@@ -1,8 +1,9 @@
 import React from 'react'
+import WelcomeBanner from './_components/WelcomeBanner'
 
 function Dashboard() {
     return (
-        <div>Dashboard</div>
+        <WelcomeBanner />
     )
 }
 
