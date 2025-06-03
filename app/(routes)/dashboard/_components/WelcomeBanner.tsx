@@ -8,6 +8,7 @@ function WelcomeBanner({}: Props) {
 
         <h3 className='font-bold text-2xl'>AI Personal Assistant</h3>
         <p>Smarter business decisions start here — get tailored advice, real-time market insights, and a roadmap built just for you with the power of AI.</p>
+        <button className='bg-white text-black px-4 py-2 rounded-md'>Get Started</button>
     </div>
   )
 }
