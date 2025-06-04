@@ -162,9 +162,9 @@ User Input: Fronted Developer`,
   })
 })
 
-export const AiCareerAgent = inngest.createFunction(
-  { id: 'AiCareerAgent' },
-  { event: 'AiCareerAgent' },
+export const AiOfferAgent = inngest.createFunction(
+  { id: 'AiOfferAgent' },
+  { event: 'AiOfferAgent' },
   async ({ event, step }) => {
     const { userInput } = await event?.data;
     const result = await AiOfferChatAgent.run(userInput);
