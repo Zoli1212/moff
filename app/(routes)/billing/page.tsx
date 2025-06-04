@@ -7,7 +7,9 @@ export default function Billing() {
         <p className='text-lg text-center mt-2'>Select a subscription bundle to get all AI Tools Access</p>
         <div className='mt-6'/>
         
-      <PricingTable />
+      <div className="flex flex-row flex-wrap gap-4 justify-center items-stretch">
+        <PricingTable />
+      </div>
     </div>
   )
 }

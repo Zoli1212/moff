@@ -4,31 +4,31 @@ import AiToolCard from './AiToolCard';
 
 export const aiToolsList = [
     {
-        name: 'AI Offer Chat',
-        desc: 'Ask offer questions',
+        name: 'Ajánlat Chat',
+        desc: 'Tegyél fel kérdéseket az ajánlatról',
         icon: '/chatbot.png',
-        button: 'Ask Now',
+        button: 'Kérdezz most',
         path: '/ai-tools/ai-offer'
     },
     {
-        name: 'AI Demands Analyzer',
-        desc: 'Analyze customer demands',
+        name: 'Igény Elemző',
+        desc: 'Elemezd az ügyfél igényeit',
         icon: '/resume.png',
-        button: 'Analyze Now',
+        button: 'Elemzés most',
         path: '/ai-tools/ai-demands-analyzer'
     },
     {
-        name: 'AI Cost Calculator',
-        desc: 'Calculate your offer',
+        name: 'Költség Kalkulátor',
+        desc: 'Számold ki az ajánlatodat',
         icon: '/roadmap.png',
-        button: 'Calculate Now',
+        button: 'Számolás most',
         path: '/ai-tools/ai-cost-calculator'
     },
     {
-        name: 'AI Offer Letter Generator',
-        desc: 'Generate your offer letter',
+        name: 'Ajánlatlevél Generátor',
+        desc: 'Generálj ajánlatlevelet',
         icon: '/cover.png',
-        button: 'Create Now',
+        button: 'Létrehozás most',
         path: '/ai-tools/ai-offer-letter-generator'
     },
 ];
@@ -37,8 +37,8 @@ export const aiToolsList = [
 function AiToolsList() {
     return (
         <div className='mt-7 p-5 bg-white border rounded-xl'>
-            <h2 className='font-bold text-lg'>Available AI Tools</h2>
-            <p>Start creating optimale offers for your customers with this exclusive AI Tools</p>
+            <h2 className='font-bold text-lg'>Elérhető eszközök</h2>
+            <p>Kezdd el létrehozni az optimális ajánlatokat ügyfeleidnek ezekkel az exkluzív eszközökkel!</p>
 
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-4'>
                 {aiToolsList.map((tool, index) => (
