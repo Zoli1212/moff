@@ -8,7 +8,7 @@ export const aiToolsList = [
         desc: 'Tegyél fel kérdéseket az ajánlatról',
         icon: '/chatbot.png',
         button: 'Kérdezz most',
-        path: '/ai-tools/ai-offer'
+        path: '/ai-tools/ai-chat'
     },
     {
         name: 'Igény Elemző',

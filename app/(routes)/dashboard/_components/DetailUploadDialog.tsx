@@ -15,7 +15,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 
-function DetailUploadDialog({ openResumeUpload, setOpenResumeDialog }: any) {
+function DetailUploadDialog({ open, setOpen }: any) {
 
     const [file, setFile] = useState<any>();
     const [loading, setLoading] = useState(false);
@@ -58,11 +58,11 @@ function DetailUploadDialog({ openResumeUpload, setOpenResumeDialog }: any) {
         console.log(result.data)
         setLoading(false);
         router.push('/ai-tools/ai-resume-analyzer/' + recordId);
-        setOpenResumeDialog(false);
+        setOpen(false);
     }
 
     return (
-        <Dialog open={openResumeUpload} onOpenChange={setOpenResumeDialog}>
+        <Dialog open={open} onOpenChange={setOpen}>
             {/* <DialogTrigger>Open</DialogTrigger> */}
             <DialogContent>
                 <DialogHeader>

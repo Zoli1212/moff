@@ -28,12 +28,12 @@ function AiToolCard({ tool }: AIToolProps) {
     const id = uuidv4();
     const { user } = useUser();
     const router = useRouter();
-    const [openResumeUpload, setOpenResumeUpload] = useState(false);
+    const [open, setOpen] = useState(false);
     const [openRoadmapDialog, setOpenRoadmapDialog] = useState(false);
     const onClickButton = async () => {
 
-        if (tool.name == 'AI Demands Analyzer') {
-            setOpenResumeUpload(true)
+        if (tool.name == 'Igény Elemző') {
+            setOpen(true)
             return;
         }
         if (tool.path == '/ai-tools/ai-cost-calculator') {
@@ -61,8 +61,8 @@ function AiToolCard({ tool }: AIToolProps) {
                 onClick={onClickButton}
             >{tool.button}</Button>
 
-            <DetailUploadDialog openResumeUpload={openResumeUpload}
-                setOpenResumeDialog={setOpenResumeUpload} />
+            <DetailUploadDialog openResumeUpload={open}
+                setOpenResumeDialog={setOpen} />
             <OfferGeneratorDialog   
                 openDialog={openRoadmapDialog}
                 setOpenDialog={() => setOpenRoadmapDialog(false)}

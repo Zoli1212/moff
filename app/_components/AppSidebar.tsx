@@ -51,7 +51,7 @@ const mainItems = [
     icon: Inbox,
   },
   {
-    title: "AI eszközök",
+    title: "Csevegés",
     url: "/ai-tools",
     icon: Inbox,
   },
