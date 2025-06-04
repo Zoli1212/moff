@@ -1,33 +1,64 @@
-"use client"
+"use client";
 import React, { useState } from "react";
+import { useEffect } from "react";
+import {
+  getPriceItems,
+  addPriceItem,
+  updatePriceItem,
+  deletePriceItem,
+} from "./actions";
 
-interface PriceItem {
+type PriceItem = {
   id: number;
   name: string;
   price: string;
-  isEditing?: boolean;
-}
+};
 
 export default function PricesPage() {
-  const [items, setItems] = useState<PriceItem[]>([]);
-  const [newName, setNewName] = useState("");
-  const [newPrice, setNewPrice] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
-  const [editId, setEditId] = useState<number | null>(null);
+  const [newName, setNewName] = useState("");
+  const [newPrice, setNewPrice] = useState("");
 
-  const handleAdd = () => {
-    if (!newName.trim() || !newPrice.trim()) return;
-    setItems([
-      ...items,
-      { id: Date.now(), name: newName, price: newPrice },
-    ]);
-    setNewName("");
-    setNewPrice("");
+  const [items, setItems] = useState<PriceItem[]>([]);
+
+  // Betöltés
+  const fetchItems = async () => {
+    const data = await getPriceItems();
+    setItems(data);
   };
 
-  const handleDelete = (id: number) => {
-    setItems(items.filter((item) => item.id !== id));
+  useEffect(() => {
+    fetchItems();
+    // eslint-disable-next-line
+  }, []);
+
+  const handleAdd = async () => {
+    setError(null);
+    if (!newName.trim() || !newPrice.trim()) {
+      setError("Mindkét mező kitöltése kötelező!");
+      return;
+    }
+    try {
+      await addPriceItem(newName, newPrice);
+      await fetchItems();
+      setNewName("");
+      setNewPrice("");
+    } catch (e) {
+      setError("Hiba történt a hozzáadáskor.");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    setError(null);
+    try {
+      await deletePriceItem(id);
+      await fetchItems();
+    } catch (e) {
+      setError("Hiba történt a törléskor.");
+    }
   };
 
   const handleEdit = (item: PriceItem) => {
@@ -36,22 +67,27 @@ export default function PricesPage() {
     setEditPrice(item.price);
   };
 
-  const handleSave = (id: number) => {
-    setItems(
-      items.map((item) =>
-        item.id === id
-          ? { ...item, name: editName, price: editPrice }
-          : item
-      )
-    );
-    setEditId(null);
-    setEditName("");
-    setEditPrice("");
+  const handleSave = async (id: number) => {
+    setError(null);
+    try {
+      await updatePriceItem(id, editName, editPrice);
+      await fetchItems();
+      setEditId(null);
+      setEditName("");
+      setEditPrice("");
+    } catch (e) {
+      setError("Hiba történt a mentéskor.");
+    }
   };
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
       <h1 className="text-2xl font-bold mb-6 text-center">Áraim</h1>
+      {error && (
+        <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-4 text-center">
+          {error}
+        </div>
+      )}
       <div className="flex gap-4 mb-6">
         <input
           type="text"
