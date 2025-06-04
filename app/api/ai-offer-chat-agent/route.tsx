@@ -12,7 +12,7 @@ export async function POST(req: any) {
         }
     });
     const runId = resultIds?.ids[0];
-    console.log(runId)
+    console.log(runId, 'runID')
     let runStatus;
     while (true) {
         runStatus = await getRuns(runId);
@@ -28,6 +28,7 @@ export async function POST(req: any) {
         await new Promise(resolve => setTimeout(resolve, 500))
     }
 
+    console.log("runStatus:", JSON.stringify(runStatus, null, 2));
     return NextResponse.json(runStatus.data?.[0].output?.output[0])
 
 }

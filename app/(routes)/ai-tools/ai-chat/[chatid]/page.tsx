@@ -33,7 +33,7 @@ function AiChat() {
     const GetMessageList = async () => {
         const result = await axios.get('/api/history?recordId=' + chatid);
         console.log(result.data);
-        setMessageList(result?.data?.content)
+        setMessageList(Array.isArray(result?.data?.content) ? result.data.content : (result?.data?.content ? [result.data.content] : []));
     }
 
     const onSend = async () => {
@@ -88,7 +88,7 @@ function AiChat() {
             <div className='flex items-center justify-between gap-8'>
                 <div>
                     <h2 className='font-bold text-lg'>Ajánlat Chat</h2>
-                    <p>Okosabb ajánlatokat adhatsz</p>
+                    <p className="font-bold text-lg bg-gradient-to-tl from-blue-800 to-blue-900 text-transparent bg-clip-text">okosabb ajánlatokat adhatsz</p>
                 </div>
                 <Button onClick={onNewChat}>+ Új Csevegés</Button>
             </div>
