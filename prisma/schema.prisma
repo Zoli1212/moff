@@ -18,3 +18,13 @@ model PriceItem {
   name  String
   price String
 }
+
+model History {
+  id          Int      @id @default(autoincrement())
+  recordId    String
+  content     Json?
+  userEmail   String?
+  createdAt   String?
+  aiAgentType String?
+  metaData    String?
+}
