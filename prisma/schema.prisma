@@ -19,6 +19,12 @@ model PriceItem {
   price String
 }
 
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+}
+
 model History {
   id          Int      @id @default(autoincrement())
   recordId    String

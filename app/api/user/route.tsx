@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
-import { db } from "@/configs/db";
-import { usersTable } from "@/configs/schema";
+import { prisma } from "@/lib/prisma"; // vagy a helyes elérési út, ahol a Prisma kliens van exportálva
 import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
     try {
         const user = await currentUser();
+        console.log(user, 'user2')
 
         if (!user || !user.primaryEmailAddress?.emailAddress) {
             return NextResponse.json(
@@ -18,25 +17,23 @@ export async function POST(req: NextRequest) {
         const email = user.primaryEmailAddress.emailAddress;
 
         // Check if user already exists
-        const existingUsers = await db
-            .select()
-            .from(usersTable)
-            .where(eq(usersTable.email, email));
+        const existingUser = await prisma.user.findUnique({
+            where: { email },
+        });
 
-        if (existingUsers.length > 0) {
-            return NextResponse.json(existingUsers[0]);
+        if (existingUser) {
+            return NextResponse.json(existingUser);
         }
 
         // Insert new user
-        const insertedUsers = await db
-            .insert(usersTable)
-            .values({
+        const newUser = await prisma.user.create({
+            data: {
                 name: user.fullName ?? "",
                 email: email,
-            })
-            .returning();
+            },
+        });
 
-        return NextResponse.json(insertedUsers[0]);
+        return NextResponse.json(newUser);
     } catch (e: any) {
         return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
     }

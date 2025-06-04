@@ -45,7 +45,7 @@ function AiChat() {
             type: 'text'
         }])
         setUserInput('');
-        const result = await axios.post('/api/ai-career-chat-agent', {
+        const result = await axios.post('/api/ai-offer-chat-agent', {
             userInput: userInput
         });
         console.log(result.data);
@@ -57,7 +57,7 @@ function AiChat() {
 
     useEffect(() => {
         // Save message into Database
-        messageList.length > 0 && updateMessageList();
+        messageList?.length > 0 && updateMessageList();
     }, [messageList])
 
 

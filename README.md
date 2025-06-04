@@ -1,1 +1,3 @@
-npx inngest-cli@latest dev
+
+INNGEST_SERVER_HOST=https://api.inngest.com
+INNGEST_SIGNING_KEY=signkey-prod-ee608d0103068ec617427050595ba78fbf4194d7e13bf995d2735fef16579e47
