@@ -1,13 +1,10 @@
 import { db } from "@/configs/db";
 import { inngest } from "./client";
-import { createAgent, gemini, openai } from '@inngest/agent-kit';
-
+import { createAgent, gemini, openai } from "@inngest/agent-kit";
 
 import ImageKit from "imagekit";
 import { HistoryTable } from "@/configs/schema";
 import { prisma } from "@/lib/prisma";
-
-
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
@@ -15,12 +12,13 @@ export const helloWorld = inngest.createFunction(
   async ({ event, step }) => {
     await step.sleep("wait-a-moment", "1s");
     return { message: `Hello ${event.data.email}!` };
-  },
+  }
 );
 
 export const AiOfferChatAgent = createAgent({
-  name: 'AiOfferChatAgent',
-  description: 'An internal AI assistant that helps company staff generate renovation offers based on a predefined price list and available project details.',
+  name: "AiOfferChatAgent",
+  description:
+    "An internal AI assistant that helps company staff generate renovation offers based on a predefined price list and available project details.",
   system: `
 You are a professional internal assistant for a home and property renovation company.
 You assist only company employees in preparing accurate, detailed offers for clients.
@@ -48,96 +46,54 @@ Keep your tone supportive, efficient, and professional at all times.
   }),
 });
 
+export const AiDemandAnalyzerAgent = createAgent({
+  name: 'AiDemandAnalyzerAgent',
+  description: 'AI Renovation Requirements & Demand Analyzer Agent. Returns highly detailed, structured renovation requirement analysis.',
+  system: `You are an advanced AI Renovation Requirements and Demand Analyzer Agent.
+Your task is to analyze renovation, remodeling, or construction requests from clients and extract all possible requirements, expectations, constraints, and missing information in a highly detailed, structured JSON format.
+Answer in Hungarian lanquage only, not English.
+INPUT: You will receive a plain text renovation request or description from a client (e.g. "Full apartment renovation, 3 rooms and kitchen, modern style, 78 sqm, parquet flooring, energy-efficient lighting, budget 10M HUF, deadline September 2025.").
 
-export const AiResumeAnalyzerAgent = createAgent({
-  name: 'AiResumeAnalyzerAgent',
-  description: 'AI Resume Analzyer Agent help to Return Report',
-  system: `You are an advanced AI Resume Analyzer Agent.
-Your task is to evaluate a candidate's resume and return a detailed analysis in the following structured JSON schema format.
-The schema must match the layout and structure of a visual UI that includes overall score, section scores, summary feedback, improvement tips, strengths, and weaknesses.
+GOAL: Output a comprehensive JSON report with the following structure. Be exhaustive and precise:
 
-📤 INPUT: I will provide a plain text resume.
-🎯 GOAL: Output a JSON report as per the schema below. The report should reflect:
-
-overall_score (0–100)
-
-overall_feedback (short message e.g., "Excellent", "Needs improvement")
-
-summary_comment (1–2 sentence evaluation summary)
-
-Section scores for:
-
-Contact Info
-
-Experience
-
-Education
-
-Skills
-
-Each section should include:
-
-score (as percentage)
-
-Optional comment about that section
-
-Tips for improvement (3–5 tips)
-
-What’s Good (1–3 strengths)
-
-Needs Improvement (1–3 weaknesses)
-
-🧠 Output JSON Schema:
-json
-Copy
-Edit
 {
-  "overall_score": 85,
-  "overall_feedback": "Excellent!",
-  "summary_comment": "Your resume is strong, but there are areas to refine.",
-  "sections": {
-    "contact_info": {
-      "score": 95,
-      "comment": "Perfectly structured and complete."
-    },
-    "experience": {
-      "score": 88,
-      "comment": "Strong bullet points and impact."
-    },
-    "education": {
-      "score": 70,
-      "comment": "Consider adding relevant coursework."
-    },
-    "skills": {
-      "score": 60,
-      "comment": "Expand on specific skill proficiencies."
-    }
-  },
-  "tips_for_improvement": [
-    "Add more numbers and metrics to your experience section to show impact.",
-    "Integrate more industry-specific keywords relevant to your target roles.",
-    "Start bullet points with strong action verbs to make your achievements stand out."
+  "project_type": "string, e.g. apartment renovation, bathroom remodel, roof repair, etc.",
+  "scope": "string, e.g. full, partial, modernization, extension, etc.",
+  "property_type": "string, e.g. apartment, house, office, etc.",
+  "location": "string, e.g. Budapest, 5th district, or 'not specified'",
+  "area_sqm": "number or string, e.g. 78, 12, or 'not specified'",
+  "rooms_affected": ["list of rooms or spaces, e.g. kitchen, bathroom, living room, hallway, etc."],
+  "requirements": [
+    "List all explicit and implicit requirements: materials, brands, styles, energy efficiency, sustainability, accessibility, smart home, insulation, plumbing, electrical, HVAC, windows, doors, lighting, flooring, painting, tiling, cabinetry, fixtures, appliances, etc."
   ],
-  "whats_good": [
-    "Clean and professional formatting.",
-    "Clear and concise contact information.",
-    "Relevant work experience."
+  "client_priorities": ["List what seems most important to the client (e.g. speed, budget, quality, eco-friendliness, design, warranty, etc.)"],
+  "must_haves": ["List any absolute must-haves or non-negotiables."],
+  "nice_to_haves": ["List any optional or preferred features if mentioned."],
+  "budget_estimate": "string, e.g. '10M HUF', 'not specified'",
+  "timeline": "string, e.g. 'September 2025', 'within 2 months', 'not specified'",
+  "phasing": "string, e.g. 'all at once', 'in stages', 'not specified'",
+  "constraints": ["List any constraints: access, working hours, noise, building rules, delivery, storage, etc."],
+  "risks_or_dependencies": ["List any risks, dependencies, permits, 3rd parties, or external factors."],
+  "missing_info": [
+    "List every missing, unclear, or ambiguous point that should be clarified with the client (e.g. exact materials, colors, brands, technical specifications, access details, permit status, etc.)"
   ],
-  "needs_improvement": [
-    "Skills section lacks detail.",
-    "Some experience bullet points could be stronger.",
-    "Missing a professional summary/objective."
-  ]
-}`,
+  "summary_comment": "A detailed summary (3-5 sentences) of the main requirements, client expectations, and what needs clarification."
+}
+
+- Fill in as many fields as possible from the input. If a field is not specified, mark as 'not specified' or leave empty, but always include all fields.
+- Be extremely thorough: infer implicit requirements, list every detail, and never omit possible client needs.
+- Output must be valid JSON (no comments, no extra text, only the JSON object).
+- Do NOT analyze resumes or unrelated topics, only renovation, remodeling, or construction requests.
+- Keep your tone supportive, efficient, and professional at all times.
+`,
   model: gemini({
     model: "gemini-2.0-flash",
-    apiKey: process.env.GEMINI_API_KEY
-  })
-})
+  }),
+});
 
 export const AIRoadmapGeneratorAgent = createAgent({
-  name: 'AIRoadmapGeneratorAgent',
-  description: 'Generate Details Tree Like Flow Roadmap',
+  name: "AIRoadmapGeneratorAgent",
+  description: "Generate Details Tree Like Flow Roadmap",
   system: `Generate a React flow tree-structured learning roadmap for user input position/ skills in the following format:
  vertical tree structure with meaningful x/y positions to form a flow
 - Structure should be similar to roadmap.sh layout
@@ -178,20 +134,19 @@ initialEdges : [
 User Input: Fronted Developer`,
   model: gemini({
     model: "gemini-2.0-flash",
-    apiKey: process.env.GEMINI_API_KEY
-  })
-})
+    apiKey: process.env.GEMINI_API_KEY,
+  }),
+});
 
 export const AiOfferAgent = inngest.createFunction(
-  { id: 'AiOfferAgent' },
-  { event: 'AiOfferAgent' },
+  { id: "AiOfferAgent" },
+  { event: "AiOfferAgent" },
   async ({ event, step }) => {
     const { userInput } = await event?.data;
     const result = await AiOfferChatAgent.run(userInput);
     return result;
   }
-)
-
+);
 
 var imagekit = new ImageKit({
   //@ts-ignore
@@ -199,64 +154,66 @@ var imagekit = new ImageKit({
   //@ts-ignore
   privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
   //@ts-ignore
-  urlEndpoint: process.env.IMAGEKIT_ENDPOINT_URL
+  urlEndpoint: process.env.IMAGEKIT_ENDPOINT_URL,
 });
 
-export const AiResumeAgent = inngest.createFunction(
-  { id: 'AiResumeAgent' },
-  { event: 'AiResumeAgent' },
+export const AiDemandAgent = inngest.createFunction(
+  { id: "AiDemandAgent" },
+  { event: "AiDemandAgent" },
   async ({ event, step }) => {
-    const { recordId, base64ResumeFile, pdfText, aiAgentType, userEmail } = await event.data;
+    const { recordId, base64DemandFile, pdfText, aiAgentType, userEmail } =
+      await event.data;
     // Upload file to Cloud
 
     const uploadFileUrl = await step.run("uploadImage", async () => {
       const imageKitFile = await imagekit.upload({
-        file: base64ResumeFile,
+        file: base64DemandFile,
         fileName: `${Date.now()}.pdf`,
-        isPublished: true
-      })
+        isPublished: true,
+      });
 
-      return imageKitFile.url
-    })
+      return imageKitFile.url;
+    });
 
-    const aiResumeReport = await AiResumeAnalyzerAgent.run(pdfText);
-    //@ts-ignore
-    const rawContent = aiResumeReport.output[0].content;
-    const rawContentJson = rawContent.replace('```json', '').replace('```', '');
-    const parseJson = JSON.parse(rawContentJson);
+    const aiDemandReport = await AiDemandAnalyzerAgent.run(pdfText);
+//@ts-ignore
+const rawContent = aiDemandReport.output[0].content;
+const rawContentJson = rawContent.replace('```json', '').replace('```', '');
+const parseJson = JSON.parse(rawContentJson);
+
+console.log(parseJson, 'parseJson')
     // return parseJson;
 
     //Save to DB
 
-
-const saveToDb = await step.run('SaveToDb', async () => {
-  const result = await prisma.history.create({
-    data: {
-      recordId: recordId,
-      content: parseJson,
-      aiAgentType: aiAgentType,
-      createdAt: (new Date()).toString(),
-      userEmail: userEmail,
-      metaData: uploadFileUrl
-    }
-  });
-  console.log(result);
-  return parseJson;
-})
-
+    const saveToDb = await step.run("SaveToDb", async () => {
+      const result = await prisma.history.create({
+        data: {
+          recordId: recordId,
+          content: parseJson,
+          aiAgentType: aiAgentType,
+          createdAt: new Date().toString(),
+          userEmail: userEmail,
+          metaData: uploadFileUrl,
+        },
+      });
+      console.log(result);
+      return parseJson;
+    });
   }
-)
+);
 
 export const AIRoadmapAgent = inngest.createFunction(
-  { id: 'AiRoadMapAgent' },
-  { event: 'AiRoadMapAgent' },
+  { id: "AiRoadMapAgent" },
+  { event: "AiRoadMapAgent" },
   async ({ event, step }) => {
     const { roadmapId, userInput, userEmail } = await event.data;
 
-    const roadmapResult = await AIRoadmapGeneratorAgent.run("UserInput:" + userInput);
+    const roadmapResult = await AIRoadmapGeneratorAgent.run(
+      "UserInput:" + userInput
+    );
 
     // return roadmapResult
-
 
     // @ts-ignore
     const rawContent = roadmapResult.output[0].content;
@@ -273,21 +230,17 @@ export const AIRoadmapAgent = inngest.createFunction(
     const parsedJson = JSON.parse(rawContentJson); // ✅ Safely parsed
     //Save to DB
     //Save to DB
-    const saveToDb = await step.run('SaveToDb', async () => {
+    const saveToDb = await step.run("SaveToDb", async () => {
       const result = await db.insert(HistoryTable).values({
         recordId: roadmapId,
         content: parsedJson,
-        aiAgentType: '/ai-tools/ai-roadmap-agent',
-        createdAt: (new Date()).toString(),
+        aiAgentType: "/ai-tools/ai-roadmap-agent",
+        createdAt: new Date().toString(),
         userEmail: userEmail,
-        metaData: userInput
+        metaData: userInput,
       });
       console.log(result);
-      return parsedJson
-    })
-
+      return parsedJson;
+    });
   }
-)
-
-
-
+);

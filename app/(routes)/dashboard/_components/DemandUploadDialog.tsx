@@ -15,7 +15,7 @@ import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 
-function DetailUploadDialog({ open, setOpen }: any) {
+function DemandUploadDialog({ open, setOpen }: any) {
 
     const [file, setFile] = useState<any>();
     const [loading, setLoading] = useState(false);
@@ -56,10 +56,10 @@ function DetailUploadDialog({ open, setOpen }: any) {
         }
 
         // Send FormData to Backend Server
-        const result = await axios.post('/api/ai-resume-agent', formData);
+        const result = await axios.post('/api/ai-demand-agent', formData);
         console.log(result.data)
         setLoading(false);
-        router.push('/ai-tools/ai-resume-analyzer/' + recordId);
+        router.push('/ai-tools/ai-demand-analyzer/' + recordId);
         setOpen(false);
     }
 
@@ -94,4 +94,4 @@ function DetailUploadDialog({ open, setOpen }: any) {
     )
 }
 
-export default DetailUploadDialog   
+export default DemandUploadDialog   

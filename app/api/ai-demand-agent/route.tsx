@@ -16,12 +16,12 @@ export async function POST(req: NextRequest) {
     const base64 = Buffer.from(arrayBuffer).toString('base64');
 
     const resultIds = await inngest.send({
-        name: 'AiResumeAgent',
+        name: 'AiDemandAgent',
         data: {
             recordId: recordId,
-            base64ResumeFile: base64,
+            base64DemandFile: base64,
             pdfText: docs[0]?.pageContent,
-            aiAgentType: '/ai-tools/ai-resume-analyzer',
+            aiAgentType: '/ai-tools/ai-demand-analyzer',
             userEmail: user?.primaryEmailAddress?.emailAddress
         }
     });
