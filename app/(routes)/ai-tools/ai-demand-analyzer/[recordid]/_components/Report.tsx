@@ -152,17 +152,86 @@ function Report({ aiReport }: any) {
         <p className="text-blue-900 text-base">{aiReport?.summary_comment || '-'}</p>
       </div>
 
+      {/* Proposal section */}
+      {aiReport?.proposal && (
+        <div className="mt-8 mb-8 p-6 rounded-lg border border-blue-200 bg-blue-50 shadow-sm">
+          <h3 className="text-2xl font-extrabold mb-6 text-blue-900 text-center tracking-wide">Ajánlat</h3>
+          {typeof aiReport.proposal === 'object' && aiReport.proposal !== null ? (
+            <div className="space-y-6">
+              {/* Feltételezések */}
+              {aiReport.proposal.assumptions && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Feltételezések</h4>
+                  <ul className="list-disc list-inside text-blue-900 text-sm">
+                    {aiReport.proposal.assumptions.map((a: string, idx: number) => (
+                      <li key={idx}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Munkafázisok */}
+              {aiReport.proposal.main_work_phases && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Főbb munkafázisok</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {aiReport.proposal.main_work_phases.map((phase: any, idx: number) => (
+                      <div key={idx} className="bg-white rounded-lg shadow p-4 border border-blue-100">
+                        <h5 className="font-bold text-blue-700 mb-1">{phase.phase}</h5>
+                        <div className="mb-2 text-xs text-blue-500">{phase.timeline} &bull; <span className="font-semibold">{phase.estimated_cost}</span></div>
+                        <ul className="list-disc list-inside text-blue-900 text-sm mb-2">
+                          {phase.tasks && phase.tasks.map((t: string, i: number) => <li key={i}>{t}</li>)}
+                        </ul>
+                        {phase.notes && <div className="text-xs text-blue-700 italic">{phase.notes}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Időzítés */}
+              {aiReport.proposal.timeline_details && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Időzítés, ütemezés</h4>
+                  <p className="text-blue-900 text-sm">{aiReport.proposal.timeline_details}</p>
+                </div>
+              )}
+
+              {/* Becsült költségek */}
+              {aiReport.proposal.estimated_total_cost && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Becsült teljes költség</h4>
+                  <div className="text-blue-900 text-lg font-bold">{aiReport.proposal.estimated_total_cost}</div>
+                </div>
+              )}
+
+              {/* Megjegyzések */}
+              {aiReport.proposal.implementation_notes && (
+                <div>
+                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Megjegyzések, javaslatok</h4>
+                  <ul className="list-disc list-inside text-blue-900 text-sm">
+                    {aiReport.proposal.implementation_notes.map((n: string, idx: number) => (
+                      <li key={idx}>{n}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          ) : (
+            <pre className="whitespace-pre-wrap text-blue-800 text-sm">{aiReport.proposal}</pre>
+          )}
+        </div>
+      )}
+
       {/* JSON Riport megjelenítése */}
-      <div className="bg-gray-100 rounded-lg p-4 mt-8">
-        <h3 className="text-lg font-bold mb-2">JSON Riport (nyers visszatérési érték):</h3>
-        <pre className="text-xs overflow-x-auto whitespace-pre-wrap" style={{ maxHeight: 400 }}>
+      <div className="mt-8">
+        <h3 className="text-lg font-semibold mb-2">JSON Riport (nyers visszatérési érték):</h3>
+        <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto max-h-96">
           {JSON.stringify(aiReport, null, 2)}
         </pre>
       </div>
     </div>
   );
 }
-  
-
 
 export default Report;

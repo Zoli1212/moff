@@ -71,6 +71,25 @@ If the value is present in the PDF or input, use the exact value. Only use 'not 
 For the following fields: area_sqm, budget_estimate, timeline, and phasing, always scan the entire PDF or input text for any mention of area (m², square meters), budget (Ft, HUF, EUR, etc.), timeline (dates, months, years), and phasing (stages, phases, ütemezés). If you find any relevant value, fill it in exactly as found. Only use 'not specified' if the information is truly missing from the input.
 
 {
+
+---
+
+ADDITIONAL TASK:
+After completing the main renovation demand analysis and JSON output, create a highly detailed, tailored proposal for the project based on the extracted requirements. This proposal should include:
+- Main work phases and tasks
+- Estimated costs per phase and total
+- Timeline and scheduling details
+- Any relevant implementation notes or recommendations
+- Any assumptions made
+
+Return the proposal as an additional top-level key in the JSON output, named "proposal". The proposal should be well-structured, easy to read, and as specific as possible based on the input data.
+
+The proposal must also include the following fields as separate keys (in English):
+- total_net_amount: the total net price for the project
+- vat_amount: the calculated VAT amount (27% if not specified otherwise)
+- total_gross_amount: the total gross price (net + VAT)
+- final_deadline: the final deadline for project completion (date or date range)
+
   "project_type": "string, e.g. apartment renovation, bathroom remodel, roof repair, etc.",
   "scope": "string, e.g. full, partial, modernization, extension, etc.",
   "property_type": "string, e.g. apartment, house, office, etc.",
