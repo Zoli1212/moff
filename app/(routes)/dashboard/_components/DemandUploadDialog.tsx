@@ -66,30 +66,38 @@ function DemandUploadDialog({ open, setOpen }: any) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            {/* <DialogTrigger>Open</DialogTrigger> */}
             <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Töltsd fel az Igénylést</DialogTitle>
-                    <DialogDescription>
-                        <div>
-                            <label htmlFor='resumeUpload' className='flex items-center flex-col 
-                            justify-center p-7 border border-dashed 
-                            rounded-xl hover:bg-slate-100 cursor-pointer'>
-                                <File className='h-10 w-10' />
-                                {file ?
-                                    <h2 className='mt-3 text-blue-600'>{file?.name}</h2> :
-                                    <h2 className='mt-3'>Click here to Upload PDF file</h2>}
-                            </label>
-                            <input type='file' id='resumeUpload' accept="application/pdf"
-                                className='hidden' onChange={onFileChange} />
-                        </div>
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                    <Button variant={'outline'}>Cancel</Button>
-                    <Button disabled={!file || loading} onClick={onUploadAndAnalyze}>
-                        {loading ? <Loader2Icon className='animate-spin' /> : <Sparkles />} Upload & Analyze</Button>
-                </DialogFooter>
+                {loading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                        <Loader2Icon className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                        <span className="text-lg font-semibold text-blue-700">Analízis...</span>
+                    </div>
+                ) : (
+                    <>
+                        <DialogHeader>
+                            <DialogTitle>Töltsd fel az Igénylést</DialogTitle>
+                            <DialogDescription>
+                                <div>
+                                    <label htmlFor='resumeUpload' className='flex items-center flex-col 
+                                    justify-center p-7 border border-dashed 
+                                    rounded-xl hover:bg-slate-100 cursor-pointer'>
+                                        <File className='h-10 w-10' />
+                                        {file ?
+                                            <h2 className='mt-3 text-blue-600'>{file?.name}</h2> :
+                                            <h2 className='mt-3'>Click here to Upload PDF file</h2>}
+                                    </label>
+                                    <input type='file' id='resumeUpload' accept="application/pdf"
+                                        className='hidden' onChange={onFileChange} />
+                                </div>
+                            </DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                            <Button variant={'outline'} onClick={() => setOpen(false)}>Cancel</Button>
+                            <Button disabled={!file || loading} onClick={onUploadAndAnalyze}>
+                                {loading ? <Loader2Icon className='animate-spin' /> : <Sparkles />} Upload & Analyze</Button>
+                        </DialogFooter>
+                    </>
+                )}
             </DialogContent>
         </Dialog>
     )
