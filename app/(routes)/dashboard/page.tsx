@@ -7,19 +7,29 @@ import Link from "next/link";
 function Dashboard() {
   const tiles = [
     {
-      title: "Ügyfelek",
-      href: "/dashboard/clients",
-      icon: <UserCircle className="w-10 h-10 mb-2" />,
+      title: "Ajánlataim",
+      href: "/dashboard/offers",
+      icon: <FileText className="w-10 h-10 mb-2" />,
     },
     {
-      title: "Áraim",
+      title: "Munkáim",
+      href: "/dashboard/jobs",
+      icon: <FileText className="w-10 h-10 mb-2" />,
+    },
+    {
+      title: "Számláim",
+      href: "/dashboard/billings",
+      icon: <FileText className="w-10 h-10 mb-2" />,
+    },
+    {
+      title: "Aktuális Áraim",
       href: "/dashboard/prices",
       icon: <Tag className="w-10 h-10 mb-2" />,
     },
     {
-      title: "Ajánlataim",
-      href: "/dashboard/offers",
-      icon: <FileText className="w-10 h-10 mb-2" />,
+      title: "Ügyfeleim",
+      href: "/dashboard/clients",
+      icon: <UserCircle className="w-10 h-10 mb-2" />,
     },
   ];
   return (

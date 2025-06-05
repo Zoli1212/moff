@@ -29,15 +29,17 @@ function AiToolCard({ tool }: AIToolProps) {
     const { user } = useUser();
     const router = useRouter();
     const [open, setOpen] = useState(false);
-    const [openRoadmapDialog, setOpenRoadmapDialog] = useState(false);
+    const [openOfferDialog, setOpenOfferDialog] = useState(false);
     const onClickButton = async () => {
+
+        console.log(tool.name)
 
         if (tool.name == 'Igény Elemző') {
             setOpen(true)
             return;
         }
         if (tool.path == '/ai-tools/ai-cost-calculator') {
-            setOpenRoadmapDialog(true);
+            setOpenOfferDialog(true);
             return;
         }
 
@@ -50,7 +52,8 @@ function AiToolCard({ tool }: AIToolProps) {
         console.log(result);
         router.push(tool.path + "/" + id)
     }
-
+    
+    console.log(open, 'open')
     return (
         <div className='p-3 border rounded-lg '>
             <Image src={tool.icon} width={40} height={40} alt={tool.name} />
@@ -61,11 +64,11 @@ function AiToolCard({ tool }: AIToolProps) {
                 onClick={onClickButton}
             >{tool.button}</Button>
 
-            <DetailUploadDialog openResumeUpload={open}
-                setOpenResumeDialog={setOpen} />
+
+            <DetailUploadDialog open={open} setOpen={setOpen} />
             <OfferGeneratorDialog   
-                openDialog={openRoadmapDialog}
-                setOpenDialog={() => setOpenRoadmapDialog(false)}
+                openDialog={openOfferDialog}
+                setOpenDialog={() => setOpenOfferDialog(false)}
             />
         </div>
     )

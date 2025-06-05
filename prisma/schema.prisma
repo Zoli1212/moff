@@ -14,9 +14,11 @@ datasource db {
 }
 
 model PriceItem {
-  id    Int    @id @default(autoincrement())
-  name  String
-  price String
+  id       Int     @id @default(autoincrement())
+  name     String
+  price    Float
+  unit     String
+  quantity Float?   @default(1)
 }
 
 model User {
@@ -45,4 +47,36 @@ model Client {
   offer         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model MyWork {
+  id           Int      @id @default(autoincrement())
+  customerName String
+  date         DateTime
+  location     String
+  time         String
+  totalPrice   Float
+  description  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model MyInvoices {
+  id              Int      @id @default(autoincrement())
+  invoiceNumber   String
+  issueDate       DateTime
+  dueDate         DateTime
+  sellerName      String
+  sellerTaxNumber String
+  buyerName       String
+  buyerTaxNumber  String
+  netAmount       Float?
+  vatRate         Float?
+  vatAmount       Float?
+  grossAmount     Float?
+  totalAmount     Float?
+  currency        String?  @default("HUF")
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
