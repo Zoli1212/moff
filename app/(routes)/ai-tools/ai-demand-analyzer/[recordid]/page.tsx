@@ -27,7 +27,7 @@ function AiDemandAnalzyer() {
 
             {/* Resume Preview Section */}
             <div className="col-span-2 overflow-y-auto p-4 h-full">
-                <h2 className="font-bold text-2xl mb-5">Resume Preview</h2>
+                <h2 className="font-bold text-2xl mb-5">Igény leírás eredeti</h2>
                 <iframe
                     src={pdfUrl + '#toolbar=0&navpanes=0&scrollbar=0'}
                     width="100%"

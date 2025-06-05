@@ -44,16 +44,17 @@ function DemandUploadDialog({ open, setOpen }: any) {
         // formData.append('aiAgentType', '/ai-tools/ai-resume-analyzer');
 
         // @ts-ignore
-        const hasSubscriptionEnabled = await has({ plan: 'pro' })
-        if (!hasSubscriptionEnabled) {
-            const resultHistory = await axios.get('/api/history');
-            const historyList = resultHistory.data;
-            const isPresent = await historyList.find((item: any) => item?.aiAgentType == '/ai-tools/ai-resume-analyzer');
-            router.push('/billing')
-            if (isPresent) {
-                return null;
-            }
-        }
+        // TODO: 
+        // const hasSubscriptionEnabled = await has({ plan: 'pro' })
+        // if (!hasSubscriptionEnabled) {
+        //     const resultHistory = await axios.get('/api/history');
+        //     const historyList = resultHistory.data;
+        //     const isPresent = await historyList.find((item: any) => item?.aiAgentType == '/ai-tools/ai-resume-analyzer');
+        //     router.push('/billing')
+        //     if (isPresent) {
+        //         return null;
+        //     }
+        // }
 
         // Send FormData to Backend Server
         const result = await axios.post('/api/ai-demand-agent', formData);

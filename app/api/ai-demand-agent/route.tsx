@@ -10,7 +10,9 @@ export async function POST(req: NextRequest) {
     const user = await currentUser();
     const loader = new WebPDFLoader(resumeFile);
     const docs = await loader.load();
-    console.log(docs[0])// Raw Pdf Text
+    // Fűzd össze az összes oldal szövegét
+    const fullPdfText = docs.map(doc => doc.pageContent).join('\n---\n');
+    console.log(fullPdfText)// Teljes PDF szöveg
 
     const arrayBuffer = await resumeFile.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString('base64');
@@ -20,7 +22,7 @@ export async function POST(req: NextRequest) {
         data: {
             recordId: recordId,
             base64DemandFile: base64,
-            pdfText: docs[0]?.pageContent,
+            pdfText: fullPdfText,
             aiAgentType: '/ai-tools/ai-demand-analyzer',
             userEmail: user?.primaryEmailAddress?.emailAddress
         }

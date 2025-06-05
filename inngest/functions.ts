@@ -56,6 +56,20 @@ INPUT: You will receive a plain text renovation request or description from a cl
 
 GOAL: Output a comprehensive JSON report with the following structure. Be exhaustive and precise:
 
+IMPORTANT: Extract and fill out ALL of the following project main properties from the PDF or input text if available. These must always be present in the JSON output, using the following keys:
+- project_type
+- scope
+- property_type
+- location
+- area_sqm
+- rooms_affected
+- budget_estimate
+- timeline
+- phasing
+If the value is present in the PDF or input, use the exact value. Only use 'not specified' if the information is truly missing.
+
+For the following fields: area_sqm, budget_estimate, timeline, and phasing, always scan the entire PDF or input text for any mention of area (m², square meters), budget (Ft, HUF, EUR, etc.), timeline (dates, months, years), and phasing (stages, phases, ütemezés). If you find any relevant value, fill it in exactly as found. Only use 'not specified' if the information is truly missing from the input.
+
 {
   "project_type": "string, e.g. apartment renovation, bathroom remodel, roof repair, etc.",
   "scope": "string, e.g. full, partial, modernization, extension, etc.",
