@@ -19,30 +19,28 @@ function AiDemandAnalzyer() {
     }
 
     return (
-        <div className="grid lg:grid-cols-4 grid-cols-1 h-[83vh]">
+        <div className="grid lg:grid-cols-4 grid-cols-1 h-[83vh] gap-8">
             {/* Report Section */}
             <div className="col-span-2 overflow-y-auto  border-r h-full">
                 <Report aiReport={aiReport} />
             </div>
 
             {/* Resume Preview Section */}
-            <div className="col-span-2 p-4 h-full">
+            <div className="col-span-2 p-4">
                 <h2 className="font-bold text-2xl mb-5">Igény leírás eredeti</h2>
                 {pdfUrl ? (
-                    <div className="w-full flex justify-center">
+                    <div className="w-full">
                         <iframe
-                            src={pdfUrl + '#toolbar=0&navpanes=0&scrollbar=0'}
-                            className="bg-white"
+                            src={pdfUrl + '#toolbar=0&navpanes=0&scrollbar=0&view=FitH'}
+                            className="bg-white w-full max-w-full"
                             style={{
                                 border: 'none',
                                 background: 'white',
-                                width: 'fit-content',
-                                minWidth: '800px',
+                                width: '100%',
                                 maxWidth: '100%',
                                 minHeight: '1000px',
                                 display: 'block',
                             }}
-                            width="800"
                             height="1200"
                             loading="lazy"
                         />
