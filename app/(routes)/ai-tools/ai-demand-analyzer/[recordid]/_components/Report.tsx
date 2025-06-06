@@ -158,64 +158,103 @@ function Report({ aiReport }: any) {
           <h3 className="text-2xl font-extrabold mb-6 text-blue-900 text-center tracking-wide">Ajánlat</h3>
           {typeof aiReport.proposal === 'object' && aiReport.proposal !== null ? (
             <div className="space-y-6">
+              {/* Összegzés */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div><b>Nettó összeg:</b> {aiReport.proposal.total_net_amount ?? '-'}</div>
+                <div><b>ÁFA összege:</b> {aiReport.proposal.vat_amount ?? '-'}</div>
+                <div><b>Bruttó összeg:</b> {aiReport.proposal.total_gross_amount ?? '-'}</div>
+                <div><b>Végső határidő:</b> {aiReport.proposal.final_deadline ?? '-'}</div>
+              </div>
               {/* Feltételezések */}
-              {aiReport.proposal.assumptions && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Feltételezések</h4>
+              <div>
+                <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Feltételezések</h4>
+                {Array.isArray(aiReport.proposal.assumptions_made) && aiReport.proposal.assumptions_made.length > 0 ? (
                   <ul className="list-disc list-inside text-blue-900 text-sm">
-                    {aiReport.proposal.assumptions.map((a: string, idx: number) => (
+                    {aiReport.proposal.assumptions_made.map((a: string, idx: number) => (
                       <li key={idx}>{a}</li>
                     ))}
                   </ul>
-                </div>
-              )}
-
+                ) : '-'}
+              </div>
               {/* Munkafázisok */}
-              {aiReport.proposal.main_work_phases && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Főbb munkafázisok</h4>
+              <div>
+                <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Főbb munkafázisok</h4>
+                {Array.isArray(aiReport.proposal.main_work_phases_and_tasks) && aiReport.proposal.main_work_phases_and_tasks.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {aiReport.proposal.main_work_phases.map((phase: any, idx: number) => (
+                    {aiReport.proposal.main_work_phases_and_tasks.map((phase: any, idx: number) => (
                       <div key={idx} className="bg-white rounded-lg shadow p-4 border border-blue-100">
                         <h5 className="font-bold text-blue-700 mb-1">{phase.phase}</h5>
-                        <div className="mb-2 text-xs text-blue-500">{phase.timeline} &bull; <span className="font-semibold">{phase.estimated_cost}</span></div>
                         <ul className="list-disc list-inside text-blue-900 text-sm mb-2">
                           {phase.tasks && phase.tasks.map((t: string, i: number) => <li key={i}>{t}</li>)}
                         </ul>
-                        {phase.notes && <div className="text-xs text-blue-700 italic">{phase.notes}</div>}
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Időzítés */}
-              {aiReport.proposal.timeline_details && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Időzítés, ütemezés</h4>
-                  <p className="text-blue-900 text-sm">{aiReport.proposal.timeline_details}</p>
-                </div>
-              )}
-
-              {/* Becsült költségek */}
-              {aiReport.proposal.estimated_total_cost && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Becsült teljes költség</h4>
-                  <div className="text-blue-900 text-lg font-bold">{aiReport.proposal.estimated_total_cost}</div>
-                </div>
-              )}
-
-              {/* Megjegyzések */}
-              {aiReport.proposal.implementation_notes && (
-                <div>
-                  <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Megjegyzések, javaslatok</h4>
+                ) : '-'}
+              </div>
+              {/* Ütemezés */}
+              <div>
+                <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Időzítés, ütemezés</h4>
+                {Array.isArray(aiReport.proposal.timeline_and_scheduling_details) && aiReport.proposal.timeline_and_scheduling_details.length > 0 ? (
                   <ul className="list-disc list-inside text-blue-900 text-sm">
-                    {aiReport.proposal.implementation_notes.map((n: string, idx: number) => (
-                      <li key={idx}>{n}</li>
+                    {aiReport.proposal.timeline_and_scheduling_details.map((item: string, idx: number) => (
+                      <li key={idx}>{item}</li>
                     ))}
                   </ul>
-                </div>
-              )}
+                ) : typeof aiReport.proposal.timeline_and_scheduling_details === 'string' && aiReport.proposal.timeline_and_scheduling_details.trim() !== '' ? (
+                  <div className="text-blue-900 text-sm">{aiReport.proposal.timeline_and_scheduling_details}</div>
+                ) : '-'}
+              </div>
+              {/* Költségek bontása */}
+              <div>
+                <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Költségek bontása</h4>
+                {aiReport.proposal.estimated_costs_per_phase_and_total && Object.keys(aiReport.proposal.estimated_costs_per_phase_and_total).length > 0 ? (
+                  <ul className="list-disc list-inside text-blue-900 text-sm">
+                    {Object.entries(aiReport.proposal.estimated_costs_per_phase_and_total)
+                      .filter(([key]) => key !== 'total')
+                      .sort((a, b) => {
+                        // Extract leading numbers for sorting
+                        const numA = parseInt(a[0]);
+                        const numB = parseInt(b[0]);
+                        return numA - numB;
+                      })
+                      .map(([key, value]: [string, unknown], idx: number) => {
+                        // Format key: '4_nyilaszarok_csereje' => '4. Nyílászárók cseréje'
+                        const match = key.match(/^(\d+)[_. ]?(.*)$/);
+                        let label = key;
+                        if (match) {
+                          const num = match[1];
+                          let rest = match[2]
+                            .replace(/_/g, ' ')
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                            .split(' ')
+                            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+                            .join(' ');
+                          label = `${num}. ${rest}`;
+                        }
+                        return <li key={key}><b>{label}:</b> {String(value)}</li>;
+                      })}
+                    {/* Total always last */}
+                    {aiReport.proposal.estimated_costs_per_phase_and_total.total && (
+                      <li key="total"><b>Összesen:</b> {aiReport.proposal.estimated_costs_per_phase_and_total.total}</li>
+                    )}
+                  </ul>
+                ) : '-'}
+              </div>
+              {/* Megjegyzések, javaslatok */}
+              <div>
+                <h4 className="text-lg font-semibold mb-2 text-blue-800 border-b pb-1">Megjegyzések, javaslatok</h4>
+                {Array.isArray(aiReport.proposal.relevant_implementation_notes_or_recommendations) && aiReport.proposal.relevant_implementation_notes_or_recommendations.length > 0 ? (
+                  <ul className="list-disc list-inside text-blue-900 text-sm">
+                    {aiReport.proposal.relevant_implementation_notes_or_recommendations.map((item: string, idx: number) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                ) : typeof aiReport.proposal.relevant_implementation_notes_or_recommendations === 'string' && aiReport.proposal.relevant_implementation_notes_or_recommendations.trim() !== '' ? (
+                  <div className="text-blue-900 text-sm">{aiReport.proposal.relevant_implementation_notes_or_recommendations}</div>
+                ) : '-'}
+              </div>
             </div>
           ) : (
             <pre className="whitespace-pre-wrap text-blue-800 text-sm">{aiReport.proposal}</pre>
