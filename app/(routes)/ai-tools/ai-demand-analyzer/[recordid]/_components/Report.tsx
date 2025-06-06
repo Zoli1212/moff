@@ -86,6 +86,9 @@ function Report({ aiReport }: any) {
             <b>Helyszín:</b> {filterValue(aiReport?.location)}
           </div>
           <div>
+            <b>Megrendelő:</b> {filterValue(aiReport?.customer_name)}
+          </div>
+          <div>
             <b>Alapterület (m²):</b> {filterValue(aiReport?.area_sqm)}
           </div>
           <div>
@@ -246,7 +249,7 @@ function Report({ aiReport }: any) {
           className="mt-8 mb-8 p-6 rounded-lg border border-blue-200 bg-blue-50 shadow-sm"
         >
           <h3 className="text-2xl font-extrabold mb-6 text-blue-900 text-center tracking-wide">
-            Ajánlat
+            Ajánlat {aiReport?.proposal.customer_name ? `${aiReport.proposal.customer_name} részére`: ''}
           </h3>
           {typeof aiReport.proposal === "object" &&
           aiReport.proposal !== null ? (
