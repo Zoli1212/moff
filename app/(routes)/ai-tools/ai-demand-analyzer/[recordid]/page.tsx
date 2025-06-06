@@ -9,9 +9,9 @@ function AiDemandAnalzyer() {
     const [pdfUrl, setPdfUrl] = useState();
     const [aiReport, setAiReport] = useState();
     useEffect(() => {
-        recordid && GetResumeAnalyzerRecord();
+        recordid && GetDemandAnalyzerRecord();
     }, [recordid])
-    const GetResumeAnalyzerRecord = async () => {
+    const GetDemandAnalyzerRecord = async () => {
         const result = await axios.get('/api/history?recordId=' + recordid);
         console.log(result.data);
         setPdfUrl(result.data?.metaData);
@@ -26,18 +26,28 @@ function AiDemandAnalzyer() {
             </div>
 
             {/* Resume Preview Section */}
-            <div className="col-span-2 overflow-y-auto p-4 h-full">
+            <div className="col-span-2 p-4 h-full">
                 <h2 className="font-bold text-2xl mb-5">Igény leírás eredeti</h2>
-                <iframe
-                    src={pdfUrl + '#toolbar=0&navpanes=0&scrollbar=0'}
-                    width="100%"
-                    height="100%"
-                    className="min-w-lg"
-                    style={{
-                        border: 'none',
-                        minHeight: '1000px', // Optional, keeps iframe content visible
-                    }}
-                />
+                {pdfUrl ? (
+                    <div className="w-full flex justify-center">
+                        <iframe
+                            src={pdfUrl + '#toolbar=0&navpanes=0&scrollbar=0'}
+                            className="bg-white"
+                            style={{
+                                border: 'none',
+                                background: 'white',
+                                width: 'fit-content',
+                                minWidth: '800px',
+                                maxWidth: '100%',
+                                minHeight: '1000px',
+                                display: 'block',
+                            }}
+                            width="800"
+                            height="1200"
+                            loading="lazy"
+                        />
+                    </div>
+                ) : null}
             </div>
         </div>
 
