@@ -89,7 +89,7 @@ The proposal must also include the following fields as separate keys (in English
 - vat_amount: the calculated VAT amount (27% if not specified otherwise)
 - total_gross_amount: the total gross price (net + VAT)
 - final_deadline: the final deadline for project completion (date or date range)
-- customer_name: the name of the customer
+- customer_name: the name of the customer, must have!
 
   "project_type": "string, e.g. apartment renovation, bathroom remodel, roof repair, etc.",
   "scope": "string, e.g. full, partial, modernization, extension, etc.",
