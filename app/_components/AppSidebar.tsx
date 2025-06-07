@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { UserButton } from "@clerk/nextjs";
 
 const mainItems = [
   {
@@ -142,6 +143,9 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+        <div className="flex justify-center items-center w-full border-t border-gray-200 pt-4 pb-2 mb-2 bg-white">
+          <UserButton afterSignOutUrl="/" />
+        </div>
       <SidebarFooter>
         <h2 className="p-2 text-gray-400 text-sm">
           Szerzői jog © VividMindSoft

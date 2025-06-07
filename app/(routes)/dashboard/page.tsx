@@ -31,6 +31,11 @@ function Dashboard() {
       href: "/dashboard/clients",
       icon: <UserCircle className="w-10 h-10 mb-2" />,
     },
+    {
+      title: "Email elemző",
+      href: "/dashboard/email",
+      icon: <UserCircle className="w-10 h-10 mb-2" />,
+    },
   ];
   return (
     <div className="min-h-[60vh] flex items-center justify-center">

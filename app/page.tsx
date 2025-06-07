@@ -2,12 +2,19 @@
 import Image from "next/image";
 
 import { SignIn, SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { useRouter } from 'next/navigation'
 
 export default function Home() {
   // const user = useAuthContext();
   // console.log(user?.user)
 
   const { user } = useUser();
+  const router = useRouter();
+
+  if(user && user.emailAddresses.length > 0){
+    router.push('/dashboard')
+    
+  }
 
   return (
     <div>
