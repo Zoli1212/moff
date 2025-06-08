@@ -72,6 +72,10 @@ function moreThan20(arr) {
 		if(arr[i].pont >= 20)
 			arrAbove20.push(arr[i].nev);
 	}
-	return `20 pont felett értek el: ${arrAbove20.join(", ")}.`;
+	console.log(`20 pont felett értek el: ${arrAbove20.join(", ")}.`);
+
+	if(arrAbove20.length === arr.length)
+		return `Minden diák elért legalább 20 pontot.`;
 }
+
 console.log(moreThan20(diakok));
