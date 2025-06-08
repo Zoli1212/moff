@@ -283,6 +283,7 @@ console.log(parseJson, 'parseJson')
           createdAt: new Date().toString(),
           userEmail: userEmail,
           metaData: uploadFileUrl,
+          tenantEmail: userEmail // vagy a megfelelő tenant email változó
         },
       });
       console.log(result);

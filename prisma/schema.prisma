@@ -19,6 +19,7 @@ model PriceItem {
   price    Float
   unit     String
   quantity Float?   @default(1)
+  tenantEmail String
 }
 
 model User {
@@ -35,6 +36,7 @@ model History {
   createdAt   String?
   aiAgentType String?
   metaData    String?
+  tenantEmail String
 }
 
 model Client {
@@ -47,6 +49,7 @@ model Client {
   offer         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  tenantEmail   String
 }
 
 model MyWork {
@@ -59,6 +62,7 @@ model MyWork {
   description  String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  tenantEmail  String
 }
 
 model MyInvoices {
@@ -79,4 +83,5 @@ model MyInvoices {
   description     String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  tenantEmail     String
 }

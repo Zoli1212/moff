@@ -14,7 +14,8 @@ export async function POST(req: any) {
                 content: content,
                 userEmail: user?.primaryEmailAddress?.emailAddress || null,
                 createdAt: new Date().toISOString(),
-                aiAgentType: aiAgentType
+                aiAgentType: aiAgentType,
+                tenantEmail: user?.primaryEmailAddress?.emailAddress || ''
             }
         });
         return NextResponse.json(result);

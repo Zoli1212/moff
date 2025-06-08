@@ -1,15 +1,37 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE "PriceItem" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "price" DOUBLE PRECISION NOT NULL,
+    "unit" TEXT NOT NULL,
+    "quantity" DOUBLE PRECISION DEFAULT 1,
+    "tenantEmail" TEXT NOT NULL,
 
-  - Added the required column `unit` to the `PriceItem` table without a default value. This is not possible if the table is not empty.
-  - Changed the type of `price` on the `PriceItem` table. No cast exists, the column would be dropped and recreated, which cannot be done if there is data, since the column is required.
+    CONSTRAINT "PriceItem_pkey" PRIMARY KEY ("id")
+);
 
-*/
--- AlterTable
-ALTER TABLE "PriceItem" ADD COLUMN     "quantity" DOUBLE PRECISION DEFAULT 1,
-ADD COLUMN     "unit" TEXT NOT NULL,
-DROP COLUMN "price",
-ADD COLUMN     "price" DOUBLE PRECISION NOT NULL;
+-- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "History" (
+    "id" SERIAL NOT NULL,
+    "recordId" TEXT NOT NULL,
+    "content" JSONB,
+    "userEmail" TEXT,
+    "createdAt" TEXT,
+    "aiAgentType" TEXT,
+    "metaData" TEXT,
+    "tenantEmail" TEXT NOT NULL,
+
+    CONSTRAINT "History_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "Client" (
@@ -22,6 +44,7 @@ CREATE TABLE "Client" (
     "offer" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "tenantEmail" TEXT NOT NULL,
 
     CONSTRAINT "Client_pkey" PRIMARY KEY ("id")
 );
@@ -37,6 +60,7 @@ CREATE TABLE "MyWork" (
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "tenantEmail" TEXT NOT NULL,
 
     CONSTRAINT "MyWork_pkey" PRIMARY KEY ("id")
 );
@@ -60,6 +84,10 @@ CREATE TABLE "MyInvoices" (
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "tenantEmail" TEXT NOT NULL,
 
     CONSTRAINT "MyInvoices_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

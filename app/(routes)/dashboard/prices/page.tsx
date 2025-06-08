@@ -7,20 +7,30 @@ import {
   updatePriceItem,
   deletePriceItem,
 } from "./actions";
+import { useUser } from "@clerk/nextjs";
 
 type PriceItem = {
   id: number;
   name: string;
-  price: string;
+  price: number;
+  unit: string;
+  quantity: number | null;
 };
 
 export default function PricesPage() {
+  const { isSignedIn, user, isLoaded } = useUser();
+  const tenantEmail = user?.emailAddresses?.[0]?.emailAddress;
+
   const [error, setError] = useState<string | null>(null);
   const [editId, setEditId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
+  const [editUnit, setEditUnit] = useState("");
+  const [editQuantity, setEditQuantity] = useState("");
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const [newUnit, setNewUnit] = useState("");
+  const [newQuantity, setNewQuantity] = useState("");
 
   const [items, setItems] = useState<PriceItem[]>([]);
 
@@ -37,15 +47,28 @@ export default function PricesPage() {
 
   const handleAdd = async () => {
     setError(null);
-    if (!newName.trim() || !newPrice.trim()) {
-      setError("Mindkét mező kitöltése kötelező!");
+    if (
+      !newName.trim() ||
+      !newPrice.trim() ||
+      !newUnit.trim() ||
+      !newQuantity.trim()
+    ) {
+      setError("Minden mező kitöltése kötelező!");
       return;
     }
     try {
-      await addPriceItem(newName, newPrice);
+      await addPriceItem(
+        newName,
+        Number(newPrice),
+        newUnit,
+        Number(newQuantity),
+        tenantEmail!
+      );
       await fetchItems();
       setNewName("");
       setNewPrice("");
+      setNewUnit("");
+      setNewQuantity("");
     } catch (e) {
       setError("Hiba történt a hozzáadáskor.");
     }
@@ -64,17 +87,28 @@ export default function PricesPage() {
   const handleEdit = (item: PriceItem) => {
     setEditId(item.id);
     setEditName(item.name);
-    setEditPrice(item.price);
+    setEditPrice(item.price.toString());
+    setEditUnit(item.unit);
+    setEditQuantity(item.quantity?.toString() ?? "");
   };
 
   const handleSave = async (id: number) => {
     setError(null);
     try {
-      await updatePriceItem(id, editName, editPrice);
+      await updatePriceItem(
+        id,
+        editName,
+        Number(editPrice),
+        editUnit,
+        Number(editQuantity),
+        tenantEmail!
+      );
       await fetchItems();
       setEditId(null);
       setEditName("");
       setEditPrice("");
+      setEditUnit("");
+      setEditQuantity("");
     } catch (e) {
       setError("Hiba történt a mentéskor.");
     }
@@ -98,10 +132,24 @@ export default function PricesPage() {
         />
         <input
           type="text"
-          className="w-32 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+          className="w-24 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
           placeholder="Ár (Ft)"
           value={newPrice}
           onChange={(e) => setNewPrice(e.target.value)}
+        />
+        <input
+          type="text"
+          className="w-20 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+          placeholder="Egység (pl. kg, db)"
+          value={newUnit}
+          onChange={(e) => setNewUnit(e.target.value)}
+        />
+        <input
+          type="number"
+          className="w-20 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+          placeholder="Mennyiség"
+          value={newQuantity}
+          onChange={(e) => setNewQuantity(e.target.value)}
         />
         <button
           className="bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-lg transition"
@@ -129,9 +177,21 @@ export default function PricesPage() {
                 />
                 <input
                   type="text"
-                  className="w-24 border rounded-lg px-2 py-1 mr-2"
+                  className="w-20 border rounded-lg px-2 py-1 mr-2"
                   value={editPrice}
                   onChange={(e) => setEditPrice(e.target.value)}
+                />
+                <input
+                  type="text"
+                  className="w-16 border rounded-lg px-2 py-1 mr-2"
+                  value={editUnit}
+                  onChange={(e) => setEditUnit(e.target.value)}
+                />
+                <input
+                  type="number"
+                  className="w-16 border rounded-lg px-2 py-1 mr-2"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
                 />
                 <button
                   className="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-1 rounded-lg mr-1"
@@ -151,9 +211,11 @@ export default function PricesPage() {
                 <div className="flex-1 text-lg font-semibold text-green-900">
                   {item.name}
                 </div>
-                <div className="w-24 text-right text-green-800 font-bold">
+                <div className="w-20 text-right text-green-800 font-bold">
                   {item.price} Ft
                 </div>
+                <div className="w-16 text-green-800">{item.unit}</div>
+                <div className="w-16 text-green-800">{item.quantity}</div>
                 <button
                   className="bg-green-400 hover:bg-green-500 text-white font-bold px-3 py-1 rounded-lg mr-1"
                   onClick={() => handleEdit(item)}
