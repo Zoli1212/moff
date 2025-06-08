@@ -1,0 +1,85 @@
+const diakok = [
+  { nev: "Kovács Anna", pont: 45 },
+  { nev: "Nagy Béla", pont: 38 },
+  { nev: "Szabó Csilla", pont: 50 },
+  { nev: "Tóth Dénes", pont: 29 },
+  { nev: "Farkas Emma", pont: 44 }
+];
+
+// 1. Számítsd ki az összes diák összpontszámát!
+
+let sum = [];
+
+function totalScore (param) {
+
+    param.forEach(element => {
+        let score = element.pont;
+        sum.push(score);
+    });
+
+    const totalScore = sum.reduce( (tS, cS) => tS + cS)
+    return totalScore;
+}
+
+let sumTotalScore = totalScore(diakok)
+
+console.log("Az összes diák összpontszáma: " + sumTotalScore);
+
+const pieces = sum.length;
+// console.log(sum.length);
+
+// 2. Számítsd ki az átlagpontszámot, két tizedesjegyre kerekítve!
+
+function average (sumTotalScore) {
+    const averageScore = (sumTotalScore / pieces);
+    const roundedScore = averageScore.toFixed(2);
+    return roundedScore; 
+}
+
+console.log("Az átlagpontszám, kerekítve: " + average(sumTotalScore));
+
+// 3. Írd ki annak a nevét, aki a legtöbb pontot érte el!
+
+// console.log(sum);
+const maxPoint = Math.max(...sum)
+// console.log(maxPoint);
+
+function mostPoint(param, maxPoint) {
+
+    for (const element of param) {
+       if (element.pont === maxPoint) {
+            return element.nev;
+       }   
+    }
+}
+
+console.log("Aki a legtöbb pontot elérte: " + mostPoint(diakok, maxPoint));
+
+// 4. Listázd ki azoknak a tanulóknak a nevét, akik 30 pont alatt teljesítettek!
+
+function lessThan30 (param) {
+
+    let lessThan30Arr = [];
+
+    for (let element of param) {
+        if (element.pont < 30) {
+            lessThan30Arr.push(element.nev)
+        }
+    }
+    return lessThan30Arr;
+}
+
+console.log(lessThan30(diakok) + " 30 pont alatt teljesített.");
+
+// 5. Ellenőrizd, hogy minden diák elérte-e legalább a 20 pontot!
+
+function point20 (param) {
+
+       for (let element of param) {
+        if (element.pont > 20) {
+            return `Minden diák elért legalább 20 pontot.`;
+        }
+    } 
+}
+
+console.log(point20(diakok));

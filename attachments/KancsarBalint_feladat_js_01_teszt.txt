@@ -1,0 +1,51 @@
+// Diákok pontszámai tömb
+const diakok = [
+  { nev: "Kovács Anna", pont: 45 },
+  { nev: "Nagy Béla", pont: 38 },
+  { nev: "Szabó Csilla", pont: 50 },
+  { nev: "Tóth Dénes", pont: 29 },
+  { nev: "Farkas Emma", pont: 44 }
+];
+
+Feladatok:
+//1. Számítsd ki az összes diák összpontszámát!
+
+const osszPontszam = diakok.reduce((osszeg, diak) => osszeg + diak.pont, 0);
+
+console.log("Az Összpontszám :", osszPontszam);
+
+
+
+//2. Számítsd ki az átlagpontszámot, két tizedesjegyre kerekítve!
+
+const atlagPont = osszPontszam / diakok.length;
+
+console.log(atlagPont);
+
+
+
+//3. Írd ki annak a nevét, aki a legtöbb pontot érte el!
+
+const legtobbPont = diakok.reduce((maxDiak, diak) => diak.pont > maxDiak.pont ? diak : maxDiak);
+
+console.log(legtobbPont.nev);
+
+
+
+//4. Listázd ki azoknak a tanulóknak a nevét, akik 30 pont alatt teljesítettek!
+
+const below30 = diakok.filter(diak => diak.pont <= 30)
+
+
+//5. Ellenőrizd, hogy minden diák elérte-e legalább a 20 pontot!
+
+function checkPontszam(diak) {
+    return diak.pont >= 20;
+}
+
+const mindenkiMegfelelt = diakok.every(checkPontszam);
+
+console.log(mindenkiMegfelelt);
+
+
+
