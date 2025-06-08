@@ -14,7 +14,6 @@ class AiAssistant extends Component<Props, State> {
   render() {
     return (
       <>
-        <WelcomeBanner />
         <AiToolsList />
         <History />
       </>

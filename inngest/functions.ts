@@ -82,37 +82,91 @@ After completing the main renovation demand analysis and JSON output, create a h
 - Any relevant implementation notes or recommendations
 - Any assumptions made
 
-Return the proposal as an additional top-level key in the JSON output, named "proposal". The proposal should be well-structured, easy to read, and as specific as possible based on the input data.
+Return the proposal as an additional top-level key in the JSON output, named "proposal". The proposal object MUST contain the following fields, exactly with these names, and all must be present in every output:
 
-The proposal must also include the following fields as separate keys (in English):
-- total_net_amount: the total net price for the project
-- vat_amount: the calculated VAT amount (27% if not specified otherwise)
-- total_gross_amount: the total gross price (net + VAT)
-- final_deadline: the final deadline for project completion (date or date range)
-- customer_name: the name of the customer, must have!
+- main_work_phases_and_tasks
+- timeline_and_scheduling_details
+- estimated_costs_per_phase_and_total
+- total_net_amount
+- vat_amount
+- total_gross_amount
+- final_deadline
+- customer_name
+- project_type
+- scope
+- property_type
+- location
+- area_sqm
+- rooms_affected
+- requirements
+- client_priorities
+- must_haves
+- nice_to_haves
+- budget_estimate
+- timeline
+- phasing
+- constraints
+- risks_or_dependencies
+- missing_info
+- summary_comment
 
-  "project_type": "string, e.g. apartment renovation, bathroom remodel, roof repair, etc.",
-  "scope": "string, e.g. full, partial, modernization, extension, etc.",
-  "property_type": "string, e.g. apartment, house, office, etc.",
-  "location": "string, e.g. Budapest, 5th district, or 'not specified'",
-  "area_sqm": "number or string, e.g. 78, 12, or 'not specified'",
-  "rooms_affected": ["list of rooms or spaces, e.g. kitchen, bathroom, living room, hallway, etc."],
-  "requirements": [
-    "List all explicit and implicit requirements: materials, brands, styles, energy efficiency, sustainability, accessibility, smart home, insulation, plumbing, electrical, HVAC, windows, doors, lighting, flooring, painting, tiling, cabinetry, fixtures, appliances, etc."
+If a field is not specified in the input, fill it with 'not specified' or an empty array, but include all fields above. Use the exact field names. The following JSON is ONLY A STRUCTURAL EXAMPLE. NEVER copy the example values, only use values that are present or can be inferred from the input! Every output must reflect the actual project and client data.
+
+Example structure (for field names and JSON shape ONLY):
+
+"proposal": {
+  "main_work_phases_and_tasks": [
+    { "phase": "Demolition", "tasks": ["Remove old tiles", "Dismantle fixtures"] },
+    { "phase": "Installation", "tasks": ["Install new plumbing", "Lay new tiles"] }
   ],
-  "client_priorities": ["List what seems most important to the client (e.g. speed, budget, quality, eco-friendliness, design, warranty, etc.)"],
-  "must_haves": ["List any absolute must-haves or non-negotiables."],
-  "nice_to_haves": ["List any optional or preferred features if mentioned."],
-  "budget_estimate": "string, e.g. '10M HUF', 'not specified'",
-  "timeline": "string, e.g. 'September 2025', 'within 2 months', 'not specified'",
-  "phasing": "string, e.g. 'all at once', 'in stages', 'not specified'",
-  "constraints": ["List any constraints: access, working hours, noise, building rules, delivery, storage, etc."],
-  "risks_or_dependencies": ["List any risks, dependencies, permits, 3rd parties, or external factors."],
-  "missing_info": [
-    "List every missing, unclear, or ambiguous point that should be clarified with the client (e.g. exact materials, colors, brands, technical specifications, access details, permit status, etc.)"
+  "timeline_and_scheduling_details": ["Phase 1: June 2025", "Phase 2: July 2025"],
+  "estimated_costs_per_phase_and_total": [
+    { "phase": "Demolition", "cost": "500,000 HUF" },
+    { "phase": "Installation", "cost": "1,200,000 HUF" },
+    { "phase": "Total", "cost": "1,700,000 HUF" }
   ],
-  "summary_comment": "A detailed summary (3-5 sentences) of the main requirements, client expectations, and what needs clarification."
+  "total_net_amount": "1,700,000 HUF",
+  "vat_amount": "459,000 HUF",
+  "total_gross_amount": "2,159,000 HUF",
+  "final_deadline": "2025-08-31",
+  "customer_name": "Kovács János",
+  "project_type": "bathroom remodel",
+  "scope": "full",
+  "property_type": "apartment",
+  "location": "Budapest, 5th district",
+  "area_sqm": 12,
+  "rooms_affected": ["bathroom"],
+  "requirements": ["premium tiles", "walk-in shower"],
+  "client_priorities": ["quality", "timeline"],
+  "must_haves": ["underfloor heating"],
+  "nice_to_haves": ["smart mirror"],
+  "budget_estimate": "2M HUF",
+  "timeline": "June-August 2025",
+  "phasing": "all at once",
+  "constraints": ["limited access for trucks"],
+  "risks_or_dependencies": ["permit approval"],
+  "missing_info": ["exact tile brand"],
+  "summary_comment": "The client expects a high-quality, modern bathroom renovation, with a focus on timely completion. Details on tile brand and delivery access need clarification."
 }
+
+IMPORTANT: The AI must ALWAYS generate the content of every field based on the actual input and project details. DO NOT hardcode or copy the example values. If a value is missing, use 'not specified' or an empty array, but never leave out a required field.
+
+Be extremely thorough: infer implicit requirements, list every detail, and never omit possible client needs. Output must be valid JSON (no comments, no extra text, only the JSON object).
+
+IMPORTANT STRUCTURE REQUIREMENTS:
+- The proposal object MUST use exactly and only the following field names (in snake_case, in English):
+  - main_work_phases_and_tasks (array of objects, each with "phase" and "tasks" fields)
+  - timeline_and_scheduling_details (array of strings or a string)
+  - estimated_costs_per_phase_and_total (array of objects, each with "phase" and "cost" fields)
+  - relevant_implementation_notes_or_recommendations (array or string)
+  - assumptions_made (array or string)
+  - total_net_amount, vat_amount, total_gross_amount, final_deadline, customer_name, project_type, scope, property_type, location, area_sqm, rooms_affected, requirements, client_priorities, must_haves, nice_to_haves, budget_estimate, timeline, phasing, constraints, risks_or_dependencies, missing_info, summary_comment
+- DO NOT use any other field names, capitalizations, formats, or languages (e.g. "Main work phases and tasks", magyar mezőnév, stb. are NOT allowed).
+- If the input uses a different format, field name, or language, you MUST convert it to the required field name and structure.
+- If a value is missing, use "not specified" or an empty array, but include all required fields.
+
+You MUST ALWAYS include the relevant_implementation_notes_or_recommendations field in the proposal object, even if it is only "not specified" or an empty array/string. Never omit this field.
+- The JSON example is for structure only—NEVER copy its values, only use what is present or can be inferred from the input.
 
 - Fill in as many fields as possible from the input. If a field is not specified, mark as 'not specified' or leave empty, but always include all fields.
 - Be extremely thorough: infer implicit requirements, list every detail, and never omit possible client needs.

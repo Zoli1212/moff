@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 
 const fileSchema = z.object({
   filename: z.string(),
@@ -39,64 +40,63 @@ export default function EmailSender() {
     });
 
     if (response.ok) {
-      console.log("ok");
+      toast.success("Email sikeresen elküldve!");
     } else {
-      console.log("not ok");
+      toast.error("Hiba történt az email küldésekor!");
     }
   }
   return (
     <>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Ügyfél email</FormLabel>
-                <FormControl>
-                  <Input placeholder="email" {...field} />
-                </FormControl>
-                <FormDescription>
-                  Ügyfél email cím
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="attachments"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Attachments</FormLabel>
-                <FormControl>
-                  <Input
-                    type="file"
-                    multiple
-                    onChange={(e) => {
-                      const files = e.target.files;
-                      if (files) {
-                        Promise.all(
-                          Array.from(files).map(async (file) => ({
-                            filename: file.name,
-                            content: Buffer.from(await file.arrayBuffer()).toString('base64'),
-                          }))
-                        ).then((filesArray) => {
-                          field.onChange(filesArray);
-                        });
-                      }
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button type="submit">Elküld</Button>
-        </form>
-      </Form>
+  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+    <div className="flex flex-row gap-2 items-end">
+      <FormField
+        control={form.control}
+        name="email"
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormLabel>Ügyfél email cím</FormLabel>
+            <FormControl>
+              <Input placeholder="email" {...field} />
+            </FormControl>
+        
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <FormField
+        control={form.control}
+        name="attachments"
+        render={({ field }) => (
+          <FormItem className="flex-1">
+            <FormLabel>Csatolmány</FormLabel>
+            <FormControl>
+              <Input
+                type="file"
+                multiple
+                onChange={(e) => {
+                  const files = e.target.files;
+                  if (files) {
+                    Promise.all(
+                      Array.from(files).map(async (file) => ({
+                        filename: file.name,
+                        content: Buffer.from(await file.arrayBuffer()).toString('base64'),
+                      }))
+                    ).then((filesArray) => {
+                      field.onChange(filesArray);
+                    });
+                  }
+                }}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+      <Button type="submit" className="h-10">Elküld</Button>
+    </div>
+  </form>
+</Form>
 
     </>
   );
