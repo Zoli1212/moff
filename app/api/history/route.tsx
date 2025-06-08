@@ -12,10 +12,10 @@ export async function POST(req: any) {
             data: {
                 recordId: recordId,
                 content: content,
-                userEmail: user?.primaryEmailAddress?.emailAddress || null,
+                userEmail: user?.emailAddresses?.[0]?.emailAddress || null,
                 createdAt: new Date().toISOString(),
                 aiAgentType: aiAgentType,
-                tenantEmail: user?.primaryEmailAddress?.emailAddress || ''
+                tenantEmail: user?.emailAddresses?.[0]?.emailAddress || ''
             }
         });
         return NextResponse.json(result);
