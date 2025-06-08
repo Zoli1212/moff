@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sparkle } from "lucide-react";
 import React, { useRef, useState } from "react";
 import { usePDF } from "react-to-pdf";
+import Link from "next/link";
 
 function filterRelevant(arr?: string[]) {
   if (!arr) return [];
@@ -239,9 +240,19 @@ function Report({ aiReport }: any) {
         </p>
       </div>
 
-      <Button type="button" className="mb-4" onClick={() => toPDF()}>
-        Ajánlat PDF letöltése
-      </Button>
+      {aiReport?.proposal && (
+        <div className="mb-4 flex justify-end">
+          <Link
+            href={{
+              pathname: "/proposal-preview",
+              query: { proposal: JSON.stringify(aiReport.proposal) },
+            }}
+            passHref
+          >
+            <Button variant="secondary">Ajánlat előnézet & PDF letöltés</Button>
+          </Link>
+        </div>
+      )}
 
       {aiReport?.proposal && (
         <div
