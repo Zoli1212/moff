@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { usePDF, Resolution } from "react-to-pdf";
 import { Button } from "@/components/ui/button";
 import ProposalPreview from "./ProposalPreview";
+import EmailSender from "@/components/email-sender/EmailSender";
 
 export default function ProposalPreviewPage() {
   const searchParams = useSearchParams();
@@ -37,10 +38,13 @@ export default function ProposalPreviewPage() {
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center py-8">
       <div className="w-full max-w-6xl">
-        <div className="flex flex-row items-center ml-2 mb-8 gap-4">
-          <Button variant="outline" onClick={() => router.back()}>Vissza</Button>
-          <Button onClick={() => toPDF()}>PDF letöltése</Button>
-        </div>
+        <div className="flex flex-row items-center justify-between ml-2 mb-8 gap-4">
+  <div className="flex flex-row gap-4">
+    <Button variant="outline" onClick={() => router.back()}>Vissza</Button>
+    <Button onClick={() => toPDF()}>PDF letöltése</Button>
+  </div>
+  <EmailSender />
+</div>
         <div ref={targetRef} className="w-full bg-white p-8 shadow mb-8">
           <ProposalPreview proposal={proposal} />
         </div>
