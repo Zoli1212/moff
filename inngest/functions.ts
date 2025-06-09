@@ -92,6 +92,7 @@ Return the proposal as an additional top-level key in the JSON output, named "pr
 - total_gross_amount
 - final_deadline
 - customer_name
+- customer_email
 - project_type
 - scope
 - property_type
@@ -104,7 +105,6 @@ Return the proposal as an additional top-level key in the JSON output, named "pr
 - nice_to_haves
 - budget_estimate
 - timeline
-- phasing
 - constraints
 - risks_or_dependencies
 - missing_info
@@ -130,6 +130,7 @@ Example structure (for field names and JSON shape ONLY):
   "total_gross_amount": "2,159,000 HUF",
   "final_deadline": "2025-08-31",
   "customer_name": "Kovács János",
+  "customer_email": "kovacs.janos@gmail.com",
   "project_type": "bathroom remodel",
   "scope": "full",
   "property_type": "apartment",
@@ -142,7 +143,6 @@ Example structure (for field names and JSON shape ONLY):
   "nice_to_haves": ["smart mirror"],
   "budget_estimate": "2M HUF",
   "timeline": "June-August 2025",
-  "phasing": "all at once",
   "constraints": ["limited access for trucks"],
   "risks_or_dependencies": ["permit approval"],
   "missing_info": ["exact tile brand"],
@@ -160,12 +160,12 @@ IMPORTANT STRUCTURE REQUIREMENTS:
   - estimated_costs_per_phase_and_total (array of objects, each with "phase" and "cost" fields)
   - relevant_implementation_notes_or_recommendations (array or string)
   - assumptions_made (array or string)
-  - total_net_amount, vat_amount, total_gross_amount, final_deadline, customer_name, project_type, scope, property_type, location, area_sqm, rooms_affected, requirements, client_priorities, must_haves, nice_to_haves, budget_estimate, timeline, phasing, constraints, risks_or_dependencies, missing_info, summary_comment
+  - total_net_amount, vat_amount, total_gross_amount, final_deadline, customer_name, customer_email, project_type, scope, property_type, location, area_sqm, rooms_affected, requirements, client_priorities, must_haves, nice_to_haves, budget_estimate, timeline, phasing, constraints, risks_or_dependencies, missing_info, summary_comment
 - DO NOT use any other field names, capitalizations, formats, or languages (e.g. "Main work phases and tasks", magyar mezőnév, stb. are NOT allowed).
 - If the input uses a different format, field name, or language, you MUST convert it to the required field name and structure.
 - If a value is missing, use "not specified" or an empty array, but include all required fields.
 
-You MUST ALWAYS include the relevant_implementation_notes_or_recommendations field in the proposal object, even if it is only "not specified" or an empty array/string. Never omit this field.
+You MUST ALWAYS include the total_net_amount, vat_amount, total_gross_amount, final_deadline, relevant_implementation_notes_or_recommendations field in the proposal object, even if it is only "not specified" or an empty array/string. Never omit this field. Always try to add!
 - The JSON example is for structure only—NEVER copy its values, only use what is present or can be inferred from the input.
 
 - Fill in as many fields as possible from the input. If a field is not specified, mark as 'not specified' or leave empty, but always include all fields.

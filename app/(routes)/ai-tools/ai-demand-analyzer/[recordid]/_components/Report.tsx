@@ -69,154 +69,137 @@ function Report({ aiReport }: any) {
       </div>
 
       {/* Project Main Info */}
-      <div className="bg-gradient-to-r from-[#BE575F] via-[#A338E3] to-[#AC76D6] rounded-lg shadow-md p-6 mb-6 border border-blue-200">
-        <h3 className="text-xl font-bold text-white mb-2 flex items-center">
-          <i className="fas fa-home text-yellow-400 mr-2"></i> Projekt fő adatai
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
-          <div>
-            <b>Projekt típusa:</b> {filterValue(aiReport?.project_type)}
-          </div>
-          <div>
-            <b>Felújítás jellege:</b> {filterValue(aiReport?.scope)}
-          </div>
-          <div>
-            <b>Ingatlan típusa:</b> {filterValue(aiReport?.property_type)}
-          </div>
-          <div>
-            <b>Helyszín:</b> {filterValue(aiReport?.location)}
-          </div>
-          <div>
-            <b>Megrendelő:</b> {filterValue(aiReport?.proposal.customer_name)}
-          </div>
-          <div>
-            <b>Alapterület (m²):</b> {filterValue(aiReport?.area_sqm)}
-          </div>
-          <div>
-            <b>Érintett helyiségek:</b>{" "}
-            {aiReport?.rooms_affected &&
-            filterRelevant(aiReport.rooms_affected).length > 0
-              ? filterRelevant(aiReport.rooms_affected).join(", ")
-              : "-"}
-          </div>
-          <div>
-            <b>Költségkeret:</b> {filterValue(aiReport?.budget_estimate)}
-          </div>
-          <div>
-            <b>Ütemezés:</b> {filterValue(aiReport?.timeline)}
-          </div>
-          <div>
-            <b>Fázisok:</b> {filterValue(aiReport?.phasing)}
-          </div>
-        </div>
-      </div>
-
+      <div className="bg-gradient-to-r from-[#6b166b] via-[#7c1e7c] to-[#8d269d] rounded-lg shadow-md p-6 mb-6 border border-purple-900">
+  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+    <i className="fas fa-home text-yellow-400 mr-2"></i> Projekt fő adatai
+  </h3>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
+    <div>
+      <span className="font-semibold">Projekt típusa:</span> {filterValue(aiReport?.project_type)}
+    </div>
+    <div>
+      <span className="font-semibold">Felújítás jellege:</span> {filterValue(aiReport?.scope)}
+    </div>
+    <div>
+      <span className="font-semibold">Ingatlan típusa:</span> {filterValue(aiReport?.property_type)}
+    </div>
+    <div>
+      <span className="font-semibold">Ingatlan mérete:</span> {filterValue(aiReport?.property_size)}
+    </div>
+    <div>
+      <span className="font-semibold">Cím:</span> {filterValue(aiReport?.address)}
+    </div>
+    <div>
+      <span className="font-semibold">Költségkeret:</span> {filterValue(aiReport?.budget_estimate)}
+    </div>
+    <div>
+      <span className="font-semibold">Ütemezés:</span> {filterValue(aiReport?.timeline)}
+    </div>
+    <div>
+      <span className="font-semibold">Fázisok:</span> {filterValue(aiReport?.phasing)}
+    </div>
+  </div>
+</div>
       {/* Requirements & Priorities */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-lg shadow-md p-5 border border-blue-200">
-          <h4 className="text-lg font-semibold text-gray-700 mb-2">
-            <i className="fas fa-list-alt text-blue-400 mr-2"></i> Követelmények
-          </h4>
-          <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-            {requirements.length > 0 ? (
-              requirements.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))
-            ) : (
-              <li>-</li>
-            )}
-          </ul>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-5 border border-green-200">
-          <h4 className="text-lg font-semibold text-gray-700 mb-2">
-            <i className="fas fa-star text-green-400 mr-2"></i> Ügyfél
-            prioritások
-          </h4>
-          <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-            {clientPriorities.length > 0 ? (
-              clientPriorities.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))
-            ) : (
-              <li>-</li>
-            )}
-          </ul>
-        </div>
-      </div>
-
+   {/* Requirements & Priorities */}
+<div className="flex flex-wrap gap-6 mb-6">
+  <div className="bg-white rounded-lg shadow-md p-5 border border-blue-200 min-w-[280px] max-w-full flex-1">
+    <h4 className="text-lg font-semibold text-gray-700 mb-2">
+      <i className="fas fa-list-alt text-blue-400 mr-2"></i> Követelmények
+    </h4>
+    <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+      {requirements.length > 0 ? (
+        requirements.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))
+      ) : (
+        <li>-</li>
+      )}
+    </ul>
+  </div>
+  <div className="bg-white rounded-lg shadow-md p-5 border border-green-200 min-w-[280px] max-w-full flex-1">
+    <h4 className="text-lg font-semibold text-gray-700 mb-2">
+      <i className="fas fa-star text-green-400 mr-2"></i> Ügyfél prioritások
+    </h4>
+    <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+      {clientPriorities.length > 0 ? (
+        clientPriorities.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))
+      ) : (
+        <li>-</li>
+      )}
+    </ul>
+  </div>
+</div>
       {/* Must/Nice to Have */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {mustHaves.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-5 border border-yellow-200">
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-              <i className="fas fa-check-circle text-yellow-400 mr-2"></i>{" "}
-              Kötelező elemek
-            </h4>
-            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {mustHaves.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {niceToHaves.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-5 border border-orange-200">
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-              <i className="fas fa-thumbs-up text-orange-400 mr-2"></i>{" "}
-              Jó, ha van
-            </h4>
-            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {niceToHaves.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+{/* Must/Nice to Have */}
+<div className="flex flex-wrap gap-6 mb-6">
+  {mustHaves.length > 0 && (
+    <div className="bg-white rounded-lg shadow-md p-5 border border-yellow-200 min-w-[280px] max-w-full flex-1">
+      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+        <i className="fas fa-check-circle text-yellow-400 mr-2"></i> Kötelező elemek
+      </h4>
+      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+        {mustHaves.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+  {niceToHaves.length > 0 && (
+    <div className="bg-white rounded-lg shadow-md p-5 border border-orange-200 min-w-[280px] max-w-full flex-1">
+      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+        <i className="fas fa-thumbs-up text-orange-400 mr-2"></i> Jó, ha van
+      </h4>
+      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+        {niceToHaves.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
 
       {/* Constraints, Risks, Missing Info */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {constraints.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-5 border border-red-200">
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-              <i className="fas fa-exclamation-triangle text-red-400 mr-2"></i>{" "}
-              Korlátozások
-            </h4>
-            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {constraints.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {risksOrDependencies.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-5 border border-pink-200">
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-              <i className="fas fa-bolt text-pink-400 mr-2"></i>{" "}
-              Kockázatok, függőségek
-            </h4>
-            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {risksOrDependencies.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {missingInfo.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-5 border border-gray-200">
-            <h4 className="text-lg font-semibold text-gray-700 mb-2">
-              <i className="fas fa-question-circle text-gray-400 mr-2"></i>{" "}
-              Hiányzó információk
-            </h4>
-            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {missingInfo.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-
+<div className="flex flex-wrap gap-6 mb-6">
+  {constraints.length > 0 && (
+    <div className="bg-white rounded-lg shadow-md p-5 border border-red-200 min-w-[280px] max-w-full flex-1">
+      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+        <i className="fas fa-exclamation-triangle text-red-400 mr-2"></i> Korlátozások
+      </h4>
+      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+        {constraints.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+  {risksOrDependencies.length > 0 && (
+    <div className="bg-white rounded-lg shadow-md p-5 border border-pink-200 min-w-[280px] max-w-full flex-1">
+      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+        <i className="fas fa-bolt text-pink-400 mr-2"></i> Kockázatok, függőségek
+      </h4>
+      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+        {risksOrDependencies.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+  {missingInfo.length > 0 && (
+    <div className="bg-white rounded-lg shadow-md p-5 border border-gray-200 min-w-[280px] max-w-full flex-1">
+      <h4 className="text-lg font-semibold text-gray-700 mb-2">
+        <i className="fas fa-question-circle text-gray-400 mr-2"></i> Hiányzó információk
+      </h4>
+      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+        {missingInfo.map((item: string, i: number) => (
+          <li key={i}>{item}</li>
+        ))}
+      </ul>
+    </div>
+  )}
+</div>
       {/* Summary */}
       <div className="bg-blue-50 rounded-lg shadow-md p-5 border-l-8 border-blue-400 mb-6">
         <h4 className="text-lg font-bold text-black mb-1 flex items-center">
