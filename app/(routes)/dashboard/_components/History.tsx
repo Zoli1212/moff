@@ -29,8 +29,8 @@ function History() {
 
     return (
         <div className='mt-5 p-5 border rounded-xl'>
-            <h2 className='font-bold text-lg'>Previous History</h2>
-            <p>What Your previously work on, You can find here</p>
+            <h2 className='font-bold text-lg'>Előzmények</h2>
+            <p>Előző munkáidat itt találod</p>
 
             {loading &&
                 <div>
