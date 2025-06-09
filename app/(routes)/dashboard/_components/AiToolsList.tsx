@@ -5,7 +5,7 @@ import AiToolCard from './AiToolCard';
 export const aiToolsList = [
     {
         name: 'Ajánlat Chat',
-        desc: 'Tegyél fel kérdéseket az ajánlatról',
+        desc: 'Kérdéseket az ajánlatról',
         icon: '/chatbot.png',
         button: 'Kérdezz most',
         path: '/ai-tools/ai-chat'
