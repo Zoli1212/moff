@@ -44,3 +44,20 @@ export async function getAllEmails() {
   });
 }
 
+// Google OAuth credentials lekérése tenantEmail alapján
+export async function getGoogleCredentials(tenantEmail: string) {
+  const credential = await prisma.googleOAuthCredential.findFirst({
+    where: { tenantEmail }
+  });
+  if (!credential) throw new Error("No credentials found");
+  return {
+    client_id: credential.client_id,
+    project_id: credential.project_id,
+    auth_uri: credential.auth_uri,
+    token_uri: credential.token_uri,
+    auth_provider_x509_cert_url: credential.auth_provider_x509_cert_url,
+    client_secret: credential.client_secret,
+    redirect_uris: credential.redirect_uris,
+  };
+}
+

@@ -69,7 +69,10 @@ model Client {
 
 model MyWork {
   id           Int      @id @default(autoincrement())
+  title String
   customerName String
+  customerPhone String?
+  customerEmail String?
   date         DateTime
   location     String
   time         String
@@ -99,4 +102,30 @@ model MyInvoices {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   tenantEmail     String
+}
+
+model myPrompt {
+  id Int @id @default(autoincrement())
+  prompt String
+  description String?
+  tenantEmail String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+}
+
+
+
+model GoogleOAuthCredential {
+  id                          Int     @id @default(autoincrement())
+  client_id                   String
+  project_id                  String
+  auth_uri                    String
+  token_uri                   String
+  auth_provider_x509_cert_url String
+  client_secret               String
+  redirect_uris               Json
+  tenantEmail                 String
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 }

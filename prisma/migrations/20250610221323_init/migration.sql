@@ -1,4 +1,20 @@
 -- CreateTable
+CREATE TABLE "Email" (
+    "id" SERIAL NOT NULL,
+    "gmailId" TEXT NOT NULL,
+    "from" TEXT NOT NULL,
+    "subject" TEXT NOT NULL,
+    "content" TEXT NOT NULL,
+    "hasAttachment" BOOLEAN NOT NULL DEFAULT false,
+    "attachmentFilenames" TEXT[],
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Email_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "PriceItem" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
@@ -52,7 +68,10 @@ CREATE TABLE "Client" (
 -- CreateTable
 CREATE TABLE "MyWork" (
     "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
     "customerName" TEXT NOT NULL,
+    "customerPhone" TEXT,
+    "customerEmail" TEXT,
     "date" TIMESTAMP(3) NOT NULL,
     "location" TEXT NOT NULL,
     "time" TEXT NOT NULL,
@@ -88,6 +107,38 @@ CREATE TABLE "MyInvoices" (
 
     CONSTRAINT "MyInvoices_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateTable
+CREATE TABLE "myPrompt" (
+    "id" SERIAL NOT NULL,
+    "prompt" TEXT NOT NULL,
+    "description" TEXT,
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "myPrompt_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "GoogleOAuthCredential" (
+    "id" SERIAL NOT NULL,
+    "client_id" TEXT NOT NULL,
+    "project_id" TEXT NOT NULL,
+    "auth_uri" TEXT NOT NULL,
+    "token_uri" TEXT NOT NULL,
+    "auth_provider_x509_cert_url" TEXT NOT NULL,
+    "client_secret" TEXT NOT NULL,
+    "redirect_uris" JSONB NOT NULL,
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "GoogleOAuthCredential_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Email_gmailId_key" ON "Email"("gmailId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");

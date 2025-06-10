@@ -1,0 +1,99 @@
+class Ajandek:
+    def __init__(self, nev, suly, min_eletkor, tipus):
+        self.nev = nev
+        self.suly = suly
+        self.min_eletkor = min_eletkor
+        self.tipus = tipus
+
+    def __str__(self):
+        return f"{self.nev} ({self.tipus}, {self.suly}kg, {self.min_eletkor}+ év)"
+
+
+class Gyerek:
+    def __init__(self, nev, eletkor, viselkedes):
+        self.nev = nev
+        self.eletkor = eletkor
+        self.viselkedes = viselkedes.lower()
+
+    def megerdemli(self):
+        return self.viselkedes == "jó"
+
+
+class Puttony:
+    def __init__(self, max_kapacitas):
+        self.max_kapacitas = max_kapacitas
+        self.ajandekok = []
+
+    def osszsuly(self):
+        return sum(aj.suly for aj in self.ajandekok)
+
+    def add_ajandek(self, ajandek):
+        if self.osszsuly() + ajandek.suly <= self.max_kapacitas:
+            self.ajandekok.append(ajandek)
+        else:
+            raise ValueError(
+                f"A(z) {ajandek.nev} nem fér el a puttonyban! (túl súlyos)"
+            )
+
+    def listazas(self):
+        for aj in self.ajandekok:
+            print(aj)
+
+    def kiveheto_ajandek(self, eletkor):
+        for aj in self.ajandekok:
+            if aj.min_eletkor <= eletkor:
+                return aj
+        return None
+
+    def eltavolit_ajandek(self, ajandek):
+        if ajandek in self.ajandekok:
+            self.ajandekok.remove(ajandek)
+
+
+class Mikulas:
+    def __init__(self, nev, puttony):
+        self.nev = nev
+        self.puttony = puttony
+
+    def ajandekoz(self, gyerek):
+        if not gyerek.megerdemli():
+            return f"{gyerek.nev} virgácsot kapott!"
+
+        ajandek = self.puttony.kiveheto_ajandek(gyerek.eletkor)
+        if ajandek:
+            self.puttony.eltavolit_ajandek(ajandek)
+            return f"{gyerek.nev} kapott egy ajándékot: {ajandek.nev} ({ajandek.tipus})"
+        else:
+            return f"{gyerek.nev} jó volt, de nincs megfelelő ajándék!"
+
+
+def main():
+    puttony = Puttony(max_kapacitas=10)
+
+    try:
+        puttony.add_ajandek(Ajandek("Plüssmackó", 2, 3, "játék"))
+        puttony.add_ajandek(Ajandek("Csoki", 1, 2, "édesség"))
+        puttony.add_ajandek(Ajandek("Ifjúsági regény", 3, 10, "könyv"))
+    except ValueError as e:
+        print(e)
+
+    print("Puttony tartalma:")
+    puttony.listazas()
+    print()
+
+    gyerekek = [
+        Gyerek("Anna", 4, "jó"),
+        Gyerek("Béla", 9, "rossz"),
+        Gyerek("Csenge", 11, "jó"),
+        Gyerek("Dani", 2, "jó"),
+    ]
+
+    mikulas = Mikulas("Mikulás Bácsi", puttony)
+
+    print("Ajándékozás eredménye:")
+    for gyerek in gyerekek:
+        print(mikulas.ajandekoz(gyerek))
+
+
+if __name__ == "__main__":
+    main()
