@@ -30,11 +30,15 @@ function Report({ aiReport }: any) {
 
   // Előfeldolgozott, szűrt adatok (proposal alá helyezve)
   const requirements = filterRelevant(aiReport?.proposal?.requirements);
-  const clientPriorities = filterRelevant(aiReport?.proposal?.client_priorities);
+  const clientPriorities = filterRelevant(
+    aiReport?.proposal?.client_priorities
+  );
   const mustHaves = filterRelevant(aiReport?.proposal?.must_haves);
   const niceToHaves = filterRelevant(aiReport?.proposal?.nice_to_haves);
   const constraints = filterRelevant(aiReport?.proposal?.constraints);
-  const risksOrDependencies = filterRelevant(aiReport?.proposal?.risks_or_dependencies);
+  const risksOrDependencies = filterRelevant(
+    aiReport?.proposal?.risks_or_dependencies
+  );
   const missingInfo = filterRelevant(aiReport?.proposal?.missing_info);
   const { toPDF, targetRef } = usePDF({
     filename: "ajanlat.pdf",
@@ -70,137 +74,150 @@ function Report({ aiReport }: any) {
 
       {/* Project Main Info */}
       <div className="bg-gradient-to-r from-[#6b166b] via-[#7c1e7c] to-[#8d269d] rounded-lg shadow-md p-6 mb-6 border border-purple-900">
-  <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-    <i className="fas fa-home text-yellow-400 mr-2"></i> Projekt fő adatai
-  </h3>
-  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
-    <div>
-      <span className="font-semibold">Projekt típusa:</span> {filterValue(aiReport?.project_type)}
-    </div>
-    <div>
-      <span className="font-semibold">Felújítás jellege:</span> {filterValue(aiReport?.scope)}
-    </div>
-    <div>
-      <span className="font-semibold">Ingatlan típusa:</span> {filterValue(aiReport?.property_type)}
-    </div>
-    <div>
-    <span className="font-semibold">Ingatlan mérete: </span>
-    {aiReport?.area_sqm ? `${filterValue(aiReport.area_sqm)} m2` : ''}
-    </div>
-    <div>
-      <span className="font-semibold">Cím:</span> {filterValue(aiReport?.address)}
-    </div>
-    <div>
-      <span className="font-semibold">Költségkeret:</span> {filterValue(aiReport?.budget_estimate)}
-    </div>
-    <div>
-      <span className="font-semibold">Ütemezés:</span> {filterValue(aiReport?.timeline)}
-    </div>
-    <div>
-      <span className="font-semibold">Fázisok:</span> {filterValue(aiReport?.phasing)}
-    </div>
-  </div>
-</div>
+        <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+          <i className="fas fa-home text-yellow-400 mr-2"></i> Projekt fő adatai
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
+          <div>
+            <span className="font-semibold">Projekt típusa:</span>{" "}
+            {filterValue(aiReport?.project_type)}
+          </div>
+          <div>
+            <span className="font-semibold">Felújítás jellege:</span>{" "}
+            {filterValue(aiReport?.scope)}
+          </div>
+          <div>
+            <span className="font-semibold">Ingatlan típusa:</span>{" "}
+            {filterValue(aiReport?.property_type)}
+          </div>
+          <div>
+            <span className="font-semibold">Ingatlan mérete: </span>
+            {aiReport?.area_sqm ? `${filterValue(aiReport.area_sqm)} m2` : ""}
+          </div>
+          <div>
+            <span className="font-semibold">Cím:</span>{" "}
+            {filterValue(aiReport?.address)}
+          </div>
+          <div>
+            <span className="font-semibold">Költségkeret:</span>{" "}
+            {filterValue(aiReport?.budget_estimate)}
+          </div>
+          <div>
+            <span className="font-semibold">Ütemezés:</span>{" "}
+            {filterValue(aiReport?.timeline)}
+          </div>
+          <div>
+            <span className="font-semibold">Fázisok:</span>{" "}
+            {filterValue(aiReport?.phasing)}
+          </div>
+        </div>
+      </div>
       {/* Requirements & Priorities */}
-   {/* Requirements & Priorities */}
-<div className="flex flex-wrap gap-6 mb-6">
-  <div className="bg-white rounded-lg shadow-md p-5 border border-blue-200 min-w-[280px] max-w-full flex-1">
-    <h4 className="text-lg font-semibold text-gray-700 mb-2">
-      <i className="fas fa-list-alt text-blue-400 mr-2"></i> Követelmények
-    </h4>
-    <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-      {requirements.length > 0 ? (
-        requirements.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))
-      ) : (
-        <li>-</li>
-      )}
-    </ul>
-  </div>
-  <div className="bg-white rounded-lg shadow-md p-5 border border-green-200 min-w-[280px] max-w-full flex-1">
-    <h4 className="text-lg font-semibold text-gray-700 mb-2">
-      <i className="fas fa-star text-green-400 mr-2"></i> Ügyfél prioritások
-    </h4>
-    <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-      {clientPriorities.length > 0 ? (
-        clientPriorities.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))
-      ) : (
-        <li>-</li>
-      )}
-    </ul>
-  </div>
-</div>
+      {/* Requirements & Priorities */}
+      <div className="flex flex-wrap gap-6 mb-6">
+        <div className="bg-white rounded-lg shadow-md p-5 border border-blue-200 min-w-[280px] max-w-full flex-1">
+          <h4 className="text-lg font-semibold text-gray-700 mb-2">
+            <i className="fas fa-list-alt text-blue-400 mr-2"></i> Követelmények
+          </h4>
+          <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+            {requirements.length > 0 ? (
+              requirements.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))
+            ) : (
+              <li>-</li>
+            )}
+          </ul>
+        </div>
+        <div className="bg-white rounded-lg shadow-md p-5 border border-green-200 min-w-[280px] max-w-full flex-1">
+          <h4 className="text-lg font-semibold text-gray-700 mb-2">
+            <i className="fas fa-star text-green-400 mr-2"></i> Ügyfél
+            prioritások
+          </h4>
+          <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+            {clientPriorities.length > 0 ? (
+              clientPriorities.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))
+            ) : (
+              <li>-</li>
+            )}
+          </ul>
+        </div>
+      </div>
       {/* Must/Nice to Have */}
-{/* Must/Nice to Have */}
-<div className="flex flex-wrap gap-6 mb-6">
-  {mustHaves.length > 0 && (
-    <div className="bg-white rounded-lg shadow-md p-5 border border-yellow-200 min-w-[280px] max-w-full flex-1">
-      <h4 className="text-lg font-semibold text-gray-700 mb-2">
-        <i className="fas fa-check-circle text-yellow-400 mr-2"></i> Kötelező elemek
-      </h4>
-      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-        {mustHaves.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-    </div>
-  )}
-  {niceToHaves.length > 0 && (
-    <div className="bg-white rounded-lg shadow-md p-5 border border-orange-200 min-w-[280px] max-w-full flex-1">
-      <h4 className="text-lg font-semibold text-gray-700 mb-2">
-        <i className="fas fa-thumbs-up text-orange-400 mr-2"></i> Jó, ha van
-      </h4>
-      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-        {niceToHaves.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-    </div>
-  )}
-</div>
+      {/* Must/Nice to Have */}
+      <div className="flex flex-wrap gap-6 mb-6">
+        {mustHaves.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-5 border border-yellow-200 min-w-[280px] max-w-full flex-1">
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              <i className="fas fa-check-circle text-yellow-400 mr-2"></i>{" "}
+              Kötelező elemek
+            </h4>
+            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+              {mustHaves.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {niceToHaves.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-5 border border-orange-200 min-w-[280px] max-w-full flex-1">
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              <i className="fas fa-thumbs-up text-orange-400 mr-2"></i> Jó, ha
+              van
+            </h4>
+            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+              {niceToHaves.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
 
       {/* Constraints, Risks, Missing Info */}
-<div className="flex flex-wrap gap-6 mb-6">
-  {constraints.length > 0 && (
-    <div className="bg-white rounded-lg shadow-md p-5 border border-red-200 min-w-[280px] max-w-full flex-1">
-      <h4 className="text-lg font-semibold text-gray-700 mb-2">
-        <i className="fas fa-exclamation-triangle text-red-400 mr-2"></i> Korlátozások
-      </h4>
-      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-        {constraints.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-    </div>
-  )}
-  {risksOrDependencies.length > 0 && (
-    <div className="bg-white rounded-lg shadow-md p-5 border border-pink-200 min-w-[280px] max-w-full flex-1">
-      <h4 className="text-lg font-semibold text-gray-700 mb-2">
-        <i className="fas fa-bolt text-pink-400 mr-2"></i> Kockázatok, függőségek
-      </h4>
-      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-        {risksOrDependencies.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-    </div>
-  )}
-  {missingInfo.length > 0 && (
-    <div className="bg-white rounded-lg shadow-md p-5 border border-gray-200 min-w-[280px] max-w-full flex-1">
-      <h4 className="text-lg font-semibold text-gray-700 mb-2">
-        <i className="fas fa-question-circle text-gray-400 mr-2"></i> Hiányzó információk
-      </h4>
-      <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-        {missingInfo.map((item: string, i: number) => (
-          <li key={i}>{item}</li>
-        ))}
-      </ul>
-    </div>
-  )}
-</div>
+      <div className="flex flex-wrap gap-6 mb-6">
+        {constraints.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-5 border border-red-200 min-w-[280px] max-w-full flex-1">
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              <i className="fas fa-exclamation-triangle text-red-400 mr-2"></i>{" "}
+              Korlátozások
+            </h4>
+            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+              {constraints.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {risksOrDependencies.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-5 border border-pink-200 min-w-[280px] max-w-full flex-1">
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              <i className="fas fa-bolt text-pink-400 mr-2"></i> Kockázatok,
+              függőségek
+            </h4>
+            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+              {risksOrDependencies.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {missingInfo.length > 0 && (
+          <div className="bg-white rounded-lg shadow-md p-5 border border-gray-200 min-w-[280px] max-w-full flex-1">
+            <h4 className="text-lg font-semibold text-gray-700 mb-2">
+              <i className="fas fa-question-circle text-gray-400 mr-2"></i>{" "}
+              Hiányzó információk
+            </h4>
+            <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
+              {missingInfo.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
       {/* Summary */}
       <div className="bg-blue-50 rounded-lg shadow-md p-5 border-l-8 border-blue-400 mb-6">
         <h4 className="text-lg font-bold text-black mb-1 flex items-center">
@@ -326,20 +343,46 @@ function Report({ aiReport }: any) {
                 <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
                   Költségek bontása
                 </h4>
-                {Array.isArray(aiReport.proposal.estimated_costs_per_phase_and_total) &&
-aiReport.proposal.estimated_costs_per_phase_and_total.length > 0 ? (
-  <ul className="list-disc list-inside text-black text-sm">
-    {aiReport.proposal.estimated_costs_per_phase_and_total.map(
-      (item: any, idx: number) => (
-        <li key={item.phase || idx}>
-          <b>{item.phase}:</b> {item.cost}
-        </li>
-      )
-    )}
-  </ul>
-) : (
-  "-"
-)}
+                {Array.isArray(
+                  aiReport.proposal.estimated_costs_per_phase_and_total
+                ) &&
+                aiReport.proposal.estimated_costs_per_phase_and_total.length >
+                  0 ? (
+                  <ul className="list-disc list-inside text-black text-sm">
+                    {aiReport.proposal.estimated_costs_per_phase_and_total.map(
+                      (item: any, idx: number) => {
+                        // Megkeressük a taskokat ehhez a fázishoz
+                        const phaseObj =
+                          aiReport.proposal.main_work_phases_and_tasks?.find(
+                            (p: any) => p.phase === item.phase
+                          );
+                        const tasks = phaseObj?.tasks;
+
+                        return (
+                          <li key={item.phase || idx} className="mb-2">
+                            <b>
+                              {item.phase === "Total" ||
+                              item.phase === "Összesen"
+                                ? "Összesen"
+                                : item.phase}
+                              :
+                            </b>{" "}
+                            {item.cost}
+                            {Array.isArray(tasks) && tasks.length > 0 && (
+                              <ul className="list-disc list-inside ml-4 text-gray-700">
+                                {tasks.map((task: string, tIdx: number) => (
+                                  <li key={tIdx}>{task}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </li>
+                        );
+                      }
+                    )}
+                  </ul>
+                ) : (
+                  "-"
+                )}
               </div>
               {/* Megjegyzések, javaslatok */}
             </div>
@@ -352,47 +395,57 @@ aiReport.proposal.estimated_costs_per_phase_and_total.length > 0 ? (
       )}
 
       {(() => {
-  const notes = aiReport?.proposal?.relevant_implementation_notes_or_recommendations;
-  if (!notes || (Array.isArray(notes) && notes.length === 0) || (typeof notes === "string" && notes.trim() === "")) return null;
-  return (
-    <div>
-      <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-        Megjegyzések, javaslatok
-      </h4>
-      {Array.isArray(notes) ? (
-        <ul className="list-disc list-inside text-black text-sm">
-          {notes.map((item: string, idx: number) => (
-            <li key={idx}>{item}</li>
-          ))}
-        </ul>
-      ) : (
-        <div className="text-black text-sm">{notes}</div>
-      )}
-    </div>
-  );
-})()}
+        const notes =
+          aiReport?.proposal?.relevant_implementation_notes_or_recommendations;
+        if (
+          !notes ||
+          (Array.isArray(notes) && notes.length === 0) ||
+          (typeof notes === "string" && notes.trim() === "")
+        )
+          return null;
+        return (
+          <div>
+            <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
+              Megjegyzések, javaslatok
+            </h4>
+            {Array.isArray(notes) ? (
+              <ul className="list-disc list-inside text-black text-sm">
+                {notes.map((item: string, idx: number) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-black text-sm">{notes}</div>
+            )}
+          </div>
+        );
+      })()}
 
-{(() => {
-  const assumptions = aiReport?.proposal?.assumptions_made;
-  if (!assumptions || (Array.isArray(assumptions) && assumptions.length === 0) || (typeof assumptions === "string" && assumptions.trim() === "")) return null;
-  return (
-    <div>
-      <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-        Feltételezések
-      </h4>
-      {Array.isArray(assumptions) ? (
-        <ul className="list-disc list-inside text-black text-sm">
-          {assumptions.map((item: string, idx: number) => (
-            <li key={idx}>{item}</li>
-          ))}
-        </ul>
-      ) : (
-        <div className="text-black text-sm">{assumptions}</div>
-      )}
-    </div>
-  );
-})()}
-
+      {(() => {
+        const assumptions = aiReport?.proposal?.assumptions_made;
+        if (
+          !assumptions ||
+          (Array.isArray(assumptions) && assumptions.length === 0) ||
+          (typeof assumptions === "string" && assumptions.trim() === "")
+        )
+          return null;
+        return (
+          <div>
+            <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
+              Feltételezések
+            </h4>
+            {Array.isArray(assumptions) ? (
+              <ul className="list-disc list-inside text-black text-sm">
+                {assumptions.map((item: string, idx: number) => (
+                  <li key={idx}>{item}</li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-black text-sm">{assumptions}</div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* JSON Riport megjelenítése */}
       <div className="mt-8">

@@ -16,10 +16,12 @@ const fileSchema = z.object({
 
 const formSchema = z.object({
   email: z.string().min(2).max(50),
-  attachments: z.array(fileSchema),
+  attachments: z.array(fileSchema).optional(),
 })
 
-export default function EmailSender({email}: {email: string}) {
+import { exportProposalToExcelAsBase64 } from "./excel-export";
+
+export default function EmailSender({email, proposal}: {email: string, proposal: any}) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -30,12 +32,20 @@ export default function EmailSender({email}: {email: string}) {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    let attachments = values.attachments;
+    // Ha nincs csatolmány, generálunk egyet a proposal alapján
+    if (!attachments || attachments.length === 0) {
+      const excelBase64 = exportProposalToExcelAsBase64(proposal);
+      attachments = [{
+        filename: "ajanlat-koltsegvetes.xlsx",
+        content: excelBase64,
+      }];
+    }
     const response = await fetch('/api/send', {
       method: 'POST',
       body: JSON.stringify({
         email: values.email,
-        attachments: values.attachments,
-
+        attachments,
       }),
     });
 

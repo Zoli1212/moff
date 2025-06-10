@@ -123,7 +123,7 @@ Example structure (for field names and JSON shape ONLY):
   "estimated_costs_per_phase_and_total": [
     { "phase": "Demolition", "cost": "500,000 HUF" },
     { "phase": "Installation", "cost": "1,200,000 HUF" },
-    { "phase": "Total", "cost": "1,700,000 HUF" }
+    { "phase": "Összesen", "cost": "1,700,000 HUF" }
   ],
   "total_net_amount": "1,700,000 HUF",
   "vat_amount": "459,000 HUF",
@@ -152,7 +152,7 @@ Example structure (for field names and JSON shape ONLY):
 IMPORTANT: The AI must ALWAYS generate the content of every field based on the actual input and project details. DO NOT hardcode or copy the example values. If a value is missing, use 'not specified' or an empty array, but never leave out a required field.
 
 Be extremely thorough: infer implicit requirements, list every detail, and never omit possible client needs. Output must be valid JSON (no comments, no extra text, only the JSON object).
-
+Warning: - total_net_amount, vat_amount, total_gross_amount, final_deadline, customer_name, customer_email are required fields and must be present in the output!
 IMPORTANT STRUCTURE REQUIREMENTS:
 - The proposal object MUST use exactly and only the following field names (in snake_case, in English):
   - main_work_phases_and_tasks (array of objects, each with "phase" and "tasks" fields)

@@ -141,7 +141,7 @@ export default function ProposalPreviewPage() {
     <Button onClick={() => toPDF()}>PDF letöltése</Button>
     <Button onClick={() => exportProposalToExcel(proposal)}>Excel letöltése</Button>
   </div>
-  <EmailSender email={proposal.customer_email}/>
+  <EmailSender email={proposal.customer_email} proposal={proposal}/>
 </div>
         <div ref={targetRef} className="w-full bg-white p-8 shadow mb-8">
           <ProposalPreview proposal={proposal} />
