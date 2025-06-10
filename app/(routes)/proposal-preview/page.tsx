@@ -43,7 +43,7 @@ export default function ProposalPreviewPage() {
     <Button variant="outline" onClick={() => router.back()}>Vissza</Button>
     <Button onClick={() => toPDF()}>PDF letöltése</Button>
   </div>
-  <EmailSender />
+  <EmailSender email={proposal.customer_email}/>
 </div>
         <div ref={targetRef} className="w-full bg-white p-8 shadow mb-8">
           <ProposalPreview proposal={proposal} />

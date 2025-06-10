@@ -19,11 +19,11 @@ const formSchema = z.object({
   attachments: z.array(fileSchema),
 })
 
-export default function EmailSender() {
+export default function EmailSender({email}: {email: string}) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
+      email: email,
       attachments: undefined,
 
     },

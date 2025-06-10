@@ -1,7 +1,7 @@
 'use server';
 import { prisma } from '@/lib/prisma';
 
-export async function addPriceItem(name: string, price: number, unit: string, quantity: number, tenantEmail: string) {
+export async function addPriceItem(name: string, price: number, unit: string, quantity = 1, tenantEmail: string) {
   const item = await prisma.priceItem.create({
     data: { name, price, unit, quantity, tenantEmail },
   });
@@ -12,7 +12,7 @@ export async function getPriceItems() {
   return await prisma.priceItem.findMany({ orderBy: { id: 'desc' } });
 }
 
-export async function updatePriceItem(id: number, name: string, price: number, unit: string, quantity: number, tenantEmail: string) {
+export async function updatePriceItem(id: number, name: string, price: number, unit: string, quantity = 1, tenantEmail: string) {
   const item = await prisma.priceItem.update({
     where: { id, tenantEmail },
     data: { name, price, unit, quantity },

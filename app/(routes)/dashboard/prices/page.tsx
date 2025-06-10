@@ -132,25 +132,19 @@ export default function PricesPage() {
         />
         <input
           type="text"
+          className="w-20 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+          placeholder="Mennyiségi Egység (pl. kg, db,nm2)"
+          value={newUnit}
+          onChange={(e) => setNewUnit(e.target.value)}
+        />
+        <input
+          type="text"
           className="w-24 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
           placeholder="Ár (Ft)"
           value={newPrice}
           onChange={(e) => setNewPrice(e.target.value)}
         />
-        <input
-          type="text"
-          className="w-20 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-          placeholder="Egység (pl. kg, db)"
-          value={newUnit}
-          onChange={(e) => setNewUnit(e.target.value)}
-        />
-        <input
-          type="number"
-          className="w-20 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-          placeholder="Mennyiség"
-          value={newQuantity}
-          onChange={(e) => setNewQuantity(e.target.value)}
-        />
+   
         <button
           className="bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-lg transition"
           onClick={handleAdd}
@@ -187,12 +181,7 @@ export default function PricesPage() {
                   value={editUnit}
                   onChange={(e) => setEditUnit(e.target.value)}
                 />
-                <input
-                  type="number"
-                  className="w-16 border rounded-lg px-2 py-1 mr-2"
-                  value={editQuantity}
-                  onChange={(e) => setEditQuantity(e.target.value)}
-                />
+              
                 <button
                   className="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-1 rounded-lg mr-1"
                   onClick={() => handleSave(item.id)}

@@ -84,7 +84,8 @@ function Report({ aiReport }: any) {
       <span className="font-semibold">Ingatlan típusa:</span> {filterValue(aiReport?.property_type)}
     </div>
     <div>
-      <span className="font-semibold">Ingatlan mérete:</span> {filterValue(aiReport?.property_size)}
+    <span className="font-semibold">Ingatlan mérete: </span>
+    {aiReport?.area_sqm ? `${filterValue(aiReport.area_sqm)} m2` : ''}
     </div>
     <div>
       <span className="font-semibold">Cím:</span> {filterValue(aiReport?.address)}
