@@ -3,9 +3,7 @@ import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { getEmail, listEmails } from "./gmail-fetch";
 import { createEmail } from "@/actions/server.action";
-import { gmail_v1 } from 'googleapis';
-
-
+import { gmail_v1 } from "googleapis";
 
 const SCOPE = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -88,13 +86,6 @@ function decodeHtmlEntity(str: string): string {
   return entities[str.toLowerCase()] || "";
 }
 
-interface GmailMessagePart {
-  mimeType?: string | null;
-  body?: { data?: string };
-  parts?: GmailMessagePart[] | null;
-}
-
-
 function extractEmailContent(email: gmail_v1.Schema$Message): string {
   function decodeBase64Gmail(encoded: string): string {
     const fixed = encoded.replace(/-/g, "+").replace(/_/g, "/");
@@ -121,7 +112,9 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
     return decoded;
   }
 
-  function extractTextContent(part?: gmail_v1.Schema$MessagePart): string | null {
+  function extractTextContent(
+    part?: gmail_v1.Schema$MessagePart
+  ): string | null {
     if (!part) return null;
 
     if (part.mimeType === "text/plain" && part.body?.data) {
