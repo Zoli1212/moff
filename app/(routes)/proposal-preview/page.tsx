@@ -1,25 +1,23 @@
 "use client";
-import { useSearchParams, useRouter } from "next/navigation";
 
+
+import { useRouter } from "next/navigation";
 import { usePDF, Resolution } from "react-to-pdf";
 import { Button } from "@/components/ui/button";
 import ProposalPreview from "./ProposalPreview";
 import EmailSender from "@/components/email-sender/EmailSender";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { useProposalStore } from "@/store/proposalStore";
+import { Proposal } from "@/types/proposal";
 
 export default function ProposalPreviewPage() {
-  const searchParams = useSearchParams();
+  const proposal = useProposalStore((state) => state.proposal);
   const router = useRouter();
 
-  let proposal = null;
-  try {
-    proposal = searchParams.get("proposal")
-      ? JSON.parse(searchParams.get("proposal")!)
-      : null;
-  } catch {
-    proposal = null;
-  }
+ 
+
+
 
   const { toPDF, targetRef } = usePDF({
     filename: "ajanlat.pdf",
@@ -39,23 +37,6 @@ export default function ProposalPreviewPage() {
     },
   });
 
-  type Proposal = {
-    project_type?: string;
-    customer_name?: string;
-    customer_email?: string;
-    location?: string;
-    area_sqm?: string;
-    timeline?: string;
-    total_gross_amount?: string;
-    total_net_amount?: string;
-    vat_amount?: string;
-    budget_estimate?: string;
-    final_deadline?: string;
-    missing_info?: string[];
-    summary_comment?: string;
-    main_work_phases_and_tasks?: { phase: string; tasks?: string[] }[];
-    estimated_costs_per_phase_and_total?: { phase: string; cost: string }[];
-  };
 
   function exportProposalToExcel(proposal: Proposal) {
     // 1. Projekt adatok a "Projekt" fülre (csak ha van érték)
@@ -191,14 +172,14 @@ const costRows: CostRow[] = [];
               Vissza
             </Button>
             <Button onClick={() => toPDF()}>PDF letöltése</Button>
-            <Button onClick={() => exportProposalToExcel(proposal)}>
+            {proposal && <Button onClick={() => exportProposalToExcel(proposal)}>
               Excel letöltése
-            </Button>
+            </Button>}
           </div>
-          <EmailSender email={proposal.customer_email} proposal={proposal} />
+          {proposal && proposal.customer_email && <EmailSender email={proposal.customer_email} proposal={proposal} />}
         </div>
         <div ref={targetRef} className="w-full bg-white p-8 shadow mb-8">
-          <ProposalPreview proposal={proposal} />
+          {proposal && <ProposalPreview proposal={proposal} />}
         </div>
         <h3 className="text-lg font-semibold mb-2">
           JSON Riport (nyers adat):

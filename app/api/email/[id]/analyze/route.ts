@@ -7,9 +7,9 @@ import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { Document } from '@langchain/core/documents';
 
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest) {
   const access_token = req.nextUrl.searchParams.get('token');
-  const messageId = params.id;
+  const messageId = req.nextUrl.searchParams.get('id');
 
   const messageRes = await fetch(
     `https://gmail.googleapis.com/gmail/v1/users/me/messages/${messageId}?format=full`,

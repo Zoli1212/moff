@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { Sparkle } from "lucide-react";
 import React from "react";
 import { usePDF } from "react-to-pdf";
-import Link from "next/link";
 import { Cost, Phase, Proposal } from "@/types/proposal";
+import { useProposalStore } from "@/store/proposalStore";
+import { useRouter } from "next/navigation";
 
 function filterRelevant(arr?: unknown): string[] {
   if (!Array.isArray(arr)) return [];
@@ -32,6 +32,9 @@ function Report({
 }: {
   aiReport: { proposal?: Proposal; [key: string]: unknown };
 }) {
+
+  const setProposal = useProposalStore((state) => state.setProposal);
+  const router = useRouter();
   // Előfeldolgozott, szűrt adatok (proposal alá helyezve)
   const requirements = filterRelevant(aiReport?.proposal?.requirements);
   const clientPriorities = filterRelevant(
@@ -71,9 +74,21 @@ function Report({
         <h2 className="text-2xl font-extrabold text-gray-800 gradient-component-text">
           Felújítási igény AI elemzés
         </h2>
-        <Button type="button" disabled>
-          Újraelemzés <Sparkle />
-        </Button>
+        {aiReport?.proposal && (
+  <div className="mb-4 flex justify-end">
+    <Button
+      variant="secondary"
+      onClick={() => {
+        if (aiReport?.proposal) {
+          setProposal(aiReport.proposal); 
+          router.push("/proposal-preview");
+        }
+      }}
+    >
+      Ajánlat előnézet & PDF letöltés
+    </Button>
+  </div>
+)}
       </div>
 
       {/* Project Main Info */}
@@ -285,18 +300,21 @@ function Report({
       </div>
 
       {aiReport?.proposal && (
-        <div className="mb-4 flex justify-end">
-          <Link
-            href={{
-              pathname: "/proposal-preview",
-              query: { proposal: JSON.stringify(aiReport.proposal) },
-            }}
-            passHref
-          >
-            <Button variant="secondary">Ajánlat előnézet & PDF letöltés</Button>
-          </Link>
-        </div>
-      )}
+  <div className="mb-4 flex justify-end">
+    <Button
+      variant="secondary"
+      onClick={() => {
+        if (aiReport?.proposal) {
+          setProposal(aiReport.proposal); // most biztosan Proposal típusú
+          router.push("/proposal-preview");
+        }
+      }}
+    >
+      Ajánlat előnézet & PDF letöltés
+    </Button>
+  </div>
+)}
+
 
       {aiReport?.proposal && (
         <div
