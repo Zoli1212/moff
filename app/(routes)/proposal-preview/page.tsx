@@ -37,9 +37,27 @@ export default function ProposalPreviewPage() {
     },
   });
 
+  type Proposal = {
+    project_type?: string;
+    customer_name?: string;
+    customer_email?: string;
+    location?: string;
+    area_sqm?: string;
+    timeline?: string;
+    total_gross_amount?: string;
+    total_net_amount?: string;
+    vat_amount?: string;
+    budget_estimate?: string;
+    final_deadline?: string;
+    missing_info?: string[];
+    summary_comment?: string;
+    main_work_phases_and_tasks?: { phase: string; tasks?: string[] }[];
+    estimated_costs_per_phase_and_total?: { phase: string; cost: string }[];
+  };
+
 
   
-  function exportProposalToExcel(proposal: any) {
+  function exportProposalToExcel(proposal: Proposal) {
     // 1. Projekt adatok a "Projekt" fülre (csak ha van érték)
     const projectRows: any[] = [];
     const addIf = (label: string, value: any) => {
@@ -80,7 +98,7 @@ export default function ProposalPreviewPage() {
   
     if (proposal?.main_work_phases_and_tasks && proposal?.estimated_costs_per_phase_and_total) {
       proposal.main_work_phases_and_tasks.forEach((phase: any) => {
-        const costObj = proposal.estimated_costs_per_phase_and_total.find(
+        const costObj = proposal.estimated_costs_per_phase_and_total?.find(
           (item: any) => item.phase === phase.phase
         );
         if (phase.phase || (phase.tasks && phase.tasks.length) || (costObj && costObj.cost)) {

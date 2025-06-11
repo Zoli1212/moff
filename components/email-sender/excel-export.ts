@@ -1,9 +1,14 @@
+import { Proposal } from "@/types/proposal";
 import * as XLSX from "xlsx";
 
-export function exportProposalToExcelAsBase64(proposal: any) {
-  // 1. Projekt adatok a "Projekt" fülre (csak ha van érték)
-  const projectRows: any[] = [];
-  const addIf = (label: string, value: any) => {
+
+
+type Row = { [key: string]: string };
+
+export function exportProposalToExcelAsBase64(proposal: Proposal): string {
+  const projectRows: Row[] = [];
+
+  const addIf = (label: string, value: string | undefined) => {
     if (value) projectRows.push({ "Mező": label, "Érték": value });
   };
 
@@ -11,15 +16,14 @@ export function exportProposalToExcelAsBase64(proposal: any) {
   addIf("Ügyfél", proposal.customer_name);
   addIf("Email", proposal.customer_email);
   addIf("Helyszín", proposal.location);
-  addIf("Alapterület (nm)", proposal.area_sqm);
+  addIf("Alapterület (nm)", proposal?.area_sqm?.toString());
   addIf("Időszak", proposal.timeline);
-  addIf("Bruttó összeg", proposal.total_gross_amount);
-  addIf("Nettó összeg", proposal.total_net_amount);
-  addIf("ÁFA", proposal.vat_amount);
-  addIf("Becsült költség", proposal.budget_estimate);
-  addIf("Határidő", proposal.final_deadline);
+  addIf("Bruttó összeg", proposal?.total_gross_amount?.toString());
+  addIf("Nettó összeg", proposal?.total_net_amount?.toString());
+  addIf("ÁFA", proposal?.vat_amount?.toString());
+  addIf("Becsült költség", proposal?.budget_estimate?.toString());
+  addIf("Határidő", proposal?.final_deadline);
 
-  // Hiányzó információk blokk, ha van
   if (proposal?.missing_info?.length) {
     projectRows.push({});
     projectRows.push({ "Mező": "Hiányzó információk", "Érték": "" });
@@ -28,47 +32,46 @@ export function exportProposalToExcelAsBase64(proposal: any) {
     });
   }
 
-  // Megjegyzés/összegzés, ha van
   if (proposal.summary_comment) {
     projectRows.push({});
     projectRows.push({ "Mező": "Megjegyzés / Összegzés", "Érték": proposal.summary_comment });
   }
 
-  // 2. Költségek a "Költségek" fülre
-  const costRows: any[] = [];
-  // Fejléc
+  const costRows: Row[] = [];
   costRows.push({ "Fázis": "Fázis", "Feladatok": "Feladatok", "Költség": "Költség" });
 
   if (proposal?.main_work_phases_and_tasks && proposal?.estimated_costs_per_phase_and_total) {
-    proposal.main_work_phases_and_tasks.forEach((phase: any) => {
-      const costObj = proposal.estimated_costs_per_phase_and_total.find(
-        (item: any) => item.phase === phase.phase
+    proposal.main_work_phases_and_tasks.forEach((phase) => {
+      const costObj = proposal.estimated_costs_per_phase_and_total!.find(
+        (item) => item.phase === phase.phase
       );
       if (phase.phase || (phase.tasks && phase.tasks.length) || (costObj && costObj.cost)) {
         costRows.push({
           "Fázis": phase.phase || "",
           "Feladatok": phase.tasks?.join(", ") ?? "",
-          "Költség": costObj?.cost || "",
+          "Költség": costObj?.cost?.toString() || "",
         });
       }
     });
-    // Összesen sor, ha van
-    const total = proposal.estimated_costs_per_phase_and_total.find((item: any) => item.phase === "Total");
+
+    const total = proposal.estimated_costs_per_phase_and_total.find(
+      (item) => item.phase === "Total"
+    );
     if (total) {
       costRows.push({
         "Fázis": "Összesen",
         "Feladatok": "",
-        "Költség": total.cost,
+        "Költség": total.cost?.toString() || "",
       });
     }
   }
 
-  // Excel generálás, két külön worksheet
   const wb = XLSX.utils.book_new();
   const wsProject = XLSX.utils.json_to_sheet(projectRows, { skipHeader: true });
   const wsCost = XLSX.utils.json_to_sheet(costRows, { skipHeader: true });
   XLSX.utils.book_append_sheet(wb, wsProject, "Projekt");
   XLSX.utils.book_append_sheet(wb, wsCost, "Költségek");
   const excelBase64 = XLSX.write(wb, { bookType: "xlsx", type: "base64" });
+
   return excelBase64;
 }

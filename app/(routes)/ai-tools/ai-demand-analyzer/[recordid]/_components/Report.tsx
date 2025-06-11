@@ -1,9 +1,9 @@
-import DemandUploadDialog from "@/app/(routes)/dashboard/_components/DemandUploadDialog";
 import { Button } from "@/components/ui/button";
 import { Sparkle } from "lucide-react";
-import React, { useRef, useState } from "react";
+import React from "react";
 import { usePDF } from "react-to-pdf";
 import Link from "next/link";
+import { Cost, Phase, Proposal } from "@/types/proposal";
 
 function filterRelevant(arr?: unknown): string[] {
   if (!Array.isArray(arr)) return [];
@@ -25,9 +25,13 @@ function filterValue(val?: string) {
     : "-";
 }
 
-function Report({ aiReport }: any) {
-  const [openDemandUpload, setOpenDemandUpload] = useState(false);
 
+
+function Report({
+  aiReport,
+}: {
+  aiReport: { proposal?: Proposal; [key: string]: unknown };
+}) {
   // Előfeldolgozott, szűrt adatok (proposal alá helyezve)
   const requirements = filterRelevant(aiReport?.proposal?.requirements);
   const clientPriorities = filterRelevant(
@@ -40,7 +44,7 @@ function Report({ aiReport }: any) {
     aiReport?.proposal?.risks_or_dependencies
   );
   const missingInfo = filterRelevant(aiReport?.proposal?.missing_info);
-  const { toPDF, targetRef } = usePDF({
+  const { targetRef } = usePDF({
     filename: "ajanlat.pdf",
     resolution: 4,
     method: "save",
@@ -67,7 +71,7 @@ function Report({ aiReport }: any) {
         <h2 className="text-2xl font-extrabold text-gray-800 gradient-component-text">
           Felújítási igény AI elemzés
         </h2>
-        <Button type="button" onClick={() => setOpenDemandUpload(true)}>
+        <Button type="button" disabled>
           Újraelemzés <Sparkle />
         </Button>
       </div>
@@ -80,35 +84,52 @@ function Report({ aiReport }: any) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
           <div>
             <span className="font-semibold">Projekt típusa:</span>{" "}
-            {filterValue(aiReport?.project_type)}
+            {typeof aiReport?.project_type === "string"
+              ? filterValue(aiReport?.project_type)
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Felújítás jellege:</span>{" "}
-            {filterValue(aiReport?.scope)}
+            {typeof aiReport?.scope === "string"
+              ? filterValue(aiReport?.scope)
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Ingatlan típusa:</span>{" "}
-            {filterValue(aiReport?.property_type)}
+            {typeof aiReport?.property_type === "string"
+              ? filterValue(aiReport?.property_type)
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Ingatlan mérete: </span>
-            {aiReport?.area_sqm ? `${filterValue(aiReport.area_sqm)} m2` : ""}
+            {typeof aiReport?.area_sqm === "string" ||
+            typeof aiReport?.area_sqm === "number"
+              ? `${filterValue(String(aiReport.area_sqm))} m2`
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Cím:</span>{" "}
-            {filterValue(aiReport?.address)}
+            {typeof aiReport?.address === "string"
+              ? filterValue(aiReport?.address)
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Költségkeret:</span>{" "}
-            {filterValue(aiReport?.budget_estimate)}
+            {typeof aiReport?.budget_estimate === "string"
+              ? filterValue(aiReport?.budget_estimate)
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Ütemezés:</span>{" "}
-            {filterValue(aiReport?.timeline)}
+            {typeof aiReport?.timeline === "string"
+              ? filterValue(aiReport?.timeline)
+              : "-"}
           </div>
           <div>
             <span className="font-semibold">Fázisok:</span>{" "}
-            {filterValue(aiReport?.phasing)}
+            {typeof aiReport?.phasing === "string"
+              ? filterValue(aiReport?.phasing)
+              : "-"}
           </div>
         </div>
       </div>
@@ -121,11 +142,13 @@ function Report({ aiReport }: any) {
           </h4>
           <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
             {requirements.length > 0 ? (
-              requirements.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))
+              <ul className="list-disc list-inside ml-4">
+                {requirements.map((item, idx) => (
+                  <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                ))}
+              </ul>
             ) : (
-              <li>-</li>
+              "-"
             )}
           </ul>
         </div>
@@ -136,16 +159,17 @@ function Report({ aiReport }: any) {
           </h4>
           <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
             {clientPriorities.length > 0 ? (
-              clientPriorities.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))
+              <ul className="list-disc list-inside ml-4">
+                {clientPriorities.map((item, idx) => (
+                  <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                ))}
+              </ul>
             ) : (
-              <li>-</li>
+              "-"
             )}
           </ul>
         </div>
       </div>
-      {/* Must/Nice to Have */}
       {/* Must/Nice to Have */}
       <div className="flex flex-wrap gap-6 mb-6">
         {mustHaves.length > 0 && (
@@ -155,9 +179,15 @@ function Report({ aiReport }: any) {
               Kötelező elemek
             </h4>
             <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {mustHaves.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
+              {mustHaves.length > 0 ? (
+                <ul className="list-disc list-inside ml-4">
+                  {mustHaves.map((item, idx) => (
+                    <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              )}
             </ul>
           </div>
         )}
@@ -168,9 +198,15 @@ function Report({ aiReport }: any) {
               van
             </h4>
             <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {niceToHaves.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
+              {niceToHaves.length > 0 ? (
+                <ul className="list-disc list-inside ml-4">
+                  {niceToHaves.map((item, idx) => (
+                    <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              )}
             </ul>
           </div>
         )}
@@ -185,9 +221,15 @@ function Report({ aiReport }: any) {
               Korlátozások
             </h4>
             <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {constraints.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
+              {constraints.length > 0 ? (
+                <ul className="list-disc list-inside ml-4">
+                  {constraints.map((item, idx) => (
+                    <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              )}
             </ul>
           </div>
         )}
@@ -198,9 +240,15 @@ function Report({ aiReport }: any) {
               függőségek
             </h4>
             <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {risksOrDependencies.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
+              {risksOrDependencies.length > 0 ? (
+                <ul className="list-disc list-inside ml-4">
+                  {risksOrDependencies.map((item, idx) => (
+                    <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              )}
             </ul>
           </div>
         )}
@@ -211,9 +259,15 @@ function Report({ aiReport }: any) {
               Hiányzó információk
             </h4>
             <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-              {missingInfo.map((item: string, i: number) => (
-                <li key={i}>{item}</li>
-              ))}
+              {missingInfo.length > 0 ? (
+                <ul className="list-disc list-inside ml-4">
+                  {missingInfo.map((item, idx) => (
+                    <li key={idx}>{typeof item === "string" ? item : "-"}</li>
+                  ))}
+                </ul>
+              ) : (
+                "-"
+              )}
             </ul>
           </div>
         )}
@@ -224,7 +278,9 @@ function Report({ aiReport }: any) {
           <i className="fas fa-info-circle mr-2"></i> Összefoglaló
         </h4>
         <p className="text-black text-base">
-          {aiReport?.proposal?.summary_comment || "-"}
+          {typeof aiReport?.proposal?.summary_comment === "string"
+            ? aiReport?.proposal?.summary_comment
+            : "-"}
         </p>
       </div>
 
@@ -249,11 +305,11 @@ function Report({ aiReport }: any) {
         >
           <h3 className="text-2xl font-extrabold mb-2 text-black text-center tracking-wide">
             Ajánlat{" "}
-            {aiReport?.proposal.customer_name
-              ? `${aiReport.proposal.customer_name} részére`
+            {typeof aiReport?.proposal?.customer_name === "string"
+              ? aiReport?.proposal.customer_name
               : ""}
           </h3>
-          {aiReport?.proposal.company_name && (
+          {typeof aiReport?.proposal?.company_name === "string" && (
             <div className="text-base font-bold text-black text-center mb-4">
               {aiReport.proposal.company_name}
             </div>
@@ -265,18 +321,30 @@ function Report({ aiReport }: any) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <b>Nettó összeg:</b>{" "}
-                  {aiReport.proposal.total_net_amount ?? "-"}
+                  {typeof aiReport.proposal.total_net_amount === "string" ||
+                  typeof aiReport.proposal.total_net_amount === "number"
+                    ? aiReport.proposal.total_net_amount
+                    : "-"}
                 </div>
                 <div>
-                  <b>ÁFA összege:</b> {aiReport.proposal.vat_amount ?? "-"}
+                  <b>ÁFA összege:</b>{" "}
+                  {typeof aiReport.proposal.vat_amount === "string" ||
+                  typeof aiReport.proposal.vat_amount === "number"
+                    ? aiReport.proposal.vat_amount
+                    : "-"}
                 </div>
                 <div>
                   <b>Bruttó összeg:</b>{" "}
-                  {aiReport.proposal.total_gross_amount ?? "-"}
+                  {typeof aiReport.proposal.total_gross_amount === "string" ||
+                  typeof aiReport.proposal.total_gross_amount === "number"
+                    ? aiReport.proposal.total_gross_amount
+                    : "-"}
                 </div>
                 <div>
                   <b>Végső határidő:</b>{" "}
-                  {aiReport.proposal.final_deadline ?? "-"}
+                  {typeof aiReport.proposal.final_deadline === "string"
+                    ? aiReport.proposal.final_deadline
+                    : "-"}
                 </div>
               </div>
 
@@ -295,13 +363,18 @@ function Report({ aiReport }: any) {
                           className="bg-white rounded p-4 border border-gray-300"
                         >
                           <h5 className="font-bold text-black mb-1">
-                            {phase.phase}
+                            {typeof phase.phase === "string"
+                              ? phase.phase
+                              : "-"}
                           </h5>
                           <ul className="list-disc list-inside text-black text-sm mb-2">
-                            {phase.tasks &&
-                              phase.tasks.map((t: string, i: number) => (
-                                <li key={i}>{t}</li>
-                              ))}
+                            {Array.isArray(phase.tasks)
+                              ? phase.tasks.map((t: string, i: number) => (
+                                  <li key={i}>
+                                    {typeof t === "string" ? t : "-"}
+                                  </li>
+                                ))
+                              : null}
                           </ul>
                         </div>
                       )
@@ -323,7 +396,9 @@ function Report({ aiReport }: any) {
                   <ul className="list-disc list-inside text-black text-sm">
                     {aiReport.proposal.timeline_and_scheduling_details.map(
                       (item: string, idx: number) => (
-                        <li key={idx}>{item}</li>
+                        <li key={idx}>
+                          {typeof item === "string" ? item : "-"}
+                        </li>
                       )
                     )}
                   </ul>
@@ -344,35 +419,44 @@ function Report({ aiReport }: any) {
                   Költségek bontása
                 </h4>
                 {Array.isArray(
-                  aiReport.proposal.estimated_costs_per_phase_and_total
+                  aiReport?.proposal?.estimated_costs_per_phase_and_total
                 ) &&
                 aiReport.proposal.estimated_costs_per_phase_and_total.length >
                   0 ? (
                   <ul className="list-disc list-inside text-black text-sm">
                     {aiReport.proposal.estimated_costs_per_phase_and_total.map(
-                      (item: any, idx: number) => {
+                      (item: Cost, idx: number) => {
                         // Megkeressük a taskokat ehhez a fázishoz
-                        const phaseObj =
-                          aiReport.proposal.main_work_phases_and_tasks?.find(
-                            (p: any) => p.phase === item.phase
-                          );
+                        const phaseObj = Array.isArray(
+                          aiReport?.proposal?.main_work_phases_and_tasks
+                        )
+                          ? aiReport.proposal.main_work_phases_and_tasks.find(
+                              (p: Phase) => p.phase === item.phase
+                            )
+                          : undefined;
                         const tasks = phaseObj?.tasks;
 
                         return (
                           <li key={item.phase || idx} className="mb-2">
                             <b>
-                              {item.phase === "Total" ||
-                              item.phase === "Összesen"
-                                ? "Összesen"
-                                : item.phase}
+                              {typeof item.phase === "string"
+                                ? item.phase
+                                : "-"}
                               :
                             </b>{" "}
-                            {item.cost}
+                            {typeof item.cost === "string" ||
+                            typeof item.cost === "number"
+                              ? item.cost
+                              : "-"}
                             {Array.isArray(tasks) && tasks.length > 0 && (
                               <ul className="list-disc list-inside ml-4 text-gray-700">
-                                {tasks.map((task: string, tIdx: number) => (
-                                  <li key={tIdx}>{task}</li>
-                                ))}
+                                {Array.isArray(tasks)
+                                  ? tasks.map((task: string, tIdx: number) => (
+                                      <li key={tIdx}>
+                                        {typeof task === "string" ? task : "-"}
+                                      </li>
+                                    ))
+                                  : null}
                               </ul>
                             )}
                           </li>
@@ -388,7 +472,7 @@ function Report({ aiReport }: any) {
             </div>
           ) : (
             <pre className="whitespace-pre-wrap text-black text-sm">
-              {aiReport.proposal}
+              {typeof aiReport?.proposal === "string" ? aiReport.proposal : "-"}
             </pre>
           )}
         </div>
@@ -410,12 +494,14 @@ function Report({ aiReport }: any) {
             </h4>
             {Array.isArray(notes) ? (
               <ul className="list-disc list-inside text-black text-sm">
-                {notes.map((item: string, idx: number) => (
-                  <li key={idx}>{item}</li>
+                {notes.map((item: unknown, idx: number) => (
+                  <li key={idx}>{typeof item === "string" ? item : "-"}</li>
                 ))}
               </ul>
             ) : (
-              <div className="text-black text-sm">{notes}</div>
+              <div className="text-black text-sm">
+                {typeof notes === "string" ? notes : "-"}
+              </div>
             )}
           </div>
         );
@@ -436,12 +522,14 @@ function Report({ aiReport }: any) {
             </h4>
             {Array.isArray(assumptions) ? (
               <ul className="list-disc list-inside text-black text-sm">
-                {assumptions.map((item: string, idx: number) => (
-                  <li key={idx}>{item}</li>
+                {assumptions.map((item: unknown, idx: number) => (
+                  <li key={idx}>{typeof item === "string" ? item : "-"}</li>
                 ))}
               </ul>
             ) : (
-              <div className="text-black text-sm">{assumptions}</div>
+              <div className="text-black text-sm">
+                {typeof assumptions === "string" ? assumptions : "-"}
+              </div>
             )}
           </div>
         );

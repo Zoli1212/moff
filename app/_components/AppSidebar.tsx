@@ -5,19 +5,14 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
+
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import {
   Calendar,
-  Home,
   Inbox,
   Layers,
-  Search,
-  Settings,
   UserCircle,
   Wallet,
 } from "lucide-react";
