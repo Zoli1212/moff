@@ -162,9 +162,9 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
         {Array.isArray(proposal.main_work_phases_and_tasks) &&
         Array.isArray(proposal.estimated_costs_per_phase_and_total) ? (
           <ul className="list-disc list-inside text-black text-sm">
-            {proposal.main_work_phases_and_tasks.map((phase: any) => {
+            {proposal.main_work_phases_and_tasks.map((phase: Phase) => {
               const costObj = proposal.estimated_costs_per_phase_and_total?.find(
-                (item: any) => item.phase === phase.phase
+                (item: Cost) => item.phase === phase.phase
               );
               return (
                 <li key={phase.phase} className="mb-2">

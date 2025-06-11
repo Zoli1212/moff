@@ -12,21 +12,26 @@ import { Button } from '@/components/ui/button'
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@clerk/nextjs';
 
-function DemandUploadDialog({ open, setOpen }: any) {
 
-    const [file, setFile] = useState<any>();
+interface DemandUploadDialogProps {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+}
+
+function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
+
+    const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
-    const { has } = useAuth();
+   
     useEffect(() => {
         setFile(null)
     }, [open])
 
     console.log(open, 'open')
 
-    const onFileChange = (event: any) => {
+    const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             console.log(file.name);
@@ -39,20 +44,23 @@ function DemandUploadDialog({ open, setOpen }: any) {
         const recordId = uuidv4();
         const formData = new FormData();
         formData.append('recordId', recordId);
-        formData.append('resumeFile', file);
+        if (file) {
+            formData.append('resumeFile', file);
+          }
+        
         // formData.append('aiAgentType', '/ai-tools/ai-resume-analyzer');
 
-        // @ts-ignore
+
         // TODO: 
         // const hasSubscriptionEnabled = await has({ plan: 'pro' })
         // if (!hasSubscriptionEnabled) {
         //     const resultHistory = await axios.get('/api/history');
         //     const historyList = resultHistory.data;
-        //     const isPresent = await historyList.find((item: any) => item?.aiAgentType == '/ai-tools/ai-resume-analyzer');
+        //     // const isPresent = await historyList.find((item: HistoryItem) => item?.aiAgentType == '/ai-tools/ai-resume-analyzer');
         //     router.push('/billing')
-        //     if (isPresent) {
-        //         return null;
-        //     }
+        //     // if (isPresent) {
+        //     //     return null;
+        //     // }
         // }
 
         // Send FormData to Backend Server

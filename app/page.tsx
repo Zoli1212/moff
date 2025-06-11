@@ -61,7 +61,7 @@ export default function Home() {
 
           <div className="mt-5 max-w-5xl text-center mx-auto">
             <p className="text-lg text-gray-600 dark:text-neutral-400">
-  Discover a new era of productivity with Emma, your intelligent personal assistant designed to streamline your business processes. Emma leverages advanced artificial intelligence to craft compelling offers in seconds, gather and organize client data with precision, and keep you on top of every deadline. Whether you're a busy entrepreneur or a growing team, Emma empowers you to focus on what matters most—building relationships and closing deals—while she handles the details. Experience seamless automation, personalized interactions, and reliable results, all in one intuitive platform. Let Emma transform the way you work and help your business thrive.
+  Discover a new era of productivity with Emma, your intelligent personal assistant designed to streamline your business processes. Emma leverages advanced artificial intelligence to craft compelling offers in seconds, gather and organize client data with precision, and keep you on top of every deadline. Whether you&apos;re a busy entrepreneur or a growing team, Emma empowers you to focus on what matters most—building relationships and closing deals—while she handles the details. Experience seamless automation, personalized interactions, and reliable results, all in one intuitive platform. Let Emma transform the way you work and help your business thrive.
 </p>
           </div>
 

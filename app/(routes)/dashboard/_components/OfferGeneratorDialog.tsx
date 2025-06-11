@@ -27,8 +27,8 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: any) {
         const roadmapId = v4();
         setLoading(true);
         try {
-            // @ts-ignore 
-            const hasSubscriptionEnabled = await has({ plan: 'pro' })
+            // "@ts-expect-error
+            const hasSubscriptionEnabled = await has?.({ plan: 'pro' })
             if (!hasSubscriptionEnabled) {
                 const resultHistory = await axios.get('/api/history');
                 const historyList = resultHistory.data;

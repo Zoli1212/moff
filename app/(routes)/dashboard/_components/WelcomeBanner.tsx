@@ -1,8 +1,7 @@
 import React from 'react'
 
-type Props = {}
 
-function WelcomeBanner({}: Props) {
+function WelcomeBanner() {
   return (
     <div className='p-5 bg-gradient-to-tr from-[#BE575F] via-[#A338E3] to-[#AC76D6] '>
 

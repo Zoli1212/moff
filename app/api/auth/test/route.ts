@@ -8,6 +8,7 @@ import { getGoogleAuthUrl } from "./googleAuth";
 
 export async function GET(req: NextRequest) {
   const user = await currentUser();
+  console.log(req.url)
 
   const url = await getGoogleAuthUrl(user?.emailAddresses?.[0]?.emailAddress!);
   console.log(url, 'url')

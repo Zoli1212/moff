@@ -29,7 +29,7 @@ function AiToolCard({ tool }: AIToolProps) {
   const [open, setOpen] = useState(false);
   const [openOfferDialog, setOpenOfferDialog] = useState(false);
   const onClickButton = async () => {
-    console.log(tool.name);
+    console.log(tool.name, user?.emailAddresses?.[0]?.emailAddress);
 
     if (tool.name == "Igény Elemző") {
       setOpen(true);

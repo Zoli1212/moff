@@ -80,7 +80,7 @@ export default function PricesPage() {
       await deletePriceItem(id);
       await fetchItems();
     } catch (e) {
-      setError("Hiba történt a törléskor.");
+      setError(`Hiba történt a törléskor ${(e as Error).message}`);
     }
   };
 

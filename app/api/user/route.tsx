@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"; // vagy a helyes elérési út, ahol a Pr
 import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(_req: NextRequest) {
+  console.log(_req)
   try {
     const user = await currentUser();
 
@@ -33,9 +34,9 @@ export async function POST(_req: NextRequest) {
     });
 
     return NextResponse.json(newUser);
-  } catch (e: any) {
+  } catch (e) {
     return NextResponse.json(
-      { error: e.message || "Server error" },
+      { error: (e as Error).message || "Server error" },
       { status: 500 }
     );
   }

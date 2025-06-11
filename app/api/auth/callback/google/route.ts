@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const client = await authorizeWithCode(code, email!);
+   await authorizeWithCode(code, email!);
     return NextResponse.redirect("http://localhost:3000/email-list"); // vagy bárhova
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

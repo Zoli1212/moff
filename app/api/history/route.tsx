@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from '@prisma/client';
 import { currentUser } from '@clerk/nextjs/server';
 
 const prisma = new PrismaClient();
 
-export async function POST(req: any) {
+export async function POST(req: NextRequest) {
     const { content, recordId, aiAgentType } = await req.json();
     const user = await currentUser();
     try {
@@ -24,7 +24,7 @@ export async function POST(req: any) {
     }
 }
 
-export async function PUT(req: any) {
+export async function PUT(req: NextRequest) {
     const { content, recordId } = await req.json();
     try {
         const result = await prisma.history.updateMany({
@@ -38,7 +38,7 @@ export async function PUT(req: any) {
 }
 
 
-export async function GET(req: any) {
+export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const recordId = searchParams.get('recordId');
     const user = await currentUser();

@@ -15,9 +15,14 @@ function getOfferEmail(email: string) {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+type Attachment = {
+  filename: string;
+  content: string;
+};
+
 export async function POST(req: NextRequest) {
   const json = req.json();
-  const { email, attachments } = await json;
+  const { email, attachments }: { email: string; attachments: Attachment[] } = await json;
 
   console.log('API /send called with:', { email, attachments });
 
@@ -29,7 +34,7 @@ export async function POST(req: NextRequest) {
       subject: 'Offer',
       text: 'Offer from our company',
       html: html,
-      attachments: attachments.map((file: any) => ({
+      attachments: attachments.map((file: Attachment) => ({
         filename: file.filename,
         content: file.content,
       })),
