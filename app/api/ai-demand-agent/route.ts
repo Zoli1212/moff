@@ -5,7 +5,10 @@ import axios from "axios";
 import { currentUser } from "@clerk/nextjs/server";
 export async function POST(req: NextRequest) {
     const FormData = await req.formData();
-    const resumeFile: any = FormData.get('resumeFile');
+    const resumeFile = FormData.get('resumeFile');
+    if (!(resumeFile instanceof File)) {
+        return NextResponse.json({ error: "Missing or invalid file" }, { status: 400 });
+    }
     const recordId = FormData.get('recordId');
     const user = await currentUser();
     const loader = new WebPDFLoader(resumeFile);

@@ -181,16 +181,16 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
             })}
             {/* Összesen/Total sor */}
             {proposal.estimated_costs_per_phase_and_total.some(
-              (item: any) => item.phase === "Total"
+              (item: Cost) => item.phase === "Total"
             ) && (
               <li key="total" className="font-bold">
-              <b>Összesen:</b>{" "}
-              {
-                proposal.estimated_costs_per_phase_and_total?.find(
-                  (item: Cost) => item.phase === "Total"
-                )?.cost ?? ""
-              }
-            </li>
+                <b>Összesen:</b>{" "}
+                {
+                  proposal.estimated_costs_per_phase_and_total?.find(
+                    (item: Cost) => item.phase === "Total"
+                  )?.cost ?? ""
+                }
+              </li>
             )}
           </ul>
         ) : (

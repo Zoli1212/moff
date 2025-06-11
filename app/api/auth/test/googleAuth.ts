@@ -33,17 +33,6 @@ export async function loadCredentialsDirect(tenantEmail: string) {
   };
 }
 
-// Token fájl betöltése
-async function loadSavedCredentialsIfExist(): Promise<OAuth2Client | null> {
-  try {
-    const content = fs.readFileSync(TOKEN_PATH, "utf-8");
-    const credentials = JSON.parse(content);
-    return google.auth.fromJSON(credentials) as OAuth2Client;
-  } catch {
-    return null;
-  }
-}
-
 // Token mentése fájlba
 async function saveCredentials(client: OAuth2Client, tenantEmail: string) {
   const credentials = await loadCredentialsDirect(tenantEmail);
@@ -94,7 +83,13 @@ function decodeHtmlEntity(str: string): string {
   return entities[str.toLowerCase()] || "";
 }
 
-function extractEmailContent(email: any): string {
+interface GmailMessagePart {
+  mimeType?: string | null;
+  body?: { data?: string };
+  parts?: GmailMessagePart[] | null;
+}
+
+function extractEmailContent(email: { payload?: GmailMessagePart | null }): string {
   function decodeBase64Gmail(encoded: string): string {
     const fixed = encoded.replace(/-/g, "+").replace(/_/g, "/");
     return Buffer.from(fixed, "base64").toString("utf-8");
@@ -120,7 +115,7 @@ function extractEmailContent(email: any): string {
     return decoded;
   }
 
-  function extractTextContent(part: any): string | null {
+  function extractTextContent(part?: GmailMessagePart | null): string | null {
     if (!part) return null;
 
     if (part.mimeType === "text/plain" && part.body?.data) {
@@ -141,7 +136,7 @@ function extractEmailContent(email: any): string {
     return null;
   }
 
-  const content = extractTextContent(email.payload);
+  const content = email.payload ? extractTextContent(email.payload as GmailMessagePart) : null;
   return content || "(nincs tartalom)";
 }
 

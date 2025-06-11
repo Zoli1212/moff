@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
   try {
    await authorizeWithCode(code, email!);
     return NextResponse.redirect("http://localhost:3000/email-list"); // vagy bárhova
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+  } catch (e) {
+    const errorMsg = (typeof e === 'object' && e && 'message' in e)
+      ? (e as { message: string }).message
+      : String(e);
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
