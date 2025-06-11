@@ -2,8 +2,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
-import { authorizeWithCode } from "../../test/googleAuth";
+
 import { currentUser } from "@clerk/nextjs/server";
+import { authorizeWithCode } from "../../test/googleAuth";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
