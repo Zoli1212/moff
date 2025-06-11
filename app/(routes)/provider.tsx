@@ -1,8 +1,8 @@
 "use client"
-import React, { useEffect } from 'react'
-import { useRouter } from 'next/navigation';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import axios from "axios";
+
+
+import { SidebarProvider } from '@/components/ui/sidebar';
+
 import AppHeader from '../_components/AppHeader';
 import { AppSidebar } from '../_components/AppSidebar';
 

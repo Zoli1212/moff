@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma"; // vagy a helyes elérési út, ahol a Prisma kliens van exportálva
 import { currentUser } from "@clerk/nextjs/server";
 
-export async function POST(req: NextRequest) {
+export async function POST(_req: NextRequest) {
   try {
     const user = await currentUser();
 

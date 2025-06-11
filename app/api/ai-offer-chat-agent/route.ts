@@ -1,8 +1,8 @@
 import { inngest } from "@/inngest/client";
 import axios from "axios";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function POST(req: any) {
+export async function POST(req: NextRequest) {
     const { userInput } = await req.json();
 
     const resultIds = await inngest.send({

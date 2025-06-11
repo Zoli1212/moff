@@ -1,7 +1,7 @@
 "use client"
 import Image from "next/image";
 
-import { SignIn, SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { useRouter } from 'next/navigation'
 
 export default function Home() {

@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react'
 import { aiToolsList } from './AiToolsList';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
+import { type History } from '@prisma/client';
 
 function History() {
     const [userHistory, setUserHistory] = useState([]);
@@ -53,7 +54,7 @@ function History() {
                 </div>
                 :
                 <div>
-                    {userHistory?.map((history: any, index: number) => (
+                    {userHistory?.map((history: History, index: number) => (
                         <Link href={history?.aiAgentType + "/" + history?.recordId} className='flex justify-between items-center my-3 border p-3 rounded-lg'>
                             <div key={index} className='flex gap-5 flex'>
                                 {/* @ts-ignore */}
@@ -61,7 +62,7 @@ function History() {
                                     width={20}
                                     height={20}
                                 />
-                                <h2>{GetAgentName(history?.aiAgentType)?.name}</h2>
+                                { history?.aiAgentType && <h2>{GetAgentName(history?.aiAgentType)?.name}</h2>}
                             </div>
                             <h2>{history.createdAt}</h2>
                         </Link>

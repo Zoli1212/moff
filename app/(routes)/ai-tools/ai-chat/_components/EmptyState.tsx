@@ -9,7 +9,7 @@ const questionList = [
     'Milyen nem elküldött ajánlataink vannak?',
 ]
 
-function EmptyState({ selectedQuestion }: any) {
+function EmptyState({ selectedQuestion }: { selectedQuestion: (question: string) => void }) {
     return (
         <div>
             <h2 className='font-bold text-xl text-center'>Kérdésed van?</h2>

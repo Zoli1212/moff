@@ -1,15 +1,11 @@
-'use client'
-import React, { Component } from 'react'
-import WelcomeBanner from './WelcomeBanner'
-import AiToolsList from './AiToolsList'
-import History from './History'
+'use client';
+import React, { Component } from 'react';
+import AiToolsList from './AiToolsList';
+import History from './History';
+// import WelcomeBanner from './WelcomeBanner'; // törölve, ha nincs használva
 
-type Props = {}
-
-type State = {}
-
-class AiAssistant extends Component<Props, State> {
-  state = {}
+class AiAssistant extends Component<Record<string, never>, Record<string, never>> {
+  state = {};
 
   render() {
     return (
@@ -17,8 +13,8 @@ class AiAssistant extends Component<Props, State> {
         <AiToolsList />
         <History />
       </>
-    )
+    );
   }
 }
 
-export default AiAssistant
+export default AiAssistant;

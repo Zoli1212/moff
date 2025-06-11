@@ -356,15 +356,15 @@ function Report({
                 {Array.isArray(aiReport.proposal.main_work_phases_and_tasks) &&
                 aiReport.proposal.main_work_phases_and_tasks.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {aiReport.proposal.main_work_phases_and_tasks.map(
-                      (phase: any, idx: number) => (
+                    {aiReport.proposal.main_work_phases_and_tasks.map(  
+                      (phase: Phase, idx: number) => (
                         <div
                           key={idx}
                           className="bg-white rounded p-4 border border-gray-300"
                         >
                           <h5 className="font-bold text-black mb-1">
-                            {typeof phase.phase === "string"
-                              ? phase.phase
+                            {typeof phase === "string"
+                              ? phase
                               : "-"}
                           </h5>
                           <ul className="list-disc list-inside text-black text-sm mb-2">

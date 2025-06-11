@@ -59,9 +59,10 @@ export default function ProposalPreviewPage() {
   
   function exportProposalToExcel(proposal: Proposal) {
     // 1. Projekt adatok a "Projekt" fülre (csak ha van érték)
-    const projectRows: any[] = [];
-    const addIf = (label: string, value: any) => {
-      if (value) projectRows.push({ "Mező": label, "Érték": value });
+    type Row = Record<string, string>;
+const projectRows: Row[] = [];
+const addIf = (label: string, value: string | number | undefined) => {
+      if (value) projectRows.push({ "Mező": label, "Érték": String(value) });
     };
   
     addIf("Projekt típusa", proposal.project_type);

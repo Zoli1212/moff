@@ -1,10 +1,8 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { db } from "@/configs/db";
 import { useUser } from "@clerk/nextjs";
 import axios from "axios";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import React, { useState } from "react";

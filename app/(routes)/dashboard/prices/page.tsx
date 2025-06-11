@@ -18,7 +18,7 @@ type PriceItem = {
 };
 
 export default function PricesPage() {
-  const { isSignedIn, user, isLoaded } = useUser();
+  const { user } = useUser();
   const tenantEmail = user?.emailAddresses?.[0]?.emailAddress;
 
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export default function PricesPage() {
       setNewUnit("");
       setNewQuantity("");
     } catch (e) {
-      setError("Hiba történt a hozzáadáskor.");
+      setError(`Hiba történt a hozzáadáskor: ${(e as Error).message}`);
     }
   };
 
@@ -110,7 +110,7 @@ export default function PricesPage() {
       setEditUnit("");
       setEditQuantity("");
     } catch (e) {
-      setError("Hiba történt a mentéskor.");
+      setError(`Hiba történt a mentéskor ${(e as Error).message}`);
     }
   };
 
@@ -144,7 +144,7 @@ export default function PricesPage() {
           value={newPrice}
           onChange={(e) => setNewPrice(e.target.value)}
         />
-   
+
         <button
           className="bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-lg transition"
           onClick={handleAdd}
@@ -181,7 +181,7 @@ export default function PricesPage() {
                   value={editUnit}
                   onChange={(e) => setEditUnit(e.target.value)}
                 />
-              
+
                 <button
                   className="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-1 rounded-lg mr-1"
                   onClick={() => handleSave(item.id)}
