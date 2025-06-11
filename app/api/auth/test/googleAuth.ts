@@ -121,7 +121,7 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
     return decoded;
   }
 
-  function extractTextContent(part?: any): string | null {
+  function extractTextContent(part?: gmail_v1.Schema$MessagePart): string | null {
     if (!part) return null;
 
     if (part.mimeType === "text/plain" && part.body?.data) {
@@ -143,7 +143,7 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
   }
 
   const content = email.payload
-    ? extractTextContent(email.payload as GmailMessagePart)
+    ? extractTextContent(email as gmail_v1.Schema$MessagePart)
     : null;
   return content || "(nincs tartalom)";
 }
