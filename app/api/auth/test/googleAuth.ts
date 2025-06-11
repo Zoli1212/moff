@@ -3,6 +3,9 @@ import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { getEmail, listEmails } from "./gmail-fetch";
 import { createEmail } from "@/actions/server.action";
+import { gmail_v1 } from 'googleapis';
+
+
 
 const SCOPE = [
   "https://www.googleapis.com/auth/gmail.readonly",
@@ -47,7 +50,9 @@ async function saveCredentials(client: OAuth2Client, tenantEmail: string) {
 }
 
 // Visszaadja az OAuth2Client példányt
-export async function getOAuth2Client(tenantEmail: string): Promise<OAuth2Client> {
+export async function getOAuth2Client(
+  tenantEmail: string
+): Promise<OAuth2Client> {
   const credentials = await loadCredentialsDirect(tenantEmail);
   const { client_id, client_secret, redirect_uris } = credentials.web;
   return new google.auth.OAuth2(
@@ -89,7 +94,8 @@ interface GmailMessagePart {
   parts?: GmailMessagePart[] | null;
 }
 
-function extractEmailContent(email: { payload?: GmailMessagePart | null }): string {
+
+function extractEmailContent(email: gmail_v1.Schema$Message): string {
   function decodeBase64Gmail(encoded: string): string {
     const fixed = encoded.replace(/-/g, "+").replace(/_/g, "/");
     return Buffer.from(fixed, "base64").toString("utf-8");
@@ -115,7 +121,7 @@ function extractEmailContent(email: { payload?: GmailMessagePart | null }): stri
     return decoded;
   }
 
-  function extractTextContent(part?: GmailMessagePart | null): string | null {
+  function extractTextContent(part?: any): string | null {
     if (!part) return null;
 
     if (part.mimeType === "text/plain" && part.body?.data) {
@@ -136,7 +142,9 @@ function extractEmailContent(email: { payload?: GmailMessagePart | null }): stri
     return null;
   }
 
-  const content = email.payload ? extractTextContent(email.payload as GmailMessagePart) : null;
+  const content = email.payload
+    ? extractTextContent(email.payload as GmailMessagePart)
+    : null;
   return content || "(nincs tartalom)";
 }
 
