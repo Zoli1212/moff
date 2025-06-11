@@ -6,7 +6,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -17,7 +16,17 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 
 
-function OfferGeneratorDialog({ openDialog, setOpenDialog }: any) {
+interface OfferGeneratorDialogProps {
+  openDialog: boolean;
+  setOpenDialog: (open: boolean) => void;
+}
+
+interface HistoryItem {
+  aiAgentType?: string;
+  [key: string]: unknown;
+}
+
+function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialogProps) {
     const [userInput, setUserInput] = useState<string>();
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -32,7 +41,7 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: any) {
             if (!hasSubscriptionEnabled) {
                 const resultHistory = await axios.get('/api/history');
                 const historyList = resultHistory.data;
-                const isPresent = await historyList.find((item: any) => item?.aiAgentType == '/ai-tools/ai-roadmap-agent');
+                const isPresent = await historyList.find((item: HistoryItem) => item?.aiAgentType == '/ai-tools/ai-roadmap-agent');
                 router.push('/billing')
                 if (isPresent) {
                     return null;

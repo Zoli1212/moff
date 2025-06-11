@@ -18,8 +18,17 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   const message = await messageRes.json();
 
   // 1. E-mail szöveg dekódolása
-  const parts = message.payload.parts || [];
-  const textPart = parts.find((p: any) => p.mimeType === 'text/plain' && p.body?.data);
+  interface GmailMessagePart {
+  mimeType?: string;
+  body?: {
+    data?: string;
+    attachmentId?: string;
+  };
+  filename?: string;
+  [key: string]: unknown;
+}
+  const parts: GmailMessagePart[] = message.payload.parts || [];
+  const textPart = parts.find((p: GmailMessagePart) => p.mimeType === 'text/plain' && p.body?.data);
 
   const emailBase64 = textPart?.body?.data || '';
   const emailText = Buffer.from(emailBase64, 'base64').toString('utf-8');
@@ -27,11 +36,11 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   // 2. Melléklet (PDF) lekérése
   const pdfPart = parts.find(
-    (p: any) => p.filename?.endsWith('.pdf') && p.body?.attachmentId
+    (p: GmailMessagePart) => p.filename?.endsWith('.pdf') && p.body?.attachmentId
   );
 
-  if (!pdfPart) {
-    return NextResponse.json({ error: 'PDF melléklet nem található' }, { status: 404 });
+  if (!pdfPart?.body?.attachmentId) {
+    return NextResponse.json({ error: 'PDF melléklet nem található vagy hiányzik az attachmentId' }, { status: 404 });
   }
 
   const attachmentRes = await fetch(

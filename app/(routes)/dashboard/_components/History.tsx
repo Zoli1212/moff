@@ -55,9 +55,13 @@ function History() {
                 :
                 <div>
                     {userHistory?.map((history: History, index: number) => (
-                        <Link href={history?.aiAgentType + "/" + history?.recordId} className='flex justify-between items-center my-3 border p-3 rounded-lg'>
-                            <div key={index} className='flex gap-5 flex'>
-                                {/* @ts-ignore */}
+                        <Link
+                            key={history?.recordId || index}
+                            href={history?.aiAgentType + "/" + history?.recordId}
+                            className='flex justify-between items-center my-3 border p-3 rounded-lg'
+                        >
+                            <div className='flex gap-5 flex'>
+                                {/* @ts-expect-error: aiToolsList icon type may not match Image src type */}
                                 <Image src={GetAgentName(history?.aiAgentType)?.icon} alt={'image'}
                                     width={20}
                                     height={20}
