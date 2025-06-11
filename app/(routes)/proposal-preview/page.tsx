@@ -165,8 +165,8 @@ const costRows: CostRow[] = [];
 
   return (
     <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center py-8">
-      <div className="w-full max-w-6xl">
-        <div className="flex flex-row items-center justify-between ml-2 mb-8 gap-4">
+      <div className="w-full max-w-5xl">
+        <div className="flex flex-row items-center justify-between ml-2 mr-2 mb-8 gap-4">
           <div className="flex flex-row gap-4">
             <Button variant="outline" onClick={() => router.back()}>
               Vissza
