@@ -17,6 +17,7 @@ const TOKEN_PATH =
 import { getGoogleCredentials } from "@/actions/server.action";
 export async function loadCredentialsDirect(tenantEmail: string) {
   const cred = await getGoogleCredentials(tenantEmail);
+  console.log(cred, 'cred')
   return {
     web: {
       client_id: cred.client_id,
