@@ -109,8 +109,8 @@ function Report({
           </div>
           <div>
             <span className="font-semibold">Cím:</span>{" "}
-            {typeof aiReport?.address === "string"
-              ? filterValue(aiReport?.address)
+            {typeof aiReport?.location === "string"
+              ? filterValue(aiReport?.location)
               : "-"}
           </div>
           <div>
@@ -440,7 +440,7 @@ function Report({
                           <li key={item.phase || idx} className="mb-2">
                             <b>
                               {typeof item.phase === "string"
-                                ? item.phase
+                                ? item.phase === "Total" ? "Összesen" : item.phase
                                 : "-"}
                               :
                             </b>{" "}

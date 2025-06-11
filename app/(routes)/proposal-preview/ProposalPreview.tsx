@@ -1,6 +1,7 @@
+import { Cost, Phase, Proposal } from "@/types/proposal";
 import React from "react";
 
-const ProposalPreview = ({ proposal }: { proposal: any }) => {
+const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
   return (
     <div className="max-w-auto mx-auto bg-white text-black">
       {/* Fejléc, címzett */}
@@ -162,7 +163,7 @@ const ProposalPreview = ({ proposal }: { proposal: any }) => {
         Array.isArray(proposal.estimated_costs_per_phase_and_total) ? (
           <ul className="list-disc list-inside text-black text-sm">
             {proposal.main_work_phases_and_tasks.map((phase: any) => {
-              const costObj = proposal.estimated_costs_per_phase_and_total.find(
+              const costObj = proposal.estimated_costs_per_phase_and_total?.find(
                 (item: any) => item.phase === phase.phase
               );
               return (
@@ -183,13 +184,13 @@ const ProposalPreview = ({ proposal }: { proposal: any }) => {
               (item: any) => item.phase === "Total"
             ) && (
               <li key="total" className="font-bold">
-                <b>Összesen:</b>{" "}
-                {
-                  proposal.estimated_costs_per_phase_and_total.find(
-                    (item: any) => item.phase === "Total"
-                  ).cost
-                }
-              </li>
+              <b>Összesen:</b>{" "}
+              {
+                proposal.estimated_costs_per_phase_and_total?.find(
+                  (item: Cost) => item.phase === "Total"
+                )?.cost ?? ""
+              }
+            </li>
             )}
           </ul>
         ) : (
@@ -203,11 +204,13 @@ const ProposalPreview = ({ proposal }: { proposal: any }) => {
           <div className="mb-8 border-b pb-4">
             <b className="block mb-2">Ütemezés részletei</b>
             <ul className="list-disc ml-5">
-              {proposal.timeline_and_scheduling_details.map(
-                (item: string, i: number) => (
-                  <li key={i}>{item}</li>
-                )
-              )}
+            {Array.isArray(proposal.timeline_and_scheduling_details) ? (
+              proposal.timeline_and_scheduling_details.map((item: string, i: number) => (
+                <li key={i}>{item}</li>
+              ))
+            ) : proposal.timeline_and_scheduling_details ? (
+              <li>{proposal.timeline_and_scheduling_details}</li>
+            ) : null}
             </ul>
           </div>
         )}

@@ -6,7 +6,6 @@ import {
     DialogFooter,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog"
 import { File, Loader2Icon, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'

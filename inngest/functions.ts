@@ -78,7 +78,7 @@ After completing the main renovation demand analysis and JSON output, create a h
 The "proposal" object MUST contain the following fields exactly with these names (snake_case, English only):
 - main_work_phases_and_tasks (array of objects with "phase" and "tasks")
 - timeline_and_scheduling_details (array of strings or a string)
-- estimated_costs_per_phase_and_total (array of objects with "phase" and "cost")
+– estimated_costs_per_phase_and_total: an array of objects, each containing a "phase" and a "cost" field. The array must include a final object where "phase" is "Total" and "cost" is the sum of all previous cost values in the array.
 - relevant_implementation_notes_or_recommendations (array or string)
 - assumptions_made (array or string)
 - total_net_amount
