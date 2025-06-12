@@ -65,7 +65,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
 
         // Send FormData to Backend Server
         const result = await axios.post('/api/ai-demand-agent', formData);
-        console.log(result.data)
+        console.log(result.data, 'result.data')
         setLoading(false);
         router.push('/ai-tools/ai-demand-analyzer/' + recordId);
         setOpen(false);
