@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     let runStatus;
     while (true) {
         runStatus = await getRuns(runId);
-        console.log(runStatus?.data);
+        console.log(runStatus?.data, 'data');
         if (runStatus?.data[0]?.status === 'Completed') {
             break;
         }
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 }
 
 const getRuns = async (runId: string) => {
-    console.log('URL:inngest_host_2:', process.env.INNGEST_SERVER_HOST + '/v1/events/' + runId + '/runs');
+    console.log('URL:inngest_host:', process.env.INNGEST_SERVER_HOST + '/v1/events/' + runId + '/runs');
 
     const result = await axios.get(process.env.INNGEST_SERVER_HOST + '/v1/events/' + runId + '/runs', {
         headers: {
