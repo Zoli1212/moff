@@ -45,7 +45,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
         const formData = new FormData();
         formData.append('recordId', recordId);
         if (file) {
-            formData.append('resumeFile', file);
+            formData.append('demandFile', file);
           }
         
         // formData.append('aiAgentType', '/ai-tools/ai-resume-analyzer');

@@ -5,19 +5,19 @@ import axios from "axios";
 import { currentUser } from "@clerk/nextjs/server";
 export async function POST(req: NextRequest) {
     const FormData = await req.formData();
-    const resumeFile = FormData.get('resumeFile');
-    if (!(resumeFile instanceof File)) {
+    const demandFile = FormData.get('demandFile');
+    if (!(demandFile instanceof File)) {
         return NextResponse.json({ error: "Missing or invalid file" }, { status: 400 });
     }
     const recordId = FormData.get('recordId');
     const user = await currentUser();
-    const loader = new WebPDFLoader(resumeFile);
+    const loader = new WebPDFLoader(demandFile);
     const docs = await loader.load();
     // Fűzd össze az összes oldal szövegét
     const fullPdfText = docs.map(doc => doc.pageContent).join('\n---\n');
     console.log(fullPdfText)// Teljes PDF szöveg
 
-    const arrayBuffer = await resumeFile.arrayBuffer();
+    const arrayBuffer = await demandFile.arrayBuffer();
     const base64 = Buffer.from(arrayBuffer).toString('base64');
 
     const resultIds = await inngest.send({

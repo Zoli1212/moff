@@ -324,14 +324,14 @@ function Report({
           <h3 className="text-2xl font-extrabold mb-2 text-black text-center tracking-wide">
             Ajánlat{" "}
             {typeof aiReport?.proposal?.customer_name === "string"
-              ? aiReport?.proposal.customer_name || aiReport?.proposal.company_name
+              ? aiReport?.proposal.company_name || aiReport?.proposal.customer_name 
               : ""}
           </h3>
-          {/* {typeof aiReport?.proposal?.company_name === "string" && (
+          {typeof aiReport?.proposal?.customer_name === "string" && (
             <div className="text-base font-bold text-black text-center mb-4">
-              {aiReport.proposal.company_name}
+              {aiReport.proposal.customer_name}
             </div>
-          )} */}
+          )}
           {typeof aiReport.proposal === "object" &&
           aiReport.proposal !== null ? (
             <div className="space-y-6">

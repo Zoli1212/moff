@@ -10,8 +10,7 @@ const SCOPE = [
   "https://www.googleapis.com/auth/gmail.send",
 ];
 
-const TOKEN_PATH =
-  "C:/Users/mzolt/Desktop/NodeJSCourses/fast-nextjs-v2/app/api/auth/test/token.json";
+const TOKEN_PATH = process.env.TOKEN_PATH;
 
 // 🔐 Credentials lekérdezése adatbázisból Prisma-val
 import { getGoogleCredentials } from "@/actions/server.action";
@@ -45,7 +44,7 @@ async function saveCredentials(client: OAuth2Client, tenantEmail: string) {
     client_secret: key.client_secret,
     refresh_token: client.credentials.refresh_token,
   });
-  fs.writeFileSync(TOKEN_PATH, payload);
+  fs.writeFileSync(TOKEN_PATH as string, payload);
 }
 
 // Visszaadja az OAuth2Client példányt
