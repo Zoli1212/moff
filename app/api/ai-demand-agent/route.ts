@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 }
 
 const getRuns = async (runId: string) => {
-    console.log('URL:inngest_host:', process.env.INNGEST_SERVER_HOST + '/v1/events/' + runId + '/runs');
+    console.log('URL:inngest_host_2:', process.env.INNGEST_SERVER_HOST + '/v1/events/' + runId + '/runs');
 
     const result = await axios.get(process.env.INNGEST_SERVER_HOST + '/v1/events/' + runId + '/runs', {
         headers: {
