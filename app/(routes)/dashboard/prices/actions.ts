@@ -2,6 +2,8 @@
 import { prisma } from '@/lib/prisma';
 
 export async function addPriceItem(name: string, price: number, unit: string, quantity = 1, tenantEmail: string) {
+
+  console.log(name, price, unit, quantity, tenantEmail)
   const item = await prisma.priceItem.create({
     data: { name, price, unit, quantity, tenantEmail },
   });

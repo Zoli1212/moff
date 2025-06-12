@@ -68,7 +68,7 @@ IMPORTANT: Extract and fill out ALL of the following project main properties fro
 - timeline
 - phasing
 
-If the value is present in the input, use the exact value. Only use 'not specified' if the information is truly missing.
+If the value is present in the input, use the exact value. Not use 'not specified' if the information is truly missing.
 
 For the following fields: area_sqm, budget_estimate, timeline, and phasing, always scan the entire input text for any mention of area (m², square meters), budget (Ft, HUF, EUR, etc.), timeline (dates, months, years), and phasing (stages, phases, ütemezés). If you find any relevant value, fill it in exactly as found. Only use 'not specified' if the information is truly missing from the input.
 
@@ -106,16 +106,19 @@ The "proposal" object MUST contain the following fields exactly with these names
 - missing_info (array of strings)
 - summary_comment
 
-All fields must be present in every output. If a value is missing, fill it with 'not specified' or an empty array. Never omit a required field.
+Include a field in the JSON output **only if** its value is not equal to 'not specified' and not equal to 'value is missing'.
+If a field's value would be 'not specified' or 'value is missing', do not include the field at all.
+
 
 IMPORTANT STRUCTURE REQUIREMENTS:
 - Use exactly the field names above. Do NOT use different names, capitalizations, translations, or formats.
 - If the input uses a different format or language, normalize it to the above field names.
 - Output must be valid JSON (no comments, no extra text).
 - Be extremely thorough: infer implicit requirements, list every detail, and never omit possible client needs.
-- Never analyze resumes or unrelated topics, only renovation-related content.
+- Only analyze renovation-related content.
 - Always include: total_net_amount, vat_amount, total_gross_amount, final_deadline, relevant_implementation_notes_or_recommendations, and assumptions_made fields.
 - Maintain a professional, supportive, and efficient tone at all times.
+- Always attempt to provide values, but if a field ends up with 'not specified' or 'value is missing', do not include it in the output.
 `,
   model: gemini({
     model: "gemini-2.0-flash",

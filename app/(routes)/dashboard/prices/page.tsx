@@ -26,11 +26,11 @@ export default function PricesPage() {
   const [editName, setEditName] = useState("");
   const [editPrice, setEditPrice] = useState("");
   const [editUnit, setEditUnit] = useState("");
-  const [editQuantity, setEditQuantity] = useState("");
+  const [editQuantity, setEditQuantity] = useState('1');
   const [newName, setNewName] = useState("");
   const [newPrice, setNewPrice] = useState("");
   const [newUnit, setNewUnit] = useState("");
-  const [newQuantity, setNewQuantity] = useState("");
+  const [newQuantity, setNewQuantity] = useState('1');
 
   const [items, setItems] = useState<PriceItem[]>([]);
 
@@ -50,8 +50,7 @@ export default function PricesPage() {
     if (
       !newName.trim() ||
       !newPrice.trim() ||
-      !newUnit.trim() ||
-      !newQuantity.trim()
+      !newUnit.trim() 
     ) {
       setError("Minden mező kitöltése kötelező!");
       return;
@@ -93,7 +92,19 @@ export default function PricesPage() {
   };
 
   const handleSave = async (id: number) => {
+  
     setError(null);
+  
+    if (
+      !editName.trim() ||
+      !editPrice.trim() ||
+      !editUnit.trim() ||
+      isNaN(Number(editPrice))
+    ) {
+      setError("Minden mező kitöltése kötelező, és az árnak számnak kell lennie!");
+      return;
+    }
+  
     try {
       await updatePriceItem(
         id,
@@ -115,7 +126,7 @@ export default function PricesPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="max-w-4xl mx-auto py-10 px-4">
       <h1 className="text-2xl font-bold mb-6 text-center">Áraim</h1>
       {error && (
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-4 text-center">
@@ -132,7 +143,7 @@ export default function PricesPage() {
         />
         <input
           type="text"
-          className="w-20 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
+          className="w-70 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
           placeholder="Mennyiségi Egység (pl. kg, db,nm2)"
           value={newUnit}
           onChange={(e) => setNewUnit(e.target.value)}
@@ -169,17 +180,17 @@ export default function PricesPage() {
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
                 />
+                  <input
+                    type="text"
+                    className="w-16 border rounded-lg px-2 py-1 mr-2"
+                    value={editUnit}
+                    onChange={(e) => setEditUnit(e.target.value)}
+                  />
                 <input
                   type="text"
                   className="w-20 border rounded-lg px-2 py-1 mr-2"
                   value={editPrice}
                   onChange={(e) => setEditPrice(e.target.value)}
-                />
-                <input
-                  type="text"
-                  className="w-16 border rounded-lg px-2 py-1 mr-2"
-                  value={editUnit}
-                  onChange={(e) => setEditUnit(e.target.value)}
                 />
 
                 <button
@@ -200,11 +211,11 @@ export default function PricesPage() {
                 <div className="flex-1 text-lg font-semibold text-green-900">
                   {item.name}
                 </div>
-                <div className="w-20 text-right text-green-800 font-bold">
+                <div className="w-20 text-green-800">{item.unit}</div>
+                <div className="w-30 text-right text-green-800 font-bold px-2">
                   {item.price} Ft
                 </div>
-                <div className="w-16 text-green-800">{item.unit}</div>
-                <div className="w-16 text-green-800">{item.quantity}</div>
+            
                 <button
                   className="bg-green-400 hover:bg-green-500 text-white font-bold px-3 py-1 rounded-lg mr-1"
                   onClick={() => handleEdit(item)}
