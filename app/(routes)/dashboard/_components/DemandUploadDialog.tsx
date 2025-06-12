@@ -45,32 +45,48 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
         const formData = new FormData();
         formData.append('recordId', recordId);
         if (file) {
-            formData.append('demandFile', file);
-          }
-        
-        // formData.append('aiAgentType', '/ai-tools/ai-resume-analyzer');
-
-
-        // TODO: 
-        // const hasSubscriptionEnabled = await has({ plan: 'pro' })
-        // if (!hasSubscriptionEnabled) {
-        //     const resultHistory = await axios.get('/api/history');
-        //     const historyList = resultHistory.data;
-        //     // const isPresent = await historyList.find((item: HistoryItem) => item?.aiAgentType == '/ai-tools/ai-resume-analyzer');
-        //     router.push('/billing')
-        //     // if (isPresent) {
-        //     //     return null;
-        //     // }
-        // }
-
-        // Send FormData to Backend Server
-        const result = await axios.post('/api/ai-demand-agent', formData);
-        console.log(result.data, 'result.data')
-        setLoading(false);
-        router.push('/ai-tools/ai-demand-analyzer/' + recordId);
-        setOpen(false);
-    }
-
+          formData.append('demandFile', file);
+        }
+      
+        try {
+          const result = await axios.post('/api/ai-demand-agent', formData);
+          const { eventId } = result.data;
+          console.log('Event queued:', eventId);
+      
+          let attempts = 0;
+          const maxAttempts = 60;
+      
+          const poll = async () => {
+            const res = await axios.get(`/api/ai-demand-agent/status?eventId=${eventId}`);
+            const { status } = res.data;
+      
+            console.log('Status:', status);
+      
+            if (status === 'Completed') {
+              setLoading(false);
+              setOpen(false);
+              router.push(`/ai-tools/ai-demand-analyzer/${recordId}`);
+              return;
+            }
+      
+            if (status === 'Cancelled' || attempts >= maxAttempts) {
+              setLoading(false);
+              alert("Az elemzés nem sikerült vagy túl sokáig tartott.");
+              return;
+            }
+      
+            attempts++;
+            setTimeout(poll, 2000);
+          };
+      
+          poll();
+        } catch (err) {
+          console.error('Hiba történt:', err);
+          setLoading(false);
+          alert("Nem sikerült elindítani az elemzést.");
+        }
+      };
+      
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
