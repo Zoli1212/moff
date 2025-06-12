@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf"
 import { inngest } from "@/inngest/client";
-import axios from "axios";
 import { currentUser } from "@clerk/nextjs/server";
 // app/api/ai-demand-agent/route.ts
 
