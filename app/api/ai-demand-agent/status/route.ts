@@ -23,6 +23,6 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ status });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to check run status" }, { status: 500 });
+    return NextResponse.json({ error: `Failed to check run status${(error as Error).message}` }, { status: 500 });
   }
 }
