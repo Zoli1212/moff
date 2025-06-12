@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
   try {
    await authorizeWithCode(code, email!);
-    return NextResponse.redirect("http://localhost:3000/email-list"); // vagy bárhova
+    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/email-list`); // vagy bárhova
   } catch (e) {
     const errorMsg = (typeof e === 'object' && e && 'message' in e)
       ? (e as { message: string }).message
