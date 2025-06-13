@@ -106,7 +106,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
                             <DialogTitle>Töltsd fel az Igénylést</DialogTitle>
                             <DialogDescription>
                                 <div>
-                                    <label htmlFor='resumeUpload' className='flex items-center flex-col 
+                                    <label htmlFor='demandUpload' className='flex items-center flex-col 
                                     justify-center p-7 border border-dashed 
                                     rounded-xl hover:bg-slate-100 cursor-pointer'>
                                         <File className='h-10 w-10' />
@@ -116,7 +116,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
                                     </label>
                                     <input 
                                         type='file' 
-                                        id='resumeUpload' 
+                                        id='demandUpload' 
                                         accept=".pdf,.docx,.xlsx,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/vnd.ms-excel"
                                         className='hidden' 
                                         onChange={onFileChange} 

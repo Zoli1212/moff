@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,28 +8,26 @@ datasource db {
 }
 
 model Email {
-  id                  Int       @id @default(autoincrement())
-  gmailId             String    @unique
+  id                  Int      @id @default(autoincrement())
+  gmailId             String   @unique
   from                String
   subject             String
   content             String
-  hasAttachment       Boolean   @default(false)
+  hasAttachment       Boolean  @default(false)
   attachmentFilenames String[]
   tenantEmail         String
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
   myWorkId            Int?
-  myWork              MyWork?   @relation(fields: [myWorkId], references: [id])
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  myWork              MyWork?  @relation(fields: [myWorkId], references: [id])
 }
 
-
-
 model PriceItem {
-  id       Int     @id @default(autoincrement())
-  name     String
-  price    Float
-  unit     String
-  quantity Float?   @default(1)
+  id          Int    @id @default(autoincrement())
+  name        String
+  price       Float
+  unit        String
+  quantity    Float? @default(1)
   tenantEmail String
 }
 
@@ -60,33 +52,33 @@ model History {
 }
 
 model Client {
-  id            String   @id @default(uuid())
-  companyName   String
-  contactName   String
-  contactPhone  String
-  contactEmail  String
-  demand        String
-  offer         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  tenantEmail   String
+  id           String   @id @default(uuid())
+  companyName  String
+  contactName  String
+  contactPhone String
+  contactEmail String
+  demand       String
+  offer        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  tenantEmail  String
 }
 
 model MyWork {
-  id           Int       @id @default(autoincrement())
-  title        String
-  customerName String
+  id            Int      @id @default(autoincrement())
+  title         String
+  customerName  String
   customerPhone String?
   customerEmail String?
-  date         DateTime
-  location     String
-  time         String
-  totalPrice   Float
-  description  String?
-  emails       Email[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  tenantEmail  String
+  date          DateTime
+  location      String
+  time          String
+  totalPrice    Float
+  description   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  tenantEmail   String
+  emails        Email[]
 }
 
 model MyInvoices {
@@ -111,19 +103,16 @@ model MyInvoices {
 }
 
 model myPrompt {
-  id Int @id @default(autoincrement())
-  prompt String
+  id          Int      @id @default(autoincrement())
+  prompt      String
   description String?
   tenantEmail String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-
-
 model GoogleOAuthCredential {
-  id                          Int     @id @default(autoincrement())
+  id                          Int      @id @default(autoincrement())
   client_id                   String
   project_id                  String
   auth_uri                    String
