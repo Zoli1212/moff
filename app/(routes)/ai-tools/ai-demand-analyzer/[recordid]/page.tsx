@@ -37,7 +37,7 @@ function AiDemandAnalzyer() {
                     parsedMetaData = JSON.parse(result.data.metaData);
                     console.log('Parsed metaData:', parsedMetaData);
                 } catch (e) {
-                    console.log('metaData is not a JSON string, treating as direct URL');
+                    console.log(`metaData is not a JSON string, treating as direct URL: ${result.data.metaData, (e as Error).message}`);
                     // Old format - direct URL string
                     fileUrl = result.data.metaData;
                     // Try to guess file type from URL
