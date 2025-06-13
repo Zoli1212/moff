@@ -4,14 +4,14 @@ import { inngest } from "@/inngest/client";
 import { currentUser } from "@clerk/nextjs/server";
 import * as mammoth from 'mammoth';
 import * as XLSX from 'xlsx';
-import { Readable } from 'stream';
+// import { Readable } from 'stream';
 
-async function bufferToStream(buffer: Buffer): Promise<Readable> {
-  const stream = new Readable();
-  stream.push(buffer);
-  stream.push(null);
-  return stream;
-}
+// async function bufferToStream(buffer: Buffer): Promise<Readable> {
+//   const stream = new Readable();
+//   stream.push(buffer);
+//   stream.push(null);
+//   return stream;
+// }
 
 async function extractTextFromDocx(buffer: Buffer): Promise<string> {
   const result = await mammoth.extractRawText({ buffer });
@@ -21,6 +21,7 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
 async function extractTextFromExcel(buffer: Buffer, fileType: string): Promise<string> {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
   let text = '';
+  console.log(fileType)
   
   workbook.SheetNames.forEach(sheetName => {
     const worksheet = workbook.Sheets[sheetName];
