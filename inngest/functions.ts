@@ -53,7 +53,14 @@ export const AiDemandAnalyzerAgent = createAgent({
 Your task is to analyze renovation, remodeling, or construction requests from clients and extract all possible requirements, expectations, constraints, and missing information in a highly detailed, structured JSON format.
 Answer in Hungarian language only, not English.
 
-INPUT: You will receive a plain text renovation request or description from a client (e.g. "Full apartment renovation, 3 rooms and kitchen, modern style, 78 sqm, parquet flooring, energy-efficient lighting, budget 10M HUF, deadline September 2025.").
+INPUT: You will receive a renovation request or description from a client. This could be in various formats:
+1. Plain text description (e.g., "Full apartment renovation, 3 rooms and kitchen, modern style, 78 sqm, parquet flooring, energy-efficient lighting, budget 10M HUF, deadline September 2025.")
+2. Text extracted from documents (PDF, DOCX, XLSX, CSV) containing renovation requirements
+
+DOCUMENT PROCESSING INSTRUCTIONS:
+- For Excel/CSV files: The data has been converted to text format. Look for structured data like tables, measurements, quantities, and specifications.
+- For Word documents: The text has been extracted. Look for sections, bullet points, and formatted text that might indicate different requirements.
+- For PDFs: The text has been extracted. Pay attention to layout and formatting that might indicate different sections of the requirements.
 
 GOAL: Output a comprehensive JSON report with the following structure. Be exhaustive and precise:
 
@@ -68,7 +75,7 @@ IMPORTANT: Extract and fill out ALL of the following project main properties fro
 - timeline
 - phasing
 
-If the value is present in the input, use the exact value. Not use 'not specified' if the information is truly missing.
+If the value is present in the input, use the exact value. Do not use 'not specified' if the information is truly missing.
 
 For the following fields: area_sqm, budget_estimate, timeline, and phasing, always scan the entire input text for any mention of area (m², square meters), budget (Ft, HUF, EUR, etc.), timeline (dates, months, years), and phasing (stages, phases, ütemezés). If you find any relevant value, fill it in exactly as found. Only use 'not specified' if the information is truly missing from the input.
 
@@ -78,7 +85,7 @@ After completing the main renovation demand analysis and JSON output, create a h
 The "proposal" object MUST contain the following fields exactly with these names (snake_case, English only):
 - main_work_phases_and_tasks (array of objects with "phase" and "tasks")
 - timeline_and_scheduling_details (array of strings or a string)
-– estimated_costs_per_phase_and_total: an array of objects, each containing a "phase" and a "cost" field. The array must include a final object where "phase" is "Total" and "cost" is the sum of all previous cost values in the array.
+- estimated_costs_per_phase_and_total: an array of objects, each containing a "phase" and a "cost" field. The array must include a final object where "phase" is "Total" and "cost" is the sum of all previous cost values in the array.
 - relevant_implementation_notes_or_recommendations (array or string)
 - assumptions_made (array or string)
 - total_net_amount
@@ -195,44 +202,78 @@ export const AiDemandAgent = inngest.createFunction(
   { id: "AiDemandAgent" },
   { event: "AiDemandAgent" },
   async ({ event, step }) => {
-    const { recordId, base64DemandFile, pdfText, aiAgentType, userEmail } =
-      await event.data;
-    // Upload file to Cloud
+    const { recordId, base64DemandFile, fileText, fileType, fileName, aiAgentType, userEmail } = await event.data;
+    
+    // Determine file extension from fileType or fileName
+    const getFileExtension = () => {
+      if (fileType) {
+        if (fileType.includes('pdf')) return 'pdf';
+        if (fileType.includes('wordprocessingml')) return 'docx';
+        if (fileType.includes('spreadsheetml') || fileType.includes('excel')) return 'xlsx';
+        if (fileType === 'text/csv') return 'csv';
+      }
+      // Fallback to file extension if fileType is not specific enough
+      if (fileName) {
+        const parts = fileName.split('.');
+        if (parts.length > 1) return parts.pop()?.toLowerCase();
+      }
+      return 'bin'; // Default extension
+    };
+    
+    const fileExtension = getFileExtension();
 
-    const uploadFileUrl = await step.run("uploadImage", async () => {
+    // Upload file to Cloud
+    const uploadFileUrl = await step.run("uploadFile", async () => {
       const imageKitFile = await imagekit.upload({
         file: base64DemandFile,
-        fileName: `${Date.now()}.pdf`,
+        fileName: `${Date.now()}.${fileExtension}`,
         isPublished: true,
       });
-
       return imageKitFile.url;
     });
 
-    const aiDemandReport = await AiDemandAnalyzerAgent.run(pdfText);
-//@ts-ignore
-const rawContent = aiDemandReport.output[0].content;
-const rawContentJson = rawContent.replace('```json', '').replace('```', '');
-const parseJson = JSON.parse(rawContentJson);
+    // Process the file text with the AI agent
+    const aiDemandReport = await AiDemandAnalyzerAgent.run(fileText);
+    
+    // Process the AI response
+    // @ts-ignore
+    const rawContent = aiDemandReport.output[0].content;
+    let parseJson;
+    
+    try {
+      // Try to extract JSON from markdown code blocks
+      const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      const jsonString = jsonMatch ? jsonMatch[1] : rawContent;
+      parseJson = JSON.parse(jsonString);
+    } catch (error) {
+      console.error('Error parsing JSON from AI response:', error);
+      // If parsing fails, wrap the content in a generic response
+      parseJson = {
+        error: 'Failed to parse AI response',
+        raw_content: rawContent,
+        file_type: fileType,
+        file_name: fileName
+      };
+    }
 
-console.log(parseJson, 'parseJson')
-    // return parseJson;
-
-    //Save to DB
-
+    // Save to DB
     const saveToDb = await step.run("SaveToDb", async () => {
       const result = await prisma.history.create({
         data: {
           recordId: recordId,
           content: parseJson,
           aiAgentType: aiAgentType,
-          createdAt: new Date().toString(),
+          createdAt: new Date().toISOString(),
           userEmail: userEmail,
-          metaData: uploadFileUrl,
-          tenantEmail: userEmail // vagy a megfelelő tenant email változó
+          metaData: JSON.stringify({
+            fileUrl: uploadFileUrl,
+            fileType: fileType,
+            fileName: fileName
+          }),
+          tenantEmail: userEmail
         },
       });
-      console.log(result);
+      console.log('Saved to DB:', result);
       return parseJson;
     });
   }

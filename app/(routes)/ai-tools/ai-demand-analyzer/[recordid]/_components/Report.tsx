@@ -381,9 +381,9 @@ function Report({
                           className="bg-white rounded p-4 border border-gray-300"
                         >
                           <h5 className="font-bold text-black mb-1">
-                            {typeof phase === "string"
-                              ? phase
-                              : "-"}
+                            {typeof phase === "object"
+                              ? phase.phase
+                              : phase}
                           </h5>
                           <ul className="list-disc list-inside text-black text-sm mb-2">
                             {Array.isArray(phase.tasks)

@@ -34,7 +34,12 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
     const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
-            console.log(file.name);
+            const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv', 'application/vnd.ms-excel'];
+            if (!validTypes.includes(file.type)) {
+                alert('Kérjük csak PDF, DOCX, XLSX vagy CSV fájlokat töltsön fel!');
+                return;
+            }
+            console.log(file.name, file.type);
             setFile(file);
         }
     }
@@ -107,10 +112,15 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
                                         <File className='h-10 w-10' />
                                         {file ?
                                             <h2 className='mt-3 text-blue-600'>{file?.name}</h2> :
-                                            <h2 className='mt-3'>Click here to Upload PDF file</h2>}
+                                            <h2 className='mt-3'>Kattintson ide a fájl feltöltéséhez (PDF, DOCX, XLSX, CSV)</h2>}
                                     </label>
-                                    <input type='file' id='resumeUpload' accept="application/pdf"
-                                        className='hidden' onChange={onFileChange} />
+                                    <input 
+                                        type='file' 
+                                        id='resumeUpload' 
+                                        accept=".pdf,.docx,.xlsx,.csv,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/vnd.ms-excel"
+                                        className='hidden' 
+                                        onChange={onFileChange} 
+                                    />
                                 </div>
                             </DialogDescription>
                         </DialogHeader>

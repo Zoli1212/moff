@@ -22,6 +22,8 @@ model Email {
   hasAttachment       Boolean   @default(false)
   attachmentFilenames String[]
   tenantEmail         String
+  myWorkId            Int?
+  myWork              MyWork?   @relation(fields: [myWorkId], references: [id])
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 }
@@ -50,7 +52,10 @@ model History {
   userEmail   String?
   createdAt   String?
   aiAgentType String?
-  metaData    String?
+  metaData    Json?    @db.Json
+  fileType    String?
+  fileName    String?
+  fileUrl     String?
   tenantEmail String
 }
 
@@ -68,8 +73,8 @@ model Client {
 }
 
 model MyWork {
-  id           Int      @id @default(autoincrement())
-  title String
+  id           Int       @id @default(autoincrement())
+  title        String
   customerName String
   customerPhone String?
   customerEmail String?
@@ -78,8 +83,9 @@ model MyWork {
   time         String
   totalPrice   Float
   description  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  emails       Email[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
   tenantEmail  String
 }
 
