@@ -38,13 +38,13 @@ model User {
 }
 
 model History {
-  id          Int      @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   recordId    String
   content     Json?
   userEmail   String?
   createdAt   String?
   aiAgentType String?
-  metaData    Json?    @db.Json
+  metaData    Json?   @db.Json
   fileType    String?
   fileName    String?
   fileUrl     String?
@@ -65,7 +65,7 @@ model Client {
 }
 
 model MyWork {
-  id            Int      @id @default(autoincrement())
+  id            Int       @id @default(autoincrement())
   title         String
   customerName  String
   customerPhone String?
@@ -75,8 +75,10 @@ model MyWork {
   time          String
   totalPrice    Float
   description   String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  workflowId    Int?
+  workflow      Workflow? @relation(fields: [workflowId], references: [id])
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   tenantEmail   String
   emails        Email[]
 }
@@ -123,4 +125,71 @@ model GoogleOAuthCredential {
   tenantEmail                 String
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
+}
+
+model Workflow {
+  id                Int                 @id @default(autoincrement())
+  name              String
+  description       String?
+  isActive          Boolean             @default(true)
+  tenantEmail       String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  phases            Phase[]
+  myWorks           MyWork[]
+  Specialty         Specialty?          @relation(fields: [specialtyId], references: [id])
+  specialtyId       Int?
+  WorkflowSpecialty WorkflowSpecialty[]
+}
+
+model Phase {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  order       Int
+  workflowId  Int
+  workflow    Workflow @relation(fields: [workflowId], references: [id])
+  tasks       Task[]
+  tenantEmail String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([workflowId, order])
+}
+
+model Task {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  isCompleted Boolean  @default(false)
+  order       Int
+  phaseId     Int
+  phase       Phase    @relation(fields: [phaseId], references: [id])
+  tenantEmail String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([phaseId, order])
+}
+
+model Specialty {
+  id                Int                 @id @default(autoincrement())
+  name              String              @unique
+  description       String?
+  tenantEmail       String
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  workflows         Workflow[]
+  WorkflowSpecialty WorkflowSpecialty[]
+}
+
+model WorkflowSpecialty {
+  workflowId  Int
+  specialtyId Int
+  workflow    Workflow  @relation(fields: [workflowId], references: [id])
+  specialty   Specialty @relation(fields: [specialtyId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@id([workflowId, specialtyId])
 }

@@ -62,7 +62,7 @@ function History() {
                         >
                             <div className='flex gap-5 flex'>
                                 {/* @ts-expect-error: aiToolsList icon type may not match Image src type */}
-                                <Image src={GetAgentName(history?.aiAgentType)?.icon} alt={'image'}
+                                <Image src={GetAgentName(history?.aiAgentType)?.icon || '/cover.png'} alt={'image'}
                                     width={20}
                                     height={20}
                                 />
