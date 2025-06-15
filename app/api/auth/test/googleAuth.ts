@@ -16,7 +16,7 @@ const TOKEN_PATH = process.env.TOKEN_PATH;
 import { getGoogleCredentials } from "@/actions/server.action";
 export async function loadCredentialsDirect(tenantEmail: string) {
   const cred = await getGoogleCredentials(tenantEmail);
-  console.log(cred, 'cred')
+  console.log(cred, "cred");
   return {
     web: {
       client_id: cred.client_id,
@@ -87,58 +87,137 @@ function decodeHtmlEntity(str: string): string {
 }
 
 function extractEmailContent(email: gmail_v1.Schema$Message): string {
-  function decodeBase64Gmail(encoded: string): string {
-    const fixed = encoded.replace(/-/g, "+").replace(/_/g, "/");
-    return Buffer.from(fixed, "base64").toString("utf-8");
-  }
+  // Helper to clean up HTML entities and unwanted patterns
+  function cleanContent(content: string): string {
+    if (!content) return '';
+    
+    // Replace HTML entities
+    const entities: { [key: string]: string } = {
+      '&lt;': '<',
+      '&gt;': '>',
+      '&amp;': '&',
+      '&quot;': '"',
+      '&#39;': "'",
+      '&nbsp;': ' ',
+      '&copy;': '©',
+      '&reg;': '®',
+      '&euro;': '€',
+      '&pound;': '£',
+      '&yen;': '¥',
+      '&cent;': '¢',
+      '&sect;': '§',
+      '&para;': '¶',
+      '&deg;': '°',
+      '&plusmn;': '±',
+      '&times;': '×',
+      '&divide;': '÷',
+      '&apos;': "'"
+    };
 
-  function stripHtml(html: string): string {
-    const decoded = html
-      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<\/?[^>]+(>|$)/g, "")
-      .replace(/&nbsp;/g, " ")
-      .replace(/&[a-z]+;/gi, decodeHtmlEntity)
-      .replace(/[\u200B-\u200D\uFEFF]/g, "")
-      .replace(/\s{2,}/g, " ")
-      .trim();
+    try {
+      // First decode any URL encoded characters
+      let cleaned = decodeURIComponent(content);
+      
+      // Replace HTML entities
+      Object.entries(entities).forEach(([entity, replacement]) => {
+        cleaned = cleaned.replace(new RegExp(entity, 'g'), replacement);
+      });
 
-    const linkMatch = html.match(/<https?:\/\/[^>]+>/);
-    if (linkMatch) {
-      const url = linkMatch[0].replace(/[<>]/g, "");
-      return decoded + ` – aktiválási link: ${url}`;
+      // Remove email signatures and quoted text
+      cleaned = cleaned
+        // Remove lines starting with '>' (quoted text)
+        .split('\n')
+        .filter(line => !line.trim().startsWith('>'))
+        .join('\n')
+        // Remove common email signature patterns (using [\s\S] instead of . with s flag for wider compatibility)
+        .replace(/^--\s*\n[\s\S]*?\n(?:\n|$)/gm, '')
+        .replace(/^_{2,}\n[\s\S]*?\n(?:\n|$)/gm, '')
+        // Remove multiple spaces and newlines
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      return cleaned;
+    } catch (error) {
+      console.error('Error cleaning content:', error);
+      return content; // Return original if cleaning fails
     }
-
-    return decoded;
   }
 
-  function extractTextContent(
-    part?: gmail_v1.Schema$MessagePart
-  ): string | null {
+  // Helper to decode base64 data
+  function decodeBase64(encoded: string): string {
+    try {
+      const fixed = encoded.replace(/-/g, "+").replace(/_/g, "/");
+      const decoded = Buffer.from(fixed, "base64").toString("utf-8");
+      return cleanContent(decoded);
+    } catch (error) {
+      console.error('Error decoding base64:', error);
+      return '';
+    }
+  }
+
+  // Clean the snippet if available
+  if (email.snippet) {
+    return cleanContent(email.snippet);
+  }
+
+  // Recursive function to find text content in email parts
+  function findTextContent(part: any): string | null {
     if (!part) return null;
 
-    if (part.mimeType === "text/plain" && part.body?.data) {
-      return decodeBase64Gmail(part.body.data);
+    // If this part has plain text, return it
+    if (part.mimeType === 'text/plain' && part.body?.data) {
+      return decodeBase64(part.body.data);
     }
 
-    if (part.mimeType === "text/html" && part.body?.data) {
-      return stripHtml(decodeBase64Gmail(part.body.data));
+    // If this part has HTML, return it as plain text
+    if (part.mimeType === 'text/html' && part.body?.data) {
+      const html = decodeBase64(part.body.data);
+      // Basic HTML to text conversion
+      return html
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
+        .replace(/<[^>]+>/g, ' ') // Remove all HTML tags
+        .replace(/\s+/g, ' ')     // Collapse whitespace
+        .replace(/^\s+|\s+$/g, '') // Trim
+        .trim();
     }
 
+    // If this is a multipart message, search its parts
+    if (part.mimeType?.startsWith('multipart/') && part.parts) {
+      for (const subPart of part.parts) {
+        const text = findTextContent(subPart);
+        if (text) return text;
+      }
+    }
+
+    // If this part has sub-parts, search them
     if (part.parts) {
       for (const subPart of part.parts) {
-        const result = extractTextContent(subPart);
-        if (result) return result;
+        const content = findTextContent(subPart);
+        if (content) return content;
+      }
+    }
+
+    // If this part has data, try to decode it
+    if (part.body?.data) {
+      try {
+        return decodeBase64(part.body.data);
+      } catch (e) {
+        console.error('Error decoding part data:', e);
       }
     }
 
     return null;
   }
 
-  const content = email.payload
-    ? extractTextContent(email as gmail_v1.Schema$MessagePart)
-    : null;
-  return content || "(nincs tartalom)";
+  // Try to get content from the email payload
+  if (email.payload) {
+    const content = findTextContent(email.payload);
+    if (content) return content;
+  }
+
+  // If we get here, we couldn't extract any content
+  return "(nincs elérhető tartalom)";
 }
 
 // Elmenti a token-t ha `code` érkezik a callback URL-lel
@@ -191,6 +270,8 @@ export async function authorizeWithCode(
         }
       }
     }
+
+    console.log(content, 'CONTENT')
 
     // Email mentése server action-nel
     // importáld a createEmail-t a server.action-ből

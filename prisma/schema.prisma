@@ -32,9 +32,12 @@ model PriceItem {
 }
 
 model User {
-  id    Int    @id @default(autoincrement())
-  name  String
-  email String @unique
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model History {

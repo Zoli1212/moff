@@ -1,10 +1,75 @@
 import { db } from "@/configs/db";
 import { inngest } from "./client";
 import { createAgent, gemini, openai } from "@inngest/agent-kit";
-
+import { PrismaClient } from "@prisma/client";
 import ImageKit from "imagekit";
 import { HistoryTable } from "@/configs/schema";
-import { prisma } from "@/lib/prisma";
+
+const prisma = new PrismaClient();
+
+export const EmailAnalyzerAgent = createAgent({
+  name: "EmailAnalyzerAgent",
+  description:
+    "Analyzes email content and extracts structured information including intent, requirements, and action items.",
+  system: `Egy fejlett e-mail tartalomelemző vagy. A feladatod, hogy az e-mailek tartalmát elemezd, és kulcsfontosságú információkat nyerj ki belőlük egy strukturált JSON formátumban.
+
+Bemenet: E-mail tárgya és szövege.
+
+Kimenet: Egy részletes JSON riport a következő szerkezetben:
+{
+  "analysis": {
+    "sender_intent": "string | null",
+    "main_topic": "string | null",
+    "key_points": "string[] | null",
+    "action_required": "boolean",
+    "priority": "high | medium | low | null",
+    "deadline": "string | null",
+    "related_to": "renovation | offer | inquiry | other | null",
+    "sentiment": "positive | neutral | negative | null",
+    "contact_info": {
+      "name": "string | null",
+      "email": "string | null",
+      "phone": "string | null"
+    },
+    "requirements": {
+      "type": "string[] | null",
+      "description": "string | null",
+      "preferences": "string[] | null"
+    },
+    "attachments": {
+      "present": "boolean",
+      "types": "string[] | null",
+      "purpose": "string | null"
+    },
+    "follow_up": {
+      "needed": "boolean",
+      "when": "string | null",
+      "action_items": "string[] | null"
+    }
+  },
+  "summary": {
+    "overview": "string",
+    "next_steps": "string[]"
+  },
+  "metadata": {
+    "language": "string | null",
+    "length": "number",
+    "analysis_timestamp": "string"
+  }
+}
+
+Irányelvek:
+1. Minden elérhető információt nyerj ki, de ne találj ki adatokat, ha hiányoznak.
+2. A dátumokat ISO 8601 formátumban add meg (ÉÉÉÉ-HH-NN).
+3. Az elemzés során tartsd meg az e-mail eredeti nyelvét.
+4. A logikai (boolean) értékek legyenek pontosak.
+5. Ha egy mező nem határozható meg, legyen nem definiált.
+6. Az összefoglaló legyen tömör és cselekvésorientált.
+7. Ha az e-mail magyar nyelvű, az elemzés is teljes egészében magyar legyen, **de a JSON mezőnevek maradjanak angolul**.`,
+  model: gemini({
+    model: "gemini-2.0-flash",
+  }),
+});
 
 export const helloWorld = inngest.createFunction(
   { id: "hello-world" },
@@ -47,8 +112,9 @@ Keep your tone supportive, efficient, and professional at all times.
 });
 
 export const AiDemandAnalyzerAgent = createAgent({
-  name: 'AiDemandAnalyzerAgent',
-  description: 'AI Renovation Requirements & Demand Analyzer Agent. Returns highly detailed, structured renovation requirement analysis.',
+  name: "AiDemandAnalyzerAgent",
+  description:
+    "AI Renovation Requirements & Demand Analyzer Agent. Returns highly detailed, structured renovation requirement analysis.",
   system: `You are an advanced AI Renovation Requirements and Demand Analyzer Agent.
 Your task is to analyze renovation, remodeling, or construction requests from clients and extract all possible requirements, expectations, constraints, and missing information in a highly detailed, structured JSON format.
 Answer in Hungarian language only, not English.
@@ -202,24 +268,33 @@ export const AiDemandAgent = inngest.createFunction(
   { id: "AiDemandAgent" },
   { event: "AiDemandAgent" },
   async ({ event, step }) => {
-    const { recordId, base64DemandFile, fileText, fileType, fileName, aiAgentType, userEmail } = await event.data;
-    
+    const {
+      recordId,
+      base64DemandFile,
+      fileText,
+      fileType,
+      fileName,
+      aiAgentType,
+      userEmail,
+    } = await event.data;
+
     // Determine file extension from fileType or fileName
     const getFileExtension = () => {
       if (fileType) {
-        if (fileType.includes('pdf')) return 'pdf';
-        if (fileType.includes('wordprocessingml')) return 'docx';
-        if (fileType.includes('spreadsheetml') || fileType.includes('excel')) return 'xlsx';
-        if (fileType === 'text/csv') return 'csv';
+        if (fileType.includes("pdf")) return "pdf";
+        if (fileType.includes("wordprocessingml")) return "docx";
+        if (fileType.includes("spreadsheetml") || fileType.includes("excel"))
+          return "xlsx";
+        if (fileType === "text/csv") return "csv";
       }
       // Fallback to file extension if fileType is not specific enough
       if (fileName) {
-        const parts = fileName.split('.');
+        const parts = fileName.split(".");
         if (parts.length > 1) return parts.pop()?.toLowerCase();
       }
-      return 'bin'; // Default extension
+      return "bin"; // Default extension
     };
-    
+
     const fileExtension = getFileExtension();
 
     // Upload file to Cloud
@@ -234,25 +309,25 @@ export const AiDemandAgent = inngest.createFunction(
 
     // Process the file text with the AI agent
     const aiDemandReport = await AiDemandAnalyzerAgent.run(fileText);
-    
+
     // Process the AI response
     // @ts-ignore
     const rawContent = aiDemandReport.output[0].content;
     let parseJson;
-    
+
     try {
       // Try to extract JSON from markdown code blocks
       const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       const jsonString = jsonMatch ? jsonMatch[1] : rawContent;
       parseJson = JSON.parse(jsonString);
     } catch (error) {
-      console.error('Error parsing JSON from AI response:', error);
+      console.error("Error parsing JSON from AI response:", error);
       // If parsing fails, wrap the content in a generic response
       parseJson = {
-        error: 'Failed to parse AI response',
+        error: "Failed to parse AI response",
         raw_content: rawContent,
         file_type: fileType,
-        file_name: fileName
+        file_name: fileName,
       };
     }
 
@@ -268,18 +343,18 @@ export const AiDemandAgent = inngest.createFunction(
           metaData: JSON.stringify({
             fileUrl: uploadFileUrl,
             fileType: fileType,
-            fileName: fileName
+            fileName: fileName,
           }),
-          tenantEmail: userEmail
+          tenantEmail: userEmail,
         },
       });
-      console.log('Saved to DB:', result);
+      console.log("Saved to DB:", result);
       return parseJson;
     });
   }
 );
 
-export const AIRoadmapAgent = inngest.createFunction(
+export const AiRoadmapAgent = inngest.createFunction(
   { id: "AiRoadMapAgent" },
   { event: "AiRoadMapAgent" },
   async ({ event, step }) => {
@@ -318,5 +393,101 @@ export const AIRoadmapAgent = inngest.createFunction(
       console.log(result);
       return parsedJson;
     });
+  }
+);
+
+export const EmailAnalyzer = inngest.createFunction(
+  { id: "EmailAnalyzer" },
+  { event: "EmailAnalyzer" },
+  async ({ event, step }) => {
+    console.log('EmailAnalyzer function started', { eventId: event.id });
+    const { recordId, emailContent, userEmail, metadata = {} } = event.data;
+    console.log('Processing analysis for recordId:', recordId);
+
+    try {
+      // Analyze the email content using the EmailAnalyzerAgent
+      console.log('Running EmailAnalyzerAgent...');
+      const analysisResult = await EmailAnalyzerAgent.run(emailContent);
+      console.log('EmailAnalyzerAgent completed');
+
+      // @ts-ignore
+      const rawContent = analysisResult.output[0].content;
+      console.log('Raw analysis content length:', rawContent.length);
+      console.log('Raw analysis content (first 500 chars):', rawContent.substring(0, 500));
+
+      // Try to extract JSON from markdown code blocks
+      let parsedAnalysis;
+      try {
+        const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        const jsonString = jsonMatch ? jsonMatch[1] : rawContent;
+        console.log('Extracted JSON string (first 500 chars):', jsonString.substring(0, 500));
+        
+        parsedAnalysis = JSON.parse(jsonString);
+        console.log('Successfully parsed JSON analysis:', JSON.stringify(parsedAnalysis, null, 2));
+      } catch (error) {
+        console.error("Error parsing JSON from email analysis:", error);
+        // If parsing fails, include the raw content for debugging
+        parsedAnalysis = {
+          error: "Failed to parse email analysis",
+          raw_content: rawContent?.substring(0, 500) + (rawContent?.length > 500 ? '...' : ''),
+          ...metadata,
+        };
+        console.log('Fallback analysis content:', parsedAnalysis);
+      }
+
+      // Save the analysis to the database using Prisma
+      const saveToDb = await step.run("SaveEmailAnalysis", async () => {
+        try {
+          console.log('Attempting to save to database with recordId:', recordId);
+          console.log('Analysis content to save:', JSON.stringify(parsedAnalysis, null, 2));
+          
+          const data = {
+            recordId: recordId,
+            content: parsedAnalysis,
+            aiAgentType: "/ai-tools/email-analyzer",
+            userEmail: userEmail,
+            metaData: JSON.stringify({
+              ...metadata,
+              analysis_timestamp: new Date().toISOString()
+            }),
+            tenantEmail: userEmail, // Make sure tenantEmail is set
+            createdAt: new Date().toISOString()
+          };
+          
+          console.log('Database insert data:', JSON.stringify(data, null, 2));
+          
+          const result = await prisma.history.create({
+            data: data
+          });
+          
+          console.log('Email analysis saved to DB:', {
+            recordId: recordId,
+            dbId: result.id,
+            savedAt: new Date().toISOString()
+          });
+          
+          // Verify the record was saved
+          const savedRecord = await prisma.history.findUnique({
+            where: { id: result.id }
+          });
+          console.log('Verified saved record:', {
+            id: savedRecord?.id,
+            recordId: savedRecord?.recordId,
+            aiAgentType: savedRecord?.aiAgentType,
+            hasContent: !!savedRecord?.content
+          });
+          
+          return parsedAnalysis;
+        } catch (error) {
+          console.error('Error saving to database:', error);
+          throw error;
+        }
+      });
+
+      return { success: true, analysis: parsedAnalysis };
+    } catch (error) {
+      console.error("Error in EmailAnalyzer:", error);
+      throw error;
+    }
   }
 );

@@ -10,6 +10,7 @@ CREATE TABLE "Email" (
     "tenantEmail" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
+    "myWorkId" INTEGER,
 
     CONSTRAINT "Email_pkey" PRIMARY KEY ("id")
 );
@@ -31,6 +32,9 @@ CREATE TABLE "User" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "role" TEXT NOT NULL DEFAULT 'USER',
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -43,7 +47,10 @@ CREATE TABLE "History" (
     "userEmail" TEXT,
     "createdAt" TEXT,
     "aiAgentType" TEXT,
-    "metaData" TEXT,
+    "metaData" JSON,
+    "fileType" TEXT,
+    "fileName" TEXT,
+    "fileUrl" TEXT,
     "tenantEmail" TEXT NOT NULL,
 
     CONSTRAINT "History_pkey" PRIMARY KEY ("id")
@@ -77,6 +84,7 @@ CREATE TABLE "MyWork" (
     "time" TEXT NOT NULL,
     "totalPrice" DOUBLE PRECISION NOT NULL,
     "description" TEXT,
+    "workflowId" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "tenantEmail" TEXT NOT NULL,
@@ -137,8 +145,104 @@ CREATE TABLE "GoogleOAuthCredential" (
     CONSTRAINT "GoogleOAuthCredential_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "Workflow" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "specialtyId" INTEGER,
+
+    CONSTRAINT "Workflow_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Phase" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "order" INTEGER NOT NULL,
+    "workflowId" INTEGER NOT NULL,
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Phase_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Task" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "isCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "order" INTEGER NOT NULL,
+    "phaseId" INTEGER NOT NULL,
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Specialty" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "tenantEmail" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Specialty_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "WorkflowSpecialty" (
+    "workflowId" INTEGER NOT NULL,
+    "specialtyId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WorkflowSpecialty_pkey" PRIMARY KEY ("workflowId","specialtyId")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Email_gmailId_key" ON "Email"("gmailId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Phase_workflowId_order_key" ON "Phase"("workflowId", "order");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Task_phaseId_order_key" ON "Task"("phaseId", "order");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Specialty_name_key" ON "Specialty"("name");
+
+-- AddForeignKey
+ALTER TABLE "Email" ADD CONSTRAINT "Email_myWorkId_fkey" FOREIGN KEY ("myWorkId") REFERENCES "MyWork"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "MyWork" ADD CONSTRAINT "MyWork_workflowId_fkey" FOREIGN KEY ("workflowId") REFERENCES "Workflow"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Workflow" ADD CONSTRAINT "Workflow_specialtyId_fkey" FOREIGN KEY ("specialtyId") REFERENCES "Specialty"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Phase" ADD CONSTRAINT "Phase_workflowId_fkey" FOREIGN KEY ("workflowId") REFERENCES "Workflow"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Task" ADD CONSTRAINT "Task_phaseId_fkey" FOREIGN KEY ("phaseId") REFERENCES "Phase"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkflowSpecialty" ADD CONSTRAINT "WorkflowSpecialty_workflowId_fkey" FOREIGN KEY ("workflowId") REFERENCES "Workflow"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "WorkflowSpecialty" ADD CONSTRAINT "WorkflowSpecialty_specialtyId_fkey" FOREIGN KEY ("specialtyId") REFERENCES "Specialty"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+

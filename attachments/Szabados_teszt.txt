@@ -1,0 +1,200 @@
+//* 1. TODO: Definiáld a Person típust (name: string, age: number)
+type Person = {
+    name: string;
+    age: number;
+};
+
+const john: Person = {
+    name: "John",
+    age: 30,
+};
+//* 2. TODO: Készíts egy union típust, ami csak ezeket engedi: "admin", "user", "guest"
+type Role = "admin" | "user" | "guest";
+
+const role: Role = "admin"; // csak "admin", "user", vagy "guest" legyen engedélyezett
+const role2: Role = "user";
+const role3: Role = "guest";
+// const role4: Role = "puppy"; // Hibát dob
+
+//* 3. TODO: Típus, amely egy objektumot ír le, aminek minden értéke boolean
+type Flags = {
+    isActive: boolean;
+    isVerified: boolean;
+};
+
+const flags: Flags = {
+    isActive: true,
+    isVerified: false,
+};
+
+//* 4. TODO: Generikus típus, ami becsomagolja az adott típust egy Promise-ba
+
+type Async<T> = Promise<T>;
+
+const fetchName = (): Async<string> => {
+    return new Promise((resolve) => resolve("Eszti 💖"));
+};
+
+//* 5. TODO: Definiálj egy Tuple típust, amely egy stringet és egy számot tartalmaz
+type NameAndAge = [string, number];
+
+const pair: NameAndAge = ["Eszti", 32];
+//const pair1: NameAndAge = [32, "Eszti"]; // Hibát dob
+//const pair1: NameAndAge = ["Eszti", "32"]; // Hibát dob
+//const pair1: NameAndAge = [32, 32]; // Hibát dob
+//* 6. TODO: Mapped type, ami minden mezőt opcionálissá tesz
+type Optional<T> = {
+    [K in keyof T]?: T[K];
+}
+
+type User1 = {
+    id: number;
+    email: string;
+};
+
+type OptionalUser = Optional<User1>;
+
+const maybeUser: OptionalUser = {
+    // akár üres objektum is lehet
+};
+
+//* 7. TODO: Conditional type – ha T string, akkor legyen "text", különben "other"
+type Describe<T> = T extends string ? "text" : "other";
+
+type A = Describe<string>; // "text"
+type B = Describe<number>; // "other"
+
+//* 8. TODO: Discriminated union – különböző alakzatok típusa
+type Shape1 = {
+    kind: "circle" | "square";
+    radius?: number | string;
+    side?: number | string;
+}
+
+const circle: Shape1 = {
+    kind: "circle",
+    radius: 5
+};
+
+const square: Shape1 = {
+    kind: "square",
+    side: 10
+};
+
+//* 9. TODO: Type alias használata readonly tömbhöz
+type ReadonlyNames = [string, string];
+
+const names: ReadonlyNames = ["Eszti", "Lili"];
+// names.push("valaki"); // hibát kell dobjon!
+
+//* 10. TODO: Utility type - használj Pick-et, hogy csak a 'name' és 'email' mező maradjon meg a User típusból
+type UserPreview = {
+    name: string
+    age: number
+    email: string
+    address: string
+    phone: string
+}
+
+const preview: Pick<UserPreview, 'name' & 'email'> = {
+    name: "Elena",
+    email: "elena@example.com"
+};
+
+//* 11. Típusdefiniálás
+// TODO: Egészítsd ki a User típust, hogy tartalmazzon: id (number), name (string), email (string), isActive (boolean)
+type User = {
+    id: number
+    name: string
+    email: string
+    isActive: boolean
+};
+
+//* 12. Osztály és interfész
+// TODO: Hozz létre egy Shape interfészt, benne area(): number metódussal
+interface Shape {
+    area(): number
+}
+
+//* 13 TODO: Készíts egy Rectangle osztályt, amely implementálja a Shape interfészt, és kiszámolja a területet (width * height)
+class Rectangle implements Shape {
+    width: number;
+    height: number;
+
+    constructor(width: number, height: number) {
+        this.width = width;
+        this.height = height;
+    }
+    area(): number {
+        return this.width * this.height;
+    }
+}
+
+const rect = new Rectangle(10, 5);
+console.log("Téglalap területe:", rect.area()); // Elvárt: 50
+
+//* 14. Generikus függvény
+// TODO: Készíts egy generikus függvényt wrapInArray néven, amely bármilyen típust tömbbé alakít
+function wrapInArray<T>(value: T): T[] {
+    return [value];
+}
+
+console.log(wrapInArray("hello")); // Elvárt: ["hello"]
+
+//* 15. Optional és readonly mezők
+// TODO: Egészítsd ki a Product interfészt: id (readonly number), name (string), description (opcionális string), price (number)
+interface Product {
+    readonly id: number;
+    name: string;
+    description?: string;
+    price: number;
+
+}
+
+// TODO: Hozz létre egy példányt a Product típus alapján
+
+const product: Product = {
+    id: 1,
+    name: "Laptop",
+    description: "Very good Laptop",
+    price: 100
+};
+
+// product.id = 2; // Ez hibát kell dobjon, mert readonly
+
+//* 16. Hibakezelés
+// TODO: Írj egy divide függvényt, amely a / b osztást végzi, de ha b = 0, akkor hibát dob
+function divide(a: number, b: number): number {
+    if (b === 0) {
+        throw new Error("Nullával nem osztunk!")
+    } else {
+        return a / b;
+    }
+}
+
+console.log(divide(8, 2)); // Elvárt: 4
+// console.log(divide(8, 0)); // Hibát dob
+
+
+
+//? 17. Mapped type: ReadonlyDeep
+// TODO: Készíts egy ReadonlyDeep mapped típust, amely rekurzívan readonly minden mezőt
+type ReadonlyDeep<T> = {
+    [P in keyof T]: T[P];
+};
+
+type Config = {
+    server: {
+        host: string;
+        port: number;
+    };
+};
+
+const config: ReadonlyDeep<Config> = {
+    server: {
+        host: "localhost",
+        port: 8080
+    }
+};
+
+// config.server.port = 9090; // Ez hibát kell dobjon
