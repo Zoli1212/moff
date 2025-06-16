@@ -3,6 +3,14 @@ import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { getEmail, listEmails } from "./gmail-fetch";
 import { createEmail } from "@/actions/server.action";
+import ImageKit from "imagekit";
+
+// Initialize ImageKit
+const imagekit = new ImageKit({
+  publicKey: process.env.IMAGEKIT_PUBLIC_KEY || "",
+  privateKey: process.env.IMAGEKIT_PRIVATE_KEY || "",
+  urlEndpoint: process.env.IMAGEKIT_ENDPOINT_URL || "",
+});
 import { gmail_v1 } from "googleapis";
 
 const SCOPE = [
@@ -246,26 +254,53 @@ export async function authorizeWithCode(
     const content = extractEmailContent(email);
 
     const attachmentFilenames: string[] = [];
+    const attachmentUrls: string[] = [];
     const gmail = google.gmail({ version: "v1", auth: client });
 
     if (email.payload?.parts) {
       for (const part of email.payload.parts) {
         if (part.filename && part.body?.attachmentId) {
-          attachmentFilenames.push(part.filename);
-          const attachment = await gmail.users.messages.attachments.get({
-            userId: "me",
-            messageId: msg.id,
-            id: part.body.attachmentId,
-          });
-
-          const data = attachment.data?.data;
-          if (data) {
-            const fixedData = data.replace(/-/g, "+").replace(/_/g, "/");
-            const buffer = Buffer.from(fixedData, "base64");
-            const outputPath = `./attachments/${part.filename}`;
-            fs.mkdirSync("./attachments", { recursive: true }); // biztosítsd, hogy létezik
-            fs.writeFileSync(outputPath, buffer);
-            console.log(`💾 Melléklet mentve: ${part.filename}`);
+          try {
+            console.log(`Processing attachment: ${part.filename}`);
+            const attachment = await gmail.users.messages.attachments.get({
+              userId: "me",
+              messageId: msg.id,
+              id: part.body.attachmentId,
+            });
+    
+            const data = attachment.data?.data;
+            if (!data) {
+              console.error('No data in attachment');
+              continue;
+            }
+    
+            // Clean up the base64 data
+            const base64Data = data.replace(/-/g, '+').replace(/_/g, '/');
+            const buffer = Buffer.from(base64Data, 'base64');
+            
+            console.log(`File info - Name: ${part.filename}, Size: ${buffer.length} bytes, Type: ${part.mimeType || 'unknown'}`);
+    
+            // Upload to ImageKit
+            const imageKitFile = await imagekit.upload({
+              file: buffer,
+              fileName: part.filename,
+              useUniqueFileName: true,
+              isPrivateFile: false,
+              tags: ['email-attachment']
+            });
+    
+            if (!imageKitFile.url) {
+              throw new Error('No URL in ImageKit response');
+            }
+    
+            console.log(`✅ Successfully uploaded: ${imageKitFile.name} (${imageKitFile.url})`);
+            attachmentUrls.push(imageKitFile.url);
+            attachmentFilenames.push(part.filename);
+    
+          } catch (error) {
+            console.error(`❌ Error processing attachment ${part.filename}:`, error instanceof Error ? error.message : 'Unknown error');
+            // Optionally continue with other attachments even if one fails
+            continue;
           }
         }
       }
@@ -283,6 +318,7 @@ export async function authorizeWithCode(
       content: content || "",
       hasAttachment: attachmentFilenames.length > 0,
       attachmentFilenames,
+      attachmentUrls: attachmentUrls.length > 0 ? attachmentUrls : undefined,
       tenantEmail: tenantEmail || "",
     });
 

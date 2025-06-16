@@ -10,6 +10,7 @@ export type EmailCreateInput = {
   content: string;
   hasAttachment: boolean;
   attachmentFilenames: string[];
+  attachmentUrls?: string[];
   tenantEmail: string;
 };
 
@@ -33,6 +34,7 @@ export async function createEmail(input: EmailCreateInput) {
       content: input.content || "",
       hasAttachment: input.hasAttachment,
       attachmentFilenames: input.attachmentFilenames,
+      attachmentUrls: input.attachmentUrls || [],
       tenantEmail: input.tenantEmail || '',
     },
   });
