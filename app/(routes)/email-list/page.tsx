@@ -1,10 +1,10 @@
 "use client";
+
 import { useEffect, useState, useTransition } from "react";
 import { getAllEmails } from "../../../actions/server.action";
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
-import { Loader2Icon, Sparkles, X, FileText, Mail, User, Clock, AlertCircle } from 'lucide-react';
+import { Loader2Icon, Sparkles, FileText, Mail, User, Clock, AlertCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,17 +13,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-// Format date without date-fns
-const formatDate = (date: Date) => {
-  return date.toLocaleString('hu-HU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
 
+// Email type
 type Email = {
   id: number;
   gmailId: string;
@@ -64,7 +55,6 @@ function EmailList() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const router = useRouter();
 
   const handleEmailClick = (email: Email) => {
     setSelectedEmail(email);
@@ -90,53 +80,44 @@ function EmailList() {
     const recordId = uuidv4();
 
     try {
-      // Create form data with email content and metadata
       const formData = new FormData();
       formData.append('emailContent', selectedEmail.content);
       formData.append('recordId', recordId);
       formData.append('emailId', selectedEmail.id.toString());
 
-      console.log('Starting analysis with recordId:', recordId);
-      
-      // Start the analysis
       await axios.post('/api/email-analyzer', formData);
-      
-      // Poll for the result with retries
+
       const maxRetries = 5;
       let retryCount = 0;
-      let result = null;
+      const result = null;
 
       while (retryCount < maxRetries && !result) {
         try {
-          console.log(`Polling attempt ${retryCount + 1} for analysis result...`);
           const response = await axios.get(`/api/email-analyzer/status?eventId=${recordId}`);
-          
+
           if (response.data && response.data.status === 'Completed' && response.data.result) {
-            console.log('Analysis completed successfully:', response.data.result);
             setAnalysisResult(response.data.result);
-            return; // Exit on success
+            return;
           }
-        } catch (error: any) {
-          console.warn(`Attempt ${retryCount + 1} failed:`, error.message || 'Unknown error');
+        } catch (error: unknown) {
+          console.warn(`Attempt ${retryCount + 1} failed ${(error as Error).message} `);
         }
-        
-        // Wait before next retry with exponential backoff
+
         const delay = Math.min(1000 * Math.pow(2, retryCount), 5000);
-        console.log(`Waiting ${delay}ms before next attempt...`);
         await new Promise(resolve => setTimeout(resolve, delay));
         retryCount++;
       }
-      
+
       if (!result) {
         throw new Error('Nem sikerült letölteni az elemzést. Kérjük, próbálja újra később.');
       }
-      
-    } catch (error: any) {
-      console.error('Error in analyzeEmail:', error);
-      const errorMessage = error?.response?.data?.message || 
-                         error?.message || 
-                         'Ismeretlen hiba történt az elemzés során';
-      setAnalysisError(errorMessage);
+
+    }catch (error: unknown) {
+      if (error instanceof Error) {
+        setAnalysisError(error.message);
+      } else {
+        setAnalysisError('Ismeretlen hiba');
+      }
     } finally {
       setIsAnalyzing(false);
     }
@@ -191,7 +172,6 @@ function EmailList() {
         </ul>
       )}
 
-      {/* Email Details Modal */}
       <Dialog open={!!selectedEmail} onOpenChange={open => !open && closeModal()}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           {selectedEmail && (
@@ -277,7 +257,7 @@ function EmailList() {
                   {analysisResult && (
                     <div className="bg-gray-50 rounded-lg p-4 mt-4">
                       <h5 className="font-medium text-gray-900 mb-3">Eredmények</h5>
-                      
+
                       {analysisResult.analysis?.main_topic && (
                         <div className="mb-4">
                           <h6 className="text-sm font-medium text-gray-700 mb-1">Fő téma</h6>

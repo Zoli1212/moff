@@ -1,9 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { adminListWorkflows, adminListUsers, adminListCredentials } from '@/actions/admin.action';
-import { GoogleOAuthCredential } from '@prisma/client';
+import { GoogleOAuthCredential, Workflow, Phase } from '@prisma/client';
+
+type WorkflowWithPhases = Workflow & {
+  phases: Phase[];
+};
 
 interface User {
   id: number;
@@ -12,14 +15,10 @@ interface User {
   role?: string;
 }
 
-interface Workflow {
-  id: number;
-  name: string;
-  phases: any[];
-}
+
 
 export default function AdminDashboard() {
-  const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [workflows, setWorkflows] = useState<WorkflowWithPhases[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [credentials, setCredentials] = useState<GoogleOAuthCredential[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -30,7 +29,7 @@ export default function AdminDashboard() {
       try {
         // All list functions now return data directly
         const [workflows, users, credentials] = await Promise.all([
-          adminListWorkflows(),
+          adminListWorkflows() as Promise<WorkflowWithPhases[]>,
           adminListUsers(),
           adminListCredentials(),
         ]);

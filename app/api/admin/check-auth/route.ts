@@ -1,4 +1,4 @@
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
@@ -12,7 +12,6 @@ export async function GET() {
       );
     }
     
-    const userId = user.id;
     const userEmail = user.emailAddresses[0]?.emailAddress;
 
     // Only allow access if the email matches

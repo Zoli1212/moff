@@ -70,21 +70,21 @@ export async function getGoogleAuthUrl(tenantEmail: string): Promise<string> {
   });
 }
 
-function decodeHtmlEntity(str: string): string {
-  const entities: Record<string, string> = {
-    "&nbsp;": " ",
-    "&eacute;": "é",
-    "&egrave;": "è",
-    "&agrave;": "à",
-    "&amp;": "&",
-    "&lt;": "<",
-    "&gt;": ">",
-    "&quot;": '"',
-    "&apos;": "'",
-    // ➕ Bővíthető tetszés szerint
-  };
-  return entities[str.toLowerCase()] || "";
-}
+// function decodeHtmlEntity(str: string): string {
+//   const entities: Record<string, string> = {
+//     "&nbsp;": " ",
+//     "&eacute;": "é",
+//     "&egrave;": "è",
+//     "&agrave;": "à",
+//     "&amp;": "&",
+//     "&lt;": "<",
+//     "&gt;": ">",
+//     "&quot;": '"',
+//     "&apos;": "'",
+//     // ➕ Bővíthető tetszés szerint
+//   };
+//   return entities[str.toLowerCase()] || "";
+// }
 
 function extractEmailContent(email: gmail_v1.Schema$Message): string {
   // Helper to clean up HTML entities and unwanted patterns
@@ -161,7 +161,7 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
   }
 
   // Recursive function to find text content in email parts
-  function findTextContent(part: any): string | null {
+  function findTextContent(part: gmail_v1.Schema$MessagePart): string | null {
     if (!part) return null;
 
     // If this part has plain text, return it

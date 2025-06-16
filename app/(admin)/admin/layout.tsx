@@ -3,7 +3,7 @@
 import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { prisma } from '@/lib/prisma';
+
 
 export default function AdminLayout({
   children,

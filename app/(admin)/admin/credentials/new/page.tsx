@@ -4,12 +4,6 @@ import { useRouter } from 'next/navigation';
 import { useActionState } from 'react';
 import { adminCreateCredential } from '@/actions/admin.action';
 
-type FormState = {
-  success: boolean;
-  message?: string;
-  data?: any;
-};
-
 type CredentialFormData = {
   client_id: string;
   project_id: string;
@@ -21,15 +15,20 @@ type CredentialFormData = {
   tenantEmail: string;
 };
 
+type FormState = {
+  success: boolean;
+  message?: string;
+  data?: CredentialFormData;
+};
+
 export default function NewCredentialPage() {
   const router = useRouter();
-  
+
   const [state, formAction] = useActionState<FormState, FormData>(
     adminCreateCredential,
     { success: false } as FormState
   );
-  
-  // Handle successful submission
+
   if (state?.success) {
     router.push('/admin/credentials');
   }
@@ -37,13 +36,13 @@ export default function NewCredentialPage() {
   return (
     <div>
       <h2 className="text-2xl font-semibold mb-6">Add New Google OAuth Credentials</h2>
-      
+
       {state?.message && (
         <div className={`p-4 mb-4 rounded-md ${state.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
           {state.message}
         </div>
       )}
-      
+
       <form action={formAction} className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
@@ -58,7 +57,7 @@ export default function NewCredentialPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             />
           </div>
-          
+
           <div>
             <label htmlFor="project_id" className="block text-sm font-medium text-gray-700">
               Project ID *
@@ -72,7 +71,7 @@ export default function NewCredentialPage() {
             />
           </div>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="auth_uri" className="block text-sm font-medium text-gray-700">
@@ -86,7 +85,7 @@ export default function NewCredentialPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             />
           </div>
-          
+
           <div>
             <label htmlFor="token_uri" className="block text-sm font-medium text-gray-700">
               Token URI
@@ -100,7 +99,7 @@ export default function NewCredentialPage() {
             />
           </div>
         </div>
-        
+
         <div>
           <label htmlFor="auth_provider_x509_cert_url" className="block text-sm font-medium text-gray-700">
             Auth Provider x509 Cert URL
@@ -113,7 +112,7 @@ export default function NewCredentialPage() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           />
         </div>
-        
+
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="client_secret" className="block text-sm font-medium text-gray-700">
@@ -127,7 +126,7 @@ export default function NewCredentialPage() {
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             />
           </div>
-          
+
           <div>
             <label htmlFor="tenantEmail" className="block text-sm font-medium text-gray-700">
               Tenant Email *
@@ -141,7 +140,7 @@ export default function NewCredentialPage() {
             />
           </div>
         </div>
-        
+
         <div>
           <label htmlFor="redirect_uris" className="block text-sm font-medium text-gray-700">
             Redirect URIs (JSON array) *
@@ -156,10 +155,10 @@ export default function NewCredentialPage() {
             placeholder='["http://localhost:3000/api/auth/callback"]'
           />
           <p className="mt-1 text-xs text-gray-500">
-            Enter valid JSON array of redirect URIs, e.g. ["http://localhost:3000/api/auth/callback"]
+            Enter valid JSON array of redirect URIs, e.g. [&quot;http://localhost:3000/api/auth/callback&quot;]
           </p>
         </div>
-        
+
         <div className="flex justify-end">
           <button
             type="button"
