@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import DetailUploadDialog from "./DemandUploadDialog";
 import OfferGeneratorDialog from "./OfferGeneratorDialog";
+import TextInputDialog from "./TextInputDialog";
 
 export interface TOOL {
   name: string;
@@ -28,15 +29,23 @@ function AiToolCard({ tool }: AIToolProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [openOfferDialog, setOpenOfferDialog] = useState(false);
+  const [openTextInput, setOpenTextInput] = useState(false);
+  
   const onClickButton = async () => {
     console.log(tool.name, user?.emailAddresses?.[0]?.emailAddress);
 
-    if (tool.name == "Igény Elemző") {
+    if (tool.name === "Igény Elemző") {
       setOpen(true);
       return;
     }
-    if (tool.path == "/ai-tools/ai-cost-calculator") {
+    
+    if (tool.path === "/ai-tools/ai-cost-calculator") {
       setOpenOfferDialog(true);
+      return;
+    }
+    
+    if (tool.path === "/ai-tools/ai-offer-letter") {
+      setOpenTextInput(true);
       return;
     }
 
@@ -64,7 +73,12 @@ function AiToolCard({ tool }: AIToolProps) {
       <DetailUploadDialog open={open} setOpen={setOpen} />
       <OfferGeneratorDialog
         openDialog={openOfferDialog}
-        setOpenDialog={() => setOpenOfferDialog(false)}
+        setOpenDialog={setOpenOfferDialog}
+      />
+      <TextInputDialog 
+        open={openTextInput} 
+        setOpen={setOpenTextInput} 
+        toolPath="/ai-tools/ai-offer-letter"
       />
     </div>
   );

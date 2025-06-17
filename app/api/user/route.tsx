@@ -4,17 +4,19 @@ import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(_req: NextRequest) {
 
+  console.log(_req.url)
+
   try {
     const user = await currentUser();
 
-    if (!user || !user.primaryEmailAddress?.emailAddress) {
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
       return NextResponse.json(
         { error: "Unauthorized or missing email address" },
         { status: 401 }
       );
     }
 
-    const email = user.primaryEmailAddress.emailAddress;
+    const email = user.emailAddresses?.[0]?.emailAddress;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({

@@ -56,32 +56,71 @@ async function extractTextFromFile(file: File): Promise<string> {
   }
 }
 
+interface RequestData {
+  recordId: string;
+  textContent?: string;
+  type?: string;
+  demandFile?: File;
+}
+
 export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
-        const demandFile = formData.get('demandFile');
+        const demandFile = formData.get('demandFile') as File | null;
         const recordId = formData.get('recordId')?.toString();
-    
-        if (!(demandFile instanceof File)) {
-            return NextResponse.json({ error: "Hiányzó vagy érvénytelen fájl" }, { status: 400 });
+        const textContent = formData.get('textContent')?.toString();
+        const type = formData.get('type')?.toString() || 'demand-analyzer';
+
+        if (!recordId) {
+            return NextResponse.json({ error: "Hiányzó recordId" }, { status: 400 });
         }
-    
+
         const user = await currentUser();
-        const fileText = await extractTextFromFile(demandFile);
-        const arrayBuffer = await demandFile.arrayBuffer();
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
+        let content = '';
+        let base64File = '';
+        let fileType = '';
+        let fileName = '';
+
+        if (demandFile instanceof File) {
+            content = await extractTextFromFile(demandFile);
+            const arrayBuffer = await demandFile.arrayBuffer();
+            base64File = Buffer.from(arrayBuffer).toString('base64');
+            fileType = demandFile.type;
+            fileName = demandFile.name;
+        } else if (textContent) {
+            content = textContent;
+            fileType = 'text/plain';
+            fileName = 'text-input.txt';
+        } else {
+            return NextResponse.json({ error: "Hiányzó bemeneti adat" }, { status: 400 });
+        }
+
+        const aiAgentType = type === 'offer-letter' 
+            ? '/ai-tools/ai-offer-letter' 
+            : '/ai-tools/ai-demand-analyzer';
     
-        const result = await inngest.send({
-            name: 'AiDemandAgent',
-            data: {
+        const isOfferLetter = type === 'offer-letter';
+        const eventData = isOfferLetter 
+            ? { 
+                userInput: content, // For AiOfferAgent
                 recordId,
-                base64DemandFile: base64,
-                fileText,
-                fileType: demandFile.type,
-                fileName: demandFile.name,
-                aiAgentType: '/ai-tools/ai-demand-analyzer',
-                userEmail: user?.primaryEmailAddress?.emailAddress,
-            },
+                userEmail: user?.emailAddresses?.[0]?.emailAddress
+              }
+            : {
+                // For AiDemandAgent
+                recordId,
+                base64DemandFile: base64File,
+                fileText: content,
+                fileType,
+                fileName,
+                aiAgentType,
+                userEmail: user?.emailAddresses?.[0]?.emailAddress,
+                inputType: demandFile ? 'file' : 'text',
+              };
+
+        const result = await inngest.send({
+            name: isOfferLetter ? 'AiOfferAgent' : 'AiDemandAgent',
+            data: eventData,
         });
     
         const eventId = result.ids?.[0];

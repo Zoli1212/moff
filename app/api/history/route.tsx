@@ -49,9 +49,9 @@ export async function GET(req: NextRequest) {
             });
             return NextResponse.json(result);
         } else {
-            if (user?.primaryEmailAddress?.emailAddress) {
+            if (user?.emailAddresses?.[0]?.emailAddress) {
                 const result = await prisma.history.findMany({
-                    where: { userEmail: user.primaryEmailAddress.emailAddress },
+                    where: { userEmail: user.emailAddresses?.[0]?.emailAddress },
                     orderBy: { id: 'desc' }
                 });
                 return NextResponse.json(result);

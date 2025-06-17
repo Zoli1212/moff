@@ -18,18 +18,18 @@ export const aiToolsList = [
         path: '/ai-tools/ai-demands-analyzer'
     },
     {
+        name: 'Ajánlatlevél Generátor',
+        desc: 'Generálj ajánlatlevelet szövegből',
+        icon: '/cover.png',
+        button: 'Létrehozás most',
+        path: '/ai-tools/ai-offer-letter'
+    },
+    {
         name: 'Költség Kalkulátor',
         desc: 'Számold ki az ajánlatodat',
         icon: '/roadmap.png',
         button: 'Számolás most',
         path: '/ai-tools/ai-cost-calculator'
-    },
-    {
-        name: 'Ajánlatlevél Generátor',
-        desc: 'Generálj ajánlatlevelet',
-        icon: '/cover.png',
-        button: 'Létrehozás most',
-        path: '/ai-tools/ai-offer-letter-generator'
     },
 ];
 

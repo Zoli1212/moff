@@ -5,7 +5,7 @@ export const usersTable = pgTable("users", {
     email: varchar({ length: 255 }).notNull().unique(),
 });
 
-export const HistoryTable = pgTable('historyTable', {
+export const HistoryTable = pgTable('history', {
     id: integer().primaryKey().generatedAlwaysAsIdentity(),
     recordId: varchar().notNull(),
     content: json(),

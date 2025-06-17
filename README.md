@@ -179,3 +179,55 @@ INNGEST_SIGNING_KEY=signkey-prod-ee608d0103068ec617427050595ba78fbf4194d7e13bf99
   "rooms_affected": "Teljes ingatlan",
   "budget_estimate": "5 000 000 Ft"
 }
+-------
+Tárgy: Lakásfelújítási ajánlatkérés – VIII. kerületi lakás
+
+Kedves Asszisztens!
+
+Szeretnék előzetes ajánlatot kérni az alábbi felújítási munkálatokra egy 65 m²-es, budapesti lakás kapcsán (VIII. kerület). Kérlek, a cég szakági árlistája alapján számítsd ki az ajánlott munkafolyamatokat, azok költségeit, és add meg a becsült kivitelezési határidőt is.
+
+Alapinformációk:
+
+Lakás mérete: kb. 65 m²
+
+Helyiségek: előszoba, nappali, háló, konyha, fürdő, WC
+
+Kért munkálatok:
+
+Belső vakolat javítása a teljes lakásban (kb. 130 m² falfelület)
+
+Festés, mázolás: fehérre a mennyezet, színesre a falak (kb. 130 m²)
+
+Régi parketta bontása, új laminált padló lerakása (kb. 55 m²)
+
+Beltéri ajtók cseréje (5 db ajtó)
+
+Fürdőszoba felújítás:
+
+Fal- és padlóburkolás (20 m²)
+
+Szaniterek cseréje (kád, mosdó, WC)
+
+Csaptelepek, lefolyók beépítése
+
+Elektromos hálózat részleges felújítása (15 konnektor, 5 lámpa kiállás, 1 biztosítéktábla)
+
+Kérlek, a válaszodban:
+
+Sorold fel a javasolt konkrét feladatokat a belső árlistából.
+
+Add meg minden tételhez a munkadíjat és anyagköltséget egységenként.
+
+Számítsd ki az összesített nettó költséget.
+
+Becsüld meg a várható kivitelezési időtartamot (napokban).
+
+Ha bármilyen adat hiányzik, kérlek, jelezd vissza.
+
+Előre is köszönöm a segítségedet!
+
+Üdvözlettel:
+Kovács Eszter
++36 30 123 4567
+eszter.kovacs@pelda.hu
+

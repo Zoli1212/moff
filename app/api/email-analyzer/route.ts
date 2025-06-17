@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
                 data: {
                     recordId,
                     emailContent: emailContent.substring(0, 500) + (emailContent.length > 500 ? '...' : ''), // Log first 500 chars
-                    userEmail: user.primaryEmailAddress?.emailAddress || '',
+                    userEmail: user.emailAddresses?.[0]?.emailAddress || '',
                     metadata: {
                         emailId,
                         analyzedAt: new Date().toISOString()
