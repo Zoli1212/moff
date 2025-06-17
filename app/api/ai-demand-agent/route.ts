@@ -56,12 +56,7 @@ async function extractTextFromFile(file: File): Promise<string> {
   }
 }
 
-interface RequestData {
-  recordId: string;
-  textContent?: string;
-  type?: string;
-  demandFile?: File;
-}
+
 
 export async function POST(req: NextRequest) {
     try {

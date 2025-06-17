@@ -6,15 +6,22 @@ import { Button } from '@/components/ui/button';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 
+interface OutputItem {
+  role: string;
+  type: string;
+  content: string;
+}
+
+interface OfferContent {
+  output?: OutputItem[];
+  text?: string;
+}
+
 interface OfferData {
   id: string;
   recordId: string;
-  content: any;
-  output?: Array<{
-    role: string;
-    type: string;
-    content: string;
-  }>;
+  content: string | OfferContent;
+  output?: OutputItem[];
   createdAt: string;
   metaData?: {
     title?: string;
@@ -23,12 +30,12 @@ interface OfferData {
 }
 
 // Helper function to safely parse JSON content
-const parseContent = (content: any): any => {
+const parseContent = (content: string | OfferContent): OfferContent | null => {
   if (!content) return null;
   if (typeof content === 'string') {
     try {
       return JSON.parse(content);
-    } catch (e) {
+    } catch {
       return { output: [{ role: 'assistant', type: 'text', content }] };
     }
   }
@@ -41,7 +48,7 @@ export default function OfferLetterResult() {
   const [offer, setOffer] = useState<OfferData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [content, setContent] = useState<any>(null);
+  const [content, setContent] = useState<OfferContent | null>(null);
 
   // Parse content when offer changes
   useEffect(() => {
@@ -55,8 +62,8 @@ export default function OfferLetterResult() {
       try {
         const response = await axios.get(`/api/ai-offer-letter/${params.recordid}`);
         setOffer(response.data);
-      } catch (err) {
-        console.error('Error fetching offer:', err);
+      } catch {
+        console.error('Error fetching offer');
         setError('Nem sikerült betölteni az ajánlatot. Kérjük próbáld újra később.');
       } finally {
         setIsLoading(false);
@@ -122,7 +129,7 @@ export default function OfferLetterResult() {
 
               {/* Main Content */}
               <div className="prose max-w-none">
-                {content.output?.map((item: any, index: number) => (
+                {content.output?.map((item, index) => (
                   <div key={index} className="mb-6">
                     {item.role === 'assistant' && (
                       <div className="bg-gray-50 p-5 rounded-lg">
@@ -144,7 +151,7 @@ export default function OfferLetterResult() {
                 ))}
 
                 {!content.output?.length && content.text && (
-                  <div className="whitespace-pre-wrap">
+                  <div className="whitespace-pre-wrap space-y-2">
                     {content.text}
                   </div>
                 )}
