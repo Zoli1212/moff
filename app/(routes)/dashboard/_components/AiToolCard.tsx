@@ -61,7 +61,7 @@ function AiToolCard({ tool }: AIToolProps) {
 
   console.log(open, "open");
   return (
-    <div className="p-3 border rounded-lg ">
+    <div className="p-3 border rounded-lg bg-emerald-50 hover:bg-emerald-100 transition-colors">
       <Image src={tool.icon} width={40} height={40} alt={tool.name} />
       <h2 className="font-bold mt-2">{tool.name}</h2>
       <p className="text-gray-400">{tool.desc}</p>

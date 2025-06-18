@@ -19,7 +19,7 @@ export const aiToolsList = [
     },
     {
         name: 'Ajánlatlevél Generátor',
-        desc: 'Generálj ajánlatlevelet szövegből',
+        desc: 'Ajánlatlevél szövegből',
         icon: '/cover.png',
         button: 'Létrehozás most',
         path: '/ai-tools/ai-offer-letter'
