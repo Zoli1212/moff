@@ -86,11 +86,27 @@ export default function OfferLetterResult() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [content, setContent] = useState<OfferContent | null>(null);
+  const [editableItems, setEditableItems] = useState<Array<{
+    name: string;
+    quantity: string;
+    unit: string;
+    materialUnitPrice: string;
+    workUnitPrice: string;
+    materialTotal: string;
+    workTotal: string;
+  }>>([]);
 
   useEffect(() => {
     if (offer) {
       const parsed = parseContent(offer.content);
       setContent(parsed);
+      
+      // Initialize editable items when content is loaded
+      if (parsed?.output?.[0]?.content) {
+        const rawText = parsed.output[0].content;
+        const parsedItems = parseOfferTable(rawText);
+        setEditableItems(parsedItems);
+      }
     }
   }, [offer]);
 
@@ -120,10 +136,10 @@ export default function OfferLetterResult() {
     return <Loader2 className="animate-spin" />;
   }
   const rawText = content?.output?.[0]?.content || "";
-  const items = rawText ? parseOfferTable(rawText) : [];
+  // Use editableItems instead of parsing raw text each time
+  const items = editableItems;
 
-
-// Extract email - simple pattern for this specific case
+  // Extract email - simple pattern for this specific case
 // Email - matches the email format in the signature
 const emailMatch = rawText.match(
   /(?<=\n\nÜdvözlettel,)\s*\n\s*([^\n]+@[^\s]+)/i
@@ -198,15 +214,88 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                 <tbody>
                   {items.map((item, idx) => (
                     <tr key={idx} className="border-t">
-                      <td className="p-2 border break-words whitespace-pre-wrap">
-                        {item.name}
+                      <td className="p-2 border">
+                        <input
+                          type="text"
+                          className="w-full p-1 border rounded"
+                          value={item.name}
+                          onChange={(e) => {
+                            const newItems = [...editableItems];
+                            newItems[idx].name = e.target.value;
+                            setEditableItems(newItems);
+                          }}
+                        />
                       </td>
-                      <td className="p-2 border">{item.quantity}</td>
-                      <td className="p-2 border">{item.unit}</td>
-                      <td className="p-2 border">{item.materialUnitPrice}</td>
-                      <td className="p-2 border">{item.workUnitPrice}</td>
-                      <td className="p-2 border">{item.materialTotal}</td>
-                      <td className="p-2 border">{item.workTotal}</td>
+                      <td className="p-2 border">
+                        <input
+                          type="text"
+                          className="w-full p-1 border rounded"
+                          value={item.quantity}
+                          onChange={(e) => {
+                            const newItems = [...editableItems];
+                            newItems[idx].quantity = e.target.value;
+                            // Recalculate total if needed
+                            const quantity = parseFloat(e.target.value.replace(/\D/g, '')) || 0;
+                            const workPrice = parseFloat(item.workUnitPrice.replace(/\D/g, '')) || 0;
+                            const materialPrice = parseFloat(item.materialUnitPrice.replace(/\D/g, '')) || 0;
+                            
+                            newItems[idx].workTotal = (quantity * workPrice).toLocaleString('hu-HU') + ' Ft';
+                            newItems[idx].materialTotal = (quantity * materialPrice).toLocaleString('hu-HU') + ' Ft';
+                            
+                            setEditableItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="p-2 border">
+                        <input
+                          type="text"
+                          className="w-full p-1 border rounded"
+                          value={item.unit}
+                          onChange={(e) => {
+                            const newItems = [...editableItems];
+                            newItems[idx].unit = e.target.value;
+                            setEditableItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="p-2 border">
+                        <input
+                          type="text"
+                          className="w-full p-1 border rounded"
+                          value={item.materialUnitPrice}
+                          onChange={(e) => {
+                            const newItems = [...editableItems];
+                            newItems[idx].materialUnitPrice = e.target.value;
+                            // Recalculate material total
+                            const quantity = parseFloat(item.quantity.replace(/\D/g, '')) || 0;
+                            const price = parseFloat(e.target.value.replace(/\D/g, '')) || 0;
+                            newItems[idx].materialTotal = (quantity * price).toLocaleString('hu-HU') + ' Ft';
+                            setEditableItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="p-2 border">
+                        <input
+                          type="text"
+                          className="w-full p-1 border rounded"
+                          value={item.workUnitPrice}
+                          onChange={(e) => {
+                            const newItems = [...editableItems];
+                            newItems[idx].workUnitPrice = e.target.value;
+                            // Recalculate work total
+                            const quantity = parseFloat(item.quantity.replace(/\D/g, '')) || 0;
+                            const price = parseFloat(e.target.value.replace(/\D/g, '')) || 0;
+                            newItems[idx].workTotal = (quantity * price).toLocaleString('hu-HU') + ' Ft';
+                            setEditableItems(newItems);
+                          }}
+                        />
+                      </td>
+                      <td className="p-2 border">
+                        {item.materialTotal}
+                      </td>
+                      <td className="p-2 border">
+                        {item.workTotal}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -239,7 +328,7 @@ const time = timeMatch ? timeMatch[1].trim() : '';
               {/* Add the email sender component */}
               <div className="mt-8">
                 <OfferLetterEmailSender
-                  items={items}
+                  items={editableItems}
                   name={nameMatch?.[1]?.trim()}
                   email={emailMatch?.[0]}
                   total={
@@ -248,7 +337,7 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                       : undefined
                   }
                   time={timeMatch?.[1]?.trim()}
-                  title ={"Ajánlat "}
+                  title={"Ajánlat "}
                 />
               </div>
 
