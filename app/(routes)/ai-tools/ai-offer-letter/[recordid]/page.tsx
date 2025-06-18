@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
@@ -95,6 +95,19 @@ export default function OfferLetterResult() {
     materialTotal: string;
     workTotal: string;
   }>>([]);
+  
+  // Calculate total from editable items
+  const calculateTotal = useMemo(() => {
+    return editableItems.reduce((sum, item) => {
+      const amount = parseFloat(item.workTotal.replace(/\D/g, '')) || 0;
+      return sum + amount;
+    }, 0);
+  }, [editableItems]);
+  
+  // Format total as string
+  const formattedTotal = useMemo(() => {
+    return calculateTotal.toLocaleString('hu-HU') + ' Ft';
+  }, [calculateTotal]);
 
   useEffect(() => {
     if (offer) {
@@ -301,11 +314,9 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                 </tbody>
               </table>
 
-              {totalMatch && (
-                <p className="mt-4 text-base font-medium">
-                  Összesített nettó költség: {totalMatch[1].trim() + " Ft"}
-                </p>
-              )}
+              <p className="mt-4 text-base font-medium">
+                Összesített nettó költség: {formattedTotal}
+              </p>
               {timeMatch && (
                 <p className="text-base font-medium">
                   Becsült kivitelezési idő: {timeMatch[1].trim()}
@@ -331,11 +342,7 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                   items={editableItems}
                   name={nameMatch?.[1]?.trim()}
                   email={emailMatch?.[0]}
-                  total={
-                    totalMatch?.[1]?.trim()
-                      ? `${totalMatch[1].trim()} Ft`
-                      : undefined
-                  }
+                  total={formattedTotal}
                   time={timeMatch?.[1]?.trim()}
                   title={"Ajánlat "}
                 />
