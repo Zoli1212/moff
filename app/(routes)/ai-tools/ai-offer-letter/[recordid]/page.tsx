@@ -5,6 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft } from "lucide-react";
 import axios from "axios";
+import dynamic from "next/dynamic";
+
+// Dynamically import the OfferLetterEmailSender component with SSR disabled
+const OfferLetterEmailSender = dynamic(
+  () => import("./_components/OfferLetterEmailSender"),
+  { ssr: false }
+);
 
 interface OutputItem {
   role: string;
@@ -115,16 +122,36 @@ export default function OfferLetterResult() {
   const rawText = content?.output?.[0]?.content || "";
   const items = rawText ? parseOfferTable(rawText) : [];
 
-  const totalMatch = rawText.match(
-    /\*\*Összesített nettó költség:\s*([\d\s.]+)\s*Ft\*\*/i
-  );
 
-  const timeMatch = rawText.match(
-    /\*\*Becsült kivitelezési idő:\*\*\s*([^\n\\]+)/i
-  );
+// Extract email - simple pattern for this specific case
+// Email - matches the email format in the signature
+const emailMatch = rawText.match(
+  /(?<=\n\nÜdvözlettel,)\s*\n\s*([^\n]+@[^\s]+)/i
+);
 
-  console.log("Nettó költség:", totalMatch?.[1]?.trim());
-  console.log("Időtartam:", timeMatch?.[1]?.trim());
+// Name - matches "Kedves [Name]!" at the beginning
+const nameMatch = rawText.match(
+  /^Kedves\s+([^!]+)!/i
+);
+
+// Total cost - matches "Összesített nettó költség: 3 134 000 Ft"
+const totalMatch = rawText.match(
+  /\*\*Összesített nettó költség:\*\* ([\d\s]+) Ft/i
+);
+
+// Time estimate - matches "Becsült kivitelezési idő: 15-20 nap"
+const timeMatch = rawText.match(
+  /\*\*Becsült kivitelezési idő:\*\* ([^\n]+)/i
+);
+
+
+
+// Clean and format the extracted values
+const email = emailMatch ? emailMatch[0].trim() : '';
+const name = nameMatch ? nameMatch[1].trim() : '';
+const total = totalMatch ? totalMatch[1].trim().replace(/\s/g, '') + ' Ft' : '';
+const time = timeMatch ? timeMatch[1].trim() : '';
+
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -144,7 +171,7 @@ export default function OfferLetterResult() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="border-b pb-4 mb-6">
-                <h1 className="text-xl font-semibold">Ajánlat generálás</h1>
+                <h1 className="text-xl font-semibold">Ajánlat</h1>
                 {offer.metaData?.description && (
                   <p className="text-gray-600 mt-1 truncate">
                     Tárgy: {offer.metaData.description}
@@ -195,6 +222,35 @@ export default function OfferLetterResult() {
                   Becsült kivitelezési idő: {timeMatch[1].trim()}
                 </p>
               )}
+
+              {nameMatch && (
+                <p className="text-base text-gray-800">
+                  Kérelmező neve:{" "}
+                  <span className="font-medium">{nameMatch[1].trim()}</span>
+                </p>
+              )}
+              {emailMatch && (
+                <p className="text-base text-gray-800">
+                  Kérelmező email:{" "}
+                  <span className="font-medium">{emailMatch[0]}</span>
+                </p>
+              )}
+
+              {/* Add the email sender component */}
+              <div className="mt-8">
+                <OfferLetterEmailSender
+                  items={items}
+                  name={nameMatch?.[1]?.trim()}
+                  email={emailMatch?.[0]}
+                  total={
+                    totalMatch?.[1]?.trim()
+                      ? `${totalMatch[1].trim()} Ft`
+                      : undefined
+                  }
+                  time={timeMatch?.[1]?.trim()}
+                  title ={"Ajánlat "}
+                />
+              </div>
 
               <p className="mt-4 text-sm text-gray-500">
                 Létrehozva: {new Date(offer.createdAt).toLocaleString("hu-HU")}
