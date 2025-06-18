@@ -232,3 +232,46 @@ Kovács Eszter
 eszter.kovacs@pelda.hu
 
 ----------------------------------------
+Tárgy: Lakásfelújítási ajánlatkérés – XIII. kerületi társasházi lakás
+
+Kedves Asszisztens!
+
+Előzetes ajánlatot szeretnék kérni egy 78 m²-es budapesti társasházi lakás részleges felújítására, amely a XIII. kerületben található. Kérlek, a cég aktuális szakági árlistája alapján számítsd ki a javasolt munkafolyamatokat, azok költségeit, és add meg a becsült kivitelezési időt is.
+
+Alapinformációk:
+Lakás mérete: kb. 78 m²
+
+Emelet: 3., lift van
+
+Helyiségek: előszoba, nappali, két háló, konyha, fürdő, WC, loggia
+
+Kért munkálatok:
+Teljes belső festés és mázolás (falak színesre, mennyezet fehérre): kb. 180 m²
+
+Hidegburkolat cseréje a konyhában és fürdőben (összesen kb. 25 m²)
+
+Laminált padló fektetése két hálószobában és nappaliban (kb. 50 m²)
+
+Konyhabútor bontása és új beépítése (4,5 méter hosszban)
+
+Vízvezetékek részleges cseréje (konyha és fürdő)
+
+Villanyszerelési munkák (20 konnektor, 6 lámpakiállás, 1 FI-relé beépítés)
+
+Kérlek, a válaszodban:
+Sorold fel a javasolt konkrét feladatokat a belső árlistátok alapján.
+
+Add meg minden tételhez a munkadíjat és az anyagköltséget egységenként.
+
+Számítsd ki az összesített nettó költséget.
+
+Becsüld meg a várható kivitelezési időtartamot (napokban).
+
+Ha további információra van szükség, szívesen egyeztetek telefonon vagy emailben.
+
+Előre is köszönöm a segítségedet!
+
+Üdvözlettel:
+Szabó Bence
++36 70 456 7890
+bence.szabo@pelda.hu

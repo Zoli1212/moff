@@ -42,7 +42,7 @@ const parseContent = (content: string | OfferContent): OfferContent | null => {
 };
 
 const parseOfferTable = (text: string) => {
-  const items: any[] = [];
+  const items = [];
   const lines = text.split("\n");
 
   for (const line of lines) {
@@ -54,12 +54,15 @@ const parseOfferTable = (text: string) => {
 
     if (match) {
       const [, name, qty, unit, unitPrice, unit2, total] = match;
+      console.log(unit2);
       items.push({
         name: name.trim(),
         quantity: qty.trim(),
         unit: unit.trim(),
         materialUnitPrice: "0 Ft",
-        workUnitPrice: parseInt(unitPrice.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") + " Ft",
+        workUnitPrice:
+          parseInt(unitPrice.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") +
+          " Ft",
         materialTotal: "0 Ft",
         workTotal: total.trim() + " Ft",
       });
@@ -106,17 +109,22 @@ export default function OfferLetterResult() {
     }
   }, [params.recordid]);
 
+  if (isLoading) {
+    return <Loader2 className="animate-spin" />;
+  }
   const rawText = content?.output?.[0]?.content || "";
   const items = rawText ? parseOfferTable(rawText) : [];
 
-  const totalMatch = rawText.match(/\*\*Összesített nettó költség:\*\*\s*([\d\s.]+)\s*Ft/i);
-const timeMatch = rawText.match(/\*\*Becsült kivitelezési idő:\*\*\s*([^\n\\]+)/i);
+  const totalMatch = rawText.match(
+    /\*\*Összesített nettó költség:\s*([\d\s.]+)\s*Ft\*\*/i
+  );
 
+  const timeMatch = rawText.match(
+    /\*\*Becsült kivitelezési idő:\*\*\s*([^\n\\]+)/i
+  );
 
-console.log("Nettó költség:", totalMatch?.[1]?.trim());
-console.log("Időtartam:", timeMatch?.[1]?.trim());
-
- 
+  console.log("Nettó költség:", totalMatch?.[1]?.trim());
+  console.log("Időtartam:", timeMatch?.[1]?.trim());
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
@@ -163,7 +171,9 @@ console.log("Időtartam:", timeMatch?.[1]?.trim());
                 <tbody>
                   {items.map((item, idx) => (
                     <tr key={idx} className="border-t">
-                      <td className="p-2 border break-words whitespace-pre-wrap">{item.name}</td>
+                      <td className="p-2 border break-words whitespace-pre-wrap">
+                        {item.name}
+                      </td>
                       <td className="p-2 border">{item.quantity}</td>
                       <td className="p-2 border">{item.unit}</td>
                       <td className="p-2 border">{item.materialUnitPrice}</td>
@@ -190,7 +200,8 @@ console.log("Időtartam:", timeMatch?.[1]?.trim());
                 Létrehozva: {new Date(offer.createdAt).toLocaleString("hu-HU")}
               </p>
               <p className="text-sm text-gray-500">
-                Ajánlat azonosító: <span className="font-mono">{offer.recordId}</span>
+                Ajánlat azonosító:{" "}
+                <span className="font-mono">{offer.recordId}</span>
               </p>
             </div>
 
