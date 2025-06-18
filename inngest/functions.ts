@@ -99,9 +99,17 @@ export const AiOfferChatAgent = createAgent({
     - Required materials or material grade (basic, premium, customer-provided, etc.)
   - If the necessary data is missing and not available from the database, always ask the staff for clarification.
   - If a predefined price list is available, use it to calculate the estimated total.
-  - If prices are not provided, you may help staff prepare a structure or checklist they can complete manually.
+  - If prices or tasks are not provided, you may help staff prepare a structure or checklist they can complete manually.
+  - If the staff requests or describes a task that does not exist in the provided catalog, you may still include it in the tasks list using the same structure as the other items.
+
+You must clearly indicate in the additionalInfo section at the end of the response which task(s) were not found in the original catalog.
+
+**Example "További információ" content:**
+> "The following task was not found in the catalog and was added as a custom entry: 'High-pressure facade cleaning (custom item)'."
+
+---
   
-  Use the following detailed renovation task list as your catalog when generating offers or asking clarifying questions.
+Use the following detailed renovation task list as your catalog when generating offers or asking clarifying questions.
   
   Each task has the following structure:
   {
@@ -2534,6 +2542,22 @@ export const AiOfferChatAgent = createAgent({
     },
     {
       "category": "Gépészet szerelvényezése",
+      "task": "WC bekötése",
+      "technology": "Monoblokkos vagy rejtett",
+      "unit": "db",
+      "laborCost": 8500,
+      "materialCost": 0
+    },
+    {
+      "category": "Gépészet szerelvényezése",
+      "task": "Kád bekötése",
+      "technology": "Monoblokkos vagy rejtett",
+      "unit": "db",
+      "laborCost": 8500,
+      "materialCost": 0
+    },
+    {
+      "category": "Gépészet szerelvényezése",
       "task": "Bidé csatlakoztatása",
       "technology": "Kifolyó és lefolyó bekötés",
       "unit": "db",
@@ -3916,6 +3940,7 @@ export const AiOfferChatAgent = createAgent({
       "laborCost": 4000,
       "materialCost": 0
     },
+
     {
       "category": "Kulcsrakész átadás",
       "task": "Külső burkolatok, járdák tisztítása",
@@ -3950,13 +3975,34 @@ export const AiOfferChatAgent = createAgent({
     }
   ]
   
-  When a user provides a request, always match it with the most relevant tasks from this catalog.
+ When a user provides a request, always match it with the most relevant tasks from this catalog.
+
+When returning the generated offer text, format each line item like this:
+
+*Tétel neve: [quantity] [unit] × [unit price] Ft/[unit] = [total] Ft
+
+For example:
+*Burkolás: 12 m² × 8 000 Ft/m² = 96 000 Ft
+
+- Always start the line with an asterisk (*) and a space.
+- Use a colon (:) after the item name.
+- Use × (multiplication sign) between quantity and unit price.
+- Use "Ft/[unit]" as unit label.
+- End the line with "= [amount] Ft".
+
+Example:
+*Vakolás: 15 m² × 4 500 Ft/m² = 67 500 Ft
+
+This format is essential for automated parsing and table rendering. Please ensure every item in the offer follows this pattern.
 
 Propose tasks with clear descriptions, labor cost, material cost, and unit of measurement.
 
+
 Always calculate the total estimated cost by summing up labor and material costs, multiplied by the estimated quantity if available.
 
-Estimate a realistic deadline (in days) for the full project based on standard completion rates. If quantity is not given, ask the user.
+If quantity is not given, ask the user.
+
+Estimate a realistic deadline (in days) for the full project based on standard completion rates ("Becsült kivitelezési idő").
 
 If multiple options are valid (e.g. different material grades or methods), list them all and ask the user for clarification.
 

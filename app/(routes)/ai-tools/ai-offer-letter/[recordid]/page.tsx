@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft } from 'lucide-react';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Loader2, ArrowLeft } from "lucide-react";
+import axios from "axios";
 
 interface OutputItem {
   role: string;
@@ -29,17 +29,44 @@ interface OfferData {
   };
 }
 
-// Helper function to safely parse JSON content
 const parseContent = (content: string | OfferContent): OfferContent | null => {
   if (!content) return null;
-  if (typeof content === 'string') {
+  if (typeof content === "string") {
     try {
       return JSON.parse(content);
     } catch {
-      return { output: [{ role: 'assistant', type: 'text', content }] };
+      return { output: [{ role: "assistant", type: "text", content }] };
     }
   }
   return content;
+};
+
+const parseOfferTable = (text: string) => {
+  const items: any[] = [];
+  const lines = text.split("\n");
+
+  for (const line of lines) {
+    const trimmed = line.trim().replace(/^\*+/, "");
+
+    const match = trimmed.match(
+      /^(.*?)[:\-–—\s]*([\d\s,.]+)\s*(m²|fm|db)\s*[xX×]\s*([\d\s,.]+)\s*Ft\/(m²|fm|db).*?=\s*([\d\s,.]+)\s*Ft/i
+    );
+
+    if (match) {
+      const [, name, qty, unit, unitPrice, unit2, total] = match;
+      items.push({
+        name: name.trim(),
+        quantity: qty.trim(),
+        unit: unit.trim(),
+        materialUnitPrice: "0 Ft",
+        workUnitPrice: parseInt(unitPrice.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") + " Ft",
+        materialTotal: "0 Ft",
+        workTotal: total.trim() + " Ft",
+      });
+    }
+  }
+
+  return items;
 };
 
 export default function OfferLetterResult() {
@@ -47,24 +74,28 @@ export default function OfferLetterResult() {
   const router = useRouter();
   const [offer, setOffer] = useState<OfferData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [content, setContent] = useState<OfferContent | null>(null);
 
-  // Parse content when offer changes
   useEffect(() => {
     if (offer) {
-      setContent(parseContent(offer.content));
+      const parsed = parseContent(offer.content);
+      setContent(parsed);
     }
   }, [offer]);
 
   useEffect(() => {
     const fetchOffer = async () => {
       try {
-        const response = await axios.get(`/api/ai-offer-letter/${params.recordid}`);
+        const response = await axios.get(
+          `/api/ai-offer-letter/${params.recordid}`
+        );
         setOffer(response.data);
       } catch {
-        console.error('Error fetching offer');
-        setError('Nem sikerült betölteni az ajánlatot. Kérjük próbáld újra később.');
+        console.error("Error fetching offer");
+        setError(
+          "Nem sikerült betölteni az ajánlatot. Kérjük próbáld újra később."
+        );
       } finally {
         setIsLoading(false);
       }
@@ -75,37 +106,24 @@ export default function OfferLetterResult() {
     }
   }, [params.recordid]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[300px]">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <span className="ml-2">Ajánlat betöltése...</span>
-      </div>
-    );
-  }
+  const rawText = content?.output?.[0]?.content || "";
+  const items = rawText ? parseOfferTable(rawText) : [];
 
-  if (error) {
-    return (
-      <div className="p-4 text-red-600 bg-red-50 rounded-lg">
-        <p>{error}</p>
-        <Button 
-          variant="outline" 
-          className="mt-4"
-          onClick={() => router.push('/ai-tools/ai-offer-letter')}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Vissza a kezdőlapra
-        </Button>
-      </div>
-    );
-  }
+  const totalMatch = rawText.match(/\*\*Összesített nettó költség:\*\*\s*([\d\s.]+)\s*Ft/i);
+const timeMatch = rawText.match(/\*\*Becsült kivitelezési idő:\*\*\s*([^\n\\]+)/i);
+
+
+console.log("Nettó költség:", totalMatch?.[1]?.trim());
+console.log("Időtartam:", timeMatch?.[1]?.trim());
+
+ 
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <Button 
-        variant="outline" 
+      <Button
+        variant="outline"
         className="mb-6"
-        onClick={() => router.push('/ai-tools/ai-offer-letter')}
+        onClick={() => router.push("/ai-tools/ai-offer-letter")}
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Vissza
@@ -113,61 +131,80 @@ export default function OfferLetterResult() {
 
       <div className="bg-white p-6 rounded-lg shadow">
         <h1 className="text-2xl font-bold mb-6">Generált Ajánlat</h1>
-        
+
         {offer && content ? (
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg shadow-md p-6">
-              {/* Header */}
               <div className="border-b pb-4 mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">
-                  {offer.metaData?.title || 'Generált Ajánlat'}
-                </h1>
+                <h1 className="text-xl font-semibold">Ajánlat generálás</h1>
                 {offer.metaData?.description && (
-                  <p className="text-gray-600 mt-2">{offer.metaData.description}</p>
+                  <p className="text-gray-600 mt-1 truncate">
+                    Tárgy: {offer.metaData.description}
+                  </p>
                 )}
               </div>
 
-              {/* Main Content */}
-              <div className="prose max-w-none">
-                {content.output?.map((item, index) => (
-                  <div key={index} className="mb-6">
-                    {item.role === 'assistant' && (
-                      <div className="bg-gray-50 p-5 rounded-lg">
-                        <div 
-                          className="prose prose-sm sm:prose lg:prose-lg xl:prose-xl max-w-none"
-                          dangerouslySetInnerHTML={{
-                            __html: (
-                              (item.content || '')
-                                .replace(/\n\n/g, '</p><p>')
-                                .replace(/\n/g, '<br />')
-                                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                            )
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                ))}
+              <pre className="whitespace-pre-wrap text-sm mb-4 bg-gray-50 p-4 rounded">
+                {rawText}
+              </pre>
 
-                {!content.output?.length && content.text && (
-                  <div className="whitespace-pre-wrap space-y-2">
-                    {content.text}
-                  </div>
-                )}
-              </div>
+              <table className="w-full text-sm border">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="text-left p-2 border">Tétel megnevezése</th>
+                    <th className="text-left p-2 border">Mennyiség</th>
+                    <th className="text-left p-2 border">Egység</th>
+                    <th className="text-left p-2 border">Anyag egységár</th>
+                    <th className="text-left p-2 border">Díj egységár</th>
+                    <th className="text-left p-2 border">Anyag összesen</th>
+                    <th className="text-left p-2 border">Díj összesen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item, idx) => (
+                    <tr key={idx} className="border-t">
+                      <td className="p-2 border break-words whitespace-pre-wrap">{item.name}</td>
+                      <td className="p-2 border">{item.quantity}</td>
+                      <td className="p-2 border">{item.unit}</td>
+                      <td className="p-2 border">{item.materialUnitPrice}</td>
+                      <td className="p-2 border">{item.workUnitPrice}</td>
+                      <td className="p-2 border">{item.materialTotal}</td>
+                      <td className="p-2 border">{item.workTotal}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
 
-              {/* Footer */}
-              <div className="mt-8 pt-4 border-t text-sm text-gray-500">
-                <p>Létrehozva: {new Date(offer.createdAt).toLocaleString('hu-HU')}</p>
-                <p className="mt-1">
-                  Ajánlat azonosító: <span className="font-mono">{offer.recordId}</span>
+              {totalMatch && (
+                <p className="mt-4 text-base font-medium">
+                  Összesített nettó költség: {totalMatch[1].trim() + " Ft"}
                 </p>
-              </div>
+              )}
+              {timeMatch && (
+                <p className="text-base font-medium">
+                  Becsült kivitelezési idő: {timeMatch[1].trim()}
+                </p>
+              )}
+
+              <p className="mt-4 text-sm text-gray-500">
+                Létrehozva: {new Date(offer.createdAt).toLocaleString("hu-HU")}
+              </p>
+              <p className="text-sm text-gray-500">
+                Ajánlat azonosító: <span className="font-mono">{offer.recordId}</span>
+              </p>
+            </div>
+
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-2">
+                JSON Riport (nyers visszatérési érték):
+              </h3>
+              <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto max-h-96">
+                {JSON.stringify(offer.content, null, 2)}
+              </pre>
             </div>
           </div>
         ) : (
-          <p>Nincs megjeleníthető adat.</p>
+          <p>{error || "Nincs megjeleníthető adat."}</p>
         )}
       </div>
     </div>
