@@ -3,9 +3,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Edit, Save, X } from "lucide-react";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import dynamic from "next/dynamic";
+import { useOfferLetterStore } from "@/store/offerLetterStore";
+import { Textarea } from "@/components/ui/textarea";
 
 // Dynamically import the OfferLetterEmailSender component with SSR disabled
 const OfferLetterEmailSender = dynamic(
@@ -84,36 +87,49 @@ export default function OfferLetterResult() {
   const router = useRouter();
   const [offer, setOffer] = useState<OfferData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [editText, setEditText] = useState("");
   const [error, setError] = useState("");
   const [content, setContent] = useState<OfferContent | null>(null);
-  const [editableItems, setEditableItems] = useState<Array<{
-    name: string;
-    quantity: string;
-    unit: string;
-    materialUnitPrice: string;
-    workUnitPrice: string;
-    materialTotal: string;
-    workTotal: string;
-  }>>([]);
-  
+  const { offerText, setOfferText } = useOfferLetterStore();
+
+  // Log store content when it changes
+
+
+  const [newText, setNewText] = useState("");
+  const [editableItems, setEditableItems] = useState<
+    Array<{
+      name: string;
+      quantity: string;
+      unit: string;
+      materialUnitPrice: string;
+      workUnitPrice: string;
+      materialTotal: string;
+      workTotal: string;
+    }>
+  >([]);
+
+  console.log(offerText, 'offerText')
+
   // Calculate total from editable items
   const calculateTotal = useMemo(() => {
     return editableItems.reduce((sum, item) => {
-      const amount = parseFloat(item.workTotal.replace(/\D/g, '')) || 0;
+      const amount = parseFloat(item.workTotal.replace(/\D/g, "")) || 0;
       return sum + amount;
     }, 0);
   }, [editableItems]);
-  
+
   // Format total as string
   const formattedTotal = useMemo(() => {
-    return calculateTotal.toLocaleString('hu-HU') + ' Ft';
+    return calculateTotal.toLocaleString("hu-HU") + " Ft";
   }, [calculateTotal]);
 
   useEffect(() => {
     if (offer) {
       const parsed = parseContent(offer.content);
       setContent(parsed);
-      
+
       // Initialize editable items when content is loaded
       if (parsed?.output?.[0]?.content) {
         const rawText = parsed.output[0].content;
@@ -153,45 +169,157 @@ export default function OfferLetterResult() {
   const items = editableItems;
 
   // Extract email - simple pattern for this specific case
-// Email - matches the email format in the signature
-const emailMatch = rawText.match(
-  /(?<=\n\nÜdvözlettel,)\s*\n\s*([^\n]+@[^\s]+)/i
-);
+  // Email - matches the email format in the signature
+  const emailMatch = rawText.match(
+    /(?<=\n\nÜdvözlettel,)\s*\n\s*([^\n]+@[^\s]+)/i
+  );
 
-// Name - matches "Kedves [Name]!" at the beginning
-const nameMatch = rawText.match(
-  /^Kedves\s+([^!]+)!/i
-);
+  // Name - matches "Kedves [Name]!" at the beginning
+  const nameMatch = rawText.match(/^Kedves\s+([^!]+)!/i);
 
-// Total cost - matches "Összesített nettó költség: 3 134 000 Ft"
-const totalMatch = rawText.match(
-  /\*\*Összesített nettó költség:\*\* ([\d\s]+) Ft/i
-);
+  // Total cost - matches "Összesített nettó költség: 3 134 000 Ft"
+  const totalMatch = rawText.match(
+    /\*\*Összesített nettó költség:\*\* ([\d\s]+) Ft/i
+  );
 
-// Time estimate - matches "Becsült kivitelezési idő: 15-20 nap"
-const timeMatch = rawText.match(
-  /\*\*Becsült kivitelezési idő:\*\* ([^\n]+)/i
-);
+  // Time estimate - matches "Becsült kivitelezési idő: 15-20 nap"
+  const timeMatch = rawText.match(
+    /\*\*Becsült kivitelezési idő:\*\* ([^\n]+)/i
+  );
+
+  // Clean and format the extracted values
+  const email = emailMatch ? emailMatch[0].trim() : "";
+  const name = nameMatch ? nameMatch[1].trim() : "";
+  const total = totalMatch
+    ? totalMatch[1].trim().replace(/\s/g, "") + " Ft"
+    : "";
+  const time = timeMatch ? timeMatch[1].trim() : "";
+
+  const handleResend = async () => {
+    console.log('=== FORM: Submit started ===');
+    console.log('New text to add:', newText);
+    console.log('Current offerText from store:', offerText);
+    
+    if (!newText.trim()) {
+      const errorMsg = 'Kérjük adj meg egy szöveget az elemzéshez!';
+      console.log('Validation error:', errorMsg);
+      setError(errorMsg);
+      return;
+    }
+
+    setIsSending(true);
+    setError("");
+
+    try {
+      // Get the original request text from the store
+      const combinedText = `Eredeti ajánlatkérés: ${offerText}\n\n${'Kérem az ajánlatot az eredeti ajánlatkérés és a kiegészítő válaszok együttes figyelembevételével!\n\nKiegészítő válaszok:' + newText}`;
+      console.log(combinedText, 'COMBINED TEXT')
+
+      // Update the store with the combined text first
+      setOfferText(combinedText);
+
+      // Create a new record ID
+      const recordId = uuidv4();
+
+      // Send the combined text to the API
+      const formData = new FormData();
+      formData.append("recordId", recordId);
+      formData.append("textContent", combinedText);
+      formData.append("type", "offer-letter");
+
+      const result = await axios.post("/api/ai-demand-agent", formData);
+      const { eventId } = result.data;
+      console.log("Event queued:", eventId);
+
+      let attempts = 0;
+      const maxAttempts = 60;
+
+      const poll = async () => {
+        try {
+          const res = await axios.get(`/api/ai-demand-agent/status?eventId=${eventId}`);
+          const { status } = res.data;
+          console.log('Status:', status);
+
+          if (status === 'Completed') {
+            setIsSending(false);
+            // Only redirect after processing is complete
+            router.push(`/ai-tools/ai-offer-letter/${recordId}`);
+            return;
+          }
 
 
+          if (status === 'Cancelled' || attempts >= maxAttempts) {
+            setIsSending(false);
+            setError("Az elemzés nem sikerült vagy túl sokáig tartott.");
+            return;
+          }
 
-// Clean and format the extracted values
-const email = emailMatch ? emailMatch[0].trim() : '';
-const name = nameMatch ? nameMatch[1].trim() : '';
-const total = totalMatch ? totalMatch[1].trim().replace(/\s/g, '') + ' Ft' : '';
-const time = timeMatch ? timeMatch[1].trim() : '';
+          attempts++;
+          setTimeout(poll, 2000);
+        } catch (err) {
+          console.error('Error polling status:', err);
+          setIsSending(false);
+          setError("Hiba történt az állapot lekérdezése során.");
+        }
+      };
 
+      poll();
+    } catch (err) {
+      console.error("Error resending request:", err);
+      setError("Hiba történt az újraküldés során. Kérjük próbáld újra később.");
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <Button
-        variant="outline"
-        className="mb-6"
-        onClick={() => router.push("/ai-tools/ai-offer-letter")}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Vissza
-      </Button>
+      <div className="flex justify-between items-center mb-6">
+        <Button
+          variant="outline"
+          onClick={() => router.push("/ai-tools/ai-offer-letter")}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Vissza
+        </Button>
+
+        <div className="flex space-x-2">
+          {isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(false)}
+                disabled={isSending}
+              >
+                <X className="mr-2 h-4 w-4" />
+                Mégse
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleResend}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                Kiegészítés és újragenerálás
+              </Button>
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditing(true)}
+            >
+              <Edit className="mr-2 h-4 w-4" />
+              További információ
+            </Button>
+          )}
+        </div>
+      </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
         <h1 className="text-2xl font-bold mb-6">Generált Ajánlat</h1>
@@ -208,10 +336,23 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                 )}
               </div>
 
+              {isEditing ? (
+                <div className="mb-4">
+                  <Textarea
+                    value={newText}
+                    onChange={(e) => setNewText(e.target.value)}
+                    className="min-h-[300px] font-mono text-sm"
+                    placeholder="Írd ide az új szöveget, amit hozzá szeretnél adni..."
+                  />
+                  {error && (
+                    <p className="mt-2 text-sm text-red-600">{error}</p>
+                  )}
+                </div>
+              ) : null}
+
               <pre className="whitespace-pre-wrap text-sm mb-4 bg-gray-50 p-4 rounded">
                 {rawText}
               </pre>
-
               <table className="w-full text-sm border">
                 <thead className="bg-gray-100">
                   <tr>
@@ -248,13 +389,26 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                             const newItems = [...editableItems];
                             newItems[idx].quantity = e.target.value;
                             // Recalculate total if needed
-                            const quantity = parseFloat(e.target.value.replace(/\D/g, '')) || 0;
-                            const workPrice = parseFloat(item.workUnitPrice.replace(/\D/g, '')) || 0;
-                            const materialPrice = parseFloat(item.materialUnitPrice.replace(/\D/g, '')) || 0;
-                            
-                            newItems[idx].workTotal = (quantity * workPrice).toLocaleString('hu-HU') + ' Ft';
-                            newItems[idx].materialTotal = (quantity * materialPrice).toLocaleString('hu-HU') + ' Ft';
-                            
+                            const quantity =
+                              parseFloat(e.target.value.replace(/\D/g, "")) ||
+                              0;
+                            const workPrice =
+                              parseFloat(
+                                item.workUnitPrice.replace(/\D/g, "")
+                              ) || 0;
+                            const materialPrice =
+                              parseFloat(
+                                item.materialUnitPrice.replace(/\D/g, "")
+                              ) || 0;
+
+                            newItems[idx].workTotal =
+                              (quantity * workPrice).toLocaleString("hu-HU") +
+                              " Ft";
+                            newItems[idx].materialTotal =
+                              (quantity * materialPrice).toLocaleString(
+                                "hu-HU"
+                              ) + " Ft";
+
                             setEditableItems(newItems);
                           }}
                         />
@@ -280,9 +434,14 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                             const newItems = [...editableItems];
                             newItems[idx].materialUnitPrice = e.target.value;
                             // Recalculate material total
-                            const quantity = parseFloat(item.quantity.replace(/\D/g, '')) || 0;
-                            const price = parseFloat(e.target.value.replace(/\D/g, '')) || 0;
-                            newItems[idx].materialTotal = (quantity * price).toLocaleString('hu-HU') + ' Ft';
+                            const quantity =
+                              parseFloat(item.quantity.replace(/\D/g, "")) || 0;
+                            const price =
+                              parseFloat(e.target.value.replace(/\D/g, "")) ||
+                              0;
+                            newItems[idx].materialTotal =
+                              (quantity * price).toLocaleString("hu-HU") +
+                              " Ft";
                             setEditableItems(newItems);
                           }}
                         />
@@ -296,19 +455,20 @@ const time = timeMatch ? timeMatch[1].trim() : '';
                             const newItems = [...editableItems];
                             newItems[idx].workUnitPrice = e.target.value;
                             // Recalculate work total
-                            const quantity = parseFloat(item.quantity.replace(/\D/g, '')) || 0;
-                            const price = parseFloat(e.target.value.replace(/\D/g, '')) || 0;
-                            newItems[idx].workTotal = (quantity * price).toLocaleString('hu-HU') + ' Ft';
+                            const quantity =
+                              parseFloat(item.quantity.replace(/\D/g, "")) || 0;
+                            const price =
+                              parseFloat(e.target.value.replace(/\D/g, "")) ||
+                              0;
+                            newItems[idx].workTotal =
+                              (quantity * price).toLocaleString("hu-HU") +
+                              " Ft";
                             setEditableItems(newItems);
                           }}
                         />
                       </td>
-                      <td className="p-2 border">
-                        {item.materialTotal}
-                      </td>
-                      <td className="p-2 border">
-                        {item.workTotal}
-                      </td>
+                      <td className="p-2 border">{item.materialTotal}</td>
+                      <td className="p-2 border">{item.workTotal}</td>
                     </tr>
                   ))}
                 </tbody>

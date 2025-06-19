@@ -18,7 +18,6 @@ function History() {
     const GetHistory = async () => {
         setLoading(true)
         const result = await axios.get('/api/history');
-        console.log(result.data)
         setUserHistory(result.data);
         setLoading(false);
     }

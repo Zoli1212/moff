@@ -104,7 +104,7 @@ export const AiOfferChatAgent = createAgent({
 
 You must clearly indicate in the additionalInfo section at the end of the response which task(s) were not found in the original catalog.
 
-**Example "További információ" content:**
+**Example "További információ: " content:**
 > "A következő tétel nem volt az adatbázisban: 'High-pressure facade cleaning (custom item)'."
 
 ---
