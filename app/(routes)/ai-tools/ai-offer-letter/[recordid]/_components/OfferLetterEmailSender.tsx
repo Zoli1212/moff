@@ -63,7 +63,7 @@ export default function OfferLetterEmailSender({
       [""],
       ["Összefoglaló"],
       ["Összesített nettó költség:", total || "N/A"],
-      ["Becsült kivitelezési idő:", time || "N/A"],
+      ["Becsült kivitelezési idő:", time ? `${time} munkanap` : "N/A"],
       [""],
       ["Létrehozva:", new Date().toLocaleString('hu-HU')],
     ];

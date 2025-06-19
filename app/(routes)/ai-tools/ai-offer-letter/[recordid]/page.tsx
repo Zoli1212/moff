@@ -89,13 +89,11 @@ export default function OfferLetterResult() {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const [editText, setEditText] = useState("");
   const [error, setError] = useState("");
   const [content, setContent] = useState<OfferContent | null>(null);
   const { offerText, setOfferText } = useOfferLetterStore();
 
   // Log store content when it changes
-
 
   const [newText, setNewText] = useState("");
   const [editableItems, setEditableItems] = useState<
@@ -110,7 +108,7 @@ export default function OfferLetterResult() {
     }>
   >([]);
 
-  console.log(offerText, 'offerText')
+  console.log(offerText, "offerText");
 
   // Calculate total from editable items
   const calculateTotal = useMemo(() => {
@@ -177,32 +175,17 @@ export default function OfferLetterResult() {
   // Name - matches "Kedves [Name]!" at the beginning
   const nameMatch = rawText.match(/^Kedves\s+([^!]+)!/i);
 
-  // Total cost - matches "Összesített nettó költség: 3 134 000 Ft"
-  const totalMatch = rawText.match(
-    /\*\*Összesített nettó költség:\*\* ([\d\s]+) Ft/i
-  );
+
 
   // Time estimate - matches "Becsült kivitelezési idő: 15-20 nap"
-  const timeMatch = rawText.match(
-    /\*\*Becsült kivitelezési idő:\*\* ([^\n]+)/i
-  );
+  const timeMatch = rawText.match(/Becsült kivitelezési idő:\s*(\d+(?:[-–]\d+)?)/i);
 
-  // Clean and format the extracted values
-  const email = emailMatch ? emailMatch[0].trim() : "";
-  const name = nameMatch ? nameMatch[1].trim() : "";
-  const total = totalMatch
-    ? totalMatch[1].trim().replace(/\s/g, "") + " Ft"
-    : "";
-  const time = timeMatch ? timeMatch[1].trim() : "";
-
+  
   const handleResend = async () => {
-    console.log('=== FORM: Submit started ===');
-    console.log('New text to add:', newText);
-    console.log('Current offerText from store:', offerText);
-    
+   
     if (!newText.trim()) {
-      const errorMsg = 'Kérjük adj meg egy szöveget az elemzéshez!';
-      console.log('Validation error:', errorMsg);
+      const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez!";
+      console.log("Validation error:", errorMsg);
       setError(errorMsg);
       return;
     }
@@ -212,8 +195,8 @@ export default function OfferLetterResult() {
 
     try {
       // Get the original request text from the store
-      const combinedText = `Eredeti ajánlatkérés: ${offerText}\n\n${'Kérem az ajánlatot az eredeti ajánlatkérés és a kiegészítő válaszok együttes figyelembevételével!\n\nKiegészítő válaszok:' + newText}`;
-      console.log(combinedText, 'COMBINED TEXT')
+      const combinedText = `Eredeti ajánlatkérés: ${offerText}\n\n${"Kérem az ajánlatot az eredeti ajánlatkérés és a kiegészítő válaszok együttes figyelembevételével!\n\nKiegészítő válaszok:" + newText}`;
+
 
       // Update the store with the combined text first
       setOfferText(combinedText);
@@ -236,19 +219,20 @@ export default function OfferLetterResult() {
 
       const poll = async () => {
         try {
-          const res = await axios.get(`/api/ai-demand-agent/status?eventId=${eventId}`);
+          const res = await axios.get(
+            `/api/ai-demand-agent/status?eventId=${eventId}`
+          );
           const { status } = res.data;
-          console.log('Status:', status);
+          console.log("Status:", status);
 
-          if (status === 'Completed') {
+          if (status === "Completed") {
             setIsSending(false);
             // Only redirect after processing is complete
             router.push(`/ai-tools/ai-offer-letter/${recordId}`);
             return;
           }
 
-
-          if (status === 'Cancelled' || attempts >= maxAttempts) {
+          if (status === "Cancelled" || attempts >= maxAttempts) {
             setIsSending(false);
             setError("Az elemzés nem sikerült vagy túl sokáig tartott.");
             return;
@@ -257,7 +241,7 @@ export default function OfferLetterResult() {
           attempts++;
           setTimeout(poll, 2000);
         } catch (err) {
-          console.error('Error polling status:', err);
+          console.error("Error polling status:", err);
           setIsSending(false);
           setError("Hiba történt az állapot lekérdezése során.");
         }
@@ -342,7 +326,7 @@ export default function OfferLetterResult() {
                     value={newText}
                     onChange={(e) => setNewText(e.target.value)}
                     className="min-h-[300px] font-mono text-sm"
-                    placeholder="Írd ide az új szöveget, amit hozzá szeretnél adni..."
+                    placeholder="Írd ide a kiegészítéseket, amit hozzá szeretnél adni a kéréshez..."
                   />
                   {error && (
                     <p className="mt-2 text-sm text-red-600">{error}</p>
@@ -479,7 +463,7 @@ export default function OfferLetterResult() {
               </p>
               {timeMatch && (
                 <p className="text-base font-medium">
-                  Becsült kivitelezési idő: {timeMatch[1].trim()}
+                  Becsült kivitelezési idő: {timeMatch[1].trim()} munkanap
                 </p>
               )}
 
