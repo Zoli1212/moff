@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Loader2, ArrowLeft, Edit, Save, X } from "lucide-react";
+import { Loader2, ArrowLeft, Edit, Save, X, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import dynamic from "next/dynamic";
@@ -379,14 +380,72 @@ export default function OfferLetterResult() {
               </Button>
             </>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit className="mr-2 h-4 w-4" />
-              További információ
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  // Export to Excel
+                  const wb = XLSX.utils.book_new();
+                  
+                  // Create data for the items sheet
+                  const itemsData = [
+                    ["Tétel megnevezése", "Mennyiség", "Egység", "Anyag egységár", "Díj egységár", "Anyag összesen", "Díj összesen"],
+                    ...editableItems.map(item => [
+                      item.name,
+                      item.quantity,
+                      item.unit,
+                      item.materialUnitPrice,
+                      item.workUnitPrice,
+                      item.materialTotal,
+                      item.workTotal
+                    ])
+                  ];
+                  
+                  // Add summary rows
+                  itemsData.push(["", "", "", "", "", "Munkadíj összesen:", formattedWorkTotal]);
+                  itemsData.push(["", "", "", "", "", "Anyagköltség összesen:", formattedMaterialTotal]);
+                  itemsData.push(["", "", "", "", "", "Összesített nettó költség:", formattedTotal]);
+                  
+                  if (timeMatch) {
+                    itemsData.push(["", "", "", "", "", "Becsült kivitelezési idő:", `${timeMatch[1].trim()} munkanap`]);
+                  }
+                  
+                  // Create worksheet
+                  const wsItems = XLSX.utils.aoa_to_sheet(itemsData);
+                  
+                  // Set column widths
+                  const colWidths = [
+                    { wch: 40 }, // Tétel megnevezése
+                    { wch: 10 }, // Mennyiség
+                    { wch: 8 },  // Egység
+                    { wch: 15 }, // Anyag egységár
+                    { wch: 15 }, // Díj egységár
+                    { wch: 20 }, // Anyag összesen
+                    { wch: 20 }  // Díj összesen
+                  ];
+                  wsItems['!cols'] = colWidths;
+                  
+                  // Add worksheet to workbook
+                  XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat");
+                  
+                  // Generate Excel file
+                  XLSX.writeFile(wb, `ajanlat-${new Date().toISOString().split('T')[0]}.xlsx`);
+                }}
+                className="flex items-center gap-1"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Excel letöltése
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit className="mr-2 h-4 w-4" />
+                További információ
+              </Button>
+            </div>
           )}
         </div>
       </div>
