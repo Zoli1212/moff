@@ -94,31 +94,87 @@ export default function OfferLetterResult() {
   const { offerText, setOfferText } = useOfferLetterStore();
 
   // Log store content when it changes
-
   const [newText, setNewText] = useState("");
-  const [editableItems, setEditableItems] = useState<
-    Array<{
-      name: string;
-      quantity: string;
-      unit: string;
-      materialUnitPrice: string;
-      workUnitPrice: string;
-      materialTotal: string;
-      workTotal: string;
-    }>
-  >([]);
+
+  interface TableItem {
+    name: string;
+    quantity: string;
+    unit: string;
+    materialUnitPrice: string;
+    workUnitPrice: string;
+    materialTotal: string;
+    workTotal: string;
+  }
+
+  const [editableItems, setEditableItems] = useState<TableItem[]>([]);
+
+  // Initialize with empty item if no items are loaded
+  useEffect(() => {
+    const initializeItems = () => {
+      if (editableItems.length === 0) {
+        const parsedItems = content?.output?.[0]?.content
+          ? parseOfferTable(content.output[0].content)
+          : [];
+
+        if (parsedItems.length === 0) {
+          // Add an empty item if no items were parsed
+          setEditableItems([
+            {
+              name: "",
+              quantity: "1",
+              unit: "db",
+              materialUnitPrice: "0 Ft",
+              workUnitPrice: "0 Ft",
+              materialTotal: "0 Ft",
+              workTotal: "0 Ft",
+            },
+          ]);
+        } else {
+          setEditableItems(parsedItems);
+        }
+      }
+    };
+
+    initializeItems();
+  }, [content]);
 
   console.log(offerText, "offerText");
 
-  // Calculate total from editable items
-  const calculateTotal = useMemo(() => {
+  // Helper function to parse currency values
+  const parseCurrency = (value: string): number => {
+    // Remove all non-numeric characters except decimal point and minus
+    const numericValue = value.replace(/[^0-9,-]+/g, "").replace(",", ".");
+    return parseFloat(numericValue) || 0;
+  };
+
+  // Calculate work costs total
+  const calculateWorkTotal = useMemo(() => {
     return editableItems.reduce((sum, item) => {
-      const amount = parseFloat(item.workTotal.replace(/\D/g, "")) || 0;
-      return sum + amount;
+      return sum + parseCurrency(item.workTotal);
     }, 0);
   }, [editableItems]);
 
-  // Format total as string
+  // Calculate material costs total
+  const calculateMaterialTotal = useMemo(() => {
+    return editableItems.reduce((sum, item) => {
+      return sum + parseCurrency(item.materialTotal);
+    }, 0);
+  }, [editableItems]);
+
+  // Calculate total (work + material costs)
+  const calculateTotal = useMemo(() => {
+    return calculateWorkTotal + calculateMaterialTotal;
+  }, [calculateWorkTotal, calculateMaterialTotal]);
+
+  // Format values as strings
+  const formattedWorkTotal = useMemo(() => {
+    return calculateWorkTotal.toLocaleString("hu-HU") + " Ft";
+  }, [calculateWorkTotal]);
+
+  const formattedMaterialTotal = useMemo(() => {
+    return calculateMaterialTotal.toLocaleString("hu-HU") + " Ft";
+  }, [calculateMaterialTotal]);
+
   const formattedTotal = useMemo(() => {
     return calculateTotal.toLocaleString("hu-HU") + " Ft";
   }, [calculateTotal]);
@@ -180,19 +236,29 @@ export default function OfferLetterResult() {
     /Becsült kivitelezési idő:\s*(\d+(?:[-–]\d+)?)/i
   );
 
-  function buildPromptWithItems(existingItemsText: string, newInfo: string) {
+  function buildPromptWithItems(
+    existingItemsText: string,
+    newInfo: string,
+    originalRequest: string
+  ) {
     return `
   Ez az ajánlatkérés kiegészítése.
   
-  Kérem, hogy az alábbi új információk alapján egészítsd ki az ajánlatot új tételekkel, de a lent felsorolt meglévő tételeket változatlanul tartsd meg! Az új tételeket kérlek a meglévők után add hozzá, ugyanolyan formátumban.
+  Kérem, hogy az alábbi új információk és az eredeti ajánlatkérés alapján egészítsd ki az ajánlatot új tételekkel vagy pontosításokkal, de a lent felsorolt meglévő tételeket változatlanul tartsd meg!
   
-  Meglővő tételek:
+  Ha korábban feltett kérdésekre nem érkezett válasz (pl. anyagminőség, kivitelezési részletek), kérlek az új információkkal együtt azokra is térj ki.
+  
+  Eredeti ajánlatkérés:
+  ${originalRequest}
+  
+  Meglévő tételek:
   ${existingItemsText}
   
   Kiegészítő információk:
   ${newInfo}
   `;
   }
+  
 
   const handleResend = async () => {
     if (!newText.trim()) {
@@ -208,12 +274,15 @@ export default function OfferLetterResult() {
     try {
       // Get the original request text from the store
       // const combinedText = `Eredeti ajánlatkérés: ${offerText}\n\n${"Kérem az ajánlatot az eredeti ajánlatkérés és a kiegészítő válaszok együttes figyelembevételével!\n\nKiegészítő válaszok:" + newText}`;
-      const formattedItems = editableItems.map(
-        (item) =>
-          `* ${item.name}: ${item.quantity} ${item.unit} × ${item.workUnitPrice} = ${item.workTotal}`
-      ).join("\n");
-      
-      const combinedText = buildPromptWithItems(formattedItems, newText);
+      const formattedItems = editableItems
+        .map(
+          (item) =>
+            `* ${item.name}: ${item.quantity} ${item.unit} × ${item.workUnitPrice} = ${item.workTotal}`
+        )
+        .join("\n");
+
+        const combinedText = buildPromptWithItems(formattedItems, newText, offerText);
+
       setOfferText(combinedText);
 
       // Update the store with the combined text first
@@ -390,25 +459,19 @@ export default function OfferLetterResult() {
                             const newItems = [...editableItems];
                             newItems[idx].quantity = e.target.value;
                             // Recalculate total if needed
-                            const quantity =
-                              parseFloat(e.target.value.replace(/\D/g, "")) ||
-                              0;
-                            const workPrice =
-                              parseFloat(
-                                item.workUnitPrice.replace(/\D/g, "")
-                              ) || 0;
-                            const materialPrice =
-                              parseFloat(
-                                item.materialUnitPrice.replace(/\D/g, "")
-                              ) || 0;
+                            const quantity = parseFloat(e.target.value) || 0;
+                            const workPrice = parseCurrency(item.workUnitPrice);
+                            const materialPrice = parseCurrency(
+                              item.materialUnitPrice
+                            );
+
+                            const workTotal = quantity * workPrice;
+                            const materialTotal = quantity * materialPrice;
 
                             newItems[idx].workTotal =
-                              (quantity * workPrice).toLocaleString("hu-HU") +
-                              " Ft";
+                              workTotal.toLocaleString("hu-HU") + " Ft";
                             newItems[idx].materialTotal =
-                              (quantity * materialPrice).toLocaleString(
-                                "hu-HU"
-                              ) + " Ft";
+                              materialTotal.toLocaleString("hu-HU") + " Ft";
 
                             setEditableItems(newItems);
                           }}
@@ -435,14 +498,11 @@ export default function OfferLetterResult() {
                             const newItems = [...editableItems];
                             newItems[idx].materialUnitPrice = e.target.value;
                             // Recalculate material total
-                            const quantity =
-                              parseFloat(item.quantity.replace(/\D/g, "")) || 0;
-                            const price =
-                              parseFloat(e.target.value.replace(/\D/g, "")) ||
-                              0;
+                            const quantity = parseFloat(item.quantity) || 0;
+                            const price = parseCurrency(e.target.value);
+                            const total = quantity * price;
                             newItems[idx].materialTotal =
-                              (quantity * price).toLocaleString("hu-HU") +
-                              " Ft";
+                              total.toLocaleString("hu-HU") + " Ft";
                             setEditableItems(newItems);
                           }}
                         />
@@ -456,14 +516,11 @@ export default function OfferLetterResult() {
                             const newItems = [...editableItems];
                             newItems[idx].workUnitPrice = e.target.value;
                             // Recalculate work total
-                            const quantity =
-                              parseFloat(item.quantity.replace(/\D/g, "")) || 0;
-                            const price =
-                              parseFloat(e.target.value.replace(/\D/g, "")) ||
-                              0;
+                            const quantity = parseFloat(item.quantity) || 0;
+                            const price = parseCurrency(e.target.value);
+                            const total = quantity * price;
                             newItems[idx].workTotal =
-                              (quantity * price).toLocaleString("hu-HU") +
-                              " Ft";
+                              total.toLocaleString("hu-HU") + " Ft";
                             setEditableItems(newItems);
                           }}
                         />
@@ -475,9 +532,42 @@ export default function OfferLetterResult() {
                 </tbody>
               </table>
 
-              <p className="mt-4 text-base font-medium">
-                Összesített nettó költség: {formattedTotal}
-              </p>
+              <div className="mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const newItem = {
+                      name: "",
+                      quantity: "1",
+                      unit: "db",
+                      materialUnitPrice: "0 Ft",
+                      workUnitPrice: "0 Ft",
+                      materialTotal: "0 Ft",
+                      workTotal: "0 Ft",
+                    };
+                    setEditableItems([...editableItems, newItem]);
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <span>+</span> Új tétel hozzáadása
+                </Button>
+              </div>
+
+              <div className="mt-4 space-y-1">
+                <p className="text-base">
+                  <span className="font-medium">Munkadíj összesen:</span>{" "}
+                  {formattedWorkTotal}
+                </p>
+                <p className="text-base">
+                  <span className="font-medium">Anyagköltség összesen:</span>{" "}
+                  {formattedMaterialTotal}
+                </p>
+                <p className="text-base font-medium pt-2 border-t border-gray-200 ">
+                  <strong>Összesített nettó költség:</strong> {formattedTotal}
+                </p>
+              </div>
               {timeMatch && (
                 <p className="text-base font-medium">
                   Becsült kivitelezési idő: {timeMatch[1].trim()} munkanap

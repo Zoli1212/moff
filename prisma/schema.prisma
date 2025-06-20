@@ -164,10 +164,10 @@ model Phase {
 model Task {
   id          Int      @id @default(autoincrement())
   name        String
-  description String?
+  item String?
   isCompleted Boolean  @default(false)
-  order       Int
-  phaseId     Int
+  order       Int?
+  phaseId     Int?
   phase       Phase    @relation(fields: [phaseId], references: [id])
   tenantEmail String
   createdAt   DateTime @default(now())
