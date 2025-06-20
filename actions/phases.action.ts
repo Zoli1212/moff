@@ -197,7 +197,7 @@ export async function updateTaskStatus(taskId: number, isCompleted: boolean) {
   });
 
   // Verify the workflow belongs to the user
-  if (!task || task.phase.workflow.tenantEmail !== user.email) {
+  if (!task || task?.phase?.workflow.tenantEmail !== user.email) {
     throw new Error('Task not found or access denied');
   }
 
