@@ -175,14 +175,26 @@ export default function OfferLetterResult() {
   // Name - matches "Kedves [Name]!" at the beginning
   const nameMatch = rawText.match(/^Kedves\s+([^!]+)!/i);
 
-
-
   // Time estimate - matches "Becsült kivitelezési idő: 15-20 nap"
-  const timeMatch = rawText.match(/Becsült kivitelezési idő:\s*(\d+(?:[-–]\d+)?)/i);
+  const timeMatch = rawText.match(
+    /Becsült kivitelezési idő:\s*(\d+(?:[-–]\d+)?)/i
+  );
 
+  function buildPromptWithItems(existingItemsText: string, newInfo: string) {
+    return `
+  Ez az ajánlatkérés kiegészítése.
   
+  Kérem, hogy az alábbi új információk alapján egészítsd ki az ajánlatot új tételekkel, de a lent felsorolt meglévő tételeket változatlanul tartsd meg! Az új tételeket kérlek a meglévők után add hozzá, ugyanolyan formátumban.
+  
+  Meglővő tételek:
+  ${existingItemsText}
+  
+  Kiegészítő információk:
+  ${newInfo}
+  `;
+  }
+
   const handleResend = async () => {
-   
     if (!newText.trim()) {
       const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez!";
       console.log("Validation error:", errorMsg);
@@ -195,11 +207,16 @@ export default function OfferLetterResult() {
 
     try {
       // Get the original request text from the store
-      const combinedText = `Eredeti ajánlatkérés: ${offerText}\n\n${"Kérem az ajánlatot az eredeti ajánlatkérés és a kiegészítő válaszok együttes figyelembevételével!\n\nKiegészítő válaszok:" + newText}`;
-
+      // const combinedText = `Eredeti ajánlatkérés: ${offerText}\n\n${"Kérem az ajánlatot az eredeti ajánlatkérés és a kiegészítő válaszok együttes figyelembevételével!\n\nKiegészítő válaszok:" + newText}`;
+      const formattedItems = editableItems.map(
+        (item) =>
+          `* ${item.name}: ${item.quantity} ${item.unit} × ${item.workUnitPrice} = ${item.workTotal}`
+      ).join("\n");
+      
+      const combinedText = buildPromptWithItems(formattedItems, newText);
+      setOfferText(combinedText);
 
       // Update the store with the combined text first
-      setOfferText(combinedText);
 
       // Create a new record ID
       const recordId = uuidv4();

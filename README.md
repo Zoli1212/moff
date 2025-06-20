@@ -275,3 +275,5 @@ Előre is köszönöm a segítségedet!
 Szabó Bence
 +36 70 456 7890
 bence.szabo@pelda.hu
+
+régi neon: postgresql://neondb_owner:npg_k7pwgiyFJ5bR@ep-steep-frost-a8tawktk-pooler.eastus2.azure.neon.tech/neondb?sslmode=require

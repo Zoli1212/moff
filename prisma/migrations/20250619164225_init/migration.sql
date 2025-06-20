@@ -7,6 +7,7 @@ CREATE TABLE "Email" (
     "content" TEXT NOT NULL,
     "hasAttachment" BOOLEAN NOT NULL DEFAULT false,
     "attachmentFilenames" TEXT[],
+    "attachmentUrls" TEXT[],
     "tenantEmail" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -245,4 +246,3 @@ ALTER TABLE "WorkflowSpecialty" ADD CONSTRAINT "WorkflowSpecialty_workflowId_fke
 
 -- AddForeignKey
 ALTER TABLE "WorkflowSpecialty" ADD CONSTRAINT "WorkflowSpecialty_specialtyId_fkey" FOREIGN KEY ("specialtyId") REFERENCES "Specialty"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
