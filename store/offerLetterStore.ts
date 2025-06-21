@@ -1,21 +1,21 @@
 import { create } from "zustand";
 
-interface OfferLetterStore {
+interface DemandStore {
   // Az ajánlatkérés szövege
-  offerText: string;
+  demandText: string;
   // A szöveg beállítása
-  setOfferText: (text: string) => void;
+  setDemandText: (text: string) => void;
   // A szöveg törlése
-  clearOfferText: () => void;
+  clearDemandText: () => void;
 }
 
-export const useOfferLetterStore = create<OfferLetterStore>((set) => ({
+export const useDemandStore = create<DemandStore>((set) => ({
   // Kezdetben üres a szöveg
-  offerText: "",
+  demandText: "",
 
   // A szöveg frissítése
-  setOfferText: (text: string) => set({ offerText: text }),
+  setDemandText: (text: string) => set({ demandText: text }),
 
   // A szöveg törlése
-  clearOfferText: () => set({ offerText: "" }),
+  clearDemandText: () => set({ demandText: "" }),
 }));

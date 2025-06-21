@@ -8,7 +8,7 @@ import * as XLSX from "xlsx";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import dynamic from "next/dynamic";
-import { useOfferLetterStore } from "@/store/offerLetterStore";
+import { useDemandStore } from "@/store/offerLetterStore";
 import { Textarea } from "@/components/ui/textarea";
 
 // Dynamically import the OfferLetterEmailSender component with SSR disabled
@@ -92,7 +92,7 @@ export default function OfferLetterResult() {
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [content, setContent] = useState<OfferContent | null>(null);
-  const { offerText, setOfferText } = useOfferLetterStore();
+  const { demandText, setDemandText } = useDemandStore();
 
   // Log store content when it changes
   const [newText, setNewText] = useState("");
@@ -139,7 +139,7 @@ export default function OfferLetterResult() {
     initializeItems();
   }, [content]);
 
-  console.log(offerText, "offerText");
+  console.log(demandText, "demandText");
 
   // Helper function to parse currency values
   const parseCurrency = (value: string): number => {
@@ -282,9 +282,9 @@ export default function OfferLetterResult() {
         )
         .join("\n");
 
-        const combinedText = buildPromptWithItems(formattedItems, newText, offerText);
+        const combinedText = buildPromptWithItems(formattedItems, newText, demandText);
 
-      setOfferText(combinedText);
+      setDemandText(combinedText);
 
       // Update the store with the combined text first
 

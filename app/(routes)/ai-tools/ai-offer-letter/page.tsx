@@ -7,17 +7,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles } from "lucide-react";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
-import { useOfferLetterStore } from "@/store/offerLetterStore";
+import { useDemandStore } from "@/store/offerLetterStore";
 
 export default function OfferLetterGenerator() {
   const router = useRouter();
-  const { offerText, setOfferText } = useOfferLetterStore();
+  const { demandText, setDemandText } = useDemandStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!offerText.trim()) {
+    if (!demandText.trim()) {
       setError("Kérjük adj meg egy szöveget az elemzéshez!");
       return;
     }
@@ -31,7 +31,7 @@ export default function OfferLetterGenerator() {
       // Send the text to the API
       const formData = new FormData();
       formData.append("recordId", recordId);
-      formData.append("textContent", offerText);
+      formData.append("textContent", demandText);
       formData.append("type", "offer-letter");
 
       const result = await axios.post("/api/ai-demand-agent", formData);
@@ -93,8 +93,8 @@ export default function OfferLetterGenerator() {
           </label>
           <Textarea
             id="offer-text"
-            value={offerText}
-            onChange={(e) => setOfferText(e.target.value)}
+            value={demandText}
+            onChange={(e) => setDemandText(e.target.value)}
             placeholder="Például: Üdvözlöm! Szeretnék ajánlatot kérni egy 50 négyzetméteres iroda felújítására..."
             className="min-h-[200px]"
           />

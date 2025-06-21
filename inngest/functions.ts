@@ -1,10 +1,10 @@
-import { db } from "@/configs/db";
 import { inngest } from "./client";
 import { createAgent, gemini, openai } from "@inngest/agent-kit";
 import { PrismaClient } from "@prisma/client";
 import ImageKit from "imagekit";
 
 const prisma = new PrismaClient();
+
 
 export const EmailAnalyzerAgent = createAgent({
   name: "EmailAnalyzerAgent",

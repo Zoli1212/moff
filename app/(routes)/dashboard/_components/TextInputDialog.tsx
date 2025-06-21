@@ -15,7 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { useOfferLetterStore } from '@/store/offerLetterStore';
+import { useDemandStore } from '@/store/offerLetterStore';
 
 interface TextInputDialogProps {
   open: boolean;
@@ -24,13 +24,13 @@ interface TextInputDialogProps {
 }
 
 export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDialogProps) {
-  const { offerText, setOfferText } = useOfferLetterStore();
+  const { demandText, setDemandText } = useDemandStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
 
   const onAnalyze = async () => {
-    if (!offerText.trim()) {
+    if (!demandText.trim()) {
       setError('Kérjük adj meg egy szöveget az elemzéshez!');
       return;
     }
@@ -42,7 +42,7 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
       const recordId = uuidv4();
       const formData = new FormData();
       formData.append('recordId', recordId);
-      formData.append('textContent', offerText);
+      formData.append('textContent', demandText);
       formData.append('type', 'offer-letter');
       
       const result = await axios.post('/api/ai-demand-agent', formData);
@@ -107,9 +107,9 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
                   <Textarea 
                     placeholder="Illessze be ide az elemzendő szöveget..."
                     className="min-h-[200px]"
-                    value={offerText}
+                    value={demandText}
                     onChange={(e) => {
-                      setOfferText(e.target.value);
+                      setDemandText(e.target.value);
                       setError('');
                     }}
                   />
@@ -120,7 +120,7 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Mégse</Button>
               <Button 
-                disabled={!offerText.trim() || loading} 
+                disabled={!demandText.trim() || loading} 
                 onClick={onAnalyze}
               >
                 {loading ? (
