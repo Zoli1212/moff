@@ -97,11 +97,31 @@ export async function processExcelWithAI(fileBuffer: Uint8Array | ArrayBuffer): 
       console.log(`\n  Folyamatban: ${i + 1}/${rows.length} sor (${Math.round((i + 1) / rows.length * 100)}%)`);
       console.log(`  Tétel: ${tetelSzovege?.toString().substring(0, 80)}${tetelSzovege && tetelSzovege.length > 80 ? '...' : ''}`);
 
-      // Alapértelmezések beállítása
-      const mennyiseg = typeof row['Menny.'] === 'number' && !isNaN(row['Menny.']) ? row['Menny.'] : 1;
-      const egyseg = typeof row['Egység'] === 'string' && row['Egység'].trim() !== '' ? row['Egység'] : 'db';
-      row['Menny.'] = mennyiseg;
-      row['Egység'] = egyseg;
+      // Mennyiség kezelése
+      let mennyiseg: string | number | null | undefined = row['Menny.'];
+      // Csak akkor írunk be 1-et, ha nincs érték vagy érvénytelen
+      if (mennyiseg === undefined || mennyiseg === null || 
+          (typeof mennyiseg === 'number' && isNaN(mennyiseg))) {
+        mennyiseg = 1;
+        row['Menny.'] = 1; // Csak akkor írjuk felül, ha üres/érvénytelen
+      } else if (typeof mennyiseg === 'string') {
+        // Ha stringként van megadva, akkor próbáljuk számmá alakítani
+        const num = parseFloat(mennyiseg);
+        if (!isNaN(num)) {
+          mennyiseg = num;
+        } else {
+          mennyiseg = 1;
+          row['Menny.'] = 1;
+        }
+      }
+      // Egység kezelése - 'db' beírása, ha üres vagy érvénytelen, egyébként megtartani az eredeti értéket
+      let egyseg = row['Egység'];
+      if (egyseg === undefined || egyseg === null || 
+          (typeof egyseg === 'string' && egyseg.trim() === '') ||
+          (typeof egyseg !== 'string' && typeof egyseg !== 'number')) {
+        egyseg = 'db';
+        row['Egység'] = 'db';
+      }
 
       console.log(`  Mennyiség: ${mennyiseg} ${egyseg}`);
 
