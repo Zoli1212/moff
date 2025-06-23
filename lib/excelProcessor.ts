@@ -1,3 +1,4 @@
+import { currentUser } from '@clerk/nextjs/server';
 import ExcelJS from 'exceljs';
 import { OpenAI } from 'openai';
 
@@ -27,8 +28,27 @@ interface AIPricing {
 }
 
 export async function processExcelWithAI(fileBuffer: Uint8Array | ArrayBuffer): Promise<ArrayBuffer> {
+  const user = await currentUser();
+  const email = user?.primaryEmailAddress?.emailAddress || '';
+  const currentDate = new Date().toLocaleDateString('hu-HU');
+  
   console.log('\n=== Excel feldolgozás elindult ===');
+  console.log(`  Felhasználó email: ${email || 'Nincs bejelentkezve'}`);
   const workbook = new ExcelJS.Workbook();
+  
+  // Helper function to get or create worksheet
+  const getOrCreateWorksheet = (name: string) => {
+    return workbook.getWorksheet(name) || workbook.addWorksheet(name);
+  };
+  
+  // Helper function to clear existing content but keep formatting
+  const clearWorksheet = (worksheet: ExcelJS.Worksheet) => {
+    worksheet.eachRow({ includeEmpty: true }, (row) => {
+      row.eachCell({ includeEmpty: true }, (cell) => {
+        cell.value = null;
+      });
+    });
+  };
 
   try {
     console.log('Excel fájl betöltése...');
@@ -43,7 +63,36 @@ export async function processExcelWithAI(fileBuffer: Uint8Array | ArrayBuffer): 
     throw new Error('Nem sikerült betölteni az Excel fájlt: ' + (error instanceof Error ? error.message : String(error)));
   }
 
+  // Process Záradék sheet
+  const zaradekSheet = getOrCreateWorksheet('Záradék');
+  if (zaradekSheet) {
+    console.log('\nZáradék munkalap feldolgozása...');
+    
+    // Clear existing content but keep formatting
+    clearWorksheet(zaradekSheet);
+    
+    // Add offer information
+    zaradekSheet.getCell('A1').value = 'Ajánlat';
+    zaradekSheet.getCell('A2').value = `Kelt: ${currentDate}`;
+    if (email) {
+      zaradekSheet.getCell('A3').value = `Küldő: ${email}`;
+    }
+  }
+  
+  // Data structure to store summary information
+  const summaryData: Array<{
+    munkaNeve: string;
+    anyagOsszesen: number;
+    dijOsszesen: number;
+  }> = [];
+
+  // Process other sheets and collect data for summary
   for (const worksheet of workbook.worksheets) {
+    // Skip Záradék and Összesítő sheets as they are handled separately
+    if (['Záradék', 'Összesítő'].includes(worksheet.name)) {
+      continue;
+    }
+    
     console.log(`\nFeldolgozás alatt: '${worksheet.name}' munkalap`);
     
     const headerRow = worksheet.getRow(1);
@@ -198,6 +247,90 @@ export async function processExcelWithAI(fileBuffer: Uint8Array | ArrayBuffer): 
     } else {
       console.warn('⚠️  Nem található Munkanem sor!');
     }
+  }
+
+  // Process Összesítő sheet
+  const osszesitoSheet = getOrCreateWorksheet('Összesítő');
+  if (osszesitoSheet) {
+    console.log('\nÖsszesítő munkalap feldolgozása...');
+    
+    // Clear existing content but keep formatting
+    clearWorksheet(osszesitoSheet);
+    
+    // Add headers
+    const headerRow = osszesitoSheet.getRow(1);
+    headerRow.getCell(1).value = 'Munkanem megnevezése';
+    headerRow.getCell(2).value = 'Anyag összege';
+    headerRow.getCell(3).value = 'Díj összege';
+    
+    // Format headers
+    headerRow.font = { bold: true };
+    
+    // Add data rows
+    let rowIndex = 2;
+    let anyagTotal = 0;
+    let dijTotal = 0;
+    
+    // Collect data from all worksheets
+    for (const ws of workbook.worksheets) {
+      if (['Záradék', 'Összesítő'].includes(ws.name)) continue;
+      
+      let anyagSum = 0;
+      let dijSum = 0;
+      
+      // Find the column indices
+      const firstRow = ws.getRow(1);
+      let anyagCol = -1;
+      let dijCol = -1;
+      
+      firstRow.eachCell((cell, colNumber) => {
+        const value = String(cell.value).toLowerCase();
+        if (value.includes('anyag') && value.includes('összesen')) anyagCol = colNumber;
+        if (value.includes('díj') && value.includes('összesen')) dijCol = colNumber;
+      });
+      
+      if (anyagCol === -1 || dijCol === -1) continue;
+      
+      // Sum up values
+      ws.eachRow((row, rowNum) => {
+        if (rowNum === 1) return; // Skip header
+        
+        const anyagVal = row.getCell(anyagCol).value;
+        const dijVal = row.getCell(dijCol).value;
+        
+        if (typeof anyagVal === 'number') anyagSum += anyagVal;
+        if (typeof dijVal === 'number') dijSum += dijVal;
+      });
+      
+      // Add row to summary
+      const dataRow = osszesitoSheet.getRow(rowIndex++);
+      dataRow.getCell(1).value = ws.name;
+      dataRow.getCell(2).value = { formula: `ROUND(${anyagSum}, 2)`, result: anyagSum };
+      dataRow.getCell(3).value = { formula: `ROUND(${dijSum}, 2)`, result: dijSum };
+      
+      anyagTotal += anyagSum;
+      dijTotal += dijSum;
+    }
+    
+    // Add total row
+    const totalRow = osszesitoSheet.getRow(rowIndex);
+    totalRow.getCell(1).value = 'Összesen';
+    totalRow.getCell(2).value = { formula: `SUM(B2:B${rowIndex - 1})`, result: anyagTotal };
+    totalRow.getCell(3).value = { formula: `SUM(C2:C${rowIndex - 1})`, result: dijTotal };
+    
+    // Format totals
+    totalRow.font = { bold: true };
+    
+    // Auto-fit columns
+    osszesitoSheet.columns.forEach(column => {
+      let maxLength = 0;
+      // Add optional chaining to safely call eachCell
+      column.eachCell?.({ includeEmpty: true }, cell => {
+        const length = cell.value ? cell.value.toString().length : 0;
+        maxLength = Math.max(maxLength, length);
+      });
+      column.width = Math.min(Math.max(maxLength + 2, 15), 50);
+    });
   }
 
   return await workbook.xlsx.writeBuffer();
