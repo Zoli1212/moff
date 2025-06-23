@@ -93,6 +93,12 @@ export default function OfferLetterResult() {
   const [error, setError] = useState("");
   const [content, setContent] = useState<OfferContent | null>(null);
   const { demandText, setDemandText } = useDemandStore();
+  const [editableItems, setEditableItems] = useState<TableItem[]>([]);
+  const {
+    storedItems,
+    setStoredItems,
+  } = useDemandStore();
+  
 
   // Log store content when it changes
   const [newText, setNewText] = useState("");
@@ -107,7 +113,6 @@ export default function OfferLetterResult() {
     workTotal: string;
   }
 
-  const [editableItems, setEditableItems] = useState<TableItem[]>([]);
 
   // Initialize with empty item if no items are loaded
   useEffect(() => {
@@ -139,7 +144,14 @@ export default function OfferLetterResult() {
     initializeItems();
   }, [content]);
 
+  // minden szerkesztés után frissítjük a store-t
+useEffect(() => {
+  setStoredItems(editableItems);
+}, [editableItems]);
+
+
   console.log(demandText, "demandText");
+  console.log("🧠 Zustand storedItems:", storedItems);
 
   // Helper function to parse currency values
   const parseCurrency = (value: string): number => {
@@ -179,20 +191,40 @@ export default function OfferLetterResult() {
   const formattedTotal = useMemo(() => {
     return calculateTotal.toLocaleString("hu-HU") + " Ft";
   }, [calculateTotal]);
-
   useEffect(() => {
     if (offer) {
       const parsed = parseContent(offer.content);
       setContent(parsed);
-
-      // Initialize editable items when content is loaded
+  
       if (parsed?.output?.[0]?.content) {
         const rawText = parsed.output[0].content;
         const parsedItems = parseOfferTable(rawText);
-        setEditableItems(parsedItems);
+  
+        // Ha az új lista rövidebb, és már vannak korábbi tételek a store-ban
+        if (parsedItems.length < 5 && storedItems.length >= 10) {
+          const uniqueNewItems = parsedItems.filter((newItem) =>
+            !storedItems.some((existingItem) =>
+              existingItem.name === newItem.name &&
+              existingItem.quantity === newItem.quantity &&
+              existingItem.unit === newItem.unit &&
+              existingItem.materialUnitPrice === newItem.materialUnitPrice &&
+              existingItem.workUnitPrice === newItem.workUnitPrice &&
+              existingItem.materialTotal === newItem.materialTotal &&
+              existingItem.workTotal === newItem.workTotal
+            )
+          );
+  
+          const mergedItems = [...storedItems, ...uniqueNewItems];
+          setStoredItems(mergedItems);
+          setEditableItems(mergedItems);
+        } else {
+          setStoredItems(parsedItems);
+          setEditableItems(parsedItems);
+        }
       }
     }
   }, [offer]);
+  
 
   useEffect(() => {
     const fetchOffer = async () => {
@@ -259,6 +291,8 @@ export default function OfferLetterResult() {
   ${newInfo}
   `;
   }
+
+  
   
 
   const handleResend = async () => {

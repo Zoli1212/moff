@@ -1,21 +1,31 @@
 import { create } from "zustand";
 
+interface TableItem {
+  name: string;
+  quantity: string;
+  unit: string;
+  materialUnitPrice: string;
+  workUnitPrice: string;
+  materialTotal: string;
+  workTotal: string;
+}
+
 interface DemandStore {
-  // Az ajánlatkérés szövege
   demandText: string;
-  // A szöveg beállítása
   setDemandText: (text: string) => void;
-  // A szöveg törlése
   clearDemandText: () => void;
+
+  storedItems: TableItem[];
+  setStoredItems: (items: TableItem[]) => void;
+  clearStoredItems: () => void;
 }
 
 export const useDemandStore = create<DemandStore>((set) => ({
-  // Kezdetben üres a szöveg
   demandText: "",
-
-  // A szöveg frissítése
-  setDemandText: (text: string) => set({ demandText: text }),
-
-  // A szöveg törlése
+  setDemandText: (text) => set({ demandText: text }),
   clearDemandText: () => set({ demandText: "" }),
+
+  storedItems: [],
+  setStoredItems: (items) => set({ storedItems: items }),
+  clearStoredItems: () => set({ storedItems: [] }),
 }));
