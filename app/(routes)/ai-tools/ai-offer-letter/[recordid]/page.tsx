@@ -94,7 +94,7 @@ export default function OfferLetterResult() {
   const [content, setContent] = useState<OfferContent | null>(null);
   const { demandText, setDemandText } = useDemandStore();
   const [editableItems, setEditableItems] = useState<TableItem[]>([]);
-  const { storedItems, setStoredItems } = useDemandStore();
+  const { setStoredItems } = useDemandStore();
   const storedItemsRef = useRef<TableItem[]>([]);
 
   // Log store content when it changes
