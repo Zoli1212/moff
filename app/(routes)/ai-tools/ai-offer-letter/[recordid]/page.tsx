@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Edit, Save, X, Download } from "lucide-react";
@@ -95,6 +95,7 @@ export default function OfferLetterResult() {
   const { demandText, setDemandText } = useDemandStore();
   const [editableItems, setEditableItems] = useState<TableItem[]>([]);
   const { storedItems, setStoredItems } = useDemandStore();
+  const storedItemsRef = useRef<TableItem[]>([]);
 
   // Log store content when it changes
   const [newText, setNewText] = useState("");
@@ -191,11 +192,18 @@ export default function OfferLetterResult() {
         const rawText = parsed.output[0].content;
         const parsedItems = parseOfferTable(rawText);
 
-        // Ha az új lista rövidebb, és már vannak korábbi tételek a store-ban
-        if (parsedItems.length < 5 && storedItems.length >= 10) {
+        // Első alkalommal beállítjuk a ref-et, ha még nincs benne érték
+        if (storedItemsRef.current.length === 0) {
+          storedItemsRef.current = parsedItems;
+          setEditableItems(parsedItems);
+          setStoredItems(parsedItems);
+          return;
+        }
+
+        if (parsedItems.length < 5 && storedItemsRef.current.length >= 10) {
           const uniqueNewItems = parsedItems.filter(
             (newItem) =>
-              !storedItems.some(
+              !storedItemsRef.current.some(
                 (existingItem) =>
                   existingItem.name === newItem.name &&
                   existingItem.quantity === newItem.quantity &&
@@ -208,16 +216,23 @@ export default function OfferLetterResult() {
               )
           );
 
-          const mergedItems = [...storedItems, ...uniqueNewItems];
-          setStoredItems(mergedItems);
+          const mergedItems = [...storedItemsRef.current, ...uniqueNewItems];
+
+          storedItemsRef.current = mergedItems;
           setEditableItems(mergedItems);
+          setStoredItems(mergedItems);
         } else {
-          setStoredItems(parsedItems);
+          storedItemsRef.current = parsedItems;
           setEditableItems(parsedItems);
+          setStoredItems(parsedItems);
         }
       }
     }
   }, [offer]);
+
+  useEffect(() => {
+    console.log("🔍 storedItemsRef jelenlegi érték:", storedItemsRef.current);
+  }, [editableItems]);
 
   useEffect(() => {
     const fetchOffer = async () => {
@@ -361,6 +376,9 @@ export default function OfferLetterResult() {
           setError("Hiba történt az állapot lekérdezése során.");
         }
       };
+
+      storedItemsRef.current = editableItems;
+      setStoredItems(editableItems);
 
       poll();
     } catch (err) {
