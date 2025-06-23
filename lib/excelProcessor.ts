@@ -215,12 +215,19 @@ export async function processExcelWithAI(fileBuffer: Uint8Array | ArrayBuffer): 
     // Visszaírás
     rows.forEach((row, i) => {
       const excelRow = worksheet.getRow(i + 2);
+      const isSummaryRow = String(row['Tétel szövege']).toLowerCase().includes('munkanem');
+    
       headers.forEach((key, idx) => {
-        if (key in row) {
+        const shouldSkip =
+          isSummaryRow &&
+          ['Menny.', 'Egység', 'Anyag egységár', 'Díj egységre'].includes(key);
+    
+        if (!shouldSkip && key in row) {
           excelRow.getCell(idx + 1).value = row[key];
         }
       });
     });
+    
 
     // --- MUNKANEM sor frissítése összesítéssel ---
     const totalMaterial = rows.reduce((sum, r) => sum + (r['Anyag összesen'] || 0), 0);
