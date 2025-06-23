@@ -277,3 +277,9 @@ Szabó Bence
 bence.szabo@pelda.hu
 
 régi neon: postgresql://neondb_owner:npg_k7pwgiyFJ5bR@ep-steep-frost-a8tawktk-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
+
+# ha nem a mi árunkból van akkor jelöljük + eleje ! felkiáltójel a végén legyen ha nem a mi tételünk
+# mennyiség be van írva előre !
+# mobilos legyen az egész!
+# munkáink + számláink
+# erőforrásaink

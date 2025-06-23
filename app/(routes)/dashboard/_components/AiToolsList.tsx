@@ -24,7 +24,7 @@ export const aiToolsList = [
     path: "/ai-tools/ai-offer-letter",
   },
   {
-    name: "Előre megírt tételek",
+    name: "Ajánlat árazatlan költségkiírásra",
     desc: "Előre megírt tételekkel",
     icon: "/roadmap.png",
     button: "Számolás most",
