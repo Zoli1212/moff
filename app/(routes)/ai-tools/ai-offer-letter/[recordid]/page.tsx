@@ -94,11 +94,7 @@ export default function OfferLetterResult() {
   const [content, setContent] = useState<OfferContent | null>(null);
   const { demandText, setDemandText } = useDemandStore();
   const [editableItems, setEditableItems] = useState<TableItem[]>([]);
-  const {
-    storedItems,
-    setStoredItems,
-  } = useDemandStore();
-  
+  const { storedItems, setStoredItems } = useDemandStore();
 
   // Log store content when it changes
   const [newText, setNewText] = useState("");
@@ -112,7 +108,6 @@ export default function OfferLetterResult() {
     materialTotal: string;
     workTotal: string;
   }
-
 
   // Initialize with empty item if no items are loaded
   useEffect(() => {
@@ -145,13 +140,9 @@ export default function OfferLetterResult() {
   }, [content]);
 
   // minden szerkesztés után frissítjük a store-t
-useEffect(() => {
-  setStoredItems(editableItems);
-}, [editableItems]);
-
-
-  console.log(demandText, "demandText");
-  console.log("🧠 Zustand storedItems:", storedItems);
+  useEffect(() => {
+    setStoredItems(editableItems);
+  }, [editableItems]);
 
   // Helper function to parse currency values
   const parseCurrency = (value: string): number => {
@@ -195,25 +186,28 @@ useEffect(() => {
     if (offer) {
       const parsed = parseContent(offer.content);
       setContent(parsed);
-  
+
       if (parsed?.output?.[0]?.content) {
         const rawText = parsed.output[0].content;
         const parsedItems = parseOfferTable(rawText);
-  
+
         // Ha az új lista rövidebb, és már vannak korábbi tételek a store-ban
         if (parsedItems.length < 5 && storedItems.length >= 10) {
-          const uniqueNewItems = parsedItems.filter((newItem) =>
-            !storedItems.some((existingItem) =>
-              existingItem.name === newItem.name &&
-              existingItem.quantity === newItem.quantity &&
-              existingItem.unit === newItem.unit &&
-              existingItem.materialUnitPrice === newItem.materialUnitPrice &&
-              existingItem.workUnitPrice === newItem.workUnitPrice &&
-              existingItem.materialTotal === newItem.materialTotal &&
-              existingItem.workTotal === newItem.workTotal
-            )
+          const uniqueNewItems = parsedItems.filter(
+            (newItem) =>
+              !storedItems.some(
+                (existingItem) =>
+                  existingItem.name === newItem.name &&
+                  existingItem.quantity === newItem.quantity &&
+                  existingItem.unit === newItem.unit &&
+                  existingItem.materialUnitPrice ===
+                    newItem.materialUnitPrice &&
+                  existingItem.workUnitPrice === newItem.workUnitPrice &&
+                  existingItem.materialTotal === newItem.materialTotal &&
+                  existingItem.workTotal === newItem.workTotal
+              )
           );
-  
+
           const mergedItems = [...storedItems, ...uniqueNewItems];
           setStoredItems(mergedItems);
           setEditableItems(mergedItems);
@@ -224,7 +218,6 @@ useEffect(() => {
       }
     }
   }, [offer]);
-  
 
   useEffect(() => {
     const fetchOffer = async () => {
@@ -292,9 +285,6 @@ useEffect(() => {
   `;
   }
 
-  
-  
-
   const handleResend = async () => {
     if (!newText.trim()) {
       const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez!";
@@ -316,7 +306,11 @@ useEffect(() => {
         )
         .join("\n");
 
-        const combinedText = buildPromptWithItems(formattedItems, newText, demandText);
+      const combinedText = buildPromptWithItems(
+        formattedItems,
+        newText,
+        demandText
+      );
 
       setDemandText(combinedText);
 
@@ -421,50 +415,93 @@ useEffect(() => {
                 onClick={() => {
                   // Export to Excel
                   const wb = XLSX.utils.book_new();
-                  
+
                   // Create data for the items sheet
                   const itemsData = [
-                    ["Tétel megnevezése", "Mennyiség", "Egység", "Anyag egységár", "Díj egységár", "Anyag összesen", "Díj összesen"],
-                    ...editableItems.map(item => [
+                    [
+                      "Tétel megnevezése",
+                      "Mennyiség",
+                      "Egység",
+                      "Anyag egységár",
+                      "Díj egységár",
+                      "Anyag összesen",
+                      "Díj összesen",
+                    ],
+                    ...editableItems.map((item) => [
                       item.name,
                       item.quantity,
                       item.unit,
                       item.materialUnitPrice,
                       item.workUnitPrice,
                       item.materialTotal,
-                      item.workTotal
-                    ])
+                      item.workTotal,
+                    ]),
                   ];
-                  
+
                   // Add summary rows
-                  itemsData.push(["", "", "", "", "", "Munkadíj összesen:", formattedWorkTotal]);
-                  itemsData.push(["", "", "", "", "", "Anyagköltség összesen:", formattedMaterialTotal]);
-                  itemsData.push(["", "", "", "", "", "Összesített nettó költség:", formattedTotal]);
-                  
+                  itemsData.push([
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Munkadíj összesen:",
+                    formattedWorkTotal,
+                  ]);
+                  itemsData.push([
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Anyagköltség összesen:",
+                    formattedMaterialTotal,
+                  ]);
+                  itemsData.push([
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "Összesített nettó költség:",
+                    formattedTotal,
+                  ]);
+
                   if (timeMatch) {
-                    itemsData.push(["", "", "", "", "", "Becsült kivitelezési idő:", `${timeMatch[1].trim()} munkanap`]);
+                    itemsData.push([
+                      "",
+                      "",
+                      "",
+                      "",
+                      "",
+                      "Becsült kivitelezési idő:",
+                      `${timeMatch[1].trim()} munkanap`,
+                    ]);
                   }
-                  
+
                   // Create worksheet
                   const wsItems = XLSX.utils.aoa_to_sheet(itemsData);
-                  
+
                   // Set column widths
                   const colWidths = [
                     { wch: 40 }, // Tétel megnevezése
                     { wch: 10 }, // Mennyiség
-                    { wch: 8 },  // Egység
+                    { wch: 8 }, // Egység
                     { wch: 15 }, // Anyag egységár
                     { wch: 15 }, // Díj egységár
                     { wch: 20 }, // Anyag összesen
-                    { wch: 20 }  // Díj összesen
+                    { wch: 20 }, // Díj összesen
                   ];
-                  wsItems['!cols'] = colWidths;
-                  
+                  wsItems["!cols"] = colWidths;
+
                   // Add worksheet to workbook
                   XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat");
-                  
+
                   // Generate Excel file
-                  XLSX.writeFile(wb, `ajanlat-${new Date().toISOString().split('T')[0]}.xlsx`);
+                  XLSX.writeFile(
+                    wb,
+                    `ajanlat-${new Date().toISOString().split("T")[0]}.xlsx`
+                  );
                 }}
                 className="flex items-center gap-1"
               >
