@@ -10,23 +10,27 @@ export default function FullscreenHandler() {
         msRequestFullscreen?: () => Promise<void>;
       };
       
-      const requestFullscreen = () => {
-        if (docEl.requestFullscreen) {
-          docEl.requestFullscreen();
-        } else if (docEl.webkitRequestFullscreen) { // Safari
-          docEl.webkitRequestFullscreen();
-        } else if (docEl.msRequestFullscreen) { // IE11
-          docEl.msRequestFullscreen();
+      const requestFullscreen = async () => {
+        try {
+          if (docEl.requestFullscreen) {
+            await docEl.requestFullscreen();
+          } else if (docEl.webkitRequestFullscreen) {
+            await docEl.webkitRequestFullscreen();
+          } else if (docEl.msRequestFullscreen) {
+            await docEl.msRequestFullscreen();
+          }
+        } catch (err) {
+          console.error('Fullscreen hiba:', err);
         }
       };
 
-      // Try to enter fullscreen on mobile devices
+      // Csak mobil eszközökön próbáljuk meg
       if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
-        // Add a small delay to ensure the page is fully loaded
-        setTimeout(() => {
+        // Késleltetés az oldal betöltéséhez
+        const timer = setTimeout(() => {
           requestFullscreen();
           
-          // Add a click handler to the document to re-enter fullscreen if user exits
+          // Kattintásra újrapróbálkozás, ha kiléptünk
           const handleClick = () => {
             if (!document.fullscreenElement) {
               requestFullscreen();
@@ -35,24 +39,26 @@ export default function FullscreenHandler() {
           
           document.addEventListener('click', handleClick);
           
-          // Clean up event listener
+          // Tisztítás
           return () => {
+            clearTimeout(timer);
             document.removeEventListener('click', handleClick);
           };
         }, 1000);
       }
     };
 
-    // Run the fullscreen handler
+    // Futtatás
     handleFullscreen();
     
-    // Re-run when the page becomes visible again (e.g., after switching tabs)
+    // Újrafuttatás, ha láthatóvá válik az oldal
     document.addEventListener('visibilitychange', handleFullscreen);
     
+    // Tisztítás
     return () => {
       document.removeEventListener('visibilitychange', handleFullscreen);
     };
   }, []);
 
-  return null; // This component doesn't render anything
+  return null; // Nem renderel semmit
 }
