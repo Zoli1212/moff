@@ -69,7 +69,7 @@ model Client {
 }
 
 model MyWork {
-  id            Int       @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   title         String
   customerName  String
   customerPhone String?
@@ -80,11 +80,47 @@ model MyWork {
   totalPrice    Float
   description   String?
   workflowId    Int?
-  workflow      Workflow? @relation(fields: [workflowId], references: [id])
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  workflow      Workflow?     @relation(fields: [workflowId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   tenantEmail   String
   emails        Email[]
+  requirements  Requirement[]
+}
+
+model Requirement {
+  id                     Int           @id @default(autoincrement())
+  title                  String
+  description            String?
+  versionNumber          Int
+  status                 String       @default("draft")
+  myWorkId              Int
+  myWork                MyWork        @relation(fields: [myWorkId], references: [id])
+  previousRequirementId  Int?
+  previousVersion       Requirement?  @relation("RequirementVersions", fields: [previousRequirementId], references: [id])
+  nextVersions          Requirement[] @relation("RequirementVersions")
+  offers                Offer[]
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  @@unique([myWorkId, versionNumber])
+  @@index([previousRequirementId])
+}
+
+model Offer {
+  id             Int         @id @default(autoincrement())
+  title          String
+  description    String?
+  totalPrice     Float
+  status         String     @default("draft")
+  requirementId  Int
+  requirement    Requirement @relation(fields: [requirementId], references: [id])
+  items          Json?
+  validUntil     DateTime?
+  notes          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  createdBy      String?
 }
 
 model MyInvoices {

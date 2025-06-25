@@ -1,24 +1,24 @@
-'use server';
+"use server";
 
-import { prisma } from '@/lib/prisma';
-import { auth } from '@clerk/nextjs/server';
+import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 
 // Get all workflows for the current user
 export async function getWorkflows() {
   const { userId } = await auth();
-  
+
   if (!userId) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
   // Get user's email from Clerk
   const user = await prisma.user.findUnique({
     where: { id: Number(userId) },
-    select: { email: true }
+    select: { email: true },
   });
 
   if (!user?.email) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   return await prisma.workflow.findMany({
@@ -26,96 +26,100 @@ export async function getWorkflows() {
       WorkflowSpecialty: {
         some: {
           specialty: {
-            tenantEmail: user.email
-          }
-        }
-      }
+            tenantEmail: user.email,
+          },
+        },
+      },
     },
     include: {
       phases: {
         include: {
-          tasks: true
+          tasks: true,
         },
         orderBy: {
-          order: 'asc'
-        }
-      }
-    }
+          order: "asc",
+        },
+      },
+    },
   });
 }
 
 // Get workflows by specialty ID
 export async function getWorkflowsBySpecialty(specialtyId: number) {
   const { userId } = await auth();
-  
+
   if (!userId) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
   // Get user's email from Clerk
   const user = await prisma.user.findUnique({
     where: { id: Number(userId) },
-    select: { email: true }
+    select: { email: true },
   });
 
   if (!user?.email) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   // Verify the specialty belongs to the user
   const specialty = await prisma.specialty.findFirst({
     where: {
       id: specialtyId,
-      tenantEmail: user.email
-    }
+      tenantEmail: user.email,
+    },
   });
 
   if (!specialty) {
-    throw new Error('Specialty not found or access denied');
+    throw new Error("Specialty not found or access denied");
   }
 
   return await prisma.workflow.findMany({
     where: {
       WorkflowSpecialty: {
         some: {
-          specialtyId: specialtyId
-        }
-      }
+          specialtyId: specialtyId,
+        },
+      },
     },
     orderBy: {
-      name: 'asc'
-    }
+      name: "asc",
+    },
   });
 }
 
 // Create a new workflow
-export async function createWorkflow(name: string, description: string, specialtyId: number) {
+export async function createWorkflow(
+  name: string,
+  description: string,
+  specialtyId: number
+) {
   const { userId } = await auth();
-  
+
   if (!userId) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
   // Get user's email from Clerk
   const user = await prisma.user.findUnique({
     where: { id: Number(userId) },
-    select: { email: true }
+    select: { email: true },
   });
 
   if (!user?.email) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   // Verify the specialty belongs to the user
   const specialty = await prisma.specialty.findFirst({
     where: {
       id: specialtyId,
-      tenantEmail: user.email
-    }
+      tenantEmail: user.email,
+    },
   });
 
   if (!specialty) {
-    throw new Error('Specialty not found or access denied');
+    throw new Error("Specialty not found or access denied");
   }
 
   // Create the workflow and connect it to the specialty
@@ -126,84 +130,87 @@ export async function createWorkflow(name: string, description: string, specialt
       tenantEmail: user.email,
       WorkflowSpecialty: {
         create: {
-          specialtyId: specialtyId
-        }
-      }
-    }
+          specialtyId: specialtyId,
+        },
+      },
+    },
   });
 }
 
 // Update a workflow
-export async function updateWorkflow(workflowId: number, data: { name?: string; description?: string }) {
+export async function updateWorkflow(
+  workflowId: number,
+  data: { name?: string; description?: string }
+) {
   const { userId } = await auth();
-  
+
   if (!userId) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
   // Get user's email from Clerk
   const user = await prisma.user.findUnique({
     where: { id: Number(userId) },
-    select: { email: true }
+    select: { email: true },
   });
 
   if (!user?.email) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   // Verify the workflow belongs to the user
   const workflow = await prisma.workflow.findFirst({
     where: {
       id: workflowId,
-      tenantEmail: user.email
-    }
+      tenantEmail: user.email,
+    },
   });
 
   if (!workflow) {
-    throw new Error('Workflow not found or access denied');
+    throw new Error("Workflow not found or access denied");
   }
 
   return await prisma.workflow.update({
     where: { id: workflowId },
     data: {
       name: data.name,
-      description: data.description
-    }
+      description: data.description,
+    },
   });
 }
 
 // Delete a workflow
 export async function deleteWorkflow(workflowId: number) {
   const { userId } = await auth();
-  
+
   if (!userId) {
-    throw new Error('Unauthorized');
+    throw new Error("Unauthorized");
   }
 
   // Get user's email from Clerk
   const user = await prisma.user.findUnique({
     where: { id: Number(userId) },
-    select: { email: true }
+    select: { email: true },
   });
 
   if (!user?.email) {
-    throw new Error('User not found');
+    throw new Error("User not found");
   }
 
   // Verify the workflow belongs to the user
   const workflow = await prisma.workflow.findFirst({
     where: {
       id: workflowId,
-      tenantEmail: user.email
-    }
+      tenantEmail: user.email,
+    },
   });
 
   if (!workflow) {
-    throw new Error('Workflow not found or access denied');
+    throw new Error("Workflow not found or access denied");
   }
 
   // Delete the workflow (cascading deletes will handle related records)
   return await prisma.workflow.delete({
-    where: { id: workflowId }
+    where: { id: workflowId },
   });
 }

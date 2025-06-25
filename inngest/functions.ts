@@ -5,7 +5,6 @@ import ImageKit from "imagekit";
 
 const prisma = new PrismaClient();
 
-
 export const EmailAnalyzerAgent = createAgent({
   name: "EmailAnalyzerAgent",
   description:
@@ -93,6 +92,7 @@ export const AiOfferChatAgent = createAgent({
   Your tasks include:
   - Helping staff generate professional renovation offers based on the company's services and price list.
   - Clarifying all missing information needed for offer creation. For example:
+    - Location/address (extract and display prominently)
     - Surface area or quantity (m², number of doors, etc.)
     - Location of work (kitchen, bathroom, exterior, etc.)
     - Type of work (painting, tiling, demolition, installation, etc.)
@@ -3977,7 +3977,11 @@ Use the following detailed renovation task list as your catalog when generating 
   
  When a user provides a request, always match it with the most relevant tasks from this catalog.
 
-When returning the generated offer text, format each line item like this:
+ When returning the generated offer text, ALWAYS start with the location/address if available in this format:
+
+# [Location/Address]
+[Extracted location information]
+
 
 *Tétel neve: [quantity] [unit] × [unit price] Ft/[unit] = [total] Ft
 
@@ -4160,49 +4164,55 @@ export const AiOfferAgent = inngest.createFunction(
   { id: "AiOfferAgent" },
   { event: "AiOfferAgent" },
   async ({ event, step }) => {
-    console.log('AiOfferAgent event received:', JSON.stringify(event, null, 2));
-    
+    console.log("AiOfferAgent event received:", JSON.stringify(event, null, 2));
+
     try {
       const { userInput, recordId, userEmail } = event.data;
-      console.log('Processing offer letter request:', { userInput, recordId, userEmail });
-      
+      console.log("Processing offer letter request:", {
+        userInput,
+        recordId,
+        userEmail,
+      });
+
       if (!userInput) {
-        throw new Error('Missing userInput in event data');
+        throw new Error("Missing userInput in event data");
       }
-      
+
       const result = await AiOfferChatAgent.run(userInput);
-      console.log('AiOfferChatAgent result:', JSON.stringify(result, null, 2));
-      
+      console.log("AiOfferChatAgent result:", JSON.stringify(result, null, 2));
+
       // Save the result to the database using Prisma
       if (recordId) {
-        await step.run('save-offer-letter', async () => {
+        await step.run("save-offer-letter", async () => {
           const historyData = {
             recordId: recordId,
             content: JSON.parse(JSON.stringify(result)), // Convert to plain object
             tenantEmail: userEmail,
-            aiAgentType: 'ai-offer-letter',
+            aiAgentType: "ai-offer-letter",
             metaData: {
-              title: 'Ajánlat generálás',
-              description: userInput.substring(0, 100) + '...',
+              title: "Ajánlat generálás",
+              description: userInput.substring(0, 100) + "...",
             },
             createdAt: new Date().toISOString(),
           };
-          
-        
-          console.log('Saving to history:', JSON.stringify(historyData, null, 2));
-          
+
+          console.log(
+            "Saving to history:",
+            JSON.stringify(historyData, null, 2)
+          );
+
           const saved = await prisma.history.create({
             data: historyData,
           });
-          
-          console.log('Saved history record:', saved);
+
+          console.log("Saved history record:", saved);
           return saved;
         });
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Error in AiOfferAgent:', error);
+      console.error("Error in AiOfferAgent:", error);
       throw error; // Re-throw to mark the function as failed
     }
   }
@@ -4340,18 +4350,22 @@ export const AiRoadmapAgent = inngest.createFunction(
         content: parsedJson as any, // Type assertion for Prisma JSON field
         aiAgentType: "/ai-tools/ai-roadmap-agent",
         createdAt: new Date().toISOString(),
-        userEmail: userEmail || 'anonymous@example.com',
-        tenantEmail: userEmail || 'anonymous@example.com',
-        metaData: typeof userInput === 'string' ? { content: userInput } : userInput,
+        userEmail: userEmail || "anonymous@example.com",
+        tenantEmail: userEmail || "anonymous@example.com",
+        metaData:
+          typeof userInput === "string" ? { content: userInput } : userInput,
       };
-      
-      console.log('Saving roadmap to history:', JSON.stringify(historyData, null, 2));
-      
+
+      console.log(
+        "Saving roadmap to history:",
+        JSON.stringify(historyData, null, 2)
+      );
+
       const result = await prisma.history.create({
         data: historyData,
       });
-      
-      console.log('Saved roadmap history record:', result);
+
+      console.log("Saved roadmap history record:", result);
       console.log(result);
       return parsedJson;
     });
@@ -4364,10 +4378,10 @@ interface EmailAnalysis {
     main_topic?: string | null;
     key_points?: string[] | null;
     action_required?: boolean;
-    priority?: 'high' | 'medium' | 'low' | null;
+    priority?: "high" | "medium" | "low" | null;
     deadline?: string | null;
-    related_to?: 'renovation' | 'offer' | 'inquiry' | 'other' | null;
-    sentiment?: 'positive' | 'neutral' | 'negative' | null;
+    related_to?: "renovation" | "offer" | "inquiry" | "other" | null;
+    sentiment?: "positive" | "neutral" | "negative" | null;
     contact_info?: {
       name?: string | null;
       email?: string | null;
@@ -4404,19 +4418,21 @@ export const ProcessBulkEmails = inngest.createFunction(
   { id: "process-bulk-emails" },
   { event: "ProcessBulkEmails" },
   async ({ event, step }) => {
-    console.log('ProcessBulkEmails function started');
+    console.log("ProcessBulkEmails function started");
     const { userEmail } = event.data;
 
     try {
       // Find all emails without a myWorkId and with content
       const emails = await step.run("GetEmailsWithoutWork", async () => {
-        return await prisma.$queryRaw<Array<{
-          id: number;
-          subject: string;
-          content: string;
-          from: string;
-          // Add other fields from your Email model as needed
-        }>>`
+        return await prisma.$queryRaw<
+          Array<{
+            id: number;
+            subject: string;
+            content: string;
+            from: string;
+            // Add other fields from your Email model as needed
+          }>
+        >`
           SELECT * FROM "Email"
           WHERE "myWorkId" IS NULL
           AND "tenantEmail" = ${userEmail}
@@ -4435,113 +4451,160 @@ export const ProcessBulkEmails = inngest.createFunction(
           continue;
         }
 
-        
         try {
-          console.log(`Processing email: ${email.id} - ${email.subject || 'No subject'}`);
-          
+          console.log(
+            `Processing email: ${email.id} - ${email.subject || "No subject"}`
+          );
+
           // Run the EmailAnalyzerAgent outside of step.run
           const emailContent = email.content as string;
-          console.log(`Analyzing email ${email.id} (${email.subject || 'No subject'})`);
-          
-          let analysisResult: EmailAnalysis = { analysis: {}, summary: { overview: '', next_steps: [] } };
-          
+          console.log(
+            `Analyzing email ${email.id} (${email.subject || "No subject"})`
+          );
+
+          let analysisResult: EmailAnalysis = {
+            analysis: {},
+            summary: { overview: "", next_steps: [] },
+          };
+
           try {
             const result = await EmailAnalyzerAgent.run(emailContent);
             const firstMessage = result.output?.[0];
             let rawContent: string | undefined;
 
-            if (firstMessage && 'content' in firstMessage) {
+            if (firstMessage && "content" in firstMessage) {
               // Handle regular message with content
               rawContent = firstMessage.content as string;
-            } else if (firstMessage && 'tool_call_id' in firstMessage) {
+            } else if (firstMessage && "tool_call_id" in firstMessage) {
               // Handle tool call message
-              console.error('Received tool call message, but expected text content');
-              analysisResult = { analysis: {}, summary: { overview: 'Error: Tool call not supported here', next_steps: [] } };
+              console.error(
+                "Received tool call message, but expected text content"
+              );
+              analysisResult = {
+                analysis: {},
+                summary: {
+                  overview: "Error: Tool call not supported here",
+                  next_steps: [],
+                },
+              };
             }
-            
+
             if (rawContent) {
               // Try to extract JSON from markdown code blocks
               try {
                 let jsonString = rawContent;
-                
+
                 // Try to find JSON in markdown code blocks
-                const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+                const jsonMatch = rawContent.match(
+                  /```(?:json)?\s*([\s\S]*?)\s*```/
+                );
                 if (jsonMatch) {
                   jsonString = jsonMatch[1];
                 }
-                
+
                 // Clean up the string before parsing
                 jsonString = jsonString.trim();
-                
+
                 // If the response starts with a non-JSON text, try to find the actual JSON part
-                if (!jsonString.startsWith('{') && !jsonString.startsWith('[')) {
-                  const jsonStart = jsonString.indexOf('{');
+                if (
+                  !jsonString.startsWith("{") &&
+                  !jsonString.startsWith("[")
+                ) {
+                  const jsonStart = jsonString.indexOf("{");
                   if (jsonStart > 0) {
                     jsonString = jsonString.substring(jsonStart);
                   }
                 }
-                
+
                 // Try to parse the JSON
                 analysisResult = JSON.parse(jsonString) as EmailAnalysis;
-                console.log('Successfully parsed analysis result');
+                console.log("Successfully parsed analysis result");
               } catch (error) {
-                console.error(`Error parsing analysis for email ${email.id}:`, error);
-                console.log('Raw content that failed to parse:', rawContent.substring(0, 500));
-                analysisResult = { 
-                  analysis: {}, 
-                  summary: { 
-                    overview: 'Hiba az elemzés feldolgozásakor. Kérjük, ellenőrizd az e-mail tartalmát.', 
-                    next_steps: [] 
-                  } 
+                console.error(
+                  `Error parsing analysis for email ${email.id}:`,
+                  error
+                );
+                console.log(
+                  "Raw content that failed to parse:",
+                  rawContent.substring(0, 500)
+                );
+                analysisResult = {
+                  analysis: {},
+                  summary: {
+                    overview:
+                      "Hiba az elemzés feldolgozásakor. Kérjük, ellenőrizd az e-mail tartalmát.",
+                    next_steps: [],
+                  },
                 };
               }
             }
           } catch (error) {
-            console.error(`Error running EmailAnalyzerAgent for email ${email.id}:`, error);
-            analysisResult = { analysis: {}, summary: { overview: 'Error analyzing email', next_steps: [] } };
+            console.error(
+              `Error running EmailAnalyzerAgent for email ${email.id}:`,
+              error
+            );
+            analysisResult = {
+              analysis: {},
+              summary: { overview: "Error analyzing email", next_steps: [] },
+            };
           }
 
           // Extract location from email content or subject
-          const location = (email.subject?.match(/(?:helyszín|location):?\s*([^\n,]+)/i)?.[1]?.trim() ||
-                         (typeof email.content === 'string' ? email.content.match(/(?:helyszín|location):?\s*([^\n,]+)/i)?.[1]?.trim() : '') ||
-                         analysisResult.analysis?.requirements?.description?.match(/(?:helyszín|location):?\s*([^\n,]+)/i)?.[1]?.trim() ||
-                         'Ismeretlen helyszín');
+          const location =
+            email.subject
+              ?.match(/(?:helyszín|location):?\s*([^\n,]+)/i)?.[1]
+              ?.trim() ||
+            (typeof email.content === "string"
+              ? email.content
+                  .match(/(?:helyszín|location):?\s*([^\n,]+)/i)?.[1]
+                  ?.trim()
+              : "") ||
+            analysisResult.analysis?.requirements?.description
+              ?.match(/(?:helyszín|location):?\s*([^\n,]+)/i)?.[1]
+              ?.trim() ||
+            "Ismeretlen helyszín";
 
           // Create or find MyWork item
           await step.run(`CreateOrUpdateMyWork-${email.id}`, async () => {
-            const emailSubject = email.subject || 'Névtelen munka';
-            const fromText = email.from || 'Ismeretlen feladó';
-            const emailContent = email.content || '';
-            
+            const emailSubject = email.subject || "Névtelen munka";
+            const fromText = email.from || "Ismeretlen feladó";
+            const emailContent = email.content || "";
+
             // Extract customer name and email from the from field
-            const customerName = fromText.split('<')[0]?.trim() || 'Ismeretlen ügyfél';
+            const customerName =
+              fromText.split("<")[0]?.trim() || "Ismeretlen ügyfél";
             const customerEmailMatch = fromText.match(/<([^>]+)>/);
-            const customerEmail = customerEmailMatch ? customerEmailMatch[1] : '';
-            
+            const customerEmail = customerEmailMatch
+              ? customerEmailMatch[1]
+              : "";
+
             // Create a description with the first 200 chars of the email
-            const emailPreview = emailContent.length > 200 
-              ? `${emailContent.substring(0, 200)}...` 
-              : emailContent;
+            const emailPreview =
+              emailContent.length > 200
+                ? `${emailContent.substring(0, 200)}...`
+                : emailContent;
             const description = `E-mail kapcsolat: ${fromText}\n\n${emailPreview}`;
-            
+
             // Build the where clause for finding existing work
             const whereClause: any = {
               tenantEmail: userEmail,
-              OR: [] as any[]
+              OR: [] as any[],
             };
-            
+
             // Only add title condition if email has a subject
             if (email.subject) {
               whereClause.OR.push({ title: email.subject });
             }
-            
+
             // Always include location in the OR condition
-            whereClause.OR.push({ location: { equals: location, mode: 'insensitive' } });
-            
+            whereClause.OR.push({
+              location: { equals: location, mode: "insensitive" },
+            });
+
             // Find existing work that matches either title or location
             const existingWork = await prisma.myWork.findFirst({
               where: whereClause,
-              orderBy: { createdAt: 'desc' } // Get the most recent one
+              orderBy: { createdAt: "desc" }, // Get the most recent one
             });
 
             if (existingWork) {
@@ -4554,18 +4617,20 @@ export const ProcessBulkEmails = inngest.createFunction(
                   customerName: existingWork.customerName || customerName,
                   customerEmail: existingWork.customerEmail || customerEmail,
                   // Update location if it was empty
-                  location: existingWork.location || location
-                }
+                  location: existingWork.location || location,
+                },
               });
-              
+
               // Link email to existing MyWork
               await prisma.email.update({
                 where: { id: email.id },
-                data: { myWorkId: existingWork.id }
+                data: { myWorkId: existingWork.id },
               });
-              
-              console.log(`Linked email ${email.id} to existing MyWork ${existingWork.id}`);
-              return { action: 'linked', workId: existingWork.id };
+
+              console.log(
+                `Linked email ${email.id} to existing MyWork ${existingWork.id}`
+              );
+              return { action: "linked", workId: existingWork.id };
             } else {
               // Create new MyWork with data from email and analysis
               const newWorkData: any = {
@@ -4574,30 +4639,32 @@ export const ProcessBulkEmails = inngest.createFunction(
                 customerEmail: customerEmail,
                 date: new Date(),
                 location: location,
-                time: '00:00',
+                time: "00:00",
                 totalPrice: 0,
                 description: description,
                 tenantEmail: userEmail,
                 workflowId: null,
                 // Add additional fields from analysis if available
-                customerPhone: analysisResult.analysis?.contact_info?.phone || null
+                customerPhone:
+                  analysisResult.analysis?.contact_info?.phone || null,
               };
-              
+
               const newWork = await prisma.myWork.create({
-                data: newWorkData
+                data: newWorkData,
               });
-              
+
               // Link email to the new MyWork
               await prisma.email.update({
                 where: { id: email.id },
-                data: { myWorkId: newWork.id }
+                data: { myWorkId: newWork.id },
               });
-              
-              console.log(`Created new MyWork ${newWork.id} for email ${email.id}`);
-              return { action: 'created', workId: newWork.id };
+
+              console.log(
+                `Created new MyWork ${newWork.id} for email ${email.id}`
+              );
+              return { action: "created", workId: newWork.id };
             }
           });
-          
         } catch (error) {
           console.error(`Error processing email ${email.id}:`, error);
           // Continue with next email even if one fails
@@ -4607,7 +4674,7 @@ export const ProcessBulkEmails = inngest.createFunction(
 
       return { success: true, processedCount: emails.length };
     } catch (error) {
-      console.error('Error in ProcessBulkEmails:', error);
+      console.error("Error in ProcessBulkEmails:", error);
       throw error;
     }
   }
@@ -4617,47 +4684,64 @@ export const EmailAnalyzer = inngest.createFunction(
   { id: "EmailAnalyzer" },
   { event: "EmailAnalyzer" },
   async ({ event, step }) => {
-    console.log('EmailAnalyzer function started', { eventId: event.id });
+    console.log("EmailAnalyzer function started", { eventId: event.id });
     const { recordId, emailContent, userEmail, metadata = {} } = event.data;
-    console.log('Processing analysis for recordId:', recordId);
+    console.log("Processing analysis for recordId:", recordId);
 
     try {
       // Analyze the email content using the EmailAnalyzerAgent
-      console.log('Running EmailAnalyzerAgent...');
+      console.log("Running EmailAnalyzerAgent...");
       const analysisResult = await EmailAnalyzerAgent.run(emailContent);
-      console.log('EmailAnalyzerAgent completed');
+      console.log("EmailAnalyzerAgent completed");
 
       // @ts-ignore
       const rawContent = analysisResult.output[0].content;
-      console.log('Raw analysis content length:', rawContent.length);
-      console.log('Raw analysis content (first 500 chars):', rawContent.substring(0, 500));
+      console.log("Raw analysis content length:", rawContent.length);
+      console.log(
+        "Raw analysis content (first 500 chars):",
+        rawContent.substring(0, 500)
+      );
 
       // Try to extract JSON from markdown code blocks
       let parsedAnalysis;
       try {
         const jsonMatch = rawContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
         const jsonString = jsonMatch ? jsonMatch[1] : rawContent;
-        console.log('Extracted JSON string (first 500 chars):', jsonString.substring(0, 500));
-        
+        console.log(
+          "Extracted JSON string (first 500 chars):",
+          jsonString.substring(0, 500)
+        );
+
         parsedAnalysis = JSON.parse(jsonString);
-        console.log('Successfully parsed JSON analysis:', JSON.stringify(parsedAnalysis, null, 2));
+        console.log(
+          "Successfully parsed JSON analysis:",
+          JSON.stringify(parsedAnalysis, null, 2)
+        );
       } catch (error) {
         console.error("Error parsing JSON from email analysis:", error);
         // If parsing fails, include the raw content for debugging
         parsedAnalysis = {
           error: "Failed to parse email analysis",
-          raw_content: rawContent?.substring(0, 500) + (rawContent?.length > 500 ? '...' : ''),
+          raw_content:
+            rawContent?.substring(0, 500) +
+            (rawContent?.length > 500 ? "..." : ""),
           ...metadata,
         };
-        console.log('Fallback analysis content:', parsedAnalysis);
+        console.log("Fallback analysis content:", parsedAnalysis);
       }
 
       // Save the analysis to the database using Prisma
       const saveToDb = await step.run("SaveEmailAnalysis", async () => {
         try {
-          console.log('Attempting to save to database with recordId:', recordId);
-          console.log('Analysis content to save:', JSON.stringify(parsedAnalysis, null, 2));
-          
+          console.log(
+            "Attempting to save to database with recordId:",
+            recordId
+          );
+          console.log(
+            "Analysis content to save:",
+            JSON.stringify(parsedAnalysis, null, 2)
+          );
+
           const data = {
             recordId: recordId,
             content: parsedAnalysis,
@@ -4665,38 +4749,38 @@ export const EmailAnalyzer = inngest.createFunction(
             userEmail: userEmail,
             metaData: JSON.stringify({
               ...metadata,
-              analysis_timestamp: new Date().toISOString()
+              analysis_timestamp: new Date().toISOString(),
             }),
             tenantEmail: userEmail, // Make sure tenantEmail is set
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
           };
-          
-          console.log('Database insert data:', JSON.stringify(data, null, 2));
-          
+
+          console.log("Database insert data:", JSON.stringify(data, null, 2));
+
           const result = await prisma.history.create({
-            data: data
+            data: data,
           });
-          
-          console.log('Email analysis saved to DB:', {
+
+          console.log("Email analysis saved to DB:", {
             recordId: recordId,
             dbId: result.id,
-            savedAt: new Date().toISOString()
+            savedAt: new Date().toISOString(),
           });
-          
+
           // Verify the record was saved
           const savedRecord = await prisma.history.findUnique({
-            where: { id: result.id }
+            where: { id: result.id },
           });
-          console.log('Verified saved record:', {
+          console.log("Verified saved record:", {
             id: savedRecord?.id,
             recordId: savedRecord?.recordId,
             aiAgentType: savedRecord?.aiAgentType,
-            hasContent: !!savedRecord?.content
+            hasContent: !!savedRecord?.content,
           });
-          
+
           return parsedAnalysis;
         } catch (error) {
-          console.error('Error saving to database:', error);
+          console.error("Error saving to database:", error);
           throw error;
         }
       });

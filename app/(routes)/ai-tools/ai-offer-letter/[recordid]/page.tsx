@@ -240,6 +240,7 @@ export default function OfferLetterResult() {
         const response = await axios.get(
           `/api/ai-offer-letter/${params.recordid}`
         );
+        console.log(response.data, "DATA");
         setOffer(response.data);
       } catch {
         console.error("Error fetching offer");

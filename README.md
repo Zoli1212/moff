@@ -236,7 +236,7 @@ Tárgy: Lakásfelújítási ajánlatkérés – XIII. kerületi társasházi lak
 
 Kedves Asszisztens!
 
-Előzetes ajánlatot szeretnék kérni egy 78 m²-es budapesti társasházi lakás részleges felújítására, amely a XIII. kerületben található. Kérlek, a cég aktuális szakági árlistája alapján számítsd ki a javasolt munkafolyamatokat, azok költségeit, és add meg a becsült kivitelezési időt is.
+Előzetes ajánlatot szeretnék kérni egy 78 m²-es budapesti társasházi lakás részleges felújítására, amely a XIII. kerületben Gábor Áron utca 2. sz. alatt található. Kérlek, a cég aktuális szakági árlistája alapján számítsd ki a javasolt munkafolyamatokat, azok költségeit, és add meg a becsült kivitelezési időt is.
 
 Alapinformációk:
 Lakás mérete: kb. 78 m²
