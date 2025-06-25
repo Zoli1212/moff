@@ -277,7 +277,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         hasNotes: !!offer.notes
       });
       
-      revalidatePath('/dashboard/offers');
+      revalidatePath('/jobs');
       
       return {
         success: true,
