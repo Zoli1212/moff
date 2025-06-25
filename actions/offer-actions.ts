@@ -108,18 +108,39 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       }
     }
 
-    // 1. Create the Work record
-    const work = await prisma.myWork.create({
-      data: {
+    // 1. Check if work with this title already exists
+    const existingWork = await prisma.myWork.findFirst({
+      where: {
         title,
-        customerName,
-        date: new Date(),
-        location: parsedContent.location || 'Nincs megadva',
-        time: estimatedTime,
-        totalPrice: parsedContent.totalPrice || 0,
-        tenantEmail: emailToUse,
-      } as Prisma.MyWorkCreateInput,
+        tenantEmail: emailToUse
+      },
+      select: { 
+        id: true,
+        title: true
+      }
     });
+
+    let work;
+    
+    if (existingWork) {
+      // Use existing work
+      work = existingWork;
+      console.log('Using existing work with title:', title);
+    } else {
+      // Create new work record if it doesn't exist
+      work = await prisma.myWork.create({
+        data: {
+          title,
+          customerName,
+          date: new Date(),
+          location: title || parsedContent.location || 'Nincs megadva',
+          time: estimatedTime,
+          totalPrice: parsedContent.totalPrice || 0,
+          tenantEmail: emailToUse,
+        } as Prisma.MyWorkCreateInput,
+      });
+      console.log('Created new work with title:', title);
+    }
 
     // 2. Create or update Requirement with versioning
     const requirementTitle = `Követelmény - ${work.title}` || customerName || parsedContent.title || 'Új ajánlat';
