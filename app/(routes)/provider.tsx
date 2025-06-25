@@ -1,7 +1,7 @@
 "use client"
 
 import { SidebarProvider } from '@/components/ui/sidebar';
-import AppHeader from '../_components/AppHeader';
+import { AppHeader } from '../_components/AppHeader';
 import { AppSidebar } from '../_components/AppSidebar';
 
 function DashboardProvider({
