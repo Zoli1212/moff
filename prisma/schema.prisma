@@ -116,11 +116,14 @@ model Offer {
   requirementId  Int
   requirement    Requirement @relation(fields: [requirementId], references: [id])
   items          Json?
+  recordId       String?     @unique(map: "unique_offer_record_id")
   validUntil     DateTime?
   notes          String?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   createdBy      String?
+  
+  @@unique([recordId])
 }
 
 model MyInvoices {
