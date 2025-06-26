@@ -8,6 +8,7 @@ import 'react-swipeable-list/dist/styles.css';
 import { getUserWorks, deleteWork } from '@/actions/work-actions';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
+import TextInputDialog from '@/app/(routes)/dashboard/_components/TextInputDialog';
 
 interface Work {
   id: number;
@@ -30,6 +31,7 @@ export default function OffersPage() {
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const fetchWorks = useCallback(async () => {
     try {
@@ -132,29 +134,54 @@ export default function OffersPage() {
     <div className="min-h-screen w-full bg-gray-50 pt-4">
     <div className="w-full mx-auto px-4 max-w-7xl">
       <div className="mb-6">
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={() => router.push('/dashboard')}
-            className="text-gray-600 hover:text-gray-900 transition-colors"
-            aria-label="Vissza a főoldalra"
-          >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-6 w-6" 
-              fill="none" 
-              viewBox="0 0 24 24" 
-              stroke="currentColor"
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={() => router.push('/dashboard')}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+              aria-label="Vissza a főoldalra"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M15 19l-7-7 7-7" 
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                className="h-6 w-6" 
+                fill="none" 
+                viewBox="0 0 24 24" 
+                stroke="currentColor"
+              >
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d="M15 19l-7-7 7-7" 
+                />
+              </svg>
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800">Munkáim</h1>
+          </div>
+          <button
+            onClick={() => setIsDialogOpen(true)}
+            className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            aria-label="Új munka hozzáadása"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
+                clipRule="evenodd"
               />
             </svg>
           </button>
-          <h1 className="text-2xl font-bold text-gray-800">Munkáim</h1>
         </div>
+        <TextInputDialog
+          open={isDialogOpen}
+          setOpen={setIsDialogOpen}
+          toolPath="/ai-tools/ai-offer-letter"
+        />
         <div className="mt-4 relative">
           <input
             type="text"

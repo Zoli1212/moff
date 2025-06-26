@@ -237,18 +237,21 @@ export default function JobsPage() {
         <form onSubmit={handleSubmit}>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <div>
+              <div className="flex-1">
                 <CardTitle>Fázisok és Feladatok</CardTitle>
                 <CardDescription>Fázisok és hozzájuk tartozó feladatok hozzáadása és kezelése</CardDescription>
               </div>
-              <Button 
-                type="button" 
-                variant="outline" 
-                size="sm" 
-                onClick={handleAddPhase}
-              >
-                <Plus className="mr-2 h-4 w-4" /> Fázis Hozzáadása
-              </Button>
+              <div className="ml-auto">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleAddPhase}
+                  className="whitespace-nowrap"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Fázis Hozzáadása
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               {phases.length === 0 ? (

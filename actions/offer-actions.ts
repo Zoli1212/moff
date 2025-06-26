@@ -172,7 +172,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       },
       // Link to previous version if it exists
       ...(latestRequirement && {
-        previousRequirement: {
+        previousVersion: {
           connect: { id: latestRequirement.id }
         }
       })
