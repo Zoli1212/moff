@@ -178,9 +178,13 @@ export default function WorkRequirementsPage() {
             ) : (
               <div className="space-y-4">
                 {requirements.map((requirement) => (
-                  <div key={requirement.id} className="bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                  <Link 
+                    key={requirement.id} 
+                    href={`/offers/${requirement.id}`}
+                    className="block bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
+                  >
                     <div className="flex justify-between items-start">
-                      <div>
+                      <div className="flex-1">
                         <h4 className="font-medium text-gray-900">{requirement.title}</h4>
                         {requirement.description && (
                           <p className="mt-1 text-sm text-gray-600">
@@ -195,14 +199,22 @@ export default function WorkRequirementsPage() {
                           <span>{requirement._count.offers} ajánlat</span>
                         </div>
                       </div>
-                      <Link
-                        href={`/requirements/${workId}/${requirement.id}`}
-                        className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                        Részletek →
-                      </Link>
+                      <div className="ml-4 text-blue-600">
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="h-5 w-5" 
+                          viewBox="0 0 20 20" 
+                          fill="currentColor"
+                        >
+                          <path 
+                            fillRule="evenodd" 
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" 
+                            clipRule="evenodd" 
+                          />
+                        </svg>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             )}

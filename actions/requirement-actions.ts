@@ -37,6 +37,39 @@ export async function getRequirementsByWorkId(
   }
 }
 
+export async function getRequirementById(requirementId: number) {
+  try {
+    const requirement = await prisma.requirement.findUnique({
+      where: { id: requirementId },
+      include: {
+        myWork: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+    return requirement;
+  } catch (error) {
+    console.error('Error fetching requirement:', error);
+    throw new Error('Hiba történt a követelmény betöltése közben');
+  }
+}
+
+export async function getOffersByRequirementId(requirementId: number) {
+  try {
+    const offers = await prisma.offer.findMany({
+      where: { requirementId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return offers;
+  } catch (error) {
+    console.error('Error fetching offers:', error);
+    throw new Error('Hiba történt az ajánlatok betöltése közben');
+  }
+}
+
 export async function createRequirement(
   workId: number,
   title: string,
@@ -46,7 +79,7 @@ export async function createRequirement(
     // First, get the latest version number for this work
     const latestVersion = await prisma.requirement.findFirst({
       where: { myWorkId: workId },
-      orderBy: { versionNumber: 'desc' },
+      orderBy: { versionNumber: "desc" },
       select: { versionNumber: true },
     });
 
@@ -56,7 +89,7 @@ export async function createRequirement(
         description,
         myWorkId: workId,
         versionNumber: (latestVersion?.versionNumber || 0) + 1,
-        status: 'draft',
+        status: "draft",
       },
     });
 
