@@ -21,10 +21,12 @@ interface OfferWithItems extends Omit<Offer, "items" | "notes"> {
     totalPrice: string;
   }>;
   notes: string[];
-  requirement?: {
+  requirement: {
     id: number;
     title: string;
-  };
+    description: string | null;
+    status: string;
+  } | null;
 }
 
 // Modal component for showing full offer details
@@ -181,17 +183,23 @@ export default function RequirementOffersPage() {
         const offersData = await getOffersByRequirementId(requirementId);
 
         // Add requirement data to each offer
-        const offersWithRequirement: OfferWithItems[] = offersData.map(
-          (offer: OfferWithItems) => ({
-            ...offer,
-            requirement: requirementData
-              ? {
-                  id: requirementData.id,
-                  title: requirementData.title,
-                }
-              : undefined,
-          })
-        );
+        const offersWithRequirement: OfferWithItems[] = offersData.map((offer) => ({
+          ...offer,
+          items: Array.isArray(offer.items) ? offer.items : [],
+          notes: Array.isArray(offer.notes) ? offer.notes : [],
+          requirement: requirementData
+            ? {
+                id: requirementData.id,
+                title: requirementData.title,
+                description: requirementData.description || null,
+                status: requirementData.status || 'draft'
+              }
+            : null,
+          requirementId: offer.requirementId,
+          recordId: offer.recordId,
+          validUntil: offer.validUntil,
+          createdBy: offer.createdBy || null
+        }));
 
         setOffers(offersWithRequirement);
 
