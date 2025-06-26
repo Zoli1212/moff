@@ -125,67 +125,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
         </div>
       </div>
 
-      {/* Items Section */}
-      {items.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-8">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <List className="h-5 w-5 mr-2 text-gray-500" />
-              Tételek
-            </h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8">#</th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Megnevezés</th>
-                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Mennyiség</th>
-                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Egységár</th>
-                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32">Összesen</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {items.map((item, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{index + 1}.</td>
-                    <td className="px-4 py-3 text-sm text-gray-900">
-                      <div className="font-medium">{item.name.replace(/^\*\s*/, '')}</div>
-                      {item.unit && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          Mértékegység: {item.unit}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                      {item.quantity}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                      {item.unitPrice.replace(/\s*Ft$/, '')} Ft
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                      {item.totalPrice.replace(/\s*Ft$/, '')} Ft
-                    </td>
-                  </tr>
-                ))}
-                {/* Összesítő sor */}
-                <tr className="bg-gray-50 border-t-2 border-gray-200">
-                  <td colSpan={4} className="px-4 py-3 text-right text-sm font-medium text-gray-700">
-                    Összesen:
-                  </td>
-                  <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                    {items.reduce((sum, item) => {
-                      const price = parseFloat(item.totalPrice.replace(/[^0-9]/g, '')) || 0;
-                      return sum + price;
-                    }, 0).toLocaleString('hu-HU')} Ft
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
+      
       {/* Notes Section */}
       {notes.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">

@@ -122,6 +122,7 @@ model Offer {
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   createdBy      String?
+  tenantEmail    String     @default("")
   
   @@unique([recordId])
 }

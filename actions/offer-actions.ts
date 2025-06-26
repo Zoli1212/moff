@@ -296,6 +296,54 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
   }
 }
 
+export async function getUserOffers() {
+  try {
+    const user = await currentUser();
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
+    
+    if (!userEmail) {
+      throw new Error('No email available for user');
+    }
+
+    // First, get all works for the current user
+    const works = await prisma.myWork.findMany({
+      where: {
+        tenantEmail: userEmail,
+      },
+      include: {
+        requirements: {
+          include: {
+            offers: true,
+          },
+        },
+      },
+    });
+
+    // Flatten the offers array from all requirements
+    const offers = works.flatMap(work => 
+      work.requirements.flatMap(req => 
+        req.offers.map(offer => ({
+          ...offer,
+          requirement: {
+            id: req.id,
+            title: req.title,
+          },
+        }))
+      )
+    );
+
+    // Process items and notes for each offer
+    return offers.map(offer => ({
+      ...offer,
+      items: offer.items ? (Array.isArray(offer.items) ? offer.items : JSON.parse(offer.items as string)) : [],
+      notes: offer.notes ? (Array.isArray(offer.notes) ? offer.notes : [offer.notes as string]) : [],
+    }));
+  } catch (error) {
+    console.error('Error fetching user offers:', error);
+    throw new Error('Failed to fetch user offers');
+  }
+}
+
 export async function getOfferById(id: number) {
   try {
     const offer = await prisma.offer.findUnique({
