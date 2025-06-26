@@ -35,11 +35,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const items = Array.isArray(offer.items) ? offer.items : [];
     
   // Format price with Hungarian locale
-  const formatPrice = (price: number | string) => {
-    if (price === null || price === undefined) return '0';
-    const num = typeof price === 'string' ? parseFloat(price) : price;
-    return isNaN(num) ? '0' : num.toLocaleString('hu-HU');
-  };
+
   
   // Format date with Hungarian locale
   const formatDate = (dateString: string | Date | null) => {
@@ -48,18 +44,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       const date = new Date(dateString);
       return isNaN(date.getTime()) ? 'Érvénytelen dátum' : format(date, 'PPP', { locale: hu });
     } catch (e) {
-      return 'Érvénytelen dátum';
+      return `Érvénytelen dátum: ${(e as Error).message}`;
     }
   };
   
-  // Calculate total price from items
-  const calculateTotalPrice = () => {
-    return items.reduce((sum, item) => {
-      const price = parseFloat(item.totalPrice) || 0;
-      return sum + price;
-    }, 0);
-  };
-
   function getStatusDisplay(status: string) {
     const statusMap: Record<string, string> = {
       'draft': 'Piszkozat',

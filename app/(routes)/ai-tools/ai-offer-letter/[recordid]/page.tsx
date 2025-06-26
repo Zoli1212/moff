@@ -105,10 +105,9 @@ export default function OfferLetterResult() {
   const recordid = paramsurl.recordid?.toString();
   const [hasSaved, setHasSaved] = useState(false);
   const hasSavedRef = useRef(false);
-  
-
-  // Log store content when it changes
   const [newText, setNewText] = useState("");
+
+  console.log(hasSaved, "hasSaved");
 
   interface TableItem {
     name: string;

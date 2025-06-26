@@ -17,7 +17,7 @@ export interface ParsedOffer {
 export function parseOfferText(text: string): ParsedOffer {
   const lines = text.split('\n').filter(line => line.trim() !== '');
   const items: OfferItem[] = [];
-  let notes: string[] = [];
+  const notes: string[] = [];
   
   // Extract title from the first line after the greeting
   const titleLine = lines.find(line => line.includes('kerület')) || 'Ismeretlen cím';
@@ -40,6 +40,7 @@ export function parseOfferText(text: string): ParsedOffer {
     
     if (itemMatch) {
       const [_, name, quantity, unit, unitPrice, totalPrice] = itemMatch;
+      console.log(_)
       items.push({
         name: name.trim(),
         quantity: quantity.trim(),

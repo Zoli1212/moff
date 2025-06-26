@@ -30,7 +30,7 @@ export default function Dashboard() {
           </div>
         </Link>
 
-        {/* Munkáim – középtájon, jobbra */}
+        {/* Ajánlataim – középtájon, jobbra */}
         <Link href="/offers">
           <div className="absolute top-[32%] left-[55%] w-20 h-20 rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
             <Wrench className="text-orange-500" size={32} />

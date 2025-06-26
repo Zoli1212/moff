@@ -125,7 +125,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     if (existingWork) {
       // Use existing work
       work = existingWork;
-      console.log('Using existing work with title:', title);
+
     } else {
       // Create new work record if it doesn't exist
       work = await prisma.myWork.create({
@@ -139,15 +139,13 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
           tenantEmail: emailToUse,
         } as Prisma.MyWorkCreateInput,
       });
-      console.log('Created new work with title:', title);
+     
     }
 
     // 2. Create or update Requirement with versioning
     const requirementTitle = `Követelmény - ${work.title}` || customerName || parsedContent.title || 'Új ajánlat';
     
-    console.log('Creating requirement with title:', requirementTitle);
-    console.log('Demand text length:', demandText?.length || 0);
-    console.log('Demand text preview:', demandText?.substring(0, 100) + '...');
+  
     
     // Find the latest version of this requirement
     const latestRequirement = await prisma.requirement.findFirst({
@@ -185,11 +183,11 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       data: requirementData as Prisma.RequirementCreateInput,
     });
     
-    console.log('Requirement created with ID:', requirement.id);
+ 
     
     // Update the previous version to point to this new version
     if (latestRequirement) {
-      console.log('Updating previous requirement', latestRequirement.id, 'to point to new version', requirement.id);
+    
       await prisma.requirement.update({
         where: { id: latestRequirement.id },
         data: {
