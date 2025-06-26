@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Offer, Requirement } from "@prisma/client";
+import { Offer} from "@prisma/client";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import {
@@ -40,45 +40,6 @@ interface OfferDetailViewProps {
   onBack: () => void;
 }
 
-function RequirementsList({
-  requirements,
-}: {
-  requirements?: Array<{
-    id: number;
-    title: string;
-    description: string | null;
-    status: string;
-  }>;
-}) {
-  if (!requirements || requirements.length === 0) {
-    return (
-      <div className="p-4 text-sm text-gray-500 italic">
-        Nincsenek követelmények ehhez az ajánlathoz.
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-2 mt-2">
-      {requirements.map((req) => (
-        <div
-          key={req.id}
-          className="p-3 bg-gray-50 rounded-lg border border-gray-100"
-        >
-          <div className="font-medium text-gray-900">{req.title}</div>
-          {req.description && (
-            <p className="mt-1 text-sm text-gray-600">{req.description}</p>
-          )}
-          <div className="mt-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {req.status}
-            </span>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [showRequirements, setShowRequirements] = useState(false);

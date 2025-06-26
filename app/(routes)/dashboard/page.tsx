@@ -24,14 +24,14 @@ export default function Dashboard() {
       {/* Ikonok pozicionálva fordított háromszögben */}
       <div className="relative w-full h-full">
         {/* Ajánlataim – bal felső sarokban */}
-        <Link href="/jobs">
+        <Link href="/offers">
           <div className="absolute top-[32%] left-[22%] w-20 h-20 rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
             <FileText className="text-orange-500" size={32} />
           </div>
         </Link>
 
         {/* Ajánlataim – középtájon, jobbra */}
-        <Link href="/offers">
+        <Link href="/jobs">
           <div className="absolute top-[32%] left-[55%] w-20 h-20 rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
             <Wrench className="text-orange-500" size={32} />
           </div>
