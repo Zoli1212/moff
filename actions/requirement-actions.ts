@@ -52,8 +52,8 @@ export async function getRequirementById(requirementId: number) {
     });
     return requirement;
   } catch (error) {
-    console.error('Error fetching requirement:', error);
-    throw new Error('Hiba történt a követelmény betöltése közben');
+    console.error("Error fetching requirement:", error);
+    throw new Error("Hiba történt a követelmény betöltése közben");
   }
 }
 
@@ -61,12 +61,52 @@ export async function getOffersByRequirementId(requirementId: number) {
   try {
     const offers = await prisma.offer.findMany({
       where: { requirementId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
-    return offers;
+
+    // Parse items and notes for each offer
+    return offers.map(offer => {
+      let items = [];
+      let notes = [];
+      
+      console.log('Raw offer.items:', offer.items, 'Type:', typeof offer.items);
+      
+      try {
+        if (Array.isArray(offer.items)) {
+          // If items is already an array, use it directly
+          items = offer.items;
+          console.log('Items is already an array');
+        } else if (typeof offer.items === 'string') {
+          // If items is a string, try to parse it as JSON
+          items = offer.items ? JSON.parse(offer.items) : [];
+          console.log('Parsed items from JSON string');
+        } else {
+          // Default to empty array if items is undefined or null
+          items = [];
+          console.log('Using empty array for items');
+        }
+        console.log('Processed items:', items);
+      } catch (e) {
+        console.error('Error processing offer items:', e, 'Items value:', offer.items);
+        items = [];
+      }
+      
+      try {
+        notes = offer.notes ? JSON.parse(offer.notes as string) : [];
+      } catch (e) {
+        console.error('Error parsing offer notes:', e);
+      }
+      
+      console.log(items, 'ITEMS')
+      return {
+        ...offer,
+        items,
+        notes,
+      };
+    });
   } catch (error) {
-    console.error('Error fetching offers:', error);
-    throw new Error('Hiba történt az ajánlatok betöltése közben');
+    console.error("Error fetching offers:", error);
+    throw new Error("Hiba történt az ajánlatok betöltése közben");
   }
 }
 

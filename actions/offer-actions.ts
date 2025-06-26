@@ -242,9 +242,11 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     // Add items if they exist
     if (parsedContent.items && parsedContent.items.length > 0) {
       console.log(`Adding ${parsedContent.items.length} items to offer`);
-      offerData.items = parsedContent.items;
+      offerData.items = JSON.stringify(parsedContent.items);
+      console.log('Items JSON:', offerData.items);
     } else {
       console.log('No items to add to offer');
+      offerData.items = '[]'; // Ensure it's a valid empty array JSON string
     }
 
     // Add notes as JSON if they exist (for structured data)
@@ -293,5 +295,45 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
   } catch (error) {
     console.error('Error saving offer with requirements:', error);
     throw new Error('Hiba történt az ajánlat mentésekor');
+  }
+}
+
+export async function getOfferById(id: number) {
+  try {
+    const offer = await prisma.offer.findUnique({
+      where: { id },
+      include: {
+        requirement: true,
+      },
+    });
+
+    if (!offer) {
+      return null;
+    }
+
+    // Parse the items and notes if they exist
+    let items = [];
+    let notes = [];
+    
+    try {
+      items = offer.items ? JSON.parse(offer.items as string) : [];
+    } catch (e) {
+      console.error('Error parsing offer items:', e);
+    }
+    
+    try {
+      notes = offer.notes ? JSON.parse(offer.notes as string) : [];
+    } catch (e) {
+      console.error('Error parsing offer notes:', e);
+    }
+
+    return {
+      ...offer,
+      items,
+      notes,
+    };
+  } catch (error) {
+    console.error('Error fetching offer by ID:', error);
+    throw new Error('Hiba történt az ajánlat betöltése közben');
   }
 }

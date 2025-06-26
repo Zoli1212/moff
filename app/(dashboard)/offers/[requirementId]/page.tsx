@@ -1,12 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { getRequirementById, getOffersByRequirementId } from '@/actions/requirement-actions';
+import { getOfferById } from '@/actions/offer-actions';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import Link from 'next/link';
 import { Offer, Requirement } from '@prisma/client';
+import { OfferDetailView } from '@/components/offer-detail';
+
+interface OfferWithItems extends Omit<Offer, 'items' | 'notes'> {
+  items: Array<{
+    name: string;
+    quantity: string;
+    unit: string;
+    unitPrice: string;
+    totalPrice: string;
+  }>;
+  notes: string[];
+  requirement?: {
+    id: number;
+    title: string;
+  };
+}
 
 // Modal component for showing full offer details
 function OfferDetailsModal({ 
@@ -16,9 +33,14 @@ function OfferDetailsModal({
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  offer: Offer | null 
+  offer: OfferWithItems 
 }) {
-  if (!isOpen || !offer) return null;
+  if (!isOpen) return null;
+  
+  // Ensure notes is always an array
+  const notes = Array.isArray(offer.notes) ? offer.notes : [];
+  // Ensure items is always an array
+  const items = Array.isArray(offer.items) ? offer.items : [];
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -92,53 +114,125 @@ interface RequirementWithWork extends Requirement {
 export default function RequirementOffersPage() {
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const requirementId = Number(params.requirementId);
+  const offerId = searchParams.get('offerId');
   
-  const [requirement, setRequirement] = useState<RequirementWithWork | null>(null);
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [requirement, setRequirement] = useState<Requirement | null>(null);
+  const [offers, setOffers] = useState<OfferWithItems[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
+  const [selectedOffer, setSelectedOffer] = useState<OfferWithItems | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const handleViewDetails = (offer: Offer) => {
-    setSelectedOffer(offer);
-    setIsModalOpen(true);
-  };
-
+  const [isDetailView, setIsDetailView] = useState(false);
+  
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedOffer(null);
   };
+  
+  // Function to handle viewing offer details
+  const handleViewDetails = (offer: OfferWithItems) => {
+    // Ensure the offer has the correct type before navigating
+    const typedOffer: OfferWithItems = {
+      ...offer,
+      items: Array.isArray(offer.items) ? offer.items : [],
+      notes: Array.isArray(offer.notes) ? offer.notes : []
+    };
+    setSelectedOffer(typedOffer);
+    setIsDetailView(true);
+    router.push(`/offers/${requirementId}?offerId=${offer.id}`, { scroll: false });
+  };
 
+  // Function to safely handle view details click
+  const handleViewDetailsClick = (e: React.MouseEvent, offer: OfferWithItems) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleViewDetails(offer);
+  };
+
+  // Load requirement and offers
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       try {
         setIsLoading(true);
         
-        // Fetch requirement details
+        // Load requirement
         const requirementData = await getRequirementById(requirementId);
         if (!requirementData) {
           throw new Error('A követelmény nem található');
         }
+        setRequirement(requirementData);
         
-        // Fetch offers for this requirement
+        // Load offers
         const offersData = await getOffersByRequirementId(requirementId);
         
-        setRequirement(requirementData);
-        setOffers(offersData);
+        // Add requirement data to each offer
+        const offersWithRequirement: OfferWithItems[] = offersData.map((offer: any) => ({
+          ...offer,
+          requirement: requirementData ? {
+            id: requirementData.id,
+            title: requirementData.title
+          } : undefined
+        }));
+        
+        setOffers(offersWithRequirement);
+        
+        // If offerId is in URL, load that specific offer
+        if (offerId) {
+          const selected = offersWithRequirement.find(o => o.id === Number(offerId));
+          if (selected) {
+            setSelectedOffer(selected);
+            setIsDetailView(true);
+          }
+        }
+        
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('Error loading data:', err);
         setError('Hiba történt az adatok betöltése közben.');
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     if (requirementId) {
-      fetchData();
+      loadData();
     }
-  }, [requirementId]);
+  }, [requirementId, offerId]);
+
+
+  
+  // Function to parse offer data from the database
+  const parseOfferData = (offer: any): OfferWithItems => {
+    let items = [];
+    let notes = [];
+    
+    try {
+      items = offer.items ? JSON.parse(offer.items as string) : [];
+    } catch (e) {
+      console.error('Error parsing offer items:', e);
+    }
+    
+    try {
+      notes = offer.notes ? JSON.parse(offer.notes as string) : [];
+    } catch (e) {
+      console.error('Error parsing offer notes:', e);
+    }
+    
+    return {
+      ...offer,
+      items,
+      notes,
+    };
+  };
+
+  const handleBackToList = () => {
+    router.push(`/offers/${requirementId}`, { scroll: false });
+    setIsDetailView(false);
+    setSelectedOffer(null);
+  };
+
+
 
   if (isLoading) {
     return (
@@ -173,6 +267,72 @@ export default function RequirementOffersPage() {
     );
   }
 
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 pt-24 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-32 bg-white rounded-lg mt-6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error || !requirement) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+            <p>{error || 'A követelmény nem található'}</p>
+            <button 
+              onClick={() => router.back()}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+            >
+              &larr; Vissza
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render detail view if an offer is selected
+  if (isDetailView && selectedOffer) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 pt-4">
+        <div className="w-full mx-auto px-4 max-w-6xl">
+          <OfferDetailView 
+            offer={selectedOffer} 
+            onBack={handleBackToList} 
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Render detail view if an offer is selected
+  if (isDetailView && selectedOffer) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 pt-4">
+        <div className="w-full mx-auto px-4 max-w-7xl">
+          <OfferDetailView 
+            offer={selectedOffer} 
+            onBack={() => {
+              router.push(`/offers/${requirementId}`);
+              setIsDetailView(false);
+            }} 
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Render list view
   return (
     <div className="min-h-screen w-full bg-gray-50 pt-4">
       <div className="w-full mx-auto px-4 max-w-7xl">
@@ -221,7 +381,11 @@ export default function RequirementOffersPage() {
           ) : (
             <div className="space-y-4">
               {offers.map((offer) => (
-                <div key={offer.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                <div 
+                  key={offer.id} 
+                  className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleViewDetails(offer)}
+                >
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-gray-900">{offer.title || 'Névtelen ajánlat'}</h3>
@@ -241,11 +405,7 @@ export default function RequirementOffersPage() {
                       </div>
                     </div>
                     <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        handleViewDetails(offer);
-                      }}
+                      onClick={(e) => handleViewDetailsClick(e, offer)}
                       className="text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap ml-4"
                     >
                       Részletek →
@@ -258,12 +418,18 @@ export default function RequirementOffersPage() {
         </div>
       </div>
       
-      {/* Offer Details Modal */}
-      <OfferDetailsModal 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
-        offer={selectedOffer} 
-      />
+      {/* Keep the modal for backward compatibility */}
+      {selectedOffer && (
+        <OfferDetailsModal 
+          isOpen={isModalOpen} 
+          onClose={closeModal} 
+          offer={{
+            ...selectedOffer,
+            items: Array.isArray(selectedOffer.items) ? selectedOffer.items : [],
+            notes: Array.isArray(selectedOffer.notes) ? selectedOffer.notes : []
+          }} 
+        />
+      )}
     </div>
   );
 }
