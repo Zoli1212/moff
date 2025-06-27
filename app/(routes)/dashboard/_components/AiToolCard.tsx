@@ -30,7 +30,7 @@ function AiToolCard({ tool }: AIToolProps) {
   const [open, setOpen] = useState(false);
   const [openOfferDialog, setOpenOfferDialog] = useState(false);
   const [openTextInput, setOpenTextInput] = useState(false);
-  
+
   const onClickButton = async () => {
     console.log(tool.name, user?.emailAddresses?.[0]?.emailAddress);
 
@@ -38,12 +38,12 @@ function AiToolCard({ tool }: AIToolProps) {
       setOpen(true);
       return;
     }
-    
+
     if (tool.path === "/ai-tools/ai-cost-calculator") {
       setOpenOfferDialog(true);
       return;
     }
-    
+
     if (tool.path === "/ai-tools/ai-offer-letter") {
       setOpenTextInput(true);
       return;

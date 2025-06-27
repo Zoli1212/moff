@@ -104,7 +104,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               {offer.title || "Ajánlat részletei"}
             </h1>
             <div className="ml-4">
-              <SocialShareButtons />
+              <SocialShareButtons offer={{
+                title: offer.title,
+                description: offer.description,
+                items: offer.items,
+                totalPrice: offer.totalPrice,
+                validUntil: offer.validUntil,
+                status: offer.status
+              }} />
             </div>
           </div>
 
@@ -153,6 +160,23 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           </div>
         </div>
 
+        {/* Description Section */}
+        {offer.description && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <FileText className="h-5 w-5 mr-2 text-gray-500" />
+                Leírás
+              </h2>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-700 whitespace-pre-line">
+                {offer.description}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
         {/* Notes Section */}
         {notes.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -175,23 +199,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           </div>
         )}
 
-        {/* Description Section */}
-        {offer.description && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-gray-500" />
-                Leírás
-              </h2>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-700 whitespace-pre-line">
-                {offer.description}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Requirements Section */}
       {offer.requirement && (

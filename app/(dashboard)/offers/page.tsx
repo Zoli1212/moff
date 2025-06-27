@@ -1,11 +1,52 @@
-export const dynamic = "force-dynamic";
+'use client';
+
+import { useState, useEffect } from 'react';
 import { getUserOffers } from "@/actions/offer-actions";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
 
-export default async function OffersPage() {
-  const offers = await getUserOffers();
+interface Offer {
+  id: number;
+  title: string;
+  status: string;
+  updatedAt: Date | string;
+  requirementId: number;
+  items?: any[];
+  notes?: (string | any)[];
+  tenantEmail?: string;
+  createdAt?: Date | string;
+  totalPrice?: number;
+  createdBy?: string | null;
+  requirement?: {
+    id: number;
+    title: string;
+  };
+}
+
+export default function OffersPage() {
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Load offers on component mount
+  useEffect(() => {
+    const loadOffers = async () => {
+      try {
+        const data = await getUserOffers();
+        setOffers(data);
+      } catch (error) {
+        console.error('Error loading offers:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadOffers();
+  }, []);
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
@@ -48,40 +89,33 @@ export default async function OffersPage() {
               </svg>
             </Link>
             <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
-            <Link
-              href="/ai-tools/ai-offer-letter"
+            <Button
+              onClick={() => setIsDialogOpen(true)}
               className="ml-auto p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               aria-label="Új ajánlat létrehozása"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </Link>
+              <Plus className="h-5 w-5" />
+            </Button>
           </div>
 
           <div className="mt-6 space-y-4">
-            {offers.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-8">
+                <p>Betöltés...</p>
+              </div>
+            ) : offers.length === 0 ? (
               <div className="bg-white rounded-lg p-6 text-center">
                 <p className="text-gray-500">Még nincsenek ajánlataid.</p>
-                <Link
-                  href="/ai-tools/ai-offer-letter"
-                  className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                  className="mt-4"
                 >
                   Új ajánlat létrehozása
-                </Link>
+                </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                {offers.map((offer) => (
+                {offers.map((offer: any) => (
                   <Link
                     key={offer.id}
                     href={`/offers/${offer.requirementId}?offerId=${offer.id}`}
@@ -103,6 +137,13 @@ export default async function OffersPage() {
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                             {getStatusDisplay(offer.status)}
                           </span>
+                          <p className="mt-1 text-sm text-gray-500">
+                            {offer.updatedAt ? format(
+                              new Date(offer.updatedAt), 
+                              "PPP", 
+                              { locale: hu }
+                            ) : ''}
+                          </p>
                         </div>
                       </div>
 
@@ -134,6 +175,11 @@ export default async function OffersPage() {
           </div>
         </div>
       </div>
+      <TextInputDialog 
+        open={isDialogOpen}
+        setOpen={setIsDialogOpen}
+        toolPath="/offers"
+      />
     </div>
   );
 }
