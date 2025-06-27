@@ -7,7 +7,7 @@ import { getRequirementsByWorkId, RequirementWithOffers } from '@/actions/requir
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import Link from 'next/link';
-import { Requirement } from '@prisma/client';
+
 
 interface Work {
   id: number;
@@ -173,7 +173,7 @@ export default function WorkRequirementsPage() {
             
             {requirements.length === 0 ? (
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <p className="text-sm text-blue-800">Még nincsenek követelmények. Kattints az "Új követelmény" gombra a létrehozáshoz.</p>
+                <p className="text-sm text-blue-800">Még nincsenek követelmények. Kattints az -Új követelmény- gombra a létrehozáshoz.</p>
               </div>
             ) : (
               <div className="space-y-4">

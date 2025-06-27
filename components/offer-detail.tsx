@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import SocialShareButtons from './SocialShareButtons';
 import { Offer } from "@prisma/client";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
@@ -98,9 +99,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
         {/* Offer Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {offer.title || "Ajánlat részletei"}
-          </h1>
+          <div className="flex justify-between items-start mb-4">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {offer.title || "Ajánlat részletei"}
+            </h1>
+            <div className="ml-4">
+              <SocialShareButtons />
+            </div>
+          </div>
 
           <div className="flex flex-wrap gap-6 mt-4">
             <div className="flex items-center text-gray-600">
