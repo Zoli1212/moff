@@ -25,31 +25,33 @@ export default async function OffersPage() {
     <div className="min-h-screen w-full bg-gray-50 pt-4">
       <div className="w-full mx-auto px-4 max-w-7xl">
         <div className="mb-6">
-          <div className="flex items-center space-x-2">
-            <Link
-              href="/dashboard"
-              className="text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Vissza a főoldalra"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Link
+                href="/dashboard"
+                className="text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label="Vissza a főoldalra"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
-            </Link>
-            <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </Link>
+              <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+            </div>
             <Link
               href="/ai-tools/ai-offer-letter"
-              className="ml-auto p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               aria-label="Új ajánlat létrehozása"
             >
               <svg
