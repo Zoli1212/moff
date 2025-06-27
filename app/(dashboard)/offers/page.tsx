@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getUserOffers } from "@/actions/offer-actions";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
