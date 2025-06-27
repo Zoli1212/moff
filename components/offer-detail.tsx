@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Offer} from "@prisma/client";
+import { Offer } from "@prisma/client";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import {
@@ -40,14 +40,13 @@ interface OfferDetailViewProps {
   onBack: () => void;
 }
 
-
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [showRequirements, setShowRequirements] = useState(false);
 
   // Debug: log the requirement object
   useEffect(() => {
-    console.log('Requirement object:', offer.requirement);
-    console.log('Requirement description:', offer.requirement?.description);
+    console.log("Requirement object:", offer.requirement);
+    console.log("Requirement description:", offer.requirement?.description);
   }, [offer.requirement]);
 
   // Ensure notes is always an array of strings

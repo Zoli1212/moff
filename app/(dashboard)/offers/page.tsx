@@ -8,14 +8,14 @@ export default async function OffersPage() {
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
-      case 'draft':
-        return 'Piszkozat';
-      case 'sent':
-        return 'Elküldve';
-      case 'accepted':
-        return 'Elfogadva';
-      case 'rejected':
-        return 'Elutasítva';
+      case "draft":
+        return "Piszkozat";
+      case "sent":
+        return "Elküldve";
+      case "accepted":
+        return "Elfogadva";
+      case "rejected":
+        return "Elutasítva";
       default:
         return status;
     }
@@ -25,33 +25,31 @@ export default async function OffersPage() {
     <div className="min-h-screen w-full bg-gray-50 pt-4">
       <div className="w-full mx-auto px-4 max-w-7xl">
         <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Link
-                href="/dashboard"
-                className="text-gray-600 hover:text-gray-900 transition-colors"
-                aria-label="Vissza a főoldalra"
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/dashboard"
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+              aria-label="Vissza a főoldalra"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-              </Link>
-              <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
-            </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
+            </Link>
+            <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
             <Link
               href="/ai-tools/ai-offer-letter"
-              className="p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="ml-auto p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               aria-label="Új ajánlat létrehozása"
             >
               <svg
@@ -92,7 +90,7 @@ export default async function OffersPage() {
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-medium text-gray-900">
-                            {offer.title || 'Névtelen ajánlat'}
+                            {offer.title || "Névtelen ajánlat"}
                           </h3>
                           {offer.requirement && (
                             <p className="text-sm text-gray-500">
@@ -106,14 +104,14 @@ export default async function OffersPage() {
                           </span>
                         </div>
                       </div>
-                      
+
                       <div className="mt-2 flex justify-between items-center">
                         <div className="text-sm text-gray-500">
                           {offer.totalPrice ? (
                             <span className="font-medium text-gray-900">
-                              {new Intl.NumberFormat('hu-HU', {
-                                style: 'currency',
-                                currency: 'HUF',
+                              {new Intl.NumberFormat("hu-HU", {
+                                style: "currency",
+                                currency: "HUF",
                                 maximumFractionDigits: 0,
                               }).format(offer.totalPrice)}
                             </span>
@@ -122,7 +120,9 @@ export default async function OffersPage() {
                           )}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {format(new Date(offer.createdAt), 'PPP', { locale: hu })}
+                          {format(new Date(offer.createdAt), "PPP", {
+                            locale: hu,
+                          })}
                         </div>
                       </div>
                     </div>

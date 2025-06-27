@@ -180,7 +180,7 @@ export default function WorkRequirementsPage() {
                 {requirements.map((requirement) => (
                   <Link 
                     key={requirement.id} 
-                    href={`/offers/${requirement.id}`}
+                    href={`/jobs/${requirement.id}`}
                     className="block bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow"
                   >
                     <div className="flex justify-between items-start">

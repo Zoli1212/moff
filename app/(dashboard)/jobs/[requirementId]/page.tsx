@@ -151,7 +151,7 @@ export default function RequirementOffersPage() {
     };
     setSelectedOffer(typedOffer);
     setIsDetailView(true);
-    router.push(`/offers/${requirementId}?offerId=${offer.id}`, {
+    router.push(`/jobs/${requirementId}?offerId=${offer.id}`, {
       scroll: false,
     });
   };
@@ -183,23 +183,25 @@ export default function RequirementOffersPage() {
         const offersData = await getOffersByRequirementId(requirementId);
 
         // Add requirement data to each offer
-        const offersWithRequirement: OfferWithItems[] = offersData.map((offer) => ({
-          ...offer,
-          items: Array.isArray(offer.items) ? offer.items : [],
-          notes: Array.isArray(offer.notes) ? offer.notes : [],
-          requirement: requirementData
-            ? {
-                id: requirementData.id,
-                title: requirementData.title,
-                description: requirementData.description || null,
-                status: requirementData.status || 'draft'
-              }
-            : null,
-          requirementId: offer.requirementId,
-          recordId: offer.recordId,
-          validUntil: offer.validUntil,
-          createdBy: offer.createdBy || null
-        }));
+        const offersWithRequirement: OfferWithItems[] = offersData.map(
+          (offer) => ({
+            ...offer,
+            items: Array.isArray(offer.items) ? offer.items : [],
+            notes: Array.isArray(offer.notes) ? offer.notes : [],
+            requirement: requirementData
+              ? {
+                  id: requirementData.id,
+                  title: requirementData.title,
+                  description: requirementData.description || null,
+                  status: requirementData.status || "draft",
+                }
+              : null,
+            requirementId: offer.requirementId,
+            recordId: offer.recordId,
+            validUntil: offer.validUntil,
+            createdBy: offer.createdBy || null,
+          })
+        );
 
         setOffers(offersWithRequirement);
 
@@ -227,10 +229,15 @@ export default function RequirementOffersPage() {
   }, [requirementId, offerId]);
 
   const handleBackToList = () => {
-    // router.push(`/offers/${requirementId}`, { scroll: false });
-    router.push(`/offers`, { scroll: false });
-    setIsDetailView(false);
-    setSelectedOffer(null);
+    if (isDetailView || window.location.search.includes('offerId=')) {
+      // If we're in detail view, go back to the list view
+      router.push(`/jobs/${requirementId}`, { scroll: false });
+      setIsDetailView(false);
+      setSelectedOffer(null);
+    } else {
+      // If we're in list view, go back to /jobs
+      router.push('/jobs', { scroll: false });
+    }
   };
 
   if (isLoading) {
@@ -316,6 +323,7 @@ export default function RequirementOffersPage() {
     );
   }
 
+  // Render detail view if an offer is selected
 
   // Render list view
   return (
@@ -324,7 +332,7 @@ export default function RequirementOffersPage() {
         <div className="mb-6">
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => router.back()}
+              onClick={handleBackToList}
               className="text-gray-600 hover:text-gray-900 transition-colors"
               aria-label="Vissza"
             >
