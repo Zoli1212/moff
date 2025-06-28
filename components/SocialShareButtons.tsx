@@ -119,29 +119,27 @@ autoTableTyped(doc, {
   startY: finalY,
   head: [['#', 'Megnevezés', 'Mennyiség', 'Egységár', 'Összesen']],
   body: itemsData,
+  foot: offer.totalPrice ? [[
+    { content: 'Összesen:', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
+    { content: `${offer.totalPrice.toLocaleString('hu-HU')} Ft`, styles: { fontStyle: 'bold' } }
+  ]] : undefined,
   theme: 'grid',
   headStyles: { fillColor: [41, 128, 185], textColor: 255 },
   styles: { fontSize: 10 },
   margin: { top: 10 },
+  didDrawPage: function(data: { cursor?: { y: number } }) {
+    finalY = data.cursor?.y || 120;
+  }
 });
-
-finalY = autoTableTyped.previous?.finalY ?? 120;
 
       }
       
-  
-      if (offer.totalPrice) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(`Összesen: ${offer.totalPrice.toLocaleString('hu-HU')} Ft`, 14, finalY + 15);
-      }
-  
       if (offer.validUntil && new Date(offer.validUntil).toString() !== 'Invalid Date') {
         const date = new Date(offer.validUntil);
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(100);
-        doc.text(`Érvényes: ${date.toLocaleDateString('hu-HU')}`, 14, finalY + 25);
+        doc.text(`Érvényes: ${date.toLocaleDateString('hu-HU')}`, 14, finalY + 15);
       }
   
       return doc.output('blob');
