@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import SocialShareButtons from './SocialShareButtons';
+import { RequirementDetail } from './requirement-detail';
 import { Offer } from "@prisma/client";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
@@ -14,10 +15,8 @@ import {
   Tag,
   Calendar,
   AlertCircle,
-  ChevronDown,
   ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
 
 interface OfferWithItems extends Omit<Offer, "items" | "notes"> {
   items: Array<{
@@ -42,6 +41,7 @@ interface OfferDetailViewProps {
 }
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
+  const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [showRequirements, setShowRequirements] = useState(false);
 
   // Debug: log the requirement object
@@ -81,6 +81,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     };
 
     return statusMap[status] || status;
+  }
+
+  if (showRequirementDetail && offer.requirement) {
+    return (
+      <RequirementDetail 
+        requirement={offer.requirement} 
+        onBack={() => setShowRequirementDetail(false)} 
+      />
+    );
   }
 
   return (
@@ -204,7 +213,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       {offer.requirement && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <button
-            onClick={() => setShowRequirements(!showRequirements)}
+            onClick={() => setShowRequirementDetail(true)}
             className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
           >
             <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -214,33 +223,8 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 1
               </span>
             </h2>
-            {showRequirements ? (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronRight className="h-5 w-5 text-gray-500" />
-            )}
+            <ChevronRight className="h-5 w-5 text-gray-500" />
           </button>
-          {showRequirements && (
-            <div className="p-6 pt-2">
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                <div className="font-medium text-gray-900">
-                  {offer.requirement.title}
-                </div>
-                <div className="mt-2 text-sm text-gray-600">
-                  {offer.requirement.description ? (
-                    <p>{offer.requirement.description}</p>
-                  ) : (
-                    <p className="text-gray-400 italic">Nincs leírás megadva</p>
-                  )}
-                </div>
-                <div className="mt-3">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {offer.requirement.status || "Aktív"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
