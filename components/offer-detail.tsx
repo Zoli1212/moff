@@ -42,8 +42,7 @@ interface OfferDetailViewProps {
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
-  const [showRequirements, setShowRequirements] = useState(false);
-
+ 
   // Debug: log the requirement object
   useEffect(() => {
     console.log("Requirement object:", offer.requirement);

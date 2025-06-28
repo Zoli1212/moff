@@ -2,26 +2,32 @@
 
 import { usePathname } from 'next/navigation';
 import { MessageCircle, Mail, Share2, FileText } from 'lucide-react';
-import { useState } from 'react';
+
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
  // stabil regisztráció
 
+// Import autoTable types from jspdf-autotable
+import { UserOptions } from 'jspdf-autotable';
+
+
+
 // Extend jsPDF with autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF;
+    autoTable: (options: UserOptions) => jsPDF;
     lastAutoTable?: {
       finalY: number;
     };
   }
 }
 
+// Type for the autoTable function with previous property
 interface AutoTableWithPrevious {
-    (doc: jsPDF, options: any): void;
-    previous?: { finalY?: number };
-  }
+  (doc: jsPDF, options: Parameters<jsPDF['autoTable']>[0]): void;
+  previous?: { finalY?: number };
+}
   
 
 interface SocialShareButtonsProps {
@@ -115,22 +121,50 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
       
         const autoTableTyped: AutoTableWithPrevious = autoTable;
 
-autoTableTyped(doc, {
-  startY: finalY + 5,  // Added 5 units of space
-  head: [['#', 'Megnevezés', 'Mennyiség', 'Egységár', 'Összesen']],
-  body: itemsData,
-  foot: offer.totalPrice ? [[
-    { content: 'Összesen:', colSpan: 4, styles: { halign: 'right', fontStyle: 'bold' } },
-    { content: `${offer.totalPrice.toLocaleString('hu-HU')} Ft`, styles: { fontStyle: 'bold' } }
-  ]] : undefined,
-  theme: 'grid',
-  headStyles: { fillColor: [41, 128, 185], textColor: 255 },
-  styles: { fontSize: 10 },
-  margin: { top: 10 },
-  didDrawPage: function(data: { cursor?: { y: number } }) {
-    finalY = data.cursor?.y || 120;
-  }
-});
+        // Prepare table data
+        const head = ['#', 'Megnevezés', 'Mennyiség', 'Egységár', 'Összesen'];
+        
+        autoTableTyped(doc, {
+          startY: finalY + 5,  // Added 5 units of space
+          head: [head],
+          body: itemsData,
+          foot: offer.totalPrice ? [
+            [
+              { 
+                content: 'Összesen:',
+                colSpan: 4,
+                styles: { 
+                  halign: 'right',
+                  fontStyle: 'bold'
+                }
+              },
+              { 
+                content: `${offer.totalPrice.toLocaleString('hu-HU')} Ft`,
+                styles: { 
+                  fontStyle: 'bold',
+                  halign: 'right'
+                }
+              }
+            ]
+          ] : [],
+          theme: 'grid' as const,
+          headStyles: { 
+            fillColor: [41, 128, 185],
+            textColor: 255,
+            halign: 'center',
+            fontStyle: 'bold'
+          },
+          styles: { 
+            fontSize: 10,
+            cellPadding: 3,
+            halign: 'left'
+          },
+          margin: { top: 10 },
+          didDrawPage: function(data) {
+            finalY = data.cursor?.y || 120;
+            return true;
+          }
+        });
 
       }
       

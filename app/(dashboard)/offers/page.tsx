@@ -9,18 +9,38 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
 
+interface OfferItem {
+  id?: number;
+  name: string;
+  quantity: number;
+  unit: string;
+  unitPrice: number;
+  totalPrice: number;
+  description?: string;
+}
+
+interface Note {
+  id?: number;
+  content: string;
+  createdAt?: string | Date;
+  createdBy?: string | null;
+}
+
+type NoteInput = Note | string; // Allow string for backward compatibility
+
 interface Offer {
   id: number;
   title: string;
   status: string;
   updatedAt: Date | string;
   requirementId: number;
-  items?: any[];
-  notes?: (string | any)[];
+  items?: OfferItem[];
+  notes?: NoteInput[];
   tenantEmail?: string;
   createdAt?: Date | string;
   totalPrice?: number;
   createdBy?: string | null;
+  description?: string;
   requirement?: {
     id: number;
     title: string;
@@ -37,7 +57,15 @@ export default function OffersPage() {
     const loadOffers = async () => {
       try {
         const data = await getUserOffers();
-        setOffers(data);
+        // Transform data to match the Offer type
+        const transformedData = data.map(offer => ({
+          ...offer,
+          notes: offer.notes?.map(note => 
+            typeof note === 'string' ? { content: note } : note
+          ) as Note[],
+          description: offer.description || undefined // Convert null to undefined
+        }));
+        setOffers(transformedData);
       } catch (error) {
         console.error('Error loading offers:', error);
       } finally {
@@ -115,7 +143,7 @@ export default function OffersPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {offers.map((offer: any) => (
+                {offers.map((offer: Offer) => (
                   <Link
                     key={offer.id}
                     href={`/offers/${offer.requirementId}?offerId=${offer.id}`}
@@ -126,10 +154,12 @@ export default function OffersPage() {
                         <div>
                           <h3 className="font-medium text-gray-900">
                             {offer.title || "Névtelen ajánlat"}
-                          </h3>
-                          {offer.requirement && (
-                            <p className="text-sm text-gray-500">
-                              {offer.requirement.title}
+                          </h3>                
+                          {offer.description && (
+                            <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                              Összefoglaló: {offer.description.length > 100 
+                                ? `${offer.description.substring(0, 100)}...` 
+                                : offer.description}
                             </p>
                           )}
                         </div>
@@ -162,9 +192,9 @@ export default function OffersPage() {
                           )}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {format(new Date(offer.createdAt), "PPP", {
+                          {offer.createdAt ? format(new Date(offer.createdAt), "PPP", {
                             locale: hu,
-                          })}
+                          }) : 'Nincs dátum'}
                         </div>
                       </div>
                     </div>

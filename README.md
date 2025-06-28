@@ -334,11 +334,10 @@ Előre is köszönöm a segítségedet!
 Üdvözlettel:
 Kovács Eszter
 
-# uj felmérés alul - a plussz helyett - # új ajánlat
 # uj követelmény - # új követelmény
 # tételek legyenek 2 vagy 3 sorosak hogy lássa az egészet
 # elküld megosztások
 # kérdések szekció pipával
 # el tudja küldeni, megosztás
-# uj ajánlat bekötni
+
 
