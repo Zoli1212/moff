@@ -333,15 +333,7 @@ Előre is köszönöm a segítségedet!
 
 Üdvözlettel:
 Kovács Eszter
-+36 30 123 4567
-eszter.kovacs@pelda.hu
 
-
-# elküldött nem elküldött csoportosítva
-# követelmény helyett összefoglaló legyen nem kell ... röviden lássa ajánlat viewban
-# piszkozat - nem elküldött
-# piszkozat / elküldött legyen
-# deployment
 # uj felmérés alul - a plussz helyett - # új ajánlat
 # uj követelmény - # új követelmény
 # tételek legyenek 2 vagy 3 sorosak hogy lássa az egészet

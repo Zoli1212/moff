@@ -175,6 +175,16 @@ export default function OffersPage() {
           </div>
         </div>
       </div>
+      <div className="w-full max-w-7xl mx-auto px-4 mt-6">
+        <Button
+          onClick={() => setIsDialogOpen(true)}
+          variant="outline"
+          className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+        >
+          <span className="text-lg font-medium">+ Új felmérés</span>
+        </Button>
+      </div>
+      
       <TextInputDialog 
         open={isDialogOpen}
         setOpen={setIsDialogOpen}
