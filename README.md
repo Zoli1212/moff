@@ -337,7 +337,6 @@ Kovács Eszter
 eszter.kovacs@pelda.hu
 
 
-# követelmények beúszik uj viewban
 # elküldött nem elküldött csoportosítva
 # követelmény helyett összefoglaló legyen nem kell ... röviden lássa ajánlat viewban
 # piszkozat - nem elküldött

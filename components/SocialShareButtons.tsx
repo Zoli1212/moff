@@ -116,7 +116,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         const autoTableTyped: AutoTableWithPrevious = autoTable;
 
 autoTableTyped(doc, {
-  startY: finalY,
+  startY: finalY + 5,  // Added 5 units of space
   head: [['#', 'Megnevezés', 'Mennyiség', 'Egységár', 'Összesen']],
   body: itemsData,
   foot: offer.totalPrice ? [[
