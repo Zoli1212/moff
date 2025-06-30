@@ -22,6 +22,8 @@ import {
   X,
   Save,
   Plus,
+  Trash2,
+  Check,
 } from "lucide-react";
 
 interface OfferDetailViewProps {
@@ -31,8 +33,9 @@ interface OfferDetailViewProps {
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
+  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
 
   // Log items when they change
@@ -45,7 +48,8 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     if (offer.items) {
       const items = Array.isArray(offer.items) ? offer.items : [];
       // Ensure all items have the required fields
-      const validatedItems = items.map((item) => ({
+      const validatedItems = items.map((item, index) => ({
+        id: index, // Add unique id for each item
         name: item.name || "",
         quantity: item.quantity || "1",
         unit: item.unit || "db",
@@ -54,8 +58,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
         materialTotal: item.materialTotal || "0 Ft",
         workTotal: item.workTotal || "0 Ft",
       }));
-      setEditableItems([...validatedItems]);
-      setOriginalItems([...validatedItems]);
+      setEditableItems(validatedItems);
+      // Store original items with their indices
+      setOriginalItems(validatedItems);
     }
   }, [offer.items]);
 
@@ -91,18 +96,28 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
   // Add new item
   const handleAddItem = () => {
-    setEditableItems([
-      ...editableItems,
-      {
-        name: "",
-        quantity: "1",
-        unit: "db",
-        materialUnitPrice: "0 Ft",
-        workUnitPrice: "0 Ft",
-        materialTotal: "0 Ft",
-        workTotal: "0 Ft",
-      },
-    ]);
+    const newItem = {
+      id: Date.now(), // Use timestamp as temporary ID
+      name: "",
+      quantity: "1",
+      unit: "db",
+      materialUnitPrice: "0 Ft",
+      workUnitPrice: "0 Ft",
+      materialTotal: "0 Ft",
+      workTotal: "0 Ft",
+    };
+    
+    const updatedItems = [...editableItems, newItem];
+    setEditableItems(updatedItems);
+    setEditingItemId(updatedItems.length - 1); // Set editing mode for the new item
+    
+    // Scroll to the new item
+    setTimeout(() => {
+      const element = document.getElementById(`item-${newItem.id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 100);
   };
 
   // Remove item
@@ -112,38 +127,54 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     setEditableItems(newItems);
   };
 
-  // Toggle edit mode
-  const toggleEditMode = async () => {
-    if (isEditing) {
-      // Save changes when exiting edit mode
-      try {
-        const result = await updateOfferItems(
-          parseInt(offer.id.toString()),
-          editableItems
-        );
-        if (result.success) {
-          toast.success("Az ajánlat sikeresen frissítve");
-          // Update the offer with the server response
-          if (result.offer) {
-            setEditableItems(result.offer.items);
-            setOriginalItems([...result.offer.items]);
-          }
-        } else {
-          toast.error(result.error || "Hiba történt a mentés során");
-          // Revert to original items on error
-          setEditableItems([...originalItems]);
-        }
-      } catch (error) {
-        console.error("Error saving offer:", error);
-        toast.error("Hiba történt a mentés során");
-        // Revert to original items on error
-        setEditableItems([...originalItems]);
-      }
-    } else {
-      // When entering edit mode, make a copy of the current items
-      setOriginalItems([...editableItems]);
+  // Start editing an item
+  const startEditing = (index: number) => {
+    setEditingItemId(index);
+  };
+
+  // Save the current item being edited
+  const saveItem = async (index: number) => {
+    if (isSaving) return;
+    
+    const item = editableItems[index];
+    if (!item.name || !item.quantity || !item.unit) {
+      toast.error("Kérem töltse ki az összes kötelező mezőt");
+      return;
     }
-    setIsEditing(!isEditing);
+    
+    setIsSaving(true);
+    try {
+      const result = await updateOfferItems(
+        parseInt(offer.id.toString()),
+        editableItems
+      );
+      
+      if (result.success) {
+        toast.success("A tétel sikeresen mentve");
+        setEditingItemId(null);
+        // Update original items with the saved data
+        if (result.offer?.items) {
+          setOriginalItems([...result.offer.items]);
+        }
+      } else {
+        toast.error(result.error || "Hiba történt a mentés során");
+      }
+    } catch (error) {
+      console.error("Error saving item:", error);
+      toast.error("Hiba történt a mentés során");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Cancel editing the current item
+  const cancelEditing = (index: number) => {
+    if (originalItems[index]) {
+      const newItems = [...editableItems];
+      newItems[index] = { ...originalItems[index] };
+      setEditableItems(newItems);
+    }
+    setEditingItemId(null);
   };
 
   // Calculate totals
@@ -178,14 +209,16 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   // Ensure notes is always an array of strings
   const notes = Array.isArray(offer.notes) ? offer.notes : [];
 
-  // Use editableItems when in edit mode, otherwise use original items
-  const items = isEditing
-    ? editableItems
-    : Array.isArray(offer.items)
-      ? offer.items
-      : [];
+  // Always use editableItems
+  const items = editableItems;
 
   // Format price with Hungarian locale
+  const formatPrice = (price: number | string) => {
+    if (typeof price === 'string') {
+      return price;
+    }
+    return price.toLocaleString('hu-HU') + ' Ft';
+  };
 
   // Format date with Hungarian locale
   const formatDate = (dateString: string | Date | null) => {
@@ -298,9 +331,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <p className="text-sm text-blue-700">
                   <span className="font-medium">Összeg: </span>
                   <span className="font-bold text-lg">
-                    {isEditing
-                      ? formatCurrency(calculateTotals().total)
-                      : offer.totalPrice?.toLocaleString("hu-HU")}{" "}
+                    {editingItemId !== null
+                      ? formatPrice(calculateTotals().total)
+                      : offer.totalPrice?.toLocaleString("hu-HU")}{' '}
                     Ft
                   </span>
                 </p>
@@ -377,37 +410,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   <List className="h-5 w-5 mr-2 text-gray-500" />
                   Tételek
                 </h2>
-                {!isEditing && (
-                  <button
-                    onClick={toggleEditMode}
-                    className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Pencil className="h-4 w-4 mr-1" /> Szerkesztés
-                  </button>
-                )}
               </div>
-              {isEditing && (
-                <div className="flex space-x-2">
-                  <button
-                    onClick={toggleEditMode}
-                    className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <X className="h-4 w-4 mr-1" /> Mégse
-                  </button>
-                  <button
-                    onClick={toggleEditMode}
-                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <Save className="h-4 w-4 mr-1" /> Mentés
-                  </button>
-                  <button
-                    onClick={handleAddItem}
-                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    <Plus className="h-4 w-4 mr-1" /> Új tétel
-                  </button>
-                </div>
-              )}
+              <div className="flex space-x-2">
+                <button
+                  onClick={handleAddItem}
+                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Új tétel
+                </button>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -465,7 +476,11 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {items.map((item, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
+                    <tr 
+                      key={index} 
+                      id={`item-${item.id || index}`}
+                      className={`hover:bg-gray-50 ${editingItemId === index ? 'bg-blue-50' : ''}`}
+                    >
                       {/* # */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                         {index + 1}.
@@ -473,7 +488,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
                       {/* Tétel megnevezése */}
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <input
                             type="text"
                             className="w-full p-1 border rounded"
@@ -483,7 +498,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             }
                           />
                         ) : (
-                          <div className="font-medium">
+                          <div 
+                            className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
+                            onClick={() => startEditing(index)}
+                          >
                             {item.name.replace(/^\*\s*/, "")}
                           </div>
                         )}
@@ -491,7 +509,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
                       {/* Mennyiség */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <input
                             type="text"
                             className="w-20 p-1 border rounded"
@@ -505,13 +523,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             }
                           />
                         ) : (
-                          item.quantity
+                          <div 
+                            className="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                            onClick={() => startEditing(index)}
+                          >
+                            {item.quantity}
+                          </div>
                         )}
                       </td>
 
                       {/* Egység */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <input
                             type="text"
                             className="w-20 p-1 border rounded"
@@ -521,13 +544,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             }
                           />
                         ) : (
-                          item.unit
+                          <div 
+                            className="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                            onClick={() => startEditing(index)}
+                          >
+                            {item.unit}
+                          </div>
                         )}
                       </td>
 
                       {/* Anyag egységár */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <div className="flex items-center justify-end">
                             <input
                               type="text"
@@ -547,15 +575,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          <span className="whitespace-nowrap">
+                          <div 
+                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                            onClick={() => startEditing(index)}
+                          >
                             {item.materialUnitPrice || "0 Ft"}
-                          </span>
+                          </div>
                         )}
                       </td>
 
                       {/* Díj egységár */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <div className="flex items-center justify-end">
                             <input
                               type="text"
@@ -574,15 +605,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          <span className="whitespace-nowrap">
+                          <div 
+                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                            onClick={() => startEditing(index)}
+                          >
                             {item.workUnitPrice || "0 Ft"}
-                          </span>
+                          </div>
                         )}
                       </td>
 
                       {/* Anyag összesen */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <div className="flex items-center justify-end">
                             <input
                               type="text"
@@ -593,13 +627,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          item.materialTotal
+                          <div 
+                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                            onClick={() => startEditing(index)}
+                          >
+                            {formatPrice(parseCurrency(item.materialTotal))}
+                          </div>
                         )}
                       </td>
 
                       {/* Díj összesen */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                        {isEditing ? (
+                        {editingItemId === index ? (
                           <div className="flex items-center justify-end">
                             <input
                               type="text"
@@ -610,28 +649,65 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          item.workTotal
+                          <div 
+                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                            onClick={() => startEditing(index)}
+                          >
+                            {formatPrice(parseCurrency(item.workTotal))}
+                          </div>
                         )}
                       </td>
 
-                      {/* Törlés gomb szerkesztés módban */}
-                      {isEditing && (
-                        <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-right">
-                          <button
-                            onClick={() => handleRemoveItem(index)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            Törlés
-                          </button>
-                        </td>
-                      )}
+                      {/* Műveletek */}
+                      <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-right">
+                        {editingItemId === index ? (
+                          <div className="flex space-x-2 justify-end">
+                            <button
+                              onClick={() => cancelEditing(index)}
+                              className="px-2 py-1 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                              disabled={isSaving}
+                            >
+                              Mégse
+                            </button>
+                            <button
+                              onClick={() => saveItem(index)}
+                              className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+                              disabled={isSaving}
+                            >
+                              {isSaving ? 'Mentés...' : 'Mentés'}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex space-x-2 justify-end">
+                            <button
+                              onClick={() => startEditing(index)}
+                              className="p-1 text-blue-600 rounded-full hover:bg-blue-50"
+                              title="Szerkesztés"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Biztosan törölni szeretné ezt a tételt?')) {
+                                  handleRemoveItem(index);
+                                }
+                              }}
+                              className="p-1 text-red-600 rounded-full hover:bg-red-50"
+                              title="Törlés"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
                     </tr>
                   ))}
 
                   {/* Összesítő sorok */}
                   <tr className="bg-gray-50 border-t-2 border-gray-200">
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-3 text-right text-sm font-medium text-gray-700"
                     >
                       Munkadíj összesen:
@@ -642,7 +718,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   </tr>
                   <tr className="bg-gray-50">
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-3 text-right text-sm font-medium text-gray-700"
                     >
                       Anyagköltség összesen:
@@ -653,7 +729,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   </tr>
                   <tr className="bg-gray-100 border-t-2 border-gray-300">
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-3 text-right text-sm font-bold text-gray-900"
                     >
                       Összesített nettó költség:
