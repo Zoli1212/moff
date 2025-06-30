@@ -470,17 +470,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   <MoreVertical className="h-5 w-5 text-gray-600" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem
-                  className="flex items-center cursor-pointer"
-                  onSelect={(e: Event) => {
-                    e.preventDefault();
-                    // Handle download
-                  }}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  <span>Letöltés</span>
-                </DropdownMenuItem>
+              <DropdownMenuContent className="w-56" align="end">        
                 <DropdownMenuItem
                   className="flex items-center cursor-pointer"
                   onSelect={(e: Event) => {
