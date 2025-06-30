@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { updateOfferItems } from "@/actions/offer-actions";
+import { toast } from "sonner";
 import SocialShareButtons from './SocialShareButtons';
 import { RequirementDetail } from './requirement-detail';
 import { Offer } from "@prisma/client";
@@ -16,16 +18,22 @@ import {
   Calendar,
   AlertCircle,
   ChevronRight,
+  Pencil,
+  X,
+  Save,
+  Plus
 } from "lucide-react";
 
+interface OfferItem {
+  name: string;
+  quantity: string;
+  unit: string;
+  unitPrice: string;
+  totalPrice: string;
+}
+
 interface OfferWithItems extends Omit<Offer, "items" | "notes"> {
-  items: Array<{
-    name: string;
-    quantity: string;
-    unit: string;
-    unitPrice: string;
-    totalPrice: string;
-  }>;
+  items: OfferItem[];
   notes: string[];
   requirement: {
     id: number;
@@ -42,7 +50,111 @@ interface OfferDetailViewProps {
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
- 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
+  const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
+  
+  // Initialize items
+  useEffect(() => {
+    if (offer.items) {
+      const items = Array.isArray(offer.items) ? offer.items : [];
+      // Ensure all items have the required fields
+      const validatedItems = items.map(item => ({
+        name: item.name || '',
+        quantity: item.quantity || '0',
+        unit: item.unit || 'db',
+        unitPrice: item.unitPrice || '0',
+        totalPrice: item.totalPrice || '0',
+      }));
+      setEditableItems([...validatedItems]);
+      setOriginalItems([...validatedItems]);
+    }
+  }, [offer.items]);
+
+  // Parse currency values
+  const parseCurrency = (value: string): number => {
+    const numericValue = value.replace(/[^0-9,-]+/g, "").replace(",", ".");
+    return parseFloat(numericValue) || 0;
+  };
+
+  // Format currency
+  const formatCurrency = (value: number): string => {
+    return value.toLocaleString("hu-HU") + " Ft";
+  };
+
+  // Handle item field change
+  const handleItemChange = (index: number, field: string, value: string) => {
+    const newItems = [...editableItems];
+    const item = { ...newItems[index], [field]: value };
+    
+    // Recalculate total if quantity or unit price changes
+    if (field === 'quantity' || field === 'unitPrice') {
+      const quantity = parseFloat(item.quantity) || 0;
+      const unitPrice = parseCurrency(item.unitPrice);
+      const total = quantity * unitPrice;
+      item.totalPrice = formatCurrency(total);
+    }
+    
+    newItems[index] = item;
+    setEditableItems(newItems);
+  };
+
+  // Add new item
+  const handleAddItem = () => {
+    setEditableItems([...editableItems, {
+      name: "",
+      quantity: "1",
+      unit: "db",
+      unitPrice: "0",
+      totalPrice: "0"
+    }]);
+  };
+
+  // Remove item
+  const handleRemoveItem = (index: number) => {
+    const newItems = [...editableItems];
+    newItems.splice(index, 1);
+    setEditableItems(newItems);
+  };
+
+  // Toggle edit mode
+  const toggleEditMode = async () => {
+    if (isEditing) {
+      // Save changes when exiting edit mode
+      try {
+        const result = await updateOfferItems(parseInt(offer.id.toString()), editableItems);
+        if (result.success) {
+          toast.success("Az ajánlat sikeresen frissítve");
+          // Update the offer with the server response
+          if (result.offer) {
+            setEditableItems(result.offer.items);
+            setOriginalItems([...result.offer.items]);
+          }
+        } else {
+          toast.error(result.error || "Hiba történt a mentés során");
+          // Revert to original items on error
+          setEditableItems([...originalItems]);
+        }
+      } catch (error) {
+        console.error('Error saving offer:', error);
+        toast.error("Hiba történt a mentés során");
+        // Revert to original items on error
+        setEditableItems([...originalItems]);
+      }
+    } else {
+      // When entering edit mode, make a copy of the current items
+      setOriginalItems([...editableItems]);
+    }
+    setIsEditing(!isEditing);
+  };
+
+  // Calculate total price
+  const calculateTotal = useCallback(() => {
+    return editableItems.reduce((sum, item) => {
+      return sum + parseCurrency(item.totalPrice);
+    }, 0);
+  }, [editableItems]);
+
   // Debug: log the requirement object
   useEffect(() => {
     console.log("Requirement object:", offer.requirement);
@@ -51,9 +163,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
   // Ensure notes is always an array of strings
   const notes = Array.isArray(offer.notes) ? offer.notes : [];
-
-  // Ensure items is always an array
-  const items = Array.isArray(offer.items) ? offer.items : [];
+  
+  // Use editableItems when in edit mode, otherwise use original items
+  const items = isEditing ? editableItems : (Array.isArray(offer.items) ? offer.items : []);
 
   // Format price with Hungarian locale
 
@@ -160,7 +272,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <p className="text-sm text-blue-700">
                   <span className="font-medium">Összeg: </span>
                   <span className="font-bold text-lg">
-                    {offer.totalPrice?.toLocaleString("hu-HU")} Ft
+                    {isEditing 
+                      ? formatCurrency(calculateTotal())
+                      : offer.totalPrice?.toLocaleString("hu-HU")} Ft
                   </span>
                 </p>
               </div>
@@ -231,11 +345,43 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       {items.length > 0 && (
         <div className="mt-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-8">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <List className="h-5 w-5 mr-2 text-gray-500" />
-                Tételek
-              </h2>
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <div className="flex items-center space-x-4">
+                <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                  <List className="h-5 w-5 mr-2 text-gray-500" />
+                  Tételek
+                </h2>
+                {!isEditing && (
+                  <button
+                    onClick={toggleEditMode}
+                    className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Pencil className="h-4 w-4 mr-1" /> Szerkesztés
+                  </button>
+                )}
+              </div>
+              {isEditing && (
+                <div className="flex space-x-2">
+                  <button
+                    onClick={toggleEditMode}
+                    className="inline-flex items-center px-3 py-1 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <X className="h-4 w-4 mr-1" /> Mégse
+                  </button>
+                  <button
+                    onClick={toggleEditMode}
+                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Save className="h-4 w-4 mr-1" /> Mentés
+                  </button>
+                  <button
+                    onClick={handleAddItem}
+                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Új tétel
+                  </button>
+                </div>
+              )}
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -280,24 +426,86 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         {index + 1}.
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        <div className="font-medium">
-                          {item.name.replace(/^\*\s*/, "")}
-                        </div>
-                        {item.unit && (
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className="w-full p-1 border rounded"
+                            value={item.name}
+                            onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                          />
+                        ) : (
+                          <div className="font-medium">
+                            {item.name.replace(/^\*\s*/, "")}
+                          </div>
+                        )}
+                        {isEditing ? (
+                          <div className="mt-1">
+                            <input
+                              type="text"
+                              className="w-24 p-1 border rounded text-xs"
+                              value={item.unit}
+                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                              placeholder="Mértékegység"
+                            />
+                          </div>
+                        ) : item.unit ? (
                           <div className="text-xs text-gray-500 mt-1">
                             Mértékegység: {item.unit}
                           </div>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className="w-20 p-1 border rounded text-right"
+                            value={item.quantity}
+                            onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                          />
+                        ) : (
+                          item.quantity
                         )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                        {item.quantity}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                        {item.unitPrice.replace(/\s*Ft$/, "")} Ft
+                        {isEditing ? (
+                          <div className="flex items-center justify-end">
+                            <input
+                              type="text"
+                              className="w-24 p-1 border rounded text-right"
+                              value={item.unitPrice.replace(/\s*Ft$/, "")}
+                              onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
+                            />
+                            <span className="ml-1">Ft</span>
+                          </div>
+                        ) : (
+                          `${item.unitPrice.replace(/\s*Ft$/, "")} Ft`
+                        )}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                        {item.totalPrice.replace(/\s*Ft$/, "")} Ft
+                        {isEditing ? (
+                          <div className="flex items-center justify-end">
+                            <input
+                              type="text"
+                              className="w-24 p-1 border rounded text-right"
+                              value={item.totalPrice.replace(/\s*Ft$/, "")}
+                              readOnly
+                            />
+                            <span className="ml-1">Ft</span>
+                          </div>
+                        ) : (
+                          `${item.totalPrice.replace(/\s*Ft$/, "")} Ft`
+                        )}
                       </td>
+                      {isEditing && (
+                        <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-right">
+                          <button
+                            onClick={() => handleRemoveItem(index)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            Törlés
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                   {/* Összesítő sor */}

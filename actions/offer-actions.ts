@@ -3,8 +3,13 @@
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
-import { Prisma } from '@prisma/client';
+import { Prisma, Offer } from '@prisma/client';
 import { parseOfferText, formatOfferForSave } from '@/lib/offer-parser';
+
+interface OfferWithItems extends Omit<Offer, 'items' | 'notes'> {
+  items: any[];
+  notes: string[];
+}
 
 interface SaveOfferData {
   recordId: string;
@@ -346,32 +351,39 @@ export async function getUserOffers() {
 
 export async function getOfferById(id: number) {
   try {
+    console.log(`Fetching offer with ID: ${id}`);
+    
     const offer = await prisma.offer.findUnique({
       where: { id },
       include: {
-        requirement: true,
+        requirement: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            status: true,
+          },
+        },
       },
     });
 
     if (!offer) {
+      console.log(`No offer found with ID: ${id}`);
       return null;
     }
 
-    // Parse the items and notes if they exist
-    let items = [];
-    let notes = [];
-    
-    try {
-      items = offer.items ? JSON.parse(offer.items as string) : [];
-    } catch (e) {
-      console.error('Error parsing offer items:', e);
-    }
-    
-    try {
-      notes = offer.notes ? JSON.parse(offer.notes as string) : [];
-    } catch (e) {
-      console.error('Error parsing offer notes:', e);
-    }
+    // Parse items and notes if they exist
+    const items = offer.items ? JSON.parse(offer.items as string) : [];
+    const notes = offer.notes ? JSON.parse(offer.notes as string) : [];
+
+    // Log the parsed data for debugging
+    console.log('Parsed offer data:', {
+      id: offer.id,
+      title: offer.title,
+      itemsCount: items.length,
+      notesCount: notes.length,
+      hasRequirement: !!offer.requirement,
+    });
 
     return {
       ...offer,
@@ -379,7 +391,75 @@ export async function getOfferById(id: number) {
       notes,
     };
   } catch (error) {
-    console.error('Error fetching offer by ID:', error);
-    throw new Error('Hiba történt az ajánlat betöltése közben');
+    console.error('Error in getOfferById:', error);
+    throw new Error('Hiba történt az ajánlat betöltésekor');
+  }
+}
+
+export async function updateOfferItems(offerId: number, items: Array<{
+  name: string;
+  quantity: string;
+  unit: string;
+  unitPrice: string;
+  totalPrice: string;
+}>) {
+  try {
+    console.log(`Updating items for offer ID: ${offerId}`, items);
+    
+    // Calculate new total price
+    const totalPrice = items.reduce((sum, item) => {
+      // Parse the total price, handling both formatted strings and numbers
+      const price = typeof item.totalPrice === 'string' 
+        ? parseFloat(item.totalPrice.replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0
+        : Number(item.totalPrice) || 0;
+      return sum + price;
+    }, 0);
+
+    // Update the offer with new items and total price
+    const updatedOffer = await prisma.offer.update({
+      where: { id: offerId },
+      data: {
+        items: JSON.stringify(items),
+        totalPrice: totalPrice,
+      },
+      select: {
+        id: true,
+        title: true,
+        totalPrice: true,
+        items: true,
+        updatedAt: true,
+      },
+    });
+
+    console.log('✅ Offer items updated successfully:', {
+      id: updatedOffer.id,
+      title: updatedOffer.title,
+      totalPrice: updatedOffer.totalPrice,
+      itemCount: items.length,
+      updatedAt: updatedOffer.updatedAt,
+    });
+
+    // Revalidate the offers page to show updated data
+    revalidatePath('/offers');
+
+    return {
+      success: true,
+      offer: {
+        ...updatedOffer,
+        items: JSON.parse(updatedOffer.items as string) as Array<{
+          name: string;
+          quantity: string;
+          unit: string;
+          unitPrice: string;
+          totalPrice: string;
+        }>,
+      },
+    };
+  } catch (error) {
+    console.error('❌ Error updating offer items:', error);
+    return {
+      success: false,
+      error: 'Hiba történt az ajánlat frissítésekor',
+    };
   }
 }
