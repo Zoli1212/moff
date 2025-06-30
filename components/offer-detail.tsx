@@ -21,10 +21,7 @@ import {
   Pencil,
   Plus,
   Trash2,
-  Share2,
   MoreVertical,
-  Download,
-  Mail,
   Copy,
   Printer,
 } from "lucide-react";

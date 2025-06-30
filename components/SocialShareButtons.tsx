@@ -65,7 +65,7 @@ const formatDate = (date: string | Date | null | undefined): string => {
           day: "numeric",
         });
   } catch (e) {
-    return "Érvénytelen dátum";
+    return `Érvénytelen dátum: ${(e as Error).message}`;
   }
 };
 
@@ -293,7 +293,6 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         const textY1 = boxY + 12;
         const textY2 = boxY + 24;
         const textY3 = boxY + 36;
-        const rightAlign = boxX + boxWidth - 10; // Right edge - 10mm margin
         
         // Work total
         doc.text("Munkadíj összesen:", boxX + 10, textY1);
