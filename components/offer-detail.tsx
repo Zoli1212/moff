@@ -512,15 +512,23 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                       title: offer.title,
                       description: offer.description,
                       items: offer.items?.map((item) => ({
+                        id: item.id,
                         name: item.name,
                         quantity: item.quantity,
                         unit: item.unit,
+                        materialUnitPrice: item.materialUnitPrice,
+                        workUnitPrice: item.workUnitPrice,
+                        materialTotal: item.materialTotal,
+                        workTotal: item.workTotal,
+                        // Backward compatibility
                         unitPrice: item.workUnitPrice,
                         totalPrice: item.workTotal,
                       })),
                       totalPrice: offer.totalPrice,
+                      createdAt: offer.createdAt,
                       validUntil: offer.validUntil,
                       status: offer.status,
+                      notes: offer.notes,
                     }}
                   />
                 </div>

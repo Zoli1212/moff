@@ -30,17 +30,24 @@ interface AutoTableWithPrevious {
 }
   
 
+interface OfferItem {
+  id?: number;
+  name: string;
+  quantity: string;
+  unit: string;
+  materialUnitPrice: string;
+  workUnitPrice: string;
+  materialTotal: string;
+  workTotal: string;
+  unitPrice?: string; // For backward compatibility
+  totalPrice?: string; // For backward compatibility
+}
+
 interface SocialShareButtonsProps {
   offer?: {
     title?: string;
     description?: string | null;
-    items?: Array<{
-      name: string;
-      quantity: string;
-      unit: string;
-      unitPrice: string;
-      totalPrice: string;
-    }>;
+    items?: OfferItem[];
     totalPrice?: number | null;
     notes?: string[];
     createdAt?: string | Date;
@@ -48,6 +55,35 @@ interface SocialShareButtonsProps {
     status?: string;
   };
 }
+
+// Helper function to format date
+const formatDate = (date: string | Date | null | undefined): string => {
+  if (!date) return 'Nincs megadva';
+  try {
+    const d = new Date(date);
+    return isNaN(d.getTime()) 
+      ? 'Érvénytelen dátum' 
+      : d.toLocaleDateString('hu-HU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+  } catch (e) {
+    return 'Érvénytelen dátum';
+  }
+};
+
+// Helper function to get status display text
+const getStatusDisplay = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    draft: 'Piszkozat',
+    sent: 'Elküldve',
+    accepted: 'Elfogadva',
+    rejected: 'Elutasítva',
+    expired: 'Lejárt',
+  };
+  return statusMap[status] || status;
+};
 
 export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
   const pathname = usePathname();
@@ -65,18 +101,39 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
     if (offer.items && offer.items.length > 0) {
       text += '*Tételek:*\n';
       offer.items.forEach((item, index) => {
-        text += `${index + 1}. ${item.name} - ${item.quantity} ${item.unit} x ${item.unitPrice} = ${item.totalPrice}\n`;
+        text += `${index + 1}. ${item.name} - ${item.quantity} ${item.unit}\n`;
+        text += `   Anyag: ${item.materialUnitPrice || '0 Ft'} x ${item.quantity} = ${item.materialTotal || '0 Ft'}\n`;
+        text += `   Munkadíj: ${item.workUnitPrice || '0 Ft'} x ${item.quantity} = ${item.workTotal || '0 Ft'}\n\n`;
       });
       text += '\n';
     }
 
-    if (offer.totalPrice) {
-      text += `*Összesen: ${offer.totalPrice.toLocaleString('hu-HU')} Ft*\n`;
+    // Calculate totals if not provided
+    let materialTotal = 0;
+    let workTotal = 0;
+    
+    if (offer.items && offer.items.length > 0) {
+      const totals = offer.items.reduce((acc, item) => {
+        const material = parseFloat((item.materialTotal || '0').replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+        const work = parseFloat((item.workTotal || '0').replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+        return {
+          material: acc.material + material,
+          work: acc.work + work
+        };
+      }, { material: 0, work: 0 });
+      
+      materialTotal = totals.material;
+      workTotal = totals.work;
     }
 
+    text += `*Összesítés:*\n`;
+    text += `Munkadíj: ${workTotal.toLocaleString('hu-HU')} Ft\n`;
+    text += `Anyagköltség: ${materialTotal.toLocaleString('hu-HU')} Ft\n`;
+    text += `*Összesen: ${(workTotal + materialTotal).toLocaleString('hu-HU')} Ft*\n\n`;
+
     if (offer.validUntil && new Date(offer.validUntil).toString() !== 'Invalid Date') {
-      const validDate = new Date(offer.validUntil).toLocaleDateString('hu-HU');
-      text += `\n*Érvényes: ${validDate}*\n`;
+      const validDate = formatDate(offer.validUntil);
+      text += `*Érvényes: ${validDate}*\n`;
     }
 
     text += `\n${pageUrl}`;
@@ -94,70 +151,87 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         format: 'a4'
       });
   
+      // Add title
       doc.setFontSize(18);
       doc.text(offer.title || 'Ajánlat', 14, 22);
   
-      doc.setFontSize(11);
+      // Add metadata
+      doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Létrehozva: ${new Date().toLocaleDateString('hu-HU')}`, 14, 30);
-  
-      if (offer.description) {
-        doc.setFontSize(12);
-        doc.setTextColor(0, 0, 0);
-        const splitDesc = doc.splitTextToSize(offer.description, 180);
-        doc.text(splitDesc, 14, 40);
+      doc.text(`Létrehozva: ${formatDate(offer.createdAt || new Date())}`, 14, 30);
+      if (offer.validUntil) {
+        doc.text(`Érvényes: ${formatDate(offer.validUntil)}`, 14, 36);
       }
+      doc.text(`Státusz: ${getStatusDisplay(offer.status || 'draft')}`, 14, 42);
   
-      let finalY = offer.description ? 50 : 40;
+      let finalY = 50;
   
       if (offer.items && offer.items.length > 0) {
+        // Calculate totals
+        const totals = offer.items.reduce((acc, item) => {
+          const materialTotal = parseFloat((item.materialTotal || '0').replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+          const workTotal = parseFloat((item.workTotal || '0').replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+          return {
+            material: acc.material + materialTotal,
+            work: acc.work + workTotal
+          };
+        }, { material: 0, work: 0 });
+
+        // Prepare table data with all 7 columns
         const itemsData = offer.items.map((item, index) => [
           (index + 1).toString(),
           item.name,
-          `${item.quantity} ${item.unit}`,
-          `${item.unitPrice} Ft`,
-          `${item.totalPrice} Ft`
+          item.quantity,
+          item.unit,
+          item.materialUnitPrice || '0 Ft',
+          item.workUnitPrice || '0 Ft',
+          item.materialTotal || '0 Ft',
+          item.workTotal || '0 Ft'
         ]);
       
         const autoTableTyped: AutoTableWithPrevious = autoTable;
 
-        // Prepare table data
-        const head = ['#', 'Megnevezés', 'Mennyiség', 'Egységár', 'Összesen'];
+        // Prepare table headers for all 7 columns
+        const head = [
+          '#', 
+          'Tétel megnevezése', 
+          'Mennyiség', 
+          'Egység', 
+          'Anyag egységár', 
+          'Díj egységár',
+          'Anyag összesen',
+          'Díj összesen'
+        ];
         
+        // Add the main table
         autoTableTyped(doc, {
-          startY: finalY + 5,  // Added 5 units of space
+          startY: finalY,
           head: [head],
           body: itemsData,
-          foot: offer.totalPrice ? [
-            [
-              { 
-                content: 'Összesen:',
-                colSpan: 4,
-                styles: { 
-                  halign: 'right',
-                  fontStyle: 'bold'
-                }
-              },
-              { 
-                content: `${offer.totalPrice.toLocaleString('hu-HU')} Ft`,
-                styles: { 
-                  fontStyle: 'bold',
-                  halign: 'right'
-                }
-              }
-            ]
-          ] : [],
           theme: 'grid' as const,
           headStyles: { 
             fillColor: [41, 128, 185],
             textColor: 255,
             halign: 'center',
-            fontStyle: 'bold'
+            fontStyle: 'bold',
+            fontSize: 8
           },
           styles: { 
-            fontSize: 10,
-            cellPadding: 3,
-            halign: 'left'
+            fontSize: 7,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            cellWidth: 'wrap',
+            lineColor: [200, 200, 200]
+          },
+          columnStyles: {
+            0: { cellWidth: 8, halign: 'center' },  // #
+            1: { cellWidth: 55, halign: 'left' },   // Tétel
+            2: { cellWidth: 15, halign: 'right' },  // Mennyiség
+            3: { cellWidth: 15, halign: 'center' }, // Egység
+            4: { cellWidth: 25, halign: 'right' },  // Anyag egységár
+            5: { cellWidth: 25, halign: 'right' },  // Díj egységár
+            6: { cellWidth: 25, halign: 'right' },  // Anyag összesen
+            7: { cellWidth: 25, halign: 'right' }   // Díj összesen
           },
           margin: { top: 10 },
           didDrawPage: function(data) {
@@ -166,6 +240,20 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
           }
         });
 
+        // Add totals
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Munkadíj összesen:', 14, finalY + 10);
+        doc.text(`${totals.work.toLocaleString('hu-HU')} Ft`, 190, finalY + 10, { align: 'right' });
+        
+        doc.text('Anyagköltség összesen:', 14, finalY + 16);
+        doc.text(`${totals.material.toLocaleString('hu-HU')} Ft`, 190, finalY + 16, { align: 'right' });
+        
+        doc.setFontSize(12);
+        doc.text('Összesített nettó költség:', 14, finalY + 26);
+        doc.text(`${(totals.work + totals.material).toLocaleString('hu-HU')} Ft`, 190, finalY + 26, { align: 'right' });
+        
+        finalY += 36;
       }
       
       if (offer.validUntil && new Date(offer.validUntil).toString() !== 'Invalid Date') {
