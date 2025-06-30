@@ -157,7 +157,7 @@ export default function OffersPage() {
                           </h3>                
                           {offer.description && (
                             <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                              Összefoglaló: {offer.description.length > 100 
+                              {offer.description.length > 100 
                                 ? `${offer.description.substring(0, 100)}...` 
                                 : offer.description}
                             </p>

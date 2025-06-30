@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { OfferWithItems } from "@/types/offer.types";
 import {
   getRequirementById,
   getOffersByRequirementId,
@@ -12,22 +13,7 @@ import Link from "next/link";
 import { Offer, Requirement } from "@prisma/client";
 import { OfferDetailView } from "@/components/offer-detail";
 
-interface OfferWithItems extends Omit<Offer, "items" | "notes"> {
-  items: Array<{
-    name: string;
-    quantity: string;
-    unit: string;
-    unitPrice: string;
-    totalPrice: string;
-  }>;
-  notes: string[];
-  requirement: {
-    id: number;
-    title: string;
-    description: string | null;
-    status: string;
-  } | null;
-}
+// Using shared OfferWithItems type from @/types/offer.types
 
 // Modal component for showing full offer details
 function OfferDetailsModal({
@@ -182,26 +168,37 @@ export default function RequirementOffersPage() {
         // Load offers
         const offersData = await getOffersByRequirementId(requirementId);
 
-        // Add requirement data to each offer
-        const offersWithRequirement: OfferWithItems[] = offersData.map((offer) => ({
-          ...offer,
-          items: Array.isArray(offer.items) ? offer.items : [],
-          notes: Array.isArray(offer.notes) ? offer.notes : [],
-          requirement: requirementData
-            ? {
-                id: requirementData.id,
-                title: requirementData.title,
-                description: requirementData.description || null,
-                status: requirementData.status || 'draft'
-              }
-            : null,
-          requirementId: offer.requirementId,
-          recordId: offer.recordId,
-          validUntil: offer.validUntil,
-          createdBy: offer.createdBy || null
-        }));
+        // Transform offer items to match the OfferItem type
+        const offersWithRequirement: OfferWithItems[] = offersData.map((offer) => {
+          const items = Array.isArray(offer.items) ? offer.items.map(item => {
+            // Handle both old and new item formats
+            const isNewFormat = 'materialUnitPrice' in item;
+            
+            return {
+              id: item.id,
+              name: item.name || '',
+              description: item.description || '',
+              quantity: item.quantity?.toString() || '0',
+              unit: item.unit || 'db',
+              materialUnitPrice: isNewFormat ? item.materialUnitPrice : '0',
+              workUnitPrice: isNewFormat ? item.workUnitPrice : (item.unitPrice || '0'),
+              materialTotal: isNewFormat ? item.materialTotal : '0',
+              workTotal: isNewFormat ? item.workTotal : (item.totalPrice || '0')
+            };
+          }) : [];
+        
+          return {
+            ...offer,
+            items,
+            notes: Array.isArray(offer.notes) ? offer.notes : [],
+            requirement: requirementData,
+          };
+        });
 
         setOffers(offersWithRequirement);
+        
+        // Log the transformed offers for debugging
+        console.log('Transformed offers:', JSON.stringify(offersWithRequirement, null, 2));
 
         // If offerId is in URL, load that specific offer
         if (offerId) {

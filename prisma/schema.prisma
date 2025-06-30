@@ -112,17 +112,19 @@ model Offer {
   title          String
   description    String?
   totalPrice     Float
-  status         String     @default("draft")
+  materialTotal  Float?      @default(0)
+  workTotal      Float?      @default(0)
+  status         String      @default("draft")
   requirementId  Int
   requirement    Requirement @relation(fields: [requirementId], references: [id])
   items          Json?
   recordId       String?     @unique(map: "unique_offer_record_id")
   validUntil     DateTime?
   notes          String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
   createdBy      String?
-  tenantEmail    String     @default("")
+  tenantEmail    String      @default("")
   
   @@unique([recordId])
 }

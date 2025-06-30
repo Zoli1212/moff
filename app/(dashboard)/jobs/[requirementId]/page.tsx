@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { OfferWithItems } from "@/types/offer.types";
 import {
   getRequirementById,
   getOffersByRequirementId,
@@ -12,22 +13,7 @@ import Link from "next/link";
 import { Offer, Requirement } from "@prisma/client";
 import { OfferDetailView } from "@/components/offer-detail";
 
-interface OfferWithItems extends Omit<Offer, "items" | "notes"> {
-  items: Array<{
-    name: string;
-    quantity: string;
-    unit: string;
-    unitPrice: string;
-    totalPrice: string;
-  }>;
-  notes: string[];
-  requirement: {
-    id: number;
-    title: string;
-    description: string | null;
-    status: string;
-  } | null;
-}
+// Using shared OfferWithItems type from @/types/offer.types
 
 // Modal component for showing full offer details
 function OfferDetailsModal({

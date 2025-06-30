@@ -3,11 +3,11 @@
 import { useEffect, useState, useCallback } from "react";
 import { updateOfferItems } from "@/actions/offer-actions";
 import { toast } from "sonner";
-import SocialShareButtons from './SocialShareButtons';
-import { RequirementDetail } from './requirement-detail';
-import { Offer } from "@prisma/client";
+import SocialShareButtons from "./SocialShareButtons";
+import { RequirementDetail } from "./requirement-detail";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
+import { OfferItem, OfferWithItems } from "@/types/offer.types";
 import {
   ArrowLeft,
   FileText,
@@ -21,27 +21,8 @@ import {
   Pencil,
   X,
   Save,
-  Plus
+  Plus,
 } from "lucide-react";
-
-interface OfferItem {
-  name: string;
-  quantity: string;
-  unit: string;
-  unitPrice: string;
-  totalPrice: string;
-}
-
-interface OfferWithItems extends Omit<Offer, "items" | "notes"> {
-  items: OfferItem[];
-  notes: string[];
-  requirement: {
-    id: number;
-    title: string;
-    description: string | null;
-    status: string;
-  } | null;
-}
 
 interface OfferDetailViewProps {
   offer: OfferWithItems;
@@ -53,18 +34,25 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
-  
+
+  // Log items when they change
+  useEffect(() => {
+    console.log("Current items:", JSON.stringify(editableItems, null, 2));
+  }, [editableItems]);
+
   // Initialize items
   useEffect(() => {
     if (offer.items) {
       const items = Array.isArray(offer.items) ? offer.items : [];
       // Ensure all items have the required fields
-      const validatedItems = items.map(item => ({
-        name: item.name || '',
-        quantity: item.quantity || '0',
-        unit: item.unit || 'db',
-        unitPrice: item.unitPrice || '0',
-        totalPrice: item.totalPrice || '0',
+      const validatedItems = items.map((item) => ({
+        name: item.name || "",
+        quantity: item.quantity || "1",
+        unit: item.unit || "db",
+        materialUnitPrice: item.materialUnitPrice || "0 Ft",
+        workUnitPrice: item.workUnitPrice || "0 Ft",
+        materialTotal: item.materialTotal || "0 Ft",
+        workTotal: item.workTotal || "0 Ft",
       }));
       setEditableItems([...validatedItems]);
       setOriginalItems([...validatedItems]);
@@ -86,28 +74,35 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const handleItemChange = (index: number, field: string, value: string) => {
     const newItems = [...editableItems];
     const item = { ...newItems[index], [field]: value };
-    
-    // Recalculate total if quantity or unit price changes
-    if (field === 'quantity' || field === 'unitPrice') {
+
+    // Recalculate totals if quantity or prices change
+    if (["quantity", "materialUnitPrice", "workUnitPrice"].includes(field)) {
       const quantity = parseFloat(item.quantity) || 0;
-      const unitPrice = parseCurrency(item.unitPrice);
-      const total = quantity * unitPrice;
-      item.totalPrice = formatCurrency(total);
+      const materialUnitPrice = parseCurrency(item.materialUnitPrice);
+      const workUnitPrice = parseCurrency(item.workUnitPrice);
+
+      item.materialTotal = formatCurrency(quantity * materialUnitPrice);
+      item.workTotal = formatCurrency(quantity * workUnitPrice);
     }
-    
+
     newItems[index] = item;
     setEditableItems(newItems);
   };
 
   // Add new item
   const handleAddItem = () => {
-    setEditableItems([...editableItems, {
-      name: "",
-      quantity: "1",
-      unit: "db",
-      unitPrice: "0",
-      totalPrice: "0"
-    }]);
+    setEditableItems([
+      ...editableItems,
+      {
+        name: "",
+        quantity: "1",
+        unit: "db",
+        materialUnitPrice: "0 Ft",
+        workUnitPrice: "0 Ft",
+        materialTotal: "0 Ft",
+        workTotal: "0 Ft",
+      },
+    ]);
   };
 
   // Remove item
@@ -122,7 +117,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     if (isEditing) {
       // Save changes when exiting edit mode
       try {
-        const result = await updateOfferItems(parseInt(offer.id.toString()), editableItems);
+        const result = await updateOfferItems(
+          parseInt(offer.id.toString()),
+          editableItems
+        );
         if (result.success) {
           toast.success("Az ajánlat sikeresen frissítve");
           // Update the offer with the server response
@@ -136,7 +134,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           setEditableItems([...originalItems]);
         }
       } catch (error) {
-        console.error('Error saving offer:', error);
+        console.error("Error saving offer:", error);
         toast.error("Hiba történt a mentés során");
         // Revert to original items on error
         setEditableItems([...originalItems]);
@@ -148,12 +146,28 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     setIsEditing(!isEditing);
   };
 
-  // Calculate total price
-  const calculateTotal = useCallback(() => {
-    return editableItems.reduce((sum, item) => {
-      return sum + parseCurrency(item.totalPrice);
-    }, 0);
+  // Calculate totals
+  const calculateTotals = useCallback(() => {
+    return editableItems.reduce(
+      (totals, item) => {
+        return {
+          material: totals.material + parseCurrency(item.materialTotal),
+          work: totals.work + parseCurrency(item.workTotal),
+          total:
+            totals.total +
+            parseCurrency(item.materialTotal) +
+            parseCurrency(item.workTotal),
+        };
+      },
+      { material: 0, work: 0, total: 0 }
+    );
   }, [editableItems]);
+
+  const {
+    material: materialTotal,
+    work: workTotal,
+    total: grandTotal,
+  } = calculateTotals();
 
   // Debug: log the requirement object
   useEffect(() => {
@@ -163,9 +177,13 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
   // Ensure notes is always an array of strings
   const notes = Array.isArray(offer.notes) ? offer.notes : [];
-  
+
   // Use editableItems when in edit mode, otherwise use original items
-  const items = isEditing ? editableItems : (Array.isArray(offer.items) ? offer.items : []);
+  const items = isEditing
+    ? editableItems
+    : Array.isArray(offer.items)
+      ? offer.items
+      : [];
 
   // Format price with Hungarian locale
 
@@ -196,9 +214,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
   if (showRequirementDetail && offer.requirement) {
     return (
-      <RequirementDetail 
-        requirement={offer.requirement} 
-        onBack={() => setShowRequirementDetail(false)} 
+      <RequirementDetail
+        requirement={offer.requirement}
+        onBack={() => setShowRequirementDetail(false)}
       />
     );
   }
@@ -224,14 +242,22 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               {offer.title || "Ajánlat részletei"}
             </h1>
             <div className="ml-4">
-              <SocialShareButtons offer={{
-                title: offer.title,
-                description: offer.description,
-                items: offer.items,
-                totalPrice: offer.totalPrice,
-                validUntil: offer.validUntil,
-                status: offer.status
-              }} />
+              <SocialShareButtons
+                offer={{
+                  title: offer.title,
+                  description: offer.description,
+                  items: offer.items?.map((item) => ({
+                    name: item.name,
+                    quantity: item.quantity,
+                    unit: item.unit,
+                    unitPrice: item.workUnitPrice,
+                    totalPrice: item.workTotal,
+                  })),
+                  totalPrice: offer.totalPrice,
+                  validUntil: offer.validUntil,
+                  status: offer.status,
+                }}
+              />
             </div>
           </div>
 
@@ -272,9 +298,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <p className="text-sm text-blue-700">
                   <span className="font-medium">Összeg: </span>
                   <span className="font-bold text-lg">
-                    {isEditing 
-                      ? formatCurrency(calculateTotal())
-                      : offer.totalPrice?.toLocaleString("hu-HU")} Ft
+                    {isEditing
+                      ? formatCurrency(calculateTotals().total)
+                      : offer.totalPrice?.toLocaleString("hu-HU")}{" "}
+                    Ft
                   </span>
                 </p>
               </div>
@@ -299,28 +326,27 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           </div>
         )}
       </div>
-        {/* Notes Section */}
-        {notes.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
-                Megjegyzések
-              </h2>
-            </div>
-            <div className="p-6">
-              <ul className="space-y-4">
-                {notes.map((note, index) => (
-                  <li key={index} className="flex items-start">
-                    <div className="flex-shrink-0 h-5 w-5 text-gray-400">•</div>
-                    <p className="ml-2 text-sm text-gray-700">{note}</p>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/* Notes Section */}
+      {notes.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
+              Megjegyzések
+            </h2>
           </div>
-        )}
-
+          <div className="p-6">
+            <ul className="space-y-4">
+              {notes.map((note, index) => (
+                <li key={index} className="flex items-start">
+                  <div className="flex-shrink-0 h-5 w-5 text-gray-400">•</div>
+                  <p className="ml-2 text-sm text-gray-700">{note}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
 
       {/* Requirements Section */}
       {offer.requirement && (
@@ -397,105 +423,198 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                       scope="col"
                       className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                     >
-                      Megnevezés
+                      Tétel megnevezése
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
                     >
                       Mennyiség
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
                     >
-                      Egységár
+                      Egység
                     </th>
                     <th
                       scope="col"
                       className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
                     >
-                      Összesen
+                      Anyag egységár
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                    >
+                      Díj egységár
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                    >
+                      Anyag összesen
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                    >
+                      Díj összesen
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {items.map((item, index) => (
                     <tr key={index} className="hover:bg-gray-50">
+                      {/* # */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                         {index + 1}.
                       </td>
+
+                      {/* Tétel megnevezése */}
                       <td className="px-4 py-3 text-sm text-gray-900">
                         {isEditing ? (
                           <input
                             type="text"
                             className="w-full p-1 border rounded"
                             value={item.name}
-                            onChange={(e) => handleItemChange(index, 'name', e.target.value)}
+                            onChange={(e) =>
+                              handleItemChange(index, "name", e.target.value)
+                            }
                           />
                         ) : (
                           <div className="font-medium">
                             {item.name.replace(/^\*\s*/, "")}
                           </div>
                         )}
-                        {isEditing ? (
-                          <div className="mt-1">
-                            <input
-                              type="text"
-                              className="w-24 p-1 border rounded text-xs"
-                              value={item.unit}
-                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                              placeholder="Mértékegység"
-                            />
-                          </div>
-                        ) : item.unit ? (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Mértékegység: {item.unit}
-                          </div>
-                        ) : null}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+
+                      {/* Mennyiség */}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
                         {isEditing ? (
                           <input
                             type="text"
-                            className="w-20 p-1 border rounded text-right"
+                            className="w-20 p-1 border rounded"
                             value={item.quantity}
-                            onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                            onChange={(e) =>
+                              handleItemChange(
+                                index,
+                                "quantity",
+                                e.target.value
+                              )
+                            }
                           />
                         ) : (
                           item.quantity
                         )}
                       </td>
+
+                      {/* Egység */}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            className="w-20 p-1 border rounded"
+                            value={item.unit}
+                            onChange={(e) =>
+                              handleItemChange(index, "unit", e.target.value)
+                            }
+                          />
+                        ) : (
+                          item.unit
+                        )}
+                      </td>
+
+                      {/* Anyag egységár */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
                         {isEditing ? (
                           <div className="flex items-center justify-end">
                             <input
                               type="text"
                               className="w-24 p-1 border rounded text-right"
-                              value={item.unitPrice.replace(/\s*Ft$/, "")}
-                              onChange={(e) => handleItemChange(index, 'unitPrice', e.target.value)}
+                              value={
+                                item.materialUnitPrice?.replace(/\s*Ft$/, "") ||
+                                "0"
+                              }
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "materialUnitPrice",
+                                  e.target.value
+                                )
+                              }
                             />
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          `${item.unitPrice.replace(/\s*Ft$/, "")} Ft`
+                          <span className="whitespace-nowrap">
+                            {item.materialUnitPrice || "0 Ft"}
+                          </span>
                         )}
                       </td>
+
+                      {/* Díj egységár */}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end">
+                            <input
+                              type="text"
+                              className="w-24 p-1 border rounded text-right"
+                              value={
+                                item.workUnitPrice?.replace(/\s*Ft$/, "") || "0"
+                              }
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "workUnitPrice",
+                                  e.target.value
+                                )
+                              }
+                            />
+                            <span className="ml-1">Ft</span>
+                          </div>
+                        ) : (
+                          <span className="whitespace-nowrap">
+                            {item.workUnitPrice || "0 Ft"}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Anyag összesen */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
                         {isEditing ? (
                           <div className="flex items-center justify-end">
                             <input
                               type="text"
                               className="w-24 p-1 border rounded text-right"
-                              value={item.totalPrice.replace(/\s*Ft$/, "")}
+                              value={item.materialTotal.replace(/\s*Ft$/, "")}
                               readOnly
                             />
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          `${item.totalPrice.replace(/\s*Ft$/, "")} Ft`
+                          item.materialTotal
                         )}
                       </td>
+
+                      {/* Díj összesen */}
+                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end">
+                            <input
+                              type="text"
+                              className="w-24 p-1 border rounded text-right"
+                              value={item.workTotal.replace(/\s*Ft$/, "")}
+                              readOnly
+                            />
+                            <span className="ml-1">Ft</span>
+                          </div>
+                        ) : (
+                          item.workTotal
+                        )}
+                      </td>
+
+                      {/* Törlés gomb szerkesztés módban */}
                       {isEditing && (
                         <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-right">
                           <button
@@ -508,25 +627,39 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                       )}
                     </tr>
                   ))}
-                  {/* Összesítő sor */}
+
+                  {/* Összesítő sorok */}
                   <tr className="bg-gray-50 border-t-2 border-gray-200">
                     <td
-                      colSpan={4}
+                      colSpan={7}
                       className="px-4 py-3 text-right text-sm font-medium text-gray-700"
                     >
-                      Összesen:
+                      Munkadíj összesen:
                     </td>
                     <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                      {items
-                        .reduce((sum, item) => {
-                          const price =
-                            parseFloat(
-                              item.totalPrice.replace(/[^0-9]/g, "")
-                            ) || 0;
-                          return sum + price;
-                        }, 0)
-                        .toLocaleString("hu-HU")}{" "}
-                      Ft
+                      {workTotal.toLocaleString("hu-HU")} Ft
+                    </td>
+                  </tr>
+                  <tr className="bg-gray-50">
+                    <td
+                      colSpan={7}
+                      className="px-4 py-3 text-right text-sm font-medium text-gray-700"
+                    >
+                      Anyagköltség összesen:
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
+                      {materialTotal.toLocaleString("hu-HU")} Ft
+                    </td>
+                  </tr>
+                  <tr className="bg-gray-100 border-t-2 border-gray-300">
+                    <td
+                      colSpan={7}
+                      className="px-4 py-3 text-right text-sm font-bold text-gray-900"
+                    >
+                      Összesített nettó költség:
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
+                      {grandTotal.toLocaleString("hu-HU")} Ft
                     </td>
                   </tr>
                 </tbody>

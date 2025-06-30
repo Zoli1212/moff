@@ -339,5 +339,9 @@ Kovács Eszter
 # elküld megosztások
 # kérdések szekció pipával
 # el tudja küldeni, megosztás
-
-
+# összefoglaló nem kell
+# Ajánlat
+# sorra katitntok akkor akkor felugrik egy form
+# Követelmények pontosjtása
+# megosztások
+# kérdések

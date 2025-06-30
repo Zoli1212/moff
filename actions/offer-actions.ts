@@ -5,11 +5,9 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { Prisma, Offer } from '@prisma/client';
 import { parseOfferText, formatOfferForSave } from '@/lib/offer-parser';
+import { OfferItem, OfferWithItems } from '@/types/offer.types';
 
-interface OfferWithItems extends Omit<Offer, 'items' | 'notes'> {
-  items: any[];
-  notes: string[];
-}
+// Using shared OfferWithItems type from @/types/offer.types
 
 interface SaveOfferData {
   recordId: string;
@@ -212,7 +210,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       : 'Nincsenek megjegyzések';
     
     const offerData: any = {
-      title: `Ajánlat - ${work.title}`,
+      title: work.title,
       description: formattedNotes, // Save formatted notes in the description
       totalPrice: parsedContent.totalPrice || 0,
       status: 'draft',
@@ -396,31 +394,35 @@ export async function getOfferById(id: number) {
   }
 }
 
-export async function updateOfferItems(offerId: number, items: Array<{
-  name: string;
-  quantity: string;
-  unit: string;
-  unitPrice: string;
-  totalPrice: string;
-}>) {
+export async function updateOfferItems(offerId: number, items: OfferItem[]) {
   try {
     console.log(`Updating items for offer ID: ${offerId}`, items);
     
-    // Calculate new total price
-    const totalPrice = items.reduce((sum, item) => {
-      // Parse the total price, handling both formatted strings and numbers
-      const price = typeof item.totalPrice === 'string' 
-        ? parseFloat(item.totalPrice.replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0
-        : Number(item.totalPrice) || 0;
-      return sum + price;
-    }, 0);
+    // Calculate new totals
+    const totals = items.reduce(
+      (acc, item) => {
+        const material = parseFloat(item.materialTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+        const work = parseFloat(item.workTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+        return {
+          material: acc.material + material,
+          work: acc.work + work,
+          grandTotal: acc.grandTotal + material + work,
+        };
+      },
+      { material: 0, work: 0, grandTotal: 0 }
+    );
+    
+    const { material: materialTotal, work: workTotal, grandTotal } = totals;
 
     // Update the offer with new items and total price
     const updatedOffer = await prisma.offer.update({
       where: { id: offerId },
       data: {
-        items: JSON.stringify(items),
-        totalPrice: totalPrice,
+        items: items as unknown as Prisma.InputJsonValue, // Type-safe JSON serialization
+        totalPrice: grandTotal,
+        materialTotal: parseFloat(materialTotal.toFixed(2)),
+        workTotal: parseFloat(workTotal.toFixed(2)),
+        updatedAt: new Date()
       },
       select: {
         id: true,
@@ -446,13 +448,32 @@ export async function updateOfferItems(offerId: number, items: Array<{
       success: true,
       offer: {
         ...updatedOffer,
-        items: JSON.parse(updatedOffer.items as string) as Array<{
-          name: string;
-          quantity: string;
-          unit: string;
-          unitPrice: string;
-          totalPrice: string;
-        }>,
+        items: (() => {
+          try {
+            let items: any[] = [];
+            if (Array.isArray(updatedOffer.items)) {
+              items = updatedOffer.items;
+            } else if (typeof updatedOffer.items === 'string') {
+              items = JSON.parse(updatedOffer.items);
+            }
+            
+            // Validate and transform each item to match OfferItem
+            return items.map(item => ({
+              id: item.id,
+              name: item.name || '',
+              quantity: item.quantity || '0',
+              unit: item.unit || 'db',
+              materialUnitPrice: item.materialUnitPrice || '0',
+              workUnitPrice: item.workUnitPrice || '0',
+              materialTotal: item.materialTotal || '0',
+              workTotal: item.workTotal || '0',
+              description: item.description || ''
+            } as OfferItem));
+          } catch (error) {
+            console.error('Error parsing offer items:', error);
+            return [];
+          }
+        })(),
       },
     };
   } catch (error) {
