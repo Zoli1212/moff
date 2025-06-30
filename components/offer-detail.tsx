@@ -19,12 +19,22 @@ import {
   AlertCircle,
   ChevronRight,
   Pencil,
-  X,
-  Save,
   Plus,
   Trash2,
-  Check,
+  Share2,
+  MoreVertical,
+  Download,
+  Mail,
+  Copy,
+  Printer,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 interface OfferDetailViewProps {
   offer: OfferWithItems;
@@ -106,16 +116,16 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       materialTotal: "0 Ft",
       workTotal: "0 Ft",
     };
-    
+
     const updatedItems = [...editableItems, newItem];
     setEditableItems(updatedItems);
     setEditingItemId(updatedItems.length - 1); // Set editing mode for the new item
-    
+
     // Scroll to the new item
     setTimeout(() => {
       const element = document.getElementById(`item-${newItem.id}`);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
       }
     }, 100);
   };
@@ -135,20 +145,20 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   // Save the current item being edited
   const saveItem = async (index: number) => {
     if (isSaving) return;
-    
+
     const item = editableItems[index];
     if (!item.name || !item.quantity || !item.unit) {
       toast.error("Kérem töltse ki az összes kötelező mezőt");
       return;
     }
-    
+
     setIsSaving(true);
     try {
       const result = await updateOfferItems(
         parseInt(offer.id.toString()),
         editableItems
       );
-      
+
       if (result.success) {
         toast.success("A tétel sikeresen mentve");
         setEditingItemId(null);
@@ -214,10 +224,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
   // Format price with Hungarian locale
   const formatPrice = (price: number | string) => {
-    if (typeof price === 'string') {
+    if (typeof price === "string") {
       return price;
     }
-    return price.toLocaleString('hu-HU') + ' Ft';
+    return price.toLocaleString("hu-HU") + " Ft";
   };
 
   // Format date with Hungarian locale
@@ -254,8 +264,188 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     );
   }
 
+  // Add print styles
+  const printStyles = `
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-area, #printable-area * {
+        visibility: visible;
+      }
+      #printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        padding: 10mm;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 10px;
+        margin-bottom: 20px;
+      }
+      .print-table th, 
+      .print-table td {
+        border: 1px solid #e2e8f0;
+        padding: 3px 5px;
+        vertical-align: top;
+      }
+      .print-table th {
+        background-color: #f8fafc;
+        font-weight: 600;
+        text-align: center;
+      }
+      .text-right {
+        text-align: right !important;
+      }
+      .text-center {
+        text-align: center !important;
+      }
+      .print-header {
+        margin-bottom: 20px;
+      }
+      .print-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .print-meta {
+        font-size: 12px;
+        margin-bottom: 15px;
+      }
+      .print-section {
+        margin-bottom: 20px;
+      }
+      .print-section-title {
+        font-size: 14px;
+        font-weight: bold;
+        margin: 15px 0 10px 0;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 5px;
+      }
+    }
+  `;
+  
+  // Function to handle print
+  const handlePrint = () => {
+    const printWindow = window.open('', '', 'width=1000,height=800');
+    if (!printWindow) return;
+    
+    // Get the HTML for the print view
+    const printContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${offer.title || 'Ajánlat'}</title>
+        <meta charset="utf-8">
+        <style>${printStyles}</style>
+      </head>
+      <body>
+        <div id="printable-area">
+          <div class="print-header">
+            <div class="print-title">${offer.title || 'Ajánlat'}</div>
+            <div class="print-meta">
+              <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || 'draft')}</div>
+              <div><strong>Létrehozva:</strong> ${formatDate(offer.createdAt)}</div>
+              ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ''}
+            </div>
+          </div>
+          
+          ${offer.description ? `
+            <div class="print-section">
+              <div class="print-section-title">Leírás</div>
+              <div>${offer.description.replace(/\n/g, '<br>')}</div>
+            </div>
+          ` : ''}
+          
+          ${items.length > 0 ? `
+            <div class="print-section">
+              <div class="print-section-title">Tételek</div>
+              <table class="print-table">
+                <thead>
+                  <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 25%;">Tétel megnevezése</th>
+                    <th style="width: 8%;">Mennyiség</th>
+                    <th style="width: 8%;">Egység</th>
+                    <th style="width: 15%;">Anyag egységár</th>
+                    <th style="width: 15%;">Díj egységár</th>
+                    <th style="width: 12%;">Anyag összesen</th>
+                    <th style="width: 12%;">Díj összesen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${items.map((item, index) => `
+                    <tr>
+                      <td class="text-center">${index + 1}.</td>
+                      <td>${item.name.replace(/^\*\s*/, '')}</td>
+                      <td class="text-center">${item.quantity}</td>
+                      <td class="text-center">${item.unit}</td>
+                      <td class="text-right">${item.materialUnitPrice || '0 Ft'}</td>
+                      <td class="text-right">${item.workUnitPrice || '0 Ft'}</td>
+                      <td class="text-right">${item.materialTotal || '0 Ft'}</td>
+                      <td class="text-right">${item.workTotal || '0 Ft'}</td>
+                    </tr>
+                  `).join('')}
+                  <tr>
+                    <td colspan="4" class="text-right font-bold">Munkadíj összesen:</td>
+                    <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString('hu-HU')} Ft</td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" class="text-right font-bold">Anyagköltség összesen:</td>
+                    <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString('hu-HU')} Ft</td>
+                  </tr>
+                  <tr>
+                    <td colspan="4" class="text-right font-bold">Összesített nettó költség:</td>
+                    <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString('hu-HU')} Ft</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+          
+          ${notes.length > 0 ? `
+            <div class="print-section">
+              <div class="print-section-title">Megjegyzések</div>
+              <ul>
+                ${notes.map(note => `<li>• ${note}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        </div>
+      </body>
+      </html>
+    `;
+    
+    printWindow.document.open();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    
+    // Wait for content to load before printing
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 500);
+    };
+  };
+
   return (
-    <div className="flex flex-col h-full">
+    <>
+      <style>{printStyles}</style>
+      <div className="flex flex-col h-full" id="printable-area">
       <div className="space-y-6 flex-grow">
         {/* Header with back button */}
         <div className="flex items-center space-x-4 mb-6">
@@ -274,24 +464,68 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             <h1 className="text-2xl font-bold text-gray-900">
               {offer.title || "Ajánlat részletei"}
             </h1>
-            <div className="ml-4">
-              <SocialShareButtons
-                offer={{
-                  title: offer.title,
-                  description: offer.description,
-                  items: offer.items?.map((item) => ({
-                    name: item.name,
-                    quantity: item.quantity,
-                    unit: item.unit,
-                    unitPrice: item.workUnitPrice,
-                    totalPrice: item.workTotal,
-                  })),
-                  totalPrice: offer.totalPrice,
-                  validUntil: offer.validUntil,
-                  status: offer.status,
-                }}
-              />
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <MoreVertical className="h-5 w-5 text-gray-600" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuItem
+                  className="flex items-center cursor-pointer"
+                  onSelect={(e: Event) => {
+                    e.preventDefault();
+                    // Handle download
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  <span>Letöltés</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex items-center cursor-pointer"
+                  onSelect={(e: Event) => {
+                    e.preventDefault();
+                    handlePrint();
+                  }}
+                >
+                  <Printer className="mr-2 h-4 w-4" />
+                  <span>Nyomtatás</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="flex items-center cursor-pointer"
+                  onSelect={(e: Event) => {
+                    e.preventDefault();
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("Link a vágólapra másolva");
+                  }}
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  <span>Link másolása</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5">
+                  <div className="text-xs font-medium text-gray-500 px-2 mb-1">
+                    Megosztás
+                  </div>
+                  <SocialShareButtons
+                    offer={{
+                      title: offer.title,
+                      description: offer.description,
+                      items: offer.items?.map((item) => ({
+                        name: item.name,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        unitPrice: item.workUnitPrice,
+                        totalPrice: item.workTotal,
+                      })),
+                      totalPrice: offer.totalPrice,
+                      validUntil: offer.validUntil,
+                      status: offer.status,
+                    }}
+                  />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           <div className="flex flex-wrap gap-6 mt-4">
@@ -333,7 +567,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   <span className="font-bold text-lg">
                     {editingItemId !== null
                       ? formatPrice(calculateTotals().total)
-                      : offer.totalPrice?.toLocaleString("hu-HU")}{' '}
+                      : offer.totalPrice?.toLocaleString("hu-HU")}{" "}
                     Ft
                   </span>
                 </p>
@@ -476,10 +710,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {items.map((item, index) => (
-                    <tr 
-                      key={index} 
+                    <tr
+                      key={index}
                       id={`item-${item.id || index}`}
-                      className={`hover:bg-gray-50 ${editingItemId === index ? 'bg-blue-50' : ''}`}
+                      className={`hover:bg-gray-50 ${editingItemId === index ? "bg-blue-50" : ""}`}
                     >
                       {/* # */}
                       <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
@@ -498,7 +732,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             }
                           />
                         ) : (
-                          <div 
+                          <div
                             className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
                             onClick={() => startEditing(index)}
                           >
@@ -523,7 +757,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             }
                           />
                         ) : (
-                          <div 
+                          <div
                             className="cursor-pointer hover:bg-gray-100 p-1 rounded"
                             onClick={() => startEditing(index)}
                           >
@@ -544,7 +778,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             }
                           />
                         ) : (
-                          <div 
+                          <div
                             className="cursor-pointer hover:bg-gray-100 p-1 rounded"
                             onClick={() => startEditing(index)}
                           >
@@ -575,7 +809,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          <div 
+                          <div
                             className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
                             onClick={() => startEditing(index)}
                           >
@@ -605,7 +839,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          <div 
+                          <div
                             className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
                             onClick={() => startEditing(index)}
                           >
@@ -627,7 +861,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          <div 
+                          <div
                             className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
                             onClick={() => startEditing(index)}
                           >
@@ -649,7 +883,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <span className="ml-1">Ft</span>
                           </div>
                         ) : (
-                          <div 
+                          <div
                             className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
                             onClick={() => startEditing(index)}
                           >
@@ -674,7 +908,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
                               disabled={isSaving}
                             >
-                              {isSaving ? 'Mentés...' : 'Mentés'}
+                              {isSaving ? "Mentés..." : "Mentés"}
                             </button>
                           </div>
                         ) : (
@@ -689,7 +923,11 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm('Biztosan törölni szeretné ezt a tételt?')) {
+                                if (
+                                  window.confirm(
+                                    "Biztosan törölni szeretné ezt a tételt?"
+                                  )
+                                ) {
                                   handleRemoveItem(index);
                                 }
                               }}
@@ -744,6 +982,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
