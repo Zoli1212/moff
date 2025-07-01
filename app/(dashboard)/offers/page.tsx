@@ -218,7 +218,7 @@ export default function OffersPage() {
       <TextInputDialog 
         open={isDialogOpen}
         setOpen={setIsDialogOpen}
-        toolPath="/offers"
+        toolPath="/ai-tools/ai-offer-letter-mobile"
       />
     </div>
   );
