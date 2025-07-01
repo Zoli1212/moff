@@ -719,60 +719,65 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   </div>
 
                   {/* Price Grid */}
-                  <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
-                    <div className="bg-gray-50 p-2 rounded">
-                      <div className="font-medium text-center text-gray-700 mb-1">Anyag</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <div className="text-xs text-gray-500">Egységár</div>
-                          {editingItemId === index ? (
-                            <div className="flex items-center">
-                              <input
-                                type="text"
-                                className="w-full p-1 border rounded text-right"
-                                value={item.materialUnitPrice?.replace(/\s*Ft$/, '') || '0'}
-                                onChange={(e) => handleItemChange(index, 'materialUnitPrice', e.target.value)}
-                              />
-                              <span className="ml-1">Ft</span>
-                            </div>
-                          ) : (
-                            <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
-                              {item.materialUnitPrice || '0 Ft'}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">Összesen</div>
-                          <div className="text-right">{item.materialTotal || '0 Ft'}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 p-2 rounded">
-                      <div className="font-medium text-center text-gray-700 mb-1">Díj</div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <div className="text-xs text-gray-500">Egységár</div>
-                          {editingItemId === index ? (
-                            <div className="flex items-center">
-                              <input
-                                type="text"
-                                className="w-full p-1 border rounded text-right"
-                                value={item.workUnitPrice?.replace(/\s*Ft$/, '') || '0'}
-                                onChange={(e) => handleItemChange(index, 'workUnitPrice', e.target.value)}
-                              />
-                              <span className="ml-1">Ft</span>
-                            </div>
-                          ) : (
-                            <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
-                              {item.workUnitPrice || '0 Ft'}
-                            </div>
-                          )}
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500">Összesen</div>
-                          <div className="text-right">{item.workTotal || '0 Ft'}</div>
-                        </div>
-                      </div>
+                  <div className="mt-3 text-sm">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full">
+                        <thead>
+                          <tr>
+                            <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                            <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Anyag</th>
+                            <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Díj</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          <tr>
+                            <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">Egységár</td>
+                            <td className="px-2 py-1 whitespace-nowrap text-right">
+                              {editingItemId === index ? (
+                                <div className="flex items-center justify-end">
+                                  <input
+                                    type="text"
+                                    className="w-full max-w-[100px] p-1 border rounded text-right"
+                                    value={item.materialUnitPrice?.replace(/\s*Ft$/, '') || '0'}
+                                    onChange={(e) => handleItemChange(index, 'materialUnitPrice', e.target.value)}
+                                  />
+                                  <span className="ml-1">Ft</span>
+                                </div>
+                              ) : (
+                                <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
+                                  {item.materialUnitPrice || '0 Ft'}
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-2 py-1 whitespace-nowrap text-right">
+                              {editingItemId === index ? (
+                                <div className="flex items-center justify-end">
+                                  <input
+                                    type="text"
+                                    className="w-full max-w-[100px] p-1 border rounded text-right"
+                                    value={item.workUnitPrice?.replace(/\s*Ft$/, '') || '0'}
+                                    onChange={(e) => handleItemChange(index, 'workUnitPrice', e.target.value)}
+                                  />
+                                  <span className="ml-1">Ft</span>
+                                </div>
+                              ) : (
+                                <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
+                                  {item.workUnitPrice || '0 Ft'}
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">Összesen</td>
+                            <td className="px-2 py-1 whitespace-nowrap text-right">
+                              {item.materialTotal || '0 Ft'}
+                            </td>
+                            <td className="px-2 py-1 whitespace-nowrap text-right">
+                              {item.workTotal || '0 Ft'}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </div>
