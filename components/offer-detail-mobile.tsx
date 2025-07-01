@@ -674,28 +674,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                           </div>
                         )}
                       </div>
-                      <div className="text-sm text-gray-500 mt-1">
-                        {editingItemId === index ? (
-                          <div className="flex space-x-2">
-                            <input
-                              type="text"
-                              className="w-20 p-1 border rounded"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                            />
-                            <input
-                              type="text"
-                              className="w-20 p-1 border rounded"
-                              value={item.unit}
-                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                            />
-                          </div>
-                        ) : (
-                          <div onClick={() => startEditing(index)} className="cursor-pointer hover:bg-gray-100 p-1 rounded">
-                            {item.quantity} {item.unit}
-                          </div>
-                        )}
-                      </div>
+                     
                     </div>
                     <div className="flex space-x-2">
                       <button 
@@ -731,7 +710,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                           <tr>
-                            <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">Egységár</td>
+                            <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">Egységár ({item.unit})</td>
                             <td className="px-2 py-1 whitespace-nowrap text-right">
                               {editingItemId === index ? (
                                 <div className="flex items-center justify-end">
@@ -768,7 +747,30 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                             </td>
                           </tr>
                           <tr>
-                            <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">Összesen</td>
+                            <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <div className="text-sm text-gray-500 mt-1">
+                        {editingItemId === index ? (
+                          <div className="flex space-x-2">
+                            <input
+                              type="text"
+                              className="w-20 p-1 border rounded"
+                              value={item.quantity}
+                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              className="w-20 p-1 border rounded"
+                              value={item.unit}
+                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
+                            />
+                          </div>
+                        ) : (
+                          <div onClick={() => startEditing(index)} className="cursor-pointer hover:bg-gray-100 p-1 rounded">
+                            {item.quantity} {item.unit}
+                          </div>
+                        )}
+                      </div>
+                            </td>
                             <td className="px-2 py-1 whitespace-nowrap text-right">
                               {item.materialTotal || '0 Ft'}
                             </td>
