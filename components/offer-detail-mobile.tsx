@@ -24,6 +24,7 @@ import {
   MoreVertical,
   Copy,
   Printer,
+  X,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -32,6 +33,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface OfferDetailViewProps {
   offer: OfferWithItems;
@@ -41,9 +46,10 @@ interface OfferDetailViewProps {
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
-  const [editingItemId, setEditingItemId] = useState<number | null>(null);
+  const [editingItem, setEditingItem] = useState<{index: number, item: OfferItem} | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Log items when they change
   useEffect(() => {
@@ -115,8 +121,12 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     };
 
     const updatedItems = [...editableItems, newItem];
+    const newItemIndex = updatedItems.length - 1;
     setEditableItems(updatedItems);
-    setEditingItemId(updatedItems.length - 1); // Set editing mode for the new item
+    setEditingItem({
+      index: newItemIndex,
+      item: updatedItems[newItemIndex]
+    }); 
 
     // Scroll to the new item
     setTimeout(() => {
@@ -134,16 +144,37 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     setEditableItems(newItems);
   };
 
-  // Start editing an item
+  // Start editing an item in modal
   const startEditing = (index: number) => {
-    setEditingItemId(index);
+    setEditingItem({ index, item: { ...editableItems[index] } });
+    setIsModalOpen(true);
   };
 
-  // Save the current item being edited
-  const saveItem = async (index: number) => {
-    if (isSaving) return;
+  // Handle modal input changes
+  const handleModalChange = (field: string, value: string) => {
+    if (!editingItem) return;
+    
+    const updatedItem = { ...editingItem.item, [field]: value };
+    
+    // Recalculate totals if quantity or prices change
+    if (["quantity", "materialUnitPrice", "workUnitPrice"].includes(field)) {
+      const quantity = parseFloat(updatedItem.quantity) || 0;
+      const materialUnitPrice = parseCurrency(updatedItem.materialUnitPrice || '0');
+      const workUnitPrice = parseCurrency(updatedItem.workUnitPrice || '0');
 
-    const item = editableItems[index];
+      updatedItem.materialTotal = formatCurrency(quantity * materialUnitPrice);
+      updatedItem.workTotal = formatCurrency(quantity * workUnitPrice);
+    }
+    
+    setEditingItem({ ...editingItem, item: updatedItem });
+  };
+
+  // Save the item from modal
+  const saveItem = async () => {
+    if (!editingItem) return;
+    
+    const { index, item } = editingItem;
+    
     if (!item.name || !item.quantity || !item.unit) {
       toast.error("Kérem töltse ki az összes kötelező mezőt");
       return;
@@ -151,18 +182,19 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
     setIsSaving(true);
     try {
+      const newItems = [...editableItems];
+      newItems[index] = item;
+      
       const result = await updateOfferItems(
         parseInt(offer.id.toString()),
-        editableItems
+        newItems
       );
 
       if (result.success) {
         toast.success("A tétel sikeresen mentve");
-        setEditingItemId(null);
-        // Update original items with the saved data
-        if (result.offer?.items) {
-          setOriginalItems([...result.offer.items]);
-        }
+        setEditableItems(newItems);
+        setOriginalItems(newItems.map(item => ({ ...item })));
+        setIsModalOpen(false);
       } else {
         toast.error(result.error || "Hiba történt a mentés során");
       }
@@ -174,14 +206,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     }
   };
 
-  // Cancel editing the current item
-  const cancelEditing = (index: number) => {
-    if (originalItems[index]) {
-      const newItems = [...editableItems];
-      newItems[index] = { ...originalItems[index] };
-      setEditableItems(newItems);
-    }
-    setEditingItemId(null);
+  // Cancel editing in modal
+  const cancelEditing = () => {
+    setIsModalOpen(false);
   };
 
   // Calculate totals
@@ -443,6 +470,110 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     <>
       <style>{printStyles}</style>
       <div className="flex flex-col h-full" id="printable-area">
+      {/* Edit Item Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex justify-between items-center">
+              <span>Tétel szerkesztése</span>
+              <button 
+                onClick={cancelEditing}
+                className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+              >
+                <X className="h-4 w-4" />
+                <span className="sr-only">Bezárás</span>
+              </button>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Megnevezés
+              </Label>
+              <Input
+                id="name"
+                value={editingItem?.item.name || ''}
+                onChange={(e) => handleModalChange('name', e.target.value)}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="quantity" className="text-right">
+                Mennyiség
+              </Label>
+              <Input
+                id="quantity"
+                type="number"
+                value={editingItem?.item.quantity || ''}
+                onChange={(e) => handleModalChange('quantity', e.target.value)}
+                className="col-span-1"
+              />
+              <Label htmlFor="unit" className="text-right">
+                Egység
+              </Label>
+              <Input
+                id="unit"
+                value={editingItem?.item.unit || ''}
+                onChange={(e) => handleModalChange('unit', e.target.value)}
+                className="col-span-1"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="materialUnitPrice" className="text-right">
+                Anyag egységár
+              </Label>
+              <div className="col-span-3 flex items-center">
+                <Input
+                  id="materialUnitPrice"
+                  value={editingItem?.item.materialUnitPrice?.replace(/\s*Ft$/, '') || '0'}
+                  onChange={(e) => handleModalChange('materialUnitPrice', e.target.value)}
+                  className="text-right"
+                />
+                <span className="ml-2">Ft</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="workUnitPrice" className="text-right">
+                Díj egységár
+              </Label>
+              <div className="col-span-3 flex items-center">
+                <Input
+                  id="workUnitPrice"
+                  value={editingItem?.item.workUnitPrice?.replace(/\s*Ft$/, '') || '0'}
+                  onChange={(e) => handleModalChange('workUnitPrice', e.target.value)}
+                  className="text-right"
+                />
+                <span className="ml-2">Ft</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
+              <Label className="text-right font-medium">
+                Anyag összesen
+              </Label>
+              <div className="col-span-3 font-medium">
+                {editingItem?.item.materialTotal || '0 Ft'}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label className="text-right font-medium">
+                Díj összesen
+              </Label>
+              <div className="col-span-3 font-medium">
+                {editingItem?.item.workTotal || '0 Ft'}
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={cancelEditing} disabled={isSaving}>
+              Mégse
+            </Button>
+            <Button onClick={saveItem} disabled={isSaving}>
+              {isSaving ? 'Mentés...' : 'Mentés'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="space-y-6 flex-grow">
         {/* Header with back button */}
         <div className="flex items-center space-x-4 mb-6">
@@ -559,11 +690,8 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               <div className="ml-3">
                 <p className="text-sm text-blue-700">
                   <span className="font-medium">Összeg: </span>
-                  <span className="font-bold text-lg">
-                    {editingItemId !== null
-                      ? formatPrice(calculateTotals().total)
-                      : offer.totalPrice?.toLocaleString("hu-HU")}{" "}
-                    Ft
+                  <span className="font-medium">
+                    {formatPrice(calculateTotals().total)} Ft
                   </span>
                 </p>
               </div>
@@ -655,24 +783,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <div 
                   key={index}
                   id={`item-${item.id || index}`}
-                  className={`p-4 ${editingItemId === index ? 'bg-blue-50' : ''}`}
+                  className="p-4 hover:bg-gray-50"
                 >
                   {/* Item Header */}
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="font-medium text-gray-900">
-                        {editingItemId === index ? (
-                          <input
-                            type="text"
-                            className="w-full p-1 border rounded"
-                            value={item.name}
-                            onChange={(e) => handleItemChange(index, 'name', e.target.value)}
-                          />
-                        ) : (
-                          <div onClick={() => startEditing(index)} className="cursor-pointer hover:bg-gray-100 p-1 rounded">
-                            {index + 1}. {item.name.replace(/^\*\s*/, '')}
-                          </div>
-                        )}
+                        <div onClick={() => startEditing(index)} className="cursor-pointer hover:bg-gray-100 p-1 rounded">
+                          {index + 1}. {item.name.replace(/^\*\s*/, '')}
+                        </div>
                       </div>
                      
                     </div>
@@ -712,63 +831,22 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                           <tr>
                             <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">Egységár ({item.unit})</td>
                             <td className="px-2 py-1 whitespace-nowrap text-right">
-                              {editingItemId === index ? (
-                                <div className="flex items-center justify-end">
-                                  <input
-                                    type="text"
-                                    className="w-full max-w-[100px] p-1 border rounded text-right"
-                                    value={item.materialUnitPrice?.replace(/\s*Ft$/, '') || '0'}
-                                    onChange={(e) => handleItemChange(index, 'materialUnitPrice', e.target.value)}
-                                  />
-                                  <span className="ml-1">Ft</span>
-                                </div>
-                              ) : (
-                                <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
-                                  {item.materialUnitPrice || '0 Ft'}
-                                </div>
-                              )}
+                              <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
+                                {item.materialUnitPrice || '0 Ft'}
+                              </div>
                             </td>
                             <td className="px-2 py-1 whitespace-nowrap text-right">
-                              {editingItemId === index ? (
-                                <div className="flex items-center justify-end">
-                                  <input
-                                    type="text"
-                                    className="w-full max-w-[100px] p-1 border rounded text-right"
-                                    value={item.workUnitPrice?.replace(/\s*Ft$/, '') || '0'}
-                                    onChange={(e) => handleItemChange(index, 'workUnitPrice', e.target.value)}
-                                  />
-                                  <span className="ml-1">Ft</span>
-                                </div>
-                              ) : (
-                                <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
-                                  {item.workUnitPrice || '0 Ft'}
-                                </div>
-                              )}
+                              <div className="cursor-pointer hover:bg-gray-100 p-1 rounded text-right" onClick={() => startEditing(index)}>
+                                {item.workUnitPrice || '0 Ft'}
+                              </div>
                             </td>
                           </tr>
                           <tr>
                             <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
                             <div className="text-sm text-gray-500 mt-1">
-                        {editingItemId === index ? (
-                          <div className="flex space-x-2">
-                            <input
-                              type="text"
-                              className="w-20 p-1 border rounded"
-                              value={item.quantity}
-                              onChange={(e) => handleItemChange(index, 'quantity', e.target.value)}
-                            />
-                            <input
-                              type="text"
-                              className="w-20 p-1 border rounded"
-                              value={item.unit}
-                              onChange={(e) => handleItemChange(index, 'unit', e.target.value)}
-                            />
-                          </div>
-                        ) : (
-                          <div onClick={() => startEditing(index)} className="cursor-pointer hover:bg-gray-100 p-1 rounded">
-                            {item.quantity} {item.unit}
-                          </div>
-                        )}
+                        <div onClick={() => startEditing(index)} className="cursor-pointer hover:bg-gray-100 p-1 rounded">
+                          {item.quantity} {item.unit}
+                        </div>
                       </div>
                             </td>
                             <td className="px-2 py-1 whitespace-nowrap text-right">
