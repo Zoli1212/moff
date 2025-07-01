@@ -54,6 +54,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   // Log items when they change
   useEffect(() => {
     console.log("Current items:", JSON.stringify(editableItems, null, 2));
+    console.log(originalItems.length)
   }, [editableItems]);
 
   // Initialize items
@@ -88,24 +89,24 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     return value.toLocaleString("hu-HU") + " Ft";
   };
 
-  // Handle item field change
-  const handleItemChange = (index: number, field: string, value: string) => {
-    const newItems = [...editableItems];
-    const item = { ...newItems[index], [field]: value };
+  // // Handle item field change
+  // const handleItemChange = (index: number, field: string, value: string) => {
+  //   const newItems = [...editableItems];
+  //   const item = { ...newItems[index], [field]: value };
 
-    // Recalculate totals if quantity or prices change
-    if (["quantity", "materialUnitPrice", "workUnitPrice"].includes(field)) {
-      const quantity = parseFloat(item.quantity) || 0;
-      const materialUnitPrice = parseCurrency(item.materialUnitPrice);
-      const workUnitPrice = parseCurrency(item.workUnitPrice);
+  //   // Recalculate totals if quantity or prices change
+  //   if (["quantity", "materialUnitPrice", "workUnitPrice"].includes(field)) {
+  //     const quantity = parseFloat(item.quantity) || 0;
+  //     const materialUnitPrice = parseCurrency(item.materialUnitPrice);
+  //     const workUnitPrice = parseCurrency(item.workUnitPrice);
 
-      item.materialTotal = formatCurrency(quantity * materialUnitPrice);
-      item.workTotal = formatCurrency(quantity * workUnitPrice);
-    }
+  //     item.materialTotal = formatCurrency(quantity * materialUnitPrice);
+  //     item.workTotal = formatCurrency(quantity * workUnitPrice);
+  //   }
 
-    newItems[index] = item;
-    setEditableItems(newItems);
-  };
+  //   newItems[index] = item;
+  //   setEditableItems(newItems);
+  // };
 
   // Add new item
   const handleAddItem = () => {
