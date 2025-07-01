@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import Link from "next/link";
 import { Requirement } from "@prisma/client";
-import { OfferDetailView } from "@/components/offer-detail";
+import { OfferDetailView } from "@/components/offer-detail-mobile";
 
 // Using shared OfferWithItems type from @/types/offer.types
 
