@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { Prisma, Offer } from '@prisma/client';
 import { parseOfferText, formatOfferForSave } from '@/lib/offer-parser';
 import { OfferItem, OfferWithItems } from '@/types/offer.types';
+import { v4 as uuidv4 } from 'uuid';
 
 // Using shared OfferWithItems type from @/types/offer.types
 
@@ -130,10 +131,12 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       work = existingWork;
 
     } else {
+
+      const finalTitle = title && title.trim() !== '' ? title : uuidv4();
       // Create new work record if it doesn't exist
       work = await prisma.myWork.create({
         data: {
-          title,
+          title: finalTitle,
           customerName,
           date: new Date(),
           location: title || parsedContent.location || 'Nincs megadva',

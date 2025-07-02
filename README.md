@@ -389,3 +389,9 @@ Előre is köszönöm a segítségedet!
 Szabó Bence
 +36 70 456 7890
 bence.szabo@pelda.hu
+
+# Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérjek ajánlatot
+
+Best Regards,
+
+Martin Retai
