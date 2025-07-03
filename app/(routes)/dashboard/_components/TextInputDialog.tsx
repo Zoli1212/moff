@@ -92,46 +92,87 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[600px] h-[90vh] max-h-[800px] flex flex-col">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12">
-            <Loader2 className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-            <span className="text-lg font-semibold text-blue-700">Analízis folyamatban...</span>
+          <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
+            <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Feldolgozás folyamatban</h3>
+            <p className="text-gray-600 max-w-md">Az Ön kérése feldolgozás alatt áll, kérjük várjon...</p>
           </div>
         ) : (
-          <>
-            <DialogHeader>
-              <DialogTitle>Szöveg beillesztése</DialogTitle>
-              <DialogDescription>
-                <div className="mt-4">
-                  <Textarea 
-                    placeholder="Illessze be ide az elemzendő szöveget..."
-                    className="min-h-[200px]"
-                    value={demandText}
-                    onChange={(e) => {
-                      setDemandText(e.target.value);
-                      setError('');
-                    }}
-                  />
-                  {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
-                </div>
+          <div className="flex flex-col h-full">
+            <DialogHeader className="px-1">
+              <DialogTitle className="text-xl font-bold text-gray-900">Új ajánlatkérés</DialogTitle>
+              <DialogDescription className="text-gray-600">
+                Illessze be az ajánlatkérést vagy írja le részletesen mire van szüksége
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpen(false)}>Mégse</Button>
+            
+            <div className="flex-1 mt-4 overflow-hidden">
+              <div className="h-full flex flex-col">
+                <Textarea 
+                  placeholder="Például: 50m²-es lakás felújítása, burkolással, festéssel és villanyszereléssel..."
+                  className="flex-1 min-h-[200px] text-base p-4 resize-none"
+                  value={demandText}
+                  onChange={(e) => {
+                    setDemandText(e.target.value);
+                    setError('');
+                  }}
+                />
+                {error && (
+                  <div className="mt-2 px-4 py-2 bg-red-50 text-red-600 text-sm rounded-md">
+                    {error}
+                  </div>
+                )}
+                
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="text-sm text-gray-500 mb-3">Tippek:</div>
+                  <ul className="space-y-2 text-sm text-gray-600">
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Minden fontos információt írjon le</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Adja meg a pontos helyszínt</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-500 mr-2">•</span>
+                      <span>Mikorra lenne szüksége a munkákra?</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            
+            <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4 mt-auto">
               <Button 
+                variant="outline" 
+                className="w-full h-14 text-base font-medium"
+                onClick={() => setOpen(false)}
+              >
+                Mégse
+              </Button>
+              <Button 
+                className="w-full h-14 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                 disabled={!demandText.trim() || loading} 
                 onClick={onAnalyze}
+                size="lg"
               >
                 {loading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Folyamatban...
+                  </>
                 ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
+                  <>
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Elemzés indítása
+                  </>
                 )}
-                Elemzés
               </Button>
             </DialogFooter>
-          </>
+          </div>
         )}
       </DialogContent>
     </Dialog>

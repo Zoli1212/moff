@@ -283,6 +283,10 @@ régi neon: postgresql://neondb_owner:npg_k7pwgiyFJ5bR@ep-steep-frost-a8tawktk-p
 # mobilos legyen az egész!
 # munkáink + számláink
 # erőforrásaink
+# követelmények
+# megosztások
+# kérdések
+ 
 --------
 #
 Tárgy: Lakásfelújítási ajánlatkérés – IX. kerületi lakás Dienes utca 11 sz.
