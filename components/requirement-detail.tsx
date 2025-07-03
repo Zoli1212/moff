@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useDemandStore } from "@/store/offerLetterStore";
+import { getOfferById } from "@/actions/offer-actions";
 import { ArrowLeft, Edit, X, Save, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import revalidatePath from "@/lib/revalidate-path";
 
 interface Requirement {
   id: number;
@@ -17,7 +21,10 @@ interface Requirement {
 interface RequirementDetailProps {
   requirement: Requirement;
   onBack: () => void;
-  onRequirementUpdated?: (updatedRequirement: { id: number; description: string }) => void;
+  onRequirementUpdated?: (updatedRequirement: {
+    id: number;
+    description: string;
+  }) => void;
 }
 
 export function RequirementDetail({
@@ -26,6 +33,8 @@ export function RequirementDetail({
   onRequirementUpdated,
 }: RequirementDetailProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { setStoredItems } = useDemandStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newText, setNewText] = useState("");
@@ -34,6 +43,37 @@ export function RequirementDetail({
     requirement.description || ""
   );
   const [isResubmitting, setIsResubmitting] = useState(false);
+  console.log(requirement, "REQ");
+
+  // Fetch offer and its items when component mounts
+  useEffect(() => {
+    const fetchOffer = async () => {
+      const offerId = searchParams.get('offerId');
+      if (offerId) {
+        try {
+          const offer = await getOfferById(parseInt(offerId));
+          if (offer && offer.items) {
+            // Transform items to match the TableItem format expected by the store
+            const tableItems = offer.items.map((item: { name: string; quantity: number; unit: string; unitPrice: number }) => ({
+              name: item.name,
+              quantity: item.quantity.toString(),
+              unit: item.unit,
+              materialUnitPrice: item.unitPrice.toString(),
+              workUnitPrice: '0', // Default value since it's not in the item
+              materialTotal: (item.unitPrice * item.quantity).toString(),
+              workTotal: '0' // Default value since it's not in the item
+            }));
+            
+            setStoredItems(tableItems);
+          }
+        } catch (error) {
+          console.error('Error fetching offer items:', error);
+        }
+      }
+    };
+
+    fetchOffer();
+  }, [searchParams, setStoredItems]);
 
   const handleSubmit = async () => {
     if (!newText.trim()) {
@@ -112,7 +152,7 @@ export function RequirementDetail({
 
       // Create a new record ID
       const recordId = crypto.randomUUID();
-      
+
       // Prepare the combined text with original requirement and new text
       const combinedText = `Eredeti követelmény: ${currentDescription}\n\nKiegészítő információk:\n${newText}`;
 
@@ -142,15 +182,18 @@ export function RequirementDetail({
 
       const poll = async () => {
         try {
-          const statusRes = await fetch(`/api/ai-demand-agent/status?eventId=${result.eventId}`);
+          const statusRes = await fetch(
+            `/api/ai-demand-agent/status?eventId=${result.eventId}`
+          );
           const { status } = await statusRes.json();
           console.log("Status:", status);
 
           if (status === "Completed") {
             setIsResubmitting(false);
+            revalidatePath("/offer");
             toast.success("Sikeresen feldolgozva!");
             // Redirect to the new offer page
-            router.push(`/ai-tools/ai-offer-letter/${recordId}`);
+            router.push(`/ai-tools/ai-offer-letter-mobile/${recordId}`);
             return;
           }
 
@@ -170,7 +213,6 @@ export function RequirementDetail({
       };
 
       poll();
-      
     } catch (error) {
       console.error("Error resubmitting requirement:", error);
       setError("Hiba történt az újraküldés során. Kérjük próbáld újra később.");
@@ -187,19 +229,23 @@ export function RequirementDetail({
         <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
           <div className="flex flex-col items-center">
             <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-3" />
-            <p className="text-base font-medium text-gray-700">Követelmény feldolgozása folyamatban...</p>
-            <p className="text-sm text-gray-500 mt-1">Kérem várjon, ez eltarthat néhány pillanatig</p>
+            <p className="text-base font-medium text-gray-700">
+              Követelmény feldolgozása folyamatban...
+            </p>
+            <p className="text-sm text-gray-500 mt-1">
+              Kérem várjon, ez eltarthat néhány pillanatig
+            </p>
           </div>
         </div>
       )}
-      
+
       <div className="space-y-6 flex-grow">
         {/* Header with back button */}
         <div className="flex items-center space-x-4 mb-6">
           <button
             onClick={onBack}
             disabled={isResubmitting}
-            className={`flex items-center ${isResubmitting ? 'text-gray-400 cursor-not-allowed' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+            className={`flex items-center ${isResubmitting ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"} transition-colors`}
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             Vissza az ajánlathoz
@@ -294,7 +340,9 @@ export function RequirementDetail({
                         }
                         className="bg-green-600 hover:bg-green-700 text-white flex-1 min-w-[120px] relative"
                       >
-                        <span className={`flex items-center ${isResubmitting ? 'invisible' : 'visible'}`}>
+                        <span
+                          className={`flex items-center ${isResubmitting ? "invisible" : "visible"}`}
+                        >
                           <Send className="h-4 w-4 mr-2" />
                           Újra beküldés
                         </span>

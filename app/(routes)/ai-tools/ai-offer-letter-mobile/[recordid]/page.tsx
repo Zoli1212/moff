@@ -12,8 +12,7 @@ import { useDemandStore } from "@/store/offerLetterStore";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { saveOfferWithRequirements } from "@/actions/offer-actions";
-import * as React from 'react'
-
+import * as React from "react";
 
 // Dynamically import the OfferLetterEmailSender component with SSR disabled
 const OfferLetterEmailSender = dynamic(
@@ -86,8 +85,6 @@ const parseOfferTable = (text: string) => {
 
   return items;
 };
-
-
 
 export default function OfferLetterResult() {
   const router = useRouter();
@@ -243,11 +240,10 @@ export default function OfferLetterResult() {
     console.log("🔍 storedItemsRef jelenlegi érték:", storedItemsRef.current);
   }, [editableItems]);
 
-
   useEffect(() => {
     const fetchOffer = async () => {
       if (!recordid) return;
-  
+
       try {
         const response = await axios.get(`/api/ai-offer-letter/${recordid}`);
         console.log(response.data, "DATA");
@@ -262,48 +258,48 @@ export default function OfferLetterResult() {
         setIsLoading(false);
       }
     };
-  
+
     fetchOffer();
   }, [recordid]);
 
   // Track if we've started saving
   const isSavingRef = useRef(false);
-  
+
   // Check localStorage to see if this offer was already saved and not expired
   const getSavedStatus = () => {
-    if (typeof window === 'undefined') return false;
-    
-    const savedOffers = JSON.parse(localStorage.getItem('savedOffers') || '{}');
-    const savedData = savedOffers[recordid || ''];
-    
+    if (typeof window === "undefined") return false;
+
+    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
+    const savedData = savedOffers[recordid || ""];
+
     // If no saved data or no expiration, consider it not saved
     if (!savedData) return false;
-    
+
     // Check if the saved data has expired (7 days)
     const now = Date.now();
     if (savedData.expires && savedData.expires < now) {
       // Remove expired entry
-      delete savedOffers[recordid || ''];
-      localStorage.setItem('savedOffers', JSON.stringify(savedOffers));
-      console.log('🗑️ Removed expired save status for offer:', recordid);
+      delete savedOffers[recordid || ""];
+      localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
+      console.log("🗑️ Removed expired save status for offer:", recordid);
       return false;
     }
-    
+
     return !!savedData.saved;
   };
-  
+
   // Save offer status with 7-day expiration
   const saveOfferStatus = (recordId: string) => {
-    if (typeof window === 'undefined') return;
-    
-    const savedOffers = JSON.parse(localStorage.getItem('savedOffers') || '{}');
+    if (typeof window === "undefined") return;
+
+    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
     savedOffers[recordId] = {
       saved: true,
       savedAt: new Date().toISOString(),
-      expires: Date.now() + (7 * 24 * 60 * 60 * 1000) // 7 days from now
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days from now
     };
-    localStorage.setItem('savedOffers', JSON.stringify(savedOffers));
-    console.log('💾 Saved offer status with expiration:', recordId);
+    localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
+    console.log("💾 Saved offer status with expiration:", recordId);
   };
 
   const [isAlreadySaved, setIsAlreadySaved] = useState(false);
@@ -313,7 +309,7 @@ export default function OfferLetterResult() {
     if (recordid) {
       const saved = getSavedStatus();
       setIsAlreadySaved(saved);
-      console.log('🔍 Checked saved status:', { recordid, saved });
+      console.log("🔍 Checked saved status:", { recordid, saved });
     }
   }, [recordid]);
 
@@ -321,71 +317,72 @@ export default function OfferLetterResult() {
     const saveOfferIfNeeded = async () => {
       // Don't proceed if we're already saving, have already saved, or if it was saved before
       if (isSavingRef.current || hasSavedRef.current || isAlreadySaved) {
-        console.log('⏭️ Save skipped - already saving/saved in this session or was saved before');
+        console.log(
+          "⏭️ Save skipped - already saving/saved in this session or was saved before"
+        );
         return;
       }
 
       if (!offer || !recordid) {
-        console.log('❌ Save aborted - missing offer or recordid');
+        console.log("❌ Save aborted - missing offer or recordid");
         return;
       }
-      
-      const contentToSave = typeof offer.content === "string"
-        ? offer.content
-        : offer.content?.output?.[0]?.content;
-  
+
+      const contentToSave =
+        typeof offer.content === "string"
+          ? offer.content
+          : offer.content?.output?.[0]?.content;
+
       if (!contentToSave) {
-        console.log('❌ Save aborted - no content to save');
+        console.log("❌ Save aborted - no content to save");
         return;
       }
 
       // Mark that we're starting the save process
       isSavingRef.current = true;
-      console.log('💾 Starting save process...', {
+      console.log("💾 Starting save process...", {
         recordid,
         contentLength: contentToSave.length,
         demandTextLength: demandText?.length || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-  
+
       try {
         const result = await saveOfferWithRequirements({
           recordId: recordid,
-          demandText: demandText || '',
+          demandText: demandText || "",
           offerContent: contentToSave,
         });
-  
+
         if (result.success) {
-          console.log('✅ Save successful');
+          console.log("✅ Save successful");
           // Save to localStorage that this offer was saved with expiration
-          if (typeof window !== 'undefined' && recordid) {
+          if (typeof window !== "undefined" && recordid) {
             saveOfferStatus(recordid);
           }
-          
+
           hasSavedRef.current = true;
           setHasSaved(true);
           setIsAlreadySaved(true);
           toast.success("Ajánlat sikeresen mentve!");
         } else {
-          console.error('❌ Save failed:', result);
+          console.error("❌ Save failed:", result);
           isSavingRef.current = false;
           toast.error("Hiba történt az ajánlat mentésekor");
         }
       } catch (error) {
-        console.error('❌ Error during save:', error);
+        console.error("❌ Error during save:", error);
         isSavingRef.current = false;
         toast.error("Váratlan hiba történt");
       }
     };
-  
+
     // Only start saving if we have all required data and it wasn't saved before
     if (offer && recordid && !isAlreadySaved) {
-      console.log('🔍 Found offer and recordid, checking if save is needed...');
+      console.log("🔍 Found offer and recordid, checking if save is needed...");
       saveOfferIfNeeded();
     }
   }, [offer, recordid, isAlreadySaved]); // Add isAlreadySaved to dependencies
-  
-  
 
   if (isLoading) {
     return <Loader2 className="animate-spin" />;
@@ -522,10 +519,7 @@ export default function OfferLetterResult() {
   return (
     <div className="container mx-auto p-4 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/offers")}
-        >
+        <Button variant="outline" onClick={() => router.push("/offers")}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Vissza
         </Button>
