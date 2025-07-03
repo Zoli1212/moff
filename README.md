@@ -335,17 +335,15 @@ Előre is köszönöm a segítségedet!
 Kovács Eszter
 
 # uj követelmény - # új követelmény
-# tételek legyenek 2 vagy 3 sorosak hogy lássa az egészet
+# tételek legyenek 2 vagy 3 sorosak hogy lássa az egészet, szerkesztésnél is
 # elküld megosztások
 # kérdések szekció pipával
-# el tudja küldeni, megosztás
-# sorra katitntok akkor akkor felugrik egy form
-# Követelmények pontosjtása
+# válasz mobilbarát formába jelnjen meg
+# Követelmények pontosítása
 # megosztások
 # kérdések
-# gomb tapadjon fel
-# rendezés legújabb legyen legfelül
-# szám legyen 1000 es szeparator
+
+
 Tárgy: Lakásfelújítási ajánlatkérés – II. kerületi társasházi lakás
 
 Kedves Asszisztens!

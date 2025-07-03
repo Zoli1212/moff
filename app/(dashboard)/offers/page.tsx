@@ -57,14 +57,23 @@ export default function OffersPage() {
     const loadOffers = async () => {
       try {
         const data = await getUserOffers();
-        // Transform data to match the Offer type
-        const transformedData = data.map((offer) => ({
-          ...offer,
-          notes: offer.notes?.map((note) =>
-            typeof note === "string" ? { content: note } : note
-          ) as Note[],
-          description: offer.description || undefined, // Convert null to undefined
-        }));
+        // Transform and sort data
+        const transformedData = data
+          .map((offer) => ({
+            ...offer,
+            notes: offer.notes?.map((note) =>
+              typeof note === "string" ? { content: note } : note
+            ) as Note[],
+            description: offer.description || undefined, // Convert null to undefined
+            // Ensure createdAt is a Date object for consistent sorting
+            createdAt: offer.createdAt ? new Date(offer.createdAt) : new Date(0),
+          }))
+          // Sort by createdAt in descending order (newest first)
+          .sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA; // Descending order
+          });
         setOffers(transformedData);
       } catch (error) {
         console.error("Error loading offers:", error);
