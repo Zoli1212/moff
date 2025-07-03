@@ -489,7 +489,7 @@ export default function OfferLetterResult() {
           if (status === "Completed") {
             setIsSending(false);
             // Only redirect after processing is complete
-            router.push(`/ai-tools/ai-offer-letter/${recordId}`);
+            router.push(`/ai-tools/ai-offer-letter-mobile/${recordId}`);
             return;
           }
 

@@ -334,40 +334,46 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       }
     }
   `;
-  
+
   // Function to handle print
   const handlePrint = () => {
-    const printWindow = window.open('', '', 'width=1000,height=800');
+    const printWindow = window.open("", "", "width=1000,height=800");
     if (!printWindow) return;
-    
+
     // Get the HTML for the print view
     const printContent = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${offer.title || 'Ajánlat'}</title>
+        <title>${offer.title || "Ajánlat"}</title>
         <meta charset="utf-8">
         <style>${printStyles}</style>
       </head>
       <body>
         <div id="printable-area">
           <div class="print-header">
-            <div class="print-title">${offer.title || 'Ajánlat'}</div>
+            <div class="print-title">${offer.title || "Ajánlat"}</div>
             <div class="print-meta">
-              <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || 'draft')}</div>
+              <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || "draft")}</div>
               <div><strong>Létrehozva:</strong> ${formatDate(offer.createdAt)}</div>
-              ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ''}
+              ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ""}
             </div>
           </div>
           
-          ${offer.description ? `
+          ${
+            offer.description
+              ? `
             <div class="print-section">
               <div class="print-section-title">Leírás</div>
-              <div>${offer.description.replace(/\n/g, '<br>')}</div>
+              <div>${offer.description.replace(/\n/g, "<br>")}</div>
             </div>
-          ` : ''}
+          `
+              : ""
+          }
           
-          ${items.length > 0 ? `
+          ${
+            items.length > 0
+              ? `
             <div class="print-section">
               <div class="print-section-title">Tételek</div>
               <table class="print-table">
@@ -384,52 +390,62 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  ${items.map((item, index) => `
+                  ${items
+                    .map(
+                      (item, index) => `
                     <tr>
                       <td class="text-center">${index + 1}.</td>
-                      <td>${item.name.replace(/^\*\s*/, '')}</td>
+                      <td>${item.name.replace(/^\*\s*/, "")}</td>
                       <td class="text-center">${item.quantity}</td>
                       <td class="text-center">${item.unit}</td>
-                      <td class="text-right">${item.materialUnitPrice || '0 Ft'}</td>
-                      <td class="text-right">${item.workUnitPrice || '0 Ft'}</td>
-                      <td class="text-right">${item.materialTotal || '0 Ft'}</td>
-                      <td class="text-right">${item.workTotal || '0 Ft'}</td>
+                      <td class="text-right">${item.materialUnitPrice || "0 Ft"}</td>
+                      <td class="text-right">${item.workUnitPrice || "0 Ft"}</td>
+                      <td class="text-right">${item.materialTotal || "0 Ft"}</td>
+                      <td class="text-right">${item.workTotal || "0 Ft"}</td>
                     </tr>
-                  `).join('')}
+                  `
+                    )
+                    .join("")}
                   <tr>
                     <td colspan="4" class="text-right font-bold">Munkadíj összesen:</td>
-                    <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString('hu-HU')} Ft</td>
+                    <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString("hu-HU")} Ft</td>
                   </tr>
                   <tr>
                     <td colspan="4" class="text-right font-bold">Anyagköltség összesen:</td>
-                    <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString('hu-HU')} Ft</td>
+                    <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString("hu-HU")} Ft</td>
                   </tr>
                   <tr>
                     <td colspan="4" class="text-right font-bold">Összesített nettó költség:</td>
-                    <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString('hu-HU')} Ft</td>
+                    <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString("hu-HU")} Ft</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          ` : ''}
+          `
+              : ""
+          }
           
-          ${notes.length > 0 ? `
+          ${
+            notes.length > 0
+              ? `
             <div class="print-section">
               <div class="print-section-title">Megjegyzések</div>
               <ul>
-                ${notes.map(note => `<li>• ${note}</li>`).join('')}
+                ${notes.map((note) => `<li>• ${note}</li>`).join("")}
               </ul>
             </div>
-          ` : ''}
+          `
+              : ""
+          }
         </div>
       </body>
       </html>
     `;
-    
+
     printWindow.document.open();
     printWindow.document.write(printContent);
     printWindow.document.close();
-    
+
     // Wait for content to load before printing
     printWindow.onload = () => {
       setTimeout(() => {
@@ -443,540 +459,543 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     <>
       <style>{printStyles}</style>
       <div className="flex flex-col h-full" id="printable-area">
-      <div className="space-y-6 flex-grow">
-        {/* Header with back button */}
-        <div className="flex items-center space-x-4 mb-6">
-          <button
-            onClick={onBack}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Vissza az ajánlatokhoz
-          </button>
-        </div>
-
-        {/* Offer Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {offer.title || "Ajánlat részletei"}
-            </h1>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                  <MoreVertical className="h-5 w-5 text-gray-600" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end">        
-                <DropdownMenuItem
-                  className="flex items-center cursor-pointer"
-                  onSelect={(e: Event) => {
-                    e.preventDefault();
-                    handlePrint();
-                  }}
-                >
-                  <Printer className="mr-2 h-4 w-4" />
-                  <span>Nyomtatás</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="flex items-center cursor-pointer"
-                  onSelect={(e: Event) => {
-                    e.preventDefault();
-                    navigator.clipboard.writeText(window.location.href);
-                    toast.success("Link a vágólapra másolva");
-                  }}
-                >
-                  <Copy className="mr-2 h-4 w-4" />
-                  <span>Link másolása</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <div className="px-2 py-1.5">
-                  <div className="text-xs font-medium text-gray-500 px-2 mb-1">
-                    Megosztás
-                  </div>
-                  <SocialShareButtons
-                    offer={{
-                      title: offer.title,
-                      description: offer.description,
-                      items: offer.items?.map((item) => ({
-                        id: item.id,
-                        name: item.name,
-                        quantity: item.quantity,
-                        unit: item.unit,
-                        materialUnitPrice: item.materialUnitPrice,
-                        workUnitPrice: item.workUnitPrice,
-                        materialTotal: item.materialTotal,
-                        workTotal: item.workTotal,
-                        // Backward compatibility
-                        unitPrice: item.workUnitPrice,
-                        totalPrice: item.workTotal,
-                      })),
-                      totalPrice: offer.totalPrice,
-                      createdAt: offer.createdAt,
-                      validUntil: offer.validUntil,
-                      status: offer.status,
-                      notes: offer.notes,
-                    }}
-                  />
-                </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+        <div className="space-y-6 flex-grow">
+          {/* Header with back button */}
+          <div className="flex items-center space-x-4 mb-6">
+            <button
+              onClick={onBack}
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 mr-2" />
+              Vissza az ajánlatokhoz
+            </button>
           </div>
 
-          <div className="flex flex-wrap gap-6 mt-4">
-            <div className="flex items-center text-gray-600">
-              <Tag className="h-4 w-4 mr-2 text-gray-400" />
-              <span>Státusz: </span>
-              <span className="ml-1 font-medium">
-                {getStatusDisplay(offer.status || "draft")}
-              </span>
+          {/* Offer Header */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="flex justify-between items-start mb-4">
+              <h1 className="text-2xl font-bold text-gray-900">
+                {offer.title || "Ajánlat részletei"}
+              </h1>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <MoreVertical className="h-5 w-5 text-gray-600" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuItem
+                    className="flex items-center cursor-pointer"
+                    onSelect={(e: Event) => {
+                      e.preventDefault();
+                      handlePrint();
+                    }}
+                  >
+                    <Printer className="mr-2 h-4 w-4" />
+                    <span>Nyomtatás</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="flex items-center cursor-pointer"
+                    onSelect={(e: Event) => {
+                      e.preventDefault();
+                      navigator.clipboard.writeText(window.location.href);
+                      toast.success("Link a vágólapra másolva");
+                    }}
+                  >
+                    <Copy className="mr-2 h-4 w-4" />
+                    <span>Link másolása</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-1.5">
+                    <div className="text-xs font-medium text-gray-500 px-2 mb-1">
+                      Megosztás
+                    </div>
+                    <SocialShareButtons
+                      offer={{
+                        title: offer.title,
+                        description: offer.description,
+                        items: offer.items?.map((item) => ({
+                          id: item.id,
+                          name: item.name,
+                          quantity: item.quantity,
+                          unit: item.unit,
+                          materialUnitPrice: item.materialUnitPrice,
+                          workUnitPrice: item.workUnitPrice,
+                          materialTotal: item.materialTotal,
+                          workTotal: item.workTotal,
+                          // Backward compatibility
+                          unitPrice: item.workUnitPrice,
+                          totalPrice: item.workTotal,
+                        })),
+                        totalPrice: offer.totalPrice,
+                        createdAt: offer.createdAt,
+                        validUntil: offer.validUntil,
+                        status: offer.status,
+                        notes: offer.notes,
+                      }}
+                    />
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
-            <div className="flex items-center text-gray-600">
-              <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-              <span>Létrehozva: </span>
-              <span className="ml-1 font-medium">
-                {formatDate(offer.createdAt)}
-              </span>
-            </div>
-
-            {offer.validUntil && (
+            <div className="flex flex-wrap gap-6 mt-4">
               <div className="flex items-center text-gray-600">
-                <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Érvényes: </span>
+                <Tag className="h-4 w-4 mr-2 text-gray-400" />
+                <span>Státusz: </span>
                 <span className="ml-1 font-medium">
-                  {formatDate(offer.validUntil)}
+                  {getStatusDisplay(offer.status || "draft")}
                 </span>
               </div>
-            )}
+
+              <div className="flex items-center text-gray-600">
+                <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                <span>Létrehozva: </span>
+                <span className="ml-1 font-medium">
+                  {formatDate(offer.createdAt)}
+                </span>
+              </div>
+
+              {offer.validUntil && (
+                <div className="flex items-center text-gray-600">
+                  <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>Érvényes: </span>
+                  <span className="ml-1 font-medium">
+                    {formatDate(offer.validUntil)}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <AlertCircle className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-700">
+                    <span className="font-medium">Összeg: </span>
+                    <span className="font-bold text-lg">
+                      {editingItemId !== null
+                        ? formatPrice(calculateTotals().total)
+                        : offer.totalPrice?.toLocaleString("hu-HU")}{" "}
+                      Ft
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <AlertCircle className="h-5 w-5 text-blue-400" />
+          {/* Description Section */}
+          {offer.description && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-gray-500" />
+                  Leírás
+                </h2>
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  <span className="font-medium">Összeg: </span>
-                  <span className="font-bold text-lg">
-                    {editingItemId !== null
-                      ? formatPrice(calculateTotals().total)
-                      : offer.totalPrice?.toLocaleString("hu-HU")}{" "}
-                    Ft
-                  </span>
+              <div className="p-6">
+                <p className="text-gray-700 whitespace-pre-line">
+                  {offer.description}
                 </p>
               </div>
             </div>
-          </div>
+          )}
         </div>
-
-        {/* Description Section */}
-        {offer.description && (
+        {/* Notes Section */}
+        {notes.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <FileText className="h-5 w-5 mr-2 text-gray-500" />
-                Leírás
+                <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
+                Megjegyzések
               </h2>
             </div>
             <div className="p-6">
-              <p className="text-gray-700 whitespace-pre-line">
-                {offer.description}
-              </p>
+              <ul className="space-y-4">
+                {notes.map((note, index) => (
+                  <li key={index} className="flex items-start">
+                    <div className="flex-shrink-0 h-5 w-5 text-gray-400">•</div>
+                    <p className="ml-2 text-sm text-gray-700">{note}</p>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         )}
-      </div>
-      {/* Notes Section */}
-      {notes.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
-              Megjegyzések
-            </h2>
+
+        {/* Requirements Section */}
+        {offer.requirement && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => setShowRequirementDetail(true)}
+              className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <List className="h-5 w-5 mr-2 text-gray-500" />
+                Követelmény
+                <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                  1
+                </span>
+              </h2>
+              <ChevronRight className="h-5 w-5 text-gray-500" />
+            </button>
           </div>
-          <div className="p-6">
-            <ul className="space-y-4">
-              {notes.map((note, index) => (
-                <li key={index} className="flex items-start">
-                  <div className="flex-shrink-0 h-5 w-5 text-gray-400">•</div>
-                  <p className="ml-2 text-sm text-gray-700">{note}</p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Requirements Section */}
-      {offer.requirement && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <button
-            onClick={() => setShowRequirementDetail(true)}
-            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
-          >
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <List className="h-5 w-5 mr-2 text-gray-500" />
-              Követelmény
-              <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                1
-              </span>
-            </h2>
-            <ChevronRight className="h-5 w-5 text-gray-500" />
-          </button>
-        </div>
-      )}
-
-      {/* Items Section - Pushed to bottom */}
-      {items.length > 0 && (
-        <div className="mt-auto">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-8">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                  <List className="h-5 w-5 mr-2 text-gray-500" />
-                  Tételek
-                </h2>
+        {/* Items Section - Pushed to bottom */}
+        {items.length > 0 && (
+          <div className="mt-auto">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-8">
+              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <div className="flex items-center space-x-4">
+                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <List className="h-5 w-5 mr-2 text-gray-500" />
+                    Tételek
+                  </h2>
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleAddItem}
+                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <Plus className="h-4 w-4 mr-1" /> Új tétel
+                  </button>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={handleAddItem}
-                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Új tétel
-                </button>
-              </div>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"
-                    >
-                      #
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      Tétel megnevezése
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
-                    >
-                      Mennyiség
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
-                    >
-                      Egység
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
-                    >
-                      Anyag egységár
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
-                    >
-                      Díj egységár
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
-                    >
-                      Anyag összesen
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
-                    >
-                      Díj összesen
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {items.map((item, index) => (
-                    <tr
-                      key={index}
-                      id={`item-${item.id || index}`}
-                      className={`hover:bg-gray-50 ${editingItemId === index ? "bg-blue-50" : ""}`}
-                    >
-                      {/* # */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        {index + 1}.
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-8"
+                      >
+                        #
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
+                        Tétel megnevezése
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
+                      >
+                        Mennyiség
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
+                      >
+                        Egység
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                      >
+                        Anyag egységár
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                      >
+                        Díj egységár
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                      >
+                        Anyag összesen
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+                      >
+                        Díj összesen
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {items.map((item, index) => (
+                      <tr
+                        key={index}
+                        id={`item-${item.id || index}`}
+                        className={`hover:bg-gray-50 ${editingItemId === index ? "bg-blue-50" : ""}`}
+                      >
+                        {/* # */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                          {index + 1}.
+                        </td>
 
-                      {/* Tétel megnevezése */}
-                      <td className="px-4 py-3 text-sm text-gray-900">
-                        {editingItemId === index ? (
-                          <input
-                            type="text"
-                            className="w-full p-1 border rounded"
-                            value={item.name}
-                            onChange={(e) =>
-                              handleItemChange(index, "name", e.target.value)
-                            }
-                          />
-                        ) : (
-                          <div
-                            className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
-                            onClick={() => startEditing(index)}
-                          >
-                            {item.name.replace(/^\*\s*/, "")}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Mennyiség */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
-                        {editingItemId === index ? (
-                          <input
-                            type="text"
-                            className="w-20 p-1 border rounded"
-                            value={item.quantity}
-                            onChange={(e) =>
-                              handleItemChange(
-                                index,
-                                "quantity",
-                                e.target.value
-                              )
-                            }
-                          />
-                        ) : (
-                          <div
-                            className="cursor-pointer hover:bg-gray-100 p-1 rounded"
-                            onClick={() => startEditing(index)}
-                          >
-                            {item.quantity}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Egység */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
-                        {editingItemId === index ? (
-                          <input
-                            type="text"
-                            className="w-20 p-1 border rounded"
-                            value={item.unit}
-                            onChange={(e) =>
-                              handleItemChange(index, "unit", e.target.value)
-                            }
-                          />
-                        ) : (
-                          <div
-                            className="cursor-pointer hover:bg-gray-100 p-1 rounded"
-                            onClick={() => startEditing(index)}
-                          >
-                            {item.unit}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Anyag egységár */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                        {editingItemId === index ? (
-                          <div className="flex items-center justify-end">
+                        {/* Tétel megnevezése */}
+                        <td className="px-4 py-3 text-sm text-gray-900">
+                          {editingItemId === index ? (
                             <input
                               type="text"
-                              className="w-24 p-1 border rounded text-right"
-                              value={
-                                item.materialUnitPrice?.replace(/\s*Ft$/, "") ||
-                                "0"
-                              }
+                              className="w-full p-1 border rounded"
+                              value={item.name}
                               onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "materialUnitPrice",
-                                  e.target.value
-                                )
+                                handleItemChange(index, "name", e.target.value)
                               }
                             />
-                            <span className="ml-1">Ft</span>
-                          </div>
-                        ) : (
-                          <div
-                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
-                            onClick={() => startEditing(index)}
-                          >
-                            {item.materialUnitPrice || "0 Ft"}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Díj egységár */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
-                        {editingItemId === index ? (
-                          <div className="flex items-center justify-end">
-                            <input
-                              type="text"
-                              className="w-24 p-1 border rounded text-right"
-                              value={
-                                item.workUnitPrice?.replace(/\s*Ft$/, "") || "0"
-                              }
-                              onChange={(e) =>
-                                handleItemChange(
-                                  index,
-                                  "workUnitPrice",
-                                  e.target.value
-                                )
-                              }
-                            />
-                            <span className="ml-1">Ft</span>
-                          </div>
-                        ) : (
-                          <div
-                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
-                            onClick={() => startEditing(index)}
-                          >
-                            {item.workUnitPrice || "0 Ft"}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Anyag összesen */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                        {editingItemId === index ? (
-                          <div className="flex items-center justify-end">
-                            <input
-                              type="text"
-                              className="w-24 p-1 border rounded text-right"
-                              value={item.materialTotal.replace(/\s*Ft$/, "")}
-                              readOnly
-                            />
-                            <span className="ml-1">Ft</span>
-                          </div>
-                        ) : (
-                          <div
-                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
-                            onClick={() => startEditing(index)}
-                          >
-                            {formatPrice(parseCurrency(item.materialTotal))}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Díj összesen */}
-                      <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
-                        {editingItemId === index ? (
-                          <div className="flex items-center justify-end">
-                            <input
-                              type="text"
-                              className="w-24 p-1 border rounded text-right"
-                              value={item.workTotal.replace(/\s*Ft$/, "")}
-                              readOnly
-                            />
-                            <span className="ml-1">Ft</span>
-                          </div>
-                        ) : (
-                          <div
-                            className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
-                            onClick={() => startEditing(index)}
-                          >
-                            {formatPrice(parseCurrency(item.workTotal))}
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Műveletek */}
-                      <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-right">
-                        {editingItemId === index ? (
-                          <div className="flex space-x-2 justify-end">
-                            <button
-                              onClick={() => cancelEditing(index)}
-                              className="px-2 py-1 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
-                              disabled={isSaving}
-                            >
-                              Mégse
-                            </button>
-                            <button
-                              onClick={() => saveItem(index)}
-                              className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
-                              disabled={isSaving}
-                            >
-                              {isSaving ? "Mentés..." : "Mentés"}
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex space-x-2 justify-end">
-                            <button
+                          ) : (
+                            <div
+                              className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
                               onClick={() => startEditing(index)}
-                              className="p-1 text-blue-600 rounded-full hover:bg-blue-50"
-                              title="Szerkesztés"
                             >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (
-                                  window.confirm(
-                                    "Biztosan törölni szeretné ezt a tételt?"
-                                  )
-                                ) {
-                                  handleRemoveItem(index);
+                              {item.name.replace(/^\*\s*/, "")}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Mennyiség */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
+                          {editingItemId === index ? (
+                            <input
+                              type="text"
+                              className="w-20 p-1 border rounded"
+                              value={item.quantity}
+                              onChange={(e) =>
+                                handleItemChange(
+                                  index,
+                                  "quantity",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                              onClick={() => startEditing(index)}
+                            >
+                              {item.quantity}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Egység */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-left">
+                          {editingItemId === index ? (
+                            <input
+                              type="text"
+                              className="w-20 p-1 border rounded"
+                              value={item.unit}
+                              onChange={(e) =>
+                                handleItemChange(index, "unit", e.target.value)
+                              }
+                            />
+                          ) : (
+                            <div
+                              className="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                              onClick={() => startEditing(index)}
+                            >
+                              {item.unit}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Anyag egységár */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                          {editingItemId === index ? (
+                            <div className="flex items-center justify-end">
+                              <input
+                                type="text"
+                                className="w-24 p-1 border rounded text-right"
+                                value={
+                                  item.materialUnitPrice?.replace(
+                                    /\s*Ft$/,
+                                    ""
+                                  ) || "0"
                                 }
-                              }}
-                              className="p-1 text-red-600 rounded-full hover:bg-red-50"
-                              title="Törlés"
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "materialUnitPrice",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <span className="ml-1">Ft</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                              onClick={() => startEditing(index)}
                             >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        )}
+                              {item.materialUnitPrice || "0 Ft"}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Díj egységár */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500 text-right">
+                          {editingItemId === index ? (
+                            <div className="flex items-center justify-end">
+                              <input
+                                type="text"
+                                className="w-24 p-1 border rounded text-right"
+                                value={
+                                  item.workUnitPrice?.replace(/\s*Ft$/, "") ||
+                                  "0"
+                                }
+                                onChange={(e) =>
+                                  handleItemChange(
+                                    index,
+                                    "workUnitPrice",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <span className="ml-1">Ft</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                              onClick={() => startEditing(index)}
+                            >
+                              {item.workUnitPrice || "0 Ft"}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Anyag összesen */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                          {editingItemId === index ? (
+                            <div className="flex items-center justify-end">
+                              <input
+                                type="text"
+                                className="w-24 p-1 border rounded text-right"
+                                value={item.materialTotal.replace(/\s*Ft$/, "")}
+                                readOnly
+                              />
+                              <span className="ml-1">Ft</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                              onClick={() => startEditing(index)}
+                            >
+                              {formatPrice(parseCurrency(item.materialTotal))}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Díj összesen */}
+                        <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right">
+                          {editingItemId === index ? (
+                            <div className="flex items-center justify-end">
+                              <input
+                                type="text"
+                                className="w-24 p-1 border rounded text-right"
+                                value={item.workTotal.replace(/\s*Ft$/, "")}
+                                readOnly
+                              />
+                              <span className="ml-1">Ft</span>
+                            </div>
+                          ) : (
+                            <div
+                              className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
+                              onClick={() => startEditing(index)}
+                            >
+                              {formatPrice(parseCurrency(item.workTotal))}
+                            </div>
+                          )}
+                        </td>
+
+                        {/* Műveletek */}
+                        <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-right">
+                          {editingItemId === index ? (
+                            <div className="flex space-x-2 justify-end">
+                              <button
+                                onClick={() => cancelEditing(index)}
+                                className="px-2 py-1 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
+                                disabled={isSaving}
+                              >
+                                Mégse
+                              </button>
+                              <button
+                                onClick={() => saveItem(index)}
+                                className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
+                                disabled={isSaving}
+                              >
+                                {isSaving ? "Mentés..." : "Mentés"}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex space-x-2 justify-end">
+                              <button
+                                onClick={() => startEditing(index)}
+                                className="p-1 text-blue-600 rounded-full hover:bg-blue-50"
+                                title="Szerkesztés"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (
+                                    window.confirm(
+                                      "Biztosan törölni szeretné ezt a tételt?"
+                                    )
+                                  ) {
+                                    handleRemoveItem(index);
+                                  }
+                                }}
+                                className="p-1 text-red-600 rounded-full hover:bg-red-50"
+                                title="Törlés"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+
+                    {/* Összesítő sorok */}
+                    <tr className="bg-gray-50 border-t-2 border-gray-200">
+                      <td
+                        colSpan={8}
+                        className="px-4 py-3 text-right text-sm font-medium text-gray-700"
+                      >
+                        Munkadíj összesen:
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
+                        {workTotal.toLocaleString("hu-HU")} Ft
                       </td>
                     </tr>
-                  ))}
-
-                  {/* Összesítő sorok */}
-                  <tr className="bg-gray-50 border-t-2 border-gray-200">
-                    <td
-                      colSpan={8}
-                      className="px-4 py-3 text-right text-sm font-medium text-gray-700"
-                    >
-                      Munkadíj összesen:
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                      {workTotal.toLocaleString("hu-HU")} Ft
-                    </td>
-                  </tr>
-                  <tr className="bg-gray-50">
-                    <td
-                      colSpan={8}
-                      className="px-4 py-3 text-right text-sm font-medium text-gray-700"
-                    >
-                      Anyagköltség összesen:
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                      {materialTotal.toLocaleString("hu-HU")} Ft
-                    </td>
-                  </tr>
-                  <tr className="bg-gray-100 border-t-2 border-gray-300">
-                    <td
-                      colSpan={8}
-                      className="px-4 py-3 text-right text-sm font-bold text-gray-900"
-                    >
-                      Összesített nettó költség:
-                    </td>
-                    <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
-                      {grandTotal.toLocaleString("hu-HU")} Ft
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    <tr className="bg-gray-50">
+                      <td
+                        colSpan={8}
+                        className="px-4 py-3 text-right text-sm font-medium text-gray-700"
+                      >
+                        Anyagköltség összesen:
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
+                        {materialTotal.toLocaleString("hu-HU")} Ft
+                      </td>
+                    </tr>
+                    <tr className="bg-gray-100 border-t-2 border-gray-300">
+                      <td
+                        colSpan={8}
+                        className="px-4 py-3 text-right text-sm font-bold text-gray-900"
+                      >
+                        Összesített nettó költség:
+                      </td>
+                      <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
+                        {grandTotal.toLocaleString("hu-HU")} Ft
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </>
   );

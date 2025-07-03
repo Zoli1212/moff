@@ -143,3 +143,45 @@ export async function createRequirement(
     };
   }
 }
+
+export async function updateRequirement(
+  requirementId: number,
+  data: {
+    title?: string;
+    description?: string;
+    status?: string;
+  }
+) {
+  try {
+    const updatedRequirement = await prisma.requirement.update({
+      where: { id: requirementId },
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.description && { description: data.description }),
+        ...(data.status && { status: data.status }),
+        updatedAt: new Date(),
+      },
+      include: {
+        myWork: true,
+      },
+    });
+
+    // Revalidate the requirement page and related paths
+    revalidatePath(`/offers/${requirementId}`);
+    
+    if (updatedRequirement.myWork) {
+      revalidatePath(`/jobs/${updatedRequirement.myWork.id}/requirements`);
+    }
+
+    return { 
+      success: true, 
+      data: updatedRequirement,
+    };
+  } catch (error) {
+    console.error("Error updating requirement:", error);
+    return {
+      success: false,
+      error: "Hiba történt a követelmény frissítése közben",
+    };
+  }
+}

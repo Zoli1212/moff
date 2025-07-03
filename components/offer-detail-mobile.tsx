@@ -97,10 +97,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   };
 
   // Format number with space as thousand separator
-  const formatNumberWithSpace = (value: string | number | null | undefined): string => {
-    if (value === null || value === undefined) return '';
-    const num = typeof value === 'string' ? parseFloat(value.replace(/\s+/g, '').replace(',', '.')) || 0 : value;
-    return num.toLocaleString('hu-HU', { useGrouping: true, maximumFractionDigits: 0 });
+  const formatNumberWithSpace = (
+    value: string | number | null | undefined
+  ): string => {
+    if (value === null || value === undefined) return "";
+    const num =
+      typeof value === "string"
+        ? parseFloat(value.replace(/\s+/g, "").replace(",", ".")) || 0
+        : value;
+    return num.toLocaleString("hu-HU", {
+      useGrouping: true,
+      maximumFractionDigits: 0,
+    });
   };
 
   // // Handle item field change
@@ -551,13 +559,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <div className="col-span-3 flex items-center">
                   <Input
                     id="materialUnitPrice"
-                    value={
-                      formatNumberWithSpace(
-                        editingItem?.item.materialUnitPrice?.replace(/\s*Ft$/, "")
-                      )
-                    }
+                    value={formatNumberWithSpace(
+                      editingItem?.item.materialUnitPrice?.replace(/\s*Ft$/, "")
+                    )}
                     onChange={(e) =>
-                      handleModalChange("materialUnitPrice", e.target.value.replace(/\s+/g, ''))
+                      handleModalChange(
+                        "materialUnitPrice",
+                        e.target.value.replace(/\s+/g, "")
+                      )
                     }
                     className="text-right"
                   />
@@ -571,13 +580,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <div className="col-span-3 flex items-center">
                   <Input
                     id="workUnitPrice"
-                    value={
-                      formatNumberWithSpace(
-                        editingItem?.item.workUnitPrice?.replace(/\s*Ft$/, "")
-                      )
-                    }
+                    value={formatNumberWithSpace(
+                      editingItem?.item.workUnitPrice?.replace(/\s*Ft$/, "")
+                    )}
                     onChange={(e) =>
-                      handleModalChange("workUnitPrice", e.target.value.replace(/\s+/g, ''))
+                      handleModalChange(
+                        "workUnitPrice",
+                        e.target.value.replace(/\s+/g, "")
+                      )
                     }
                     className="text-right"
                   />
@@ -587,13 +597,19 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
                 <Label className="text-right font-medium">Anyag összesen</Label>
                 <div className="col-span-3 font-medium">
-                  {formatNumberWithSpace(editingItem?.item.materialTotal?.replace(/\s*Ft$/, ""))} Ft
+                  {formatNumberWithSpace(
+                    editingItem?.item.materialTotal?.replace(/\s*Ft$/, "")
+                  )}{" "}
+                  Ft
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right font-medium">Díj összesen</Label>
                 <div className="col-span-3 font-medium">
-                  {formatNumberWithSpace(editingItem?.item.workTotal?.replace(/\s*Ft$/, ""))} Ft
+                  {formatNumberWithSpace(
+                    editingItem?.item.workTotal?.replace(/\s*Ft$/, "")
+                  )}{" "}
+                  Ft
                 </div>
               </div>
             </div>
@@ -886,7 +902,12 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                   onClick={() => startEditing(index)}
                                 >
                                   {item.materialUnitPrice
-                                    ? formatNumberWithSpace(item.materialUnitPrice.replace(/\s*Ft$/, "")) + " Ft"
+                                    ? formatNumberWithSpace(
+                                        item.materialUnitPrice.replace(
+                                          /\s*Ft$/,
+                                          ""
+                                        )
+                                      ) + " Ft"
                                     : "0 Ft"}
                                 </div>
                               </td>
@@ -896,7 +917,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                   onClick={() => startEditing(index)}
                                 >
                                   {item.workUnitPrice
-                                    ? formatNumberWithSpace(item.workUnitPrice.replace(/\s*Ft$/, "")) + " Ft"
+                                    ? formatNumberWithSpace(
+                                        item.workUnitPrice.replace(/\s*Ft$/, "")
+                                      ) + " Ft"
                                     : "0 Ft"}
                                 </div>
                               </td>
@@ -913,13 +936,17 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                 </div>
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap text-right">
-                                {item.materialTotal 
-                                  ? formatNumberWithSpace(item.materialTotal.replace(/\s*Ft$/, "")) + " Ft"
+                                {item.materialTotal
+                                  ? formatNumberWithSpace(
+                                      item.materialTotal.replace(/\s*Ft$/, "")
+                                    ) + " Ft"
                                   : "0 Ft"}
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap text-right">
-                                {item.workTotal 
-                                  ? formatNumberWithSpace(item.workTotal.replace(/\s*Ft$/, "")) + " Ft"
+                                {item.workTotal
+                                  ? formatNumberWithSpace(
+                                      item.workTotal.replace(/\s*Ft$/, "")
+                                    ) + " Ft"
                                   : "0 Ft"}
                               </td>
                             </tr>

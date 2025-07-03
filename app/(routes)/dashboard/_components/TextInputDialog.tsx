@@ -29,6 +29,8 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
   const [error, setError] = useState('');
   const router = useRouter();
 
+  console.log('opened')
+
   const onAnalyze = async () => {
     if (!demandText.trim()) {
       setError('Kérjük adj meg egy szöveget az elemzéshez!');
