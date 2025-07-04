@@ -282,7 +282,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         },
       });
 
-      console.log("✅ Offer created successfully:", {
+      console.log("Offer created successfully:", {
         id: offer.id,
         title: offer.title,
         recordId: recordId || "N/A",

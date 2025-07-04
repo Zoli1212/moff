@@ -60,14 +60,15 @@ export function RequirementDetail({
                 quantity: number;
                 unit: string;
                 unitPrice: number;
+                materialUnitPrice: number;
               }) => ({
                 name: item.name,
                 quantity: item.quantity.toString(),
                 unit: item.unit,
-                materialUnitPrice: item.unitPrice.toString(),
-                workUnitPrice: "0", // Default value since it's not in the item
-                materialTotal: (item.unitPrice * item.quantity).toString(),
-                workTotal: "0", // Default value since it's not in the item
+                materialUnitPrice: item.materialUnitPrice || "0",
+                workUnitPrice: item.unitPrice.toString(), // Default value since it's not in the item
+                materialTotal: (item.materialUnitPrice * item.quantity).toString(),
+                workTotal: (item.unitPrice * item.quantity).toString(), // Default value since it's not in the item
               })
             );
 
