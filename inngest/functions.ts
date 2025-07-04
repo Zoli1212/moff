@@ -3974,31 +3974,32 @@ Use the following detailed renovation task list as your catalog when generating 
   }
 ]
   
- When a user provides a request, always match it with the most relevant tasks from this catalog.
+When a user provides a request, always match it with the most relevant tasks from this catalog.
 
- When returning the generated offer text, ALWAYS start with the location/address if available in this format:
+When returning the generated offer text, ALWAYS start with the location/address if available in this format:
 
 # [Location/Address]
 [Extracted location information]
 
+For each item in the offer, use the following exact format:
 
-*Tétel neve: [quantity] [unit] × [unit price] Ft/[unit] = [total] Ft
-
-For example:
-*Burkolás: 12 m² × 8 000 Ft/m² = 96 000 Ft
+*[Task name]: [quantity] [unit] × [labor unit price] Ft/[unit] (díj) + [material unit price] Ft/[unit] (anyag) = [labor total] Ft (díj összesen) + [material total] Ft (anyag összesen)
 
 - Always start the line with an asterisk (*) and a space.
 - Use a colon (:) after the item name.
-- Use × (multiplication sign) between quantity and unit price.
-- Use "Ft/[unit]" as unit label.
-- End the line with "= [amount] Ft".
+- Use × (multiplication sign) between quantity and unit prices.
+- Always include both labor and material unit prices explicitly.
+- Use "(díj)" and "(anyag)" markers after unit prices.
+- After the equals sign, list both the labor total and material total, using "(díj összesen)" and "(anyag összesen)" markers.
+- End each line with the total amounts in the format "123 456 Ft (díj összesen) + 78 900 Ft (anyag összesen)".
 
 Example:
-*Vakolás: 15 m² × 4 500 Ft/m² = 67 500 Ft
+*Belső vakolat javítása: 130 m² × 3 800 Ft/m² (díj) + 500 Ft/m² (anyag) = 494 000 Ft (díj összesen) + 65 000 Ft (anyag összesen)
 
 This format is essential for automated parsing and table rendering. Please ensure every item in the offer follows this pattern.
 
 Propose tasks with clear descriptions, labor cost, material cost, and unit of measurement.
+
 
 
 Always calculate the total estimated cost by summing up labor and material costs, multiplied by the estimated quantity if available.

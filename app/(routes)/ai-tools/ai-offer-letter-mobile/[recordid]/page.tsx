@@ -63,28 +63,26 @@ const parseOfferTable = (text: string) => {
     const trimmed = line.trim().replace(/^\*+/, "");
 
     const match = trimmed.match(
-      /^(.*?)[:\-–—\s]*([\d\s,.]+)\s*(m²|fm|db)\s*[xX×]\s*([\d\s,.]+)\s*Ft\/(m²|fm|db).*?=\s*([\d\s,.]+)\s*Ft/i
+      /^(.*?)[:\-–—\s]*([\d\s,.]+)\s*(m²|fm|db)\s*[xX×]\s*([\d\s,.]+)\s*Ft\/\3\s*\(díj\)\s*\+\s*([\d\s,.]+)\s*Ft\/\3\s*\(anyag\)\s*=\s*([\d\s,.]+)\s*Ft\s*\(díj összesen\)\s*\+\s*([\d\s,.]+)\s*Ft\s*\(anyag összesen\)/i
     );
 
     if (match) {
-      const [, name, qty, unit, unitPrice, unit2, total] = match;
-      console.log(unit2);
+      const [, name, qty, unit, laborUnit, materialUnit, laborTotal, materialTotal] = match;
       items.push({
         name: name.trim(),
         quantity: qty.trim(),
         unit: unit.trim(),
-        materialUnitPrice: "0 Ft",
-        workUnitPrice:
-          parseInt(unitPrice.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") +
-          " Ft",
-        materialTotal: "0 Ft",
-        workTotal: total.trim() + " Ft",
+        workUnitPrice: parseInt(laborUnit.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") + " Ft",
+        materialUnitPrice: parseInt(materialUnit.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") + " Ft",
+        workTotal: laborTotal.trim() + " Ft",
+        materialTotal: materialTotal.trim() + " Ft",
       });
     }
   }
 
   return items;
 };
+
 
 export default function OfferLetterResult() {
   const router = useRouter();

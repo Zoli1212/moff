@@ -64,28 +64,36 @@ const parseOfferTable = (text: string) => {
     const trimmed = line.trim().replace(/^\*+/, "");
 
     const match = trimmed.match(
-      /^(.*?)[:\-–—\s]*([\d\s,.]+)\s*(m²|fm|db)\s*[xX×]\s*([\d\s,.]+)\s*Ft\/(m²|fm|db).*?=\s*([\d\s,.]+)\s*Ft/i
+      /^(.+?):\s*([\d\s,.]+)\s*(m²|fm|db)\s*[×xX]\s*([\d\s,.]+)\s*Ft\/\3\s*\(díj\)\s*\+\s*([\d\s,.]+)\s*Ft\/\3\s*\(anyag\)\s*=\s*([\d\s,.]+)\s*Ft\s*\(díj összesen\)\s*\+\s*([\d\s,.]+)\s*Ft\s*\(anyag összesen\)/i
     );
 
     if (match) {
-      const [, name, qty, unit, unitPrice, unit2, total] = match;
-      console.log(unit2);
+      const [
+        _,
+        name,
+        qty,
+        unit,
+        laborUnitPrice,
+        materialUnitPrice,
+        laborTotal,
+        materialTotal
+      ] = match;
+
       items.push({
-        name: name.trim(),
-        quantity: qty.trim(),
-        unit: unit.trim(),
-        materialUnitPrice: "0 Ft",
-        workUnitPrice:
-          parseInt(unitPrice.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") +
-          " Ft",
-        materialTotal: "0 Ft",
-        workTotal: total.trim() + " Ft",
+        name: (name ?? '').trim(),
+        quantity: (qty ?? '').trim(),
+        unit: (unit ?? '').trim(),
+        workUnitPrice: (laborUnitPrice ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        materialUnitPrice: (materialUnitPrice ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        workTotal: (laborTotal ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        materialTotal: (materialTotal ?? '').toString().trim().replace(/\s/g, '') + ' Ft'
       });
     }
   }
 
   return items;
 };
+
 
 
 
@@ -313,7 +321,7 @@ export default function OfferLetterResult() {
     if (recordid) {
       const saved = getSavedStatus();
       setIsAlreadySaved(saved);
-      console.log('🔍 Checked saved status:', { recordid, saved });
+      console.log("Checked saved status:", { recordid, saved });
     }
   }, [recordid]);
 
@@ -321,12 +329,12 @@ export default function OfferLetterResult() {
     const saveOfferIfNeeded = async () => {
       // Don't proceed if we're already saving, have already saved, or if it was saved before
       if (isSavingRef.current || hasSavedRef.current || isAlreadySaved) {
-        console.log('⏭️ Save skipped - already saving/saved in this session or was saved before');
+        console.log('Save skipped - already saving/saved in this session or was saved before');
         return;
       }
 
       if (!offer || !recordid) {
-        console.log('❌ Save aborted - missing offer or recordid');
+        console.log('Save aborted - missing offer or recordid');
         return;
       }
       

@@ -25,6 +25,9 @@ interface ParsedOfferContent {
     quantity: string;
     unit: string;
     unitPrice: string;
+    materialUnitPrice: string;
+    workTotal: string;
+    materialTotal: string;
     totalPrice: string;
   }>;
   notes?: string[];
@@ -491,7 +494,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
                   quantity: item.quantity || "0",
                   unit: item.unit || "db",
                   materialUnitPrice: item.materialUnitPrice || "0",
-                  workUnitPrice: item.workUnitPrice || "0",
+                  unitPrice: item.unitPrice || "0",
                   materialTotal: item.materialTotal || "0",
                   workTotal: item.workTotal || "0",
                   description: item.description || "",

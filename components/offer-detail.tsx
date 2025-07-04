@@ -61,7 +61,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
         quantity: item.quantity || "1",
         unit: item.unit || "db",
         materialUnitPrice: item.materialUnitPrice || "0 Ft",
-        workUnitPrice: item.workUnitPrice || "0 Ft",
+        unitPrice: item.unitPrice || "0 Ft",
         materialTotal: item.materialTotal || "0 Ft",
         workTotal: item.workTotal || "0 Ft",
       }));
@@ -91,7 +91,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     if (["quantity", "materialUnitPrice", "workUnitPrice"].includes(field)) {
       const quantity = parseFloat(item.quantity) || 0;
       const materialUnitPrice = parseCurrency(item.materialUnitPrice);
-      const workUnitPrice = parseCurrency(item.workUnitPrice);
+      const workUnitPrice = parseCurrency(item.unitPrice);
 
       item.materialTotal = formatCurrency(quantity * materialUnitPrice);
       item.workTotal = formatCurrency(quantity * workUnitPrice);
@@ -109,7 +109,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       quantity: "1",
       unit: "db",
       materialUnitPrice: "0 Ft",
-      workUnitPrice: "0 Ft",
+      unitPrice: "0 Ft",
       materialTotal: "0 Ft",
       workTotal: "0 Ft",
     };
@@ -399,7 +399,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                       <td class="text-center">${item.quantity}</td>
                       <td class="text-center">${item.unit}</td>
                       <td class="text-right">${item.materialUnitPrice || "0 Ft"}</td>
-                      <td class="text-right">${item.workUnitPrice || "0 Ft"}</td>
+                      <td class="text-right">${item.unitPrice || "0 Ft"}</td>
                       <td class="text-right">${item.materialTotal || "0 Ft"}</td>
                       <td class="text-right">${item.workTotal || "0 Ft"}</td>
                     </tr>
@@ -520,11 +520,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                           quantity: item.quantity,
                           unit: item.unit,
                           materialUnitPrice: item.materialUnitPrice,
-                          workUnitPrice: item.workUnitPrice,
+                          unitPrice: item.unitPrice,
                           materialTotal: item.materialTotal,
                           workTotal: item.workTotal,
                           // Backward compatibility
-                          unitPrice: item.workUnitPrice,
                           totalPrice: item.workTotal,
                         })),
                         totalPrice: offer.totalPrice,
@@ -839,7 +838,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                 type="text"
                                 className="w-24 p-1 border rounded text-right"
                                 value={
-                                  item.workUnitPrice?.replace(/\s*Ft$/, "") ||
+                                  item.unitPrice?.replace(/\s*Ft$/, "") ||
                                   "0"
                                 }
                                 onChange={(e) =>
@@ -857,7 +856,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               className="whitespace-nowrap cursor-pointer hover:bg-gray-100 p-1 rounded text-right"
                               onClick={() => startEditing(index)}
                             >
-                              {item.workUnitPrice || "0 Ft"}
+                              {item.unitPrice || "0 Ft"}
                             </div>
                           )}
                         </td>

@@ -32,10 +32,9 @@ interface OfferItem {
   quantity: string;
   unit: string;
   materialUnitPrice: string;
-  workUnitPrice: string;
+  unitPrice: string;
   materialTotal: string;
   workTotal: string;
-  unitPrice?: string; // For backward compatibility
   totalPrice?: string; // For backward compatibility
 }
 
@@ -99,7 +98,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
       offer.items.forEach((item, index) => {
         text += `${index + 1}. ${item.name} - ${item.quantity} ${item.unit}\n`;
         text += `   Anyag: ${item.materialUnitPrice || "0 Ft"} x ${item.quantity} = ${item.materialTotal || "0 Ft"}\n`;
-        text += `   Munkadíj: ${item.workUnitPrice || "0 Ft"} x ${item.quantity} = ${item.workTotal || "0 Ft"}\n\n`;
+        text += `   Munkadíj: ${item.unitPrice || "0 Ft"} x ${item.quantity} = ${item.workTotal || "0 Ft"}\n\n`;
       });
       text += "\n";
     }
@@ -213,7 +212,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
           item.quantity,
           item.unit,
           item.materialUnitPrice || "0 Ft",
-          item.workUnitPrice || "0 Ft",
+          item.unitPrice || "0 Ft",
           item.materialTotal || "0 Ft",
           item.workTotal || "0 Ft",
         ]);

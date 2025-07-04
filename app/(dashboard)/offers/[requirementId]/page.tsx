@@ -181,7 +181,7 @@ export default function RequirementOffersPage() {
               quantity: item.quantity?.toString() || '0',
               unit: item.unit || 'db',
               materialUnitPrice: isNewFormat ? item.materialUnitPrice : '0',
-              workUnitPrice: isNewFormat ? item.workUnitPrice : (item.unitPrice || '0'),
+              unitPrice: isNewFormat ? item.unitPrice : (item.unitPrice || '0'),
               materialTotal: isNewFormat ? item.materialTotal : '0',
               workTotal: isNewFormat ? item.workTotal : (item.totalPrice || '0')
             };

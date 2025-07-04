@@ -3,6 +3,9 @@ export interface OfferItem {
   quantity: string;
   unit: string;
   unitPrice: string;
+  materialUnitPrice: string;
+  workTotal: string;
+  materialTotal: string;
   totalPrice: string;
 }
 
@@ -18,48 +21,61 @@ export function parseOfferText(text: string): ParsedOffer {
   const lines = text.split('\n').filter(line => line.trim() !== '');
   const items: OfferItem[] = [];
   const notes: string[] = [];
-  
-  // Extract title from the first line after the greeting
+
+  // Extract title from the first line containing 'kerület' or fallback
   const titleLine = lines.find(line => line.includes('kerület')) || 'Ismeretlen cím';
   const title = titleLine.split('#').pop()?.trim() || 'Új ajánlat';
-  
+
   // Extract location from title
   const location = title.split(',').slice(0, -1).join(',').trim();
-  
+
   for (const line of lines) {
     const trimmed = line.trim();
-    
-    // Skip empty lines and section headers
+
+    // Skip irrelevant lines
     if (!trimmed || trimmed.startsWith('**') || trimmed.startsWith('Kedves') || 
         trimmed.includes('előzetes ajánlat') || trimmed.includes('Összesített')) {
       continue;
     }
-    
-    // Parse item lines with the format: "Description: quantity unit × price/unit = totalPrice Ft"
-    const itemMatch = trimmed.match(/^(.+?):\s*([\d\s,.]*)\s*(m²|fm|db|db)\s*×\s*([\d\s,.]*)\s*Ft\/[^=]*=\s*([\d\s,.]*)\s*Ft/i);
-    
+
+    // Parse new detailed item lines with labor + material
+    const itemMatch = trimmed.match(
+      /^(.+?):\s*([\d\s,.]+)\s*(m²|fm|db)\s*×\s*([\d\s,.]+)\s*Ft\/\3\s*\(díj\)\s*\+\s*([\d\s,.]+)\s*Ft\/\3\s*\(anyag\)\s*=\s*([\d\s,.]+)\s*Ft\s*\(díj összesen\)\s*\+\s*([\d\s,.]+)\s*Ft\s*\(anyag összesen\)/i
+    );
+
     if (itemMatch) {
-      const [_, name, quantity, unit, unitPrice, totalPrice] = itemMatch;
-      console.log(_)
+      const [
+        _, name, quantity, unit, unitPrice, materialUnitPrice, laborTotal, materialTotal, totalPrice
+      ] = itemMatch;
+
+      const workTotalNum = parseFloat((laborTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;
+      const materialTotalNum = parseFloat((materialTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;
+      const calculatedTotal = workTotalNum + materialTotalNum;
+      
       items.push({
-        name: name.trim(),
-        quantity: quantity.trim(),
-        unit: unit.trim(),
-        unitPrice: unitPrice.trim().replace(/\s/g, '') + ' Ft',
-        totalPrice: totalPrice.trim().replace(/\s/g, '') + ' Ft'
+        name: (name ?? '').toString().trim(),
+        quantity: (quantity ?? '').toString().trim(),
+        unit: (unit ?? '').toString().trim(),
+        unitPrice: (unitPrice ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        materialUnitPrice: (materialUnitPrice ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        workTotal: (laborTotal ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        materialTotal: (materialTotal ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
+        totalPrice: calculatedTotal.toLocaleString('hu-HU') + ' Ft'
       });
+      
     } else if (trimmed) {
-      // If it's not an item line, treat it as a note
+      // Non-item lines go into notes
       notes.push(trimmed);
     }
   }
-  
-  // Calculate total price
+
+  // Calculate total price (labor + material)
   const totalPrice = items.reduce((sum, item) => {
-    const price = parseFloat(item.totalPrice.replace(/\s/g, '').replace(',', '.'));
-    return sum + (isNaN(price) ? 0 : price);
+    const work = parseFloat(item.workTotal.replace(/\s/g, '').replace(',', '.'));
+    const material = parseFloat(item.materialTotal.replace(/\s/g, '').replace(',', '.'));
+    return sum + (isNaN(work) ? 0 : work) + (isNaN(material) ? 0 : material);
   }, 0);
-  
+
   return {
     title,
     location,
@@ -69,6 +85,7 @@ export function parseOfferText(text: string): ParsedOffer {
   };
 }
 
+
 export function formatOfferForSave(parsed: ParsedOffer) {
   return {
     title: parsed.title,
@@ -77,6 +94,9 @@ export function formatOfferForSave(parsed: ParsedOffer) {
     items: parsed.items.map(item => ({
       ...item,
       unitPrice: item.unitPrice,
+      materialUnitPrice: item.materialUnitPrice,
+      workTotal: item.workTotal,
+      materialTotal: item.materialTotal,
       totalPrice: item.totalPrice
     })),
     notes: parsed.notes

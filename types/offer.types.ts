@@ -6,9 +6,10 @@ export interface OfferItem {
   quantity: string;
   unit: string;
   materialUnitPrice: string;
-  workUnitPrice: string;
+  unitPrice: string;
   materialTotal: string;
   workTotal: string;
+  totalPrice?: string;
   description?: string;
 }
 
