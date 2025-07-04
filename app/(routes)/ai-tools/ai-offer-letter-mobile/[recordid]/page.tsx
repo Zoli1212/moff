@@ -334,7 +334,7 @@ export default function OfferLetterResult() {
           : offer.content?.output?.[0]?.content;
 
       if (!contentToSave) {
-        console.log("❌ Save aborted - no content to save");
+        console.log("Save aborted - no content to save");
         return;
       }
 
@@ -366,12 +366,12 @@ export default function OfferLetterResult() {
           setIsAlreadySaved(true);
           toast.success("Ajánlat sikeresen mentve!");
         } else {
-          console.error("❌ Save failed:", result);
+          console.error("Save failed:", result);
           isSavingRef.current = false;
           toast.error("Hiba történt az ajánlat mentésekor");
         }
       } catch (error) {
-        console.error("❌ Error during save:", error);
+        console.error("Error during save:", error);
         isSavingRef.current = false;
         toast.error("Váratlan hiba történt");
       }

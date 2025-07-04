@@ -893,7 +893,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                           </thead>
                           <tbody className="divide-y divide-gray-200">
                             <tr>
-                              <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
+                              <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
                                 Egységár ({item.unit})
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap text-right">
@@ -929,20 +929,20 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                 <div className="text-sm text-gray-500 mt-1">
                                   <div
                                     onClick={() => startEditing(index)}
-                                    className="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                                    className="cursor-pointer font-bold hover:bg-gray-100 p-1 rounded"
                                   >
                                     {item.quantity} {item.unit}
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-2 py-1 whitespace-nowrap text-right">
+                              <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
                                 {item.materialTotal
                                   ? formatNumberWithSpace(
                                       item.materialTotal.replace(/\s*Ft$/, "")
                                     ) + " Ft"
                                   : "0 Ft"}
                               </td>
-                              <td className="px-2 py-1 whitespace-nowrap text-right">
+                              <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
                                 {item.workTotal
                                   ? formatNumberWithSpace(
                                       item.workTotal.replace(/\s*Ft$/, "")

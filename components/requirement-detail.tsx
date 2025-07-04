@@ -48,26 +48,33 @@ export function RequirementDetail({
   // Fetch offer and its items when component mounts
   useEffect(() => {
     const fetchOffer = async () => {
-      const offerId = searchParams.get('offerId');
+      const offerId = searchParams.get("offerId");
       if (offerId) {
         try {
           const offer = await getOfferById(parseInt(offerId));
           if (offer && offer.items) {
             // Transform items to match the TableItem format expected by the store
-            const tableItems = offer.items.map((item: { name: string; quantity: number; unit: string; unitPrice: number }) => ({
-              name: item.name,
-              quantity: item.quantity.toString(),
-              unit: item.unit,
-              materialUnitPrice: item.unitPrice.toString(),
-              workUnitPrice: '0', // Default value since it's not in the item
-              materialTotal: (item.unitPrice * item.quantity).toString(),
-              workTotal: '0' // Default value since it's not in the item
-            }));
-            
+            const tableItems = offer.items.map(
+              (item: {
+                name: string;
+                quantity: number;
+                unit: string;
+                unitPrice: number;
+              }) => ({
+                name: item.name,
+                quantity: item.quantity.toString(),
+                unit: item.unit,
+                materialUnitPrice: item.unitPrice.toString(),
+                workUnitPrice: "0", // Default value since it's not in the item
+                materialTotal: (item.unitPrice * item.quantity).toString(),
+                workTotal: "0", // Default value since it's not in the item
+              })
+            );
+
             setStoredItems(tableItems);
           }
         } catch (error) {
-          console.error('Error fetching offer items:', error);
+          console.error("Error fetching offer items:", error);
         }
       }
     };
@@ -313,7 +320,7 @@ export function RequirementDetail({
                         <X className="h-4 w-4 mr-2" />
                         Mégse
                       </Button>
-                      <Button
+                      {/* <Button
                         onClick={handleSubmit}
                         disabled={
                           isSubmitting || isResubmitting || !newText.trim()
@@ -332,7 +339,7 @@ export function RequirementDetail({
                             Csak mentés
                           </>
                         )}
-                      </Button>
+                      </Button> */}
                       <Button
                         onClick={handleResubmit}
                         disabled={
