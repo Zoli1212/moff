@@ -67,13 +67,27 @@ const parseOfferTable = (text: string) => {
     );
 
     if (match) {
-      const [, name, qty, unit, laborUnit, materialUnit, laborTotal, materialTotal] = match;
+      const [
+        ,
+        name,
+        qty,
+        unit,
+        laborUnit,
+        materialUnit,
+        laborTotal,
+        materialTotal,
+      ] = match;
       items.push({
         name: name.trim(),
         quantity: qty.trim(),
         unit: unit.trim(),
-        workUnitPrice: parseInt(laborUnit.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") + " Ft",
-        materialUnitPrice: parseInt(materialUnit.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") + " Ft",
+        workUnitPrice:
+          parseInt(laborUnit.replace(/\s|,/g, ""), 10).toLocaleString("hu-HU") +
+          " Ft",
+        materialUnitPrice:
+          parseInt(materialUnit.replace(/\s|,/g, ""), 10).toLocaleString(
+            "hu-HU"
+          ) + " Ft",
         workTotal: laborTotal.trim() + " Ft",
         materialTotal: materialTotal.trim() + " Ft",
       });
@@ -82,7 +96,6 @@ const parseOfferTable = (text: string) => {
 
   return items;
 };
-
 
 export default function OfferLetterResult() {
   const router = useRouter();
@@ -514,12 +527,35 @@ export default function OfferLetterResult() {
     }
   };
 
+  const updateItemField = (
+    idx: number,
+    field: keyof TableItem,
+    value: string
+  ) => {
+    const newItems = [...editableItems];
+    newItems[idx][field] = value;
+
+    // Ha quantity vagy árak változtak, számoljuk újra
+    if (["quantity", "materialUnitPrice", "workUnitPrice"].includes(field)) {
+      const quantity = parseFloat(newItems[idx].quantity) || 0;
+      const materialPrice = parseCurrency(newItems[idx].materialUnitPrice);
+      const workPrice = parseCurrency(newItems[idx].workUnitPrice);
+
+      newItems[idx].materialTotal =
+        (quantity * materialPrice).toLocaleString("hu-HU") + " Ft";
+      newItems[idx].workTotal =
+        (quantity * workPrice).toLocaleString("hu-HU") + " Ft";
+    }
+
+    setEditableItems(newItems);
+  };
+
   return (
-    <div className="container mx-auto p-4 max-w-4xl">
-      <div className="flex justify-between items-center mb-6">
-        <Button variant="outline" onClick={() => router.push("/offers")}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Vissza
+    <div className="container mx-auto p-4 max-w-md">
+      <div className="flex  items-center mb-6">
+        <Button variant="outline" onClick={() => router.push("/offers")} className="mr-4">
+          <ArrowLeft className="h-4 w-4" />
+    
         </Button>
 
         <div className="flex space-x-2">
@@ -662,7 +698,7 @@ export default function OfferLetterResult() {
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-lg shadow">
+      <div className="max-w-md mx-auto bg-white rounded-lg shadow">
         <h1 className="text-2xl font-bold mb-6">Generált Ajánlat</h1>
 
         {offer && content ? (
@@ -691,10 +727,11 @@ export default function OfferLetterResult() {
                 </div>
               ) : null}
 
-              <pre className="whitespace-pre-wrap text-sm mb-4 bg-gray-50 p-4 rounded">
+              <pre className="whitespace-pre-wrap p-2 text-sm mb-4 bg-gray-50 rounded">
                 {rawText}
               </pre>
-              <table className="w-full text-sm border">
+              {/* Asztali táblázat */}
+              <table className="hidden md:table w-full text-sm border mb-8">
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="text-left p-2 border">Tétel megnevezése</th>
@@ -714,11 +751,9 @@ export default function OfferLetterResult() {
                           type="text"
                           className="w-full p-1 border rounded"
                           value={item.name}
-                          onChange={(e) => {
-                            const newItems = [...editableItems];
-                            newItems[idx].name = e.target.value;
-                            setEditableItems(newItems);
-                          }}
+                          onChange={(e) =>
+                            updateItemField(idx, "name", e.target.value)
+                          }
                         />
                       </td>
                       <td className="p-2 border">
@@ -726,26 +761,9 @@ export default function OfferLetterResult() {
                           type="text"
                           className="w-full p-1 border rounded"
                           value={item.quantity}
-                          onChange={(e) => {
-                            const newItems = [...editableItems];
-                            newItems[idx].quantity = e.target.value;
-                            // Recalculate total if needed
-                            const quantity = parseFloat(e.target.value) || 0;
-                            const workPrice = parseCurrency(item.workUnitPrice);
-                            const materialPrice = parseCurrency(
-                              item.materialUnitPrice
-                            );
-
-                            const workTotal = quantity * workPrice;
-                            const materialTotal = quantity * materialPrice;
-
-                            newItems[idx].workTotal =
-                              workTotal.toLocaleString("hu-HU") + " Ft";
-                            newItems[idx].materialTotal =
-                              materialTotal.toLocaleString("hu-HU") + " Ft";
-
-                            setEditableItems(newItems);
-                          }}
+                          onChange={(e) =>
+                            updateItemField(idx, "quantity", e.target.value)
+                          }
                         />
                       </td>
                       <td className="p-2 border">
@@ -753,11 +771,9 @@ export default function OfferLetterResult() {
                           type="text"
                           className="w-full p-1 border rounded"
                           value={item.unit}
-                          onChange={(e) => {
-                            const newItems = [...editableItems];
-                            newItems[idx].unit = e.target.value;
-                            setEditableItems(newItems);
-                          }}
+                          onChange={(e) =>
+                            updateItemField(idx, "unit", e.target.value)
+                          }
                         />
                       </td>
                       <td className="p-2 border">
@@ -765,17 +781,13 @@ export default function OfferLetterResult() {
                           type="text"
                           className="w-full p-1 border rounded"
                           value={item.materialUnitPrice}
-                          onChange={(e) => {
-                            const newItems = [...editableItems];
-                            newItems[idx].materialUnitPrice = e.target.value;
-                            // Recalculate material total
-                            const quantity = parseFloat(item.quantity) || 0;
-                            const price = parseCurrency(e.target.value);
-                            const total = quantity * price;
-                            newItems[idx].materialTotal =
-                              total.toLocaleString("hu-HU") + " Ft";
-                            setEditableItems(newItems);
-                          }}
+                          onChange={(e) =>
+                            updateItemField(
+                              idx,
+                              "materialUnitPrice",
+                              e.target.value
+                            )
+                          }
                         />
                       </td>
                       <td className="p-2 border">
@@ -783,17 +795,13 @@ export default function OfferLetterResult() {
                           type="text"
                           className="w-full p-1 border rounded"
                           value={item.workUnitPrice}
-                          onChange={(e) => {
-                            const newItems = [...editableItems];
-                            newItems[idx].workUnitPrice = e.target.value;
-                            // Recalculate work total
-                            const quantity = parseFloat(item.quantity) || 0;
-                            const price = parseCurrency(e.target.value);
-                            const total = quantity * price;
-                            newItems[idx].workTotal =
-                              total.toLocaleString("hu-HU") + " Ft";
-                            setEditableItems(newItems);
-                          }}
+                          onChange={(e) =>
+                            updateItemField(
+                              idx,
+                              "workUnitPrice",
+                              e.target.value
+                            )
+                          }
                         />
                       </td>
                       <td className="p-2 border">{item.materialTotal}</td>
@@ -802,6 +810,95 @@ export default function OfferLetterResult() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Mobil stacked nézet */}
+              <div className="space-y-1 md:hidden px-1">
+                {items.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="max-w-md border rounded p-3 shadow-sm bg-white"
+                  >
+                    <div className="mb-2">
+                      <textarea
+                        rows={2}
+                        className="w-auto p-1 rounded text-sm font-medium resize-none bg-white"
+                        value={item.name}
+                        onChange={(e) =>
+                          updateItemField(idx, "name", e.target.value)
+                        }
+                        style={{ minHeight: "2.5rem" }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 text-xs">
+                      <div className="text-gray-600 flex items-center">
+                        Mennyiség:
+                      </div>
+                      <input
+                        type="text"
+                        className="max-w-md p-1 border rounded text-xs bg-white"
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateItemField(idx, "quantity", e.target.value)
+                        }
+                      />
+
+                      <div className="text-gray-600 flex items-center">
+                        Egység:
+                      </div>
+                      <input
+                        type="text"
+                        className="max-w-md p-1 border rounded text-xs bg-white"
+                        value={item.unit}
+                        onChange={(e) =>
+                          updateItemField(idx, "unit", e.target.value)
+                        }
+                      />
+
+                      <div className="text-gray-600 flex items-center">
+                        Anyag egységár:
+                      </div>
+                      <input
+                        type="text"
+                        className="max-w-md p-1 border rounded text-xs text-left bg-white"
+                        value={item.materialUnitPrice}
+                        onChange={(e) =>
+                          updateItemField(
+                            idx,
+                            "materialUnitPrice",
+                            e.target.value
+                          )
+                        }
+                      />
+
+                      <div className="text-gray-600 flex items-center">
+                        Díj egységár:
+                      </div>
+                      <input
+                        type="text"
+                        className="max-w-md p-1 border rounded text-xs text-left bg-white"
+                        value={item.workUnitPrice}
+                        onChange={(e) =>
+                          updateItemField(idx, "workUnitPrice", e.target.value)
+                        }
+                      />
+
+                      <div className="text-gray-600 flex items-center">
+                        Anyag összesen:
+                      </div>
+                      <div className="text-left text-xs font-medium p-1">
+                        {item.materialTotal}
+                      </div>
+
+                      <div className="text-gray-600 flex items-center">
+                        Díj összesen:
+                      </div>
+                      <div className="text-left text-xs font-medium p-1">
+                        {item.workTotal}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
 
               <div className="mt-4">
                 <Button
