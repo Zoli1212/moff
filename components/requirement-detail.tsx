@@ -237,14 +237,10 @@ export function RequirementDetail({
       {/* Loading Overlay */}
       {isResubmitting && (
         <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-12 w-12 text-blue-600 animate-spin mb-3" />
-            <p className="text-base font-medium text-gray-700">
-              Követelmény feldolgozása folyamatban...
-            </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Kérem várjon, ez eltarthat néhány pillanatig
-            </p>
+          <div className="flex flex-col items-center p-6 text-center">
+            <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">Feldolgozás folyamatban</h3>
+            <p className="text-gray-600 max-w-md">Az Ön kérése feldolgozás alatt áll, kérjük várjon...</p>
           </div>
         </div>
       )}
@@ -277,7 +273,7 @@ export function RequirementDetail({
                     className="w-full py-3 px-4 border-[#FF9900] text-[#FF9900] hover:bg-[#FF9900]/10 hover:text-[#e68a00] hover:border-[#e68a00] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] flex items-center justify-center"
                   >
                     <Edit className="h-5 w-5 mr-2" />
-                    Ajánlat frissítése
+                    Követelmények pontosítása
                   </Button>
                 </div>
               </div>
@@ -357,7 +353,7 @@ export function RequirementDetail({
                           className={`flex items-center ${isResubmitting ? "invisible" : "visible"}`}
                         >
                           <Send className="h-4 w-4 mr-2" />
-                          Újra beküldés
+                          Ajánlat frissítése
                         </span>
                         {isResubmitting && (
                           <div className="absolute inset-0 flex items-center justify-center">
