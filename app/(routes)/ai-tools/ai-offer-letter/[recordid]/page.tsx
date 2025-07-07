@@ -366,7 +366,7 @@ export default function OfferLetterResult() {
         });
   
         if (result.success) {
-          console.log('✅ Save successful');
+          console.log('Save successful');
           // Save to localStorage that this offer was saved with expiration
           if (typeof window !== 'undefined' && recordid) {
             saveOfferStatus(recordid);

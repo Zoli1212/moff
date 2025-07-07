@@ -295,6 +295,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       });
 
       revalidatePath("/jobs");
+      revalidatePath("/offers");
 
       return {
         success: true,
@@ -304,7 +305,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         title: work.title,
       };
     } catch (error) {
-      console.error("❌ Error creating offer:", error);
+      console.error("Error creating offer:", error);
       throw new Error("Hiba történt az ajánlat mentésekor");
     }
   } catch (error) {

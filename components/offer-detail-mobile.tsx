@@ -932,7 +932,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                 <div className="text-sm text-gray-500 mt-1">
                                   <div
                                     onClick={() => startEditing(index)}
-                                    className="cursor-pointer font-bold hover:bg-gray-100 p-1 rounded"
+                                    className="cursor-pointer text-gray-900 font-bold hover:bg-gray-100 p-1 rounded"
                                   >
                                     {item.quantity} {item.unit}
                                   </div>
