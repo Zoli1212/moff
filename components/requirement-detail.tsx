@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { getOfferById } from "@/actions/offer-actions";
-import { ArrowLeft, Edit, X, Save, Loader2, Send } from "lucide-react";
+import { ArrowLeft, Edit, X, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";

@@ -45,8 +45,10 @@ export function parseOfferText(text: string): ParsedOffer {
 
     if (itemMatch) {
       const [
-        _, name, quantity, unit, unitPrice, materialUnitPrice, laborTotal, materialTotal, totalPrice
+        _, name, quantity, unit, unitPrice, materialUnitPrice, laborTotal, materialTotal
       ] = itemMatch;
+
+      console.log(_)
 
       const workTotalNum = parseFloat((laborTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;
       const materialTotalNum = parseFloat((materialTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;

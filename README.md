@@ -345,8 +345,22 @@ Kovács Eszter
 # válasz mobilbarát formába jelnjen meg
 # Követelmények pontosítása
 # megosztások
-# kérdések
-
+---------------
+# kérdések beküldése
+# Ajánlat frissítése / Ez legyen a neve!
+# sticky Pontosítás 
+# kérdések megválaszolása #Pontosítás
+# mobil nézet a válaszokban
+# Analízis folyamatban kis türelmet kérek
+# leírás végén legyen egy gomb a kérdések megválaszolása
+# Új ajánlat az új követelmenyékkel
+# dialógus blokkolja
+# deployment
+# a db ne szürke legyen
+# action gombok narancssárga gombok legyenek minden narancssárga pl + Új tétel
+# Összeg kék
+# hamburger menü is narancssárga legyen
+---------
 
 Tárgy: Lakásfelújítási ajánlatkérés – II. kerületi társasházi lakás
 

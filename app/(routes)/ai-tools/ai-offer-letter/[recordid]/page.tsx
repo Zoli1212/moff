@@ -79,6 +79,8 @@ const parseOfferTable = (text: string) => {
         materialTotal
       ] = match;
 
+      console.log(_)
+
       items.push({
         name: (name ?? '').trim(),
         quantity: (qty ?? '').trim(),

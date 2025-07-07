@@ -16,7 +16,7 @@ export function AppHeader() {
         />
         <button 
           onClick={toggleSidebar}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-orange-500 p-1"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#FF9900] hover:text-[#FF9900] p-1"
         >
           <Menu className="h-6 w-6" />
         </button>
