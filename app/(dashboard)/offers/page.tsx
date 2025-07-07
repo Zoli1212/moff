@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
+import { useDemandStore } from "@/store/offerLetterStore";
 
 interface OfferItem {
   id?: number;
@@ -51,6 +52,13 @@ export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { clearDemandText, clearStoredItems } = useDemandStore();
+
+  // Clear the store when the component mounts
+  useEffect(() => {
+    clearDemandText();
+    clearStoredItems();
+  }, [clearDemandText, clearStoredItems]);
 
   // Load offers on component mount
   useEffect(() => {

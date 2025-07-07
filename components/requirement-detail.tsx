@@ -34,7 +34,7 @@ export function RequirementDetail({
 }: RequirementDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setStoredItems, setDemandText } = useDemandStore();
+  const { storedItems, setStoredItems, setDemandText } = useDemandStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newText, setNewText] = useState("");
@@ -175,6 +175,11 @@ export function RequirementDetail({
       formData.append("textContent", combinedText);
       formData.append("type", "offer-letter");
       formData.append("requirementId", requirement.id.toString());
+      
+      // Küldjük el a meglévő tételeket is, ha vannak
+      if (storedItems && storedItems.length > 0) {
+        formData.append("existingItems", JSON.stringify(storedItems));
+      }
 
       // Call the API
       const response = await fetch("/api/ai-demand-agent", {
@@ -206,7 +211,9 @@ export function RequirementDetail({
             revalidatePath("/offer");
             toast.success("Sikeresen feldolgozva!");
             // Redirect to the new offer page
-            router.push(`/ai-tools/ai-offer-letter-mobile-redirect/${recordId}`);
+            router.push(
+              `/ai-tools/ai-offer-letter-mobile-redirect/${recordId}`
+            );
             return;
           }
 
@@ -244,8 +251,12 @@ export function RequirementDetail({
             <div className="flex justify-center mb-6">
               <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Feldolgozás folyamatban</h3>
-            <p className="text-gray-600">Az Ön kérése feldolgozás alatt áll, kérjük várjon...</p>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Feldolgozás folyamatban
+            </h3>
+            <p className="text-gray-600">
+              Az Ön kérése feldolgozás alatt áll, kérjük várjon...
+            </p>
             <div className="mt-6 text-sm text-gray-500">
               Ez eltarthat néhány másodpercig
             </div>

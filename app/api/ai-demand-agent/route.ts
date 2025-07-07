@@ -65,6 +65,21 @@ export async function POST(req: NextRequest) {
         const recordId = formData.get('recordId')?.toString();
         const textContent = formData.get('textContent')?.toString();
         const type = formData.get('type')?.toString() || 'demand-analyzer';
+        
+        // Kezeljük a meglévő tételeket, ha vannak
+        let existingItems = [];
+        try {
+          const existingItemsStr = formData.get('existingItems')?.toString();
+          if (existingItemsStr) {
+            existingItems = JSON.parse(existingItemsStr);
+            if (!Array.isArray(existingItems)) {
+              existingItems = [];
+            }
+          }
+        } catch (error) {
+          console.error('Hibás existingItems formátum:', error);
+          existingItems = [];
+        }
 
         if (!recordId) {
             return NextResponse.json({ error: "Hiányzó recordId" }, { status: 400 });
@@ -99,7 +114,8 @@ export async function POST(req: NextRequest) {
             ? { 
                 userInput: content, // For AiOfferAgent
                 recordId,
-                userEmail: user?.emailAddresses?.[0]?.emailAddress
+                userEmail: user?.emailAddresses?.[0]?.emailAddress,
+                existingItems: existingItems // Hozzáadjuk a meglévő tételeket
               }
             : {
                 // For AiDemandAgent

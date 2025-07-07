@@ -4167,18 +4167,24 @@ export const AiOfferAgent = inngest.createFunction(
     console.log("AiOfferAgent event received:", JSON.stringify(event, null, 2));
 
     try {
-      const { userInput, recordId, userEmail } = event.data;
+      const { userInput, recordId, userEmail, existingItems = [] } = event.data;
       console.log("Processing offer letter request:", {
         userInput,
         recordId,
         userEmail,
+        hasExistingItems: existingItems.length > 0
       });
+      
+      // Átadjuk a meglévő tételeket az AI-nak a felhasználói bemenettel együtt
+      const aiInput = existingItems.length > 0 
+        ? `${userInput}\n\nMeglévő tételek (ne vegyél fel ismétlődést):\n${JSON.stringify(existingItems, null, 2)}`
+        : userInput;
 
       if (!userInput) {
         throw new Error("Missing userInput in event data");
       }
 
-      const result = await AiOfferChatAgent.run(userInput);
+      const result = await AiOfferChatAgent.run(aiInput);
       console.log("AiOfferChatAgent result:", JSON.stringify(result, null, 2));
 
       // Save the result to the database using Prisma
@@ -4192,6 +4198,7 @@ export const AiOfferAgent = inngest.createFunction(
             metaData: {
               title: "Ajánlat generálás",
               description: userInput.substring(0, 100) + "...",
+              existingItems: existingItems.length > 0 ? existingItems : undefined,
             },
             createdAt: new Date().toISOString(),
           };
