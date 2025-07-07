@@ -131,7 +131,8 @@ export default function OffersPage() {
               </div>
               <Button
                 onClick={() => setIsDialogOpen(true)}
-                className="ml-auto p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                variant="outline"
+                className="ml-auto p-2 rounded-full border-[#FF9900] text-[#FF9900] hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
                 aria-label="Új ajánlat létrehozása"
               >
                 <Plus className="h-5 w-5" />
