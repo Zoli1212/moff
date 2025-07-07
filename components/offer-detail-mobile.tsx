@@ -71,7 +71,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       // Ensure all items have the required fields
 
       for (let i = 0; i < offer.items.length; i++) {
-        console.log(offer.items[i], '+');
+        console.log(offer.items[i], "+");
       }
       const validatedItems = items.map((item, index) => ({
         id: index, // Add unique id for each item
@@ -828,7 +828,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleAddItem}
-                    className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    className="inline-flex items-center px-3 py-1 border border-[#FF9900] text-sm leading-4 font-medium rounded-md text-[#FF9900] hover:bg-[#FF9900]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
                   >
                     <Plus className="h-4 w-4 mr-1" /> Új tétel
                   </button>
@@ -857,7 +857,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => startEditing(index)}
-                          className="text-gray-400 hover:text-gray-600"
+                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -872,7 +872,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               handleRemoveItem(index);
                             }
                           }}
-                          className="text-gray-400 hover:text-red-600"
+                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

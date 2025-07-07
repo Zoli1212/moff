@@ -156,7 +156,7 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
                 Mégse
               </Button>
               <Button 
-                className="w-full h-14 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                className="w-full h-14 text-base font-medium bg-[#FF9900] hover:bg-[#e68a00] text-white"
                 disabled={!demandText.trim() || loading} 
                 onClick={onAnalyze}
                 size="lg"

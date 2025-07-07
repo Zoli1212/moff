@@ -67,7 +67,9 @@ export function RequirementDetail({
                 unit: item.unit,
                 materialUnitPrice: item.materialUnitPrice || "0",
                 workUnitPrice: item.unitPrice.toString(), // Default value since it's not in the item
-                materialTotal: (item.materialUnitPrice * item.quantity).toString(),
+                materialTotal: (
+                  item.materialUnitPrice * item.quantity
+                ).toString(),
                 workTotal: (item.unitPrice * item.quantity).toString(), // Default value since it's not in the item
               })
             );
@@ -267,15 +269,18 @@ export function RequirementDetail({
               {requirement.title || "Követelmény részletei"}
             </h1>
             {!isEditing && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1"
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                Szerkesztés
-              </Button>
+              <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-10">
+                <div className="max-w-4xl mx-auto">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    className="w-full py-3 px-4 border-[#FF9900] text-[#FF9900] hover:bg-[#FF9900]/10 hover:text-[#e68a00] hover:border-[#e68a00] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] flex items-center justify-center"
+                  >
+                    <Edit className="h-5 w-5 mr-2" />
+                    Ajánlat frissítése
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -346,7 +351,7 @@ export function RequirementDetail({
                         disabled={
                           isSubmitting || isResubmitting || !newText.trim()
                         }
-                        className="bg-green-600 hover:bg-green-700 text-white flex-1 min-w-[120px] relative"
+                        className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1 min-w-[120px] relative"
                       >
                         <span
                           className={`flex items-center ${isResubmitting ? "invisible" : "visible"}`}
