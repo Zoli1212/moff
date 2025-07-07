@@ -352,7 +352,7 @@ export default function RequirementOffersPage() {
             </h2>
             <Link
               href={`/offers/new?requirementId=${requirementId}`}
-              className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-4 py-2 border border-orange-500 text-orange-600 hover:bg-orange-50 rounded-md text-sm font-medium transition-colors"
             >
               Új ajánlat
             </Link>
@@ -372,11 +372,19 @@ export default function RequirementOffersPage() {
                   className="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                   onClick={() => handleViewDetails(offer)}
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-gray-900">
-                        {offer.title || "Névtelen ajánlat"}
-                      </h3>
+                  <div className="flex flex-col sm:flex-row justify-between gap-3">
+                    <div className="flex-1">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
+                        <button
+                          onClick={(e) => handleViewDetailsClick(e, offer)}
+                          className="px-3 py-1 border border-orange-500 text-orange-600 hover:bg-orange-50 rounded-md text-sm font-medium whitespace-nowrap sm:ml-4 self-end sm:self-auto transition-colors"
+                        >
+                          Részletek →
+                        </button>
+                        <h3 className="font-bold text-gray-900">
+                          {offer.title || "Névtelen ajánlat"}
+                        </h3>
+                      </div>
                       {offer.description && (
                         <p className="mt-1 text-sm text-gray-600">
                           {offer.description.length > 100
@@ -384,13 +392,13 @@ export default function RequirementOffersPage() {
                             : offer.description}
                         </p>
                       )}
-                      <div className="mt-2 flex items-center text-sm text-gray-500">
+                      <div className="mt-2 flex flex-wrap items-center gap-1 text-sm text-gray-500">
                         <span>
                           Ár: {offer.totalPrice?.toLocaleString("hu-HU")} Ft
                         </span>
-                        <span className="mx-2">•</span>
+                        <span>•</span>
                         <span>Státusz: {getStatusDisplay(offer.status)}</span>
-                        <span className="mx-2">•</span>
+                        <span>•</span>
                         <span>
                           Létrehozva:{" "}
                           {format(new Date(offer.createdAt), "PPP", {
@@ -399,12 +407,6 @@ export default function RequirementOffersPage() {
                         </span>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => handleViewDetailsClick(e, offer)}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800 whitespace-nowrap ml-4"
-                    >
-                      Részletek →
-                    </button>
                   </div>
                 </div>
               ))}
