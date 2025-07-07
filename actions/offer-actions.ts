@@ -41,7 +41,14 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     if (recordId) {
       const existingOffer = await prisma.offer.findFirst({
         where: { recordId },
-        select: { id: true, title: true, createdAt: true },
+        select: {
+          id: true,
+          title: true,
+          createdAt: true,
+          requirement: {
+            select: { id: true },
+          },
+        },
       });
 
       if (existingOffer) {
@@ -51,9 +58,10 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
           createdAt: existingOffer.createdAt,
         });
         return {
-          success: false,
-          error: "Már létezik ajánlat ezzel az azonosítóval",
-          existingOfferId: existingOffer.id,
+          success: true, // Change to true since the offer exists
+          error: "",
+          offerId: existingOffer.id,
+          requirementId: existingOffer.requirement?.id || null,
         };
       }
     }
@@ -231,6 +239,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       },
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       createdBy: emailToUse,
+      tenantEmail: emailToUse, // Add tenantEmail to ensure it's saved with the offer
     };
 
     // Add recordId if it exists

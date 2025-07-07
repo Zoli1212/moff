@@ -34,7 +34,7 @@ export function RequirementDetail({
 }: RequirementDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { setStoredItems } = useDemandStore();
+  const { setStoredItems, setDemandText } = useDemandStore();
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newText, setNewText] = useState("");
@@ -122,6 +122,9 @@ export function RequirementDetail({
       setCurrentDescription(updatedDescription);
       setNewText("");
 
+      // Save the updated description as demandText in the store
+      setDemandText(updatedDescription);
+
       // Notify parent component about the update
       if (onRequirementUpdated) {
         onRequirementUpdated({
@@ -203,7 +206,7 @@ export function RequirementDetail({
             revalidatePath("/offer");
             toast.success("Sikeresen feldolgozva!");
             // Redirect to the new offer page
-            router.push(`/ai-tools/ai-offer-letter-mobile/${recordId}`);
+            router.push(`/ai-tools/ai-offer-letter-mobile-redirect/${recordId}`);
             return;
           }
 
@@ -234,13 +237,18 @@ export function RequirementDetail({
 
   return (
     <div className="flex flex-col h-full relative">
-      {/* Loading Overlay */}
+      {/* Loading Overlay - Fixed positioning to cover the whole screen */}
       {isResubmitting && (
-        <div className="absolute inset-0 bg-white bg-opacity-70 flex items-center justify-center z-50">
-          <div className="flex flex-col items-center p-6 text-center">
-            <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Feldolgozás folyamatban</h3>
-            <p className="text-gray-600 max-w-md">Az Ön kérése feldolgozás alatt áll, kérjük várjon...</p>
+        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex items-center justify-center">
+          <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 max-w-md w-[90%] mx-4 text-center">
+            <div className="flex justify-center mb-6">
+              <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Feldolgozás folyamatban</h3>
+            <p className="text-gray-600">Az Ön kérése feldolgozás alatt áll, kérjük várjon...</p>
+            <div className="mt-6 text-sm text-gray-500">
+              Ez eltarthat néhány másodpercig
+            </div>
           </div>
         </div>
       )}

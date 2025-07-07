@@ -329,13 +329,13 @@ export default function OfferLetterResult() {
       // Don't proceed if we're already saving, have already saved, or if it was saved before
       if (isSavingRef.current || hasSavedRef.current || isAlreadySaved) {
         console.log(
-          "⏭️ Save skipped - already saving/saved in this session or was saved before"
+          "Save skipped - already saving/saved in this session or was saved before"
         );
         return;
       }
 
       if (!offer || !recordid) {
-        console.log("❌ Save aborted - missing offer or recordid");
+        console.log("Save aborted - missing offer or recordid");
         return;
       }
 
@@ -351,7 +351,7 @@ export default function OfferLetterResult() {
 
       // Mark that we're starting the save process
       isSavingRef.current = true;
-      console.log("💾 Starting save process...", {
+      console.log("Starting save process...", {
         recordid,
         contentLength: contentToSave.length,
         demandTextLength: demandText?.length || 0,
@@ -366,7 +366,7 @@ export default function OfferLetterResult() {
         });
 
         if (result.success) {
-          console.log("✅ Save successful");
+          console.log(" Save successful");
           // Save to localStorage that this offer was saved with expiration
           if (typeof window !== "undefined" && recordid) {
             saveOfferStatus(recordid);
