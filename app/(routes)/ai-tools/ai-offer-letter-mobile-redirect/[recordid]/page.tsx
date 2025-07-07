@@ -39,6 +39,7 @@ export default function SilentOfferSaverPage() {
     const savedOffer = savedOffers[recordId];
     return savedOffer && savedOffer.expires > Date.now();
   };
+  console.log(isProcessing)
 
   useEffect(() => {
     const fetchAndSaveOffer = async () => {
