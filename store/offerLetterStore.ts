@@ -18,6 +18,10 @@ interface DemandStore {
   storedItems: TableItem[];
   setStoredItems: (items: TableItem[]) => void;
   clearStoredItems: () => void;
+  
+  // Global loading state
+  isGlobalLoading: boolean;
+  setGlobalLoading: (isLoading: boolean) => void;
 }
 
 export const useDemandStore = create<DemandStore>((set) => ({
@@ -28,4 +32,8 @@ export const useDemandStore = create<DemandStore>((set) => ({
   storedItems: [],
   setStoredItems: (items) => set({ storedItems: items }),
   clearStoredItems: () => set({ storedItems: [] }),
+  
+  // Global loading state
+  isGlobalLoading: false,
+  setGlobalLoading: (isGlobalLoading) => set({ isGlobalLoading }),
 }));

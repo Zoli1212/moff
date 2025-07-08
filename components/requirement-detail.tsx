@@ -34,7 +34,14 @@ export function RequirementDetail({
 }: RequirementDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { storedItems, setStoredItems, setDemandText } = useDemandStore();
+  const {
+    storedItems,
+    setStoredItems,
+    setDemandText,
+    isGlobalLoading,
+    setGlobalLoading,
+  } = useDemandStore();
+
   const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newText, setNewText] = useState("");
@@ -42,7 +49,6 @@ export function RequirementDetail({
   const [currentDescription, setCurrentDescription] = useState(
     requirement.description || ""
   );
-  const [isResubmitting, setIsResubmitting] = useState(false);
   console.log(requirement, "REQ");
 
   // Fetch offer and its items when component mounts
@@ -154,7 +160,7 @@ export function RequirementDetail({
       return;
     }
 
-    setIsResubmitting(true);
+    setGlobalLoading(true);
     setError("");
 
     try {
@@ -175,7 +181,7 @@ export function RequirementDetail({
       formData.append("textContent", combinedText);
       formData.append("type", "offer-letter");
       formData.append("requirementId", requirement.id.toString());
-      
+
       // Küldjük el a meglévő tételeket is, ha vannak
       if (storedItems && storedItems.length > 0) {
         formData.append("existingItems", JSON.stringify(storedItems));
@@ -207,7 +213,7 @@ export function RequirementDetail({
           console.log("Status:", status);
 
           if (status === "Completed") {
-            setIsResubmitting(false);
+            setGlobalLoading(false);
             revalidatePath("/offer");
             toast.success("Sikeresen feldolgozva!");
             // Redirect to the new offer page
@@ -218,7 +224,7 @@ export function RequirementDetail({
           }
 
           if (status === "Cancelled" || attempts >= maxAttempts) {
-            setIsResubmitting(false);
+            setGlobalLoading(false);
             setError("A feldolgozás nem sikerült vagy túl sokáig tartott.");
             return;
           }
@@ -227,7 +233,7 @@ export function RequirementDetail({
           setTimeout(poll, 2000);
         } catch (err) {
           console.error("Error polling status:", err);
-          setIsResubmitting(false);
+          setGlobalLoading(false);
           setError("Hiba történt az állapot lekérdezése során.");
         }
       };
@@ -238,14 +244,14 @@ export function RequirementDetail({
       setError("Hiba történt az újraküldés során. Kérjük próbáld újra később.");
       toast.error("Hiba történt az újraküldés során");
     } finally {
-      setIsResubmitting(false);
+      setGlobalLoading(false);
     }
   };
 
   return (
     <div className="flex flex-col h-full relative">
       {/* Loading Overlay - Fixed positioning to cover the whole screen */}
-      {isResubmitting && (
+      {isGlobalLoading && (
         <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex items-center justify-center">
           <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 max-w-md w-[90%] mx-4 text-center">
             <div className="flex justify-center mb-6">
@@ -269,8 +275,8 @@ export function RequirementDetail({
         <div className="flex items-center space-x-4 mb-6">
           <button
             onClick={onBack}
-            disabled={isResubmitting}
-            className={`flex items-center ${isResubmitting ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"} transition-colors`}
+            disabled={isGlobalLoading}
+            className={`flex items-center ${isGlobalLoading ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"} transition-colors`}
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
             Vissza az ajánlathoz
@@ -335,7 +341,7 @@ export function RequirementDetail({
                           setError("");
                           setNewText("");
                         }}
-                        disabled={isSubmitting || isResubmitting}
+                        disabled={isSubmitting || isGlobalLoading}
                         className="flex-1 min-w-[120px]"
                       >
                         <X className="h-4 w-4 mr-2" />
@@ -344,7 +350,7 @@ export function RequirementDetail({
                       {/* <Button
                         onClick={handleSubmit}
                         disabled={
-                          isSubmitting || isResubmitting || !newText.trim()
+                          isSubmitting || isGlobalLoading || !newText.trim()
                         }
                         variant="outline"
                         className="flex-1 min-w-[120px]"
@@ -364,17 +370,17 @@ export function RequirementDetail({
                       <Button
                         onClick={handleResubmit}
                         disabled={
-                          isSubmitting || isResubmitting || !newText.trim()
+                          isSubmitting || isGlobalLoading || !newText.trim()
                         }
                         className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1 min-w-[120px] relative"
                       >
                         <span
-                          className={`flex items-center ${isResubmitting ? "invisible" : "visible"}`}
+                          className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}
                         >
                           <Send className="h-4 w-4 mr-2" />
                           Ajánlat frissítése
                         </span>
-                        {isResubmitting && (
+                        {isGlobalLoading && (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <Loader2 className="h-5 w-5 animate-spin" />
                           </div>
