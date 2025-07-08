@@ -105,7 +105,7 @@ export const AiOfferChatAgent = createAgent({
 You must clearly indicate in the additionalInfo section at the end of the response which task(s) were not found in the original catalog.
 
 **Example "További információ: " content:**
-> "A következő tétel nem volt az adatbázisban: 'High-pressure facade cleaning (custom item)'."
+> "A következő tétel nem volt az adatbázisban: 'High-pressure facade cleaning (egyedi tétel)'."
 
 ---
   
@@ -3999,7 +3999,6 @@ Example:
 This format is essential for automated parsing and table rendering. Please ensure every item in the offer follows this pattern.
 
 Propose tasks with clear descriptions, labor cost, material cost, and unit of measurement.
-
 
 
 Always calculate the total estimated cost by summing up labor and material costs, multiplied by the estimated quantity if available.

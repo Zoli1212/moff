@@ -8,6 +8,7 @@ import { RequirementDetail } from "./requirement-detail";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import { OfferItem, OfferWithItems } from "@/types/offer.types";
+import { useDemandStore } from "@/store/offerLetterStore";
 import {
   ArrowLeft,
   FileText,
@@ -44,6 +45,45 @@ import {
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
 import TextInputDialogQuestions from "@/app/(routes)/dashboard/_components/TextInputDialogQuestions";
 
+// Helper function to extract questions from description
+function extractQuestions(description: string): string[] {
+  if (!description) return [];
+
+  // First, split by line breaks to handle list items
+  const lines = description.split(/\r?\n/);
+
+  const questions: string[] = [];
+
+  for (const line of lines) {
+    // Skip empty lines
+    if (!line.trim()) continue;
+
+    // Check if line ends with a question mark
+    if (line.trim().endsWith('?')) {
+      // Try to find the start of the question (number followed by dot or parenthesis)
+      const match = line.match(/^(\d+[.)]?\s*)(.*\?)/);
+      if (match) {
+        // If line starts with a number, use the text after it
+        questions.push(match[2].trim());
+      } else {
+        // Otherwise just take the whole line
+        questions.push(line.trim());
+      }
+    }
+  }
+
+  // If no questions found with the list approach, fall back to the old method
+  if (questions.length === 0) {
+    const sentences = description.split(/(?<=[.!?])\s+/);
+    return sentences
+      .filter((sentence) => sentence.trim().endsWith('?'))
+      .map((q) => q.trim())
+      .filter(Boolean);
+  }
+
+  return questions;
+}
+
 interface OfferDetailViewProps {
   offer: OfferWithItems;
   onBack: () => void;
@@ -60,6 +100,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { setDemandText } = useDemandStore();
 
   // Log items when they change
   useEffect(() => {
@@ -777,24 +818,32 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           )}
         </div>
         <div>
-          {!isDialogOpen && <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-4 z-[9999]">
-                <div className="max-w-7xl mx-auto">
-                  <Button
-                    onClick={() => setIsDialogOpen(true)}
-                    variant="outline"
-                    className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
-                  >
-                    <span className="text-lg font-medium">+ Kérdések megválaszolása</span>
-                  </Button>
-                </div>
-              </div>}
-        
-              <TextInputDialogQuestions
-              
-                open={isDialogOpen}
-                setOpen={setIsDialogOpen}
-                toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
-              />
+          {!isDialogOpen && (
+            <div className="fixed bottom-0 left-0 w-full bg-transparent border-t border-gray-200 px-4 py-4 z-[9999]">
+              <div className="max-w-7xl mx-auto">
+                <Button
+                  onClick={() => {
+                    // Set the demandText to the offer requirement or description when opening the dialog
+                    setDemandText(offer.requirement?.description || offer.description || '');
+                    setIsDialogOpen(true);
+                  }}
+                  variant="outline"
+                  className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+                >
+                  <span className="text-lg font-medium">
+                    + Kérdések megválaszolása
+                  </span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <TextInputDialogQuestions
+            open={isDialogOpen}
+            setOpen={setIsDialogOpen}
+            toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
+            questions={extractQuestions(offer.description || "")}
+          />
         </div>
         {/* Notes Section */}
         {notes.length > 0 && (
