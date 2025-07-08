@@ -3995,11 +3995,23 @@ For each item in the offer, use the following exact format:
 
 Example:
 *Belső vakolat javítása: 130 m² × 3 800 Ft/m² (díj) + 500 Ft/m² (anyag) = 494 000 Ft (díj összesen) + 65 000 Ft (anyag összesen)
-
 This format is essential for automated parsing and table rendering. Please ensure every item in the offer follows this pattern.
 
 Propose tasks with clear descriptions, labor cost, material cost, and unit of measurement.
 
+If a requested task is not found in the provided catalog, you must still include it in the offer items list using the **exact same output format** as catalog-based items.
+
+- Estimate a realistic labor and material cost if not available.
+- Do **not** mark "egyedi tétel" directly in the line – it must be structurally identical to other items.
+- Never write "egyedi tétel" or any comment inside the offer item line itself. These lines must stay clean and strictly follow the given format.
+- Instead, list each such item clearly in the "További információ" section at the end of the response, using this sentence structure:
+  > "A következő tétel nem volt az adatbázisban: '[Feladat neve] (egyedi tétel)'."
+
+**Example:**
+*Tetőcserepezés acél cseréppel: 85 m² × 3 900 Ft/m² (díj) + 2 200 Ft/m² (anyag) = 331 500 Ft (díj összesen) + 187 000 Ft (anyag összesen)*
+
+**További információ:**
+> "A következő tétel nem volt az adatbázisban: 'Tetőcserepezés acél cseréppel (egyedi tétel)'."
 
 Always calculate the total estimated cost by summing up labor and material costs, multiplied by the estimated quantity if available.
 
