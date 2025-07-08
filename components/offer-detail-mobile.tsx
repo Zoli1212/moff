@@ -41,6 +41,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
+import TextInputDialogQuestions from "@/app/(routes)/dashboard/_components/TextInputDialogQuestions";
 
 interface OfferDetailViewProps {
   offer: OfferWithItems;
@@ -57,6 +59,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Log items when they change
   useEffect(() => {
@@ -772,6 +775,26 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               </div>
             </div>
           )}
+        </div>
+        <div>
+          {!isDialogOpen && <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-4 z-[9999]">
+                <div className="max-w-7xl mx-auto">
+                  <Button
+                    onClick={() => setIsDialogOpen(true)}
+                    variant="outline"
+                    className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+                  >
+                    <span className="text-lg font-medium">+ Kérdések megválaszolása</span>
+                  </Button>
+                </div>
+              </div>}
+        
+              <TextInputDialogQuestions
+              
+                open={isDialogOpen}
+                setOpen={setIsDialogOpen}
+                toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
+              />
         </div>
         {/* Notes Section */}
         {notes.length > 0 && (
