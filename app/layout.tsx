@@ -5,6 +5,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import Provider from "./provider";
 import { Toaster } from "@/components/ui/sonner";
 import FullscreenHandler from "./_components/FullscreenHandler";
+import { GlobalLoading } from "@/components/GlobalLoading";
+import { GlobalLoadingHandler } from "@/components/GlobalLoadingHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -55,10 +57,12 @@ export default function RootLayout({
           className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
         >
           <Provider>
+            <GlobalLoadingHandler />
             {children}
             <FullscreenHandler />
+            <GlobalLoading />
           </Provider>
-          <Toaster />
+          <Toaster position="top-center" richColors />
         </body>
       </html>
     </ClerkProvider>

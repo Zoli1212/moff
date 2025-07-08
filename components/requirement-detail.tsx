@@ -160,8 +160,56 @@ export function RequirementDetail({
       return;
     }
 
+    // Set global loading state
     setGlobalLoading(true);
     setError("");
+    
+    // Store loading state in session storage to persist across navigation
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('isGlobalLoading', 'true');
+    }
+    
+    // Clean up function to ensure loading state is reset
+    const cleanup = () => {
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('isGlobalLoading');
+      }
+      setGlobalLoading(false);
+    };
+    
+    // Set up cleanup on page unload
+    const cleanupOnUnload = () => {
+      if (typeof window === 'undefined') return () => {};
+      
+      const handleBeforeUnload = () => {
+        // Keep the loading state in session storage
+        sessionStorage.setItem('isGlobalLoading', 'true');
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    };
+    
+    // Set up cleanup
+    const removeUnloadListener = cleanupOnUnload();
+    
+    // Also clean up when component unmounts
+    const cleanupOnUnmount = () => {
+      return () => {
+        removeUnloadListener();
+        // Don't clean up if we're navigating away
+        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
+        const isNavigatingAway = !currentUrl.includes('requirement');
+        
+        if (!isNavigatingAway) {
+          cleanup();
+        }
+      };
+    };
+    
+    const finalCleanup = cleanupOnUnmount();
 
     try {
       // First save the updated description if there are changes
@@ -240,35 +288,15 @@ export function RequirementDetail({
 
       poll();
     } catch (error) {
-      console.error("Error resubmitting requirement:", error);
-      setError("Hiba történt az újraküldés során. Kérjük próbáld újra később.");
-      toast.error("Hiba történt az újraküldés során");
-    } finally {
-      setGlobalLoading(false);
+      console.error("Error in handleResubmit:", error);
+      setError("Hiba történt a feldolgozás során. Kérjük próbálja újra.");
+      toast.error("Hiba történt a feldolgozás során");
+      finalCleanup();
     }
   };
 
   return (
     <div className="flex flex-col h-full relative">
-      {/* Loading Overlay - Fixed positioning to cover the whole screen */}
-      {isGlobalLoading && (
-        <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-[9999] flex items-center justify-center">
-          <div className="bg-white p-8 rounded-xl shadow-2xl border border-gray-200 max-w-md w-[90%] mx-4 text-center">
-            <div className="flex justify-center mb-6">
-              <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              Feldolgozás folyamatban
-            </h3>
-            <p className="text-gray-600">
-              Az Ön kérése feldolgozás alatt áll, kérjük várjon...
-            </p>
-            <div className="mt-6 text-sm text-gray-500">
-              Ez eltarthat néhány másodpercig
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="space-y-6 flex-grow">
         {/* Header with back button */}
