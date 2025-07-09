@@ -5,11 +5,13 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useThemeStore } from "@/store/theme-store";
+import { usePositionStore } from "@/store/position-store";
+import DraggableIcon from "@/components/DraggableIcon";
 
 export default function Dashboard() {
   const { theme } = useThemeStore();
-
   const { user } = useUser();
+  const { positions, updatePosition } = usePositionStore();
 
   // Sync theme with database when component mounts
   useEffect(() => {
@@ -34,28 +36,43 @@ export default function Dashboard() {
         <div className="absolute inset-0 bg-black/20"></div>
       </div>
 
-      {/* Ikonok pozicionálva fordított háromszögben */}
+      {/* Ikonok */}
       <div className="relative w-full h-full">
-        {/* Ajánlataim – bal felső sarokban */}
-        <Link href="/offers">
-          <div className="absolute top-[32%] left-[22%] w-20 h-20 rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
-            <FileText className="text-orange-500" size={32} />
-          </div>
-        </Link>
+        <DraggableIcon 
+          id="offers"
+          position={positions.offers}
+          onPositionChange={(x, y) => updatePosition('offers', x, y)}
+        >
+          <Link href="/offers" className="block w-20 h-20">
+            <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
+              <FileText className="text-orange-500" size={32} />
+            </div>
+          </Link>
+        </DraggableIcon>
 
-        {/* Ajánlataim – középtájon, jobbra */}
-        <Link href="/jobs">
-          <div className="absolute top-[32%] left-[55%] w-20 h-20 rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
-            <Wrench className="text-orange-500" size={32} />
-          </div>
-        </Link>
+        <DraggableIcon 
+          id="jobs"
+          position={positions.jobs}
+          onPositionChange={(x, y) => updatePosition('jobs', x, y)}
+        >
+          <Link href="/jobs" className="block w-20 h-20">
+            <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
+              <Wrench className="text-orange-500" size={32} />
+            </div>
+          </Link>
+        </DraggableIcon>
 
-        {/* Számláim – középen alul */}
-        <Link href="/dashboard/billings">
-          <div className="absolute top-[68%] left-[38%] w-20 h-20 rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
-            <DollarSign className="text-orange-500" size={32} />
-          </div>
-        </Link>
+        <DraggableIcon 
+          id="billings"
+          position={positions.billings}
+          onPositionChange={(x, y) => updatePosition('billings', x, y)}
+        >
+          <Link href="/dashboard/billings" className="block w-20 h-20">
+            <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
+              <DollarSign className="text-orange-500" size={32} />
+            </div>
+          </Link>
+        </DraggableIcon>
       </div>
     </div>
   );
