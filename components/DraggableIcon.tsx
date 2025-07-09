@@ -24,6 +24,8 @@ export default function DraggableIcon({
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const iconRef = useRef<HTMLDivElement>(null);
 
+  console.log(id);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!iconRef.current) return;
 

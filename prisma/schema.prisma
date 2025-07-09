@@ -240,3 +240,18 @@ model WorkflowSpecialty {
 
   @@id([workflowId, specialtyId])
 }
+
+model PriceList {
+  id            Int      @id @default(autoincrement())
+  category      String
+  task          String
+  technology    String
+  unit          String
+  laborCost     Int
+  materialCost  Int
+  tenantEmail   String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([task, tenantEmail], name: "task_tenantEmail")
+}
