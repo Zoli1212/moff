@@ -37,6 +37,7 @@ model User {
   name      String
   email     String   @unique
   role      String   @default("USER")
+  theme     String   @default("landing")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

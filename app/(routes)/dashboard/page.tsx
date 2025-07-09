@@ -2,16 +2,29 @@
 import Image from "next/image";
 import { FileText, Wrench, DollarSign } from "lucide-react";
 import Link from "next/link";
-import React from "react";
+import { useEffect } from "react";
+import { useUser } from "@clerk/nextjs";
+import { useThemeStore } from "@/store/theme-store";
 
 export default function Dashboard() {
+  const { theme } = useThemeStore();
+
+  const { user } = useUser();
+
+  // Sync theme with database when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      useThemeStore.getState().syncThemeWithDb(user.id);
+    }
+  }, [user]);
+
   return (
     <div className="relative h-screen w-screen overflow-hidden">
       {/* Háttérkép */}
       <div className="fixed inset-0 -z-10">
         <Image
-          src="/landing.jpg"
-          alt="Woman with notebook at construction site"
+          src={`/${theme || "landing"}.jpg`}
+          alt="Background image"
           fill
           priority
           className="object-cover"
