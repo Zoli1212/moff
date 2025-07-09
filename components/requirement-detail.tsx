@@ -405,7 +405,7 @@ export function RequirementDetail({
           <div className="bg-white rounded border border-gray-200 overflow-hidden">
             {lines.length > 0 ? (
               <div>
-                {lines.map((line, index) => (
+                {lines.map((line) => (
                   <div 
                     key={line.id}
                     className="group flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors"
