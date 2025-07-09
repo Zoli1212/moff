@@ -4,12 +4,21 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { getOfferById } from "@/actions/offer-actions";
-import { ArrowLeft, Edit, X, Loader2, Send } from "lucide-react";
+import { Loader2, X, Send, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import revalidatePath from "@/lib/revalidate-path";
+import { parseRequirementLines, isLineDeletable, RequirementLine } from "@/lib/requirement-utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface Requirement {
   id: number;
@@ -42,14 +51,16 @@ export function RequirementDetail({
     setGlobalLoading,
   } = useDemandStore();
 
-  const [isEditing, setIsEditing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   const [newText, setNewText] = useState("");
   const [error, setError] = useState("");
+  const [lines, setLines] = useState<RequirementLine[]>([]);
   const [currentDescription, setCurrentDescription] = useState(
-    requirement.description || ""
+    requirement?.description || ""
   );
-  console.log(requirement, "REQ");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [lineToDelete, setLineToDelete] = useState<string | null>(null);
 
   // Fetch offer and its items when component mounts
   useEffect(() => {
@@ -140,7 +151,6 @@ export function RequirementDetail({
       }
 
       toast.success("Követelmény sikeresen frissítve!");
-      setIsEditing(false);
     } catch (error) {
       console.error("Error updating requirement:", error);
       setError(
@@ -163,52 +173,53 @@ export function RequirementDetail({
     // Set global loading state
     setGlobalLoading(true);
     setError("");
-    
+
     // Store loading state in session storage to persist across navigation
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem('isGlobalLoading', 'true');
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("isGlobalLoading", "true");
     }
-    
+
     // Clean up function to ensure loading state is reset
     const cleanup = () => {
-      if (typeof window !== 'undefined') {
-        sessionStorage.removeItem('isGlobalLoading');
+      if (typeof window !== "undefined") {
+        sessionStorage.removeItem("isGlobalLoading");
       }
       setGlobalLoading(false);
     };
-    
+
     // Set up cleanup on page unload
     const cleanupOnUnload = () => {
-      if (typeof window === 'undefined') return () => {};
-      
+      if (typeof window === "undefined") return () => {};
+
       const handleBeforeUnload = () => {
         // Keep the loading state in session storage
-        sessionStorage.setItem('isGlobalLoading', 'true');
+        sessionStorage.setItem("isGlobalLoading", "true");
       };
-      
-      window.addEventListener('beforeunload', handleBeforeUnload);
+
+      window.addEventListener("beforeunload", handleBeforeUnload);
       return () => {
-        window.removeEventListener('beforeunload', handleBeforeUnload);
+        window.removeEventListener("beforeunload", handleBeforeUnload);
       };
     };
-    
+
     // Set up cleanup
     const removeUnloadListener = cleanupOnUnload();
-    
+
     // Also clean up when component unmounts
     const cleanupOnUnmount = () => {
       return () => {
         removeUnloadListener();
         // Don't clean up if we're navigating away
-        const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
-        const isNavigatingAway = !currentUrl.includes('requirement');
-        
+        const currentUrl =
+          typeof window !== "undefined" ? window.location.href : "";
+        const isNavigatingAway = !currentUrl.includes("requirement");
+
         if (!isNavigatingAway) {
           cleanup();
         }
       };
     };
-    
+
     const finalCleanup = cleanupOnUnmount();
 
     try {
@@ -295,152 +306,224 @@ export function RequirementDetail({
     }
   };
 
+  // Parse the description into lines when it changes
+  useEffect(() => {
+    const description = requirement?.description || '';
+    const parsedLines = parseRequirementLines(description)
+      .filter(line => line.text.trim() !== ''); // Filter out empty lines
+    setLines(parsedLines);
+  }, [requirement?.description]);
+
+  // Handle delete confirmation
+  const confirmDelete = (lineId: string) => {
+    setLineToDelete(lineId);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Handle removing a line
+  const handleRemoveLine = async () => {
+    if (!lineToDelete) return;
+    
+    try {
+      setIsProcessing(true);
+      
+      // Find the line to remove
+      const lineToRemove = lines.find(line => line.id === lineToDelete);
+      if (!lineToRemove) {
+        setLineToDelete(null);
+        setIsDeleteDialogOpen(false);
+        return;
+      }
+      
+      // Create the updated description by excluding the line to be removed
+      const currentDescription = requirement.description || '';
+      const allLines = currentDescription.split('\n');
+      const updatedLines = allLines.filter(line => line.trim() !== lineToRemove.text.trim());
+      const updatedDescription = updatedLines.join('\n').trim();
+      
+      // Update the requirement in the database
+      const response = await fetch("/api/update-requirement", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          requirementId: requirement.id,
+          data: {
+            description: updatedDescription,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update requirement');
+      }
+
+      // Update the local state
+      const data = await response.json();
+      if (data.success) {
+        setCurrentDescription(updatedDescription);
+        setLines(prevLines => prevLines.filter(line => line.id !== lineToDelete));
+        setLineToDelete(null);
+        setIsDeleteDialogOpen(false);
+        toast.success('A sor sikeresen eltávolítva');
+      } else {
+        throw new Error(data.error || 'Ismeretlen hiba történt');
+      }
+    } catch (error) {
+      console.error('Error removing line:', error);
+      toast.error('Hiba történt a sor eltávolítása közben');
+    } finally {
+      setIsProcessing(false);
+      setLineToDelete(null);
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full relative">
+    <div className="flex flex-col h-full bg-gray-50 p-4">
+      {/* Header */}
+      <div className="flex items-center space-x-4 mb-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="rounded-full w-10 h-10 hover:bg-gray-100"
+        >
+          <ArrowLeft className="h-5 w-5 text-gray-600" />
+        </Button>
+        <h1 className="text-2xl font-bold text-gray-900">
+          {requirement.title}
+        </h1>
+      </div>
 
-      <div className="space-y-6 flex-grow">
-        {/* Header with back button */}
-        <div className="flex items-center space-x-4 mb-6">
-          <button
-            onClick={onBack}
-            disabled={isGlobalLoading}
-            className={`flex items-center ${isGlobalLoading ? "text-gray-400 cursor-not-allowed" : "text-gray-600 hover:text-gray-900"} transition-colors`}
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Vissza az ajánlathoz
-          </button>
-        </div>
-
-        {/* Requirement Header */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-start mb-4">
-            <h1 className="text-2xl font-bold text-gray-900">
-              {requirement.title || "Követelmény részletei"}
-            </h1>
-            {!isEditing && (
-              <div className="fixed bottom-0 left-0 right-0 bg-transparent border-t border-gray-200 p-4 shadow-lg z-10">
-                <div className="max-w-4xl mx-auto">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                    className="w-full py-3 px-4 border-[#FF9900] text-[#FF9900] hover:bg-[#FF9900]/10 hover:text-[#e68a00] hover:border-[#e68a00] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] flex items-center justify-center"
+      {/* Main Content */}
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden flex-1 flex flex-col">
+        {/* Description Section */}
+        <div className="p-4">
+          <div className="bg-white rounded border border-gray-200 overflow-hidden">
+            {lines.length > 0 ? (
+              <div>
+                {lines.map((line, index) => (
+                  <div 
+                    key={line.id}
+                    className="group flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors"
                   >
-                    <Edit className="h-5 w-5 mr-2" />
-                    Követelmények pontosítása
-                  </Button>
-                </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`whitespace-pre-wrap break-words text-gray-800 text-sm leading-tight ${
+                        line.isSectionHeader ? 'font-semibold' : ''
+                      }`}>
+                        {line.text}
+                      </p>
+                    </div>
+                    {isLineDeletable(line) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          confirmDelete(line.id);
+                        }}
+                        disabled={isProcessing}
+                        className="flex-shrink-0 text-gray-300 hover:text-red-500 disabled:opacity-50 transition-colors p-0.5 -mr-1"
+                        title="Sor eltávolítása"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3 text-center">
+                <p className="text-gray-400 text-sm italic">Nincs megjeleníthető tartalom</p>
               </div>
             )}
           </div>
+        </div>
 
-          <div className="mt-6 space-y-6">
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-2">Leírás</h2>
-              {isEditing ? (
-                <div className="space-y-4">
-                  {currentDescription && (
-                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                      <p className="text-gray-700 whitespace-pre-line">
-                        {currentDescription}
-                      </p>
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="text-md font-medium text-gray-900 mb-2">
-                      Kiegészítő információk
-                    </h3>
-                    <Textarea
-                      value={newText}
-                      onChange={(e) => setNewText(e.target.value)}
-                      className="min-h-[100px]"
-                      placeholder="Írd ide a további követelményeket vagy módosításokat..."
-                    />
-                    {error && (
-                      <p className="mt-2 text-sm text-red-600">{error}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col space-y-3">
-                    <div className="flex flex-wrap gap-2 w-full">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => {
-                          setIsEditing(false);
-                          setError("");
-                          setNewText("");
-                        }}
-                        disabled={isSubmitting || isGlobalLoading}
-                        className="flex-1 min-w-[120px]"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        Mégse
-                      </Button>
-                      {/* <Button
-                        onClick={handleSubmit}
-                        disabled={
-                          isSubmitting || isGlobalLoading || !newText.trim()
-                        }
-                        variant="outline"
-                        className="flex-1 min-w-[120px]"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Mentés...
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-4 w-4 mr-2" />
-                            Csak mentés
-                          </>
-                        )}
-                      </Button> */}
-                      <Button
-                        onClick={handleResubmit}
-                        disabled={
-                          isSubmitting || isGlobalLoading || !newText.trim()
-                        }
-                        className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1 min-w-[120px] relative"
-                      >
-                        <span
-                          className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}
-                        >
-                          <Send className="h-4 w-4 mr-2" />
-                          Ajánlat frissítése
-                        </span>
-                        {isGlobalLoading && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                          </div>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  {currentDescription ? (
-                    <p className="text-gray-700 whitespace-pre-line">
-                      {currentDescription}
-                    </p>
-                  ) : (
-                    <p className="text-gray-400 italic">Nincs leírás megadva</p>
-                  )}
-                </div>
-              )}
-            </div>
+        {/* Additional Info Section */}
+        <div className="p-4 border-t border-gray-200">
+          <h3 className="text-md font-medium text-gray-900 mb-2">Kiegészítő információk</h3>
+          <Textarea
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            className="min-h-[80px] bg-white text-sm"
+            placeholder="Írd ide a további követelményeket vagy módosításokat..."
+          />
+          {error && (
+            <p className="mt-1 text-xs text-red-600">{error}</p>
+          )}
+        </div>
 
-            <div>
-              <h2 className="text-lg font-medium text-gray-900 mb-2">
-                Státusz
-              </h2>
+        {/* Footer Actions */}
+        <div className="p-4 bg-gray-50 border-t border-gray-100">
+          <div className="flex justify-between items-center">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setNewText("");
+                setError("");
+              }}
+              disabled={isSubmitting || isGlobalLoading}
+              className="min-w-[120px]"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Mégse
+            </Button>
+            
+            <div className="flex items-center gap-3">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 {requirement.status || "Aktív"}
               </span>
+              
+              <Button
+                onClick={handleResubmit}
+                disabled={isSubmitting || isGlobalLoading || !newText.trim()}
+                className="bg-[#FF9900] hover:bg-[#e68a00] text-white min-w-[160px] relative"
+              >
+                <span className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}>
+                  <Send className="h-4 w-4 mr-2" />
+                  Ajánlat frissítése
+                </span>
+                {isGlobalLoading && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  </div>
+                )}
+              </Button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Megerősítés szükséges</DialogTitle>
+            <DialogDescription>
+              Biztosan eltávolítod ezt a sort? A művelet nem vonható vissza.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              disabled={isProcessing}
+            >
+              Mégse
+            </Button>
+            <Button 
+              variant="destructive"
+              onClick={handleRemoveLine}
+              disabled={isProcessing}
+            >
+              {isProcessing ? 'Feldolgozás...' : 'Eltávolítás'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

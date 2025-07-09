@@ -412,11 +412,9 @@ Best Regards,
 
 Martin Retai
 
-# tételként rakja a munkálatokat az item
-# kérdések kidolgozva
-# követelmények tételesen kerüljenek be törölhetőek és szerkeszthetőek
-# spinner maradjon végig
-# lépések legyenek a spinnerben
+# lokális tábla az áraknak
+# növeld meg az árakat 10% al -
+
 -----
 # template corporate 3 - 4 képernyő theme
 # képet berakni kezdőképernyő bállítás
