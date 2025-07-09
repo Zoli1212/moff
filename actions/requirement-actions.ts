@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Requirement } from "@prisma/client";
+import { currentUser } from "@clerk/nextjs/server";
 
 export interface RequirementWithOffers extends Requirement {
   _count: {
@@ -14,14 +15,32 @@ export async function getRequirementsByWorkId(
   workId: number
 ): Promise<RequirementWithOffers[]> {
   try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+    if (!userEmail) {
+      throw new Error("Nem található email cím a felhasználóhoz!");
+    }
+
     const requirements = await prisma.requirement.findMany({
       where: {
         myWorkId: workId,
+        myWork: {
+          tenantEmail: userEmail,
+        },
       },
       include: {
         _count: {
           select: {
             offers: true,
+          },
+        },
+        myWork: {
+          select: {
+            tenantEmail: true,
           },
         },
       },
@@ -39,17 +58,38 @@ export async function getRequirementsByWorkId(
 
 export async function getRequirementById(requirementId: number) {
   try {
-    const requirement = await prisma.requirement.findUnique({
-      where: { id: requirementId },
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+    if (!userEmail) {
+      throw new Error("Nem található email cím a felhasználóhoz!");
+    }
+
+    const requirement = await prisma.requirement.findFirst({
+      where: { 
+        id: requirementId,
+        myWork: {
+          tenantEmail: userEmail,
+        },
+      },
       include: {
         myWork: {
           select: {
             id: true,
             title: true,
+            tenantEmail: true,
           },
         },
       },
     });
+
+    if (!requirement) {
+      throw new Error("A követelmény nem található vagy nincs hozzáférése!");
+    }
+
     return requirement;
   } catch (error) {
     console.error("Error fetching requirement:", error);
@@ -59,8 +99,35 @@ export async function getRequirementById(requirementId: number) {
 
 export async function getOffersByRequirementId(requirementId: number) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+    if (!userEmail) {
+      throw new Error("Nem található email cím a felhasználóhoz!");
+    }
+
+    // First verify the requirement belongs to the user
+    const requirement = await prisma.requirement.findFirst({
+      where: { 
+        id: requirementId,
+        myWork: {
+          tenantEmail: userEmail,
+        },
+      },
+    });
+
+    if (!requirement) {
+      throw new Error("A követelmény nem található vagy nincs hozzáférése!");
+    }
+
     const offers = await prisma.offer.findMany({
-      where: { requirementId },
+      where: { 
+        requirementId,
+        tenantEmail: userEmail,
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -116,9 +183,36 @@ export async function createRequirement(
   description: string
 ) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+    if (!userEmail) {
+      throw new Error("Nem található email cím a felhasználóhoz!");
+    }
+
+    // Verify the work belongs to the user
+    const work = await prisma.myWork.findFirst({
+      where: { 
+        id: workId,
+        tenantEmail: userEmail,
+      },
+    });
+
+    if (!work) {
+      throw new Error("A munka nem található vagy nincs jogosultsága hozzá!");
+    }
+
     // First, get the latest version number for this work
     const latestVersion = await prisma.requirement.findFirst({
-      where: { myWorkId: workId },
+      where: { 
+        myWorkId: workId,
+        myWork: {
+          tenantEmail: userEmail,
+        },
+      },
       orderBy: { versionNumber: "desc" },
       select: { versionNumber: true },
     });
@@ -153,8 +247,37 @@ export async function updateRequirement(
   }
 ) {
   try {
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+    if (!userEmail) {
+      throw new Error("Nem található email cím a felhasználóhoz!");
+    }
+
+    // First verify the requirement belongs to the user
+    const requirement = await prisma.requirement.findFirst({
+      where: { 
+        id: requirementId,
+        myWork: {
+          tenantEmail: userEmail,
+        },
+      },
+    });
+
+    if (!requirement) {
+      throw new Error("A követelmény nem található vagy nincs jogosultsága a módosításhoz!");
+    }
+
     const updatedRequirement = await prisma.requirement.update({
-      where: { id: requirementId },
+      where: { 
+        id: requirementId,
+        myWork: {
+          tenantEmail: userEmail,
+        },
+      },
       data: {
         ...(data.title && { title: data.title }),
         ...(data.description && { description: data.description }),

@@ -1,32 +1,28 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 
 // Get all workflows for the current user
 export async function getWorkflows() {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
+  const user = await currentUser();
+  
+  if (!user) {
+    throw new Error("Nincs bejelentkezve felhasználó!");
   }
 
-  // Get user's email from Clerk
-  const user = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-    select: { email: true },
-  });
-
-  if (!user?.email) {
-    throw new Error("User not found");
+  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) {
+    throw new Error("Nem található email cím a felhasználóhoz!");
   }
 
   return await prisma.workflow.findMany({
     where: {
+      tenantEmail: userEmail,
       WorkflowSpecialty: {
         some: {
           specialty: {
-            tenantEmail: user.email,
+            tenantEmail: userEmail,
           },
         },
       },
@@ -46,27 +42,22 @@ export async function getWorkflows() {
 
 // Get workflows by specialty ID
 export async function getWorkflowsBySpecialty(specialtyId: number) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
+  const user = await currentUser();
+  
+  if (!user) {
+    throw new Error("Nincs bejelentkezve felhasználó!");
   }
 
-  // Get user's email from Clerk
-  const user = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-    select: { email: true },
-  });
-
-  if (!user?.email) {
-    throw new Error("User not found");
+  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) {
+    throw new Error("Nem található email cím a felhasználóhoz!");
   }
 
   // Verify the specialty belongs to the user
   const specialty = await prisma.specialty.findFirst({
     where: {
       id: specialtyId,
-      tenantEmail: user.email,
+      tenantEmail: userEmail,
     },
   });
 
@@ -94,27 +85,22 @@ export async function createWorkflow(
   description: string,
   specialtyId: number
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
+  const user = await currentUser();
+  
+  if (!user) {
+    throw new Error("Nincs bejelentkezve felhasználó!");
   }
 
-  // Get user's email from Clerk
-  const user = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-    select: { email: true },
-  });
-
-  if (!user?.email) {
-    throw new Error("User not found");
+  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) {
+    throw new Error("Nem található email cím a felhasználóhoz!");
   }
 
   // Verify the specialty belongs to the user
   const specialty = await prisma.specialty.findFirst({
     where: {
       id: specialtyId,
-      tenantEmail: user.email,
+      tenantEmail: userEmail,
     },
   });
 
@@ -127,7 +113,7 @@ export async function createWorkflow(
     data: {
       name,
       description,
-      tenantEmail: user.email,
+      tenantEmail: userEmail,
       WorkflowSpecialty: {
         create: {
           specialtyId: specialtyId,
@@ -142,27 +128,22 @@ export async function updateWorkflow(
   workflowId: number,
   data: { name?: string; description?: string }
 ) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
+  const user = await currentUser();
+  
+  if (!user) {
+    throw new Error("Nincs bejelentkezve felhasználó!");
   }
 
-  // Get user's email from Clerk
-  const user = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-    select: { email: true },
-  });
-
-  if (!user?.email) {
-    throw new Error("User not found");
+  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) {
+    throw new Error("Nem található email cím a felhasználóhoz!");
   }
 
   // Verify the workflow belongs to the user
   const workflow = await prisma.workflow.findFirst({
     where: {
       id: workflowId,
-      tenantEmail: user.email,
+      tenantEmail: userEmail,
     },
   });
 
@@ -181,27 +162,22 @@ export async function updateWorkflow(
 
 // Delete a workflow
 export async function deleteWorkflow(workflowId: number) {
-  const { userId } = await auth();
-
-  if (!userId) {
-    throw new Error("Unauthorized");
+  const user = await currentUser();
+  
+  if (!user) {
+    throw new Error("Nincs bejelentkezve felhasználó!");
   }
 
-  // Get user's email from Clerk
-  const user = await prisma.user.findUnique({
-    where: { id: Number(userId) },
-    select: { email: true },
-  });
-
-  if (!user?.email) {
-    throw new Error("User not found");
+  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) {
+    throw new Error("Nem található email cím a felhasználóhoz!");
   }
 
   // Verify the workflow belongs to the user
   const workflow = await prisma.workflow.findFirst({
     where: {
       id: workflowId,
-      tenantEmail: user.email,
+      tenantEmail: userEmail,
     },
   });
 

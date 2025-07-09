@@ -9,9 +9,11 @@ export async function getUserWorks() {
     throw new Error('Not authenticated');
   }
 
+  const emailId = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress;
+
   const works = await prisma.myWork.findMany({
     where: {
-      tenantEmail: user.emailAddresses[0].emailAddress,
+      tenantEmail: emailId,
     },
     orderBy: {
       date: 'desc',

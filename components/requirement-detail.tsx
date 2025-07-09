@@ -1,16 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { getOfferById } from "@/actions/offer-actions";
-import { Loader2, X, Send, ArrowLeft } from "lucide-react";
+import { Loader2, X, Send, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import revalidatePath from "@/lib/revalidate-path";
-import { parseRequirementLines, isLineDeletable, RequirementLine } from "@/lib/requirement-utils";
+import {
+  parseRequirementLines,
+  isLineDeletable,
+  RequirementLine,
+} from "@/lib/requirement-utils";
+import {
+  SwipeableList,
+  SwipeableListItem,
+  SwipeAction,
+  TrailingActions,
+} from "react-swipeable-list";
+import "react-swipeable-list/dist/styles.css";
 import {
   Dialog,
   DialogContent,
@@ -308,11 +319,27 @@ export function RequirementDetail({
 
   // Parse the description into lines when it changes
   useEffect(() => {
-    const description = requirement?.description || '';
-    const parsedLines = parseRequirementLines(description)
-      .filter(line => line.text.trim() !== ''); // Filter out empty lines
+    const description = requirement?.description || "";
+    const parsedLines = parseRequirementLines(description).filter(
+      (line) => line.text.trim() !== ""
+    ); // Filter out empty lines
     setLines(parsedLines);
   }, [requirement?.description]);
+
+  // Swipeable list item trailing actions
+  const getTrailingActions = useCallback(
+    (lineId: string) => (
+      <TrailingActions>
+        <SwipeAction destructive={true} onClick={() => confirmDelete(lineId)}>
+          <div className="flex items-center justify-end h-full px-4 bg-red-500 text-white">
+            <Trash2 className="h-5 w-5 mr-2" />
+            <span>Törlés</span>
+          </div>
+        </SwipeAction>
+      </TrailingActions>
+    ),
+    []
+  );
 
   // Handle delete confirmation
   const confirmDelete = (lineId: string) => {
@@ -323,24 +350,26 @@ export function RequirementDetail({
   // Handle removing a line
   const handleRemoveLine = async () => {
     if (!lineToDelete) return;
-    
+
     try {
       setIsProcessing(true);
-      
+
       // Find the line to remove
-      const lineToRemove = lines.find(line => line.id === lineToDelete);
+      const lineToRemove = lines.find((line) => line.id === lineToDelete);
       if (!lineToRemove) {
         setLineToDelete(null);
         setIsDeleteDialogOpen(false);
         return;
       }
-      
+
       // Create the updated description by excluding the line to be removed
-      const currentDescription = requirement.description || '';
-      const allLines = currentDescription.split('\n');
-      const updatedLines = allLines.filter(line => line.trim() !== lineToRemove.text.trim());
-      const updatedDescription = updatedLines.join('\n').trim();
-      
+      const currentDescription = requirement.description || "";
+      const allLines = currentDescription.split("\n");
+      const updatedLines = allLines.filter(
+        (line) => line.trim() !== lineToRemove.text.trim()
+      );
+      const updatedDescription = updatedLines.join("\n").trim();
+
       // Update the requirement in the database
       const response = await fetch("/api/update-requirement", {
         method: "POST",
@@ -357,23 +386,25 @@ export function RequirementDetail({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Failed to update requirement');
+        throw new Error(errorData.error || "Failed to update requirement");
       }
 
       // Update the local state
       const data = await response.json();
       if (data.success) {
         setCurrentDescription(updatedDescription);
-        setLines(prevLines => prevLines.filter(line => line.id !== lineToDelete));
+        setLines((prevLines) =>
+          prevLines.filter((line) => line.id !== lineToDelete)
+        );
         setLineToDelete(null);
         setIsDeleteDialogOpen(false);
-        toast.success('A sor sikeresen eltávolítva');
+        toast.success("A követelmény sor eltávolítva");
       } else {
-        throw new Error(data.error || 'Ismeretlen hiba történt');
+        throw new Error(data.error || "Ismeretlen hiba történt");
       }
     } catch (error) {
-      console.error('Error removing line:', error);
-      toast.error('Hiba történt a sor eltávolítása közben');
+      console.error("Error removing line:", error);
+      toast.error("Hiba történt a sor eltávolítása közben");
     } finally {
       setIsProcessing(false);
       setLineToDelete(null);
@@ -404,38 +435,49 @@ export function RequirementDetail({
         <div className="p-4">
           <div className="bg-white rounded border border-gray-200 overflow-hidden">
             {lines.length > 0 ? (
-              <div>
+              <SwipeableList threshold={0.3}>
                 {lines.map((line) => (
-                  <div 
+                  <SwipeableListItem
                     key={line.id}
-                    className="group flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors"
+                    trailingActions={
+                      isLineDeletable(line)
+                        ? getTrailingActions(line.id)
+                        : undefined
+                    }
+                    className="group"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className={`whitespace-pre-wrap break-words text-gray-800 text-sm leading-tight ${
-                        line.isSectionHeader ? 'font-semibold' : ''
-                      }`}>
-                        {line.text}
-                      </p>
+                    <div className="flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors bg-white">
+                      <div className="flex-1 min-w-0 py-2">
+                        <p
+                          className={`whitespace-pre-wrap break-words text-gray-800 text-sm leading-tight ${
+                            line.isSectionHeader ? "font-semibold" : ""
+                          }`}
+                        >
+                          {line.text}
+                        </p>
+                      </div>
+                      {isLineDeletable(line) && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            confirmDelete(line.id);
+                          }}
+                          disabled={isProcessing}
+                          className="flex-shrink-0 text-gray-300 hover:text-red-500 disabled:opacity-50 transition-colors p-0.5 -mr-1"
+                          title="Sor eltávolítása"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
                     </div>
-                    {isLineDeletable(line) && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmDelete(line.id);
-                        }}
-                        disabled={isProcessing}
-                        className="flex-shrink-0 text-gray-300 hover:text-red-500 disabled:opacity-50 transition-colors p-0.5 -mr-1"
-                        title="Sor eltávolítása"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    )}
-                  </div>
+                  </SwipeableListItem>
                 ))}
-              </div>
+              </SwipeableList>
             ) : (
               <div className="p-3 text-center">
-                <p className="text-gray-400 text-sm italic">Nincs megjeleníthető tartalom</p>
+                <p className="text-gray-400 text-sm italic">
+                  Nincs megjeleníthető tartalom
+                </p>
               </div>
             )}
           </div>
@@ -443,16 +485,16 @@ export function RequirementDetail({
 
         {/* Additional Info Section */}
         <div className="p-4 border-t border-gray-200">
-          <h3 className="text-md font-medium text-gray-900 mb-2">Kiegészítő információk</h3>
+          <h3 className="text-md font-medium text-gray-900 mb-2">
+            Kiegészítő információk
+          </h3>
           <Textarea
             value={newText}
             onChange={(e) => setNewText(e.target.value)}
             className="min-h-[80px] bg-white text-sm"
             placeholder="Írd ide a további követelményeket vagy módosításokat..."
           />
-          {error && (
-            <p className="mt-1 text-xs text-red-600">{error}</p>
-          )}
+          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
         </div>
 
         {/* Footer Actions */}
@@ -471,18 +513,20 @@ export function RequirementDetail({
               <X className="h-4 w-4 mr-2" />
               Mégse
             </Button>
-            
+
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
                 {requirement.status || "Aktív"}
               </span>
-              
+
               <Button
                 onClick={handleResubmit}
                 disabled={isSubmitting || isGlobalLoading || !newText.trim()}
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white min-w-[160px] relative"
               >
-                <span className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}>
+                <span
+                  className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}
+                >
                   <Send className="h-4 w-4 mr-2" />
                   Ajánlat frissítése
                 </span>
@@ -507,19 +551,19 @@ export function RequirementDetail({
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isProcessing}
             >
               Mégse
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={handleRemoveLine}
               disabled={isProcessing}
             >
-              {isProcessing ? 'Feldolgozás...' : 'Eltávolítás'}
+              {isProcessing ? "Feldolgozás..." : "Eltávolítás"}
             </Button>
           </DialogFooter>
         </DialogContent>

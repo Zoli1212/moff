@@ -326,7 +326,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 export async function getUserOffers() {
   try {
     const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress;
+    const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0].emailAddress;
 
     if (!userEmail) {
       throw new Error("No email available for user");
@@ -381,10 +381,19 @@ export async function getUserOffers() {
 
 export async function getOfferById(id: number) {
   try {
-    console.log(`Fetching offer with ID: ${id}`);
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress;
+    console.log(`Fetching offer with ID: ${id} for user: ${userEmail}`);
 
-    const offer = await prisma.offer.findUnique({
-      where: { id },
+    const offer = await prisma.offer.findFirst({
+      where: { 
+        id,
+        tenantEmail: userEmail 
+      },
       include: {
         requirement: {
           select: {
@@ -398,7 +407,7 @@ export async function getOfferById(id: number) {
     });
 
     if (!offer) {
-      console.log(`No offer found with ID: ${id}`);
+      console.log(`No offer found with ID: ${id} for user: ${userEmail}`);
       return null;
     }
 
@@ -428,7 +437,26 @@ export async function getOfferById(id: number) {
 
 export async function updateOfferItems(offerId: number, items: OfferItem[]) {
   try {
-    console.log(`Updating items for offer ID: ${offerId}`, items);
+    const user = await currentUser();
+    if (!user) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+    
+    const userEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress;
+    console.log(`Updating items for offer ID: ${offerId} for user: ${userEmail}`, items);
+
+    // First, verify the offer belongs to the current user
+    const existingOffer = await prisma.offer.findFirst({
+      where: {
+        id: offerId,
+        tenantEmail: userEmail
+      },
+      select: { id: true }
+    });
+
+    if (!existingOffer) {
+      throw new Error("Az ajánlat nem található vagy nincs jogosultságod a módosításához!");
+    }
 
     // Calculate new totals
     const totals = items.reduce(
@@ -454,7 +482,10 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 
     // Update the offer with new items and total price
     const updatedOffer = await prisma.offer.update({
-      where: { id: offerId },
+      where: { 
+        id: offerId,
+        tenantEmail: userEmail // Ensure we only update if the offer belongs to the user
+      },
       data: {
         items: items as unknown as Prisma.InputJsonValue, // Type-safe JSON serialization
         totalPrice: grandTotal,
@@ -518,7 +549,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
       },
     };
   } catch (error) {
-    console.error("❌ Error updating offer items:", error);
+    console.error("Error updating offer items:", error);
     return {
       success: false,
       error: "Hiba történt az ajánlat frissítésekor",
