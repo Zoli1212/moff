@@ -312,11 +312,22 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     );
   }, [editableItems]);
 
-  const {
-    material: materialTotal,
-    work: workTotal,
-    total: grandTotal,
-  } = calculateTotals();
+  const { material: materialTotal, work: workTotal, total: grandTotal } = calculateTotals();
+
+  // Helper functions to extract name and email from title and description
+  const extractName = (title?: string | null): string => {
+    if (!title) return "";
+    // Try to find a name in the title (assuming format like "Ajánlat - John Doe")
+    const nameMatch = title.match(/[-:]\s*([^\n,]+)/);
+    return nameMatch ? nameMatch[1].trim() : title;
+  };
+
+  const extractEmail = (description?: string | null): string => {
+    if (!description) return "";
+    // Try to find an email in the description
+    const emailMatch = description.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
+    return emailMatch ? emailMatch[0] : "";
+  };
 
   // Debug: log the requirement object
   useEffect(() => {
@@ -928,8 +939,8 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 }))}
                 total={grandTotal.toLocaleString("hu-HU") + " Ft"}
                 title={offer.title || "Ajánlat"}
-                name={"name" in (offer.requirement || {}) ? (offer.requirement as any).name : ""}
-                email={"email" in (offer.requirement || {}) ? (offer.requirement as any).email : ""}
+                name={extractName(offer.requirement?.title)}
+                email={extractEmail(offer.requirement?.description)}
               />
             </div>
           )}

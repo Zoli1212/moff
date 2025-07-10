@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { MessageCircle, Mail, Share2, FileText } from "lucide-react";
+import { MessageCircle, Share2, FileText } from "lucide-react";
 
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
