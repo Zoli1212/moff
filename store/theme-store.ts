@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { setTheme } from '@/actions/theme.actions';
+import { setTheme as saveThemeToDb } from '@/actions/theme.actions';
 
 type Theme = 'landing' | 'corporate' | 'common';
 
@@ -32,7 +32,15 @@ export const useThemeStore = create<ThemeState>()(
     (set, get) => ({
       theme: DEFAULT_THEME,
       isInitialized: false,
-      setTheme: (theme: Theme) => set({ theme }),
+      setTheme: async (theme: Theme) => {
+        set({ theme });
+        // Try to save to database if user is logged in
+        try {
+          await saveThemeToDb(theme);
+        } catch (error) {
+          console.error('Failed to save theme to database:', error);
+        }
+      },
       initializeTheme: (theme: Theme) => {
         if (!get().isInitialized) {
           set({ theme, isInitialized: true });
@@ -41,7 +49,7 @@ export const useThemeStore = create<ThemeState>()(
       syncThemeWithDb: async (userId: string) => {
         const { theme } = get();
         try {
-          await setTheme(theme);
+          await saveThemeToDb(theme);
         } catch (error) {
           console.error('Failed to sync theme with database:', error);
         }

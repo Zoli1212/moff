@@ -2,23 +2,13 @@
 import Image from "next/image";
 import { FileText, Wrench, DollarSign } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
-import { useUser } from "@clerk/nextjs";
 import { useThemeStore } from "@/store/theme-store";
 import { usePositionStore } from "@/store/position-store";
 import DraggableIcon from "@/components/DraggableIcon";
 
 export default function Dashboard() {
   const { theme } = useThemeStore();
-  const { user } = useUser();
   const { positions, updatePosition } = usePositionStore();
-
-  // Sync theme with database when component mounts
-  useEffect(() => {
-    if (user?.id) {
-      useThemeStore.getState().syncThemeWithDb(user.id);
-    }
-  }, [user]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
