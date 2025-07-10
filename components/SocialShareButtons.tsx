@@ -273,26 +273,26 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         const boxY = finalY + 10; // Add some space after table
         const boxHeight = 45;
         const boxX = 190 - boxWidth; // Right-align the box
-        
+
         // Draw light blue background
         doc.setFillColor(230, 240, 255);
-        doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'F');
-        
+        doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, "F");
+
         // Add subtle border
         doc.setDrawColor(200, 220, 255);
         doc.setLineWidth(0.5);
-        doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, 'S');
-        
+        doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, "S");
+
         // Add summary text
         doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
         doc.setTextColor(0, 0, 0);
-        
+
         // Calculate text positions relative to the box
         const textY1 = boxY + 12;
         const textY2 = boxY + 24;
         const textY3 = boxY + 36;
-        
+
         // Work total
         doc.text("Munkadíj összesen:", boxX + 10, textY1);
         doc.text(
@@ -428,29 +428,6 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-blue-700"
       >
         <MessageCircle className="w-4 h-4" />
-      </button>
-
-      {/* Email */}
-      <button
-        onClick={() => {
-          if (!offer) return;
-          try {
-            const subject = encodeURIComponent(offer.title || "Ajánlat");
-            const body = encodeURIComponent(
-              getShareText() + "\n\nAz ajánlat letöltése: " + pageUrl
-            );
-            window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
-          } catch (error) {
-            console.error("Hiba az email küldése során:", error);
-            alert(
-              "Hiba történt az email küldése során. Kérjük, próbáld újra később."
-            );
-          }
-        }}
-        aria-label="Megosztás emailben"
-        className="w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-700"
-      >
-        <Mail className="w-4 h-4" />
       </button>
 
       {/* WhatsApp */}

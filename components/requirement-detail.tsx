@@ -72,6 +72,7 @@ export function RequirementDetail({
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
+  const [isLineRemoved, setIsLineRemoved] = useState(false);
 
   // Fetch offer and its items when component mounts
   useEffect(() => {
@@ -174,8 +175,8 @@ export function RequirementDetail({
   };
 
   const handleResubmit = async () => {
-    if (!newText.trim()) {
-      const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez!";
+    if (!newText.trim() && !isLineRemoved) {
+      const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez, vagy távolíts el egy elemet!";
       console.log("Validation error:", errorMsg);
       setError(errorMsg);
       return;
@@ -398,6 +399,7 @@ export function RequirementDetail({
         );
         setLineToDelete(null);
         setIsDeleteDialogOpen(false);
+        setIsLineRemoved(true);
         toast.success("A követelmény sor eltávolítva");
       } else {
         throw new Error(data.error || "Ismeretlen hiba történt");
@@ -515,13 +517,11 @@ export function RequirementDetail({
             </Button>
 
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                {requirement.status || "Aktív"}
-              </span>
+            
 
               <Button
                 onClick={handleResubmit}
-                disabled={isSubmitting || isGlobalLoading || !newText.trim()}
+                disabled={isSubmitting || isGlobalLoading || (!newText.trim() && !isLineRemoved)}
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white min-w-[160px] relative"
               >
                 <span
