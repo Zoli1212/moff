@@ -9,6 +9,13 @@ import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import { OfferItem, OfferWithItems } from "@/types/offer.types";
 import { useDemandStore } from "@/store/offerLetterStore";
+import dynamic from "next/dynamic";
+
+// Dynamically import the email sender component to avoid SSR issues
+const OfferLetterEmailSender = dynamic(
+  () => import("@/app/(routes)/ai-tools/ai-offer-letter/[recordid]/_components/OfferLetterEmailSender"),
+  { ssr: false }
+);
 import {
   ArrowLeft,
   FileText,
@@ -25,6 +32,9 @@ import {
   MoreVertical,
   Copy,
   Printer,
+  Mail,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -100,6 +110,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEmailExpanded, setIsEmailExpanded] = useState(false);
   const { setDemandText } = useDemandStore();
 
   // Log items when they change
@@ -885,6 +896,44 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             </button>
           </div>
         )}
+
+        {/* Email Sender Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
+          <button
+            onClick={() => setIsEmailExpanded(!isEmailExpanded)}
+            className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center">
+              <Mail className="h-5 w-5 mr-2 text-gray-500" />
+              <span className="font-medium">Ajánlat küldése emailben</span>
+            </div>
+            {isEmailExpanded ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
+          
+          {isEmailExpanded && (
+            <div className="px-6 pb-4">
+              <OfferLetterEmailSender 
+                items={items.map(item => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  unit: item.unit,
+                  materialUnitPrice: item.materialUnitPrice || '0 Ft',
+                  materialTotal: item.materialTotal || '0 Ft',
+                  workUnitPrice: item.unitPrice || '0 Ft',
+                  workTotal: item.workTotal || '0 Ft'
+                }))}
+                total={grandTotal.toLocaleString("hu-HU") + " Ft"}
+                title={offer.title || "Ajánlat"}
+                name={"name" in (offer.requirement || {}) ? (offer.requirement as any).name : ""}
+                email={"email" in (offer.requirement || {}) ? (offer.requirement as any).email : ""}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
