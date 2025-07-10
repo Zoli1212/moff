@@ -53,7 +53,7 @@ export function AppSidebar() {
   }, [user]);
 
   return (
-    <Sidebar className="bg-[#1f1f1f] text-[#f5deb3] border-r border-[#333]">
+    <Sidebar className="bg-[#121212] text-[#ffeb3b] border-r border-[#333]">
       <SidebarHeader>
         <div className="p-4 flex flex-col items-center">
           <Image
@@ -63,15 +63,15 @@ export function AppSidebar() {
             height={80}
             className="mb-2"
           />
-          <h2 className="text-sm text-[#aaaaaa] text-center">
+          <h2 className="text-sm text-[#ffd600] text-center">
             Fejlessz nagyszerű készségeket!
           </h2>
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="bg-[#121212]">
         <SidebarGroup>
-          <SidebarGroupContent>
+          <SidebarGroupContent className="bg-[#121212]">
             <SidebarMenu className="mt-2 space-y-1">
               {mainItems.map((item, index) => {
                 const isActive =
@@ -90,7 +90,7 @@ export function AppSidebar() {
                       ${
                         isActive
                           ? "bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 text-black font-semibold"
-                          : "hover:bg-[#333] hover:text-yellow-300"
+                          : "hover:bg-[#333333] hover:text-yellow-400"
                       }`}
                   >
                     <item.icon className="w-5 h-5" />
@@ -112,7 +112,7 @@ export function AppSidebar() {
           ${
             isActive
               ? "bg-yellow-500 text-black border-yellow-500 font-semibold shadow-md"
-              : "bg-[#2a2a2a] text-[#f5deb3] border-yellow-400 hover:bg-[#3a3a3a] hover:shadow"
+              : "bg-[#2a2a2a] text-[#ffeb3b] border-yellow-400 hover:bg-[#3a3a3a] hover:shadow"
           }`}
                     >
                       <item.icon className="h-6 w-6 mb-1" />
@@ -126,14 +126,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-[#1a1a1a]">
+      <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-[#121212]">
         <UserButton afterSignOutUrl="/" />
 
         {showThemeSelector && (
           <div className="mt-4 w-full px-4">
             <div className="bg-[#2c2c2c] border border-[#444] rounded-xl p-3 shadow-lg">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-sm font-semibold text-[#f5deb3]">
+                <h2 className="text-sm font-semibold text-[#ffd600]">
                   Válassz hátteret
                 </h2>
                 <button
@@ -155,7 +155,7 @@ export function AppSidebar() {
                       ${
                         currentTheme === theme
                           ? "bg-yellow-500 text-black font-semibold"
-                          : "bg-[#444] text-[#f5deb3] hover:bg-[#555]"
+                          : "bg-[#444] text-[#ffeb3b] hover:bg-[#555]"
                       }`}
                   >
                     {theme.charAt(0).toUpperCase() + theme.slice(1)}
@@ -168,7 +168,7 @@ export function AppSidebar() {
 
         <button
           onClick={() => setShowThemeSelector(!showThemeSelector)}
-          className="w-11/12 mt-3 bg-[#2e2e2e] hover:bg-[#3a3a3a] text-[#f5deb3] py-2 px-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+          className="w-11/12 mt-3 bg-[#2e2e2e] hover:bg-[#3a3a3a] text-[#ffd600] py-2 px-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Palette size={16} />
           <span>Háttér beállítása</span>
