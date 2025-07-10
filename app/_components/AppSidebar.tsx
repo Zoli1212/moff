@@ -54,7 +54,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="bg-[#121212] text-[#ffeb3b] border-r border-[#333]">
-      <SidebarHeader>
+      <SidebarHeader className="bg-black">
         <div className="p-4 flex flex-col items-center">
           <Image
             src={"/logo.svg"}
@@ -86,7 +86,7 @@ export function AppSidebar() {
                   <a
                     key={index}
                     href={item.url}
-                    className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors
+                    className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors text-[#ffeb3b]
                       ${
                         isActive
                           ? "bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 text-black font-semibold"
@@ -126,7 +126,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-[#121212]">
+      <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-black">
         <UserButton afterSignOutUrl="/" />
 
         {showThemeSelector && (
@@ -175,7 +175,7 @@ export function AppSidebar() {
         </button>
       </div>
 
-      <SidebarFooter>
+      <SidebarFooter className="bg-black">
         <div className="w-full px-4 pb-4">
           <SignOutButton redirectUrl="/">
             <button className="w-full px-4 py-2 border border-yellow-500 text-yellow-500 rounded hover:bg-yellow-500 hover:text-black transition-colors text-sm">
