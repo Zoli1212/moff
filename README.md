@@ -411,8 +411,75 @@ bence.szabo@pelda.hu
 Best Regards,
 
 Martin Retai
+---
+Tárgy: Lakásfelújítás kapcsán érdeklődöm – XIII. kerület, 2 szoba, extra igények
 
+Helló!
 
+Egy 61 m²-es lakás részleges felújításával kapcsolatban szeretnék érdeklődni. Az ingatlan a XIII. kerületben található (Tahi utca 45.). Olyan csapatot keresek, akik gyorsak, pontosak, és nem ijedeznek meg egy kis extra kéréstől sem.
+
+Amit szeretnék:
+
+Teljes festés (főként fehér, de egy fal sötétkék lenne) – kb. 150 m²
+
+Fürdőszoba újramosása + zuhanykabin csere (kb. 6 m²)
+
+Elektromos rendszer átnézése és 4 új dugalj beépítése
+
+Konyhai munkapult cseréje és új mosogató bekötése
+
+Hangszigetelés a hálószobában egy falon (10 m² – lehet bármi kreatív megoldás!)
+
+Fontos lenne:
+
+Ár- és időbecslés külön bontva (anyag / munkadíj)
+
+Mennyi idő alatt készülnétek el vele?
+
+Van-e lehetőség helyszíni felmérésre előtte?
+
+Ha szükséges, tudok képeket is küldeni a jelenlegi állapotról.
+
+Köszi előre is,
+Varga Anna
+anna.varga@gmail.com
++36 20 123 4567
+-----
+Tárgy: Irodafelújítási ajánlatkérés – VI. kerület, Teréz körút 39.
+
+Tisztelt Cégvezetés!
+
+Cégünk, az OptiSolve Kft. előzetes árajánlatot szeretne kérni egy VI. kerületi, 85 m²-es iroda részleges felújítására. A munkák célja az irodatér modernizálása és funkcionálisabbá tétele.
+
+Felújítási munkák listája:
+
+Teljes festés és mennyezeti javítás (kb. 200 m² falfelület)
+
+Laminált padló csere 3 helyiségben (összesen 60 m²)
+
+Új LED világítás kiépítése (8 mennyezeti lámpa, mozgásérzékelős kapcsolás)
+
+Régi válaszfal bontása és gipszkarton fallal újraépítése (12 m²)
+
+Beltéri ajtók cseréje (3 db, egységes dizájn)
+
+Kérjük, hogy az ajánlat tartalmazza:
+
+Részletes tételes bontást (anyag / munkadíj külön)
+
+Összesített nettó árat
+
+Becsült kivitelezési időtartamot
+
+A kivitelezés megkezdésének lehetséges legkorábbi időpontját
+
+A felmérést előzetes egyeztetés után személyesen is tudjuk biztosítani.
+
+Köszönettel:
+Dr. Farkas Máté
+ügyvezető – OptiSolve Kft.
+info@optisolve.hu
++36 1 999 8877
 
 # alaprajz 
 # tervrajzot lehessen hozzá tölteni, külön oldalak + nevek adása
@@ -423,12 +490,7 @@ Martin Retai
 -----
 # képet berakni kezdőképernyő bállítás
 # új képet tudjon feltölteni
-------
-# ha megnevezést változtatja kéressen
+-
 # követelmények
-# letöltés excel + pdf hide email
-# árváltozás több lehet 
-# helyesírás ellenőrzés
-# ikon iphone megosztás ikon
-# figyelmeztetés
+# items
 ------

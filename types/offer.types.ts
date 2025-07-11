@@ -21,6 +21,7 @@ export interface OfferWithItems extends Omit<PrismaOffer, 'items' | 'notes'> {
     title: string;
     description: string | null;
     status: string;
+    updateCount?: number;
   } | null;
 }
 

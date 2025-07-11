@@ -283,6 +283,7 @@ export async function updateRequirement(
         ...(data.description && { description: data.description }),
         ...(data.status && { status: data.status }),
         updatedAt: new Date(),
+        updateCount: { increment: 1 },
       },
       include: {
         myWork: true,

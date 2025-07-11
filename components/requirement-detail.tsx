@@ -465,7 +465,7 @@ export function RequirementDetail({
                             confirmDelete(line.id);
                           }}
                           disabled={isProcessing}
-                          className="flex-shrink-0 text-gray-300 hover:text-red-500 disabled:opacity-50 transition-colors p-0.5 -mr-1"
+                          className="flex-shrink-0 text-gray-700 hover:text-red-500 disabled:opacity-50 transition-colors p-0.5 -mr-1"
                           title="Sor eltávolítása"
                         >
                           <X className="h-3 w-3" />
