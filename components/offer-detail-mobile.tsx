@@ -486,7 +486,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   //             ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ""}
   //           </div>
   //         </div>
-          
+
   //         ${
   //           offer.description
   //             ? `
@@ -497,7 +497,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   //         `
   //             : ""
   //         }
-          
+
   //         ${
   //           items.length > 0
   //             ? `
@@ -551,7 +551,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   //         `
   //             : ""
   //         }
-          
+
   //         ${
   //           notes.length > 0
   //             ? `
@@ -920,14 +920,13 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <List className="h-5 w-5 mr-2 text-gray-500" />
                 Követelmény
                 <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {offer?.requirement?.updateCount || '1'}
+                  {offer?.requirement?.updateCount || "1"}
                 </span>
               </h2>
               <ChevronRight className="h-5 w-5 text-gray-500" />
             </button>
           </div>
         )}
-
 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
@@ -1104,43 +1103,46 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         {grandTotal.toLocaleString("hu-HU")} Ft
                       </div>
                     </div>
-        {/* Email Sender Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
-          <button
-            onClick={() => setIsEmailExpanded(!isEmailExpanded)}
-            className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center">
-              <Mail className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-medium">Ajánlat küldése emailben</span>
-            </div>
-            {isEmailExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            )}
-          </button>
+                    {/* Email Sender Section */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
+                      <button
+                        onClick={() => setIsEmailExpanded(!isEmailExpanded)}
+                        className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="flex items-center">
+                          <Mail className="h-5 w-5 mr-2 text-gray-500" />
+                          <span className="font-medium">
+                            Ajánlat küldése emailben
+                          </span>
+                        </div>
+                        {isEmailExpanded ? (
+                          <ChevronUp className="h-5 w-5 text-gray-500" />
+                        ) : (
+                          <ChevronDown className="h-5 w-5 text-gray-500" />
+                        )}
+                      </button>
 
-          {isEmailExpanded && (
-            <div className="px-6 pb-4">
-              <OfferLetterEmailSender
-                items={items.map((item) => ({
-                  name: item.name,
-                  quantity: item.quantity,
-                  unit: item.unit,
-                  materialUnitPrice: item.materialUnitPrice || "0 Ft",
-                  materialTotal: item.materialTotal || "0 Ft",
-                  workUnitPrice: item.unitPrice || "0 Ft",
-                  workTotal: item.workTotal || "0 Ft",
-                }))}
-                total={grandTotal.toLocaleString("hu-HU") + " Ft"}
-                title={offer.title || "Ajánlat"}
-                name={extractName(offer.requirement?.title)}
-                email={extractEmail(offer.requirement?.description)}
-              />
-            </div>
-          )}
-        </div>
+                      {isEmailExpanded && (
+                        <div className="px-6 pb-4">
+                          <OfferLetterEmailSender
+                            items={items.map((item) => ({
+                              name: item.name,
+                              quantity: item.quantity,
+                              unit: item.unit,
+                              materialUnitPrice:
+                                item.materialUnitPrice || "0 Ft",
+                              materialTotal: item.materialTotal || "0 Ft",
+                              workUnitPrice: item.unitPrice || "0 Ft",
+                              workTotal: item.workTotal || "0 Ft",
+                            }))}
+                            total={grandTotal.toLocaleString("hu-HU") + " Ft"}
+                            title={offer.title || "Ajánlat"}
+                            name={extractName(offer.requirement?.title)}
+                            email={extractEmail(offer.requirement?.description)}
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
