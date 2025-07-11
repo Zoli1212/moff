@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { updateOfferItems } from "@/actions/offer-actions";
 import { toast } from "sonner";
-import SocialShareButtons from "./SocialShareButtons";
 import { RequirementDetail } from "./requirement-detail";
 import { format } from "date-fns";
 import { hu } from "date-fns/locale";
@@ -32,8 +31,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  Copy,
-  Printer,
   Mail,
   ChevronDown,
   ChevronUp,
@@ -41,7 +38,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
@@ -744,7 +740,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                     </svg>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
+                <DropdownMenuContent className="w-36" align="end">
                   {/* <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onSelect={(e: Event) => {
@@ -768,9 +764,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   </DropdownMenuItem> */}
                   <DropdownMenuSeparator />
                   <div className="px-2 py-1.5">
-                    <div className="text-xs font-medium text-gray-500 px-2 mb-1">
-                      Megosztás vagy Letöltés
-                    </div>
                     <SocialShareButtonsExcel
                       offer={{
                         title: offer.title,

@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { MessageCircle, Share2, FileText, FileSpreadsheet } from "lucide-react"; // Excel icon
+import {Share2, FileText, FileSpreadsheet } from "lucide-react"; // Excel icon
 import * as XLSX from "xlsx"; // Excel export
 
 import jsPDF from "jspdf";
@@ -83,75 +83,75 @@ const getStatusDisplay = (status: string): string => {
 
 export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsProps) {
   const pathname = usePathname();
-  const pageUrl = `${window.location.origin}${pathname}`;
+  // const pageUrl = `${window.location.origin}${pathname}`;
 
-  const getShareText = () => {
-    if (!offer) return "";
+  // const getShareText = () => {
+  //   if (!offer) return "";
 
-    let text = `*${offer.title || "Ajánlat"}*\n\n`;
+  //   let text = `*${offer.title || "Ajánlat"}*\n\n`;
 
-    if (offer.description) {
-      text += `${offer.description}\n\n`;
-    }
+  //   if (offer.description) {
+  //     text += `${offer.description}\n\n`;
+  //   }
 
-    if (offer.items && offer.items.length > 0) {
-      text += "*Tételek:*\n";
-      offer.items.forEach((item, index) => {
-        text += `${index + 1}. ${item.name} - ${item.quantity} ${item.unit}\n`;
-        text += `   Anyag: ${item.materialUnitPrice || "0 Ft"} x ${item.quantity} = ${item.materialTotal || "0 Ft"}\n`;
-        text += `   Munkadíj: ${item.unitPrice || "0 Ft"} x ${item.quantity} = ${item.workTotal || "0 Ft"}\n\n`;
-      });
-      text += "\n";
-    }
+  //   if (offer.items && offer.items.length > 0) {
+  //     text += "*Tételek:*\n";
+  //     offer.items.forEach((item, index) => {
+  //       text += `${index + 1}. ${item.name} - ${item.quantity} ${item.unit}\n`;
+  //       text += `   Anyag: ${item.materialUnitPrice || "0 Ft"} x ${item.quantity} = ${item.materialTotal || "0 Ft"}\n`;
+  //       text += `   Munkadíj: ${item.unitPrice || "0 Ft"} x ${item.quantity} = ${item.workTotal || "0 Ft"}\n\n`;
+  //     });
+  //     text += "\n";
+  //   }
 
-    // Calculate totals if not provided
-    let materialTotal = 0;
-    let workTotal = 0;
+  //   // Calculate totals if not provided
+  //   let materialTotal = 0;
+  //   let workTotal = 0;
 
-    if (offer.items && offer.items.length > 0) {
-      const totals = offer.items.reduce(
-        (acc, item) => {
-          const material =
-            parseFloat(
-              (item.materialTotal || "0")
-                .replace(/[^0-9,-]+/g, "")
-                .replace(",", ".")
-            ) || 0;
-          const work =
-            parseFloat(
-              (item.workTotal || "0")
-                .replace(/[^0-9,-]+/g, "")
-                .replace(",", ".")
-            ) || 0;
-          return {
-            material: acc.material + material,
-            work: acc.work + work,
-          };
-        },
-        { material: 0, work: 0 }
-      );
+  //   if (offer.items && offer.items.length > 0) {
+  //     const totals = offer.items.reduce(
+  //       (acc, item) => {
+  //         const material =
+  //           parseFloat(
+  //             (item.materialTotal || "0")
+  //               .replace(/[^0-9,-]+/g, "")
+  //               .replace(",", ".")
+  //           ) || 0;
+  //         const work =
+  //           parseFloat(
+  //             (item.workTotal || "0")
+  //               .replace(/[^0-9,-]+/g, "")
+  //               .replace(",", ".")
+  //           ) || 0;
+  //         return {
+  //           material: acc.material + material,
+  //           work: acc.work + work,
+  //         };
+  //       },
+  //       { material: 0, work: 0 }
+  //     );
 
-      materialTotal = totals.material;
-      workTotal = totals.work;
-    }
+  //     materialTotal = totals.material;
+  //     workTotal = totals.work;
+  //   }
 
-    text += `*Összesítés:*\n`;
-    text += `Munkadíj: ${workTotal.toLocaleString("hu-HU")} Ft\n`;
-    text += `Anyagköltség: ${materialTotal.toLocaleString("hu-HU")} Ft\n`;
-    text += `*Összesen: ${(workTotal + materialTotal).toLocaleString("hu-HU")} Ft*\n\n`;
+  //   text += `*Összesítés:*\n`;
+  //   text += `Munkadíj: ${workTotal.toLocaleString("hu-HU")} Ft\n`;
+  //   text += `Anyagköltség: ${materialTotal.toLocaleString("hu-HU")} Ft\n`;
+  //   text += `*Összesen: ${(workTotal + materialTotal).toLocaleString("hu-HU")} Ft*\n\n`;
 
-    if (
-      offer.validUntil &&
-      new Date(offer.validUntil).toString() !== "Invalid Date"
-    ) {
-      const validDate = formatDate(offer.validUntil);
-      text += `*Érvényes: ${validDate}*\n`;
-    }
+  //   if (
+  //     offer.validUntil &&
+  //     new Date(offer.validUntil).toString() !== "Invalid Date"
+  //   ) {
+  //     const validDate = formatDate(offer.validUntil);
+  //     text += `*Érvényes: ${validDate}*\n`;
+  //   }
 
-    text += `\n${pageUrl}`;
+  //   text += `\n${pageUrl}`;
 
-    return text;
-  };
+  //   return text;
+  // };
 
   const generatePdf = async (): Promise<Blob | null> => {
     if (!offer) return null;
@@ -401,124 +401,127 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
   };
 
   return (
-    <div className="flex gap-2">
-      {/* Native Share */}
-      <button
-        onClick={handleShare}
-        aria-label="Megosztás"
-        className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
-      >
-        <Share2 className="w-4 h-4" />
-      </button>
+    <div className="flex flex-col items-center">
+      {/* Megosztás */}
+      <div className="text-xs font-medium text-gray-500 mb-1 text-center">Megosztás</div>
+      <div className="flex gap-1.5 mb-1 justify-center">
+        <button
+          onClick={handleShare}
+          aria-label="Megosztás"
+          className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+      </div>
+      {/* Letöltés */}
+      <div className="text-xs font-medium text-gray-500 mb-1 text-center">Letöltés</div>
+      <div className="flex gap-1.5 justify-center">
+        {/* PDF */}
+        <button
+          onClick={async () => {
+            try {
+              const pdfBlob = await generatePdf();
+              if (!pdfBlob) return;
 
-    
-
-
-      {/* PDF */}
-      <button
-        onClick={async () => {
-          try {
-            const pdfBlob = await generatePdf();
-            if (!pdfBlob) return;
-
-            const url = URL.createObjectURL(pdfBlob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "ajanlat.pdf";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          } catch (error) {
-            console.error("Hiba a PDF letöltése közben:", error);
-            alert(
-              "Hiba történt a PDF letöltése közben. Kérjük, próbáld újra később."
-            );
-          }
-        }}
-        aria-label="PDF letöltése"
-        className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-red-700"
-      >
-        <FileText className="w-4 h-4" />
-      </button>
-      {/* Excel */}
-      <button
-        onClick={async () => {
-          try {
-            if (!offer) return;
-            // --- Excel generálás logika ---
-            // 1. Workbook létrehozása
-            const wb = XLSX.utils.book_new();
-
-            // 2. Projekt adatok sheet
-            const projectDetails = [
-              ["Projekt adatok"],
-              [""],
-              ["Ajánlat", offer?.title || ""],
-              ["Leírás", offer?.description || ""],
-              ["Státusz", offer?.status || ""],
-              ["Létrehozva", offer?.createdAt ? new Date(offer.createdAt).toLocaleString('hu-HU') : ""],
-              ["Érvényes", offer?.validUntil ? new Date(offer.validUntil).toLocaleDateString('hu-HU') : ""],
-              [""]
-            ];
-            if (offer?.totalPrice) {
-              projectDetails.push(["Összesített nettó költség:", offer.totalPrice.toLocaleString("hu-HU") + " Ft"]);
+              const url = URL.createObjectURL(pdfBlob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "ajanlat.pdf";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (error) {
+              console.error("Hiba a PDF letöltése közben:", error);
+              alert(
+                "Hiba történt a PDF letöltése közben. Kérjük, próbáld újra később."
+              );
             }
-            const wsProject = XLSX.utils.aoa_to_sheet(projectDetails);
-            if (!wsProject['!merges']) wsProject['!merges'] = [];
-            wsProject['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
+          }}
+          aria-label="PDF letöltése"
+          className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-red-700"
+        >
+          <FileText className="w-4 h-4" />
+        </button>
+        {/* Excel */}
+        <button
+          onClick={async () => {
+            try {
+              if (!offer) return;
+              // --- Excel generálás logika ---
+              // 1. Workbook létrehozása
+              const wb = XLSX.utils.book_new();
 
-            // 3. Tételek sheet
-            const offerItemsData = [
-              ["Tétel megnevezése", "Mennyiség", "Egység", "Anyag egységár", "Díj egységár", "Anyag összesen", "Díj összesen"],
-              ...(offer?.items || []).map(item => [
-                item.name,
-                item.quantity,
-                item.unit,
-                item.materialUnitPrice,
-                item.unitPrice,
-                item.materialTotal,
-                item.workTotal
-              ])
-            ];
-            if (offer?.totalPrice) {
-              offerItemsData.push(["", "", "", "", "", "Összesen:", offer.totalPrice.toLocaleString("hu-HU") + " Ft"]);
+              // 2. Projekt adatok sheet
+              const projectDetails = [
+                ["Projekt adatok"],
+                [""],
+                ["Ajánlat", offer?.title || ""],
+                ["Leírás", offer?.description || ""],
+                ["Státusz", offer?.status || ""],
+                ["Létrehozva", offer?.createdAt ? new Date(offer.createdAt).toLocaleString('hu-HU') : ""],
+                ["Érvényes", offer?.validUntil ? new Date(offer.validUntil).toLocaleDateString('hu-HU') : ""],
+                [""]
+              ];
+              if (offer?.totalPrice) {
+                projectDetails.push(["Összesített nettó költség:", offer.totalPrice.toLocaleString("hu-HU") + " Ft"]);
+              }
+              const wsProject = XLSX.utils.aoa_to_sheet(projectDetails);
+              if (!wsProject['!merges']) wsProject['!merges'] = [];
+              wsProject['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
+
+              // 3. Tételek sheet
+              const offerItemsData = [
+                ["Tétel megnevezése", "Mennyiség", "Egység", "Anyag egységár", "Díj egységár", "Anyag összesen", "Díj összesen"],
+                ...(offer?.items || []).map(item => [
+                  item.name,
+                  item.quantity,
+                  item.unit,
+                  item.materialUnitPrice,
+                  item.unitPrice,
+                  item.materialTotal,
+                  item.workTotal
+                ])
+              ];
+              if (offer?.totalPrice) {
+                offerItemsData.push(["", "", "", "", "", "Összesen:", offer.totalPrice.toLocaleString("hu-HU") + " Ft"]);
+              }
+              const wsItems = XLSX.utils.aoa_to_sheet(offerItemsData);
+              wsItems['!cols'] = [
+                { wch: 40 },
+                { wch: 10 },
+                { wch: 8 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 15 },
+                { wch: 15 }
+              ];
+
+              XLSX.utils.book_append_sheet(wb, wsProject, "Projekt adatok");
+              XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat tételes");
+
+              // 4. Excel file generálás és letöltés
+              const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+              const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = "ajanlat.xlsx";
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            } catch (error) {
+              console.error("Hiba az Excel letöltése közben:", error);
+              alert("Hiba történt az Excel letöltése közben. Kérjük, próbáld újra később.");
             }
-            const wsItems = XLSX.utils.aoa_to_sheet(offerItemsData);
-            wsItems['!cols'] = [
-              { wch: 40 },
-              { wch: 10 },
-              { wch: 8 },
-              { wch: 15 },
-              { wch: 15 },
-              { wch: 15 },
-              { wch: 15 }
-            ];
-
-            XLSX.utils.book_append_sheet(wb, wsProject, "Projekt adatok");
-            XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat tételes");
-
-            // 4. Excel file generálás és letöltés
-            const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "ajanlat.xlsx";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-          } catch (error) {
-            console.error("Hiba az Excel letöltése közben:", error);
-            alert("Hiba történt az Excel letöltése közben. Kérjük, próbáld újra később.");
-          }
-        }}
-        aria-label="Excel letöltése"
-        className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700"
-      >
-        <FileSpreadsheet className="w-4 h-4" />
-      </button>
+          }}
+          aria-label="Excel letöltése"
+          className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 }
