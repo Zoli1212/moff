@@ -56,6 +56,7 @@ import {
 } from "@/components/ui/dialog";
 
 import TextInputDialogQuestions from "@/app/(routes)/dashboard/_components/TextInputDialogQuestions";
+import SocialShareButtonsExcel from "./SocialShareButtonsExcel";
 
 // Helper function to extract questions from description
 function extractQuestions(description: string): string[] {
@@ -744,7 +745,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
-                  <DropdownMenuItem
+                  {/* <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onSelect={(e: Event) => {
                       e.preventDefault();
@@ -764,13 +765,13 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   >
                     <Copy className="mr-2 h-4 w-4" />
                     <span>Link másolása</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuSeparator />
                   <div className="px-2 py-1.5">
                     <div className="text-xs font-medium text-gray-500 px-2 mb-1">
-                      Megosztás
+                      Megosztás vagy Letöltés
                     </div>
-                    <SocialShareButtons
+                    <SocialShareButtonsExcel
                       offer={{
                         title: offer.title,
                         description: offer.description,
