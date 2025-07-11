@@ -463,124 +463,124 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   `;
 
   // Function to handle print
-  const handlePrint = () => {
-    const printWindow = window.open("", "", "width=1000,height=800");
-    if (!printWindow) return;
+  // const handlePrint = () => {
+  //   const printWindow = window.open("", "", "width=1000,height=800");
+  //   if (!printWindow) return;
 
-    // Get the HTML for the print view
-    const printContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${offer.title || "Ajánlat"}</title>
-        <meta charset="utf-8">
-        <style>${printStyles}</style>
-      </head>
-      <body>
-        <div id="printable-area">
-          <div class="print-header">
-            <div class="print-title">${offer.title || "Ajánlat"}</div>
-            <div class="print-meta">
-              <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || "draft")}</div>
-              <div><strong>Létrehozva:</strong> ${formatDate(offer.createdAt)}</div>
-              ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ""}
-            </div>
-          </div>
+  //   // Get the HTML for the print view
+  //   const printContent = `
+  //     <!DOCTYPE html>
+  //     <html>
+  //     <head>
+  //       <title>${offer.title || "Ajánlat"}</title>
+  //       <meta charset="utf-8">
+  //       <style>${printStyles}</style>
+  //     </head>
+  //     <body>
+  //       <div id="printable-area">
+  //         <div class="print-header">
+  //           <div class="print-title">${offer.title || "Ajánlat"}</div>
+  //           <div class="print-meta">
+  //             <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || "draft")}</div>
+  //             <div><strong>Létrehozva:</strong> ${formatDate(offer.createdAt)}</div>
+  //             ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ""}
+  //           </div>
+  //         </div>
           
-          ${
-            offer.description
-              ? `
-            <div class="print-section">
-              <div class="print-section-title">Leírás</div>
-              <div>${offer.description.replace(/\n/g, "<br>")}</div>
-            </div>
-          `
-              : ""
-          }
+  //         ${
+  //           offer.description
+  //             ? `
+  //           <div class="print-section">
+  //             <div class="print-section-title">Leírás</div>
+  //             <div>${offer.description.replace(/\n/g, "<br>")}</div>
+  //           </div>
+  //         `
+  //             : ""
+  //         }
           
-          ${
-            items.length > 0
-              ? `
-            <div class="print-section">
-              <div class="print-section-title">Tételek</div>
-              <table class="print-table">
-                <thead>
-                  <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 25%;">Tétel megnevezése</th>
-                    <th style="width: 8%;">Mennyiség</th>
-                    <th style="width: 8%;">Egység</th>
-                    <th style="width: 15%;">Anyag egységár</th>
-                    <th style="width: 15%;">Díj egységár</th>
-                    <th style="width: 12%;">Anyag összesen</th>
-                    <th style="width: 12%;">Díj összesen</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${items
-                    .map(
-                      (item, index) => `
-                    <tr>
-                      <td class="text-center">${index + 1}.</td>
-                      <td>${item.name.replace(/^\*\s*/, "")}</td>
-                      <td class="text-center">${item.quantity}</td>
-                      <td class="text-center">${item.unit}</td>
-                      <td class="text-right">${item.materialUnitPrice || "0 Ft"}</td>
-                      <td class="text-right">${item.unitPrice || "0 Ft"}</td>
-                      <td class="text-right">${item.materialTotal || "0 Ft"}</td>
-                      <td class="text-right">${item.workTotal || "0 Ft"}</td>
-                    </tr>
-                  `
-                    )
-                    .join("")}
-                  <tr>
-                    <td colspan="4" class="text-right font-bold">Munkadíj összesen:</td>
-                    <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString("hu-HU")} Ft</td>
-                  </tr>
-                  <tr>
-                    <td colspan="4" class="text-right font-bold">Anyagköltség összesen:</td>
-                    <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString("hu-HU")} Ft</td>
-                  </tr>
-                  <tr>
-                    <td colspan="4" class="text-right font-bold">Összesített nettó költség:</td>
-                    <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString("hu-HU")} Ft</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          `
-              : ""
-          }
+  //         ${
+  //           items.length > 0
+  //             ? `
+  //           <div class="print-section">
+  //             <div class="print-section-title">Tételek</div>
+  //             <table class="print-table">
+  //               <thead>
+  //                 <tr>
+  //                   <th style="width: 5%;">#</th>
+  //                   <th style="width: 25%;">Tétel megnevezése</th>
+  //                   <th style="width: 8%;">Mennyiség</th>
+  //                   <th style="width: 8%;">Egység</th>
+  //                   <th style="width: 15%;">Anyag egységár</th>
+  //                   <th style="width: 15%;">Díj egységár</th>
+  //                   <th style="width: 12%;">Anyag összesen</th>
+  //                   <th style="width: 12%;">Díj összesen</th>
+  //                 </tr>
+  //               </thead>
+  //               <tbody>
+  //                 ${items
+  //                   .map(
+  //                     (item, index) => `
+  //                   <tr>
+  //                     <td class="text-center">${index + 1}.</td>
+  //                     <td>${item.name.replace(/^\*\s*/, "")}</td>
+  //                     <td class="text-center">${item.quantity}</td>
+  //                     <td class="text-center">${item.unit}</td>
+  //                     <td class="text-right">${item.materialUnitPrice || "0 Ft"}</td>
+  //                     <td class="text-right">${item.unitPrice || "0 Ft"}</td>
+  //                     <td class="text-right">${item.materialTotal || "0 Ft"}</td>
+  //                     <td class="text-right">${item.workTotal || "0 Ft"}</td>
+  //                   </tr>
+  //                 `
+  //                   )
+  //                   .join("")}
+  //                 <tr>
+  //                   <td colspan="4" class="text-right font-bold">Munkadíj összesen:</td>
+  //                   <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString("hu-HU")} Ft</td>
+  //                 </tr>
+  //                 <tr>
+  //                   <td colspan="4" class="text-right font-bold">Anyagköltség összesen:</td>
+  //                   <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString("hu-HU")} Ft</td>
+  //                 </tr>
+  //                 <tr>
+  //                   <td colspan="4" class="text-right font-bold">Összesített nettó költség:</td>
+  //                   <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString("hu-HU")} Ft</td>
+  //                 </tr>
+  //               </tbody>
+  //             </table>
+  //           </div>
+  //         `
+  //             : ""
+  //         }
           
-          ${
-            notes.length > 0
-              ? `
-            <div class="print-section">
-              <div class="print-section-title">Megjegyzések</div>
-              <ul>
-                ${notes.map((note) => `<li>• ${note}</li>`).join("")}
-              </ul>
-            </div>
-          `
-              : ""
-          }
-        </div>
-      </body>
-      </html>
-    `;
+  //         ${
+  //           notes.length > 0
+  //             ? `
+  //           <div class="print-section">
+  //             <div class="print-section-title">Megjegyzések</div>
+  //             <ul>
+  //               ${notes.map((note) => `<li>• ${note}</li>`).join("")}
+  //             </ul>
+  //           </div>
+  //         `
+  //             : ""
+  //         }
+  //       </div>
+  //     </body>
+  //     </html>
+  //   `;
 
-    printWindow.document.open();
-    printWindow.document.write(printContent);
-    printWindow.document.close();
+  //   printWindow.document.open();
+  //   printWindow.document.write(printContent);
+  //   printWindow.document.close();
 
-    // Wait for content to load before printing
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-      }, 500);
-    };
-  };
+  //   // Wait for content to load before printing
+  //   printWindow.onload = () => {
+  //     setTimeout(() => {
+  //       printWindow.print();
+  //       printWindow.close();
+  //     }, 500);
+  //   };
+  // };
 
   return (
     <>

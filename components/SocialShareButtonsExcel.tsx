@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+// import { usePathname } from "next/navigation";
 import {Share2, FileText, FileSpreadsheet } from "lucide-react"; // Excel icon
 import * as XLSX from "xlsx"; // Excel export
 
@@ -82,7 +82,7 @@ const getStatusDisplay = (status: string): string => {
 };
 
 export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsProps) {
-  const pathname = usePathname();
+  // const pathname = usePathname();
   // const pageUrl = `${window.location.origin}${pathname}`;
 
   // const getShareText = () => {
