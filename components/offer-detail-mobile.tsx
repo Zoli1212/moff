@@ -13,7 +13,10 @@ import dynamic from "next/dynamic";
 
 // Dynamically import the email sender component to avoid SSR issues
 const OfferLetterEmailSender = dynamic(
-  () => import("@/app/(routes)/ai-tools/ai-offer-letter/[recordid]/_components/OfferLetterEmailSender"),
+  () =>
+    import(
+      "@/app/(routes)/ai-tools/ai-offer-letter/[recordid]/_components/OfferLetterEmailSender"
+    ),
   { ssr: false }
 );
 import {
@@ -69,7 +72,7 @@ function extractQuestions(description: string): string[] {
     if (!line.trim()) continue;
 
     // Check if line ends with a question mark
-    if (line.trim().endsWith('?')) {
+    if (line.trim().endsWith("?")) {
       // Try to find the start of the question (number followed by dot or parenthesis)
       const match = line.match(/^(\d+[.)]?\s*)(.*\?)/);
       if (match) {
@@ -86,7 +89,7 @@ function extractQuestions(description: string): string[] {
   if (questions.length === 0) {
     const sentences = description.split(/(?<=[.!?])\s+/);
     return sentences
-      .filter((sentence) => sentence.trim().endsWith('?'))
+      .filter((sentence) => sentence.trim().endsWith("?"))
       .map((q) => q.trim())
       .filter(Boolean);
   }
@@ -312,7 +315,11 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     );
   }, [editableItems]);
 
-  const { material: materialTotal, work: workTotal, total: grandTotal } = calculateTotals();
+  const {
+    material: materialTotal,
+    work: workTotal,
+    total: grandTotal,
+  } = calculateTotals();
 
   // Helper functions to extract name and email from title and description
   const extractName = (title?: string | null): string => {
@@ -325,7 +332,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const extractEmail = (description?: string | null): string => {
     if (!description) return "";
     // Try to find an email in the description
-    const emailMatch = description.match(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/);
+    const emailMatch = description.match(
+      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/
+    );
     return emailMatch ? emailMatch[0] : "";
   };
 
@@ -719,7 +728,20 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <MoreVertical className="h-5 w-5 text-gray-600" />
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-gray-600"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-56" align="end">
@@ -840,25 +862,30 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           )}
         </div>
         <div>
-          {!isDialogOpen && (
-            <div className="fixed bottom-0 left-0 w-full bg-transparent border-t border-gray-200 px-4 py-4 z-[9999]">
-              <div className="max-w-7xl mx-auto">
-                <Button
-                  onClick={() => {
-                    // Set the demandText to the offer requirement or description when opening the dialog
-                    setDemandText(offer.requirement?.description || offer.description || '');
-                    setIsDialogOpen(true);
-                  }}
-                  variant="outline"
-                  className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
-                >
-                  <span className="text-lg font-medium">
-                    + Kérdések megválaszolása
-                  </span>
-                </Button>
+          {!isDialogOpen &&
+            extractQuestions(offer.description || "").length > 0 && (
+              <div className="fixed bottom-0 left-0 w-full bg-transparent border-t border-gray-200 px-4 py-4 z-[9999]">
+                <div className="max-w-7xl mx-auto">
+                  <Button
+                    onClick={() => {
+                      // Set the demandText to the offer requirement or description when opening the dialog
+                      setDemandText(
+                        offer.requirement?.description ||
+                          offer.description ||
+                          ""
+                      );
+                      setIsDialogOpen(true);
+                    }}
+                    variant="outline"
+                    className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+                  >
+                    <span className="text-lg font-medium">
+                      + Kérdések megválaszolása
+                    </span>
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           <TextInputDialogQuestions
             open={isDialogOpen}
@@ -908,43 +935,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           </div>
         )}
 
-        {/* Email Sender Section */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
-          <button
-            onClick={() => setIsEmailExpanded(!isEmailExpanded)}
-            className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center">
-              <Mail className="h-5 w-5 mr-2 text-gray-500" />
-              <span className="font-medium">Ajánlat küldése emailben</span>
-            </div>
-            {isEmailExpanded ? (
-              <ChevronUp className="h-5 w-5 text-gray-500" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-gray-500" />
-            )}
-          </button>
-          
-          {isEmailExpanded && (
-            <div className="px-6 pb-4">
-              <OfferLetterEmailSender 
-                items={items.map(item => ({
-                  name: item.name,
-                  quantity: item.quantity,
-                  unit: item.unit,
-                  materialUnitPrice: item.materialUnitPrice || '0 Ft',
-                  materialTotal: item.materialTotal || '0 Ft',
-                  workUnitPrice: item.unitPrice || '0 Ft',
-                  workTotal: item.workTotal || '0 Ft'
-                }))}
-                total={grandTotal.toLocaleString("hu-HU") + " Ft"}
-                title={offer.title || "Ajánlat"}
-                name={extractName(offer.requirement?.title)}
-                email={extractEmail(offer.requirement?.description)}
-              />
-            </div>
-          )}
-        </div>
 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
@@ -1121,6 +1111,43 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         {grandTotal.toLocaleString("hu-HU")} Ft
                       </div>
                     </div>
+        {/* Email Sender Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
+          <button
+            onClick={() => setIsEmailExpanded(!isEmailExpanded)}
+            className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center">
+              <Mail className="h-5 w-5 mr-2 text-gray-500" />
+              <span className="font-medium">Ajánlat küldése emailben</span>
+            </div>
+            {isEmailExpanded ? (
+              <ChevronUp className="h-5 w-5 text-gray-500" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-gray-500" />
+            )}
+          </button>
+
+          {isEmailExpanded && (
+            <div className="px-6 pb-4">
+              <OfferLetterEmailSender
+                items={items.map((item) => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  unit: item.unit,
+                  materialUnitPrice: item.materialUnitPrice || "0 Ft",
+                  materialTotal: item.materialTotal || "0 Ft",
+                  workUnitPrice: item.unitPrice || "0 Ft",
+                  workTotal: item.workTotal || "0 Ft",
+                }))}
+                total={grandTotal.toLocaleString("hu-HU") + " Ft"}
+                title={offer.title || "Ajánlat"}
+                name={extractName(offer.requirement?.title)}
+                email={extractEmail(offer.requirement?.description)}
+              />
+            </div>
+          )}
+        </div>
                   </div>
                 </div>
               </div>

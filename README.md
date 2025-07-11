@@ -412,14 +412,8 @@ Best Regards,
 
 Martin Retai
 
-# lokális tábla az áraknak, mikor elmentjük azt használja
-# növeld meg az árakat 10% al -
-# Követelmények látható legyen hány darab van - belőle
-# ha nincs kérdések nem kell kérdések
-# draft nem kell felirat a követelménybe
-# oldalt legyen a témaválasztó
-# item árakat visszadobja globálisra nem a mentettet csinálja!
------
+
+
 # alaprajz 
 # tervrajzot lehessen hozzá tölteni, külön oldalak + nevek adása
 # belmagasság falfelület
@@ -427,5 +421,14 @@ Martin Retai
 -----
 # dokumentumtár
 -----
-# template corporate 3 - 4 képernyő theme
 # képet berakni kezdőképernyő bállítás
+# új képet tudjon feltölteni
+------
+# ha megnevezést változtatja kéressen
+# követelmények
+# letöltés excel + pdf hide email
+# árváltozás több lehet 
+# helyesírás ellenőrzés
+# ikon iphone megosztás ikon
+# figyelmeztetés
+------
