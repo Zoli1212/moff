@@ -32,7 +32,6 @@ import {
   Pencil,
   Plus,
   Trash2,
-  MoreVertical,
   Copy,
   Printer,
   Mail,
