@@ -80,7 +80,6 @@ export async function GET(
       output = parsedContent.output;
     }
     
-    console.log(output, "output");
     // Prepare the response data
     const responseData = {
       id: record.id,

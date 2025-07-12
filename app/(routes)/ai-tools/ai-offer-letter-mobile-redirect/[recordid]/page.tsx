@@ -6,6 +6,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { saveOfferWithRequirements } from "@/actions/offer-actions";
 import { useDemandStore } from "@/store/offerLetterStore";
+import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 
 export default function SilentOfferSaverPage() {
   const router = useRouter();
@@ -13,7 +14,8 @@ export default function SilentOfferSaverPage() {
   const searchParams = useSearchParams();
   const recordid = params.recordid?.toString();
   const [isProcessing, setIsProcessing] = useState(true);
-  const { demandText } = useDemandStore();
+    const { demandText } = useDemandStore();
+    const { offerItems, clearOfferItems } = useOfferItemCheckStore();
   
   // Get demandText from URL or localStorage
   const demandTextToUse = searchParams?.get('demandText') || 
@@ -79,15 +81,22 @@ export default function SilentOfferSaverPage() {
 
         // 2) Save to DB
         console.log('Saving with demandText:!!', demandTextToUse, contentToSave);
-        const result = await saveOfferWithRequirements({
+                const result = await saveOfferWithRequirements({
           recordId: recordid,
           demandText: demandTextToUse || "",
           offerContent: contentToSave,
+          checkedItems: offerItems,
         });
 
-        if (result.success && result.requirementId && result.offerId) {
+                if (result.success && result.requirementId && result.offerId) {
           console.log("Offer saved to database", result);
           toast.success("Ajánlat sikeresen lementve!");
+
+          // Clear the checked items from the store
+          if (offerItems && offerItems.length > 0) {
+            clearOfferItems();
+            console.log("Checked items store cleared.");
+          }
 
           // Redirect to the target URL
           const targetUrl = `/offers/${result.requirementId}?offerId=${result.offerId}`;

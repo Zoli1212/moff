@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import { OfferItem, OfferWithItems } from "@/types/offer.types";
 import { useDemandStore } from "@/store/offerLetterStore";
+import { useOfferItemCheckStore } from '@/store/offerItemCheckStore';
 import dynamic from "next/dynamic";
 
 // Dynamically import the email sender component to avoid SSR issues
@@ -110,7 +111,13 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEmailExpanded, setIsEmailExpanded] = useState(false);
-  const { setDemandText } = useDemandStore();
+    const { setDemandText } = useDemandStore();
+  const { setOfferItems } = useOfferItemCheckStore();
+
+  // Update the store whenever editableItems changes
+  useEffect(() => {
+    setOfferItems(editableItems);
+  }, [editableItems, setOfferItems]);
 
   // Log items when they change
   useEffect(() => {
