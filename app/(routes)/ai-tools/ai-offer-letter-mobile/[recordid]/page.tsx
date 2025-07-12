@@ -273,6 +273,15 @@ export default function OfferLetterResult() {
     fetchOffer();
   }, [recordid]);
 
+
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="animate-spin w-12 h-12" />
+      </div>
+    );
+  }
   // Track if we've started saving
   const isSavingRef = useRef(false);
 
