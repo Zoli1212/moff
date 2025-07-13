@@ -274,16 +274,9 @@ export default function OfferLetterResult() {
   }, [recordid]);
 
 
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="animate-spin w-12 h-12" />
-      </div>
-    );
-  }
-  // Track if we've started saving
+  const [isAlreadySaved, setIsAlreadySaved] = useState(false);
   const isSavingRef = useRef(false);
+    // Track if we've started saving
 
   // Check localStorage to see if this offer was already saved and not expired
   const getSavedStatus = () => {
@@ -322,7 +315,6 @@ export default function OfferLetterResult() {
     console.log("💾 Saved offer status with expiration:", recordId);
   };
 
-  const [isAlreadySaved, setIsAlreadySaved] = useState(false);
 
   // Check saved status on component mount
   useEffect(() => {
@@ -405,7 +397,11 @@ export default function OfferLetterResult() {
   }, [offer, recordid, isAlreadySaved]); // Add isAlreadySaved to dependencies
 
   if (isLoading) {
-    return <Loader2 className="animate-spin" />;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="animate-spin w-12 h-12" />
+      </div>
+    );
   }
   const rawText = content?.output?.[0]?.content || "";
   // Use editableItems instead of parsing raw text each time
