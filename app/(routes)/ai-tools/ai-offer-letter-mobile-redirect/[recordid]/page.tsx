@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { saveOfferWithRequirements } from "@/actions/offer-actions";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
+import { FileText } from "lucide-react";
 
 export default function SilentOfferSaverPage() {
   const router = useRouter();
@@ -117,5 +118,18 @@ export default function SilentOfferSaverPage() {
     fetchAndSaveOffer();
   }, [recordid, router]);
 
-  return null; // nincs UI
+  if (isProcessing) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
+        <div className="flex flex-col items-center gap-4">
+          <FileText className="animate-spin w-16 h-16 text-blue-600" />
+          <p className="text-lg font-mono text-blue-600 tracking-widest animate-pulse">
+            AJÁNLAT BETÖLTÉSE...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return null; // No UI when not processing
 }

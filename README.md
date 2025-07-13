@@ -494,3 +494,108 @@ info@optisolve.hu
 # követelmények
 # items
 ------
+Tárgy: Üzlethelyiség modernizálása – VII. kerület, Rákóczi út 25.
+Tisztelt Kivitelező Cég!
+
+Az OptiSolve Kft. egy 60 m² alapterületű, földszinti üzlethelyiség belső modernizálásához keres szakmai partnert. A cél egy letisztult, minimalista belső tér kialakítása, korszerű világítással és új burkolatokkal.
+
+A kivitelezési igények:
+
+Régi burkolatok eltávolítása, helyettük vinyl padló lerakása (60 m²)
+
+Mennyezeti spotlámpák beépítése (12 db, dimmelhető)
+
+Új elektromos hálózat kialakítása (3 áramkör, FI-relével)
+
+Hátsó vizesblokk teljes felújítása (mosdó, WC, csempe, szaniterek)
+
+Kérjük az ajánlatukban az alábbiakat tüntessék fel:
+
+Anyagköltség és munkadíj tételes bontása
+
+Teljes nettó ár
+
+Várható kivitelezési idő (napokban)
+
+Kezdés legkorábbi időpontja
+
+Garanciaidő vállalt munkákra
+
+Helyszíni bejárás előzetes egyeztetés után lehetséges.
+
+Köszönettel:
+Dr. Farkas Máté
+ügyvezető – OptiSolve Kft.
+info@optisolve.hu
++36 1 999 8877
+
+2. Tárgy: Tárgyalóterem akusztikai és esztétikai átalakítása – XI. ker., Október huszonharmadika utca 8.
+Tisztelt Cégvezetés!
+
+Az OptiSolve Kft. 25 fős tárgyalótermének felújítását tervezi egy XI. kerületi irodaházban (alapterület: 50 m²). A cél egy reprezentatív, ugyanakkor akusztikailag jól szigetelt tér kialakítása.
+
+A tervezett feladatok:
+
+Akusztikus falburkolat és mennyezeti panelek beépítése (összesen 70 m²)
+
+Professzionális hangszigetelés az ajtón és falakon
+
+Projektor + vetítővászon kiépítése (süllyesztett kábelezéssel)
+
+Padlószőnyeg csere és padlókiegyenlítés (50 m²)
+
+Ajánlatkérés részletei:
+
+Tételes költségbontás (anyagok / munka külön)
+
+Nettó végösszeg
+
+Kivitelezésre szükséges napok száma
+
+Munkakezdés elérhető időpontja
+
+Korábbi hasonló referencia (opcionális)
+
+Előzetes személyes bejárást biztosítunk, előre egyeztetett időpontban.
+
+Tisztelettel:
+Dr. Farkas László
+ügyvezető – OptiSolve Kft.
+info@optisolve.hu
++36 1 999 8877
+
+3. Tárgy: Konyhai és előtéri felújítás igény – XIII. ker., Váci út 92.
+Tisztelt Ajánlatadó!
+
+Irodánk XIII. kerületi telephelyén (Váci út 92.) szeretnénk a belső konyharészt és az előtér fogadórészt részben felújítani. Az érintett terület körülbelül 40 m².
+
+Felújítási igények:
+
+Teakonyha bútor és gépek cseréje (mosogató, hűtő, mikrohullámú sütő)
+
+Új falicsempe és padlólap (12 m² csempe, 15 m² padló)
+
+Előtérben recepciós pult kialakítása (egyszerű, L-alakú bútor)
+
+Frissítő festés (30 m² felület)
+
+Elektromos aljzatok bővítése (4 új pont)
+
+Ajánlatkérési szempontok:
+
+Tételes anyag- és munkadíj bontás
+
+Komplett nettó végösszeg
+
+Becsült kivitelezési idő (munkanapokban)
+
+Munkakezdés lehetséges legkorábbi dátuma
+
+Helyszíni egyeztetésre nyitottak vagyunk rugalmas időpontban.
+
+Üdvözlettel:
+Dr. Farkas István
+ügyvezető – OptiSolve Kft.
+info@optisolve.hu
++36 1 999 8877
+
