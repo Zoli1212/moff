@@ -10,7 +10,7 @@ export function parseRequirementLines(description: string): RequirementLine[] {
   if (!description) return [];
   let currentSection = "";
   let inRequirements = false;
-  let lines: RequirementLine[] = [];
+  const lines: RequirementLine[] = [];
   const blocks = description.split(/\n\s*\n/);
 
   blocks.forEach((block, index) => {
