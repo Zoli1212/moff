@@ -195,9 +195,10 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       where: {
         title: requirementTitle,
         myWorkId: work.id,
+        
       },
       orderBy: { versionNumber: "desc" },
-      select: { versionNumber: true, id: true },
+      select: { versionNumber: true, id: true, updateCount: true },
     });
 
     const newVersionNumber = latestRequirement
@@ -213,6 +214,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       myWork: {
         connect: { id: work.id },
       },
+      updateCount: (latestRequirement?.updateCount ?? 1),
       // Link to previous version if it exists
       ...(latestRequirement && {
         previousVersion: {

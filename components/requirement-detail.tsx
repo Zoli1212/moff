@@ -74,6 +74,8 @@ export function RequirementDetail({
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
   const [isLineRemoved, setIsLineRemoved] = useState(false);
 
+  console.log(JSON.stringify(requirement), 'REQ')
+
   // Fetch offer and its items when component mounts
   useEffect(() => {
     const fetchOffer = async () => {
@@ -125,7 +127,9 @@ export function RequirementDetail({
 
     try {
       // Combine the existing description with the new text
-      const updatedDescription = `${currentDescription ? currentDescription + "\n\n" : ""}${newText}`;
+      // Replace single newlines with double newlines, except where already double
+const normalizedNewText = newText.replace(/([^\n])\n([^\n])/g, '$1\n\n$2');
+const updatedDescription = `${currentDescription ? currentDescription + "\n\n" : ""}${normalizedNewText}`;
 
       // Update the requirement in the database
       const response = await fetch("/api/update-requirement", {
@@ -135,6 +139,7 @@ export function RequirementDetail({
           requirementId: requirement.id,
           data: {
             description: updatedDescription,
+            updateCount: { increment: 1 },
           },
         }),
       });
@@ -176,7 +181,8 @@ export function RequirementDetail({
 
   const handleResubmit = async () => {
     if (!newText.trim() && !isLineRemoved) {
-      const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez, vagy távolíts el egy elemet!";
+      const errorMsg =
+        "Kérjük adj meg egy szöveget az elemzéshez, vagy távolíts el egy elemet!";
       console.log("Validation error:", errorMsg);
       setError(errorMsg);
       return;
@@ -363,6 +369,15 @@ export function RequirementDetail({
         return;
       }
 
+// Típus a frissítéshez
+ type UpdateBody = {
+   requirementId: string | number;
+   data: {
+     description: string;
+     updateCount?: { increment: number };
+   };
+ };
+
       // Create the updated description by excluding the line to be removed
       const currentDescription = requirement.description || "";
       const allLines = currentDescription.split("\n");
@@ -372,17 +387,24 @@ export function RequirementDetail({
       const updatedDescription = updatedLines.join("\n").trim();
 
       // Update the requirement in the database
+      const updateBody: UpdateBody = {
+        requirementId: requirement.id,
+        data: {
+          description: updatedDescription,
+        },
+      };
+      // Csak akkor növeljük az updateCount-ot, ha minden törölhető sor törölve lett
+      const updatedLinesParsed = parseRequirementLines(updatedDescription);
+      const hasDeletable = updatedLinesParsed.some(line => isLineDeletable(line));
+      if (!hasDeletable) {
+        updateBody.data.updateCount = { increment: 1 };
+      }
       const response = await fetch("/api/update-requirement", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          requirementId: requirement.id,
-          data: {
-            description: updatedDescription,
-          },
-        }),
+        body: JSON.stringify(updateBody),
       });
 
       if (!response.ok) {
@@ -448,7 +470,7 @@ export function RequirementDetail({
                     }
                     className="group"
                   >
-                    <div className="flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors bg-white">
+                    <div className={`flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors ${isLineDeletable(line) ? 'bg-gray-100 rounded-md' : 'bg-white'}`}>
                       <div className="flex-1 min-w-0 py-2">
                         <p
                           className={`whitespace-pre-wrap break-words text-gray-800 text-sm leading-tight ${
@@ -517,11 +539,13 @@ export function RequirementDetail({
             </Button>
 
             <div className="flex items-center gap-3">
-            
-
               <Button
                 onClick={handleResubmit}
-                disabled={isSubmitting || isGlobalLoading || (!newText.trim() && !isLineRemoved)}
+                disabled={
+                  isSubmitting ||
+                  isGlobalLoading ||
+                  (!newText.trim() && !isLineRemoved)
+                }
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white min-w-[160px] relative"
               >
                 <span

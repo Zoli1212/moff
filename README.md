@@ -600,14 +600,12 @@ info@optisolve.hu
 +36 1 999 8877
 
 ----
-1.EXCEL felirat PDF felirat 3 kiirva egymás után ikon + leirás, méret
-2. Ikoncsere
+
 3. követelmények / blokkok / követelmények  blokkok legyenek
 4. bugfix: regresszio csökkentése
 5. új követelmény esetén item + uj verzio ne legyen egy uj ajánlat
 6. legfrissebb számít az ajánlatoknak, verziok ne jelenjenek meg
-7. van olyan, hogy van kérdés és nem jeleníti meg, ez o3
-8. mentsük a globálisba is
+
 ----
 teszt cases AI al
 tesztelés gemini

@@ -387,6 +387,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   }
 
   if (showRequirementDetail && offer.requirement) {
+  
     return (
       <RequirementDetail
         requirement={offer.requirement}
@@ -747,7 +748,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                     </svg>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-36" align="end">
+                <DropdownMenuContent className="w-55" align="end">
                   {/* <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onSelect={(e: Event) => {
@@ -927,7 +928,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <List className="h-5 w-5 mr-2 text-gray-500" />
                 Követelmény
                 <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {offer?.requirement?.versionNumber || "1"}
+                  {offer?.requirement?.updateCount || "1"}
                 </span>
               </h2>
               <ChevronRight className="h-5 w-5 text-gray-500" />

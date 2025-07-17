@@ -1,7 +1,7 @@
 "use client";
 
 // import { usePathname } from "next/navigation";
-import {Share2, FileText, FileSpreadsheet } from "lucide-react"; // Excel icon
+import { FileDigit, Sheet } from "lucide-react"; // Ikonok frissítve PDF-hez és Excel-hez
 import * as XLSX from "xlsx"; // Excel export
 
 import jsPDF from "jspdf";
@@ -410,7 +410,20 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
           aria-label="Megosztás"
           className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
         >
-          <Share2 className="w-4 h-4" />
+          <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 text-gray-600"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
         </button>
       </div>
       {/* Letöltés */}
@@ -421,16 +434,16 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
           onClick={async () => {
             try {
               const pdfBlob = await generatePdf();
-              if (!pdfBlob) return;
-
-              const url = URL.createObjectURL(pdfBlob);
-              const a = document.createElement("a");
-              a.href = url;
-              a.download = "ajanlat.pdf";
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              URL.revokeObjectURL(url);
+              if (pdfBlob) {
+                const url = URL.createObjectURL(pdfBlob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "ajanlat.pdf";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+              }
             } catch (error) {
               console.error("Hiba a PDF letöltése közben:", error);
               alert(
@@ -439,9 +452,10 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
             }
           }}
           aria-label="PDF letöltése"
-          className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-red-700"
+          className="bg-red-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-red-700 px-3 py-1 text-sm font-semibold"
         >
-          <FileText className="w-4 h-4" />
+          <FileDigit className="w-4 h-4 mr-2" />
+          <span>PDF</span>
         </button>
         {/* Excel */}
         <button
@@ -517,9 +531,10 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
             }
           }}
           aria-label="Excel letöltése"
-          className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700"
+          className="bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700 px-3 py-1 text-sm font-semibold"
         >
-          <FileSpreadsheet className="w-4 h-4" />
+          <Sheet className="w-4 h-4 mr-2" />
+          <span>EXCEL</span>
         </button>
       </div>
     </div>
