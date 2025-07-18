@@ -15,8 +15,8 @@ export default function SilentOfferSaverPage() {
   const searchParams = useSearchParams();
   const recordid = params.recordid?.toString();
   const [isProcessing, setIsProcessing] = useState(true);
-    const { demandText } = useDemandStore();
-    const { offerItems, clearOfferItems } = useOfferItemCheckStore();
+    const { demandText, extraRequirementText } = useDemandStore();
+  const { offerItems, clearOfferItems } = useOfferItemCheckStore();
 
 
   
@@ -84,12 +84,18 @@ export default function SilentOfferSaverPage() {
 
         // 2) Save to DB
         console.log('Saving with demandText:!!', demandTextToUse, contentToSave);
-          const result = await saveOfferWithRequirements({
+        const result = await saveOfferWithRequirements({
           recordId: recordid,
           demandText: demandTextToUse || "",
           offerContent: contentToSave,
           checkedItems: offerItems,
+          extraRequirementText,
         });
+        
+        // Clear extra requirement text after successful save
+        if (extraRequirementText) {
+          useDemandStore.getState().clearExtraRequirementText();
+        }
 
                 if (result.success && result.requirementId && result.offerId) {
           console.log("Offer saved to database", result);

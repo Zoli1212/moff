@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { getOfferById } from "@/actions/offer-actions";
+import { getRequirementBlocks } from "@/actions/requirement-block-actions";
+import { addRequirementBlock } from "@/actions/requirement-block-actions";
 import { Loader2, X, Send, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -73,8 +75,26 @@ export function RequirementDetail({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
   const [isLineRemoved, setIsLineRemoved] = useState(false);
+  const [blocks, setBlocks] = useState<{ blockText: string }[]>([]);
 
-  console.log(JSON.stringify(requirement), 'REQ')
+  // Zustand extraRequirementText setter
+  const { setExtraRequirementText } = useDemandStore();
+
+  console.log(JSON.stringify(requirement), "REQ");
+
+  // Fetch blocks for this requirement
+  useEffect(() => {
+    async function fetchBlocks() {
+      try {
+        const fetchedBlocks = await getRequirementBlocks(requirement.id);
+        console.log("Requirement blocks:", fetchedBlocks);
+        setBlocks(fetchedBlocks);
+      } catch (e) {
+        console.error("Hiba a blokkok lekérdezésekor:", e);
+      }
+    }
+    fetchBlocks();
+  }, [requirement.id]);
 
   // Fetch offer and its items when component mounts
   useEffect(() => {
@@ -128,8 +148,11 @@ export function RequirementDetail({
     try {
       // Combine the existing description with the new text
       // Replace single newlines with double newlines, except where already double
-const normalizedNewText = newText.replace(/([^\n])\n([^\n])/g, '$1\n\n$2');
-const updatedDescription = `${currentDescription ? currentDescription + "\n\n" : ""}${normalizedNewText}`;
+      const normalizedNewText = newText.replace(
+        /([^\n])\n([^\n])/g,
+        "$1\n\n$2"
+      );
+      const updatedDescription = `${currentDescription ? currentDescription + "\n\n" : ""}${normalizedNewText}`;
 
       // Update the requirement in the database
       const response = await fetch("/api/update-requirement", {
@@ -180,6 +203,12 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
   };
 
   const handleResubmit = async () => {
+    // Save newText as a new block if present
+    if (newText.trim()) {
+      setExtraRequirementText(newText.trim());
+      setNewText("");
+      toast.success("Kiegészítő szöveg elmentve a store-ba!");
+    }
     if (!newText.trim() && !isLineRemoved) {
       const errorMsg =
         "Kérjük adj meg egy szöveget az elemzéshez, vagy távolíts el egy elemet!";
@@ -251,7 +280,6 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
 
       // Prepare the combined text with original requirement and new text
       const combinedText = `Eredeti követelmény: ${currentDescription}\n\nKiegészítő információk:\n${newText}`;
-      
 
       // Create form data for the API
       const formData = new FormData();
@@ -325,14 +353,84 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
     }
   };
 
-  // Parse the description into lines when it changes
+  // Parse the description into lines when it changes and check for matching blocks
   useEffect(() => {
     const description = requirement?.description || "";
-    const parsedLines = parseRequirementLines(description).filter(
-      (line) => line.text.trim() !== ""
-    ); // Filter out empty lines
+
+    console.log("=== DEBUGGING BLOCK MATCHING ===");
+    console.log("Blocks from DB:", JSON.stringify(blocks, null, 2));
+
+    // Helper function to normalize text for comparison
+    const normalizeText = (text: string) => {
+      const normalized = text
+        .toLowerCase()
+        .replace(/[\s\n]+/g, " ") // Replace all whitespace and newlines with single space
+        .replace(/[^\w\sáéíóöőúüű]/g, "") // Remove special characters
+        .trim();
+      console.log(`Normalized "${text}" to "${normalized}"`);
+      return normalized;
+    };
+
+    // Normalize all blocks
+    const normalizedBlocks = blocks.map((block) => {
+      const normalized = {
+        ...block,
+        normalizedText: normalizeText(block.blockText),
+      };
+      console.log("Normalized block:", JSON.stringify(normalized, null, 2));
+      return normalized;
+    });
+
+    // Get all individual lines from all blocks
+    const allBlockLines = blocks.flatMap((block) =>
+      block.blockText
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .map((line) => {
+          const normalized = normalizeText(line);
+          console.log("Block line:", { original: line, normalized });
+          return normalized;
+        })
+    );
+
+    // Create a set of all unique normalized block lines
+    const blockLineSet = new Set(allBlockLines);
+    console.log("All block lines:", Array.from(blockLineSet));
+
+    // Parse the description into lines
+    const parsedLines = parseRequirementLines(description)
+      .filter((line) => line.text.trim() !== "")
+      .map((line) => {
+        const normalizedLine = normalizeText(line.text);
+
+        // Check if this line exactly matches any line from any block
+        const exactMatch = blockLineSet.has(normalizedLine);
+        const blockMatch = normalizedBlocks.some(
+          (block) =>
+            block.normalizedText.includes(normalizedLine) ||
+            normalizedLine.includes(block.normalizedText)
+        );
+
+        const isBlock = exactMatch || blockMatch;
+
+        console.log("Line check:", {
+          original: line.text,
+          normalized: normalizedLine,
+          exactMatch,
+          blockMatch,
+          isBlock,
+        });
+
+        return {
+          ...line,
+          isBlock,
+        };
+      });
+
+    console.log("Final parsed lines:", JSON.stringify(parsedLines, null, 2));
     setLines(parsedLines);
-  }, [requirement?.description]);
+  }, [requirement?.description, blocks]);
 
   // Swipeable list item trailing actions
   const getTrailingActions = useCallback(
@@ -370,14 +468,14 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
         return;
       }
 
-// Típus a frissítéshez
- type UpdateBody = {
-   requirementId: string | number;
-   data: {
-     description: string;
-     updateCount?: { increment: number };
-   };
- };
+      // Típus a frissítéshez
+      type UpdateBody = {
+        requirementId: string | number;
+        data: {
+          description: string;
+          updateCount?: { increment: number };
+        };
+      };
 
       // Create the updated description by excluding the line to be removed
       const currentDescription = requirement.description || "";
@@ -396,7 +494,9 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
       };
       // Csak akkor növeljük az updateCount-ot, ha minden törölhető sor törölve lett
       const updatedLinesParsed = parseRequirementLines(updatedDescription);
-      const hasDeletable = updatedLinesParsed.some(line => isLineDeletable(line));
+      const hasDeletable = updatedLinesParsed.some((line) =>
+        isLineDeletable(line)
+      );
       if (!hasDeletable) {
         updateBody.data.updateCount = { increment: 1 };
       }
@@ -464,36 +564,41 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
                 {lines.map((line) => (
                   <SwipeableListItem
                     key={line.id}
-                    trailingActions={
-                      isLineDeletable(line)
-                        ? getTrailingActions(line.id)
-                        : undefined
-                    }
-                    className="group"
+                    trailingActions={getTrailingActions(line.id)}
                   >
-                    <div className={`flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors ${isLineDeletable(line) ? 'bg-gray-100 rounded-md' : 'bg-white'}`}>
+                    <div
+                      className={`flex items-center gap-2 px-3 py-0.5 hover:bg-gray-50 transition-colors ${
+                        isLineDeletable(line) ? "bg-gray-100 rounded-md" : ""
+                      } ${
+                        line.isBlock
+                          ? "bg-yellow-50 border-l-4 border-yellow-400 pl-2"
+                          : ""
+                      }`}
+                    >
                       <div className="flex-1 min-w-0 py-2">
-                        <p
-                          className={`whitespace-pre-wrap break-words text-gray-800 text-sm leading-tight ${
-                            line.isSectionHeader ? "font-semibold" : ""
-                          }`}
-                        >
-                          {line.text}
-                        </p>
+                        <div className="flex items-center justify-between w-full">
+                          <div
+                            className={`whitespace-pre-wrap break-words text-sm leading-tight ${
+                              line.isSectionHeader ? "font-semibold" : ""
+                            } ${line.isBlock ? "text-yellow-800" : "text-gray-800"}`}
+                          >
+                            {line.text}
+                          </div>
+                          {isLineDeletable(line) && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                confirmDelete(line.id);
+                              }}
+                              disabled={isProcessing}
+                              className="flex-shrink-0 text-gray-400 hover:text-red-500 disabled:opacity-50 transition-colors p-1 -mr-1"
+                              title="Sor törlése"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      {isLineDeletable(line) && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            confirmDelete(line.id);
-                          }}
-                          disabled={isProcessing}
-                          className="flex-shrink-0 text-gray-700 hover:text-red-500 disabled:opacity-50 transition-colors p-0.5 -mr-1"
-                          title="Sor eltávolítása"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      )}
                     </div>
                   </SwipeableListItem>
                 ))}

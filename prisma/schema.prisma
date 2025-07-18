@@ -105,8 +105,18 @@ model Requirement {
   updatedAt             DateTime     @updatedAt
   updateCount           Int          @default(1)
 
+  itemsBlocks          RequirementItemsBlock[]
+
   @@unique([myWorkId, versionNumber])
   @@index([previousRequirementId])
+}
+
+model RequirementItemsBlock {
+  id            Int          @id @default(autoincrement())
+  requirement   Requirement  @relation(fields: [requirementId], references: [id])
+  requirementId Int
+  blockText     String
+  createdAt     DateTime     @default(now())
 }
 
 model Offer {

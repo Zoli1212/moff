@@ -15,6 +15,7 @@ interface SaveOfferData {
   demandText: string;
   offerContent: string;
   checkedItems?: OfferItem[];
+  extraRequirementText?: string; // Optional: extra requirement text to save as a block
 }
 
 interface ParsedOfferContent {
@@ -36,7 +37,7 @@ interface ParsedOfferContent {
 
 export async function saveOfferWithRequirements(data: SaveOfferData) {
   try {
-        const { recordId, demandText, offerContent, checkedItems } = data;
+        const { recordId, demandText, offerContent, checkedItems, extraRequirementText } = data;
 
         console.log(demandText, 'DT-----------------------------------')
 
@@ -251,7 +252,23 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       });
     }
 
-    // 3. Create the Offer with the parsed content
+    // 3. Save extra requirement text as a block if it exists
+    if (data.extraRequirementText?.trim()) {
+      try {
+        await prisma.requirementItemsBlock.create({
+          data: {
+            requirementId: requirement.id,
+            blockText: data.extraRequirementText.trim(),
+          },
+        });
+        console.log("Extra requirement text saved as block");
+      } catch (error) {
+        console.error("Error saving extra requirement block:", error);
+        // Don't throw, continue with offer creation
+      }
+    }
+
+    // 4. Create the Offer with the parsed content
     console.log("Preparing to create offer with recordId:", recordId);
 
     // Format notes for description if they exist
