@@ -17,6 +17,8 @@ export default function SilentOfferSaverPage() {
   const [isProcessing, setIsProcessing] = useState(true);
     const { demandText } = useDemandStore();
     const { offerItems, clearOfferItems } = useOfferItemCheckStore();
+
+
   
   // Get demandText from URL or localStorage
   const demandTextToUse = searchParams?.get('demandText') || 
@@ -82,7 +84,7 @@ export default function SilentOfferSaverPage() {
 
         // 2) Save to DB
         console.log('Saving with demandText:!!', demandTextToUse, contentToSave);
-                const result = await saveOfferWithRequirements({
+          const result = await saveOfferWithRequirements({
           recordId: recordid,
           demandText: demandTextToUse || "",
           offerContent: contentToSave,
