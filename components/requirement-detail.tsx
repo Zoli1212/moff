@@ -251,6 +251,7 @@ const updatedDescription = `${currentDescription ? currentDescription + "\n\n" :
 
       // Prepare the combined text with original requirement and new text
       const combinedText = `Eredeti követelmény: ${currentDescription}\n\nKiegészítő információk:\n${newText}`;
+      
 
       // Create form data for the API
       const formData = new FormData();

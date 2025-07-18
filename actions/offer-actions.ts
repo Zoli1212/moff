@@ -38,6 +38,8 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
   try {
         const { recordId, demandText, offerContent, checkedItems } = data;
 
+        console.log(demandText, 'DT-----------------------------------')
+
     // Check if an offer with this recordId already exists
     if (recordId) {
       const existingOffer = await prisma.offer.findFirst({
@@ -77,26 +79,30 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     }
 
         // Merge with checked items if they exist
-    if (checkedItems && checkedItems.length > 0 && parsedContent.items) {
-      console.log("--- MERGE TEST LOG ---");
-      console.log("Original parsed items:", JSON.stringify(parsedContent.items, null, 2));
-      console.log("Items from store (checkedItems):", JSON.stringify(checkedItems, null, 2));
-
-      const checkedItemsMap = new Map(checkedItems.map(item => [item.name, item]));
-
-      const finalItems = parsedContent.items.map(originalItem => {
-        // If an item with the same name exists in the store, use the store's version.
-        if (checkedItemsMap.has(originalItem.name)) {
-          const storeItem = checkedItemsMap.get(originalItem.name)!;
-          // Ensure totalPrice is not undefined to satisfy the type checker.
-          return { ...storeItem, totalPrice: storeItem.totalPrice ?? '0' };
+        if (checkedItems && checkedItems.length > 0 && parsedContent.items) {
+          console.log("--- MERGE TEST LOG ---");
+          console.log("Original parsed items:", JSON.stringify(parsedContent.items, null, 2));
+          console.log("Items from store (checkedItems):", JSON.stringify(checkedItems, null, 2));
+        
+          // Egyedi kulcs csak a name és quantity alapján
+          const createKey = (item: { name: string; quantity: string }) =>
+            `${item.name}||${item.quantity}`;
+        
+          const checkedItemsMap = new Map(
+            checkedItems.map(item => [createKey(item), item])
+          );
+        
+          const finalItems = parsedContent.items.map(originalItem => {
+            const key = createKey(originalItem);
+            if (checkedItemsMap.has(key)) {
+              const storeItem = checkedItemsMap.get(key)!;
+              return { ...storeItem, totalPrice: storeItem.totalPrice ?? '0' };
+            }
+            return originalItem;
+          });
+        
+          parsedContent.items = finalItems;
         }
-        // Otherwise, keep the original item.
-        return originalItem;
-      });
-
-      parsedContent.items = finalItems;
-    }
 
     console.log("PARSED CONTENT", parsedContent);
     console.log("ITEMS", parsedContent.items || parsedContent.notes);
