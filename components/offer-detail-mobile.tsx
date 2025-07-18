@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import { OfferItem, OfferWithItems } from "@/types/offer.types";
 import { useDemandStore } from "@/store/offerLetterStore";
-import { useOfferItemCheckStore } from '@/store/offerItemCheckStore';
+import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import dynamic from "next/dynamic";
 
 // Dynamically import the email sender component to avoid SSR issues
@@ -59,36 +59,33 @@ import SocialShareButtonsExcel from "./SocialShareButtonsExcel";
 function extractQuestions(description: string): string[] {
   if (!description) return [];
 
-  // First, split by line breaks to handle list items
+  // Először soronként vizsgálunk, minden kérdőjellel végződő sort felveszünk
   const lines = description.split(/\r?\n/);
-
   const questions: string[] = [];
 
   for (const line of lines) {
-    // Skip empty lines
-    if (!line.trim()) continue;
-
-    // Check if line ends with a question mark
-    if (line.trim().endsWith("?")) {
-      // Try to find the start of the question (number followed by dot or parenthesis)
-      const match = line.match(/^(\d+[.)]?\s*)(.*\?)/);
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    if (trimmed.endsWith("?")) {
+      // Ha szám+pont/zárójel van elöl, azt levágjuk
+      const match = trimmed.match(/^(\d+[.)]?\s*)(.*\?)$/);
       if (match) {
-        // If line starts with a number, use the text after it
         questions.push(match[2].trim());
       } else {
-        // Otherwise just take the whole line
-        questions.push(line.trim());
+        questions.push(trimmed);
       }
     }
   }
 
-  // If no questions found with the list approach, fall back to the old method
+  // Ha így nincs kérdés, próbáljuk mondatonként is, hátha egy sorban több kérdés van
   if (questions.length === 0) {
     const sentences = description.split(/(?<=[.!?])\s+/);
-    return sentences
-      .filter((sentence) => sentence.trim().endsWith("?"))
-      .map((q) => q.trim())
-      .filter(Boolean);
+    sentences.forEach((sentence) => {
+      const trimmed = sentence.trim();
+      if (trimmed.endsWith("?")) {
+        questions.push(trimmed);
+      }
+    });
   }
 
   return questions;
@@ -100,6 +97,7 @@ interface OfferDetailViewProps {
 }
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
+
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItem, setEditingItem] = useState<{
@@ -111,7 +109,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEmailExpanded, setIsEmailExpanded] = useState(false);
-    const { setDemandText } = useDemandStore();
+  const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
   // Update the store whenever editableItems changes
@@ -387,7 +385,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   }
 
   if (showRequirementDetail && offer.requirement) {
-  
     return (
       <RequirementDetail
         requirement={offer.requirement}
@@ -863,30 +860,35 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           )}
         </div>
         <div>
-          {!isDialogOpen &&
-            extractQuestions(offer.description || "").length > 0 && (
-              <div className="fixed bottom-0 left-0 w-full bg-transparent border-t border-gray-200 px-4 py-4 z-[9999]">
-                <div className="max-w-7xl mx-auto">
-                  <Button
-                    onClick={() => {
-                      // Set the demandText to the offer requirement or description when opening the dialog
-                      setDemandText(
-                        offer.requirement?.description ||
-                          offer.description ||
-                          ""
-                      );
-                      setIsDialogOpen(true);
-                    }}
-                    variant="outline"
-                    className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
-                  >
-                    <span className="text-lg font-medium">
-                      + Kérdések megválaszolása
-                    </span>
-                  </Button>
+          {/* --- ÚJ LOGIKA: Ha nincs kérdés, plusz gomb és szabad szövegdoboz --- */}
+          {(() => {
+            const questions = extractQuestions(offer.description || "");
+            if (!isDialogOpen && questions.length > 0) {
+              return (
+                <div className="fixed bottom-0 left-0 w-full bg-transparent border-t border-gray-200 px-4 py-4 z-[9999]">
+                  <div className="max-w-7xl mx-auto">
+                    <Button
+                      onClick={() => {
+                        setDemandText(
+                          offer.requirement?.description ||
+                            offer.description ||
+                            ""
+                        );
+                        setIsDialogOpen(true);
+                      }}
+                      variant="outline"
+                      className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+                    >
+                      <span className="text-lg font-medium">
+                        + Kérdések megválaszolása
+                      </span>
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            }
+            return null;
+          })()}
 
           <TextInputDialogQuestions
             open={isDialogOpen}

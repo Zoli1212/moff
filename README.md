@@ -610,3 +610,13 @@ info@optisolve.hu
 teszt cases AI al
 tesztelés gemini
 ----
+item módosítások
+árak + 10% 
+mennyiséget emeljük
+anyagot is emeljen
+tervrajzot
+követelmények módosítás
+blockok legyenek els
+ha nincs semmi nincs gomb
+----
+
