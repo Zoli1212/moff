@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { saveOfferWithRequirements } from "@/actions/offer-actions";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
+import { useRequirementBlockStore } from "@/store/requirementBlockStore";
 import { FileText } from "lucide-react";
 
 export default function SilentOfferSaverPage() {
@@ -82,22 +83,38 @@ export default function SilentOfferSaverPage() {
         // 1) Save to localStorage
         saveOfferStatus(recordid);
 
-        // 2) Save to DB
+        // 2) Get block IDs from the store right before saving
+        const blockIds = useRequirementBlockStore.getState().blockIds || [];
+        console.log('Saving with block IDs:', blockIds);
+        
+        if (blockIds.length === 0) {
+          console.warn('No block IDs found in store, checking if this is expected...');
+        }
+        
+        // 3) Save to DB
         console.log('Saving with demandText:!!', demandTextToUse, contentToSave);
+        
         const result = await saveOfferWithRequirements({
           recordId: recordid,
           demandText: demandTextToUse || "",
           offerContent: contentToSave,
           checkedItems: offerItems,
           extraRequirementText,
+          blockIds: blockIds
         });
+        
+        console.log('Save result:', result);
         
         // Clear extra requirement text after successful save
         if (extraRequirementText) {
           useDemandStore.getState().clearExtraRequirementText();
         }
 
-                if (result.success && result.requirementId && result.offerId) {
+        if (!result) {
+          throw new Error('No response from server');
+        }
+
+        if (result.success && result.requirementId && result.offerId) {
           console.log("Offer saved to database", result);
           toast.success("Ajánlat sikeresen lementve!");
 
@@ -111,11 +128,13 @@ export default function SilentOfferSaverPage() {
           const targetUrl = `/offers/${result.requirementId}?offerId=${result.offerId}`;
           console.log("Redirecting to", targetUrl);
           router.push(targetUrl);
-        } else {
-          console.error("Database save failed or missing IDs", result);
-          toast.error(result.error || "Hiba a mentés közben.");
-          setIsProcessing(false);
-        }
+          return; // Exit after successful redirect
+        } 
+        
+        // Handle error case
+        console.error("Database save failed or missing IDs", result);
+        toast.error(result?.error || "Hiba a mentés közben.");
+        setIsProcessing(false);
       } catch (error) {
         console.error("Error fetching or saving offer:", error);
         toast.error("Hiba történt az ajánlat mentése közben.");
@@ -124,7 +143,7 @@ export default function SilentOfferSaverPage() {
     };
 
     fetchAndSaveOffer();
-  }, [recordid, router]);
+  }, [recordid, router, demandTextToUse, offerItems, extraRequirementText, clearOfferItems]);
 
   if (isProcessing) {
     return (

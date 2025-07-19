@@ -16,6 +16,7 @@ interface SaveOfferData {
   offerContent: string;
   checkedItems?: OfferItem[];
   extraRequirementText?: string; // Optional: extra requirement text to save as a block
+  blockIds?: number[]; // Block IDs to update with the new requirement
 }
 
 interface ParsedOfferContent {
@@ -37,9 +38,15 @@ interface ParsedOfferContent {
 
 export async function saveOfferWithRequirements(data: SaveOfferData) {
   try {
-        const { recordId, demandText, offerContent, checkedItems, extraRequirementText } = data;
+    const {
+      recordId,
+      demandText,
+      offerContent,
+      checkedItems,
+      extraRequirementText,
+    } = data;
 
-        console.log(demandText, 'DT-----------------------------------')
+    console.log(demandText, "DT-----------------------------------");
 
     // Check if an offer with this recordId already exists
     if (recordId) {
@@ -76,34 +83,40 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       parsedContent = JSON.parse(offerContent) as ParsedOfferContent;
     } catch (e) {
       // If not valid JSON, try to parse as raw text
-            parsedContent = formatOfferForSave(parseOfferText(offerContent));
+      parsedContent = formatOfferForSave(parseOfferText(offerContent));
     }
 
-        // Merge with checked items if they exist
-        if (checkedItems && checkedItems.length > 0 && parsedContent.items) {
-          console.log("--- MERGE TEST LOG ---");
-          console.log("Original parsed items:", JSON.stringify(parsedContent.items, null, 2));
-          console.log("Items from store (checkedItems):", JSON.stringify(checkedItems, null, 2));
-        
-          // Egyedi kulcs csak a name és quantity alapján
-          const createKey = (item: { name: string; quantity: string }) =>
-            `${item.name}||${item.quantity}`;
-        
-          const checkedItemsMap = new Map(
-            checkedItems.map(item => [createKey(item), item])
-          );
-        
-          const finalItems = parsedContent.items.map(originalItem => {
-            const key = createKey(originalItem);
-            if (checkedItemsMap.has(key)) {
-              const storeItem = checkedItemsMap.get(key)!;
-              return { ...storeItem, totalPrice: storeItem.totalPrice ?? '0' };
-            }
-            return originalItem;
-          });
-        
-          parsedContent.items = finalItems;
+    // Merge with checked items if they exist
+    if (checkedItems && checkedItems.length > 0 && parsedContent.items) {
+      console.log("--- MERGE TEST LOG ---");
+      console.log(
+        "Original parsed items:",
+        JSON.stringify(parsedContent.items, null, 2)
+      );
+      console.log(
+        "Items from store (checkedItems):",
+        JSON.stringify(checkedItems, null, 2)
+      );
+
+      // Egyedi kulcs csak a name és quantity alapján
+      const createKey = (item: { name: string; quantity: string }) =>
+        `${item.name}||${item.quantity}`;
+
+      const checkedItemsMap = new Map(
+        checkedItems.map((item) => [createKey(item), item])
+      );
+
+      const finalItems = parsedContent.items.map((originalItem) => {
+        const key = createKey(originalItem);
+        if (checkedItemsMap.has(key)) {
+          const storeItem = checkedItemsMap.get(key)!;
+          return { ...storeItem, totalPrice: storeItem.totalPrice ?? "0" };
         }
+        return originalItem;
+      });
+
+      parsedContent.items = finalItems;
+    }
 
     console.log("PARSED CONTENT", parsedContent);
     console.log("ITEMS", parsedContent.items || parsedContent.notes);
@@ -202,7 +215,6 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       where: {
         title: requirementTitle,
         myWorkId: work.id,
-        
       },
       orderBy: { versionNumber: "desc" },
       select: { versionNumber: true, id: true, updateCount: true },
@@ -221,7 +233,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       myWork: {
         connect: { id: work.id },
       },
-      updateCount: (latestRequirement?.updateCount ?? 1),
+      updateCount: latestRequirement?.updateCount ?? 1,
       // Link to previous version if it exists
       ...(latestRequirement && {
         previousVersion: {
@@ -252,7 +264,24 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       });
     }
 
-    // 3. Save extra requirement text as a block if it exists
+    // 3. Update existing blocks to point to the new requirement
+    if (data.blockIds && data.blockIds.length > 0) {
+      console.log(`Updating ${data.blockIds.length} blocks to point to new requirement ${requirement.id}`);
+      
+      // Update all blocks to point to the new requirement
+      try {
+        await prisma.requirementItemsBlock.updateMany({
+          where: { id: { in: data.blockIds } },
+          data: { requirementId: requirement.id }
+        });
+        console.log(`Successfully updated ${data.blockIds.length} blocks to requirement ${requirement.id}`);
+      } catch (error) {
+        console.error('Error updating block references:', error);
+        // Continue even if block updates fail
+      }
+    }
+
+    // 4. Save extra requirement text as a block if it exists
     if (data.extraRequirementText?.trim()) {
       try {
         await prisma.requirementItemsBlock.create({
@@ -374,7 +403,9 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 export async function getUserOffers() {
   try {
     const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0].emailAddress;
+    const userEmail =
+      user?.primaryEmailAddress?.emailAddress ||
+      user?.emailAddresses[0].emailAddress;
 
     if (!userEmail) {
       throw new Error("No email available for user");
@@ -433,14 +464,16 @@ export async function getOfferById(id: number) {
     if (!user) {
       throw new Error("Nincs bejelentkezve felhasználó!");
     }
-    
-    const userEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress;
+
+    const userEmail =
+      user.emailAddresses[0].emailAddress ||
+      user.primaryEmailAddress?.emailAddress;
     console.log(`Fetching offer with ID: ${id} for user: ${userEmail}`);
 
     const offer = await prisma.offer.findFirst({
-      where: { 
+      where: {
         id,
-        tenantEmail: userEmail 
+        tenantEmail: userEmail,
       },
       include: {
         requirement: {
@@ -489,21 +522,28 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
     if (!user) {
       throw new Error("Nincs bejelentkezve felhasználó!");
     }
-    
-    const userEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress;
-    console.log(`Updating items for offer ID: ${offerId} for user: ${userEmail}`, items);
+
+    const userEmail =
+      user.emailAddresses[0].emailAddress ||
+      user.primaryEmailAddress?.emailAddress;
+    console.log(
+      `Updating items for offer ID: ${offerId} for user: ${userEmail}`,
+      items
+    );
 
     // First, verify the offer belongs to the current user
     const existingOffer = await prisma.offer.findFirst({
       where: {
         id: offerId,
-        tenantEmail: userEmail
+        tenantEmail: userEmail,
       },
-      select: { id: true }
+      select: { id: true },
     });
 
     if (!existingOffer) {
-      throw new Error("Az ajánlat nem található vagy nincs jogosultságod a módosításához!");
+      throw new Error(
+        "Az ajánlat nem található vagy nincs jogosultságod a módosításához!"
+      );
     }
 
     // Calculate new totals
@@ -530,9 +570,9 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 
     // Update the offer with new items and total price
     const updatedOffer = await prisma.offer.update({
-      where: { 
+      where: {
         id: offerId,
-        tenantEmail: userEmail // Ensure we only update if the offer belongs to the user
+        tenantEmail: userEmail, // Ensure we only update if the offer belongs to the user
       },
       data: {
         items: items as unknown as Prisma.InputJsonValue, // Type-safe JSON serialization

@@ -3,6 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
+
+type RequirementBlock = {
+  id: number;
+  requirementId: number;
+  blockText: string;
+  createdAt: string | Date;
+};
+import { useRequirementBlockStore } from "@/store/requirementBlockStore";
 import { getOfferById } from "@/actions/offer-actions";
 import { getRequirementBlocks } from "@/actions/requirement-block-actions";
 import { addRequirementBlock } from "@/actions/requirement-block-actions";
@@ -47,12 +55,15 @@ interface RequirementDetailProps {
     id: number;
     description: string;
   }) => void;
+  onBlocksLoaded?: (blockIds: number[]) => void;
+  onBlockIdsChange?: (blockIds: number[]) => void;
 }
 
 export function RequirementDetail({
   requirement,
   onBack,
   onRequirementUpdated,
+  onBlockIdsChange,
 }: RequirementDetailProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -75,26 +86,66 @@ export function RequirementDetail({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
   const [isLineRemoved, setIsLineRemoved] = useState(false);
-  const [blocks, setBlocks] = useState<{ blockText: string }[]>([]);
+  const [blocks, setBlocks] = useState<RequirementBlock[]>([]);
 
   // Zustand extraRequirementText setter
   const { setExtraRequirementText } = useDemandStore();
 
   console.log(JSON.stringify(requirement), "REQ");
+  
+  const { setBlockIds } = useRequirementBlockStore();
 
   // Fetch blocks for this requirement
   useEffect(() => {
+    let isMounted = true;
+    
     async function fetchBlocks() {
       try {
+        console.log(`[RequirementDetail] Fetching blocks for requirement ${requirement.id}...`);
         const fetchedBlocks = await getRequirementBlocks(requirement.id);
-        console.log("Requirement blocks:", fetchedBlocks);
+        console.log(`[RequirementDetail] Fetched ${fetchedBlocks?.length || 0} blocks for requirement`, requirement.id, ":", fetchedBlocks);
+        
+        if (!isMounted) {
+          console.log('[RequirementDetail] Component unmounted, skipping state updates');
+          return;
+        }
+        
         setBlocks(fetchedBlocks);
+        
+        // Always update block IDs, even if empty
+        const blockIds = fetchedBlocks?.map(block => block.id) || [];
+        console.log(`[RequirementDetail] Updating block IDs in store for requirement ${requirement.id}:`, blockIds);
+        
+        // Update the store
+        setBlockIds(blockIds);
+        
+        // Notify parent component about the loaded blocks if needed
+        if (onBlockIdsChange) {
+          console.log(`[RequirementDetail] Notifying parent of block IDs:`, blockIds);
+          onBlockIdsChange(blockIds);
+        }
+        
+        // Also log the current store state
+        const storeState = useRequirementBlockStore.getState();
+        console.log('[RequirementDetail] Current store state:', storeState);
+        
       } catch (e) {
-        console.error("Hiba a blokkok lekérdezésekor:", e);
+        console.error("[RequirementDetail] Error fetching blocks:", e);
+        if (isMounted) {
+          setBlockIds([]);
+        }
       }
     }
+    
     fetchBlocks();
-  }, [requirement.id]);
+    
+    // Clean up function
+    return () => {
+      console.log('[RequirementDetail] Cleaning up block IDs...');
+      isMounted = false;
+      // We're not clearing block IDs here to ensure they're available during save
+    };
+  }, [requirement.id, setBlockIds, onBlockIdsChange]);
 
   // Fetch offer and its items when component mounts
   useEffect(() => {
@@ -612,6 +663,26 @@ export function RequirementDetail({
             )}
           </div>
         </div>
+
+        {/* Blocks Section */}
+        {blocks.length > 0 && (
+          <div className="p-4 border-t border-gray-200">
+            <h3 className="text-md font-medium text-gray-900 mb-3">Kiegészítések</h3>
+            <div className="space-y-2">
+              {blocks.map((block) => (
+                <div 
+                  key={block.id}
+                  className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r"
+                >
+                  <p className="text-sm text-yellow-800">{block.blockText}</p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                     Létrehozva: {new Date(block.createdAt).toLocaleString('hu-HU')}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Additional Info Section */}
         <div className="p-4 border-t border-gray-200">
