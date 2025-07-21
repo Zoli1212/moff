@@ -11,9 +11,6 @@ export function parseRequirementLines(description: string): RequirementLine[] {
   if (!description) return [];
   
   // Helper function to remove accents for better matching
-  function removeAccents(str: string): string {
-    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  }
   
   let currentSection = "";
   let inRequirements = false;
@@ -42,7 +39,6 @@ export function parseRequirementLines(description: string): RequirementLine[] {
     
     sectionLines.forEach((line, lineIndex) => {
       const isLineASection = line.endsWith(":");
-      const isFirstLine = sectionIndex === 0 && lineIndex === 0;
       const isAfterDoubleNewline = lineIndex === 0 && sectionIndex > 0;
       
       // If it's a section header, update the current section
@@ -53,12 +49,11 @@ export function parseRequirementLines(description: string): RequirementLine[] {
                          line.toLowerCase().includes("munkálatok"));
       }
       
-      // A line is deletable if:
-      // 1. It's after a double newline (new section) AND not a section header
-      // 2. It's in the requirements section AND not a section header
-      // 3. It's not in the excluded patterns
-      const isDeletable = (isAfterDoubleNewline && !isLineASection) || 
-                         (inRequirements && !isLineASection);
+      // A line is always deletable if it's after a double newline and not a section header
+      const isAfterDoubleNewlineDeletable = isAfterDoubleNewline && !isLineASection;
+      
+      // A line is also deletable if it's in the requirements section and not a section header
+      const isInRequirementsDeletable = inRequirements && !isLineASection;
       
       // Exclude lines that match certain patterns
       const normalizedLine = line.toLowerCase();
@@ -72,9 +67,18 @@ export function parseRequirementLines(description: string): RequirementLine[] {
       ].some(term => normalizedLine.includes(term.toLowerCase()));
       
       // Also exclude lines that look like headers or very short lines
-      const looksLikeHeader = isLineASection || 
-                            /^[A-ZÁÉÍÓÖŐÚÜŰ][^.!?]*[.:]$/.test(line) ||
-                            line.length < 10;
+      // But only apply these checks if it's not after a double newline
+      const looksLikeHeader = !isAfterDoubleNewline && (
+        isLineASection || 
+        /^[A-ZÁÉÍÓÖŐÚÜŰ][^.!?]*[.:]$/.test(line) ||
+        line.length < 10
+      );
+      
+      // A line is deletable if:
+      // 1. It's after a double newline (always deletable), OR
+      // 2. It's in requirements section and passes all other checks
+      const shouldBeDeletable = isAfterDoubleNewlineDeletable || 
+                              (isInRequirementsDeletable && !isExcluded && !looksLikeHeader && line.length >= 10);
       
       // Add the line with appropriate metadata
       lines.push({
@@ -82,7 +86,7 @@ export function parseRequirementLines(description: string): RequirementLine[] {
         text: line,
         isSectionHeader: isLineASection,
         sectionHeader: isLineASection ? undefined : currentSection,
-        isDeletable: isDeletable && !isExcluded && !looksLikeHeader && line.length >= 10,
+        isDeletable: shouldBeDeletable,
         isBlock: isAfterDoubleNewline && !isLineASection
       });
     });

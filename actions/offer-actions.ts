@@ -46,7 +46,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       extraRequirementText,
     } = data;
 
-    console.log(demandText, "DT-----------------------------------");
+ 
 
     // Check if an offer with this recordId already exists
     if (recordId) {
@@ -282,12 +282,12 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     }
 
     // 4. Save extra requirement text as a block if it exists
-    if (data.extraRequirementText?.trim()) {
+    if (extraRequirementText?.trim()) {
       try {
         await prisma.requirementItemsBlock.create({
           data: {
             requirementId: requirement.id,
-            blockText: data.extraRequirementText.trim(),
+            blockText: extraRequirementText.trim(),
           },
         });
         console.log("Extra requirement text saved as block");

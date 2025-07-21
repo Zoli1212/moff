@@ -620,3 +620,5 @@ blockok legyenek els
 ha nincs semmi nincs gomb
 ----
 
+ha se a globális ninc sbenn akkor becsüljön, 
+követlményekc online

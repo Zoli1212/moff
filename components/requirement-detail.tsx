@@ -13,7 +13,6 @@ type RequirementBlock = {
 import { useRequirementBlockStore } from "@/store/requirementBlockStore";
 import { getOfferById } from "@/actions/offer-actions";
 import { getRequirementBlocks } from "@/actions/requirement-block-actions";
-import { addRequirementBlock } from "@/actions/requirement-block-actions";
 import { Loader2, X, Send, ArrowLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -40,6 +39,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+
+interface TableItem {
+  name: string;
+  quantity: string;
+  unit: string;
+  materialUnitPrice: string;
+  workUnitPrice: string;
+  materialTotal: string;
+  workTotal: string;
+}
+
 
 interface Requirement {
   id: number;
@@ -87,6 +97,7 @@ export function RequirementDetail({
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
   const [isLineRemoved, setIsLineRemoved] = useState(false);
   const [blocks, setBlocks] = useState<RequirementBlock[]>([]);
+  const [initialTableItems, setInitialTableItems] = useState<TableItem[]>([]);
 
   // Zustand extraRequirementText setter
   const { setExtraRequirementText } = useDemandStore();
@@ -145,7 +156,7 @@ export function RequirementDetail({
       isMounted = false;
       // We're not clearing block IDs here to ensure they're available during save
     };
-  }, [requirement.id, setBlockIds, onBlockIdsChange]);
+  }, [requirement.id, requirement.description, setBlockIds, onBlockIdsChange]); // Added requirement.description to dependencies
 
   // Fetch offer and its items when component mounts
   useEffect(() => {
@@ -176,6 +187,8 @@ export function RequirementDetail({
               })
             );
 
+            console.log("Initial table items set:", tableItems);
+            setInitialTableItems(tableItems);
             setStoredItems(tableItems);
           }
         } catch (error) {
@@ -342,6 +355,10 @@ export function RequirementDetail({
       // Küldjük el a meglévő tételeket is, ha vannak
       if (storedItems && storedItems.length > 0) {
         formData.append("existingItems", JSON.stringify(storedItems));
+      }
+      if (storedItems.length === 0 && initialTableItems.length > 0) {
+        console.log("Using initial table items:", initialTableItems);
+        setStoredItems(initialTableItems);
       }
 
       // Call the API
@@ -669,17 +686,36 @@ export function RequirementDetail({
           <div className="p-4 border-t border-gray-200">
             <h3 className="text-md font-medium text-gray-900 mb-3">Kiegészítések</h3>
             <div className="space-y-2">
-              {blocks.map((block) => (
-                <div 
-                  key={block.id}
-                  className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r"
-                >
-                  <p className="text-sm text-yellow-800">{block.blockText}</p>
-                  <p className="text-xs text-yellow-600 mt-1">
-                     Létrehozva: {new Date(block.createdAt).toLocaleString('hu-HU')}
-                  </p>
-                </div>
-              ))}
+              {blocks
+                // Only show blocks that exactly match a line in the requirement description
+                .filter(block => {
+                  if (!requirement.description) return false;
+                  
+                  // Get all non-empty lines from the description
+                  const descriptionLines = requirement.description
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0);
+                  
+                  // Check if any line in the description exactly matches the block text
+                  return descriptionLines.some(line => {
+                    // Compare after normalizing whitespace and trimming
+                    const normalizedLine = line.trim().replace(/\s+/g, ' ');
+                    const normalizedBlock = block.blockText.trim().replace(/\s+/g, ' ');
+                    return normalizedLine === normalizedBlock;
+                  });
+                })
+                .map((block) => (
+                  <div 
+                    key={block.id}
+                    className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r"
+                  >
+                    <p className="text-sm text-yellow-800">{block.blockText}</p>
+                    <p className="text-xs text-yellow-600 mt-1">
+                      Létrehozva: {new Date(block.createdAt).toLocaleString('hu-HU')}
+                    </p>
+                  </div>
+                ))}
             </div>
           </div>
         )}
