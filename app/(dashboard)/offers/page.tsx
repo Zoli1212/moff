@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { getUserOffers } from "@/actions/offer-actions";
-import { format } from "date-fns";
-import { hu } from "date-fns/locale";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
