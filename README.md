@@ -15,7 +15,7 @@ INNGEST_SIGNING_KEY=signkey-prod-ee608d0103068ec617427050595ba78fbf4194d7e13bf99
     "timeline": "2025. július 1. - 2025. szeptember 30.",
     "must_haves": [
       "Biztonságos tetőszerkezet",
-      "Szigetelt tetőszerkezet",
+      "Szigetelt tetőszerkezet", PO-090-01667718282873770
       "Javított és vakolt falak",
       "Új nyílászárók",
       "Korszerű villamos hálózat",
@@ -275,6 +275,41 @@ Előre is köszönöm a segítségedet!
 Szabó Bence
 +36 70 456 7890
 bence.szabo@pelda.hu
+
+-----
+2. minta – Kispesti téglaépítésű lakás
+Tárgy: Lakásfelújítási ajánlatkérés – 30. kerületi tégla lakás
+
+Kedves Asszisztens!
+
+Ajánlatot szeretnék kérni egy 61 m²-es, régi építésű téglalakás részleges felújítására, amely Budapesten, a 30. kerületben, Ady Endre út 51. szám alatt található.
+
+Lakás jellemzői:
+
+Méret: 61 m²
+
+Elosztás: előszoba, nappali, hálószoba, konyha, fürdő, WC
+
+Felújítási igények:
+
+Teljes festés és mázolás: kb. 140 m²
+
+Konyhai hidegburkolat bontása és új lerakása: 10 m²
+
+Laminált padló fektetése a szobákban: 40 m²
+
+Vízvezeték cseréje a fürdőben
+
+Villanyszerelés: 12 konnektor, 4 lámpahely, biztosíték tábla ellenőrzés
+
+Kérem, készítsd el az ajánlatot a cég árlistája alapján, és becsüld meg a munkák időtartamát is.
+
+Előre is köszönöm a segítségedet!
+
+Üdvözlettel:
+Szilágyi Júlia
+📞 +36 30 888 7788
+📧 julia.szilagyi@pelda.hu
 
 régi neon: postgresql://neondb_owner:npg_k7pwgiyFJ5bR@ep-steep-frost-a8tawktk-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
 

@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
         let existingItems = [];
         try {
           const existingItemsStr = formData.get('existingItems')?.toString();
+          console.log('existingItemsStr', existingItemsStr);
           if (existingItemsStr) {
             existingItems = JSON.parse(existingItemsStr);
             if (!Array.isArray(existingItems)) {

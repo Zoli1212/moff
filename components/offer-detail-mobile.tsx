@@ -97,7 +97,6 @@ interface OfferDetailViewProps {
 }
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
-
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItem, setEditingItem] = useState<{
@@ -895,6 +894,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             setOpen={setIsDialogOpen}
             toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
             questions={extractQuestions(offer.description || "")}
+            currentItems={editableItems.map(item => ({
+              name: item.name || "",
+              quantity: item.quantity || "1",
+              unit: item.unit || "db",
+              materialUnitPrice: item.materialUnitPrice || "0 Ft",
+              workUnitPrice: item.unitPrice || "0 Ft",
+              materialTotal: item.materialTotal || "0 Ft",
+              workTotal: item.workTotal || "0 Ft"
+            }))}
           />
         </div>
         {/* Notes Section */}

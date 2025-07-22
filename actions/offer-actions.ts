@@ -5,7 +5,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { Prisma, Offer } from "@prisma/client";
 import { parseOfferText, formatOfferForSave } from "@/lib/offer-parser";
-import { OfferItem, OfferWithItems } from "@/types/offer.types";
+import { OfferItem, OfferItemQuestion, OfferWithItems } from "@/types/offer.types";
 import { v4 as uuidv4 } from "uuid";
 
 // Using shared OfferWithItems type from @/types/offer.types
@@ -17,6 +17,7 @@ interface SaveOfferData {
   checkedItems?: OfferItem[];
   extraRequirementText?: string; // Optional: extra requirement text to save as a block
   blockIds?: number[]; // Block IDs to update with the new requirement
+  offerItemsQuestion?: OfferItemQuestion[];
 }
 
 interface ParsedOfferContent {
@@ -44,11 +45,12 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       offerContent,
       checkedItems,
       extraRequirementText,
-    } = data;
+      offerItemsQuestion, // Add default value and type annotation
+    }: SaveOfferData = data; // Add type annotation
 
- 
+    console.log('OfferItemsQuestion', offerItemsQuestion);
 
-    // Check if an offer with this recordId already exists
+    // ... rest of the code remains the same ...
     if (recordId) {
       const existingOffer = await prisma.offer.findFirst({
         where: { recordId },
@@ -116,6 +118,46 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       });
 
       parsedContent.items = finalItems;
+    }
+
+    // If we have offerItemsQuestion, use it as the base and add any new items from parsedContent.items
+    if (offerItemsQuestion && offerItemsQuestion.length > 0) {
+      console.log("Merging offerItemsQuestion with parsedContent.items");
+      
+      // Ensure all items in offerItemsQuestion have required properties with defaults
+      const normalizedOfferItems = offerItemsQuestion.map(item => ({
+        name: item.name || "",
+        quantity: item.quantity || "1",
+        unit: item.unit || "db",
+        unitPrice: item.workUnitPrice || "0",
+        materialUnitPrice: item.materialUnitPrice || "0",
+        workTotal: item.workTotal || "0",
+        materialTotal: item.materialTotal || "0",
+        totalPrice: item.totalPrice || "0"
+      }));
+      
+      // Create a Set of item names from offerItemsQuestion for quick lookup
+      const existingItemNames = new Set(normalizedOfferItems.map(item => item.name));
+      
+      // Add items from parsedContent.items that don't exist in offerItemsQuestion
+      const newItems = (parsedContent.items || [])
+        .filter((item: { name?: string }) => item?.name && !existingItemNames.has(item.name))
+        .map(item => ({
+          name: item.name || "",
+          quantity: 'quantity' in item ? item.quantity : "1",
+          unit: 'unit' in item ? item.unit : "db",
+          unitPrice: 'unitPrice' in item ? item.unitPrice : "0",
+          materialUnitPrice: 'materialUnitPrice' in item ? item.materialUnitPrice : "0",
+          workTotal: 'workTotal' in item ? item.workTotal : "0",
+          materialTotal: 'materialTotal' in item ? item.materialTotal : "0",
+          totalPrice: 'totalPrice' in item ? item.totalPrice : "0"
+        }));
+      
+      // Combine the arrays (offerItemsQuestion first, then new items)
+      parsedContent.items = [...normalizedOfferItems, ...newItems];
+      
+      console.log(`Merged ${normalizedOfferItems.length} existing items with ${newItems.length} new items`);
+      console.log('NormalizedOfferItems', normalizedOfferItems);
     }
 
     console.log("PARSED CONTENT", parsedContent);

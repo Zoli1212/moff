@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,8 @@ import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useDemandStore } from '@/store/offerLetterStore';
+import { useOfferItemQuestionStore } from '@/store/offerItemQuestionStore';
+import { useOfferItemCheckStore } from '@/store/offerItemCheckStore';
 
 interface TextInputDialogProps {
   open: boolean;
@@ -28,6 +30,16 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  const { clearOfferItemsQuestion } = useOfferItemQuestionStore();
+  const { clearOfferItems } = useOfferItemCheckStore();
+  const { clearExtraRequirementText } = useDemandStore();
+
+  useEffect(() => {
+    clearOfferItemsQuestion();
+    clearOfferItems();
+    clearExtraRequirementText();
+  }, [clearOfferItemsQuestion, clearOfferItems, clearExtraRequirementText]);
 
 
   const onAnalyze = async () => {

@@ -12,6 +12,18 @@ export interface OfferItem {
   totalPrice?: string;
   description?: string;
 }
+export interface OfferItemQuestion {
+  id?: number;
+  name: string;
+  quantity: string;
+  unit: string;
+  materialUnitPrice: string;
+  workUnitPrice: string;
+  materialTotal: string;
+  workTotal: string;
+  totalPrice?: string;
+  description?: string;
+}
 
 export interface OfferWithItems extends Omit<PrismaOffer, 'items' | 'notes'> {
   items: OfferItem[];

@@ -9,6 +9,7 @@ import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { useRequirementBlockStore } from "@/store/requirementBlockStore";
 import { FileText } from "lucide-react";
+import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 
 export default function SilentOfferSaverPage() {
   const router = useRouter();
@@ -18,6 +19,7 @@ export default function SilentOfferSaverPage() {
   const [isProcessing, setIsProcessing] = useState(true);
     const { demandText, extraRequirementText } = useDemandStore();
   const { offerItems, clearOfferItems } = useOfferItemCheckStore();
+  const { offerItemsQuestion, clearOfferItemsQuestion } = useOfferItemQuestionStore();
 
 
   
@@ -45,7 +47,7 @@ export default function SilentOfferSaverPage() {
     const savedOffer = savedOffers[recordId];
     return savedOffer && savedOffer.expires > Date.now();
   };
-  console.log(isProcessing)
+
 
   useEffect(() => {
     const fetchAndSaveOffer = async () => {
@@ -100,7 +102,8 @@ export default function SilentOfferSaverPage() {
           offerContent: contentToSave,
           checkedItems: offerItems,
           extraRequirementText,
-          blockIds: blockIds
+          blockIds: blockIds,
+          offerItemsQuestion: offerItemsQuestion
         });
         
         console.log('Save result:', result);
@@ -121,18 +124,14 @@ export default function SilentOfferSaverPage() {
           // Clear the checked items from the store
           if (offerItems && offerItems.length > 0) {
             clearOfferItems();
-            console.log("Checked items store cleared.");
           }
 
           // Redirect to the target URL
           const targetUrl = `/offers/${result.requirementId}?offerId=${result.offerId}`;
-          console.log("Redirecting to", targetUrl);
           router.push(targetUrl);
           return; // Exit after successful redirect
         } 
-        
         // Handle error case
-        console.error("Database save failed or missing IDs", result);
         toast.error(result?.error || "Hiba a mentés közben.");
         setIsProcessing(false);
       } catch (error) {

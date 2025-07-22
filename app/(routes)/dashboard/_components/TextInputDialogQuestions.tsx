@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
+import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 
 interface TextInputDialogProps {
   open: boolean;
@@ -34,11 +35,23 @@ export default function TextInputDialogQuestions({
   setOpen,
   toolPath,
   questions: initialQuestions = [],
-}: TextInputDialogProps) {
+  currentItems = []
+}: TextInputDialogProps & { currentItems?: any[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<QuestionWithAnswer[]>([]);
   const router = useRouter();
+
+  // Get the setOfferItems function and current items from the store
+  const { setOfferItemsQuestion, offerItemsQuestion } = useOfferItemQuestionStore();
+  const prevItemsRef = useRef(currentItems);
+
+  // Log when offerItems are updated in the store
+  useEffect(() => {
+    if (offerItemsQuestion && offerItemsQuestion.length > 0) {
+      console.log('Items stored in offerItemsQuestionStore:', offerItemsQuestion);
+    }
+  }, [offerItemsQuestion]);
 
   // Initialize questions with unique IDs when dialog opens
   useEffect(() => {
@@ -50,8 +63,15 @@ export default function TextInputDialogQuestions({
           answer: "",
         }))
       );
+      
+      // Store the current items in the store when dialog opens and items have changed
+      if (currentItems && currentItems.length > 0 && 
+          JSON.stringify(currentItems) !== JSON.stringify(prevItemsRef.current)) {
+        setOfferItemsQuestion(currentItems);
+        prevItemsRef.current = currentItems;
+      }
     }
-  }, [open, initialQuestions]);
+  }, [open, initialQuestions, currentItems, setOfferItemsQuestion]);
 
   const handleAnswerChange = (id: string, answer: string) => {
     setQuestions((prev) =>
