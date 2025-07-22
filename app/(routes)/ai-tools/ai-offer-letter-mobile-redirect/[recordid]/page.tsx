@@ -113,6 +113,10 @@ export default function SilentOfferSaverPage() {
           useDemandStore.getState().clearExtraRequirementText();
         }
 
+        if (offerItemsQuestion) {
+          clearOfferItemsQuestion();
+        }
+
         if (!result) {
           throw new Error('No response from server');
         }

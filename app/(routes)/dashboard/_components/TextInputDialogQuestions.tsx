@@ -16,6 +16,7 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
+import { OfferItemQuestion } from "@/types/offer.types";
 
 interface TextInputDialogProps {
   open: boolean;
@@ -36,7 +37,7 @@ export default function TextInputDialogQuestions({
   toolPath,
   questions: initialQuestions = [],
   currentItems = []
-}: TextInputDialogProps & { currentItems?: any[] }) {
+}: TextInputDialogProps & { currentItems?: OfferItemQuestion[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<QuestionWithAnswer[]>([]);

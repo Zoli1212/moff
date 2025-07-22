@@ -4035,6 +4035,9 @@ For each item in the offer, use the following exact format:
 Example:
 *Belső vakolat javítása: 130 m² × 3 800 Ft/m² (díj) + 500 Ft/m² (anyag) = 494 000 Ft (díj összesen) + 65 000 Ft (anyag összesen)
 This format is essential for automated parsing and table rendering. Please ensure every item in the offer follows this pattern.
+
+REMINDER: You must always include every mentioned task as a properly formatted item line, even if the task is not found in the catalog.
+Do not skip, remove or omit any task — estimate a cost and add a proper line using the same format. This is MANDATORY.
 `,
   model: gemini({
     model: "gemini-2.0-flash",

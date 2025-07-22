@@ -373,28 +373,6 @@ Előre is köszönöm a segítségedet!
 Üdvözlettel:
 Kovács Eszter
 
-# uj követelmény - # új követelmény
-# tételek legyenek 2 vagy 3 sorosak hogy lássa az egészet, szerkesztésnél is
-# elküld megosztások
-# kérdések szekció pipával
-# válasz mobilbarát formába jelnjen meg
-# Követelmények pontosítása
-# megosztások
----------------
-# kérdések beküldése
-# Ajánlat frissítése / Ez legyen a neve!
-# sticky Pontosítás 
-# kérdések megválaszolása #Pontosítás
-# mobil nézet a válaszokban
-# Analízis folyamatban kis türelmet kérek
-# leírás végén legyen egy gomb a kérdések megválaszolása
-# Új ajánlat az új követelmenyékkel
-# dialógus blokkolja
-# deployment
-# a db ne szürke legyen
-# action gombok narancssárga gombok legyenek minden narancssárga pl + Új tétel
-# Összeg kék
-# hamburger menü is narancssárga legyen
 ---------
 
 Tárgy: Lakásfelújítási ajánlatkérés – II. kerületi társasházi lakás
@@ -440,8 +418,8 @@ Előre is köszönöm a segítségedet!
 Szabó Bence
 +36 70 456 7890
 bence.szabo@pelda.hu
-
-# Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérjek ajánlatot
+---- 
+Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérjek ajánlatot
 
 Best Regards,
 
@@ -516,18 +494,6 @@ Dr. Farkas Máté
 info@optisolve.hu
 +36 1 999 8877
 
-# alaprajz 
-# tervrajzot lehessen hozzá tölteni, külön oldalak + nevek adása
-# belmagasság falfelület
-# megadása
------
-# dokumentumtár
------
-# képet berakni kezdőképernyő bállítás
-# új képet tudjon feltölteni
--
-# követelmények
-# items
 ------
 Tárgy: Üzlethelyiség modernizálása – VII. kerület, Rákóczi út 25.
 Tisztelt Kivitelező Cég!
@@ -634,26 +600,5 @@ Dr. Farkas István
 info@optisolve.hu
 +36 1 999 8877
 
-----
 
-3. követelmények / blokkok / követelmények  blokkok legyenek
-4. bugfix: regresszio csökkentése
-5. új követelmény esetén item + uj verzio ne legyen egy uj ajánlat
-6. legfrissebb számít az ajánlatoknak, verziok ne jelenjenek meg
 
-----
-teszt cases AI al
-tesztelés gemini
-----
-item módosítások
-árak + 10% 
-mennyiséget emeljük
-anyagot is emeljen
-tervrajzot
-követelmények módosítás
-blockok legyenek els
-ha nincs semmi nincs gomb
-----
-
-ha se a globális ninc sbenn akkor becsüljön, 
-követlményekc online

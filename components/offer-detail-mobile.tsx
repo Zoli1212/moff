@@ -803,6 +803,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <span className="ml-1 font-medium">
                   {getStatusDisplay(offer.status || "draft")}
                 </span>
+                <div className="text-sm text-gray-500 ml-2">
+                  <span className="mt-1 text-sm text-gray-500">
+                    {offer.updatedAt
+                      ? format(new Date(offer.updatedAt), "PPP", {
+                          locale: hu,
+                        })
+                      : ""}
+                  </span>
+                </div>
               </div>
 
               <div className="flex items-center text-gray-600">
@@ -894,14 +903,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             setOpen={setIsDialogOpen}
             toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
             questions={extractQuestions(offer.description || "")}
-            currentItems={editableItems.map(item => ({
+            currentItems={editableItems.map((item) => ({
               name: item.name || "",
               quantity: item.quantity || "1",
               unit: item.unit || "db",
               materialUnitPrice: item.materialUnitPrice || "0 Ft",
               workUnitPrice: item.unitPrice || "0 Ft",
               materialTotal: item.materialTotal || "0 Ft",
-              workTotal: item.workTotal || "0 Ft"
+              workTotal: item.workTotal || "0 Ft",
             }))}
           />
         </div>

@@ -193,9 +193,11 @@ export default function OffersPage() {
                             </h3>
                             {offer.description && (
                               <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                                {offer.description.length > 100
-                                  ? `${offer.description.substring(0, 100)}...`
-                                  : offer.description}
+                                {offer.description.includes("Becsült kivitelezési idő")
+                                  ? offer.description.substring(offer.description.indexOf("Becsült kivitelezési idő"))
+                                  : offer.description.length > 100
+                                    ? `${offer.description.substring(0, 250)}...`
+                                    : offer.description}
                               </p>
                             )}
                           </div>
@@ -203,13 +205,6 @@ export default function OffersPage() {
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               {getStatusDisplay(offer.status)}
                             </span>
-                            <p className="mt-1 text-sm text-gray-500">
-                              {offer.updatedAt
-                                ? format(new Date(offer.updatedAt), "PPP", {
-                                    locale: hu,
-                                  })
-                                : ""}
-                            </p>
                           </div>
                         </div>
 
@@ -226,13 +221,6 @@ export default function OffersPage() {
                             ) : (
                               <span>Ár nincs megadva</span>
                             )}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {offer.createdAt
-                              ? format(new Date(offer.createdAt), "PPP", {
-                                  locale: hu,
-                                })
-                              : "Nincs dátum"}
                           </div>
                         </div>
                       </div>
