@@ -137,8 +137,129 @@ model Offer {
   updatedAt      DateTime    @updatedAt
   createdBy      String?
   tenantEmail    String      @default("")
+  work           Work?       @relation("OfferWork")
   
   @@unique([recordId])
+}
+
+model Work {
+  id             Int         @id @default(autoincrement())
+  offerId        Int         @unique
+  offer          Offer       @relation("OfferWork", fields: [offerId], references: [id], onDelete: Cascade)
+  status         String      @default("pending") // e.g., pending, in_progress, completed, on_hold, cancelled
+  startDate      DateTime?
+  endDate        DateTime?
+  location       String?
+  workItems      WorkItem[]
+  workDiaries    WorkDiary[]
+  
+  // Total workers tracking
+  totalWorkers   Int         @default(0)
+  totalLaborCost Float?      @default(0)
+  
+  // Total tools tracking
+  totalTools     Int         @default(0)
+  totalToolCost  Float?      @default(0)
+  
+  // Total materials tracking
+  totalMaterials Int        @default(0)
+  totalMaterialCost Float?   @default(0)
+  
+  // Summary fields
+  estimatedDuration String?  // e.g., "2 weeks", "3 months"
+  progress         Float?    @default(0) // 0-100 percentage
+  
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenantEmail    String      @default("")
+  
+  // Relations for direct access to workers, tools, and materials
+  workers       Worker[]
+  tools         Tool[]
+  materials     Material[]
+}
+
+model WorkItem {
+  id             Int         @id @default(autoincrement())
+  workId         Int
+  work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
+  name           String
+  description    String?
+  quantity       Float       @default(1)
+  unit           String
+  status         String      @default("pending") // e.g., pending, in_progress, completed
+  workers        Worker[]
+  tools          Tool[]
+  materials      Material[]
+  workDiaryEntries WorkDiary[]
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenantEmail    String      @default("")
+}
+
+model Worker {
+  id             Int         @id @default(autoincrement())
+  name           String
+  role           String?
+  workItemId     Int
+  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  hourlyRate     Float?
+  hoursWorked    Float?      @default(0)
+  contactInfo    String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenantEmail    String      @default("")
+}
+
+model Tool {
+  id             Int         @id @default(autoincrement())
+  name           String
+  workItemId     Int
+  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  quantity       Int         @default(1)
+  dailyRate      Float?
+  daysUsed       Float?      @default(0)
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenantEmail    String      @default("")
+}
+
+model Material {
+  id             Int         @id @default(autoincrement())
+  name           String
+  workItemId     Int
+  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  quantity       Float       @default(1)
+  unit           String
+  unitPrice      Float
+  totalPrice     Float
+  supplierInfo   String?
+  deliveryDate   DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenantEmail    String      @default("")
+}
+
+model WorkDiary {
+  id             Int         @id @default(autoincrement())
+  workId         Int
+  work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
+  workItemId     Int
+  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  date           DateTime    @default(now())
+  description    String
+  weather        String?
+  temperature    Float?
+  progress       Float?      // 0-100 percentage
+  issues         String?
+  notes          String?
+  reportedById   String?     // Could be linked to a User model if needed
+  reportedByName String?
+  images         String[]    // URLs to stored images
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenantEmail    String      @default("")
 }
 
 model MyInvoices {
