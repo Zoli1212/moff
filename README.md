@@ -602,3 +602,8 @@ info@optisolve.hu
 
 
 
+11 7 12 13 folyamatban ezzel foglalkozok mert beszerzés van!
+Napló elemek WorkDiary DiaryItem
+
+13 
+ha bepipálolom a beszerzést , hogy megjött akkor megjött, ha viszont rákattintok akkor nem biztos, hogy az összes
