@@ -96,9 +96,10 @@ function extractQuestions(description: string): string[] {
 interface OfferDetailViewProps {
   offer: OfferWithItems;
   onBack: () => void;
+  onStatusChange?: (newStatus: string) => void;
 }
 
-export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
+export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItem, setEditingItem] = useState<{
@@ -375,7 +376,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     }
   };
 
-  // Handle status update
+  // Handle status update - toggles between 'work' and 'draft' statuses
   const handleStatusUpdate = async () => {
     try {
       setIsUpdatingStatus(true);
@@ -383,10 +384,13 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       const result = await updateOfferStatus(offer.id, newStatus);
       
       if (result.success) {
-        toast.success('Az állapot sikeresen frissítve!');
+        toast.success(`Az ajánlat sikeresen áthelyezve a ${newStatus === 'work' ? 'munkálatok' : 'piszkozatok'} közé!`);
+        // Notify parent component about the status change
+        if (onStatusChange) {
+          onStatusChange(newStatus);
+        }
+        // Close the dialog after successful update
         setIsStatusDialogOpen(false);
-        // Refresh the page to show the updated status
-        window.location.reload();
       } else {
         toast.error(result.message || 'Hiba történt az állapot frissítésekor');
       }
@@ -834,20 +838,27 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             </div>
 
             <div className="flex flex-wrap gap-6 mt-4">
-              <div className="flex items-center text-gray-600">
-                <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Státusz: </span>
-                <span className="ml-1 font-medium">
-                  {getStatusDisplay(offer.status || "draft")}
-                </span>
-                <div className="text-sm text-gray-500 ml-2">
-                  <span className="mt-1 text-sm text-gray-500">
-                    {offer.updatedAt
-                      ? format(new Date(offer.updatedAt), "PPP", {
-                          locale: hu,
-                        })
-                      : ""}
+              <div className="flex items-center">
+                <div 
+                  className="flex items-center text-gray-600 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                  onClick={() => handleStatusUpdate()}
+                >
+                  <Tag className="h-4 w-4 mr-2 text-gray-400" />
+                  <span>Státusz: </span>
+                  <span className={`ml-1 font-medium ${
+                    offer.status === 'work' ? 'text-blue-600' : 'text-gray-700'
+                  }`}>
+                    {getStatusDisplay(offer.status || "draft")}
                   </span>
+                  <div className="text-sm text-gray-500 ml-2">
+                    <span className="mt-1 text-sm text-gray-500">
+                      {offer.updatedAt
+                        ? format(new Date(offer.updatedAt), "PPP", {
+                            locale: hu,
+                          })
+                        : ""}
+                    </span>
+                  </div>
                 </div>
               </div>
 

@@ -710,23 +710,92 @@ export async function updateOfferStatus(offerId: number, status: string) {
       return { success: false, message: "Nincs bejelentkezve felhasználó!" };
     }
 
-    // Update the offer status
-    const updatedOffer = await prisma.offer.update({
-      where: { id: offerId },
-      data: { 
-        status,
-        updatedAt: new Date() 
-      },
+    // 1. Ellenőrizzük, hogy létezik-e már work ehhez az ajánlathoz
+    const existingWork = await prisma.work.findFirst({
+      where: { offerId }
     });
 
-    // Revalidate the relevant paths
+    // 2. Lekérjük az ajánlatot a requirementtel együtt
+    const offer = await prisma.offer.findUnique({
+      where: { id: offerId },
+      include: {
+        requirement: {
+         
+        }
+      }
+    });
+
+    if (!offer) {
+      return { success: false, message: "Az ajánlat nem található!" };
+    }
+
+
+
+    // 4. Tranzakció kezdete
+    const result = await prisma.$transaction(async (tx) => {
+      // 4.1. Frissítjük az ajánlat státuszát
+      const updatedOffer = await tx.offer.update({
+        where: { id: offerId },
+        data: { 
+          status,
+          updatedAt: new Date() 
+        }
+      });
+
+      // 4.2. Munka státusz logika (logikai törlés/aktiválás)
+      if (status === 'work') {
+        if (existingWork) {
+          // Ha már van work, csak aktiváljuk
+          await tx.work.update({
+            where: { id: existingWork.id },
+            data: { isActive: true }
+          });
+        } else {
+          // Ha nincs, létrehozzuk
+          const workTitle = offer.title || 'Új munka';
+          await tx.work.create({
+            data: {
+              offerId: updatedOffer.id,
+              status: 'pending',
+              title: workTitle,
+              offerDescription: offer.description || null,
+              totalWorkers: 0,
+              totalLaborCost: 0,
+              totalTools: 0,
+              totalToolCost: 0,
+              totalMaterials:  0,
+              totalMaterialCost: offer.materialTotal ? Number(offer.materialTotal) : 0,
+              estimatedDuration: '0',
+              progress: 0,
+              tenantEmail: user.primaryEmailAddress?.emailAddress || '',
+              offerItems: offer.items ? JSON.parse(JSON.stringify(offer.items)) : null,
+              isActive: true
+            },
+            include: {
+              workItems: true
+            }
+          });
+        }
+      } else if (status === 'draft' && existingWork) {
+        // Ha draftba állítjuk, csak logikailag inaktiváljuk
+        await tx.work.update({
+          where: { id: existingWork.id },
+          data: { isActive: false }
+        });
+      }
+      
+      return updatedOffer;
+    });
+
+    // 5. Cache frissítése
     revalidatePath(`/dashboard/offers/${offerId}`);
     revalidatePath('/dashboard/offers');
+    revalidatePath('/dashboard/jobs');
 
     return { 
       success: true, 
-      message: "Az állapot sikeresen frissítve!",
-      offer: updatedOffer
+      message: `Az ajánlat sikeresen ${status === 'work' ? 'munkába állítva' : 'frissítve'}!`,
+      offer: result
     };
   } catch (error) {
     console.error("Hiba az állapot frissítésekor:", error);

@@ -143,15 +143,17 @@ model Offer {
 }
 
 model Work {
-  id             Int         @id @default(autoincrement())
-  offerId        Int         @unique
-  offer          Offer       @relation("OfferWork", fields: [offerId], references: [id], onDelete: Cascade)
-  status         String      @default("pending") // e.g., pending, in_progress, completed, on_hold, cancelled
-  startDate      DateTime?
-  endDate        DateTime?
-  location       String?
-  workItems      WorkItem[]
-  workDiaries    WorkDiary[]
+  id                Int         @id @default(autoincrement())
+  title             String      
+  offerId           Int         @unique
+  offer             Offer       @relation("OfferWork", fields: [offerId], references: [id], onDelete: Cascade)
+  offerDescription  String?     
+  status            String      @default("pending") // e.g., pending, in_progress, completed, on_hold, cancelled
+  startDate         DateTime?
+  endDate           DateTime?
+  location          String?
+  workItems         WorkItem[]
+  workDiaries       WorkDiary[]
   
   // Total workers tracking
   totalWorkers   Int         @default(0)
@@ -168,7 +170,9 @@ model Work {
   // Summary fields
   estimatedDuration String?  // e.g., "2 weeks", "3 months"
   progress         Float?    @default(0) // 0-100 percentage
-  
+
+  isActive        Boolean    @default(true)
+
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
@@ -177,17 +181,24 @@ model Work {
   workers       Worker[]
   tools         Tool[]
   materials     Material[]
+  
+  // Original offer items
+  offerItems    Json?       // Stores the original offer items as JSON
 }
 
 model WorkItem {
-  id             Int         @id @default(autoincrement())
-  workId         Int
-  work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
-  name           String
-  description    String?
-  quantity       Float       @default(1)
-  unit           String
-  status         String      @default("pending") // e.g., pending, in_progress, completed
+  id                Int         @id @default(autoincrement())
+  workId            Int
+  work              Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
+  name              String
+  description       String?
+  quantity          Float       @default(1)
+  unit              String
+  unitPrice         Float
+  materialUnitPrice Float?
+  workTotal         Float?
+  materialTotal     Float?
+  totalPrice        Float
   workers        Worker[]
   tools          Tool[]
   materials      Material[]
@@ -201,6 +212,8 @@ model Worker {
   id             Int         @id @default(autoincrement())
   name           String
   role           String?
+  workId         Int
+  work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
   workItemId     Int
   workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   hourlyRate     Float?
@@ -214,6 +227,8 @@ model Worker {
 model Tool {
   id             Int         @id @default(autoincrement())
   name           String
+  workId         Int
+  work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
   workItemId     Int
   workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   quantity       Int         @default(1)
@@ -228,6 +243,8 @@ model Tool {
 model Material {
   id             Int         @id @default(autoincrement())
   name           String
+  workId         Int
+  work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
   workItemId     Int
   workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   quantity       Float       @default(1)

@@ -11,7 +11,7 @@ import { format } from "date-fns";
 import { hu } from "date-fns/locale";
 import Link from "next/link";
 import { Requirement } from "@prisma/client";
-import { OfferDetailView } from "@/components/offer-detail";
+import { OfferDetailView } from "@/components/offer-detail-mobile";
 
 // Using shared OfferWithItems type from @/types/offer.types
 
@@ -298,12 +298,29 @@ export default function RequirementOffersPage() {
     );
   }
 
+  // Handle status change for an offer
+  const handleStatusChange = (offerId: number, newStatus: string) => {
+    setOffers(prevOffers => 
+      prevOffers.map(offer => 
+        offer.id === offerId ? { ...offer, status: newStatus } : offer
+      )
+    );
+    
+    if (selectedOffer && selectedOffer.id === offerId) {
+      setSelectedOffer({ ...selectedOffer, status: newStatus });
+    }
+  };
+
   // Render detail view if an offer is selected
   if (isDetailView && selectedOffer) {
     return (
       <div className="min-h-screen w-full bg-gray-50 pt-4">
         <div className="w-full mx-auto px-4 max-w-6xl">
-          <OfferDetailView offer={selectedOffer} onBack={handleBackToList} />
+          <OfferDetailView 
+            offer={selectedOffer} 
+            onBack={handleBackToList} 
+            onStatusChange={(newStatus) => handleStatusChange(selectedOffer.id, newStatus)}
+          />
         </div>
       </div>
     );

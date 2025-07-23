@@ -116,6 +116,8 @@ export default function OffersPage() {
         return "Elfogadva";
       case "rejected":
         return "Elutasítva";
+      case "work":
+        return "Munka";
       default:
         return status;
     }
