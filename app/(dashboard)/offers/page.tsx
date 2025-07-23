@@ -200,7 +200,7 @@ export default function OffersPage() {
                             )}
                           </div>
                           <div className="text-right">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === 'work' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
                               {getStatusDisplay(offer.status)}
                             </span>
                           </div>

@@ -5,7 +5,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { Prisma, Offer } from "@prisma/client";
 import { parseOfferText, formatOfferForSave } from "@/lib/offer-parser";
-import { OfferItem, OfferItemQuestion, OfferWithItems } from "@/types/offer.types";
+import {
+  OfferItem,
+  OfferItemQuestion,
+  OfferWithItems,
+} from "@/types/offer.types";
 import { v4 as uuidv4 } from "uuid";
 
 // Using shared OfferWithItems type from @/types/offer.types
@@ -48,7 +52,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       offerItemsQuestion, // Add default value and type annotation
     }: SaveOfferData = data; // Add type annotation
 
-    console.log('OfferItemsQuestion', offerItemsQuestion);
+    console.log("OfferItemsQuestion", offerItemsQuestion);
 
     // ... rest of the code remains the same ...
     if (recordId) {
@@ -123,9 +127,9 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     // If we have offerItemsQuestion, use it as the base and add any new items from parsedContent.items
     if (offerItemsQuestion && offerItemsQuestion.length > 0) {
       console.log("Merging offerItemsQuestion with parsedContent.items");
-      
+
       // Ensure all items in offerItemsQuestion have required properties with defaults
-      const normalizedOfferItems = offerItemsQuestion.map(item => ({
+      const normalizedOfferItems = offerItemsQuestion.map((item) => ({
         name: item.name || "",
         quantity: item.quantity || "1",
         unit: item.unit || "db",
@@ -133,31 +137,39 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         materialUnitPrice: item.materialUnitPrice || "0",
         workTotal: item.workTotal || "0",
         materialTotal: item.materialTotal || "0",
-        totalPrice: item.totalPrice || "0"
+        totalPrice: item.totalPrice || "0",
       }));
-      
+
       // Create a Set of item names from offerItemsQuestion for quick lookup
-      const existingItemNames = new Set(normalizedOfferItems.map(item => item.name));
-      
+      const existingItemNames = new Set(
+        normalizedOfferItems.map((item) => item.name)
+      );
+
       // Add items from parsedContent.items that don't exist in offerItemsQuestion
       const newItems = (parsedContent.items || [])
-        .filter((item: { name?: string }) => item?.name && !existingItemNames.has(item.name))
-        .map(item => ({
+        .filter(
+          (item: { name?: string }) =>
+            item?.name && !existingItemNames.has(item.name)
+        )
+        .map((item) => ({
           name: item.name || "",
-          quantity: 'quantity' in item ? item.quantity : "1",
-          unit: 'unit' in item ? item.unit : "db",
-          unitPrice: 'unitPrice' in item ? item.unitPrice : "0",
-          materialUnitPrice: 'materialUnitPrice' in item ? item.materialUnitPrice : "0",
-          workTotal: 'workTotal' in item ? item.workTotal : "0",
-          materialTotal: 'materialTotal' in item ? item.materialTotal : "0",
-          totalPrice: 'totalPrice' in item ? item.totalPrice : "0"
+          quantity: "quantity" in item ? item.quantity : "1",
+          unit: "unit" in item ? item.unit : "db",
+          unitPrice: "unitPrice" in item ? item.unitPrice : "0",
+          materialUnitPrice:
+            "materialUnitPrice" in item ? item.materialUnitPrice : "0",
+          workTotal: "workTotal" in item ? item.workTotal : "0",
+          materialTotal: "materialTotal" in item ? item.materialTotal : "0",
+          totalPrice: "totalPrice" in item ? item.totalPrice : "0",
         }));
-      
+
       // Combine the arrays (offerItemsQuestion first, then new items)
       parsedContent.items = [...normalizedOfferItems, ...newItems];
-      
-      console.log(`Merged ${normalizedOfferItems.length} existing items with ${newItems.length} new items`);
-      console.log('NormalizedOfferItems', normalizedOfferItems);
+
+      console.log(
+        `Merged ${normalizedOfferItems.length} existing items with ${newItems.length} new items`
+      );
+      console.log("NormalizedOfferItems", normalizedOfferItems);
     }
 
     console.log("PARSED CONTENT", parsedContent);
@@ -308,17 +320,21 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
     // 3. Update existing blocks to point to the new requirement
     if (data.blockIds && data.blockIds.length > 0) {
-      console.log(`Updating ${data.blockIds.length} blocks to point to new requirement ${requirement.id}`);
-      
+      console.log(
+        `Updating ${data.blockIds.length} blocks to point to new requirement ${requirement.id}`
+      );
+
       // Update all blocks to point to the new requirement
       try {
         await prisma.requirementItemsBlock.updateMany({
           where: { id: { in: data.blockIds } },
-          data: { requirementId: requirement.id }
+          data: { requirementId: requirement.id },
         });
-        console.log(`Successfully updated ${data.blockIds.length} blocks to requirement ${requirement.id}`);
+        console.log(
+          `Successfully updated ${data.blockIds.length} blocks to requirement ${requirement.id}`
+        );
       } catch (error) {
-        console.error('Error updating block references:', error);
+        console.error("Error updating block references:", error);
         // Continue even if block updates fail
       }
     }
@@ -683,6 +699,40 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
     return {
       success: false,
       error: "Hiba történt az ajánlat frissítésekor",
+    };
+  }
+}
+
+export async function updateOfferStatus(offerId: number, status: string) {
+  try {
+    const user = await currentUser();
+    if (!user) {
+      return { success: false, message: "Nincs bejelentkezve felhasználó!" };
+    }
+
+    // Update the offer status
+    const updatedOffer = await prisma.offer.update({
+      where: { id: offerId },
+      data: { 
+        status,
+        updatedAt: new Date() 
+      },
+    });
+
+    // Revalidate the relevant paths
+    revalidatePath(`/dashboard/offers/${offerId}`);
+    revalidatePath('/dashboard/offers');
+
+    return { 
+      success: true, 
+      message: "Az állapot sikeresen frissítve!",
+      offer: updatedOffer
+    };
+  } catch (error) {
+    console.error("Hiba az állapot frissítésekor:", error);
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : "Ismeretlen hiba történt az állapot frissítésekor" 
     };
   }
 }

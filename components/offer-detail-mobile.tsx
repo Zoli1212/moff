@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { updateOfferItems } from "@/actions/offer-actions";
+import { updateOfferItems, updateOfferStatus } from "@/actions/offer-actions";
 import { toast } from "sonner";
 import { RequirementDetail } from "./requirement-detail";
 import { format } from "date-fns";
@@ -50,6 +50,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 
 import TextInputDialogQuestions from "@/app/(routes)/dashboard/_components/TextInputDialogQuestions";
@@ -107,6 +109,8 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isEmailExpanded, setIsEmailExpanded] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
@@ -371,6 +375,30 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     }
   };
 
+  // Handle status update
+  const handleStatusUpdate = async () => {
+    try {
+      setIsUpdatingStatus(true);
+      const newStatus = offer.status === 'draft' ? 'work' : 'draft';
+      const result = await updateOfferStatus(offer.id, newStatus);
+      
+      if (result.success) {
+        toast.success('Az állapot sikeresen frissítve!');
+        setIsStatusDialogOpen(false);
+        // Refresh the page to show the updated status
+        window.location.reload();
+      } else {
+        toast.error(result.message || 'Hiba történt az állapot frissítésekor');
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Hiba történt az állapot frissítésekor');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Get status display text
   function getStatusDisplay(status: string) {
     const statusMap: Record<string, string> = {
       draft: "Piszkozat",
@@ -709,7 +737,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
         <div className="space-y-6 flex-grow">
           {/* Header with back button */}
-          <div className="flex items-center space-x-4 mb-6">
+          <div className="flex items-center justify-between mb-6">
             <button
               onClick={onBack}
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
@@ -717,6 +745,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               <ArrowLeft className="h-5 w-5 mr-2" />
               Vissza az ajánlatokhoz
             </button>
+            <Button
+              onClick={() => setIsStatusDialogOpen(true)}
+              variant="outline"
+              className={`${offer.status === 'draft' 
+                ? 'bg-green-100 text-green-700 hover:bg-green-200 border-green-300' 
+                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300'}`}
+            >
+              {offer.status === 'draft' ? 'Munkába állítás' : 'Visszaállítás piszkozatba'}
+            </Button>
           </div>
 
           {/* Offer Header */}
@@ -1177,6 +1214,44 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           </div>
         )}
       </div>
+
+      {/* Status Update Dialog */}
+      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {offer.status === 'draft' ? 'Munkába állítás' : 'Visszaállítás piszkozatra'}
+            </DialogTitle>
+            <DialogDescription className="pt-4">
+              {offer.status === 'draft' 
+                ? 'Biztosan át szeretnéd állítani az ajánlatot "Munkában" állapotba?'
+                : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsStatusDialogOpen(false)}
+              disabled={isUpdatingStatus}
+            >
+              Mégse
+            </Button>
+            <Button
+              onClick={handleStatusUpdate}
+              disabled={isUpdatingStatus}
+              className={offer.status === 'draft' 
+                ? 'bg-green-600 hover:bg-green-700' 
+                : 'bg-blue-600 hover:bg-blue-700'}
+            >
+              {isUpdatingStatus 
+                ? 'Feldolgozás...' 
+                : offer.status === 'draft' 
+                  ? 'Igen, munkába állítom' 
+                  : 'Igen, piszkozatba teszem'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
