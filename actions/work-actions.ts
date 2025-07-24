@@ -11,12 +11,13 @@ export async function getUserWorks() {
 
   const emailId = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress;
 
-  const works = await prisma.myWork.findMany({
+  const works = await prisma.work.findMany({
     where: {
       tenantEmail: emailId,
+      isActive: true,
     },
     orderBy: {
-      date: 'desc',
+      createdAt: 'desc',
     },
   });
 
@@ -30,11 +31,11 @@ export async function deleteWork(id: number) {
   }
 
   // Verify the work belongs to the user
-  const work = await prisma.myWork.findUnique({
+  const work = await prisma.work.findUnique({
     where: { id },
     select: { 
       tenantEmail: true,
-      requirements: {
+      workItems: {
         select: { id: true }
       }
     }
@@ -44,30 +45,16 @@ export async function deleteWork(id: number) {
     throw new Error('Unauthorized');
   }
 
-  // Get all requirement IDs for this work
-  const requirementIds = work.requirements.map(req => req.id);
+  // Get all workItem IDs for this work
 
-  // Use a transaction to ensure all deletions succeed or fail together
-  await prisma.$transaction([
-    // Delete related offers first (they reference requirements)
-    prisma.offer.deleteMany({
-      where: { 
-        requirementId: { in: requirementIds }
-      }
-    }),
-    
-    // Delete requirements
-    prisma.requirement.deleteMany({
-      where: { myWorkId: id }
-    }),
-    
-    // Finally delete the work
-    prisma.myWork.delete({
-      where: { id }
-    })
-  ]);
+  // Soft delete: set isActive to false
+  await prisma.work.update({
+    where: { id },
+    data: { isActive: false }
+  });
 
   return { success: true };
+
 }
 
 export async function getWorkById(id: number) {
@@ -76,8 +63,15 @@ export async function getWorkById(id: number) {
     throw new Error('Not authenticated');
   }
 
-  const work = await prisma.myWork.findUnique({
+  const work = await prisma.work.findUnique({
     where: { id },
+    include: {
+      workItems: true,
+      workers: true,
+      materials: true,
+      tools: true,
+      workDiaries: true,
+    },
   });
 
   // Verify the work belongs to the user

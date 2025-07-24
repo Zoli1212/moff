@@ -704,6 +704,8 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 }
 
 export async function updateOfferStatus(offerId: number, status: string) {
+
+  console.log(offerId, 'OFFERID')
   try {
     const user = await currentUser();
     if (!user) {
@@ -751,7 +753,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
             data: { isActive: true }
           });
         } else {
-          // Ha nincs, létrehozzuk
+          // Ha nincs, mindig létrehozzuk
           const workTitle = offer.title || 'Új munka';
           await tx.work.create({
             data: {
@@ -770,9 +772,6 @@ export async function updateOfferStatus(offerId: number, status: string) {
               tenantEmail: user.primaryEmailAddress?.emailAddress || '',
               offerItems: offer.items ? JSON.parse(JSON.stringify(offer.items)) : null,
               isActive: true
-            },
-            include: {
-              workItems: true
             }
           });
         }
@@ -790,7 +789,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
     // 5. Cache frissítése
     revalidatePath(`/dashboard/offers/${offerId}`);
     revalidatePath('/dashboard/offers');
-    revalidatePath('/dashboard/jobs');
+    revalidatePath('/works');
 
     return { 
       success: true, 

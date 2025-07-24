@@ -41,11 +41,11 @@ export default function Dashboard() {
         </DraggableIcon>
 
         <DraggableIcon 
-          id="jobs"
+          id="works"
           position={positions.jobs}
           onPositionChange={(x, y) => updatePosition('jobs', x, y)}
         >
-          <Link href="/jobs" className="block w-20 h-20">
+          <Link href="/works" className="block w-20 h-20">
             <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
               <Wrench className="text-orange-500" size={32} />
             </div>

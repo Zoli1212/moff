@@ -155,21 +155,17 @@ model Work {
   workItems         WorkItem[]
   workDiaries       WorkDiary[]
   
-  // Total workers tracking
   totalWorkers   Int         @default(0)
   totalLaborCost Float?      @default(0)
   
-  // Total tools tracking
   totalTools     Int         @default(0)
   totalToolCost  Float?      @default(0)
   
-  // Total materials tracking
   totalMaterials Int        @default(0)
   totalMaterialCost Float?   @default(0)
   
-  // Summary fields
-  estimatedDuration String?  // e.g., "2 weeks", "3 months"
-  progress         Float?    @default(0) // 0-100 percentage
+  estimatedDuration String?  
+  progress         Float?    @default(0) 
 
   isActive        Boolean    @default(true)
 
@@ -177,13 +173,11 @@ model Work {
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
   
-  // Relations for direct access to workers, tools, and materials
   workers       Worker[]
   tools         Tool[]
   materials     Material[]
   
-  // Original offer items
-  offerItems    Json?       // Stores the original offer items as JSON
+  offerItems    Json?       
 }
 
 model WorkItem {
