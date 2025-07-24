@@ -606,4 +606,7 @@ info@optisolve.hu
 Napló elemek WorkDiary DiaryItem
 
 13 
-ha bepipálolom a beszerzést , hogy megjött akkor megjött, ha viszont rákattintok akkor nem biztos, hogy az összes
+ha bepipálolom a beszerzést , hogy megjött akkor megjött, ha viszont rákattintok akkor nem biztos,
+-----
+BUG 1 ha felemelem a db ben a quantity-t de eltér a visszaküldött quantity -t akkor a régit fogja használni a kevesebbet, mivel szóbeli felemelést implementáltunk. És hiába db ben van változás a requirementsben nincs a DemendTextben tehát ujra az alacsonayabb értkkel fog számolni
+

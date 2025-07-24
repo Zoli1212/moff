@@ -4203,7 +4203,7 @@ export const AiOfferAgent = inngest.createFunction(
       }
 
       const result = await AiOfferChatAgent.run(aiInput);
-      console.log("AiOfferChatAgent result:", JSON.stringify(result, null, 2));
+      console.log("AiOfferChatAgent result!!!:", JSON.stringify(result, null, 2));
 
       // Save the result to the database using Prisma
       if (recordId) {
@@ -4223,7 +4223,8 @@ export const AiOfferAgent = inngest.createFunction(
 
           console.log(
             "Saving to history:",
-            JSON.stringify(historyData, null, 2)
+            JSON.stringify(historyData, null, 2),
+            result
           );
 
           const saved = await prisma.history.create({
@@ -4336,7 +4337,7 @@ export const AiDemandAgent = inngest.createFunction(
           tenantEmail: userEmail,
         },
       });
-      console.log("Saved to DB:", result);
+      console.log("Saved to DB:", result, parseJson);
       return parseJson;
     });
   }

@@ -8,6 +8,8 @@ import { saveOfferWithRequirements } from "@/actions/offer-actions";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { useRequirementBlockStore } from "@/store/requirementBlockStore";
+import { useRequirementIdStore } from "@/store/requirement-id-store";
+import { useOfferTitleStore } from "@/store/offer-title-store";
 import { FileText } from "lucide-react";
 import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 
@@ -51,6 +53,8 @@ export default function SilentOfferSaverPage() {
 
   useEffect(() => {
     const fetchAndSaveOffer = async () => {
+  const requirementId = useRequirementIdStore.getState().requirementId;
+
       if (!recordid) {
         console.error("Missing recordid");
         setIsProcessing(false);
@@ -96,6 +100,7 @@ export default function SilentOfferSaverPage() {
         // 3) Save to DB
         console.log('Saving with demandText:!!', demandTextToUse, contentToSave);
         
+        const offerTitle = useOfferTitleStore.getState().offerTitle;
         const result = await saveOfferWithRequirements({
           recordId: recordid,
           demandText: demandTextToUse || "",
@@ -103,7 +108,9 @@ export default function SilentOfferSaverPage() {
           checkedItems: offerItems,
           extraRequirementText,
           blockIds: blockIds,
-          offerItemsQuestion: offerItemsQuestion
+          offerItemsQuestion: offerItemsQuestion,
+          ...(requirementId ? { requirementId } : {}),
+          ...(offerTitle ? { offerTitle } : {})
         });
         
         console.log('Save result:', result);
@@ -115,6 +122,10 @@ export default function SilentOfferSaverPage() {
 
         if (offerItemsQuestion) {
           clearOfferItemsQuestion();
+        }
+
+        if(requirementId){
+        useRequirementIdStore.getState().clearRequirementId();
         }
 
         if (!result) {
@@ -130,6 +141,9 @@ export default function SilentOfferSaverPage() {
             clearOfferItems();
           }
 
+          if(offerTitle && offerTitle.length > 0){
+          useOfferTitleStore.getState().clearOfferTitle();
+          }
           // Redirect to the target URL
           const targetUrl = `/offers/${result.requirementId}?offerId=${result.offerId}`;
           router.push(targetUrl);

@@ -22,6 +22,8 @@ interface SaveOfferData {
   extraRequirementText?: string; // Optional: extra requirement text to save as a block
   blockIds?: number[]; // Block IDs to update with the new requirement
   offerItemsQuestion?: OfferItemQuestion[];
+  requirementId?: number;
+  offerTitle?: string;
 }
 
 interface ParsedOfferContent {
@@ -50,9 +52,15 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       checkedItems,
       extraRequirementText,
       offerItemsQuestion, // Add default value and type annotation
+      requirementId,
+      offerTitle,
     }: SaveOfferData = data; // Add type annotation
 
-    console.log("OfferItemsQuestion", offerItemsQuestion);
+    if (requirementId) {
+      console.log("Received requirementId from client:", requirementId);
+    }
+
+    console.log("OfferTitle", offerTitle);
 
     // ... rest of the code remains the same ...
     if (recordId) {
@@ -240,6 +248,8 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
     if (existingWork) {
       // Use existing work
+
+      console.log(existingWork, 'EXISTINGWORK')
       work = existingWork;
     } else {
       const finalTitle = title && title.trim() !== "" ? title : uuidv4();
@@ -265,18 +275,31 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       "Új ajánlat";
 
     // Find the latest version of this requirement
-    const latestRequirement = await prisma.requirement.findFirst({
-      where: {
-        title: requirementTitle,
-        myWorkId: work.id,
-      },
-      orderBy: { versionNumber: "desc" },
-      select: { versionNumber: true, id: true, updateCount: true },
-    });
+    let latestRequirement = null;
+    if (requirementId) {
+      latestRequirement = await prisma.requirement.findUnique({
+        where: { id: requirementId },
+        select: { versionNumber: true, id: true, updateCount: true },
+      });
+    }
+    if (!latestRequirement) {
+      latestRequirement = await prisma.requirement.findFirst({
+        where: {
+          title: requirementTitle,
+          myWorkId: work.id,
+        },
+        orderBy: { versionNumber: "desc" },
+        select: { versionNumber: true, id: true, updateCount: true },
+      });
+    }
 
     const newVersionNumber = latestRequirement
       ? latestRequirement.versionNumber + 1
       : 1;
+
+
+    console.log(latestRequirement, 'LATESTREQUIREMENT', newVersionNumber)
+    console.log(work.title, 'WORK TITLE')
 
     // Prepare requirement data
     const requirementData = {
@@ -365,7 +388,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         : "Nincsenek megjegyzések";
 
     const offerData: any = {
-      title: work.title,
+      title: offerTitle || work.title,
       description: formattedNotes, // Save formatted notes in the description
       totalPrice: parsedContent.totalPrice || 0,
       status: "draft",

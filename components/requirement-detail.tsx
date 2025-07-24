@@ -11,6 +11,9 @@ type RequirementBlock = {
   createdAt: string | Date;
 };
 import { useRequirementBlockStore } from "@/store/requirementBlockStore";
+import { useRequirementIdStore } from "@/store/requirement-id-store";
+import { useOfferTitleStore } from "@/store/offer-title-store";
+import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { getOfferById } from "@/actions/offer-actions";
 import { getRequirementBlocks } from "@/actions/requirement-block-actions";
 import { Loader2, X, Send, ArrowLeft, Trash2 } from "lucide-react";
@@ -50,7 +53,6 @@ interface TableItem {
   workTotal: string;
 }
 
-
 interface Requirement {
   id: number;
   title: string;
@@ -69,12 +71,16 @@ interface RequirementDetailProps {
   onBlockIdsChange?: (blockIds: number[]) => void;
 }
 
+
 export function RequirementDetail({
   requirement,
   onBack,
   onRequirementUpdated,
   onBlockIdsChange,
 }: RequirementDetailProps) {
+  // --- OFFER ITEMS DEBUG KIÍRÁS ---
+  const offerItems = useOfferItemCheckStore((state) => state.offerItems);
+  // --- /OFFER ITEMS DEBUG KIÍRÁS ---
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -103,43 +109,59 @@ export function RequirementDetail({
   const { setExtraRequirementText } = useDemandStore();
 
   console.log(JSON.stringify(requirement), "REQ");
-  
+
   const { setBlockIds } = useRequirementBlockStore();
+
+  const { setOfferTitle, clearOfferTitle } = useOfferTitleStore();
 
   // Fetch blocks for this requirement
   useEffect(() => {
     let isMounted = true;
-    
+
     async function fetchBlocks() {
       try {
-        console.log(`[RequirementDetail] Fetching blocks for requirement ${requirement.id}...`);
+        console.log(
+          `[RequirementDetail] Fetching blocks for requirement ${requirement.id}...`
+        );
         const fetchedBlocks = await getRequirementBlocks(requirement.id);
-        console.log(`[RequirementDetail] Fetched ${fetchedBlocks?.length || 0} blocks for requirement`, requirement.id, ":", fetchedBlocks);
-        
+        console.log(
+          `[RequirementDetail] Fetched ${fetchedBlocks?.length || 0} blocks for requirement`,
+          requirement.id,
+          ":",
+          fetchedBlocks
+        );
+
         if (!isMounted) {
-          console.log('[RequirementDetail] Component unmounted, skipping state updates');
+          console.log(
+            "[RequirementDetail] Component unmounted, skipping state updates"
+          );
           return;
         }
-        
+
         setBlocks(fetchedBlocks);
-        
+
         // Always update block IDs, even if empty
-        const blockIds = fetchedBlocks?.map(block => block.id) || [];
-        console.log(`[RequirementDetail] Updating block IDs in store for requirement ${requirement.id}:`, blockIds);
-        
+        const blockIds = fetchedBlocks?.map((block) => block.id) || [];
+        console.log(
+          `[RequirementDetail] Updating block IDs in store for requirement ${requirement.id}:`,
+          blockIds
+        );
+
         // Update the store
         setBlockIds(blockIds);
-        
+
         // Notify parent component about the loaded blocks if needed
         if (onBlockIdsChange) {
-          console.log(`[RequirementDetail] Notifying parent of block IDs:`, blockIds);
+          console.log(
+            `[RequirementDetail] Notifying parent of block IDs:`,
+            blockIds
+          );
           onBlockIdsChange(blockIds);
         }
-        
+
         // Also log the current store state
         const storeState = useRequirementBlockStore.getState();
-        console.log('[RequirementDetail] Current store state:', storeState);
-        
+        console.log("[RequirementDetail] Current store state:", storeState);
       } catch (e) {
         console.error("[RequirementDetail] Error fetching blocks:", e);
         if (isMounted) {
@@ -147,12 +169,12 @@ export function RequirementDetail({
         }
       }
     }
-    
+
     fetchBlocks();
-    
+
     // Clean up function
     return () => {
-      console.log('[RequirementDetail] Cleaning up block IDs...');
+      console.log("[RequirementDetail] Cleaning up block IDs...");
       isMounted = false;
       // We're not clearing block IDs here to ensure they're available during save
     };
@@ -165,6 +187,13 @@ export function RequirementDetail({
       if (offerId) {
         try {
           const offer = await getOfferById(parseInt(offerId));
+           if (offer) {
+            if (offer.title) {
+              setOfferTitle(offer.title);
+            } else {
+              clearOfferTitle();
+            }
+          }
           if (offer && offer.items) {
             // Transform items to match the TableItem format expected by the store
             const tableItems = offer.items.map(
@@ -190,8 +219,14 @@ export function RequirementDetail({
             console.log("Initial table items set:", tableItems);
             setInitialTableItems(tableItems);
             setStoredItems(tableItems);
+            // Store offer.items in OfferItemCheckStore
+            if (offer.items) {
+              useOfferItemCheckStore.getState().setOfferItems(offer.items);
+              console.log('[OfferItemCheckStore] offerItems elmentve:', useOfferItemCheckStore.getState().offerItems);
+            }
           }
         } catch (error) {
+          clearOfferTitle();
           console.error("Error fetching offer items:", error);
         }
       }
@@ -254,6 +289,9 @@ export function RequirementDetail({
         });
       }
 
+      // Log the offerTitle after save
+      console.log("[handleSubmit] offerTitle:", useOfferTitleStore.getState().offerTitle);
+
       toast.success("Követelmény sikeresen frissítve!");
     } catch (error) {
       console.error("Error updating requirement:", error);
@@ -265,6 +303,8 @@ export function RequirementDetail({
       setIsSubmitting(false);
     }
   };
+
+  const setRequirementId = useRequirementIdStore((state) => state.setRequirementId);
 
   const handleResubmit = async () => {
     // Save newText as a new block if present
@@ -357,8 +397,10 @@ export function RequirementDetail({
         formData.append("existingItems", JSON.stringify(storedItems));
       }
       if (storedItems.length === 0 && initialTableItems.length > 0) {
-        console.log("Using initial table items:", initialTableItems);
+       
         setStoredItems(initialTableItems);
+       // Kiírás közvetlenül eltárolás után
+       console.log('[useDemandStore] storedItems elmentve:', useDemandStore.getState().storedItems);
       }
 
       // Call the API
@@ -412,6 +454,7 @@ export function RequirementDetail({
         }
       };
 
+      setRequirementId(requirement.id);
       poll();
     } catch (error) {
       console.error("Error in handleResubmit:", error);
@@ -684,35 +727,40 @@ export function RequirementDetail({
         {/* Blocks Section */}
         {blocks.length > 0 && (
           <div className="p-4 border-t border-gray-200">
-            <h3 className="text-md font-medium text-gray-900 mb-3">Kiegészítések</h3>
+            <h3 className="text-md font-medium text-gray-900 mb-3">
+              Kiegészítések
+            </h3>
             <div className="space-y-2">
               {blocks
                 // Only show blocks that exactly match a line in the requirement description
-                .filter(block => {
+                .filter((block) => {
                   if (!requirement.description) return false;
-                  
+
                   // Get all non-empty lines from the description
                   const descriptionLines = requirement.description
-                    .split('\n')
-                    .map(line => line.trim())
-                    .filter(line => line.length > 0);
-                  
+                    .split("\n")
+                    .map((line) => line.trim())
+                    .filter((line) => line.length > 0);
+
                   // Check if any line in the description exactly matches the block text
-                  return descriptionLines.some(line => {
+                  return descriptionLines.some((line) => {
                     // Compare after normalizing whitespace and trimming
-                    const normalizedLine = line.trim().replace(/\s+/g, ' ');
-                    const normalizedBlock = block.blockText.trim().replace(/\s+/g, ' ');
+                    const normalizedLine = line.trim().replace(/\s+/g, " ");
+                    const normalizedBlock = block.blockText
+                      .trim()
+                      .replace(/\s+/g, " ");
                     return normalizedLine === normalizedBlock;
                   });
                 })
                 .map((block) => (
-                  <div 
+                  <div
                     key={block.id}
                     className="bg-yellow-50 border-l-4 border-yellow-400 p-3 rounded-r"
                   >
                     <p className="text-sm text-yellow-800">{block.blockText}</p>
                     <p className="text-xs text-yellow-600 mt-1">
-                      Létrehozva: {new Date(block.createdAt).toLocaleString('hu-HU')}
+                      Létrehozva:{" "}
+                      {new Date(block.createdAt).toLocaleString("hu-HU")}
                     </p>
                   </div>
                 ))}
@@ -805,6 +853,12 @@ export function RequirementDetail({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* OFFER ITEMS DEBUG KIÍRÁS */}
+      <div style={{ background: '#f5f5f5', padding: '8px', marginTop: 16, border: '1px solid #ccc', borderRadius: 4 }}>
+        <strong>OfferItemCheckStore offerItems:</strong>
+        <pre style={{ fontSize: 12, margin: 0 }}>{JSON.stringify(offerItems, null, 2)}</pre>
+      </div>
+      {/* /OFFER ITEMS DEBUG KIÍRÁS */}
     </div>
   );
 }
