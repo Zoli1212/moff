@@ -18,9 +18,9 @@ import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialo
 interface Work {
   id: number;
   title: string;
-  startDate?: Date;
+  startDate?: Date | null;
   date: Date;
-  endDate?: Date;
+  endDate?: Date | null;
   location?: string | null;
   time?: string | null;
   totalPrice?: number | null;
@@ -49,7 +49,7 @@ export default function OffersPage() {
         ...work,
         date:
           work.endDate instanceof Date
-            ? work.
+            ? work.endDate
             : new Date(work.endDate as unknown as string),
         createdAt:
           work.createdAt instanceof Date
