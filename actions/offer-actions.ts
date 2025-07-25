@@ -93,9 +93,11 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
     // Parse the offer content (could be JSON or raw text)
     let parsedContent: ParsedOfferContent;
+    console.log("OfferContent", offerContent, typeof offerContent, 'ENDRAW');
     try {
       parsedContent = JSON.parse(offerContent) as ParsedOfferContent;
     } catch (e) {
+      console.log("OfferContent", offerContent, typeof offerContent, 'ENDTEXT');
       // If not valid JSON, try to parse as raw text
       parsedContent = formatOfferForSave(parseOfferText(offerContent));
     }

@@ -18,6 +18,8 @@ export interface ParsedOffer {
 }
 
 export function parseOfferText(text: string): ParsedOffer {
+
+
   const lines = text.split('\n').filter(line => line.trim() !== '');
   const items: OfferItem[] = [];
   const notes: string[] = [];
