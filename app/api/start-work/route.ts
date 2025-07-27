@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ParsedWork, WorkItem } from "@/types/work";
 
 
 export async function POST(req: NextRequest) {
@@ -37,7 +38,10 @@ A válasz JSON formátuma:
       "name": "Tétel neve",
       "quantity": "mennyiség",
       "unit": "mértékegység",
-      "unitPrice": "egységár",
+      "unitPrice": "munka egységár",
+      "materialUnitPrice": "anyag egységár",
+      "workTotal": "munka összes ár",
+      "materialTotal": "anyag összes ár",
       "totalPrice": "összes ár",
       "description": "rövid szakmai leírás (AI által generált)",
       "requiredProfessionals": [
@@ -79,13 +83,13 @@ Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabá
     console.log('--- OPENAI CONTENT FIELD ---');
     console.log(content);
 
-    let cleaned = content.trim()
+     const cleaned = content.trim()
       .replace(/^```json[\r\n]*/i, '')
       .replace(/^```[\r\n]*/i, '')
       .replace(/```$/, '')
       .trim();
 
-    let parsed: any = null;
+    let parsed: ParsedWork | null = null;
 
     try {
       parsed = JSON.parse(cleaned);
@@ -123,7 +127,8 @@ Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabá
             offerItem: offer,
           }, { status: 400 });
         }
-        for (const field of ["name", "quantity", "unit", "unitPrice", "totalPrice"]) {
+        const fields: (keyof WorkItem)[] = ["name", "quantity", "unit", "unitPrice", "materialUnitPrice", "workTotal", "materialTotal", "totalPrice"];
+for (const field of fields as (keyof WorkItem)[]) {
           if (String(work[field]) !== String(offer[field])) {
             return NextResponse.json({
               error: `workItem[${i}].${field} nem egyezik az offerItem-mel`,

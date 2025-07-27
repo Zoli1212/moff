@@ -12,14 +12,14 @@ export default function ParticipantsSection({
   totalWorkers: number
 }) {
   const [workers, setWorkers] = useState<Worker[]>(initialWorkers);
+const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [addingIdx, setAddingIdx] = useState<number|null>(null);
   const [newName, setNewName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Új: kattintható körök eseménykezelője
   const handleClick = (worker: Worker) => {
-    // Itt adhatsz hozzá bármilyen logikát, pl. részletek megnyitása, modal, stb.
-    alert(`Kattintottál: ${worker.name || worker.email || worker.id}`);
+    setSelectedWorker(worker);
   };
 
   React.useEffect(() => {
@@ -39,16 +39,26 @@ export default function ParticipantsSection({
     setNewName("");
   };
 
-  // Helper to get initials or first 2 letters
-  const getShort = (val?: string | number) => {
-    if (!val) return "";
-    const str = String(val);
-    const parts = str.split(" ");
-    if (parts.length > 1) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return str.slice(0, 2).toUpperCase();
-  };
 
   // Csoportosítás szakma szerint
+
+// --- Modal megjelenítése ha van kiválasztott worker ---
+// Egyszerű overlay modal, bezárható kattintással vagy gombbal
+{selectedWorker && (
+  <div style={{
+    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 1000,
+    display: 'flex', alignItems: 'center', justifyContent: 'center'
+  }} onClick={() => setSelectedWorker(null)}>
+    <div style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 300, position: 'relative' }} onClick={e => e.stopPropagation()}>
+      <button style={{ position: 'absolute', top: 8, right: 8 }} onClick={() => setSelectedWorker(null)}>✕</button>
+      <h3>Részletek</h3>
+      <div><b>Név:</b> {selectedWorker.name}</div>
+      {selectedWorker.email && <div><b>Email:</b> {selectedWorker.email}</div>}
+      {selectedWorker.id && <div><b>ID:</b> {selectedWorker.id}</div>}
+      {/* Itt bővítheted további mezőkkel is */}
+    </div>
+  </div>
+) }
   const grouped = workers.reduce((acc: Record<string, Worker[]>, curr) => {
     const key = curr.name || 'Ismeretlen szakma';
     if (!acc[key]) acc[key] = [];
@@ -72,12 +82,26 @@ export default function ParticipantsSection({
               style={{
                 width: 40, height: 40, borderRadius: '50%', background: '#e1e1e1',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 28, cursor: 'pointer', border: '2px dashed #d0d0d0', color: '#888', fontWeight: 600, userSelect: 'none',
-                marginBottom: 2
+                fontWeight: 600, fontSize: 16, cursor: 'pointer', marginBottom: 2
               }}
               onClick={() => handleAdd(profWorkers.length)}
               title="Új résztvevő hozzáadása"
             >+</div>
+            {profWorkers.map((worker, idx) => (
+              <div
+                key={worker.id || idx}
+                className="worker-circle"
+                onClick={() => handleClick(worker)}
+                style={{
+                  width: 40, height: 40, borderRadius: '50%', background: '#e1e1e1',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontWeight: 600, fontSize: 16, cursor: 'pointer', marginBottom: 2
+                }}
+                title={worker.name}
+              >
+                {worker.name?.slice(0, 2).toUpperCase() || "?"}
+              </div>
+            ))}
             {addingIdx !== null && (
               <input
                 ref={inputRef}
