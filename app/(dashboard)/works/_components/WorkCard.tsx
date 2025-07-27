@@ -163,7 +163,6 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
             const data = await aiResponse.json();
 
             if (data && !data.error) {
-            
               try {
                 const dbResult = await updateWorkWithAIResult(id, data);
                 if (!dbResult.success) {
@@ -176,11 +175,9 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
               } catch (err) {
                 console.error("DB mentés hiba:", err);
               }
-            
             }
 
             console.log("OpenAI válasz:", data);
-
           }}
         >
           <svg
