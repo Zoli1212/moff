@@ -78,11 +78,11 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   }
 
   // Work mezők frissítése
+
   let updatedWork = null;
+
   try {
-    updatedWork = await prisma.work.update({
-    where: { id: workId },
-    data: {
+    console.log(`[updateWorkWithAIResult] Updating work ${workId} with:`, {
       location: aiResult.location,
       totalWorkers: aiResult.totalWorkers,
       totalLaborCost: aiResult.totalLaborCost,
@@ -92,8 +92,22 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
       totalMaterialCost: aiResult.totalMaterialCost,
       estimatedDuration: aiResult.estimatedDuration,
       // bármi egyéb mező, amit az AI visszaad
-    }
-  });
+    });
+    updatedWork = await prisma.work.update({
+      where: { id: workId },
+      data: {
+        location: aiResult.location,
+        totalWorkers: aiResult.totalWorkers,
+        totalLaborCost: aiResult.totalLaborCost,
+        totalTools: Array.isArray(aiResult.totalTools) ? aiResult.totalTools.length : Number(aiResult.totalTools) || 0,
+        totalToolCost: aiResult.totalToolCost,
+        totalMaterials: Array.isArray(aiResult.totalMaterials) ? aiResult.totalMaterials.length : Number(aiResult.totalMaterials) || 0,
+        totalMaterialCost: aiResult.totalMaterialCost,
+        estimatedDuration: aiResult.estimatedDuration,
+        // bármi egyéb mező, amit az AI visszaad
+      },
+      include: { workItems: true }
+    });
   } catch (err) {
     console.error(`[updateWorkWithAIResult] Failed to update Work:`, err);
     return { success: false, error: 'Failed to update Work', details: err instanceof Error ? err.message : String(err) };
@@ -104,7 +118,9 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
     await prisma.workItem.deleteMany({ where: { workId } });
     if (Array.isArray(aiResult.workItems)) {
       for (const item of aiResult.workItems) {
-        await prisma.workItem.create({
+        console.log(`[updateWorkWithAIResult] Creating workItem for work ${workId}:`, item);
+        // 1. Létrehozzuk a WorkItem-et
+        const createdWorkItem = await prisma.workItem.create({
           data: {
             workId,
             name: item.name,
@@ -119,6 +135,41 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
             tenantEmail: email,
           }
         });
+        // 2. Minden requiredProfessional-t mentünk a pivot táblába
+        if (Array.isArray(item.requiredProfessionals)) {
+          for (const rp of item.requiredProfessionals) {
+            console.log(`[updateWorkWithAIResult] Processing requiredProfessional for workItem ${createdWorkItem.id}:`, rp);
+            // Worker létezés ellenőrzése vagy létrehozás név alapján
+            let workerRecord = await prisma.worker.findFirst({
+              where: { name: rp.type, tenantEmail: email }
+            });
+            if (!workerRecord) {
+              console.log(`[updateWorkWithAIResult] Creating worker:`, { name: rp.type, tenantEmail: email, workId: workId, workItemId: createdWorkItem.id });
+              workerRecord = await prisma.worker.create({
+                data: {
+                  name: rp.type,
+                  tenantEmail: email,
+                  workId: workId,
+                  workItemId: createdWorkItem.id
+                }
+              });
+            }
+            console.log(`[updateWorkWithAIResult] Creating workItemWorker:`, {
+              workItemId: createdWorkItem.id,
+              workerId: workerRecord.id,
+              quantity: Number(rp.quantity) || 1,
+              tenantEmail: email,
+            });
+            await prisma.workItemWorker.create({
+              data: {
+                workItemId: createdWorkItem.id,
+                workerId: workerRecord.id,
+                quantity: Number(rp.quantity) || 1,
+                tenantEmail: email,
+              }
+            });
+          }
+        }
       }
     }
   } catch (err) {
@@ -126,7 +177,9 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
     return { success: false, error: 'Failed to create WorkItems', details: err instanceof Error ? err.message : String(err) };
   }
 
-  // Visszaadjuk a teljes frissített Work-ot, WorkItemekkel
+  // Összesítjük a munkásokat a Work-hoz (típus+mennyiség)
+
+  // Visszaadjuk a teljes frissített Work-ot, WorkItemekkel és összesített munkásokkal
   const result = await prisma.work.findUnique({
     where: { id: workId },
     include: { workItems: true }
@@ -157,5 +210,8 @@ export async function getWorkById(id: number) {
     throw new Error('Unauthorized');
   }
 
-  return work;
+  return {
+    ...work,
+    totalWorkers: work.workers.length,
+  };
 }

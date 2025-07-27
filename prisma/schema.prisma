@@ -197,6 +197,7 @@ model WorkItem {
   tools          Tool[]
   materials      Material[]
   workDiaryEntries WorkDiary[]
+  workItemWorkers WorkItemWorker[]
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
@@ -216,6 +217,7 @@ model Worker {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
+  workItemWorkers WorkItemWorker[] @relation("WorkerToWorkItemWorker")
 }
 
 model Tool {
@@ -292,6 +294,18 @@ model MyInvoices {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   tenantEmail     String
+}
+
+model WorkItemWorker {
+  id         Int      @id @default(autoincrement())
+  workItem   WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  workItemId Int
+  worker     Worker   @relation("WorkerToWorkItemWorker", fields: [workerId], references: [id], onDelete: Cascade)
+  workerId   Int
+  quantity   Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenantEmail String   @default("")
 }
 
 model myPrompt {
