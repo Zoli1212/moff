@@ -127,11 +127,11 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
             description: item.description,
             quantity: Number(item.quantity) || 1,
             unit: item.unit || '',
-            unitPrice: Number(item.unitPrice) || 0,
-            materialUnitPrice: Number(item.materialUnitPrice) || 0,
-            workTotal: Number(item.workTotal) || 0,
-            materialTotal: Number(item.materialTotal) || 0,
-            totalPrice: Number(item.totalPrice) || 0,
+            unitPrice: Number((item.unitPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+            materialUnitPrice: Number((item.materialUnitPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+            workTotal: Number((item.workTotal || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+            materialTotal: Number((item.materialTotal || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+            totalPrice: Number((item.totalPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
             tenantEmail: email,
           }
         });

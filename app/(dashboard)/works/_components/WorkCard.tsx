@@ -1,4 +1,5 @@
 "use client";
+import { updateWorkWithAIResult } from "@/actions/work-actions";
 import React from "react";
 
 export interface WorkCardProps {
@@ -162,36 +163,24 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
             const data = await aiResponse.json();
 
             if (data && !data.error) {
-              await fetch("/api/update-work-ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ workId: id, aiResult: data }),
-              });
-            } else {
-              alert(
-                "AI feldolgozás hiba: " + (data?.error || "Ismeretlen hiba")
-              );
+            
+              try {
+                const dbResult = await updateWorkWithAIResult(id, data);
+                if (!dbResult.success) {
+                  alert(
+                    `Hiba a mentéskor: ${dbResult.error || "Ismeretlen hiba"}`
+                  );
+                  console.error("DB mentés hiba:", dbResult);
+                }
+                console.log("DB mentés eredménye:", dbResult);
+              } catch (err) {
+                console.error("DB mentés hiba:", err);
+              }
+            
             }
 
             console.log("OpenAI válasz:", data);
 
-            try {
-              const saveRes = await fetch("/api/update-work-ai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ workId: id, aiResult: data }),
-              });
-              const dbResult = await saveRes.json();
-              if (!dbResult.success) {
-                alert(
-                  `Hiba a mentéskor: ${dbResult.error || "Ismeretlen hiba"}`
-                );
-                console.error("DB mentés hiba:", dbResult);
-              }
-              console.log("DB mentés eredménye:", dbResult);
-            } catch (err) {
-              console.error("DB mentés hiba:", err);
-            }
           }}
         >
           <svg

@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
     // Create the OpenAI prompt
     const prompt = `A következő információk alapján hozz létre egy részletes munkafelosztást ÉRVÉNYES JSON formátumban, az alábbi szabályok szerint:
 
-- Minden workItem pontosan tükrözze a hozzá tartozó offerItem mezőit: name, quantity, unit, unitPrice, totalPrice (ezeket MÁSOLD ÁT az offerItem-ből változtatás nélkül!).
+- Minden workItem pontosan tükrözze a hozzá tartozó offerItem mezőit: name, quantity, unit, unitPrice, materialUnitPrice, workTotal, materialTotal, totalPrice (EZEKET MÁSOLD ÁT az offerItem-ből VÁLTOZTATÁS NÉLKÜL!).
 - Csak a következő mezőket generáld: requiredProfessionals (szakemberek listája), tools (szükséges eszközök), materials (szükséges anyagok).
-- A többi mező (name, quantity, unit, unitPrice, totalPrice) értéke legyen azonos az offerItem megfelelő mezőjével!
+- A fenti mezők (name, quantity, unit, unitPrice, materialUnitPrice, workTotal, materialTotal, totalPrice) értéke legyen azonos az offerItem megfelelő mezőjével, VÁLTOZTATÁS NÉLKÜL!
 - NE írj magyarázatot, NE használj markdown-t, CSAK ÉRVÉNYES JSON-t adj vissza!
 
 Helyszín: ${location}
@@ -64,7 +64,7 @@ Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabá
           { role: "system", content: "Te egy profi magyar építési projektmenedzser vagy." },
           { role: "user", content: prompt },
         ],
-        max_tokens: 1500, // LIMITÁLT, hogy ne legyen túl hosszú a válasz
+        max_tokens: 10000, // LIMITÁLT, hogy ne legyen túl hosszú a válasz
         temperature: 0.2,
       }),
     });
