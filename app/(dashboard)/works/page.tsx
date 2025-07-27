@@ -1,6 +1,7 @@
 import React from "react";
 import { getUserWorks } from "@/actions/work-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
+import Link from "next/link";
 
 // Minimal Work típus, hogy ne legyen 'any'
 export type Work = {
@@ -38,7 +39,8 @@ function toCardProps(work: Work): WorkCardProps {
         ? work.financial
         : 0,
     financialPlanned:
-      typeof work.financialPlanned === "number" && work.financialPlanned !== null
+      typeof work.financialPlanned === "number" &&
+      work.financialPlanned !== null
         ? work.financialPlanned
         : 100,
     urgentTask:
@@ -62,7 +64,7 @@ const WorkListPage = async () => {
   }
   let activeWorks = works.filter((w) => w.active !== false);
 
-  console.log(activeWorks, "ACTIVE WORKS")
+  console.log(activeWorks, "ACTIVE WORKS");
 
   // Ha nincs valós adat, adjunk két példát, egy warning és egy danger mockot
   if (activeWorks.length === 0) {
@@ -136,7 +138,9 @@ const WorkListPage = async () => {
           <div>Nincs aktív munka.</div>
         ) : (
           activeWorks.map((work) => (
-            <WorkCard key={work.id} {...toCardProps(work)} />
+            <Link key={work.id} href={`/works/${work.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <WorkCard {...toCardProps(work)} />
+            </Link>
           ))
         )}
       </div>
