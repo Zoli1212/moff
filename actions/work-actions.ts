@@ -1,5 +1,6 @@
 "use server";
 
+import type { WorkItemAIResult } from "../types/work.types";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 
@@ -169,7 +170,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
             totalPrice: Number((item.totalPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
             tenantEmail: email,
             tools: {
-              create: toolList.map(name => ({
+              create: toolList.map((name: string) => ({
                 name,
                 workId,
                 workItemId: undefined, // will be set by Prisma after create
@@ -177,7 +178,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
               })),
             },
             materials: {
-              create: materialList.map(name => ({
+              create: materialList.map((name: string) => ({
                 name,
                 workId,
                 unit: "",
@@ -254,25 +255,38 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
     ]);
 
     // totalTools számítása az aiResult.workItems alapján
-    let totalTools = 0;
-    if (Array.isArray(aiResult.workItems)) {
-      for (const item of aiResult.workItems) {
-        let toolList: string[] = [];
-        if (Array.isArray(item.tools)) {
-          toolList = item.tools;
-        } else if (typeof item.tools === 'string') {
-          toolList = item.tools.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean);
-        }
-        totalTools += toolList.length;
-      }
-    }
+    // totalTools számítása aggregáltan
+    // Típusos totalTools számítás
+    const totalTools = Array.isArray(aiResult.workItems)
+      ? (aiResult.workItems as WorkItemAIResult[]).reduce((sum: number, item: WorkItemAIResult) => {
+          let toolList: string[] = [];
+          if (Array.isArray(item.tools)) {
+            toolList = item.tools;
+          } else if (typeof item.tools === 'string') {
+            toolList = item.tools.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean);
+          }
+          return sum + toolList.length;
+        }, 0)
+      : 0;
 
     // Segédfüggvény a szám konvertálásra (null/undefined is 0)
     const num = (v: any) => typeof v === 'number' ? v : Number((v || "0").toString().replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0;
 
     const totalWorkers = workers.length;
     const totalLaborCost = workItems.reduce((sum, wi) => sum + num(wi.workTotal), 0);
-    const totalMaterials = workItems.reduce((sum, wi) => sum + num(wi.quantity), 0);
+    const totalMaterials = Array.isArray(workItems)
+      ? workItems.reduce((sum: number, wi: any) => {
+          let materialList: string[] = [];
+          if (wi && (Array.isArray(wi.materials) || typeof wi.materials === 'string')) {
+            if (Array.isArray(wi.materials)) {
+              materialList = wi.materials;
+            } else if (typeof wi.materials === 'string') {
+              materialList = wi.materials.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean);
+            }
+          }
+          return sum + materialList.length;
+        }, 0)
+      : 0;
     const totalMaterialCost = workItems.reduce((sum, wi) => sum + num(wi.materialTotal), 0);
 
     await prisma.work.update({
