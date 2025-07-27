@@ -20,6 +20,7 @@ export type Work = {
 // Helper: mockolja a hiányzó mezőket
 function toCardProps(work: Work): WorkCardProps {
   return {
+    id: Number(work.id),
     title: work.title || "(Névtelen munka)",
     deadline: work.deadline || "2025-08-01",
     summary: work.summary || "Ez egy rövid összefoglaló. Ez a második sor.",
