@@ -274,19 +274,8 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
 
     const totalWorkers = workers.length;
     const totalLaborCost = workItems.reduce((sum, wi) => sum + num(wi.workTotal), 0);
-    const totalMaterials = Array.isArray(workItems)
-      ? workItems.reduce((sum: number, wi: any) => {
-          let materialList: string[] = [];
-          if (wi && (Array.isArray(wi.materials) || typeof wi.materials === 'string')) {
-            if (Array.isArray(wi.materials)) {
-              materialList = wi.materials;
-            } else if (typeof wi.materials === 'string') {
-              materialList = wi.materials.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean);
-            }
-          }
-          return sum + materialList.length;
-        }, 0)
-      : 0;
+    // totalMaterials mostantól az adatbázisból
+    const totalMaterials = await prisma.material.count({ where: { workId } });
     const totalMaterialCost = workItems.reduce((sum, wi) => sum + num(wi.materialTotal), 0);
 
     await prisma.work.update({
