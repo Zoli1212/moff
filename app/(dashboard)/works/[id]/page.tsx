@@ -260,8 +260,14 @@ export default async function WorkDetailPage({
           </svg>
         </div>
         <div style={{ fontWeight: 600 }}>
-          Összes munkás:{" "}
-          <span style={{ fontWeight: 400 }}>{work.totalWorkers}</span>
+          Szakmunkás
+          <span style={{ fontWeight: 400 }}>
+            ({work.totalWorkers})
+            {" "}
+            {workers.length > 0
+              ? workers.map(w => w.name).join(", ")
+              : "-"}
+          </span>
         </div>
         <div style={{ fontWeight: 600 }}>
           Munkaerő költség:{" "}
