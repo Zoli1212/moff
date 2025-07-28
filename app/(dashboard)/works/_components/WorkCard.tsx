@@ -2,6 +2,8 @@
 import { updateWorkWithAIResult } from "@/actions/work-actions";
 import React from "react";
 
+import type { OfferItem } from "@/types/offer.types";
+
 export interface WorkCardProps {
   id: number;
   title: string;
@@ -13,7 +15,7 @@ export interface WorkCardProps {
   financialPlanned: number;
   urgentTask: string;
   urgentLevel: "warning" | "danger";
-  offerItems?: Array<{ name: string; [key: string]: any }>;
+  offerItems?: OfferItem[];
   location?: string;
   offerDescription?: string;
   estimatedDuration?: string;

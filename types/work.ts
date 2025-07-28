@@ -7,20 +7,62 @@ export interface ParsedWork {
   workItems: WorkItem[];
 }
 
+export type WorkItemFromDb = Omit<WorkItem, "tools" | "materials" | "workers" | "workItemWorkers" | "description"> & {
+  description?: string | null;
+  tools?: Tool[] | null;
+  materials?: Material[] | null;
+  workers?: Worker[] | null;
+  workItemWorkers?: WorkItemWorker[] | null;
+};
+
 export interface WorkItem {
+  id: number;
+  workId: number;
   name: string;
-  quantity: string;
+  description?: string | null;
+  quantity: number;
   unit: string;
-  unitPrice: string;
-  materialUnitPrice: string;
-  workTotal: string;
-  materialTotal: string;
-  totalPrice: string;
-  description: string;
-  requiredProfessionals: Professional[];
-  tools: string;
-  materials: string;
+  unitPrice: number;
+  materialUnitPrice?: number | null;
+  workTotal?: number | null;
+  materialTotal?: number | null;
+  totalPrice: number;
+  tools: Tool[];
+  materials: Material[];
+  workers: Worker[];
+  workItemWorkers: WorkItemWorker[];
+  createdAt: Date;
+  updatedAt: Date;
+  tenantEmail: string;
 }
+
+export interface Tool {
+  // Define fields based on your Tool model
+  id: number;
+  name: string;
+}
+
+export interface Material {
+  // Define fields based on your Material model
+  id: number;
+  name: string;
+}
+
+export interface Worker {
+  // Define fields based on your Worker model
+  id: number;
+  name: string;
+  hired: boolean | null;
+}
+
+export interface WorkItemWorker {
+  // Define fields based on your WorkItemWorker model
+  id: number;
+  workerId: number;
+  workItemId: number;
+  quantity: number;
+}
+
 
 export interface Professional {
   type: string;

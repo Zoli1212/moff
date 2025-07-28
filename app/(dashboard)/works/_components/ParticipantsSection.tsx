@@ -1,26 +1,68 @@
 "use client";
 import React, { useState, useRef } from "react";
 
-type Worker = { id?: number|string, name?: string, email?: string };
+import type { Worker, WorkItem, WorkItemWorker } from "@/types/work";
 
 // Accept any[] for initialWorkers to avoid TSX prop errors from parent
 export default function ParticipantsSection({
   initialWorkers,
-  totalWorkers
+  totalWorkers,
+  workItems = [],
+  workId,
 }: {
-  initialWorkers: any[],
-  totalWorkers: number
+  initialWorkers: Worker[];
+  totalWorkers: number;
+  workItems?: WorkItem[];
+  workId: number;
 }) {
-  const [workers, setWorkers] = useState<Worker[]>(initialWorkers);
-const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
-  const [addingIdx, setAddingIdx] = useState<number|null>(null);
+  const [workers, setWorkers] = useState<Worker[]>(initialWorkers as Worker[]);
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+  const [addingIdx, setAddingIdx] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Szakmák (worker name) kigyűjtése az adott Work-hoz tartozó workItems alapján
+  const relevantWorkItems = workItems.filter((wi) => wi.workId === workId);
+  const allWorkers = workers as Worker[];
+  const professions = Array.from(
+    new Set(allWorkers.map((w) => w.name).filter(Boolean))
+  );
+
+  // Szakmánkénti maximum számolása
+  const professionMaxMap: Record<string, number> = {};
+  for (const profession of professions) {
+    // Az adott szakmához tartozó workerek id-i
+    const workerIds = allWorkers
+      .filter((w) => w.name === profession)
+      .map((w) => w.id);
+    let max = 0;
+    for (const wi of relevantWorkItems) {
+      const countForItem = wi.workItemWorkers
+        .filter((wiw) => workerIds.includes(wiw.workerId))
+        .reduce((sum, wiw) => sum + (wiw.quantity ?? 1), 0);
+      if (countForItem > max) max = countForItem;
+    }
+    professionMaxMap[profession] = max;
+  }
 
   // Új: kattintható körök eseménykezelője
   const handleClick = (worker: Worker) => {
     setSelectedWorker(worker);
   };
+
+  // Szakmák UI renderelése
+  // ... (a megfelelő helyen a JSX-ben, például a return előtt vagy a megfelelő szekcióban)
+  // Példa:
+  // {professions.map(profession => (
+  //   <div key={profession}>
+  //     <div>{profession}</div>
+  //     <div style={{ display: "flex", gap: 4 }}>
+  //       {Array.from({ length: professionMaxMap[profession] }).map((_, idx) => (
+  //         <div key={idx} className="worker-plus">+</div>
+  //       ))}
+  //     </div>
+  //   </div>
+  // ))}
 
   React.useEffect(() => {
     if (addingIdx !== null && inputRef.current) inputRef.current.focus();
@@ -33,98 +75,138 @@ const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
 
   const handleSave = () => {
     if (newName.trim()) {
-      setWorkers([...workers, { name: newName.trim() }]);
+      setWorkers([
+        ...workers,
+        {
+          id: Date.now(), // Unique ID, replace if you have a better generator
+          name: newName.trim(),
+          hired: false, // Default value for new worker
+        },
+      ]);
     }
     setAddingIdx(null);
     setNewName("");
   };
 
-
   // Csoportosítás szakma szerint
+  // (megjegyzés: ne hagyjunk magában álló kifejezést, csak komment vagy érvényes kód lehet itt)
 
-// --- Modal megjelenítése ha van kiválasztott worker ---
-// Egyszerű overlay modal, bezárható kattintással vagy gombbal
-{selectedWorker && (
-  <div style={{
-    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-    display: 'flex', alignItems: 'center', justifyContent: 'center'
-  }} onClick={() => setSelectedWorker(null)}>
-    <div style={{ background: '#fff', padding: 24, borderRadius: 8, minWidth: 300, position: 'relative' }} onClick={e => e.stopPropagation()}>
-      <button style={{ position: 'absolute', top: 8, right: 8 }} onClick={() => setSelectedWorker(null)}>✕</button>
-      <h3>Részletek</h3>
-      <div><b>Név:</b> {selectedWorker.name}</div>
-      {selectedWorker.email && <div><b>Email:</b> {selectedWorker.email}</div>}
-      {selectedWorker.id && <div><b>ID:</b> {selectedWorker.id}</div>}
-      {/* Itt bővítheted további mezőkkel is */}
-    </div>
-  </div>
-) }
-  const grouped = workers.reduce((acc: Record<string, Worker[]>, curr) => {
-    const key = curr.name || 'Ismeretlen szakma';
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(curr);
-    return acc;
-  }, {});
+  // --- Modal megjelenítése ha van kiválasztott worker ---
+  // Egyszerű overlay modal, bezárható kattintással vagy gombbal
+  {
+    (() =>
+      selectedWorker ? (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+          onClick={() => setSelectedWorker(null)}
+        >
+          <div
+            style={{
+              background: "#fff",
+              padding: 24,
+              borderRadius: 8,
+              minWidth: 300,
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              style={{ position: "absolute", top: 8, right: 8 }}
+              onClick={() => setSelectedWorker(null)}
+            >
+              ✕
+            </button>
+            <h3>Részletek</h3>
+            <div>
+              <b>Név:</b> {selectedWorker.name}
+            </div>
 
-  return (
-    <div style={{ background: '#fff', borderRadius: 14, boxShadow: '0 1px 5px #eee', padding: '14px 18px', marginBottom: 18 }}>
-      <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8, letterSpacing: 0.5 }}>
-        Résztvevők ({workers.length} / {totalWorkers})
-      </div>
-      {Object.entries(grouped).map(([profession, profWorkers]) => (
-        <div key={profession} style={{ marginBottom: 2 }}>
-          <div style={{ fontWeight: 600, fontSize: 20}}>{profession}</div>
-          <div style={{
-            display: 'flex', gap: 10, alignItems: 'flex-end', minHeight: 80, flexWrap: 'nowrap', flexDirection: 'row',
-            overflowX: 'auto', whiteSpace: 'nowrap', paddingBottom: 10
-          }}>
-            <div
-              style={{
-                width: 40, height: 40, borderRadius: '50%', background: '#e1e1e1',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 600, fontSize: 16, cursor: 'pointer', marginBottom: 2
-              }}
-              onClick={() => handleAdd(profWorkers.length)}
-              title="Új résztvevő hozzáadása"
-            >+</div>
-            {profWorkers.map((worker, idx) => (
-              <div
-                key={worker.id || idx}
-                className="worker-circle"
-                onClick={() => handleClick(worker)}
-                style={{
-                  width: 40, height: 40, borderRadius: '50%', background: '#e1e1e1',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 600, fontSize: 16, cursor: 'pointer', marginBottom: 2
-                }}
-                title={worker.name}
-              >
-                {worker.name?.slice(0, 2).toUpperCase() || "?"}
+            {selectedWorker.id && (
+              <div>
+                <b>ID:</b> {selectedWorker.id}
               </div>
-            ))}
-            {addingIdx !== null && (
-              <input
-                ref={inputRef}
-                style={{
-                  width: 60, height: 40, borderRadius: '50%', background: '#f2f2f2',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontWeight: 600, fontSize: 16, border: '2px solid #e0e0e0',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  marginBottom: 2
-                }}
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-                onBlur={handleSave}
-                onKeyDown={e => {
-                  if (e.key === "Enter") handleSave();
-                  if (e.key === "Escape") setAddingIdx(null);
-                }}
-                placeholder="Új név..."
-              />
             )}
+            {/* Itt bővítheted további mezőkkel is */}
           </div>
         </div>
-      ))}
-    </div>
-  );
+      ) : null)();
+    // 1. Compute max required professionals per profession
+    const maxProfessionals: Record<string, number> = {};
+    for (const item of workItems) {
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        "requiredProfessionals" in item &&
+        Array.isArray(
+          (
+            item as {
+              requiredProfessionals?: { type?: string; quantity?: number }[];
+            }
+          ).requiredProfessionals
+        )
+      ) {
+        const reqProfs = (
+          item as {
+            requiredProfessionals: { type?: string; quantity?: number }[];
+          }
+        ).requiredProfessionals;
+        for (const prof of reqProfs) {
+          if (!prof?.type) continue;
+          const currMax = maxProfessionals[prof.type] || 0;
+          if (typeof prof.quantity === "number" && prof.quantity > currMax)
+            maxProfessionals[prof.type] = prof.quantity;
+        }
+      }
+    }
+
+    // 2. Group workers by profession (by name field, which should match prof.type)
+    const grouped: Record<string, Worker[]> = {};
+    for (const worker of workers) {
+      const key = worker.name || "Ismeretlen szakma";
+      if (!grouped[key]) grouped[key] = [];
+      grouped[key].push(worker);
+    }
+
+    return (
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 14,
+          boxShadow: "0 1px 5px #eee",
+          padding: "14px 18px",
+          marginBottom: 18,
+        }}
+      >
+        <div
+          style={{
+            fontWeight: 700,
+            fontSize: 17,
+            marginBottom: 8,
+            letterSpacing: 0.5,
+            textAlign: "center",
+          }}
+        >
+          Munkások ({workers.filter((w) => w.hired).length} / {totalWorkers})
+          <div>
+            <ul>
+              {workers.map((worker) => (
+                <li key={worker.id}>{worker.name}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    );
+  }
 }

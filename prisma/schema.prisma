@@ -214,6 +214,7 @@ model Worker {
   hourlyRate     Float?
   hoursWorked    Float?      @default(0)
   contactInfo    String?
+  hired          Boolean?    @default(false) // optional: is the worker hired
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
