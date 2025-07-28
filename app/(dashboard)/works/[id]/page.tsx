@@ -1,6 +1,6 @@
 import React from "react";
 
-import { getWorkById } from "@/actions/work-actions";
+import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
 import type {
   WorkItem,
   WorkItemFromDb,
@@ -41,6 +41,17 @@ export default async function WorkDetailPage({
       msg = e;
     }
     error = msg;
+  }
+
+  let workItemsWithWorkers: WorkItemFromDb[] = [];
+  if (work && work.id) {
+    try {
+      // ÚJ: lekérjük a workItemeket a WorkItemWorker kapcsolattal
+      workItemsWithWorkers = await getWorkItemsWithWorkers(work.id);
+    } catch (err) {
+      // Hiba esetén fallback az eredeti workItems-re
+      workItemsWithWorkers = work.workItems || [];
+    }
   }
 
   if (error)
@@ -277,7 +288,13 @@ export default async function WorkDetailPage({
       <ParticipantsSection
         initialWorkers={workers}
         totalWorkers={work.totalWorkers}
-        workItems={workItems}
+        workItems={workItemsWithWorkers.map(item => ({
+          ...item,
+          tools: item.tools ?? [],
+          materials: item.materials ?? [],
+          workers: item.workers ?? [],
+          workItemWorkers: item.workItemWorkers ?? [],
+        }))}
         workId={work.id}
       />
       {/* Szegmensek (workItems) */}

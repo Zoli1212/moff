@@ -28,21 +28,18 @@ export default function ParticipantsSection({
     new Set(allWorkers.map((w) => w.name).filter(Boolean))
   );
 
-  // Szakmánkénti maximum számolása
-  const professionMaxMap: Record<string, number> = {};
-  for (const profession of professions) {
-    // Az adott szakmához tartozó workerek id-i
-    const workerIds = allWorkers
-      .filter((w) => w.name === profession)
-      .map((w) => w.id);
+  // ÚJ: WorkerId szerinti maximum szükséglet (bármelyik workItem-ben a legtöbb)
+  const workerIdToMaxNeeded: Record<number, number> = {};
+  for (const worker of workers) {
     let max = 0;
     for (const wi of relevantWorkItems) {
-      const countForItem = wi.workItemWorkers
-        .filter((wiw) => workerIds.includes(wiw.workerId))
-        .reduce((sum, wiw) => sum + (wiw.quantity ?? 1), 0);
-      if (countForItem > max) max = countForItem;
+      // Az adott workItem-ben mennyi kell ebből a workerből?
+      const sum = wi.workItemWorkers
+        .filter((wiw) => wiw.workerId === worker.id)
+        .reduce((acc, wiw) => acc + (wiw.quantity ?? 1), 0);
+      if (sum > max) max = sum;
     }
-    professionMaxMap[profession] = max;
+    workerIdToMaxNeeded[worker.id] = max;
   }
 
   // Új: kattintható körök eseménykezelője
@@ -197,11 +194,18 @@ export default function ParticipantsSection({
             textAlign: "center",
           }}
         >
-          Munkások ({workers.filter((w) => w.hired).length} / {totalWorkers})
+          Munkások ({workers.filter((w) => w.hired).length} / {Object.values(workerIdToMaxNeeded).reduce((sum, n) => sum + n, 0)})
           <div>
             <ul>
               {workers.map((worker) => (
-                <li key={worker.id}>{worker.name}</li>
+                <li key={worker.id}>
+                  {worker.name}
+                  {workerIdToMaxNeeded[worker.id] ? (
+                    <span style={{ color: '#0070f3', marginLeft: 6 }}>
+                      (szükséges: {workerIdToMaxNeeded[worker.id]})
+                    </span>
+                  ) : null}
+                </li>
               ))}
             </ul>
           </div>

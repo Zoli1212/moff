@@ -300,6 +300,21 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   return { success: true, data: result };
 }
 
+export async function getWorkItemsWithWorkers(workId: number) {
+  const user = await currentUser();
+  if (!user) {
+    throw new Error("Not authenticated");
+  }
+
+  // Lekéri a workId-hoz tartozó összes WorkItem-et és a hozzájuk tartozó WorkItemWorker-t
+  return prisma.workItem.findMany({
+    where: { workId },
+    include: {
+      workItemWorkers: true,
+    },
+  });
+}
+
 export async function getWorkById(id: number) {
   const user = await currentUser();
   if (!user) {
