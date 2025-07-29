@@ -618,6 +618,6 @@ Best Regards,
 Martin Retai
 
 Menesi ut 456 ban szeretnek egy irodat felujitani. 150 nm en fel kell
-Szedni a regi ko burkolatot es le kell tenni az ujat. Ezen kivul 200 nm en kene feherrel kifesteni részletes ajánlatot.
+Szedni a regi ko burkolatot es le kell tenni az ujat. Ezen kivul 200 nm en kene feherrel kifesteni.
 
-Kerlek ird be az ajanlatba a regi ko burkolatbak a felszedesi koltseget valamint a sit elszallitasanak a koltseget
+Kerlek ird be az ajanlatba a regi ko burkolatnak a felszedesi koltseget valamint a sit elszallitasanak a koltseget
