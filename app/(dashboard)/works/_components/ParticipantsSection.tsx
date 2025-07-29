@@ -3,6 +3,7 @@ import React, { useState, useRef } from "react";
 
 import type { Worker, WorkItem, WorkItemWorker } from "@/types/work";
 
+import WorkerModal from "./WorkerModal";
 // Accept any[] for initialWorkers to avoid TSX prop errors from parent
 export default function ParticipantsSection({
   initialWorkers,
@@ -16,6 +17,23 @@ export default function ParticipantsSection({
   workId: number;
 }) {
   const [workers, setWorkers] = useState<Worker[]>(initialWorkers as Worker[]);
+const [modalOpen, setModalOpen] = useState(false);
+const [modalProfession, setModalProfession] = useState<string | null>(null);
+
+const handleOpenModal = (profession: string) => {
+  setModalProfession(profession);
+  setModalOpen(true);
+};
+const handleCloseModal = () => {
+  setModalOpen(false);
+  setModalProfession(null);
+};
+const handleSaveWorker = (data: { name: string; email: string; mobile: string; profession: string }) => {
+  // Itt lehet majd hozzáadni a workert
+  console.log('Új munkás:', data);
+  setModalOpen(false);
+  setModalProfession(null);
+};
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [addingIdx, setAddingIdx] = useState<number | null>(null);
   const [newName, setNewName] = useState("");
@@ -176,41 +194,147 @@ export default function ParticipantsSection({
     }
 
     return (
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 14,
-          boxShadow: "0 1px 5px #eee",
-          padding: "14px 18px",
-          marginBottom: 18,
-        }}
-      >
+      <>
         <div
           style={{
-            fontWeight: 700,
-            fontSize: 17,
-            marginBottom: 8,
-            letterSpacing: 0.5,
-            textAlign: "center",
+            background: "#fff",
+            borderRadius: 14,
+            boxShadow: "0 1px 5px #eee",
+            padding: "14px 18px",
+            marginBottom: 18,
           }}
         >
-          Munkások ({workers.filter((w) => w.hired).length} / {Object.values(workerIdToMaxNeeded).reduce((sum, n) => sum + n, 0)})
-          <div>
-            <ul>
-              {workers.map((worker) => (
-                <li key={worker.id}>
-                  {worker.name}
-                  {workerIdToMaxNeeded[worker.id] ? (
-                    <span style={{ color: '#0070f3', marginLeft: 6 }}>
-                      (szükséges: {workerIdToMaxNeeded[worker.id]})
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 17,
+              marginBottom: 8,
+              letterSpacing: 0.5,
+              textAlign: "center",
+            }}
+          >
+            Munkások ({workers.filter((w) => w.hired).length} /{" "}
+            {Object.values(workerIdToMaxNeeded).reduce((sum, n) => sum + n, 0)})
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {professions.map((profession) => {
+              // Az adott szakmához tartozó workerek
+              const professionWorkers = workers.filter(
+                (w) => w.name === profession
+              );
+              // Max szükséges ebből a szakmából (összes worker id alapján)
+              const maxNeeded = Math.max(
+                ...professionWorkers.map((w) => workerIdToMaxNeeded[w.id] || 0),
+                1
+              );
+              // Slotok: meglévő workerek + üres helyek
+              const slots = [];
+              for (let i = 0; i < maxNeeded; i++) {
+                slots.push(
+                  <div
+                    key={`plus-${profession}-${i}`}
+                    className="worker-tile worker-plus"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 80,
+                      height: 40,
+                      border: "1px dashed #aaa",
+                      borderRadius: 6,
+                      marginRight: 6,
+                      color: "#222",
+                      cursor: "pointer",
+                      background: "#fafbfc",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      gap: 0,
+                    }}
+                    onClick={() => handleOpenModal(profession)}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "#bbb",
+                        marginBottom: 1,
+                        opacity: 0.7,
+                        textAlign: "center",
+                        width: "100%",
+                        lineHeight: 1.1,
+                        whiteSpace: "pre-line",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {profession}
                     </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+                    <span
+                      style={{
+                        fontSize: 22,
+                        color: "#888",
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        textAlign: "center",
+                        width: "100%",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      +
+                    </span>
+                  </div>
+                );
+              }
+              return (
+                <div
+                  key={profession}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    marginBottom: 16,
+                    width: "100%",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      fontSize: 17,
+                      marginBottom: 4,
+                      color: "#222",
+                      textAlign: "center",
+                      width: "100%",
+                      letterSpacing: 0.2,
+                    }}
+                  >
+                    {profession}{" "}
+                    <span
+                      style={{ fontWeight: 400, fontSize: 15, color: "#888" }}
+                    >
+                      ({maxNeeded})
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      width: "100%",
+                    }}
+                  >
+                    {slots}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
+        <WorkerModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          profession={modalProfession || ''}
+          onSave={handleSaveWorker}
+        />
+      </>
     );
   }
 }

@@ -47,7 +47,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
           {menu.map(({ href, label, icon }) => {
             let isActive = false;
             if (href === '/works') {
-              isActive = pathname === '/works';
+              isActive = pathname === '/works' || /^\/works\/[0-9]+$/.test(pathname);
             } else {
               isActive = pathname === href || pathname.startsWith(href + '/');
             }
