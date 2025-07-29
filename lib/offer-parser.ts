@@ -42,7 +42,7 @@ export function parseOfferText(text: string): ParsedOffer {
 
     // Parse new detailed item lines with labor + material
     const itemMatch = trimmed.match(
-      /^(.+?):\s*([\d\s,.]+)\s*(m²|fm|db)\s*×\s*([\d\s,.]+)\s*Ft\/\3\s*\(díj\)\s*\+\s*([\d\s,.]+)\s*Ft\/\3\s*\(anyag\)\s*=\s*([\d\s,.]+)\s*Ft\s*\(díj összesen\)\s*\+\s*([\d\s,.]+)\s*Ft\s*\(anyag összesen\)/i
+      /^(.+?):\s*([\d\s,.]+)\s*(m²|m3|m³|fm|db|óra|nap|hét|hónap|kg|t|liter|pár|szett|csomag|cs|lap|m|mm|cm|szem|szál|zsák|üveg|doboz|flakon|tekercs|l)\s*×\s*([\d\s,.]+)\s*Ft\/\3\s*\(díj\)\s*\+\s*([\d\s,.]+)\s*Ft\/\3\s*\(anyag\)\s*=\s*([\d\s,.]+)\s*Ft\s*\(díj összesen\)\s*\+\s*([\d\s,.]+)\s*Ft\s*\(anyag összesen\)/i
     );
 
     if (itemMatch) {

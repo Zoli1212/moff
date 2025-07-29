@@ -19,41 +19,41 @@ export default function SilentOfferSaverPage() {
   const searchParams = useSearchParams();
   const recordid = params.recordid?.toString();
   const [isProcessing, setIsProcessing] = useState(true);
-    const { demandText, extraRequirementText } = useDemandStore();
+  const { demandText, extraRequirementText } = useDemandStore();
   const { offerItems, clearOfferItems } = useOfferItemCheckStore();
-  const { offerItemsQuestion, clearOfferItemsQuestion } = useOfferItemQuestionStore();
+  const { offerItemsQuestion, clearOfferItemsQuestion } =
+    useOfferItemQuestionStore();
 
-
-  
   // Get demandText from URL or localStorage
-  const demandTextToUse = searchParams?.get('demandText') || 
-                         localStorage.getItem('lastDemandText') || 
-                         demandText;
+  const demandTextToUse =
+    searchParams?.get("demandText") ||
+    demandText ||
+    localStorage.getItem("lastDemandText") ||
+    "";
 
   const saveOfferStatus = (recordId: string) => {
     if (typeof window === "undefined") return;
 
-    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-    savedOffers[recordId] = {
-      saved: true,
-      savedAt: new Date().toISOString(),
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 nap
-    };
-    localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
-    console.log("Offer saved in localStorage:", recordId);
+    // const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
+    // savedOffers[recordId] = {
+    //   saved: true,
+    //   savedAt: new Date().toISOString(),
+    //   expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 nap
+    // };
+    // localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
+    // console.log("Offer saved in localStorage:", recordId);
   };
 
-  const getSavedStatus = (recordId: string) => {
-    if (typeof window === "undefined") return false;
-    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-    const savedOffer = savedOffers[recordId];
-    return savedOffer && savedOffer.expires > Date.now();
-  };
-
+  // const getSavedStatus = (recordId: string) => {
+  //   if (typeof window === "undefined") return false;
+  //   const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
+  //   const savedOffer = savedOffers[recordId];
+  //   return savedOffer && savedOffer.expires > Date.now();
+  // };
 
   useEffect(() => {
     const fetchAndSaveOffer = async () => {
-  const requirementId = useRequirementIdStore.getState().requirementId;
+      const requirementId = useRequirementIdStore.getState().requirementId;
 
       if (!recordid) {
         console.error("Missing recordid");
@@ -62,12 +62,12 @@ export default function SilentOfferSaverPage() {
       }
 
       // Check if this offer was already saved
-      if (getSavedStatus(recordid)) {
-        console.log("Offer was already saved, skipping save");
-        // Redirect to offers list or handle as needed
-        router.push('/offers');
-        return;
-      }
+      // if (getSavedStatus(recordid)) {
+      //   console.log("Offer was already saved, skipping save");
+      //   // Redirect to offers list or handle as needed
+      //   router.push("/offers");
+      //   return;
+      // }
 
       try {
         const response = await axios.get(`/api/ai-offer-letter/${recordid}`);
@@ -91,15 +91,21 @@ export default function SilentOfferSaverPage() {
 
         // 2) Get block IDs from the store right before saving
         const blockIds = useRequirementBlockStore.getState().blockIds || [];
-        console.log('Saving with block IDs:', blockIds);
-        
+        console.log("Saving with block IDs:", blockIds);
+
         if (blockIds.length === 0) {
-          console.warn('No block IDs found in store, checking if this is expected...');
+          console.warn(
+            "No block IDs found in store, checking if this is expected..."
+          );
         }
-        
+
         // 3) Save to DB
-        console.log('Saving with demandText:!!', demandTextToUse, contentToSave);
-        
+        console.log(
+          "Saving with demandText:!!",
+          demandTextToUse,
+          contentToSave
+        );
+
         const offerTitle = useOfferTitleStore.getState().offerTitle;
         const result = await saveOfferWithRequirements({
           recordId: recordid,
@@ -110,11 +116,11 @@ export default function SilentOfferSaverPage() {
           blockIds: blockIds,
           offerItemsQuestion: offerItemsQuestion,
           ...(requirementId ? { requirementId } : {}),
-          ...(offerTitle ? { offerTitle } : {})
+          ...(offerTitle ? { offerTitle } : {}),
         });
-        
-        console.log('Save result:', result);
-        
+
+        console.log("Save result:", result);
+
         // Clear extra requirement text after successful save
         if (extraRequirementText) {
           useDemandStore.getState().clearExtraRequirementText();
@@ -124,12 +130,12 @@ export default function SilentOfferSaverPage() {
           clearOfferItemsQuestion();
         }
 
-        if(requirementId){
-        useRequirementIdStore.getState().clearRequirementId();
+        if (requirementId) {
+          useRequirementIdStore.getState().clearRequirementId();
         }
 
         if (!result) {
-          throw new Error('No response from server');
+          throw new Error("No response from server");
         }
 
         if (result.success && result.requirementId && result.offerId) {
@@ -141,14 +147,14 @@ export default function SilentOfferSaverPage() {
             clearOfferItems();
           }
 
-          if(offerTitle && offerTitle.length > 0){
-          useOfferTitleStore.getState().clearOfferTitle();
+          if (offerTitle && offerTitle.length > 0) {
+            useOfferTitleStore.getState().clearOfferTitle();
           }
           // Redirect to the target URL
           const targetUrl = `/offers/${result.requirementId}?offerId=${result.offerId}`;
           router.push(targetUrl);
           return; // Exit after successful redirect
-        } 
+        }
         // Handle error case
         toast.error(result?.error || "Hiba a mentés közben.");
         setIsProcessing(false);
@@ -160,7 +166,14 @@ export default function SilentOfferSaverPage() {
     };
 
     fetchAndSaveOffer();
-  }, [recordid, router, demandTextToUse, offerItems, extraRequirementText, clearOfferItems]);
+  }, [
+    recordid,
+    router,
+    demandTextToUse,
+    offerItems,
+    extraRequirementText,
+    clearOfferItems,
+  ]);
 
   if (isProcessing) {
     return (

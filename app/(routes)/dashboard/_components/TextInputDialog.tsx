@@ -73,10 +73,12 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
 
           if (status === 'Completed') {
             setLoading(false);
-            setOpen(false);
             // History will be created by the backend
+            
             router.push(`${toolPath}/${recordId}`);
+            setOpen(false);
             return;
+           
           }
 
 
