@@ -230,6 +230,9 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
                 workerId: workerRecord.id,
                 quantity: Number(rp.quantity) || 1,
                 tenantEmail: email,
+                role: rp.type,
+                // email, name, phone opcionálisak, csak ha van érték
+          
               },
             });
           }
