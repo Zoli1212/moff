@@ -18,8 +18,7 @@ import Link from "next/link";
 export default async function WorkDetailPage({
   params,
 }: {
-  params: { id: string };
-}) {
+  params: Promise<{ id: string }>}) {
   let work = null;
   let error = null;
 
@@ -32,7 +31,7 @@ export default async function WorkDetailPage({
     );
   }
   try {
-    work = await getWorkById(Number(params.id));
+    work = await getWorkById(Number((await params).id));
   } catch (e: unknown) {
     let msg = "Hiba a munka lekérdezésekor";
     if (hasMessage(e)) {
