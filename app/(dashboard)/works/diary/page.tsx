@@ -1,8 +1,8 @@
 import React from 'react'
 
-type Props = {}
 
-function DiaryPage({}: Props) {
+
+function DiaryPage() {
   return (
     <div>DiaryPage</div>
   )

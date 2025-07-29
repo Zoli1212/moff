@@ -50,6 +50,7 @@ export default async function WorkDetailPage({
       workItemsWithWorkers = await getWorkItemsWithWorkers(work.id);
     } catch (err) {
       // Hiba esetén fallback az eredeti workItems-re
+      console.log(err);
       workItemsWithWorkers = work.workItems || [];
     }
   }

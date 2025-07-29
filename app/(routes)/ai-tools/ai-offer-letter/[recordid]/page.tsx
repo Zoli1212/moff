@@ -252,6 +252,7 @@ export default function OfferLetterResult() {
 
   useEffect(() => {
     console.log("🔍 storedItemsRef jelenlegi érték:", storedItemsRef.current);
+    console.log(hasSaved)
   }, [editableItems]);
 
   useEffect(() => {
@@ -284,6 +285,7 @@ export default function OfferLetterResult() {
 
   // Save offer status with 7-day expiration
   const saveOfferStatus = (recordId: string) => {
+    console.log(recordId)
     if (typeof window === "undefined") return;
 
     // const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");

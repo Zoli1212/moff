@@ -1,13 +1,12 @@
 "use client";
 import React, { useState, useRef } from "react";
 
-import type { Worker, WorkItem, WorkItemWorker } from "@/types/work";
+import type { Worker, WorkItem } from "@/types/work";
 
 import WorkerModal from "./WorkerModal";
 // Accept any[] for initialWorkers to avoid TSX prop errors from parent
 export default function ParticipantsSection({
   initialWorkers,
-  totalWorkers,
   workItems = [],
   workId,
 }: {
@@ -36,7 +35,7 @@ const handleSaveWorker = (data: { name: string; email: string; mobile: string; p
 };
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
   const [addingIdx, setAddingIdx] = useState<number | null>(null);
-  const [newName, setNewName] = useState("");
+  // const [newName, setNewName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Szakmák (worker name) kigyűjtése az adott Work-hoz tartozó workItems alapján
@@ -60,10 +59,12 @@ const handleSaveWorker = (data: { name: string; email: string; mobile: string; p
     workerIdToMaxNeeded[worker.id] = max;
   }
 
+  console.log(setWorkers, setAddingIdx)
+
   // Új: kattintható körök eseménykezelője
-  const handleClick = (worker: Worker) => {
-    setSelectedWorker(worker);
-  };
+  // const handleClick = (worker: Worker) => {
+  //   setSelectedWorker(worker);
+  // };
 
   // Szakmák UI renderelése
   // ... (a megfelelő helyen a JSX-ben, például a return előtt vagy a megfelelő szekcióban)
@@ -83,25 +84,25 @@ const handleSaveWorker = (data: { name: string; email: string; mobile: string; p
     if (addingIdx !== null && inputRef.current) inputRef.current.focus();
   }, [addingIdx]);
 
-  const handleAdd = (idx: number) => {
-    setAddingIdx(idx);
-    setNewName("");
-  };
+  // const handleAdd = (idx: number) => {
+  //   setAddingIdx(idx);
+  //   setNewName("");
+  // };
 
-  const handleSave = () => {
-    if (newName.trim()) {
-      setWorkers([
-        ...workers,
-        {
-          id: Date.now(), // Unique ID, replace if you have a better generator
-          name: newName.trim(),
-          hired: false, // Default value for new worker
-        },
-      ]);
-    }
-    setAddingIdx(null);
-    setNewName("");
-  };
+  // const handleSave = () => {
+  //   if (newName.trim()) {
+  //     setWorkers([
+  //       ...workers,
+  //       {
+  //         id: Date.now(), // Unique ID, replace if you have a better generator
+  //         name: newName.trim(),
+  //         hired: false, // Default value for new worker
+  //       },
+  //     ]);
+  //   }
+  //   setAddingIdx(null);
+  //   setNewName("");
+  // };
 
   // Csoportosítás szakma szerint
   // (megjegyzés: ne hagyjunk magában álló kifejezést, csak komment vagy érvényes kód lehet itt)

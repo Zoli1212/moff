@@ -1,8 +1,8 @@
 import React from 'react'
 
-type Props = {}
 
-function OthersPage({}: Props) {
+
+function OthersPage() {
   return (
     <div>OthersPage</div>
   )

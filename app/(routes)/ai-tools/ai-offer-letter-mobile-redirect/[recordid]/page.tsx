@@ -32,6 +32,7 @@ export default function SilentOfferSaverPage() {
     "";
 
   const saveOfferStatus = (recordId: string) => {
+    console.log(recordId)
     if (typeof window === "undefined") return;
 
     // const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");

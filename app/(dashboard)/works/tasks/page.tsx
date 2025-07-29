@@ -1,8 +1,6 @@
 import React from 'react'
 
-type Props = {}
-
-function TasksPage({}: Props) {
+function TasksPage() {
   return (
     <div>TasksPage</div>
   )

@@ -304,6 +304,10 @@ model WorkItemWorker {
   worker     Worker   @relation("WorkerToWorkItemWorker", fields: [workerId], references: [id], onDelete: Cascade)
   workerId   Int
   quantity   Int      @default(1)
+  role       String?
+  email      String?
+  name       String?
+  phone      String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   tenantEmail String   @default("")
