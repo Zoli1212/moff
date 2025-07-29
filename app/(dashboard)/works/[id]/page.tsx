@@ -321,7 +321,7 @@ export default async function WorkDetailPage({
             letterSpacing: 0.5,
           }}
         >
-          Szegmensek ({workItems.length})
+          Feladatok ({workItems.length})
         </div>
         <div
           style={{
