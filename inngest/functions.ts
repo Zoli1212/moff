@@ -266,7 +266,7 @@ export const AiOfferChatAgent = createAgent({
     "technology": "Kézi",
     "unit": "m³",
     "laborCost": 4000,
-    "materialCost": 7200
+    "materialCost": 0
   },
   {
     "category": "Telek előkészítése, tereprendezés",
