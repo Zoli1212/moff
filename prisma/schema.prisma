@@ -303,6 +303,8 @@ model WorkItemWorker {
   workItemId Int
   worker     Worker   @relation("WorkerToWorkItemWorker", fields: [workerId], references: [id], onDelete: Cascade)
   workerId   Int
+  workforceRegistry   WorkforceRegistry @relation(fields: [workforceRegistryId], references: [id])
+  workforceRegistryId Int
   quantity   Int      @default(1)
   role       String?
   email      String?
@@ -416,4 +418,50 @@ model PriceList {
   updatedAt     DateTime @updatedAt
 
   @@unique([task, tenantEmail], name: "task_tenantEmail")
+}
+
+model WorkforceRegistry {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  role               String
+  email              String?
+  phone              String?
+  contactInfo        String?
+  hiredDate          DateTime?
+  leftDate           DateTime?
+  currentlyAvailable Boolean  @default(false)
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenantEmail        String   @default("")
+  workItemWorkers    WorkItemWorker[]
+}
+
+model EquipmentRegistry {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  quantity           Float
+  unit               String
+  currentlyAvailable Boolean  @default(false)
+  description        String?
+  acquiredAt         DateTime?
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenantEmail        String   @default("")
+}
+
+model MaterialRegistry {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  amount             Float
+  unit               String
+  currentlyAvailable Boolean  @default(false)
+  description        String?
+  supplier           String?
+  acquiredAt         DateTime?
+  notes              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  tenantEmail        String   @default("")
 }

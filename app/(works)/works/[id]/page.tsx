@@ -14,7 +14,7 @@ type WorkDiary = { id?: number | string; title?: string };
 
 import ParticipantsSection from "../_components/ParticipantsSection";
 import Link from "next/link";
-import TasksPage from "../tasks/[id]/page";
+
 import Tasks from "../_components/Tasks";
 
 export default async function WorkDetailPage({
