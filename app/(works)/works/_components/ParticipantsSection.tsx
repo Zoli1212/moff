@@ -9,6 +9,7 @@ import { registerAndUpdateWorkItemWorker } from "@/actions/workitemworker-action
 import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
 import { getWorkItemWorkerByWorkItemId } from "@/actions/get-workitemworker-by-workitemid";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
+import { updateWorkerJsonArray } from "@/actions/update-worker-json-array";
 
 export default function ParticipantsSection({
   initialWorkers,
@@ -42,47 +43,48 @@ export default function ParticipantsSection({
     id?: number;
   }) => {
     try {
-      
-      let workforceRegistryId = data.id;
-      // 1. Ha nincs id, keresd a WorkforceRegistry-ben (API)
-      if (!workforceRegistryId) {
-        const found = await getWorkforce();
-        if (found && found.length > 0) {
-          workforceRegistryId = found[0].id;
-        }
-      }
-      // 2. Ha továbbra sincs, akkor regisztráld be (API)
-      if (!workforceRegistryId) {
-        const created = await addWorkforceMember({
+      // 1. Try to find existing member in registry
+      const found = await getWorkforce();
+      let member = found.find(
+        (m) =>
+          m.email?.toLowerCase() === data.email.toLowerCase() &&
+          m.name?.toLowerCase() === data.name.toLowerCase()
+      );
+      if (!member) {
+        // 2. Register new
+        member = await addWorkforceMember({
           name: data.name,
           email: data.email,
           phone: data.mobile,
+          role: data.profession,
         });
-        workforceRegistryId = created.id;
       }
-      // 3. Most már biztosan van workforceRegistryId, hozzárendelés:
-      const workItem = workItems.find(
-        (wi) => wi.name === data.profession && wi.workId === workId
+      // 3. Find the Worker record for this role and workId
+
+      console.log(workers, 'WORKERS2', data.profession)
+      const worker = workers.find(
+        (w) =>
+          w.name === (member.role || data.profession) 
       );
-      if (!workItem || typeof workItem.id !== 'number') return;
-      // Keresd ki a WorkItemWorker rekordot szerver oldali action-nel
-      const workItemWorker = await getWorkItemWorkerByWorkItemId({
-        workItemId: workItem.id,
-        workforceRegistryId,
+
+      console.log(worker, "WORKER");
+      if (!worker || typeof worker.id !== "number")
+        throw new Error("Nincs megfelelő Worker rekord");
+      // 4. Update the JSON array
+      await updateWorkerJsonArray({
+        workerId: worker.id,
+        workId,
+        workerData: {
+          workforceRegistryId: member.id,
+          name: member.name,
+          email: member.email,
+          phone: member.phone,
+          profession: member.role || data.profession,
+        },
       });
-      
-      if (!workItemWorker) return;
-      if(typeof workItemWorker.id !== 'number' || !workforceRegistryId) return;
-      await registerAndUpdateWorkItemWorker({
-        id: workItemWorker.id,
-        name: data.name,
-        email: data.email,
-        phone: data.mobile,
-        workforceRegistryId,
-      });
+      toast.success("Sikeres mentés! A résztvevő elmentve.");
       setModalOpen(false);
       setModalProfession(null);
-      toast.success("Sikeres mentés! A résztvevő elmentve.");
     } catch (e) {
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
     }
@@ -117,10 +119,6 @@ export default function ParticipantsSection({
     updateWorkersMaxRequiredAction(workId, workerIdToMaxNeeded);
     // eslint-disable-next-line
   }, [workId, JSON.stringify(workerIdToMaxNeeded)]);
-
-
-
-
 
   // Új: kattintható körök eseménykezelője
   // const handleClick = (worker: Worker) => {

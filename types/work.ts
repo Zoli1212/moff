@@ -49,9 +49,11 @@ export interface Material {
 }
 
 export interface Worker {
-  // Define fields based on your Worker model
   id: number;
   name: string;
+  role?: string | null;
+  workId: number;
+  workItemId: number;
   hired: boolean | null;
 }
 

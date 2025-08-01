@@ -221,6 +221,8 @@ model Worker {
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
   workItemWorkers WorkItemWorker[] @relation("WorkerToWorkItemWorker")
+  workers        Json?      
+ 
 }
 
 model Tool {
@@ -315,6 +317,7 @@ model WorkItemWorker {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   tenantEmail String   @default("")
+  avatarUrl String?
 }
 
 model myPrompt {

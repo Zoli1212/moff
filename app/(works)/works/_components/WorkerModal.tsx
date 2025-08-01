@@ -64,15 +64,12 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
         onSave({ name: worker.name, email: worker.email ?? "", mobile: worker.phone ?? "", profession });
       }
     } else {
-      // Add new worker
-      startTransition(() => {
-        addWorkforceMember({ name, email, phone: mobile, role: profession }).then(newWorker => {
-          onSave({ name: newWorker.name, email: newWorker.email ?? "", mobile: newWorker.phone ?? "", profession });
-        });
-      });
+      // Add new worker (just pass data up, all logic in ParticipantsSection)
+      onSave({ name, email, mobile, profession });
     }
     onClose();
   };
+
 
   if (!open) return null;
 
