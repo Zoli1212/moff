@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import TaskCard from "../_components/TaskCard";
 import { useParams } from "next/navigation";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
@@ -99,10 +100,32 @@ export default function TasksPage() {
     if (!isNaN(workId)) fetchWorkAndItems();
   }, [workId]);
 
+  const router = useRouter();
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: 16 }}>
-      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
-        Feladatok
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24, display: 'flex', alignItems: 'center' }}>
+        <span
+          onClick={() => router.back()}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            cursor: 'pointer',
+            marginRight: 12,
+            width: 28,
+            height: 28,
+            justifyContent: 'center',
+            borderRadius: 6,
+            transition: 'background 0.15s',
+          }}
+          tabIndex={0}
+          aria-label="Vissza"
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') router.back(); }}
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <polyline points="12,3 6,9 12,15" fill="none" stroke="#1b263b" strokeWidth="2.2" strokeLinejoin="round" />
+</svg>
+        </span>
+        {work?.title}
       </h2>
       {loading ? (
         <div>Betöltés...</div>
@@ -116,36 +139,24 @@ export default function TasksPage() {
             marginBottom: 40,
             background: "#fff",
             borderRadius: 18,
-            boxShadow: "0 4px 18px 0 #e3e8ef",
-            padding: 24,
-            border: "2px solid #e0e7ef",
+       
             maxWidth: 520,
             marginLeft: "auto",
             marginRight: "auto",
           }}
         >
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 20,
-              marginBottom: 8,
-              color: "#1b263b",
-              letterSpacing: 0.2,
-              textShadow: "0 1px 0 #f2f6fa",
-            }}
-          >
-            {work.title}
-          </div>
+         
           {work.endDate && (
             <div style={{ fontSize: 13, color: "#888", marginBottom: 4 }}>
               Határidő: {work.endDate.toString()}
             </div>
           )}
-          {work.offerDescription && (
-            <div style={{ fontSize: 14, color: "#444", marginBottom: 10 }}>
-              {work.offerDescription}
+          {work.startDate && (
+            <div style={{ fontSize: 13, color: "#888", marginBottom: 4 }}>
+              Kezdődő: {work.startDate.toString()}
             </div>
           )}
+         
           {workItems.length === 0 ? (
             <div style={{ color: "#aaa", fontSize: 14, marginBottom: 16 }}>
               Nincsenek feladatok ehhez a projekthez.

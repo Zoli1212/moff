@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
+import { toast } from "sonner";
 
 import type { Worker, WorkItem } from "@/types/work";
 
@@ -40,6 +41,7 @@ export default function ParticipantsSection({
     id?: number;
   }) => {
     try {
+      
       let workforceRegistryId = data.id;
       // 1. Ha nincs id, keresd a WorkforceRegistry-ben (API)
       if (!workforceRegistryId) {
@@ -82,8 +84,9 @@ export default function ParticipantsSection({
       });
       setModalOpen(false);
       setModalProfession(null);
+      toast.success("Sikeres mentés! A résztvevő elmentve.");
     } catch (e) {
-      // Hibát csendben elnyel
+      toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
     }
   };
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);

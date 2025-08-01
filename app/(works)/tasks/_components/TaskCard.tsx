@@ -24,15 +24,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
   return (
     <div
       style={{
-        border: checked ? "2px solid #3498db" : "1px solid #ccc",
+        border: checked ? "2px solid #3498db" : "1px solid #eee",
         borderRadius: 12,
         marginBottom: 16,
         padding: 16,
         background: checked ? "#eaf6ff" : "#fff",
-        boxShadow: "0 2px 8px #eee",
+        boxShadow: "none",
         display: "flex",
         alignItems: "flex-start",
-        maxWidth: 420,
+        width: '100%',
+        maxWidth: '100%',
       }}
     >
       <div style={{ flex: 1 }}>
