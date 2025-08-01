@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useTransition } from "react";
 import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
+import type { WorkItem } from "@/types/work";
 
 interface WorkerModalProps {
   open: boolean;
   onClose: () => void;
   profession: string;
   onSave: (data: { name: string; email: string; mobile: string; profession: string }) => void;
+  relevantWorkItems: WorkItem[];
 }
 
 interface WorkforceMember {
@@ -14,9 +16,10 @@ interface WorkforceMember {
   email: string | null;
   phone: string | null;
   role?: string;
+
 }
 
-const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, onSave }) => {
+const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, onSave, relevantWorkItems }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -24,7 +27,10 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [isNew, setIsNew] = useState(true);
   const [isPending, startTransition] = useTransition();
+  const [relevantWorkItemsWithWorkers, setRelevantWorkItemsWithWorkers] = useState<WorkItem[]>(relevantWorkItems);
 
+
+  console.log(relevantWorkItemsWithWorkers, 'relevantWorkItemsWithWorkers')
   useEffect(() => {
     if (open) {
       getWorkforce().then(setWorkers);
@@ -35,6 +41,8 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
       setSelectedId(null);
     }
   }, [open]);
+
+  console.log(workers, 'WORKERS')
 
   const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = Number(e.target.value);

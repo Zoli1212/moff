@@ -6,9 +6,10 @@ import type { Worker, WorkItem } from "@/types/work";
 
 import WorkerModal from "./WorkerModal";
 import { registerAndUpdateWorkItemWorker } from "@/actions/workitemworker-actions";
-import { getWorkforce, addWorkforceMember } from "./workforce-actions";
+import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
 import { getWorkItemWorkerByWorkItemId } from "@/actions/get-workitemworker-by-workitemid";
-// Accept any[] for initialWorkers to avoid TSX prop errors from parent
+import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
+
 export default function ParticipantsSection({
   initialWorkers,
   workItems = [],
@@ -32,7 +33,7 @@ export default function ParticipantsSection({
     setModalProfession(null);
   };
 
-  console.log("DEBUG participants:", workers);
+  console.log("DEBUG workers:", workers, workItems);
   const handleSaveWorker = async (data: {
     name: string;
     email: string;
@@ -45,11 +46,7 @@ export default function ParticipantsSection({
       let workforceRegistryId = data.id;
       // 1. Ha nincs id, keresd a WorkforceRegistry-ben (API)
       if (!workforceRegistryId) {
-        const found = await getWorkforce({
-          name: data.name,
-          email: data.email,
-          phone: data.mobile,
-        });
+        const found = await getWorkforce();
         if (found && found.length > 0) {
           workforceRegistryId = found[0].id;
         }
@@ -73,6 +70,7 @@ export default function ParticipantsSection({
         workItemId: workItem.id,
         workforceRegistryId,
       });
+      
       if (!workItemWorker) return;
       if(typeof workItemWorker.id !== 'number' || !workforceRegistryId) return;
       await registerAndUpdateWorkItemWorker({
@@ -115,7 +113,14 @@ export default function ParticipantsSection({
     workerIdToMaxNeeded[worker.id] = max;
   }
 
-  console.log(setWorkers, setAddingIdx);
+  React.useEffect(() => {
+    updateWorkersMaxRequiredAction(workId, workerIdToMaxNeeded);
+    // eslint-disable-next-line
+  }, [workId, JSON.stringify(workerIdToMaxNeeded)]);
+
+
+
+
 
   // Új: kattintható körök eseménykezelője
   // const handleClick = (worker: Worker) => {
@@ -392,6 +397,7 @@ export default function ParticipantsSection({
           onClose={handleCloseModal}
           profession={modalProfession || ""}
           onSave={handleSaveWorker}
+          relevantWorkItems={relevantWorkItems}
         />
       </>
     );

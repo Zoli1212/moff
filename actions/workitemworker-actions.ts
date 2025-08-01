@@ -14,6 +14,8 @@ export async function registerAndUpdateWorkItemWorker({
   phone: string;
   workforceRegistryId: number;
 }) {
+
+  console.log(id, name, email, phone, workforceRegistryId, 'UPDATE')
   // Frissítjük a rekordot az új adatokkal és regisztrációs id-val
   return prisma.workItemWorker.update({
     where: { id },
