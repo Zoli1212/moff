@@ -198,6 +198,7 @@ model WorkItem {
   materials      Material[]
   workDiaryEntries WorkDiary[]
   workItemWorkers WorkItemWorker[]
+  inProgress     Boolean   @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
@@ -303,8 +304,8 @@ model WorkItemWorker {
   workItemId Int
   worker     Worker   @relation("WorkerToWorkItemWorker", fields: [workerId], references: [id], onDelete: Cascade)
   workerId   Int
-  workforceRegistry   WorkforceRegistry @relation(fields: [workforceRegistryId], references: [id])
-  workforceRegistryId Int
+  workforceRegistry   WorkforceRegistry? @relation(fields: [workforceRegistryId], references: [id])
+  workforceRegistryId Int?
   quantity   Int      @default(1)
   role       String?
   email      String?
