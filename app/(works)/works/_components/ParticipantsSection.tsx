@@ -24,7 +24,7 @@ export default function ParticipantsSection({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalProfession, setModalProfession] = useState<string | null>(null);
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
-const [showWorkerDetailsModal, setShowWorkerDetailsModal] = useState(false);
+  const [showWorkerDetailsModal, setShowWorkerDetailsModal] = useState(false);
   const [addingIdx, setAddingIdx] = useState<number | null>(null);
   // const [newName, setNewName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -172,168 +172,91 @@ const [showWorkerDetailsModal, setShowWorkerDetailsModal] = useState(false);
   // 1. Compute max required professionals per profession
   const maxProfessionals: Record<string, number> = {};
   for (const item of workItems) {
-  if (
-    typeof item === "object" &&
-    item !== null &&
-    "requiredProfessionals" in item &&
-    Array.isArray((item as { requiredProfessionals?: { type?: string; quantity?: number }[] }).requiredProfessionals)
-  ) {
-    const reqProfs = (item as { requiredProfessionals: { type?: string; quantity?: number }[] }).requiredProfessionals;
-    for (const prof of reqProfs) {
-      if (!prof?.type) continue;
-      const currMax = maxProfessionals[prof.type] || 0;
-      if (typeof prof.quantity === "number" && prof.quantity > currMax)
-        maxProfessionals[prof.type] = prof.quantity;
+    if (
+      typeof item === "object" &&
+      item !== null &&
+      "requiredProfessionals" in item &&
+      Array.isArray(
+        (
+          item as {
+            requiredProfessionals?: { type?: string; quantity?: number }[];
+          }
+        ).requiredProfessionals
+      )
+    ) {
+      const reqProfs = (
+        item as {
+          requiredProfessionals: { type?: string; quantity?: number }[];
+        }
+      ).requiredProfessionals;
+      for (const prof of reqProfs) {
+        if (!prof?.type) continue;
+        const currMax = maxProfessionals[prof.type] || 0;
+        if (typeof prof.quantity === "number" && prof.quantity > currMax)
+          maxProfessionals[prof.type] = prof.quantity;
+      }
     }
   }
-}
 
-    // 2. Group workers by profession (by name field, which should match prof.type)
-    const grouped: Record<string, Worker[]> = {};
-    for (const worker of workers) {
-      const key = worker.name || "Ismeretlen szakma";
-      if (!grouped[key]) grouped[key] = [];
-      grouped[key].push(worker);
-    }
+  // 2. Group workers by profession (by name field, which should match prof.type)
+  const grouped: Record<string, Worker[]> = {};
+  for (const worker of workers) {
+    const key = worker.name || "Ismeretlen szakma";
+    if (!grouped[key]) grouped[key] = [];
+    grouped[key].push(worker);
+  }
 
-    return (
-      <>
+  return (
+    <>
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 14,
+          boxShadow: "0 1px 5px #eee",
+          padding: "14px 18px",
+          marginBottom: 18,
+        }}
+      >
         <div
           style={{
-            background: "#fff",
-            borderRadius: 14,
-            boxShadow: "0 1px 5px #eee",
-            padding: "14px 18px",
-            marginBottom: 18,
+            fontWeight: 700,
+            fontSize: 17,
+            marginBottom: 8,
+            letterSpacing: 0.5,
+            textAlign: "center",
           }}
         >
-          <div
-            style={{
-              fontWeight: 700,
-              fontSize: 17,
-              marginBottom: 8,
-              letterSpacing: 0.5,
-              textAlign: "center",
-            }}
-          >
-            Munkások ({workers.filter((w) => w.hired).length} /{" "}
-            {Object.values(workerIdToMaxNeeded).reduce((sum, n) => sum + n, 0)})
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {professions.map((profession) => {
-              // Az adott szakmához tartozó workerek
-              const professionWorkers = workers.filter(
-                (w) => w.name === profession
-              );
-              // Max szükséges ebből a szakmából (összes worker id alapján)
-              const maxNeeded = Math.max(
-                ...professionWorkers.map((w) => workerIdToMaxNeeded[w.id] || 0),
-                1
-              );
-              // Slotok: meglévő workerek + üres helyek
-              const slots = [];
-              const allProfessionWorkers = professionWorkers.flatMap((w) =>
-                Array.isArray(w.workers) ? w.workers : []
-              );
-              for (let i = 0; i < maxNeeded; i++) {
-                if (i < allProfessionWorkers.length) {
-                  const workerObj = allProfessionWorkers[i];
-                  if (
-                    workerObj &&
-                    typeof workerObj === "object" &&
-                    workerObj.name
-                  ) {
-                    slots.push(
-                      <div
-                        key={`avatar-${profession}-${i}`}
-                        className="worker-tile worker-avatar"
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: 80,
-                          height: 40,
-                          border: "1px solid #aaa",
-                          borderRadius: 6,
-                          marginRight: 6,
-                          color: "#222",
-                          cursor: "pointer",
-                          background: "#fff",
-                          fontWeight: 600,
-                          fontSize: 14,
-                          gap: 0,
-                          position: "relative",
-                        }}
-                        onClick={() => { setSelectedWorker(workerObj); setShowWorkerDetailsModal(true); }}
-                        title={workerObj.name}
-                      >
-                        <img
-                          src={
-                            workerObj.avatarUrl && workerObj.avatarUrl !== ""
-                              ? workerObj.avatarUrl
-                              : "/worker.jpg"
-                          }
-                          alt={workerObj.name}
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            objectFit: "cover",
-                            marginBottom: 2,
-                            border: "1px solid #eee",
-                          }}
-                        />
-                        <span
-                          style={{
-                            fontSize: 12,
-                            color: "#444",
-                            fontWeight: 500,
-                            textAlign: "center",
-                            width: "100%",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {workerObj.name}
-                        </span>
-                      </div>
-                    );
-                  } else {
-                    slots.push(
-                      <div
-                        key={`avatar-${profession}-${i}`}
-                        className="worker-tile worker-avatar"
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: 80,
-                          height: 40,
-                          border: "1px solid #eee",
-                          borderRadius: 6,
-                          marginRight: 6,
-                          color: "#aaa",
-                          background: "#f8f8f8",
-                          fontWeight: 600,
-                          fontSize: 14,
-                          gap: 0,
-                          position: "relative",
-                          pointerEvents: "none",
-                        }}
-                        title="Nincs adat"
-                      >
-                        <span style={{ fontSize: 12, color: "#aaa" }}>–</span>
-                      </div>
-                    );
-                  }
-                } else {
+          Munkások ({workers.filter((w) => w.hired).length} /{" "}
+          {Object.values(workerIdToMaxNeeded).reduce((sum, n) => sum + n, 0)})
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {professions.map((profession) => {
+            // Az adott szakmához tartozó workerek
+            const professionWorkers = workers.filter(
+              (w) => w.name === profession
+            );
+            // Max szükséges ebből a szakmából (összes worker id alapján)
+            const maxNeeded = Math.max(
+              ...professionWorkers.map((w) => workerIdToMaxNeeded[w.id] || 0),
+              1
+            );
+            // Slotok: meglévő workerek + üres helyek
+            const slots = [];
+            const allProfessionWorkers = professionWorkers.flatMap((w) =>
+              Array.isArray(w.workers) ? w.workers : []
+            );
+            for (let i = 0; i < maxNeeded; i++) {
+              if (i < allProfessionWorkers.length) {
+                const workerObj = allProfessionWorkers[i];
+                if (
+                  workerObj &&
+                  typeof workerObj === "object" &&
+                  workerObj.name
+                ) {
                   slots.push(
                     <div
-                      key={`plus-${profession}-${i}`}
-                      className="worker-tile worker-plus"
+                      key={`avatar-${profession}-${i}`}
+                      className="worker-tile worker-avatar"
                       style={{
                         display: "flex",
                         flexDirection: "column",
@@ -341,108 +264,232 @@ const [showWorkerDetailsModal, setShowWorkerDetailsModal] = useState(false);
                         justifyContent: "center",
                         width: 80,
                         height: 40,
-                        border: "1px dashed #aaa",
+                        border: "1px solid #aaa",
                         borderRadius: 6,
                         marginRight: 6,
                         color: "#222",
                         cursor: "pointer",
-                        background: "#fafbfc",
+                        background: "#fff",
                         fontWeight: 600,
                         fontSize: 14,
                         gap: 0,
+                        position: "relative",
                       }}
                       onClick={() => {
-                        if (!modalOpen) handleOpenModal(profession);
+                        setSelectedWorker(workerObj);
+                        setShowWorkerDetailsModal(true);
                       }}
+                      title={workerObj.name}
                     >
+                      <img
+                        src={
+                          workerObj.avatarUrl && workerObj.avatarUrl !== ""
+                            ? workerObj.avatarUrl
+                            : "/worker.jpg"
+                        }
+                        alt={workerObj.name}
+                        style={{
+                          width: 32,
+                          height: 32,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                          marginBottom: 2,
+                          border: "1px solid #eee",
+                        }}
+                      />
                       <span
                         style={{
-                          fontSize: 11,
+                          fontSize: 12,
+                          color: "#444",
                           fontWeight: 500,
-                          color: "#bbb",
-                          marginBottom: 1,
-                          opacity: 0.7,
                           textAlign: "center",
                           width: "100%",
-                          lineHeight: 1.1,
-                          whiteSpace: "pre-line",
-                          pointerEvents: "none",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
                         }}
                       >
-                        {profession}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 22,
-                          color: "#888",
-                          fontWeight: 700,
-                          lineHeight: 1,
-                          textAlign: "center",
-                          width: "100%",
-                          pointerEvents: "none",
-                        }}
-                      >
-                        +
+                        {workerObj.name}
                       </span>
                     </div>
                   );
+                } else {
+                  slots.push(
+                    <div
+                      key={`avatar-${profession}-${i}`}
+                      className="worker-tile worker-avatar"
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 80,
+                        height: 40,
+                        border: "1px solid #eee",
+                        borderRadius: 6,
+                        marginRight: 6,
+                        color: "#aaa",
+                        background: "#f8f8f8",
+                        fontWeight: 600,
+                        fontSize: 14,
+                        gap: 0,
+                        position: "relative",
+                        pointerEvents: "none",
+                      }}
+                      title="Nincs adat"
+                    >
+                      <span style={{ fontSize: 12, color: "#aaa" }}>–</span>
+                    </div>
+                  );
                 }
+              } else {
+                slots.push(
+                  <div
+                    key={`plus-${profession}-${i}`}
+                    className="worker-tile worker-plus"
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 80,
+                      height: 40,
+                      border: "1px dashed #aaa",
+                      borderRadius: 6,
+                      marginRight: 6,
+                      color: "#222",
+                      cursor: "pointer",
+                      background: "#fafbfc",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      gap: 0,
+                    }}
+                    onClick={() => {
+                      if (!modalOpen) handleOpenModal(profession);
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: "#bbb",
+                        marginBottom: 1,
+                        opacity: 0.7,
+                        textAlign: "center",
+                        width: "100%",
+                        lineHeight: 1.1,
+                        whiteSpace: "pre-line",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {profession}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 22,
+                        color: "#888",
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        textAlign: "center",
+                        width: "100%",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      +
+                    </span>
+                  </div>
+                );
               }
-              return (
+            }
+            return (
+              <div
+                key={profession}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  marginBottom: 16,
+                  width: "100%",
+                }}
+              >
                 <div
-                  key={profession}
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 17,
+                    marginBottom: 4,
+                    color: "#222",
+                    textAlign: "center",
+                    width: "100%",
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {profession}{" "}
+                  <span
+                    style={{ fontWeight: 400, fontSize: 15, color: "#888" }}
+                  >
+                    ({maxNeeded})
+                  </span>
+                </div>
+                <div
                   style={{
                     display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    marginBottom: 16,
+                    justifyContent: "center",
                     width: "100%",
                   }}
                 >
-                <div
-                  style={{
-                      fontWeight: 700,
-                      fontSize: 17,
-                      marginBottom: 4,
-                      color: "#222",
-                      textAlign: "center",
-                      width: "100%",
-                      letterSpacing: 0.2,
-                    }}
-                  >
-                    {profession}{" "}
-                    <span
-                      style={{ fontWeight: 400, fontSize: 15, color: "#888" }}
-                    >
-                      ({maxNeeded})
-                    </span>
-                  </div>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "center",
-                      width: "100%",
-                    }}
-                  >
-                    {slots}
-                  </div>
+                  {slots}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
-        <WorkerModal
-          open={modalOpen}
-          onClose={handleCloseModal}
-          profession={modalProfession || ""}
-          onSave={handleSaveWorker}
-          relevantWorkItems={relevantWorkItems}
-        />
-        <WorkerDetailsModal
-          open={showWorkerDetailsModal}
-          onClose={() => setShowWorkerDetailsModal(false)}
-          worker={selectedWorker}
-        />
-      </>
-    );
+      </div>
+      <WorkerModal
+        open={modalOpen}
+        onClose={handleCloseModal}
+        profession={modalProfession || ""}
+        onSave={handleSaveWorker}
+        relevantWorkItems={relevantWorkItems}
+      />
+      <WorkerDetailsModal
+        open={showWorkerDetailsModal}
+        onClose={() => setShowWorkerDetailsModal(false)}
+        worker={selectedWorker}
+        onDelete={async () => {
+          if (!selectedWorker || !selectedWorker.name || !selectedWorker.email) return;
+          // Find the parent Worker record for this mini-worker
+          const parentWorker = workers.find(
+            (w) => Array.isArray(w.workers) && (w.workers as any[]).some(
+              (mw: any) => mw.name === selectedWorker.name && mw.email === selectedWorker.email
+            )
+          );
+          if (!parentWorker) {
+            toast.error("Nem található a szülő Worker rekord.");
+            return;
+          }
+          try {
+            const { removeWorkerFromJsonArray } = await import("@/actions/works.action");
+            await removeWorkerFromJsonArray({
+              workerId: parentWorker.id,
+              workId,
+              name: selectedWorker.name,
+              email: selectedWorker.email,
+            });
+            // Update local state
+            setWorkers(ws => ws.map(w =>
+              w.id === parentWorker.id
+                ? { ...w, workers: Array.isArray(w.workers) ? (w.workers as any[]).filter((mw: any) => !(mw.name === selectedWorker.name && mw.email === selectedWorker.email)) : [] }
+                : w
+            ));
+            setShowWorkerDetailsModal(false);
+            setSelectedWorker(null);
+            toast.success("Sikeres törlés!");
+          } catch (e) {
+            toast.error("Hiba történt a törlés során. Próbáld újra!");
+            console.error(e);
+          }
+        }}
+      />
+    </>
+  );
 }

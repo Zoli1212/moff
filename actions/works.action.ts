@@ -190,3 +190,47 @@ export async function deleteWorkflow(workflowId: number) {
     where: { id: workflowId },
   });
 }
+
+// --- WORKER JSON ARRAY ACTIONS ---
+// Remove a worker from the workers JSON array by name and email
+export async function removeWorkerFromJsonArray({
+  workerId,
+  workId,
+  name,
+  email
+}: {
+  workerId: number;
+  workId: number;
+  name: string;
+  email: string;
+}) {
+  const user = await currentUser();
+  if (!user) throw new Error("Not authenticated");
+  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) throw new Error("No tenant email found");
+
+  // Fetch the worker record and check ownership
+  const worker = await prisma.worker.findFirst({
+    where: {
+      id: workerId,
+      workId,
+      work: { tenantEmail: userEmail },
+    },
+  });
+  if (!worker) throw new Error("Worker not found or access denied");
+
+  // Parse current workers array
+  let workersArr: any[] = Array.isArray(worker.workers) ? worker.workers : [];
+  // Remove the worker by name and email
+  workersArr = workersArr.filter(
+    (w) => !(w.name === name && w.email === email)
+  );
+
+  // Update the record
+  const updated = await prisma.worker.update({
+    where: { id: workerId },
+    data: { workers: workersArr },
+  });
+  return updated;
+}
+

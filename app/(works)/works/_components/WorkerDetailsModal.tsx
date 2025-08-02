@@ -11,9 +11,10 @@ export interface WorkerDetailsModalProps {
     profession?: string;
     id?: number;
   } | null;
+  onDelete?: () => void;
 }
 
-const WorkerDetailsModal: React.FC<WorkerDetailsModalProps> = ({ open, onClose, worker }) => {
+const WorkerDetailsModal: React.FC<WorkerDetailsModalProps> = ({ open, onClose, worker, onDelete }) => {
   if (!open || !worker) return null;
   return (
     <div
@@ -70,6 +71,25 @@ const WorkerDetailsModal: React.FC<WorkerDetailsModalProps> = ({ open, onClose, 
           {worker.email && <div style={{ color: "#333", fontSize: 15 }}><b>Email:</b> {worker.email}</div>}
           {worker.phone && <div style={{ color: "#333", fontSize: 15 }}><b>Telefon:</b> {worker.phone}</div>}
           {worker.id && <div style={{ color: "#888", fontSize: 14 }}><b>ID:</b> {worker.id}</div>}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 18 }}>
+          <button
+            style={{
+              background: '#e74c3c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              padding: '10px 22px',
+              fontWeight: 700,
+              fontSize: 16,
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+            }}
+            onClick={onDelete}
+            disabled={!onDelete}
+          >
+            Törlés
+          </button>
         </div>
       </div>
     </div>

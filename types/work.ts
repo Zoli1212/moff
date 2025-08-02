@@ -59,6 +59,10 @@ export interface Worker {
   workItemId: number;
   hired: boolean | null;
   workers?: unknown; // JSON field from Prisma schema
+  email?: string;
+  phone?: string;
+  avatarUrl?: string;
+  profession?: string;
 }
 
 export interface WorkItemWorker {
