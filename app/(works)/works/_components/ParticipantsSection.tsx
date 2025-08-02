@@ -65,10 +65,9 @@ export default function ParticipantsSection({
       }
       // 3. Find the Worker record for this role and workId
 
-      console.log(workers, 'WORKERS2', data.profession)
+      console.log(workers, "WORKERS2", data.profession);
       const worker = workers.find(
-        (w) =>
-          w.name === (member.role || data.profession) 
+        (w) => w.name === (member.role || data.profession)
       );
 
       console.log(worker, "WORKER");
@@ -84,7 +83,7 @@ export default function ParticipantsSection({
           email: member.email,
           phone: member.phone,
           profession: member.role || data.profession,
-          avatarUrl: data.avatarUrl || '',
+          avatarUrl: data.avatarUrl || "",
         },
       });
       toast.success("Sikeres mentés! A résztvevő elmentve.");
@@ -92,10 +91,9 @@ export default function ParticipantsSection({
       setModalProfession(null);
     } catch (e) {
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
-      console.log(e)
+      console.log(e);
     }
   };
- 
 
   // Szakmák (worker name) kigyűjtése az adott Work-hoz tartozó workItems alapján
   const relevantWorkItems = workItems.filter((wi) => wi.workId === workId);
