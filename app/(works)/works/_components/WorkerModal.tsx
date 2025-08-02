@@ -6,7 +6,7 @@ interface WorkerModalProps {
   open: boolean;
   onClose: () => void;
   profession: string;
-  onSave: (data: { name: string; email: string; mobile: string; profession: string }) => void;
+  onSave: (data: { name: string; email: string; mobile: string; profession: string; avatarUrl?: string }) => void;
   relevantWorkItems: WorkItem[];
 }
 
@@ -28,6 +28,12 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
   const [isNew, setIsNew] = useState(true);
   const [isPending, startTransition] = useTransition();
   const [relevantWorkItemsWithWorkers, setRelevantWorkItemsWithWorkers] = useState<WorkItem[]>(relevantWorkItems);
+
+  // Avatar upload state
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
+  const [avatarError, setAvatarError] = useState<string>("");
 
 
   console.log(relevantWorkItemsWithWorkers, 'relevantWorkItemsWithWorkers')
@@ -65,7 +71,8 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
       }
     } else {
       // Add new worker (just pass data up, all logic in ParticipantsSection)
-      onSave({ name, email, mobile, profession });
+      console.log('Saving worker, avatarUrl:', avatarUrl);
+      onSave({ name, email, mobile, profession, avatarUrl });
     }
     onClose();
   };
@@ -164,6 +171,8 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
         )}
         {(isNew || selectedId === null) && (
           <>
+            {/* Avatar upload UI restored */}
+
             <div style={{ marginBottom: 16 }}>
               <label style={{ fontWeight: 500 }}>Szakma</label>
               <input
@@ -213,28 +222,105 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
                 style={{ width: "100%", padding: "8px 10px", border: "1px solid #ccc", borderRadius: 5, marginTop: 2 }}
               />
             </div>
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ fontWeight: 500, display: 'block', marginBottom: 4 }}>Profilkép</label>
+              {avatarPreview ? (
+                <div style={{ position: 'relative', display: 'inline-block', marginBottom: 8 }}>
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar preview"
+                    style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '1px solid #ddd' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAvatarPreview("");
+                      setAvatarUrl("");
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      background: '#fff',
+                      border: '1px solid #f00',
+                      color: '#f00',
+                      borderRadius: '50%',
+                      width: 22,
+                      height: 22,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      fontWeight: 700,
+                      fontSize: 16,
+                      boxShadow: '0 1px 4px #ccc',
+                      zIndex: 2
+                    }}
+                    title="Profilkép törlése"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setAvatarError("");
+                    setAvatarUploading(true);
+                    setAvatarPreview(URL.createObjectURL(file));
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    console.log('UPLOAD started')
+                    try {
+                      const res = await fetch("/api/upload-avatar", {
+                        method: "POST",
+                        body: formData,
+                      });
+                      const data = await res.json();
+                      console.log(data.url, 'DATAURL')
+                      if (data.url) {
+                        setAvatarUrl(data.url);
+                      } else {
+                        setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                        setAvatarUrl("");
+                      }
+                    } catch (err) {
+                      setAvatarError("Hiba a feltöltés során.");
+                      setAvatarUrl("");
+                    } finally {
+                      setAvatarUploading(false);
+                    }
+                  }}
+                  style={{ marginBottom: 8 }}
+                />
+              )}
+              {avatarUploading && <div style={{ color: '#0070f3', marginBottom: 4 }}>Feltöltés...</div>}
+              {avatarError && <div style={{ color: 'red', marginBottom: 4 }}>{avatarError}</div>}
+            </div>
+            <button
+              style={{
+                width: "100%",
+                padding: "10px 0",
+                background: isPending ? "#999" : "#0070f3",
+                color: "#fff",
+                border: "none",
+                borderRadius: 5,
+                fontWeight: 600,
+                fontSize: 17,
+                cursor: isPending ? "not-allowed" : "pointer",
+                marginTop: 8,
+                opacity: isPending ? 0.7 : 1
+              }}
+              disabled={isPending}
+              onClick={handleSave}
+            >
+              {isPending ? "Mentés..." : "Mentés"}
+            </button>
           </>
         )}
-        <button
-          style={{
-            width: "100%",
-            padding: "10px 0",
-            background: isPending ? "#999" : "#0070f3",
-            color: "#fff",
-            border: "none",
-            borderRadius: 5,
-            fontWeight: 600,
-            fontSize: 17,
-            cursor: isPending ? "not-allowed" : "pointer",
-            marginTop: 8,
-            opacity: isPending ? 0.7 : 1
-          }}
-          disabled={isPending}
-          onClick={handleSave}
-        >
-          {isPending ? "Mentés..." : "Mentés"}
-        </button>
-
       </div>
     </div>
   );

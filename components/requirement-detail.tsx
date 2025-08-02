@@ -854,10 +854,10 @@ export function RequirementDetail({
         </DialogContent>
       </Dialog>
       {/* OFFER ITEMS DEBUG KIÍRÁS */}
-      <div style={{ background: '#f5f5f5', padding: '8px', marginTop: 16, border: '1px solid #ccc', borderRadius: 4 }}>
+      {/* <div style={{ background: '#f5f5f5', padding: '8px', marginTop: 16, border: '1px solid #ccc', borderRadius: 4 }}>
         <strong>OfferItemCheckStore offerItems:</strong>
         <pre style={{ fontSize: 12, margin: 0 }}>{JSON.stringify(offerItems, null, 2)}</pre>
-      </div>
+      </div> */}
       {/* /OFFER ITEMS DEBUG KIÍRÁS */}
     </div>
   );

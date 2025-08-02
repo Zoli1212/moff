@@ -440,6 +440,7 @@ model WorkforceRegistry {
   updatedAt          DateTime @updatedAt
   tenantEmail        String   @default("")
   workItemWorkers    WorkItemWorker[]
+  avatarUrl          String?
 }
 
 model EquipmentRegistry {

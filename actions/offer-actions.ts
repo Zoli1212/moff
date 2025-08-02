@@ -786,6 +786,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
               status: 'pending',
               title: workTitle,
               offerDescription: offer.description || null,
+              location: offer.title || 'N/A',
               totalWorkers: 0,
               totalLaborCost: 0,
               totalTools: 0,

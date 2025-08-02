@@ -41,6 +41,7 @@ export default function ParticipantsSection({
     mobile: string;
     profession: string;
     id?: number;
+    avatarUrl?: string;
   }) => {
     try {
       // 1. Try to find existing member in registry
@@ -57,6 +58,7 @@ export default function ParticipantsSection({
           email: data.email,
           phone: data.mobile,
           role: data.profession,
+          avatarUrl: data.avatarUrl,
         });
       }
       // 3. Find the Worker record for this role and workId
@@ -80,6 +82,7 @@ export default function ParticipantsSection({
           email: member.email,
           phone: member.phone,
           profession: member.role || data.profession,
+          avatarUrl: data.avatarUrl || '',
         },
       });
       toast.success("Sikeres mentés! A résztvevő elmentve.");
