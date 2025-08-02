@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import TaskCard from "../_components/TaskCard";
 import { useParams } from "next/navigation";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
+import { OfferItem } from "../../../../types/offer.types";
 
 interface WorkItem {
   id: number;
@@ -36,10 +37,11 @@ interface Work {
   createdAt: Date;
   updatedAt: Date;
   tenantEmail: string;
-  offerItems?: any | null;
+  offerItems?: OfferItem[];
 }
 
 function normalizeWork(raw: any): Work {
+  console.log(raw, 'RAW')
   return {
     id: raw.id,
     title: raw.title,
