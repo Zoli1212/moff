@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     if (!file || typeof file === 'string') {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
-    // @ts-ignore
+    
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const uploadResponse = await imagekit.upload({
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       folder: '/avatars',
     });
     return NextResponse.json({ url: uploadResponse.url });
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message || 'Upload failed' }, { status: 500 });
+  } catch (e) {
+    return NextResponse.json({ error: (e as Error).message || 'Upload failed' }, { status: 500 });
   }
 }

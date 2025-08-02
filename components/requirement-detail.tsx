@@ -78,9 +78,7 @@ export function RequirementDetail({
   onRequirementUpdated,
   onBlockIdsChange,
 }: RequirementDetailProps) {
-  // --- OFFER ITEMS DEBUG KIÍRÁS ---
-  const offerItems = useOfferItemCheckStore((state) => state.offerItems);
-  // --- /OFFER ITEMS DEBUG KIÍRÁS ---
+ 
   const router = useRouter();
   const searchParams = useSearchParams();
   const {

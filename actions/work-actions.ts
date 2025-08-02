@@ -1,5 +1,6 @@
 "use server";
 
+import { OfferItem } from "@/lib/offer-parser";
 import type { WorkItemAIResult } from "../types/work.types";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";

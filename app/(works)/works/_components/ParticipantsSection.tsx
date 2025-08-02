@@ -5,9 +5,7 @@ import { toast } from "sonner";
 import type { Worker, WorkItem } from "@/types/work";
 
 import WorkerModal from "./WorkerModal";
-import { registerAndUpdateWorkItemWorker } from "@/actions/workitemworker-actions";
 import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
-import { getWorkItemWorkerByWorkItemId } from "@/actions/get-workitemworker-by-workitemid";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { updateWorkerJsonArray } from "@/actions/update-worker-json-array";
 
@@ -24,6 +22,10 @@ export default function ParticipantsSection({
   const [workers, setWorkers] = useState<Worker[]>(initialWorkers as Worker[]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalProfession, setModalProfession] = useState<string | null>(null);
+  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+  const [addingIdx, setAddingIdx] = useState<number | null>(null);
+  // const [newName, setNewName] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenModal = (profession: string) => {
     setModalProfession(profession);
@@ -34,7 +36,7 @@ export default function ParticipantsSection({
     setModalProfession(null);
   };
 
-  console.log("DEBUG workers:", workers, workItems);
+  console.log("DEBUG workers:", workers, workItems, setWorkers, setAddingIdx);
   const handleSaveWorker = async (data: {
     name: string;
     email: string;
@@ -90,12 +92,10 @@ export default function ParticipantsSection({
       setModalProfession(null);
     } catch (e) {
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
+      console.log(e)
     }
   };
-  const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
-  const [addingIdx, setAddingIdx] = useState<number | null>(null);
-  // const [newName, setNewName] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+ 
 
   // Szakmák (worker name) kigyűjtése az adott Work-hoz tartozó workItems alapján
   const relevantWorkItems = workItems.filter((wi) => wi.workId === workId);

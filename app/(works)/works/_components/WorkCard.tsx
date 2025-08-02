@@ -189,6 +189,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
               }
             } catch (err) {
               toast.error("Hálózati vagy szerver hiba!");
+              console.error("AI feldolgozás hiba:", err);
             } finally {
               setLoading(false);
             }

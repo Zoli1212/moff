@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import TaskCard from "../_components/TaskCard";
 import { useParams } from "next/navigation";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
-import { OfferItem } from "../../../../types/offer.types";
+
 
 interface WorkItem {
   id: number;
@@ -37,17 +37,16 @@ interface Work {
   createdAt: Date;
   updatedAt: Date;
   tenantEmail: string;
-  offerItems?: OfferItem[];
+
 }
 
-function normalizeWork(raw: any): Work {
-  console.log(raw, 'RAW')
+function normalizeWork(raw: Partial<Work>): Work {
   return {
-    id: raw.id,
-    title: raw.title,
-    offerId: raw.offerId,
+    id: raw.id!,
+    title: raw.title!,
+    offerId: raw.offerId!,
     offerDescription: raw.offerDescription ?? null,
-    status: raw.status,
+    status: raw.status!,
     startDate: raw.startDate ? new Date(raw.startDate) : null,
     endDate: raw.endDate ? new Date(raw.endDate) : null,
     location: raw.location ?? null,
@@ -59,13 +58,14 @@ function normalizeWork(raw: any): Work {
     totalMaterialCost: raw.totalMaterialCost ?? null,
     estimatedDuration: raw.estimatedDuration ?? null,
     progress: raw.progress ?? null,
-    isActive: raw.isActive,
-    createdAt: new Date(raw.createdAt),
-    updatedAt: new Date(raw.updatedAt),
-    tenantEmail: raw.tenantEmail,
-    offerItems: raw.offerItems ?? null,
+    isActive: raw.isActive!,
+    createdAt: new Date(raw.createdAt!),
+    updatedAt: new Date(raw.updatedAt!),
+    tenantEmail: raw.tenantEmail!,
   };
 }
+
+
 
 export default function TasksPage() {
   const params = useParams();
@@ -93,8 +93,8 @@ export default function TasksPage() {
           })),
         }));
         setWorkItems(items);
-      } catch (e: any) {
-        setError(e.message || "Hiba történt a lekérdezéskor");
+      } catch (e) {
+        setError((e as Error).message || "Hiba történt a lekérdezéskor");
       } finally {
         setLoading(false);
       }

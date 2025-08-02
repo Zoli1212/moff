@@ -21,6 +21,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onCheck,
   children,
 }) => {
+  console.log(id)
   return (
     <div
       style={{

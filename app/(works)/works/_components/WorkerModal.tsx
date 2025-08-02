@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useTransition } from "react";
-import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
+import { getWorkforce } from "@/actions/workforce-actions";
 import type { WorkItem } from "@/types/work";
 
 interface WorkerModalProps {
@@ -48,7 +48,7 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
     }
   }, [open]);
 
-  console.log(workers, 'WORKERS')
+  console.log(workers, 'WORKERS', startTransition, setRelevantWorkItemsWithWorkers)
 
   const handleSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = Number(e.target.value);
@@ -290,6 +290,7 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
                     } catch (err) {
                       setAvatarError("Hiba a feltöltés során.");
                       setAvatarUrl("");
+                      console.log(err)
                     } finally {
                       setAvatarUploading(false);
                     }
