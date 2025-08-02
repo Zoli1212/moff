@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
+import WorkerDetailsModal from "./WorkerDetailsModal";
 import { toast } from "sonner";
 
 import type { Worker, WorkItem } from "@/types/work";
@@ -23,6 +24,7 @@ export default function ParticipantsSection({
   const [modalOpen, setModalOpen] = useState(false);
   const [modalProfession, setModalProfession] = useState<string | null>(null);
   const [selectedWorker, setSelectedWorker] = useState<Worker | null>(null);
+const [showWorkerDetailsModal, setShowWorkerDetailsModal] = useState(false);
   const [addingIdx, setAddingIdx] = useState<number | null>(null);
   // const [newName, setNewName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -167,84 +169,24 @@ export default function ParticipantsSection({
   // Csoportosítás szakma szerint
   // (megjegyzés: ne hagyjunk magában álló kifejezést, csak komment vagy érvényes kód lehet itt)
 
-  // --- Modal megjelenítése ha van kiválasztott worker ---
-  // Egyszerű overlay modal, bezárható kattintással vagy gombbal
-  {
-    (() =>
-      selectedWorker ? (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(0,0,0,0.5)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-          onClick={() => setSelectedWorker(null)}
-        >
-          <div
-            style={{
-              background: "#fff",
-              padding: 24,
-              borderRadius: 8,
-              minWidth: 300,
-              position: "relative",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              style={{ position: "absolute", top: 8, right: 8 }}
-              onClick={() => setSelectedWorker(null)}
-            >
-              ✕
-            </button>
-            <h3>Részletek</h3>
-            <div>
-              <b>Név:</b> {selectedWorker.name}
-            </div>
-
-            {selectedWorker.id && (
-              <div>
-                <b>ID:</b> {selectedWorker.id}
-              </div>
-            )}
-            {/* Itt bővítheted további mezőkkel is */}
-          </div>
-        </div>
-      ) : null)();
-    // 1. Compute max required professionals per profession
-    const maxProfessionals: Record<string, number> = {};
-    for (const item of workItems) {
-      if (
-        typeof item === "object" &&
-        item !== null &&
-        "requiredProfessionals" in item &&
-        Array.isArray(
-          (
-            item as {
-              requiredProfessionals?: { type?: string; quantity?: number }[];
-            }
-          ).requiredProfessionals
-        )
-      ) {
-        const reqProfs = (
-          item as {
-            requiredProfessionals: { type?: string; quantity?: number }[];
-          }
-        ).requiredProfessionals;
-        for (const prof of reqProfs) {
-          if (!prof?.type) continue;
-          const currMax = maxProfessionals[prof.type] || 0;
-          if (typeof prof.quantity === "number" && prof.quantity > currMax)
-            maxProfessionals[prof.type] = prof.quantity;
-        }
-      }
+  // 1. Compute max required professionals per profession
+  const maxProfessionals: Record<string, number> = {};
+  for (const item of workItems) {
+  if (
+    typeof item === "object" &&
+    item !== null &&
+    "requiredProfessionals" in item &&
+    Array.isArray((item as { requiredProfessionals?: { type?: string; quantity?: number }[] }).requiredProfessionals)
+  ) {
+    const reqProfs = (item as { requiredProfessionals: { type?: string; quantity?: number }[] }).requiredProfessionals;
+    for (const prof of reqProfs) {
+      if (!prof?.type) continue;
+      const currMax = maxProfessionals[prof.type] || 0;
+      if (typeof prof.quantity === "number" && prof.quantity > currMax)
+        maxProfessionals[prof.type] = prof.quantity;
     }
+  }
+}
 
     // 2. Group workers by profession (by name field, which should match prof.type)
     const grouped: Record<string, Worker[]> = {};
@@ -290,63 +232,161 @@ export default function ParticipantsSection({
               );
               // Slotok: meglévő workerek + üres helyek
               const slots = [];
+              const allProfessionWorkers = professionWorkers.flatMap((w) =>
+                Array.isArray(w.workers) ? w.workers : []
+              );
               for (let i = 0; i < maxNeeded; i++) {
-                slots.push(
-                  <div
-                    key={`plus-${profession}-${i}`}
-                    className="worker-tile worker-plus"
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 80,
-                      height: 40,
-                      border: "1px dashed #aaa",
-                      borderRadius: 6,
-                      marginRight: 6,
-                      color: "#222",
-                      cursor: "pointer",
-                      background: "#fafbfc",
-                      fontWeight: 600,
-                      fontSize: 14,
-                      gap: 0,
-                    }}
-                    onClick={() => {
-                      if (!modalOpen) handleOpenModal(profession);
-                    }}
-                  >
-                    <span
+                if (i < allProfessionWorkers.length) {
+                  const workerObj = allProfessionWorkers[i];
+                  if (
+                    workerObj &&
+                    typeof workerObj === "object" &&
+                    workerObj.name
+                  ) {
+                    slots.push(
+                      <div
+                        key={`avatar-${profession}-${i}`}
+                        className="worker-tile worker-avatar"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 80,
+                          height: 40,
+                          border: "1px solid #aaa",
+                          borderRadius: 6,
+                          marginRight: 6,
+                          color: "#222",
+                          cursor: "pointer",
+                          background: "#fff",
+                          fontWeight: 600,
+                          fontSize: 14,
+                          gap: 0,
+                          position: "relative",
+                        }}
+                        onClick={() => { setSelectedWorker(workerObj); setShowWorkerDetailsModal(true); }}
+                        title={workerObj.name}
+                      >
+                        <img
+                          src={
+                            workerObj.avatarUrl && workerObj.avatarUrl !== ""
+                              ? workerObj.avatarUrl
+                              : "/worker.jpg"
+                          }
+                          alt={workerObj.name}
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            marginBottom: 2,
+                            border: "1px solid #eee",
+                          }}
+                        />
+                        <span
+                          style={{
+                            fontSize: 12,
+                            color: "#444",
+                            fontWeight: 500,
+                            textAlign: "center",
+                            width: "100%",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {workerObj.name}
+                        </span>
+                      </div>
+                    );
+                  } else {
+                    slots.push(
+                      <div
+                        key={`avatar-${profession}-${i}`}
+                        className="worker-tile worker-avatar"
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 80,
+                          height: 40,
+                          border: "1px solid #eee",
+                          borderRadius: 6,
+                          marginRight: 6,
+                          color: "#aaa",
+                          background: "#f8f8f8",
+                          fontWeight: 600,
+                          fontSize: 14,
+                          gap: 0,
+                          position: "relative",
+                          pointerEvents: "none",
+                        }}
+                        title="Nincs adat"
+                      >
+                        <span style={{ fontSize: 12, color: "#aaa" }}>–</span>
+                      </div>
+                    );
+                  }
+                } else {
+                  slots.push(
+                    <div
+                      key={`plus-${profession}-${i}`}
+                      className="worker-tile worker-plus"
                       style={{
-                        fontSize: 11,
-                        fontWeight: 500,
-                        color: "#bbb",
-                        marginBottom: 1,
-                        opacity: 0.7,
-                        textAlign: "center",
-                        width: "100%",
-                        lineHeight: 1.1,
-                        whiteSpace: "pre-line",
-                        pointerEvents: "none",
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: 80,
+                        height: 40,
+                        border: "1px dashed #aaa",
+                        borderRadius: 6,
+                        marginRight: 6,
+                        color: "#222",
+                        cursor: "pointer",
+                        background: "#fafbfc",
+                        fontWeight: 600,
+                        fontSize: 14,
+                        gap: 0,
+                      }}
+                      onClick={() => {
+                        if (!modalOpen) handleOpenModal(profession);
                       }}
                     >
-                      {profession}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 22,
-                        color: "#888",
-                        fontWeight: 700,
-                        lineHeight: 1,
-                        textAlign: "center",
-                        width: "100%",
-                        pointerEvents: "none",
-                      }}
-                    >
-                      +
-                    </span>
-                  </div>
-                );
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 500,
+                          color: "#bbb",
+                          marginBottom: 1,
+                          opacity: 0.7,
+                          textAlign: "center",
+                          width: "100%",
+                          lineHeight: 1.1,
+                          whiteSpace: "pre-line",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        {profession}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 22,
+                          color: "#888",
+                          fontWeight: 700,
+                          lineHeight: 1,
+                          textAlign: "center",
+                          width: "100%",
+                          pointerEvents: "none",
+                        }}
+                      >
+                        +
+                      </span>
+                    </div>
+                  );
+                }
               }
               return (
                 <div
@@ -359,8 +399,8 @@ export default function ParticipantsSection({
                     width: "100%",
                   }}
                 >
-                  <div
-                    style={{
+                <div
+                  style={{
                       fontWeight: 700,
                       fontSize: 17,
                       marginBottom: 4,
@@ -398,7 +438,11 @@ export default function ParticipantsSection({
           onSave={handleSaveWorker}
           relevantWorkItems={relevantWorkItems}
         />
+        <WorkerDetailsModal
+          open={showWorkerDetailsModal}
+          onClose={() => setShowWorkerDetailsModal(false)}
+          worker={selectedWorker}
+        />
       </>
     );
-  }
 }

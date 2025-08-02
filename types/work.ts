@@ -7,7 +7,10 @@ export interface ParsedWork {
   workItems: WorkItem[];
 }
 
-export type WorkItemFromDb = Omit<WorkItem, "tools" | "materials" | "workers" | "workItemWorkers" | "description"> & {
+export type WorkItemFromDb = Omit<
+  WorkItem,
+  "tools" | "materials" | "workers" | "workItemWorkers" | "description"
+> & {
   description?: string | null;
   tools?: Tool[] | null;
   materials?: Material[] | null;
@@ -55,6 +58,7 @@ export interface Worker {
   workId: number;
   workItemId: number;
   hired: boolean | null;
+  workers?: unknown; // JSON field from Prisma schema
 }
 
 export interface WorkItemWorker {
@@ -64,7 +68,6 @@ export interface WorkItemWorker {
   workItemId: number;
   quantity: number;
 }
-
 
 export interface Professional {
   type: string;
