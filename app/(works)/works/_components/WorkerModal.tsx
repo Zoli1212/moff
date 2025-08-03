@@ -19,7 +19,7 @@ interface WorkforceMember {
 
 }
 
-const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, onSave, relevantWorkItems }) => {
+export const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, onSave, relevantWorkItems }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -327,4 +327,4 @@ const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profession, on
   );
 };
 
-export default WorkerModal;
+

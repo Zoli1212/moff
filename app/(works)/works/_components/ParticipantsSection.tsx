@@ -1,14 +1,13 @@
 "use client";
 import React, { useState, useRef } from "react";
 import WorkerDetailsModal from "./WorkerDetailsModal";
+import { WorkerModal } from "./WorkerModal";
 import { toast } from "sonner";
 
-import type { Worker, WorkItem } from "@/types/work";
-
-import WorkerModal from "./WorkerModal";
 import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { updateWorkerJsonArray } from "@/actions/update-worker-json-array";
+import type { Worker, WorkItem } from "@/types/work";
 
 export default function ParticipantsSection({
   initialWorkers,
