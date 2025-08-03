@@ -459,8 +459,8 @@ export default function ParticipantsSection({
           if (!selectedWorker || !selectedWorker.name || !selectedWorker.email) return;
           // Find the parent Worker record for this mini-worker
           const parentWorker = workers.find(
-            (w) => Array.isArray(w.workers) && (w.workers as any[]).some(
-              (mw: any) => mw.name === selectedWorker.name && mw.email === selectedWorker.email
+            (w) => Array.isArray(w.workers) && (w.workers as Worker[]).some(
+              (mw: Worker) => mw.name === selectedWorker.name && mw.email === selectedWorker.email
             )
           );
           if (!parentWorker) {
@@ -478,7 +478,7 @@ export default function ParticipantsSection({
             // Update local state
             setWorkers(ws => ws.map(w =>
               w.id === parentWorker.id
-                ? { ...w, workers: Array.isArray(w.workers) ? (w.workers as any[]).filter((mw: any) => !(mw.name === selectedWorker.name && mw.email === selectedWorker.email)) : [] }
+                ? { ...w, workers: Array.isArray(w.workers) ? (w.workers as Worker[]).filter((mw: Worker) => !(mw.name === selectedWorker.name && mw.email === selectedWorker.email)) : [] }
                 : w
             ));
             setShowWorkerDetailsModal(false);
