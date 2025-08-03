@@ -1,6 +1,7 @@
 "use server";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 /**
  * Updates the `workers` JSON array field of a Worker record by adding or updating a worker entry.
@@ -62,5 +63,7 @@ export async function updateWorkerJsonArray({
     data: { workers: workersArr },
   });
   console.log('DB update result:', updated);
+  revalidatePath('/works')
+  revalidatePath('/works/' + workId);
   return updated;
 }

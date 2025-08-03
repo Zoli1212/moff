@@ -88,6 +88,34 @@ export default function ParticipantsSection({
           avatarUrl: data.avatarUrl || "",
         },
       });
+
+      // --- Optimistic UI update: add new member to local state instantly ---
+      setWorkers((prevWorkers) =>
+        prevWorkers.map((w) => {
+          if (w.id !== worker.id) return w;
+          // Defensive: ensure .workers is an array
+          const current = Array.isArray(w.workers) ? w.workers : [];
+          // Ne legyen duplikáció (pl. ha frissítés után is bekerül)
+          const alreadyExists = current.some(
+            (m) => m && m.workforceRegistryId === member.id
+          );
+          if (alreadyExists) return w;
+          return {
+            ...w,
+            workers: [
+              ...current,
+              {
+                workforceRegistryId: member.id,
+                name: member.name,
+                email: member.email,
+                phone: member.phone,
+                profession: member.role || data.profession,
+                avatarUrl: data.avatarUrl || "",
+              },
+            ],
+          };
+        })
+      );
       toast.success("Sikeres mentés! A résztvevő elmentve.");
       setModalOpen(false);
       setModalProfession(null);
