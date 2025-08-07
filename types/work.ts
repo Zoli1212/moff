@@ -40,9 +40,9 @@ export interface WorkItem {
 }
 
 export interface Tool {
-  // Define fields based on your Tool model
   id: number;
   name: string;
+  quantity: number;
 }
 
 export interface Material {

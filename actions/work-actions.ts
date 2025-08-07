@@ -311,12 +311,17 @@ export async function getWorkItemsWithWorkers(workId: number) {
   }
 
   // Lekéri a workId-hoz tartozó összes WorkItem-et és a hozzájuk tartozó WorkItemWorker-t
-  return prisma.workItem.findMany({
-    where: { workId },
-    include: {
-      workItemWorkers: true,
-    },
-  });
+  const email = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+return prisma.workItem.findMany({
+  where: {
+    workId,
+    tenantEmail: email
+  },
+  include: {
+    workItemWorkers: true,
+    tools: true
+  },
+});
 }
 
 export async function getWorkById(id: number) {

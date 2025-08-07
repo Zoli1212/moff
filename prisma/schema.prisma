@@ -471,3 +471,28 @@ model MaterialRegistry {
   updatedAt          DateTime @updatedAt
   tenantEmail        String   @default("")
 }
+
+model ToolsRegistry {
+  id          Int      @id @default(autoincrement())
+  name        String
+  quantity    Int
+  tenantEmail String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  workTools   WorkToolsRegistry[]
+}
+
+
+model WorkToolsRegistry {
+  id             Int            @id @default(autoincrement())
+  work           Work           @relation(fields: [workId], references: [id], onDelete: Cascade)
+  workId         Int
+  tool           ToolsRegistry  @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  toolId         Int
+  quantity       Int            // Hány darabot rendeltünk ehhez a munkához
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  tenantEmail    String         @default("")
+
+  @@unique([workId, toolId])
+}

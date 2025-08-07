@@ -629,3 +629,5 @@ Kerlek ird be az ajanlatba a regi ko burkolatnak a felszedesi koltseget valamint
 # beszerzés + fogyás
 # kivételezés
 # munka
+
+11 7 12 13 folyamatban ezzel foglalkozok mert beszerzés van!

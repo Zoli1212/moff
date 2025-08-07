@@ -4,15 +4,20 @@ import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
 import type {
   WorkItem,
   WorkItemFromDb,
-  Tool,
+  Tool as BaseTool,
   Material,
   Worker,
 } from "@/types/work";
+// Tool típust bővítjük quantity-vel
+
+type Tool = BaseTool & { quantity?: number };
+
 // WorkDiary interface remains here if not imported, but Tool, Material, Worker are now imported from '@/types/work'.
 
 type WorkDiary = { id?: number | string; title?: string };
 
 import ParticipantsSection from "../_components/ParticipantsSection";
+import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 import Link from "next/link";
 
 import Tasks from "../_components/Tasks";
@@ -50,6 +55,7 @@ export default async function WorkDetailPage({
     try {
       // ÚJ: lekérjük a workItemeket a WorkItemWorker kapcsolattal
       workItemsWithWorkers = await getWorkItemsWithWorkers(work.id);
+      console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
     } catch (err) {
       // Hiba esetén fallback az eredeti workItems-re
       console.log(err);
@@ -96,6 +102,32 @@ export default async function WorkDetailPage({
       workItemWorkers: item.workItemWorkers ?? [],
     })
   );
+
+  console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
+
+  // --- TOOL AGGREGÁCIÓ ---
+  const toolMap = new Map<string, { tool: Tool; quantity: number }>();
+  workItemsWithWorkers.forEach((item) => {
+    (item.tools || []).forEach((tool) => {
+      const key = tool.id?.toString() || tool.name;
+      const prev = toolMap.get(key);
+      if (!prev || (tool.quantity ?? 0) > prev.quantity) {
+        toolMap.set(key, { tool, quantity: tool.quantity ?? 1 });
+      }
+    });
+  });
+  const aggregatedTools = Array.from(toolMap.values()).map(
+    ({ tool, quantity }) => ({
+      ...tool,
+      quantity,
+    })
+  );
+
+  // --- END TOOL AGGREGÁCIÓ ---
+
+  // ToolsSlotsSection importálása
+  // import ToolsSlotsSection from "../_components/ToolsSlotsSection"; (ha nincs, a file tetejére kell)
+
   const workDiaries: WorkDiary[] = work.workDiaries || [];
 
   return (
@@ -156,6 +188,8 @@ export default async function WorkDetailPage({
         </div>
       </div>
       {/* Work summary card */}
+      {/* Szükséges eszközök szekció */}
+
       <div
         style={{
           background: "#fff",
@@ -303,6 +337,7 @@ export default async function WorkDetailPage({
         }))}
         workId={work.id}
       />
+      <ToolsSlotsSection tools={aggregatedTools} />
       {/* Szegmensek (workItems) */}
       <Tasks workItems={workItems} />
       {/* Eszközök */}
