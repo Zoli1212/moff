@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { updateWorkWithAIResult } from "@/actions/work-actions";
 import { toast } from "sonner";
+import { OfferItem } from "@/types/offer.types";
 
 // You may want to adjust this type if your actual Work type is richer
 export interface Work {
@@ -10,7 +11,7 @@ export interface Work {
   location?: string;
   offerDescription?: string;
   estimatedDuration?: string;
-  offerItems?: any[];
+  offerItems?: OfferItem[];
   [key: string]: any;
 }
 

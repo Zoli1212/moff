@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import type { Tool as BaseTool } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
-import { checkToolExists } from "../../../../actions/tool-exists.server";
+// import { checkToolExists } from "../../../../actions/tool-exists.server";
 import {
   addToolToRegistry,
   createWorkToolsRegistry,
@@ -71,13 +71,13 @@ const ToolDetailsModal = ({
 };
 
 type Tool = BaseTool;
-type AssignedTool = {
+export type AssignedTool = {
   id: number;
   workId: number;
   toolId: number;
   toolName: string;
   quantity: number;
-  tool: Tool & { description?: string };
+  tool: Tool & { description: string | null };
 };
 type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[] };
 
@@ -289,7 +289,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                                 ).filter((at) => at.id !== assigned.id || at.quantity > 0);
                               });
                             } catch (err) {
-                              toast.error("Nem sikerült törölni a slotot!");
+                              toast.error(`Nem sikerült törölni a slotot!${((err as Error).message)}`);
                             }
                           }}
                           onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}

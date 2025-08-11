@@ -20,8 +20,10 @@ import ParticipantsSection from "../_components/ParticipantsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 import Link from "next/link";
 import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
+import { AssignedTool } from "@/types/tools.types";
 
 import Tasks from "../_components/Tasks";
+
 
 export default async function WorkDetailPage({
   params,
@@ -52,7 +54,7 @@ export default async function WorkDetailPage({
   }
 
   let workItemsWithWorkers: WorkItemFromDb[] = [];
-  let assignedTools: any[] = [];
+  let assignedTools: AssignedTool[] = [];
   if (work && work.id) {
     try {
       // ÚJ: lekérjük a workItemeket a WorkItemWorker kapcsolattal
@@ -121,12 +123,12 @@ export default async function WorkDetailPage({
       }
     });
   });
-  const aggregatedTools = Array.from(toolMap.values()).map(
-    ({ tool, quantity }) => ({
-      ...tool,
-      quantity,
-    })
-  );
+  // const aggregatedTools = Array.from(toolMap.values()).map(
+  //   ({ tool, quantity }) => ({
+  //     ...tool,
+  //     quantity,
+  //   })
+  // );
 
   // --- END TOOL AGGREGÁCIÓ ---
 
@@ -344,9 +346,11 @@ export default async function WorkDetailPage({
       />
       {/* Merge all assigned + available tools for slot prefill */}
       {(() => {
-        const assignedToolObjects = assignedTools.map((at: any) => at.tool).filter(Boolean);
+        const assignedToolObjects = assignedTools
+          .map((at: AssignedTool) => at.tool)
+          .filter(Boolean);
         const allToolsMap = new Map<number, Tool>();
-        [...(tools || []), ...assignedToolObjects].forEach(tool => {
+        [...(tools || []), ...assignedToolObjects].forEach((tool) => {
           if (tool && !allToolsMap.has(tool.id)) {
             allToolsMap.set(tool.id, tool);
           }
