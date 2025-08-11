@@ -490,6 +490,7 @@ model WorkToolsRegistry {
   workId         Int
   tool           ToolsRegistry  @relation(fields: [toolId], references: [id], onDelete: Cascade)
   toolId         Int
+  toolName       String         @default("")
   quantity       Int            // Hány darabot rendeltünk ehhez a munkához
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt

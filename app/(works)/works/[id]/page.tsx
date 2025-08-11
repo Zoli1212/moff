@@ -19,6 +19,7 @@ type WorkDiary = { id?: number | string; title?: string };
 import ParticipantsSection from "../_components/ParticipantsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 import Link from "next/link";
+import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 
 import Tasks from "../_components/Tasks";
 
@@ -51,15 +52,19 @@ export default async function WorkDetailPage({
   }
 
   let workItemsWithWorkers: WorkItemFromDb[] = [];
+  let assignedTools: any[] = [];
   if (work && work.id) {
     try {
       // ÚJ: lekérjük a workItemeket a WorkItemWorker kapcsolattal
       workItemsWithWorkers = await getWorkItemsWithWorkers(work.id);
+      assignedTools = await getAssignedToolsForWork(work.id);
       console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
+      console.log(assignedTools, "ASSIGNEDTOOLS");
     } catch (err) {
       // Hiba esetén fallback az eredeti workItems-re
       console.log(err);
       workItemsWithWorkers = work.workItems || [];
+      assignedTools = [];
     }
   }
 
@@ -337,7 +342,25 @@ export default async function WorkDetailPage({
         }))}
         workId={work.id}
       />
-      <ToolsSlotsSection tools={aggregatedTools} workId={work.id} />
+      {/* Merge all assigned + available tools for slot prefill */}
+      {(() => {
+        const assignedToolObjects = assignedTools.map((at: any) => at.tool).filter(Boolean);
+        const allToolsMap = new Map<number, Tool>();
+        [...(tools || []), ...assignedToolObjects].forEach(tool => {
+          if (tool && !allToolsMap.has(tool.id)) {
+            allToolsMap.set(tool.id, tool);
+          }
+        });
+        const allTools = Array.from(allToolsMap.values());
+        return (
+          <ToolsSlotsSection
+            tools={allTools}
+            workId={work.id}
+            assignedTools={assignedTools}
+          />
+        );
+      })()}
+
       {/* Szegmensek (workItems) */}
       <Tasks workItems={workItems} />
       {/* Eszközök */}

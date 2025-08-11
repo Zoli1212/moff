@@ -22,24 +22,28 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   requiredToolName,
 }) => {
   const [selectedToolId, setSelectedToolId] = useState<string | number>("");
+  const [toolName, setToolName] = useState<string>(requiredToolName || "");
   const [customDescription, setCustomDescription] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [error, setError] = useState("");
   const [toolAvailable, setToolAvailable] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
-
+  
   React.useEffect(() => {
     if (open && requiredToolName) {
       setLoading(true);
       checkToolExists(requiredToolName)
-        .then((exists) => setToolAvailable(exists))
-        .catch(() => setToolAvailable(false))
-        .finally(() => setLoading(false));
+      .then((exists) => setToolAvailable(exists))
+      .catch(() => setToolAvailable(false))
+      .finally(() => setLoading(false));
     } else {
       setToolAvailable(null);
     }
   }, [open, requiredToolName]);
-
+  
+  React.useEffect(() => {
+    if (requiredToolName) setToolName(requiredToolName);
+  }, [requiredToolName]);
   if (!open) return null;
 
   // Csak a slothoz tartozó eszköz választható
@@ -49,32 +53,9 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const isOutOfStock = filteredTools.length === 0;
 
   const handleSave = () => {
-    if (toolAvailable === false && requiredToolName) {
-      // Allow saving with entered name
-      if (!selectedToolId && !requiredToolName) {
-        setError("Add meg az eszköz nevét!");
-        return;
-      }
-      if (!customDescription) {
-        setError("A leírás kötelező!");
-        return;
-      }
-      if (!quantity || quantity < 1 || quantity > maxQuantity) {
-        setError(`A mennyiség 1 és ${maxQuantity} között kell legyen!`);
-        return;
-      }
-      const tool = { id: -1, name: String(selectedToolId), description: customDescription, quantity };
-      setError("");
-      onSave(tool, quantity, customDescription);
-      onClose();
-      return;
-    }
-    if (isOutOfStock) {
-      setError("Nincs raktáron!");
-      return;
-    }
-    if (!selectedToolId) {
-      setError("Válassz ki egy eszközt!");
+    // Validáció
+    if (!toolName) {
+      setError("Add meg az eszköz nevét!");
       return;
     }
     if (!customDescription) {
@@ -85,15 +66,21 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
       setError(`A mennyiség 1 és ${maxQuantity} között kell legyen!`);
       return;
     }
+    // Megnézzük, van-e ilyen nevű eszköz a filteredTools-ban
     const found = filteredTools.find((t) => t.id === selectedToolId || t.name === selectedToolId);
-    if (!found) {
-      setError("Hibás eszköz!");
-      return;
+    if (found) {
+      // Már létező eszköz, csak hozzárendelés
+      const tool = { ...found, description: customDescription };
+      setError("");
+      onSave(tool, quantity, customDescription);
+      onClose();
+    } else {
+      // Nem létező eszköz: regisztráljuk, majd hozzárendeljük
+      const newTool = { id: -1, name: toolName, description: customDescription, quantity };
+      setError("");
+      onSave(newTool, quantity, customDescription);
+      onClose();
     }
-    const tool = { ...found, description: customDescription };
-    setError("");
-    onSave(tool, quantity, customDescription);
-    onClose();
   };
 
   return (
@@ -121,7 +108,13 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ fontWeight: 500, marginBottom: 0, minWidth: 40 }}>Név:</label>
-          <span>{requiredToolName}</span>
+          <input
+            value={toolName}
+            onChange={e => setToolName(e.target.value)}
+            disabled={!!requiredToolName}
+            style={{ width: '100%' }}
+            required
+          />
         </div>
         <div style={{ marginBottom: 14 }}>
           <label style={{ fontWeight: 500 }}>Leírás <span style={{ color: "red" }}>*</span>:</label>

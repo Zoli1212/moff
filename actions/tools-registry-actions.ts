@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import type { ToolsRegistry } from '@prisma/client';
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 
 // List all tools for a company
@@ -62,19 +63,35 @@ export async function toolExistsInRegistry(toolName: string): Promise<boolean> {
   return !!tool;
 }
 
-// Assign a tool to a work (WorkToolsRegistry)
-export async function createWorkToolsRegistry(workId: number, toolId: number, quantity: number) {
+// Get all assigned tools for a work (with quantities and tool details)
+export async function getAssignedToolsForWork(workId: number) {
   const user = await currentUser();
   if (!user) throw new Error('Not authenticated');
   const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error('No tenant email found');
+  return prisma.workToolsRegistry.findMany({
+    where: { workId, tenantEmail },
+    include: { tool: true }, // assumes relation name is 'tool' in Prisma
+  });
+}
+
+// Assign a tool to a work (WorkToolsRegistry)
+export async function createWorkToolsRegistry(workId: number, toolId: number, quantity: number, toolName: string) {
+  const user = await currentUser();
+  if (!user) throw new Error('Not authenticated');
+  const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!tenantEmail) throw new Error('No tenant email found');
+  revalidatePath(`/works/${workId}`);
+  revalidatePath(`/works`);
   return prisma.workToolsRegistry.create({
     data: {
       workId,
       toolId,
+      toolName,
       quantity,
       tenantEmail,
     },
   });
+  
 }
 
