@@ -337,7 +337,7 @@ export default async function WorkDetailPage({
         }))}
         workId={work.id}
       />
-      <ToolsSlotsSection tools={aggregatedTools} />
+      <ToolsSlotsSection tools={aggregatedTools} workId={work.id} />
       {/* Szegmensek (workItems) */}
       <Tasks workItems={workItems} />
       {/* Eszközök */}

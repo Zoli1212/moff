@@ -154,6 +154,7 @@ model Work {
   location          String?
   workItems         WorkItem[]
   workDiaries       WorkDiary[]
+  workTools         WorkToolsRegistry[]
   
   totalWorkers   Int         @default(0)
   totalLaborCost Float?      @default(0)
@@ -476,12 +477,12 @@ model ToolsRegistry {
   id          Int      @id @default(autoincrement())
   name        String
   quantity    Int
+  description String?
   tenantEmail String   @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   workTools   WorkToolsRegistry[]
 }
-
 
 model WorkToolsRegistry {
   id             Int            @id @default(autoincrement())

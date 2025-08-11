@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import type { Tool as BaseTool } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
+import { checkToolExists } from "../../../../actions/tool-exists.server";
+import { addToolToRegistry, createWorkToolsRegistry } from "../../../../actions/tools-registry-actions";
+import { toast } from "sonner";
 
 // ToolDetailsModal for viewing tool details
 const ToolDetailsModal = ({ open, onClose, tool }: { open: boolean; onClose: () => void; tool: BaseTool | null }) => {
@@ -20,18 +23,35 @@ const ToolDetailsModal = ({ open, onClose, tool }: { open: boolean; onClose: () 
   );
 };
 
-type Tool = BaseTool & { quantity?: number };
-type Props = { tools: Tool[] };
+type Tool = BaseTool;
+type Props = { tools: Tool[]; workId: number };
 
-const ToolsSlotsSection: React.FC<Props> = ({ tools }) => {
+const ToolsSlotsSection: React.FC<Props> = ({ tools, workId }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showToolDetailsModal, setShowToolDetailsModal] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
 
-  const handleSave = (tool: Tool, quantity: number, description: string) => {
-    console.log("Mentett tool:", tool, quantity, description);
+  const handleSave = async (tool: Tool, quantity: number, description: string) => {
+    try {
+      // Ellenőrizzük, hogy van-e már ilyen nevű eszköz
+      const exists = await checkToolExists(tool.name);
+      if (exists) {
+        toast.error("Már van ilyen nevű eszköz regisztrálva!");
+        return;
+      }
+      // Mentés ToolsRegistry-be
+      // 1. Eszköz mentése
+      const savedTool = await addToolToRegistry(tool.name, quantity, description);
+      // 2. Hozzárendelés a munkához (WorkToolsRegistry)
+      await createWorkToolsRegistry(workId, savedTool.id, quantity);
+      toast.success("Sikeres mentés! Az eszköz elmentve és hozzárendelve a munkához.");
+    } catch (err) {
+      toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
+      console.error("Tool save error:", err);
+    }
   };
+
 
   if (!tools.length) return null;
 
