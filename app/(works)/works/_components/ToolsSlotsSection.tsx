@@ -84,8 +84,11 @@ type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[] };
 const ToolsSlotsSection: React.FC<Props> = ({
   tools,
   workId,
-  assignedTools,
+  assignedTools: assignedToolsProp,
 }) => {
+  // Local state for assignedTools to enable instant UI update
+  const [assignedTools, setAssignedTools] =
+    useState<AssignedTool[]>(assignedToolsProp);
   // DEBUG: Log fóliavágó tool.id and assignedTools
   const foliavagotool = tools.find((t) => t.name === "fóliavágó");
   if (foliavagotool) {
@@ -114,9 +117,20 @@ const ToolsSlotsSection: React.FC<Props> = ({
         toast.success("Az eszköz sikeresen hozzárendelve a munkához!");
       } else {
         // Nem létező eszköz: regisztráljuk, majd hozzárendeljük
-        const savedTool = await addToolToRegistry(tool.name, quantity, description);
-        await createWorkToolsRegistry(workId, savedTool.id, quantity, tool.name);
-        toast.success("Sikeres mentés! Az eszköz elmentve és hozzárendelve a munkához.");
+        const savedTool = await addToolToRegistry(
+          tool.name,
+          quantity,
+          description
+        );
+        await createWorkToolsRegistry(
+          workId,
+          savedTool.id,
+          quantity,
+          tool.name
+        );
+        toast.success(
+          "Sikeres mentés! Az eszköz elmentve és hozzárendelve a munkához."
+        );
       }
     } catch (err) {
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
@@ -238,34 +252,69 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       }}
                       title={tool.name}
                     >
-                      <span style={{ fontSize: 15, fontWeight: 600 }}>
-                        {tool.name}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 18,
-                          fontWeight: 700,
-                          color: isFilled ? "#27ae60" : "#888",
-                        }}
-                      >
-                        +
-                      </span>
-                      {isFilled && (
+                      {tool.name}
+                      {isFilled ? (
                         <span
                           style={{
+                            fontSize: 28,
+                            fontWeight: 900,
+                            color: "#e74c3c",
+                            cursor: "pointer",
+                            opacity: 0.7,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "100%",
+                            height: "100%",
                             position: "absolute",
-                            top: 4,
-                            right: 8,
-                            background: "#27ae60",
-                            color: "#fff",
-                            borderRadius: 8,
-                            padding: "1px 7px",
-                            fontSize: 13,
+                            left: 0,
+                            top: '20%',
+                            zIndex: 10,
+                            background: "transparent",
+                            transition: "opacity 0.2s",
+                          }}
+                          title="Slot törlése"
+                          onClick={async (e) => {
+                            e.stopPropagation();
+                            if (!assigned) return;
+                            try {
+                              const res = await import("../../../../actions/tools-registry-actions");
+                              await res.decrementWorkToolQuantity(assigned.id);
+                              toast.success("Slot törölve!");
+                              setAssignedTools((prev) => {
+                                return prev.map((at) =>
+                                  at.id === assigned.id && at.quantity > 1
+                                    ? { ...at, quantity: at.quantity - 1 }
+                                    : at
+                                ).filter((at) => at.id !== assigned.id || at.quantity > 0);
+                              });
+                            } catch (err) {
+                              toast.error("Nem sikerült törölni a slotot!");
+                            }
+                          }}
+                          onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}
+                          onMouseOut={(e) => (e.currentTarget.style.opacity = '0.7')}
+                        >
+                          ×
+                        </span>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: 24,
                             fontWeight: 700,
-                            boxShadow: "0 1px 4px #0001",
+                            color: "#888",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: "100%",
+                            height: "100%",
+                            position: "absolute",
+                            left: 0,
+                            top: '30%',
+                            zIndex: 5,
                           }}
                         >
-                          {assigned?.quantity} db
+                          +
                         </span>
                       )}
                     </button>

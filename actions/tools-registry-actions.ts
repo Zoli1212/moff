@@ -94,4 +94,42 @@ export async function createWorkToolsRegistry(workId: number, toolId: number, qu
   });
   
 }
+// Decrement quantity or remove tool assignment from WorkToolsRegistry
+export async function decrementWorkToolQuantity(workToolsRegistryId: number) {
+  const user = await currentUser();
+  if (!user) throw new Error('Not authenticated');
+  const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!tenantEmail) throw new Error('No tenant email found');
+  const assignment = await prisma.workToolsRegistry.findUnique({ where: { id: workToolsRegistryId } });
+  if (!assignment || assignment.tenantEmail !== tenantEmail) throw new Error('Assignment not found or access denied');
+  if (assignment.quantity > 1) {
+    // Decrement quantity
 
+    revalidatePath(`/works/${assignment.workId}`);
+    revalidatePath(`/works`);
+    return prisma.workToolsRegistry.update({
+      where: { id: workToolsRegistryId },
+      data: { quantity: assignment.quantity - 1 },
+    });
+  } else {
+    // Remove assignment if only 1 left
+    revalidatePath(`/works/${assignment.workId}`);
+    revalidatePath(`/works`);
+    return prisma.workToolsRegistry.delete({
+      where: { id: workToolsRegistryId },
+    });
+  }
+}
+
+// Remove tool assignment from WorkToolsRegistry (regardless of quantity)
+export async function removeWorkToolAssignment(workToolsRegistryId: number) {
+  const user = await currentUser();
+  if (!user) throw new Error('Not authenticated');
+  const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!tenantEmail) throw new Error('No tenant email found');
+  const assignment = await prisma.workToolsRegistry.findUnique({ where: { id: workToolsRegistryId } });
+  if (!assignment || assignment.tenantEmail !== tenantEmail) throw new Error('Assignment not found or access denied');
+  return prisma.workToolsRegistry.delete({
+    where: { id: workToolsRegistryId },
+  });
+}
