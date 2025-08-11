@@ -300,7 +300,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       ) : (
                         <span
                           style={{
-                            fontSize: 24,
+                            fontSize: 12,
                             fontWeight: 700,
                             color: "#888",
                             display: "flex",
