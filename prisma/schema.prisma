@@ -178,7 +178,8 @@ model Work {
   tools         Tool[]
   materials     Material[]
   
-  offerItems    Json?       
+  offerItems    Json?  
+  updatedByAI   Boolean   @default(false)     
 }
 
 model WorkItem {

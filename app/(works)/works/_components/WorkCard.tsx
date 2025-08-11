@@ -32,7 +32,6 @@ const getUrgentColor = (level: "warning" | "danger") => {
 const WorkCard: React.FC<WorkCardProps> = (props) => {
   console.log("WorkCard props:", props);
 
-  const [loading, setLoading] = useState(false);
 
   const {
     id,
@@ -136,83 +135,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", marginTop: 14 }}>
-        <button
-          style={{
-            background: "#2ecc71",
-            border: "none",
-            borderRadius: "50%",
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
-          title="Elkezd"
-          disabled={loading}
-          onClick={async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            const workData = {
-              location,
-              offerDescription,
-              estimatedDuration,
-              offerItems,
-            };
-            try {
-              const aiResponse = await fetch("/api/start-work", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(workData),
-              });
-              const data = await aiResponse.json();
-              if (data && !data.error) {
-                try {
-                  const dbResult = await updateWorkWithAIResult(id, data);
-                  if (!dbResult.success) {
-                    toast.error(`Hiba a mentéskor: ${dbResult.error || "Ismeretlen hiba"}`);
-                    console.error("DB mentés hiba:", dbResult);
-                  } else {
-                    toast.success("Feldolgozás kész!");
-                  }
-                  console.log("DB mentés eredménye:", dbResult);
-                } catch (err) {
-                  toast.error("DB mentés hiba!");
-                  console.error("DB mentés hiba:", err);
-                }
-              } else {
-                toast.error(data?.error || "AI feldolgozás hiba!");
-              }
-            } catch (err) {
-              toast.error("Hálózati vagy szerver hiba!");
-              console.error("AI feldolgozás hiba:", err);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        >
-          {loading ? <Loader2 className="animate-spin" size={20} /> : <span style={{ fontSize: 20, color: "#fff" }}>▶</span>}
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 20 20"
-            fill="#fff"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="10" cy="10" r="9" fill="#27ae60" />
-            <path
-              d="M7 10.5l2 2 4-4"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+
         <span style={{ display: "flex", alignItems: "center", marginRight: 8 }}>
           <svg
             width="22"

@@ -122,6 +122,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
           : Number(aiResult.totalMaterials) || 0,
         totalMaterialCost: aiResult.totalMaterialCost,
         estimatedDuration: aiResult.estimatedDuration,
+        updatedByAI: true,
         // bármi egyéb mező, amit az AI visszaad
       },
       include: { workItems: true },

@@ -2,6 +2,7 @@ import React from "react";
 import { getUserWorks } from "@/actions/work-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
+import WorksAutoUpdater from "./_components/WorksAutoUpdater";
 
 // Minimal Work típus, hogy ne legyen 'any'
 export type Work = {
@@ -133,6 +134,8 @@ const WorkListPage = async () => {
         </a>
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>Munkák</h2>
       </div>
+      {/* Automatically update all works that have not been AI-updated */}
+      <WorksAutoUpdater works={activeWorks} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
         {activeWorks.length === 0 ? (
           <div>Nincs aktív munka.</div>
