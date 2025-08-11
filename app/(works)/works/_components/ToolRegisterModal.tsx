@@ -11,7 +11,7 @@ interface ToolRegisterModalProps {
   requiredToolName?: string; // ÚJ: csak ezt lehet kiválasztani
 }
 
-import { checkToolExists } from "./tool-exists.server";
+import { checkToolExists } from "../../../../actions/tool-exists.server";
 
 const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   open,
@@ -51,7 +51,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const handleSave = () => {
     if (toolAvailable === false && requiredToolName) {
       // Allow saving with entered name
-      if (!selectedToolId) {
+      if (!selectedToolId && !requiredToolName) {
         setError("Add meg az eszköz nevét!");
         return;
       }
