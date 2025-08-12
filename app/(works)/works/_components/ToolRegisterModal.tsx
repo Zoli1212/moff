@@ -28,6 +28,8 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const [error, setError] = useState("");
   const [toolAvailable, setToolAvailable] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+
+  console.log(requiredToolName, 'RGT')
   
   React.useEffect(() => {
     if (open && requiredToolName) {
@@ -157,7 +159,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         <input
           value={toolName}
           onChange={e => setToolName(e.target.value)}
-          disabled={!!requiredToolName}
+          disabled={loading}
           style={{
             width: "100%",
             border: "1px solid #ddd",
