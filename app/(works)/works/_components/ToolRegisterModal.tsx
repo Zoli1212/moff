@@ -1,4 +1,4 @@
-'use cliente'
+"use cliente";
 import React, { useState } from "react";
 import type { Tool } from "@/types/work";
 
@@ -23,62 +23,87 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
 }) => {
   const [selectedToolId, setSelectedToolId] = useState<string | number>("");
   const [toolName, setToolName] = useState<string>(requiredToolName || "");
+  const [displayName, setDisplayName] = useState<string>(
+    requiredToolName || ""
+  );
   const [customDescription, setCustomDescription] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [error, setError] = useState("");
   const [toolAvailable, setToolAvailable] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
-  console.log(requiredToolName, 'RGT')
-  
+  console.log(tools, "RGT");
+
   React.useEffect(() => {
     if (open && requiredToolName) {
       setLoading(true);
       checkToolExists(requiredToolName)
-      .then((exists) => setToolAvailable(exists))
-      .catch(() => setToolAvailable(false))
-      .finally(() => setLoading(false));
+        .then((exists) => setToolAvailable(exists))
+        .catch(() => setToolAvailable(false))
+        .finally(() => setLoading(false));
     } else {
       setToolAvailable(null);
     }
   }, [open, requiredToolName]);
-  
+
   React.useEffect(() => {
     if (requiredToolName) setToolName(requiredToolName);
   }, [requiredToolName]);
   if (!open) return null;
 
+  const findToolInRegistryByName = async (name: string) => {
+    const res = await import("../../../../actions/tools-registry-actions");
+    const allTools = await res.getToolsRegistryByTenant();
+    return allTools.find((t: any) => t.name === name);
+  };
+
   // Csak a slothoz tartozó eszköz választható
   const filteredTools = requiredToolName
-    ? tools.filter(t => t.name === requiredToolName)
+    ? tools.filter((t) => t.name === requiredToolName)
     : tools;
   const isOutOfStock = filteredTools.length === 0;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validáció
     if (!toolName) {
       setError("Add meg az eszköz nevét!");
       return;
     }
-    if (!customDescription) {
-      setError("A leírás kötelező!");
-      return;
-    }
+
     if (!quantity || quantity < 1 || quantity > maxQuantity) {
       setError(`A mennyiség 1 és ${maxQuantity} között kell legyen!`);
       return;
     }
     // Megnézzük, van-e ilyen nevű eszköz a filteredTools-ban
-    const found = filteredTools.find((t) => t.id === selectedToolId || t.name === selectedToolId);
+    const resolvedDisplayName = displayName || requiredToolName;
+    let found = filteredTools.find(
+      (t) => t.id === selectedToolId || t.name === selectedToolId
+    );
+  
+    // Ha nem találtad a filteredTools-ban, akkor nézd meg a registry-ben (API hívás)
+    if (!found) {
+      found = await findToolInRegistryByName(toolName);
+    }
     if (found) {
       // Már létező eszköz, csak hozzárendelés
-      const tool = { ...found, description: customDescription };
+      const tool = {
+        ...found,
+        name: toolName,
+        displayName: resolvedDisplayName,
+        description: customDescription,
+      };
       setError("");
       onSave(tool, quantity, customDescription);
       onClose();
     } else {
       // Nem létező eszköz: regisztráljuk, majd hozzárendeljük
-      const newTool = { id: -1, name: toolName, description: customDescription, quantity };
+      const newTool = {
+        id: -1,
+        name: toolName,
+        displayName: resolvedDisplayName,
+        description: customDescription,
+        quantity,
+      };
       setError("");
       onSave(newTool, quantity, customDescription);
       onClose();
@@ -86,181 +111,210 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   };
 
   return (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      background: "rgba(0,0,0,0.4)",
-      zIndex: 2000,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 12,
-    }}
-  >
     <div
       style={{
-        background: "#fff",
-        borderRadius: 18,
-        boxShadow: "0 6px 32px 0 rgba(0,0,0,0.15)",
-        padding: 20,
-        width: "100%",
-        maxWidth: 370,
-        minWidth: 0,
-        margin: "auto",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(0,0,0,0.4)",
+        zIndex: 2000,
         display: "flex",
-        flexDirection: "column",
-        gap: 18,
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 12,
       }}
     >
-      <h2
+      <div
         style={{
-          fontSize: 22,
-          fontWeight: 700,
-          margin: 0,
-          marginBottom: 4,
-          textAlign: "center",
-          letterSpacing: 0.2,
+          background: "#fff",
+          borderRadius: 18,
+          boxShadow: "0 6px 32px 0 rgba(0,0,0,0.15)",
+          padding: 20,
+          width: "100%",
+          maxWidth: 370,
+          minWidth: 0,
+          margin: "auto",
+          display: "flex",
+          flexDirection: "column",
+          gap: 18,
         }}
       >
-        Eszköz kiválasztása
-      </h2>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label style={{ fontWeight: 500, marginBottom: 2 }}>Választható eszköz:</label>
-        <select
-          value={toolAvailable === false && requiredToolName ? 'nem_elérhető' : (selectedToolId || requiredToolName || '')}
-          onChange={e => setSelectedToolId(e.target.value)}
+        <h2
           style={{
-            border: "1px solid #ddd",
-            borderRadius: 10,
-            padding: "10px 12px",
-            fontSize: 16,
-            background: toolAvailable === false ? '#fbeaea' : '#fafbfc',
-            color: toolAvailable === false ? '#d32f2f' : '#222',
-            outline: "none",
-            width: "100%",
-          }}
-          disabled={loading}
-        >
-          {loading ? (
-            <option value="">Ellenőrzés...</option>
-          ) : toolAvailable === false && requiredToolName ? (
-            <option value="nem_elérhető" disabled style={{ color: 'red' }}>nem elérhető</option>
-          ) : (
-            <option value={requiredToolName}>{requiredToolName}</option>
-          )}
-        </select>
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label style={{ fontWeight: 500, marginBottom: 2 }}>Név:</label>
-        <input
-          value={toolName}
-          onChange={e => setToolName(e.target.value)}
-          disabled={loading}
-          style={{
-            width: "100%",
-            border: "1px solid #ddd",
-            borderRadius: 10,
-            padding: "10px 12px",
-            fontSize: 16,
-            background: !!requiredToolName ? '#f5f5f5' : '#fafbfc',
-            outline: "none",
-          }}
-          required
-        />
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label style={{ fontWeight: 500 }}>Leírás <span style={{ color: "#e53935" }}>*</span>:</label>
-        <textarea
-          value={customDescription || ""}
-          onChange={e => setCustomDescription(e.target.value)}
-          style={{
-            width: "100%",
-            border: "1px solid #ddd",
-            borderRadius: 10,
-            padding: "10px 12px",
-            fontSize: 16,
-            minHeight: 54,
-            background: "#fafbfc",
-            outline: "none",
-            resize: "vertical",
-          }}
-          placeholder="Rövid leírás az eszközről"
-          required
-        />
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <label style={{ fontWeight: 500, minWidth: 72 }}>
-          Mennyiség <span style={{ color: "#e53935" }}>*</span>:
-        </label>
-        <input
-          type="number"
-          value={quantity}
-          min={1}
-          max={maxQuantity}
-          onChange={e => setQuantity(Number(e.target.value))}
-          style={{
-            width: 80,
-            border: "1px solid #ddd",
-            borderRadius: 10,
-            padding: "8px 10px",
-            fontSize: 16,
-            background: isOutOfStock ? '#f5f5f5' : '#fafbfc',
-            outline: "none",
-          }}
-          required
-          disabled={isOutOfStock}
-        />
-        <span style={{ color: "#888", fontSize: 15 }}>(max: {maxQuantity})</span>
-      </div>
-      {error && (
-        <div style={{ color: "#e53935", fontWeight: 500, marginTop: 2, marginBottom: -8, textAlign: "center" }}>{error}</div>
-      )}
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, marginTop: 10 }}>
-        <button
-          onClick={onClose}
-          style={{
-            flex: 1,
-            padding: "12px 0",
-            background: "#f2f2f2",
-            color: "#333",
-            borderRadius: 10,
-            border: "none",
-            fontWeight: 600,
-            fontSize: 17,
-            transition: "background 0.2s",
-            marginRight: 2,
-          }}
-        >
-          Mégse
-        </button>
-        <button
-          onClick={handleSave}
-          style={{
-            flex: 1,
-            padding: "12px 0",
-            background: isOutOfStock ? '#bdbdbd' : '#1976d2',
-            color: "#fff",
-            borderRadius: 10,
-            border: "none",
+            fontSize: 22,
             fontWeight: 700,
-            fontSize: 17,
-            boxShadow: isOutOfStock ? 'none' : '0 2px 8px 0 #1976d233',
-            cursor: isOutOfStock ? 'not-allowed' : 'pointer',
-            opacity: isOutOfStock ? 0.7 : 1,
-            marginLeft: 2,
+            margin: 0,
+            marginBottom: 4,
+            textAlign: "center",
+            letterSpacing: 0.2,
           }}
-          disabled={isOutOfStock}
         >
-          Mentés
-        </button>
+          Eszköz kiválasztása
+        </h2>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ fontWeight: 500, marginBottom: 2 }}>
+            Választható eszköz:
+          </label>
+          <select
+            value={
+              toolAvailable === false && requiredToolName
+                ? "nem_elérhető"
+                : selectedToolId || requiredToolName || ""
+            }
+            onChange={(e) => setSelectedToolId(e.target.value)}
+            style={{
+              border: "1px solid #ddd",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 16,
+              background: toolAvailable === false ? "#fbeaea" : "#fafbfc",
+              color: toolAvailable === false ? "#d32f2f" : "#222",
+              outline: "none",
+              width: "100%",
+            }}
+            disabled={loading}
+          >
+            {loading ? (
+              <option value="">Ellenőrzés...</option>
+            ) : toolAvailable === false && requiredToolName ? (
+              <option value="nem_elérhető" disabled style={{ color: "red" }}>
+                nem elérhető
+              </option>
+            ) : (
+              <option value={requiredToolName}>{requiredToolName}</option>
+            )}
+          </select>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ fontWeight: 500, marginBottom: 2 }}>Név:</label>
+          <input
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+            disabled={loading}
+            style={{
+              width: "100%",
+              border: "1px solid #ddd",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 16,
+              background: !!requiredToolName ? "#f5f5f5" : "#fafbfc",
+              outline: "none",
+            }}
+            required
+          />
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <label style={{ fontWeight: 500 }}>
+            Leírás <span style={{ color: "#e53935" }}>*</span>:
+          </label>
+          <textarea
+            value={customDescription || ""}
+            onChange={(e) => setCustomDescription(e.target.value)}
+            style={{
+              width: "100%",
+              border: "1px solid #ddd",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 16,
+              minHeight: 54,
+              background: "#fafbfc",
+              outline: "none",
+              resize: "vertical",
+            }}
+            placeholder="Rövid leírás az eszközről"
+            required
+          />
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <label style={{ fontWeight: 500, minWidth: 72 }}>
+            Mennyiség <span style={{ color: "#e53935" }}>*</span>:
+          </label>
+          <input
+            type="number"
+            value={quantity}
+            min={1}
+            max={maxQuantity}
+            onChange={(e) => setQuantity(Number(e.target.value))}
+            style={{
+              width: 80,
+              border: "1px solid #ddd",
+              borderRadius: 10,
+              padding: "8px 10px",
+              fontSize: 16,
+              background: isOutOfStock ? "#f5f5f5" : "#fafbfc",
+              outline: "none",
+            }}
+            required
+            disabled={isOutOfStock}
+          />
+          <span style={{ color: "#888", fontSize: 15 }}>
+            (max: {maxQuantity})
+          </span>
+        </div>
+        {error && (
+          <div
+            style={{
+              color: "#e53935",
+              fontWeight: 500,
+              marginTop: 2,
+              marginBottom: -8,
+              textAlign: "center",
+            }}
+          >
+            {error}
+          </div>
+        )}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+            marginTop: 10,
+          }}
+        >
+          <button
+            onClick={onClose}
+            style={{
+              flex: 1,
+              padding: "12px 0",
+              background: "#f2f2f2",
+              color: "#333",
+              borderRadius: 10,
+              border: "none",
+              fontWeight: 600,
+              fontSize: 17,
+              transition: "background 0.2s",
+              marginRight: 2,
+            }}
+          >
+            Mégse
+          </button>
+          <button
+            onClick={handleSave}
+            style={{
+              flex: 1,
+              padding: "12px 0",
+              background: isOutOfStock ? "#bdbdbd" : "#1976d2",
+              color: "#fff",
+              borderRadius: 10,
+              border: "none",
+              fontWeight: 700,
+              fontSize: 17,
+              boxShadow: isOutOfStock ? "none" : "0 2px 8px 0 #1976d233",
+              cursor: isOutOfStock ? "not-allowed" : "pointer",
+              opacity: isOutOfStock ? 0.7 : 1,
+              marginLeft: 2,
+            }}
+            disabled={isOutOfStock}
+          >
+            Mentés
+          </button>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default ToolRegisterModal;

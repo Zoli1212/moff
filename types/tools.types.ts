@@ -13,6 +13,7 @@ export type AssignedTool = {
   workId: number;
   toolId: number;
   toolName: string;
+  displayName?: string | null;
   quantity: number;
   tool: BaseTool & { description: string | null };
 };

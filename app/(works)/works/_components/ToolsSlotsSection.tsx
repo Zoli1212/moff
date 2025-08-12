@@ -1,11 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import type { Tool as BaseTool } from "@/types/work";
+import type { Tool as BaseTool, Tool } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
 // import { checkToolExists } from "../../../../actions/tool-exists.server";
 import {
   addToolToRegistry,
   createWorkToolsRegistry,
+  getAssignedToolsForWork,
 } from "../../../../actions/tools-registry-actions";
 import { toast } from "sonner";
 
@@ -70,12 +71,12 @@ const ToolDetailsModal = ({
   );
 };
 
-type Tool = BaseTool;
 export type AssignedTool = {
   id: number;
   workId: number;
   toolId: number;
   toolName: string;
+  displayName?: string | null;
   quantity: number;
   tool: Tool & { description: string | null };
 };
@@ -89,21 +90,20 @@ const ToolsSlotsSection: React.FC<Props> = ({
   // Local state for assignedTools to enable instant UI update
   const [assignedTools, setAssignedTools] =
     useState<AssignedTool[]>(assignedToolsProp);
-  // DEBUG: Log fóliavágó tool.id and assignedTools
-  const foliavagotool = tools.find((t) => t.name === "fóliavágó");
-  if (foliavagotool) {
-    console.log(
-      "DEBUG fóliavágó tool:",
-      foliavagotool,
-      "assignedTools:",
-      assignedTools
-    );
-  }
-
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showToolDetailsModal, setShowToolDetailsModal] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
+
+  // Helper to fetch assignedTools from server and update state
+  const fetchAssignedToolsAndUpdateState = async () => {
+    try {
+      const updated = await getAssignedToolsForWork(workId);
+      setAssignedTools(updated);
+    } catch (err) {
+      toast.error("Nem sikerült frissíteni az eszközök listáját!");
+    }
+  };
 
   const handleSave = async (
     tool: Tool,
@@ -120,18 +120,21 @@ const ToolsSlotsSection: React.FC<Props> = ({
         const savedTool = await addToolToRegistry(
           tool.name,
           quantity,
-          description
+          description,
+          tool.displayName ?? ""
         );
         await createWorkToolsRegistry(
           workId,
           savedTool.id,
           quantity,
-          tool.name
+          savedTool.name
         );
         toast.success(
           "Sikeres mentés! Az eszköz elmentve és hozzárendelve a munkához."
         );
       }
+      // Always refresh assignedTools after save
+      await fetchAssignedToolsAndUpdateState();
     } catch (err) {
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
       console.error("Tool save error:", err);
@@ -203,121 +206,128 @@ const ToolsSlotsSection: React.FC<Props> = ({
                 }}
               >
                 {Array.from({ length: q }).map((_, idx) => {
-                  // DEBUG LOGGING
-                  console.log("SLOT: tool.id", tool.id, "tool.name", tool.name);
-                  console.log(
-                    "assignedTools:",
-                    assignedTools.map((at) => ({
-                      toolId: at.toolId,
-                      quantity: at.quantity,
-                    }))
-                  );
-                  const assigned = assignedTools.find(
-                    (at) => at.toolName === tool.name
-                  );
-                  console.log(
-                    "assigned for slot tool.id",
-                    tool.id,
-                    ":",
-                    assigned
-                  );
-                  const filledCount = assigned ? assigned.quantity : 0;
-                  const isFilled = idx < filledCount;
+                  // Minden toolName-hez összes assignment (pl. több glettvas, külön displayName)
+                  const assignedList = assignedTools.filter(at => at.toolName === tool.name);
+                  // Az idx-edik assignment (ha van)
+                  const assigned = assignedList[idx];
+                  const isFilled = !!assigned;
                   return (
-                    <button
+                    <div
                       key={idx}
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        width: 80,
-                        height: 40,
-                        border: isFilled
-                          ? "2px solid #27ae60"
-                          : "1px dashed #aaa",
-                        borderRadius: 6,
-                        color: isFilled ? "#27ae60" : "#888",
-                        background: isFilled ? "#eafbe7" : "#fafbfc",
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: "pointer",
-                        transition: "background .2s",
-                        position: "relative",
-                      }}
-                      onClick={() => {
-                        setSelectedTool(tool);
-                        setMaxQuantity(tool.quantity ?? 1);
-                        setModalOpen(true);
-                      }}
-                      title={tool.name}
+                      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
                     >
-                      {tool.name}
-                      {isFilled ? (
-                        <span
-                          style={{
-                            fontSize: 28,
-                            fontWeight: 900,
-                            color: "#e74c3c",
-                            cursor: "pointer",
-                            opacity: 0.7,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: "100%",
-                            height: "100%",
-                            position: "absolute",
-                            left: 0,
-                            top: '20%',
-                            zIndex: 10,
-                            background: "transparent",
-                            transition: "opacity 0.2s",
-                          }}
-                          title="Slot törlése"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            if (!assigned) return;
-                            try {
-                              const res = await import("../../../../actions/tools-registry-actions");
-                              await res.decrementWorkToolQuantity(assigned.id);
-                              toast.success("Slot törölve!");
-                              setAssignedTools((prev) => {
-                                return prev.map((at) =>
-                                  at.id === assigned.id && at.quantity > 1
-                                    ? { ...at, quantity: at.quantity - 1 }
-                                    : at
-                                ).filter((at) => at.id !== assigned.id || at.quantity > 0);
-                              });
-                            } catch (err) {
-                              toast.error(`Nem sikerült törölni a slotot!${((err as Error).message)}`);
+                      <button
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 80,
+                          height: 40,
+                          border: isFilled ? "2px solid #27ae60" : "1px dashed #aaa",
+                          borderRadius: 6,
+                          color: isFilled ? "#27ae60" : "#888",
+                          background: isFilled ? "#eafbe7" : "#fafbfc",
+                          fontWeight: 600,
+                          fontSize: 14,
+                          cursor: "pointer",
+                          transition: "background .2s",
+                          position: "relative",
+                        }}
+                        onClick={() => {
+                          setSelectedTool(tool);
+                          setMaxQuantity(tool.quantity ?? 1);
+                          setModalOpen(true);
+                        }}
+                        title={tool.name}
+                      >
+                        {tool.name}
+                        {isFilled ? (
+                          <span
+                            style={{
+                              fontSize: 28,
+                              fontWeight: 900,
+                              color: "#e74c3c",
+                              cursor: "pointer",
+                              opacity: 0.7,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "100%",
+                              height: "100%",
+                              position: "absolute",
+                              left: 0,
+                              top: "20%",
+                              zIndex: 10,
+                              background: "transparent",
+                              transition: "opacity 0.2s",
+                            }}
+                            title="Slot törlése"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (!assigned) return;
+                              try {
+                                const res = await import(
+                                  "../../../../actions/tools-registry-actions"
+                                );
+                                await res.decrementWorkToolQuantity(assigned.id);
+                                toast.success("Slot törölve!");
+                                // Always refresh assignedTools after delete
+                                await fetchAssignedToolsAndUpdateState();
+                              } catch (err) {
+                                toast.error(
+                                  `Nem sikerült törölni a slotot!${(err as Error).message}`
+                                );
+                              }
+                            }}
+                            onMouseOver={(e) =>
+                              (e.currentTarget.style.opacity = "1")
                             }
-                          }}
-                          onMouseOver={(e) => (e.currentTarget.style.opacity = '1')}
-                          onMouseOut={(e) => (e.currentTarget.style.opacity = '0.7')}
-                        >
-                          ×
-                        </span>
-                      ) : (
+                            onMouseOut={(e) =>
+                              (e.currentTarget.style.opacity = "0.7")
+                            }
+                          >
+                            ×
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: "#888",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "100%",
+                              height: "100%",
+                              position: "absolute",
+                              left: 0,
+                              top: "30%",
+                              zIndex: 5,
+                            }}
+                          >
+                            +
+                          </span>
+                        )}
+                      </button>
+                      {isFilled && assigned.tool?.displayName && (
                         <span
                           style={{
                             fontSize: 12,
-                            fontWeight: 700,
-                            color: "#888",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
+                            color: "#555",
+                            marginTop: 2,
+                            textAlign: "center",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
                             width: "100%",
-                            height: "100%",
-                            position: "absolute",
-                            left: 0,
-                            top: '30%',
-                            zIndex: 5,
                           }}
+                          title={assigned.tool.displayName}
                         >
-                          +
+                          ({assigned.tool.displayName})
                         </span>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>

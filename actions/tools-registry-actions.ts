@@ -18,7 +18,7 @@ export async function getToolsRegistryByTenant(): Promise<ToolsRegistry[]> {
 }
 
 // Add a new tool to registry
-export async function addToolToRegistry(name: string, quantity: number, description: string) {
+export async function addToolToRegistry(name: string,  quantity: number, description: string, displayName?: string) {
   const user = await currentUser();
   if (!user) throw new Error('Not authenticated');
   const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
@@ -26,6 +26,7 @@ export async function addToolToRegistry(name: string, quantity: number, descript
   return prisma.toolsRegistry.create({
     data: {
       name,
+      displayName,
       quantity,
       description,
       tenantEmail,

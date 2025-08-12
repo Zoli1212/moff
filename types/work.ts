@@ -42,6 +42,7 @@ export interface WorkItem {
 export interface Tool {
   id: number;
   name: string;
+  displayName?: string | null;
   quantity: number;
   
 }
