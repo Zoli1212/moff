@@ -60,6 +60,9 @@ export async function deleteWork(id: number) {
   return { success: true };
 }
 
+
+
+
 // --- ÚJ: AI válasz szerinti mentés ---
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   const user = await currentUser();
@@ -137,27 +140,189 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   }
 
   // WorkItemek upsertelése (létező törlés, új beszúrás)
+  // try {
+  //   await prisma.workItem.deleteMany({ where: { workId } });
+  //   if (Array.isArray(aiResult.workItems)) {
+  //     for (const item of aiResult.workItems) {
+  //       console.log(
+  //         `[updateWorkWithAIResult] Creating workItem for work ${workId}:`,
+  //         item
+  //       );
+  //       // 1. Létrehozzuk a WorkItem-et
+  //       const toolList = typeof item.tools === "string"
+  //         ? item.tools.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean)
+  //         : Array.isArray(item.tools)
+  //           ? item.tools
+  //           : [];
+
+  //       const materialList = typeof item.materials === "string"
+  //         ? item.materials.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean)
+  //         : Array.isArray(item.materials)
+  //           ? item.materials
+  //           : [];
+
+  //       const createdWorkItem = await prisma.workItem.create({
+  //         data: {
+  //           workId,
+  //           name: item.name,
+  //           description: item.description,
+  //           quantity: Number(item.quantity) || 1,
+  //           unit: item.unit || "",
+  //           unitPrice: Number((item.unitPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+  //           materialUnitPrice: Number((item.materialUnitPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+  //           workTotal: Number((item.workTotal || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+  //           materialTotal: Number((item.materialTotal || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+  //           totalPrice: Number((item.totalPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+  //           tenantEmail: email,
+  //           tools: {
+  //             create: toolList.map((name: string) => ({
+  //               name,
+  //               workId,
+  //               workItemId: undefined, // will be set by Prisma after create
+  //               tenantEmail: email,
+  //             })),
+  //           },
+  //           materials: {
+  //             create: materialList.map((name: string) => ({
+  //               name,
+  //               workId,
+  //               unit: "",
+  //               unitPrice: 0,
+  //               totalPrice: 0,
+  //               quantity: 1,
+  //               workItemId: undefined, // will be set by Prisma after create
+  //               tenantEmail: email,
+  //             })),
+  //           },
+  //         },
+  //       });
+  //       // 2. Minden requiredProfessional-t mentünk a pivot táblába
+  //       if (Array.isArray(item.requiredProfessionals)) {
+  //         for (const rp of item.requiredProfessionals) {
+  //           console.log(
+  //             `[updateWorkWithAIResult] Processing requiredProfessional for workItem ${createdWorkItem.id}:`,
+  //             rp
+  //           );
+  //           // Worker létezés ellenőrzése vagy létrehozás név alapján
+  //           let workerRecord = await prisma.worker.findFirst({
+  //             where: { name: rp.type, tenantEmail: email },
+  //           });
+  //           if (!workerRecord) {
+  //             console.log(`[updateWorkWithAIResult] Creating worker:`, {
+  //               name: rp.type,
+  //               tenantEmail: email,
+  //               workId: workId,
+  //               workItemId: createdWorkItem.id,
+  //             });
+  //             workerRecord = await prisma.worker.create({
+  //               data: {
+  //                 name: rp.type,
+  //                 tenantEmail: email,
+  //                 workId: workId,
+  //                 workItemId: createdWorkItem.id,
+  //               },
+  //             });
+  //           }
+  //           console.log(`[updateWorkWithAIResult] Creating workItemWorker:`, {
+  //             workItemId: createdWorkItem.id,
+  //             workerId: workerRecord.id,
+  //             quantity: Number(rp.quantity) || 1,
+  //             tenantEmail: email,
+  //           });
+  //           await prisma.workItemWorker.create({
+  //             data: {
+  //               workItemId: createdWorkItem.id,
+  //               workerId: workerRecord.id,
+  //               quantity: Number(rp.quantity) || 1,
+  //               tenantEmail: email,
+  //               role: rp.type,
+  //               // email, name, phone opcionálisak, csak ha van érték
+          
+  //             },
+  //           });
+  //         }
+  //       }
+  //     }
+  //   }
+  // } catch (err) {
+  //   console.error(`[updateWorkWithAIResult] Failed to create WorkItems:`, err);
+  //   return {
+  //     success: false,
+  //     error: "Failed to create WorkItems",
+  //     details: err instanceof Error ? err.message : String(err),
+  //   };
+  // }
+
   try {
     await prisma.workItem.deleteMany({ where: { workId } });
     if (Array.isArray(aiResult.workItems)) {
+      // --- segédfüggvények ---
+      const toNum = (v: unknown) =>
+        Number(String(v ?? "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0;
+  
+      const normalizeMaterials = (raw: unknown) => {
+        const out: Array<{
+          name: string;
+          unit: string;
+          quantity: number;
+          unitPrice: number;
+          totalPrice: number;
+        }> = [];
+  
+        if (!raw) return out;
+  
+        if (typeof raw === "string") {
+          raw
+            .split(/[;,]+/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .forEach((name) => {
+              out.push({ name, unit: "", quantity: 1, unitPrice: 0, totalPrice: 0 });
+            });
+          return out;
+        }
+  
+        if (Array.isArray(raw)) {
+          for (const m of raw) {
+            if (typeof m === "string") {
+              const name = m.trim();
+              if (name) out.push({ name, unit: "", quantity: 1, unitPrice: 0, totalPrice: 0 });
+              continue;
+            }
+            if (m && typeof m === "object") {
+              const name = String((m as any).type ?? (m as any).name ?? "").trim();
+              if (!name) continue;
+              out.push({
+                name,
+                unit: String((m as any).unit ?? ""),
+                quantity: Number((m as any).quantity) || 1,
+                unitPrice: toNum((m as any).unitPrice),
+                totalPrice: toNum((m as any).totalPrice),
+              });
+            }
+          }
+        }
+  
+        return out;
+      };
+      // --- /segédfüggvények ---
+  
       for (const item of aiResult.workItems) {
         console.log(
           `[updateWorkWithAIResult] Creating workItem for work ${workId}:`,
           item
         );
+  
         // 1. Létrehozzuk a WorkItem-et
         const toolList = typeof item.tools === "string"
           ? item.tools.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean)
           : Array.isArray(item.tools)
             ? item.tools
             : [];
-
-        const materialList = typeof item.materials === "string"
-          ? item.materials.split(/[;,]+/).map((t: string) => t.trim()).filter(Boolean)
-          : Array.isArray(item.materials)
-            ? item.materials
-            : [];
-
+  
+        // <<< EZ AZ EGYETLEN VÁLTOZÁS A MATERIALS-RE: >>>
+        const materialList = normalizeMaterials(item.materials);
+  
         const createdWorkItem = await prisma.workItem.create({
           data: {
             workId,
@@ -165,11 +330,11 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
             description: item.description,
             quantity: Number(item.quantity) || 1,
             unit: item.unit || "",
-            unitPrice: Number((item.unitPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
-            materialUnitPrice: Number((item.materialUnitPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
-            workTotal: Number((item.workTotal || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
-            materialTotal: Number((item.materialTotal || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
-            totalPrice: Number((item.totalPrice || "0").replace(/[^0-9.,-]/g, "").replace(",", ".")) || 0,
+            unitPrice: toNum(item.unitPrice || "0"),
+            materialUnitPrice: toNum(item.materialUnitPrice || "0"),
+            workTotal: toNum(item.workTotal || "0"),
+            materialTotal: toNum(item.materialTotal || "0"),
+            totalPrice: toNum(item.totalPrice || "0"),
             tenantEmail: email,
             tools: {
               create: toolList.map((name: string) => ({
@@ -180,19 +345,20 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
               })),
             },
             materials: {
-              create: materialList.map((name: string) => ({
-                name,
+              create: materialList.map((m) => ({
+                name: m.name,
                 workId,
-                unit: "",
-                unitPrice: 0,
-                totalPrice: 0,
-                quantity: 1,
+                unit: m.unit,
+                unitPrice: m.unitPrice,
+                totalPrice: m.totalPrice,
+                quantity: m.quantity,
                 workItemId: undefined, // will be set by Prisma after create
                 tenantEmail: email,
               })),
             },
           },
         });
+  
         // 2. Minden requiredProfessional-t mentünk a pivot táblába
         if (Array.isArray(item.requiredProfessionals)) {
           for (const rp of item.requiredProfessionals) {
@@ -234,7 +400,6 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
                 tenantEmail: email,
                 role: rp.type,
                 // email, name, phone opcionálisak, csak ha van érték
-          
               },
             });
           }
@@ -249,6 +414,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
       details: err instanceof Error ? err.message : String(err),
     };
   }
+  
 
   // Összesítjük a munkásokat a Work-hoz (típus+mennyiség)
 
