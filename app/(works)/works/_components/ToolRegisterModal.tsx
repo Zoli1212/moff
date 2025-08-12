@@ -54,7 +54,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const findToolInRegistryByName = async (name: string) => {
     const res = await import("../../../../actions/tools-registry-actions");
     const allTools = await res.getToolsRegistryByTenant();
-    return allTools.find((t: any) => t.name === name);
+    return allTools.find((t: Tool) => t.name === name);
   };
 
   // Csak a slothoz tartozó eszköz választható

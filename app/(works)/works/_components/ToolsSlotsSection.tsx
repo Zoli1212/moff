@@ -101,7 +101,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
       const updated = await getAssignedToolsForWork(workId);
       setAssignedTools(updated);
     } catch (err) {
-      toast.error("Nem sikerült frissíteni az eszközök listáját!");
+      toast.error("Nem sikerült frissíteni az eszközök listáját! " + (err as Error).message);
     }
   };
 
