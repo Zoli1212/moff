@@ -12,7 +12,7 @@ export interface Work {
   offerDescription?: string;
   estimatedDuration?: string;
   offerItems?: OfferItem[];
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 interface WorksAutoUpdaterProps {
@@ -24,9 +24,12 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
   const [doneIds, setDoneIds] = useState<(number | string)[]>([]);
   const [failedIds, setFailedIds] = useState<(number | string)[]>([]);
   const [showStatus, setShowStatus] = useState(false);
+  const [hideBar, setHideBar] = useState(false);
 
   const [stopOnError, setStopOnError] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  console.log(showStatus)
 
   useEffect(() => {
     if (stopOnError) return; // Stop all further updates if error occurred
@@ -79,7 +82,7 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
           setStopOnError(true);
         }
       } catch (err) {
-        const msg = "Network/server error during AI update!";
+        const msg = "Network/server error during AI update! "+(err as Error).message;
         toast.error(msg);
         setFailedIds((ids) => [...ids, next.id]);
         setErrorMsg(msg);
@@ -89,7 +92,7 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
     updateNext();
     // eslint-disable-next-line
   }, [works, updatingIds, doneIds, failedIds, stopOnError]);
-
+  
   useEffect(() => {
     // Hide status bar when all are done
     const notUpdated = works.filter((w) => w.updatedByAI !== true);
@@ -100,14 +103,22 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
       setTimeout(() => setShowStatus(false), 2000); // Hide after 2s
     }
   }, [doneIds, failedIds, works]);
-
+  
   const notUpdated = works.filter((w) => w.updatedByAI !== true);
   const total = notUpdated.length;
   const done = doneIds.length;
   const failed = failedIds.length;
   const progress =
-    total === 0 ? 100 : Math.round(((done + failed) / total) * 100);
-
+  total === 0 ? 100 : Math.round(((done + failed) / total) * 100);
+  
+  useEffect(() => {
+    if (done === total && total > 0) {
+      const timeout = setTimeout(() => setHideBar(true), 1500);
+      return () => clearTimeout(timeout);
+    } else {
+      setHideBar(false);
+    }
+  }, [done, total]);
   // DEBUG: Log to console how many works need update
   if (typeof window !== "undefined") {
     console.log("WorksAutoUpdater: notUpdated count:", total, notUpdated);
@@ -195,19 +206,10 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
     );
   }
 
-  if (total === 0) return null;
-
+  
   // Fade out when done
-  const [hideBar, setHideBar] = useState(false);
-  useEffect(() => {
-    if (done === total && total > 0) {
-      const timeout = setTimeout(() => setHideBar(true), 1500);
-      return () => clearTimeout(timeout);
-    } else {
-      setHideBar(false);
-    }
-  }, [done, total]);
-
+  
+  if (total === 0) return null;
   if (hideBar) return null;
 
   return (
