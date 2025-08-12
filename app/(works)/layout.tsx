@@ -49,7 +49,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
     },
     {
       href: `/accounts/${workId}`,
-      label: "Beszámoló",
+      label: "Beszerzés",
       icon: (
         <svg
           width="24" height="24" viewBox="0 0 24 24" fill="none"
