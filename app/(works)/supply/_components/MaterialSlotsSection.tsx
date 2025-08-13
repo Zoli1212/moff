@@ -1,13 +1,20 @@
 "use client";
 import React, { useState } from "react";
 import type { Material } from "@/types/work";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
+import { Plus } from "lucide-react";
+import MaterialAddModal from "./MaterialAddModal";
+import { addMaterial } from "@/actions/materials-action";
 
+import type { WorkItem } from "@/types/work";
 export interface MaterialSlotsSectionProps {
   materials: Material[];
   workId: number;
+  workItems: WorkItem[];
 }
 
-const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials, workId }) => {
+const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials, workId, workItems }) => {
   const [selected, setSelected] = useState<number[]>([]);
 
   const handleToggle = (id: number) => {
@@ -23,96 +30,83 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials, 
     return Math.min(Math.round(quantity), 100);
   };
 
+  // Állapot a modal nyitásához (később implementáljuk)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Material hozzáadás submit handler (később implementáljuk az actions-t)
+
+const handleAddMaterial = async (data: { name: string; quantity: number; unit: string; unitPrice: number; workItemId: number }) => {
+    try {
+      await addMaterial({ ...data, workId });
+      toast.success("Anyag sikeresen hozzáadva!");
+      // TODO: Frissítsd a material listát vagy triggerelj újra lekérdezést
+      // Például: router.refresh() vagy state frissítés
+    } catch (err) {
+      console.error("Anyag hozzáadása sikertelen:", err);
+      toast.error("Hiba történt az anyag hozzáadásakor!");
+    }
+  };
+
   return (
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: 14,
-        boxShadow: "0 1px 5px #eee",
-        padding: "14px 18px",
-        marginBottom: 18,
-      }}
-    >
+    <>
+      <MaterialAddModal
+        open={isAddModalOpen}
+        onOpenChange={setIsAddModalOpen}
+        onSubmit={handleAddMaterial}
+        workItems={workItems}
+      />
       <div
-        style={{
-          fontWeight: 700,
-          fontSize: 17,
-          marginBottom: 8,
-          letterSpacing: 0.5,
-        }}
+        className="relative bg-white rounded-xl shadow-sm px-5 py-3 mb-5"
       >
-        Anyagok ({materials.length})
-      </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      {/* Plusz gomb jobb felső sarokban */}
+      <Button
+        onClick={() => setIsAddModalOpen(true)}
+        variant="outline"
+        aria-label="Új anyag hozzáadása"
+        className="absolute top-[14px] right-[18px] p-2 rounded-full border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
+      >
+        <Plus className="h-5 w-5" />
+      </Button>
+      {/* Hézag a plusz gomb alatt */}
+      <div className="h-8" />
+      <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">Anyagok ({materials.length})</div>
+      <div className="flex flex-col gap-3 max-h-[calc(100vh-250px)] overflow-y-auto pb-20">
         {materials.length === 0 && (
-          <span style={{ color: "#bbb" }}>Nincs anyag</span>
+          <span className="text-[#bbb]">Nincs anyag</span>
         )}
         {materials.map((mat) => (
-          <div
-            key={mat.id}
-            style={{
-              background: "#f7f7f7",
-              borderRadius: 8,
-              fontWeight: 500,
-              fontSize: 15,
-              color: "#555",
-              marginBottom: 2,
-              padding: "7px 12px 10px 12px",
-              minHeight: 44,
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <input
-                type="checkbox"
-                checked={selected.includes(mat.id)}
-                onChange={() => handleToggle(mat.id)}
-                style={{ marginRight: 10, width: 18, height: 18 }}
-              />
-              <div style={{ flex: 2, fontWeight: 600 }}>{mat.name}</div>
-              <div style={{ flex: 1, color: "#888", fontSize: 14 }}>
-                {typeof mat.quantity !== "undefined" && mat.quantity !== null ? (
-                  <>
-                    <span style={{ fontWeight: 600 }}>{mat.quantity}</span>
-                    <span style={{ marginLeft: 3 }}>{mat.unit || ""}</span>
-                  </>
-                ) : (
-                  <span>-</span>
-                )}
+          <div key={mat.id}>
+            <div
+              className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1"
+            >
+              <div className="flex items-center gap-2.5">
+                <input
+                  type="checkbox"
+                  checked={selected.includes(mat.id)}
+                  onChange={() => handleToggle(mat.id)}
+                  className="mr-2.5 w-[18px] h-[18px]"
+                />
+                <div className="flex-2 font-semibold">{mat.name}</div>
+                <div className="flex-1 text-[#888] text-[14px]">
+                  {typeof mat.quantity !== "undefined" && mat.quantity !== null ? (
+                    <>
+                      <span className="font-semibold">{mat.quantity}</span>
+                      <span className="ml-1">{mat.unit || ""}</span>
+                    </>
+                  ) : (
+                    <span>-</span>
+                  )}
+                </div>
               </div>
             </div>
-            {/* Progress bar mock below data */}
-            <div style={{ width: "100%", minWidth: 120, maxWidth: 220, marginLeft: 32, marginTop: 2 }}>
-              <div
-                style={{
-                  background: "#e0e0e0",
-                  borderRadius: 8,
-                  height: 16,
-                  width: "100%",
-                  overflow: "hidden",
-                  position: "relative",
-                }}
-              >
+            <div className="w-full min-w-[120px] max-w-[220px] ml-8 mt-2 mb-2">
+              <div className="bg-[#e0e0e0] rounded-lg h-4 w-full overflow-hidden relative">
                 <div
-                  style={{
-                    background: "#4caf50",
-                    width: getProgress(Number(mat.quantity)) + "%",
-                    height: "100%",
-                    borderRadius: 8,
-                    transition: "width 0.3s",
-                  }}
+                  className="bg-[#4caf50] h-full rounded-lg transition-all duration-300"
+                  style={{ width: getProgress(Number(mat.quantity)) + "%" }}
                 />
                 <span
-                  style={{
-                    position: "absolute",
-                    left: 8,
-                    top: 0,
-                    fontSize: 12,
-                    color: "#222",
-                    lineHeight: "16px",
-                  }}
+                  className="absolute left-2 top-0 text-[12px] text-[#222] leading-4"
                 >
                   {mat.quantity} {mat.unit}
                 </span>
@@ -122,6 +116,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials, 
         ))}
       </div>
     </div>
+    </>
   );
 };
 

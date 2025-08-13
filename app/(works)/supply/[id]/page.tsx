@@ -1,5 +1,6 @@
 import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
+import type { WorkItem } from "@/types/work";
 import { getWorkById } from "@/actions/work-actions";
 import type { Material } from "@/types/work";
 
@@ -8,10 +9,18 @@ export default async function SupplyPage({ params }: { params: Promise<{ id: str
   if (!workId) return <div>Hibás workId</div>;
 
   let materials: Material[] = [];
+  let workItems: WorkItem[] = [];
   let workName = '';
   try {
     const work = await getWorkById(workId);
     materials = work.materials || [];
+    workItems = (work.workItems || []).map((item: any) => ({
+      ...item,
+      tools: item.tools || [],
+      materials: item.materials || [],
+      workers: item.workers || [],
+      workItemWorkers: item.workItemWorkers || [],
+    }));
     workName = work.title || '';
   } catch (e) {
     return <div>Nem sikerült betölteni az anyagokat.</div>;
@@ -69,7 +78,7 @@ export default async function SupplyPage({ params }: { params: Promise<{ id: str
           Szerszámok
         </button>
       </div>
-      <MaterialSlotsSection materials={materials} workId={workId} />
+      <MaterialSlotsSection materials={materials} workId={workId} workItems={workItems} />
     </div>
   );
 }
