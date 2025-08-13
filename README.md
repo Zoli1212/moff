@@ -631,3 +631,14 @@ Kerlek ird be az ajanlatba a regi ko burkolatnak a felszedesi koltseget valamint
 # munka
 
 11 7 12 13 folyamatban ezzel foglalkozok mert beszerzés van!
+
+
+materials
+szerszámok
+szerkeszthető legyen
++ anyag + szerszámok at tudjon felvenni
+törölni is kéne tudni supplyban
+todo lista szerűen
+tools
+----
+melyik feladathoz + mennyiséget + checkbox
