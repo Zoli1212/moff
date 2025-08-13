@@ -1,6 +1,6 @@
 import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
-import type { WorkItem } from "@/types/work";
+import type { WorkItem, WorkItemFromDb } from "@/types/work";
 import { getWorkById } from "@/actions/work-actions";
 import type { Material } from "@/types/work";
 
@@ -14,7 +14,7 @@ export default async function SupplyPage({ params }: { params: Promise<{ id: str
   try {
     const work = await getWorkById(workId);
     materials = work.materials || [];
-    workItems = (work.workItems || []).map((item: any) => ({
+    workItems = (work.workItems || []).map((item: WorkItemFromDb) => ({
       ...item,
       tools: item.tools || [],
       materials: item.materials || [],
@@ -23,6 +23,7 @@ export default async function SupplyPage({ params }: { params: Promise<{ id: str
     }));
     workName = work.title || '';
   } catch (e) {
+    console.error(e);
     return <div>Nem sikerült betölteni az anyagokat.</div>;
   }
 
