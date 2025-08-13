@@ -8,7 +8,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
 
   // Extract workId from /works/:id if present
   let workId: number | null = null;
-  if (pathname.startsWith('/works/') || pathname.startsWith('/tasks/') || pathname.startsWith('/accounts/') || pathname.startsWith('/diary/') || pathname.startsWith('/others/')) {
+  if (pathname.startsWith('/works/') || pathname.startsWith('/tasks/') || pathname.startsWith('/supply/') || pathname.startsWith('/diary/') || pathname.startsWith('/others/')) {
     const param = pathname.split('/')[2];
     if (param && /^\d+$/.test(param)) {
       workId = parseInt(param, 10);
@@ -48,7 +48,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
       ),
     },
     {
-      href: `/accounts/${workId}`,
+      href: `/supply/${workId}`,
       label: "Beszerzés",
       icon: (
         <svg

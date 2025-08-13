@@ -48,9 +48,10 @@ export interface Tool {
 }
 
 export interface Material {
-  // Define fields based on your Material model
   id: number;
   name: string;
+  quantity: number;
+  unit: string;
 }
 
 export interface Worker {
