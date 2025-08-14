@@ -2,6 +2,7 @@ import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection";
 import type { WorkItem, WorkItemFromDb, Material, Tool } from "@/types/work";
+import type { AssignedTool } from "@/types/tools.types";
 import { getWorkById } from "@/actions/work-actions";
 import { getToolsRegistryByTenant, getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 
@@ -22,7 +23,7 @@ export default async function SupplyPage({
   let workItems: WorkItem[] = [];
   let workName = "";
   let tools: Tool[] = [];
-  let assignedTools: any[] = [];
+  let assignedTools: AssignedTool[] = [];
   try {
     const work = await getWorkById(workId);
     materials = work.materials || [];
@@ -35,7 +36,7 @@ export default async function SupplyPage({
     }));
     workName = work.title || "";
     tools = await getToolsRegistryByTenant();
-    assignedTools = await getAssignedToolsForWork(workId);
+    assignedTools = await getAssignedToolsForWork(workId) as AssignedTool[];
   } catch (e) {
     console.error(e);
     return <div>Nem sikerült betölteni az anyagokat vagy szerszámokat.</div>;
