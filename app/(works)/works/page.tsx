@@ -19,7 +19,6 @@ export type Work = {
   [key: string]: unknown;
 };
 
-// Helper: mockolja a hiányzó mezőket
 function toCardProps(work: Work): WorkCardProps {
   return {
     ...work,
