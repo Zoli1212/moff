@@ -17,7 +17,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
 
   const menu = [
     {
-      href: "/works",
+      href: workId ? `/works/${workId}` : "/works",
       label: "Főoldal",
       icon: (
         <svg
