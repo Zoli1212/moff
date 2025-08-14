@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import MaterialAddModal from "./MaterialAddModal";
-import { addMaterial } from "@/actions/materials-action";
+import MaterialEditModal from "./MaterialEditModal";
+import { addMaterial, updateMaterial, deleteMaterial } from "@/actions/materials-action";
 
 import type { WorkItem } from "@/types/work";
 export interface MaterialSlotsSectionProps {
@@ -14,8 +15,11 @@ export interface MaterialSlotsSectionProps {
   workItems: WorkItem[];
 }
 
-const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials, workId, workItems }) => {
+const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials: initialMaterials, workId, workItems }) => {
+  const [materials, setMaterials] = useState<Material[]>(initialMaterials);
   const [selected, setSelected] = useState<number[]>([]);
+  const [editMaterial, setEditMaterial] = useState<Material | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const handleToggle = (id: number) => {
     setSelected((prev) =>
@@ -30,22 +34,48 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials, 
     return Math.min(Math.round(quantity), 100);
   };
 
-  // Állapot a modal nyitásához (később implementáljuk)
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  // Material hozzáadás submit handler (később implementáljuk az actions-t)
-
-const handleAddMaterial = async (data: { name: string; quantity: number; unit: string; unitPrice: number; workItemId: number }) => {
+  // Add
+  const handleAddMaterial = async (data: { name: string; quantity: number; unit: string; unitPrice: number; workItemId: number }) => {
     try {
-      await addMaterial({ ...data, workId });
+      const newMat = await addMaterial({ ...data, workId });
       toast.success("Anyag sikeresen hozzáadva!");
-      // TODO: Frissítsd a material listát vagy triggerelj újra lekérdezést
-      // Például: router.refresh() vagy state frissítés
+      setMaterials(prev => [...prev, newMat]);
     } catch (err) {
       console.error("Anyag hozzáadása sikertelen:", err);
       toast.error("Hiba történt az anyag hozzáadásakor!");
     }
   };
+
+  // Edit
+  const handleEditMaterial = async (data: { id: number; name: string; quantity: number }) => {
+    try {
+      const updated = await updateMaterial(data);
+      toast.success("Anyag sikeresen frissítve!");
+      setEditMaterial(null);
+      setMaterials(prev => prev.map(mat => mat.id === updated.id ? { ...mat, ...updated } : mat));
+    } catch (err) {
+      console.error("Anyag szerkesztése sikertelen:", err);
+      toast.error("Hiba történt az anyag szerkesztésekor!");
+    }
+  };
+
+  // Delete
+  const handleDeleteMaterial = async (id: number) => {
+    try {
+      await deleteMaterial(id);
+      toast.success("Anyag törölve!");
+      setEditMaterial(null);
+      setMaterials(prev => prev.filter(mat => mat.id !== id));
+    } catch (err) {
+      console.error("Anyag törlése sikertelen:", err);
+      toast.error("Hiba történt az anyag törlésekor!");
+    }
+  };
+
+  const setEditMaterialOpen = (open: boolean) => {
+    if (!open) setEditMaterial(null);
+  };
+
 
   return (
     <>
@@ -74,17 +104,27 @@ const handleAddMaterial = async (data: { name: string; quantity: number; unit: s
         {materials.length === 0 && (
           <span className="text-[#bbb]">Nincs anyag</span>
         )}
+        <MaterialEditModal
+          open={!!editMaterial}
+          onOpenChange={setEditMaterialOpen}
+          material={editMaterial}
+          workItems={workItems}
+          onSubmit={handleEditMaterial}
+          onDelete={handleDeleteMaterial}
+        />
         {materials.map((mat) => (
           <div key={mat.id}>
             <div
-              className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1"
+              className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 cursor-pointer hover:bg-[#ececec]"
+              onClick={() => setEditMaterial(mat)}
             >
               <div className="flex items-center gap-2.5">
                 <input
                   type="checkbox"
                   checked={selected.includes(mat.id)}
-                  onChange={() => handleToggle(mat.id)}
+                  onChange={e => { e.stopPropagation(); handleToggle(mat.id); }}
                   className="mr-2.5 w-[18px] h-[18px]"
+                  onClick={e => e.stopPropagation()}
                 />
                 <div className="flex-2 font-semibold">{mat.name}</div>
                 <div className="flex-1 text-[#888] text-[14px]">
