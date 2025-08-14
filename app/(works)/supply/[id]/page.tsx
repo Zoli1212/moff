@@ -1,20 +1,28 @@
 import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
-import type { WorkItem, WorkItemFromDb } from "@/types/work";
+import ToolsSlotsSection from "../_components/ToolsSlotsSection";
+import type { WorkItem, WorkItemFromDb, Material, Tool } from "@/types/work";
 import { getWorkById } from "@/actions/work-actions";
-import type { Material } from "@/types/work";
+import { getToolsRegistryByTenant, getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 
 export default async function SupplyPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
-  const workId = Number((await params).id);
+  const { id } = await params;
+  const workId = Number(id);
   if (!workId) return <div>Hibás workId</div>;
+
+  const { tab } = await searchParams;
 
   let materials: Material[] = [];
   let workItems: WorkItem[] = [];
   let workName = "";
+  let tools: Tool[] = [];
+  let assignedTools: any[] = [];
   try {
     const work = await getWorkById(workId);
     materials = work.materials || [];
@@ -26,9 +34,11 @@ export default async function SupplyPage({
       workItemWorkers: item.workItemWorkers || [],
     }));
     workName = work.title || "";
+    tools = await getToolsRegistryByTenant();
+    assignedTools = await getAssignedToolsForWork(workId);
   } catch (e) {
     console.error(e);
-    return <div>Nem sikerült betölteni az anyagokat.</div>;
+    return <div>Nem sikerült betölteni az anyagokat vagy szerszámokat.</div>;
   }
 
   return (
@@ -96,32 +106,35 @@ export default async function SupplyPage({
           justifyContent: "center",
         }}
       >
-        <button
+        {/* Tab links */}
+        <a
+          href={`?tab=materials`}
           style={{
             padding: "8px 30px",
             borderRadius: "22px 0 0 22px",
             border: "none",
-            background: "#e6e6e6",
-            color: "#222",
+            background: tab !== "tools" ? "#ddd" : "#e6e6e6",
+            color: tab !== "tools" ? "#222" : "#888",
             fontWeight: 600,
             fontSize: 16,
             boxShadow: "0 1px 2px #eee",
             outline: "none",
             cursor: "pointer",
             transition: "background .2s",
-            backgroundColor: "#ddd",
             zIndex: 1,
+            textDecoration: "none",
           }}
         >
           Anyagok
-        </button>
-        <button
+        </a>
+        <a
+          href={`?tab=tools`}
           style={{
             padding: "8px 30px",
             borderRadius: "0 22px 22px 0",
             border: "none",
-            background: "#f7f7f7",
-            color: "#888",
+            background: tab === "tools" ? "#ddd" : "#f7f7f7",
+            color: tab === "tools" ? "#222" : "#888",
             fontWeight: 600,
             fontSize: 16,
             boxShadow: "0 1px 2px #eee",
@@ -129,16 +142,26 @@ export default async function SupplyPage({
             cursor: "pointer",
             marginLeft: -2,
             zIndex: 0,
+            textDecoration: "none",
           }}
         >
           Szerszámok
-        </button>
+        </a>
       </div>
-      <MaterialSlotsSection
-        materials={materials}
-        workId={workId}
-        workItems={workItems}
-      />
+      {/* Tab content */}
+      {(!tab || tab === "materials") ? (
+        <MaterialSlotsSection
+          materials={materials}
+          workId={workId}
+          workItems={workItems}
+        />
+      ) : (
+        <ToolsSlotsSection
+          tools={tools}
+          workId={workId}
+          assignedTools={assignedTools}
+        />
+      )}
     </div>
   );
 }

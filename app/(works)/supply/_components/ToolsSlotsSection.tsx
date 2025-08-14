@@ -101,7 +101,10 @@ const ToolsSlotsSection: React.FC<Props> = ({
       const updated = await getAssignedToolsForWork(workId);
       setAssignedTools(updated);
     } catch (err) {
-      toast.error("Nem sikerült frissíteni az eszközök listáját! " + (err as Error).message);
+      toast.error(
+        "Nem sikerült frissíteni az eszközök listáját! " +
+          (err as Error).message
+      );
     }
   };
 
@@ -169,167 +172,42 @@ const ToolsSlotsSection: React.FC<Props> = ({
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         {Object.entries(grouped).map(([name, tool]) => {
           const q = tool.quantity ?? 1;
+          const assignedCount = assignedTools.filter(
+            (at) => at.toolName === tool.name
+          ).length;
           return (
-            <div
-              key={name}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                marginBottom: 6,
-                width: "100%",
-              }}
-            >
+            <div key={name}>
               <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: 17,
-                  marginBottom: 4,
-                  color: "#222",
-                  textAlign: "center",
-                  width: "100%",
-                  letterSpacing: 0.2,
+                className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 cursor-pointer hover:bg-[#ececec]"
+                onClick={() => {
+                  setSelectedTool(tool);
+                  setMaxQuantity(tool.quantity ?? 1);
+                  setModalOpen(true);
                 }}
               >
-                {name}{" "}
-                <span style={{ fontWeight: 400, fontSize: 15, color: "#888" }}>
-                  ({q})
-                </span>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  gap: 8,
-                  justifyContent: "center",
-                  width: "100%",
-                }}
-              >
-                {Array.from({ length: q }).map((_, idx) => {
-                  // Minden toolName-hez összes assignment (pl. több glettvas, külön displayName)
-                  const assignedList = assignedTools.filter(at => at.toolName === tool.name);
-                  // Az idx-edik assignment (ha van)
-                  const assigned = assignedList[idx];
-                  const isFilled = !!assigned;
-                  return (
+                <div className="flex items-center gap-2.5">
+                  <div className="flex-2 font-semibold">{name}</div>
+                  <div className="ml-auto font-semibold text-[14px] text-[#222] flex items-center">
+                    <span>{assignedCount}</span>
+                    <span className="mx-1">/</span>
+                    <span>{q}</span>
+                    <span className="ml-1">db</span>
+                  </div>
+                </div>
+                <div className="w-2/3 mt-2">
+                  <div className="bg-[#e0e0e0] rounded-lg h-4 w-full overflow-hidden relative">
+                    {/* Filled green bar */}
                     <div
-                      key={idx}
-                      style={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+                      className="bg-green-400 h-4 absolute left-0 top-0 transition-all duration-300"
+                      style={{ width: `${Math.min((assignedCount / q) * 100, 100)}%` }}
+                    ></div>
+                    <span
+                      className="absolute right-2 top-0 text-[12px] text-[#222] leading-4 font-semibold z-10"
                     >
-                      <button
-                        style={{
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          width: 80,
-                          height: 40,
-                          border: isFilled ? "2px solid #27ae60" : "1px dashed #aaa",
-                          borderRadius: 6,
-                          color: isFilled ? "#27ae60" : "#888",
-                          background: isFilled ? "#eafbe7" : "#fafbfc",
-                          fontWeight: 600,
-                          fontSize: 14,
-                          cursor: "pointer",
-                          transition: "background .2s",
-                          position: "relative",
-                        }}
-                        onClick={() => {
-                          setSelectedTool(tool);
-                          setMaxQuantity(tool.quantity ?? 1);
-                          setModalOpen(true);
-                        }}
-                        title={tool.name}
-                      >
-                        {tool.name}
-                        {isFilled ? (
-                          <span
-                            style={{
-                              fontSize: 28,
-                              fontWeight: 900,
-                              color: "#e74c3c",
-                              cursor: "pointer",
-                              opacity: 0.7,
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "100%",
-                              height: "100%",
-                              position: "absolute",
-                              left: 0,
-                              top: "20%",
-                              zIndex: 10,
-                              background: "transparent",
-                              transition: "opacity 0.2s",
-                            }}
-                            title="Slot törlése"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              if (!assigned) return;
-                              try {
-                                const res = await import(
-                                  "../../../../actions/tools-registry-actions"
-                                );
-                                await res.decrementWorkToolQuantity(assigned.id);
-                                toast.success("Slot törölve!");
-                                // Always refresh assignedTools after delete
-                                await fetchAssignedToolsAndUpdateState();
-                              } catch (err) {
-                                toast.error(
-                                  `Nem sikerült törölni a slotot!${(err as Error).message}`
-                                );
-                              }
-                            }}
-                            onMouseOver={(e) =>
-                              (e.currentTarget.style.opacity = "1")
-                            }
-                            onMouseOut={(e) =>
-                              (e.currentTarget.style.opacity = "0.7")
-                            }
-                          >
-                            ×
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "#888",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "100%",
-                              height: "100%",
-                              position: "absolute",
-                              left: 0,
-                              top: "30%",
-                              zIndex: 5,
-                            }}
-                          >
-                            +
-                          </span>
-                        )}
-                      </button>
-                      {isFilled && assigned.tool?.displayName && (
-                        <span
-                          style={{
-                            fontSize: 12,
-                            color: "#555",
-                            marginTop: 2,
-                            textAlign: "center",
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            width: "100%",
-                          }}
-                          title={assigned.tool.displayName}
-                        >
-                          ({assigned.tool.displayName})
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
+                      {assignedCount} / {q} db
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           );
