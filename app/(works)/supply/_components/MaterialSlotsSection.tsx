@@ -34,6 +34,8 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials: 
     return Math.min(Math.round(quantity), 100);
   };
 
+  console.log(getProgress(100));
+
   // Add
   const handleAddMaterial = async (data: { name: string; quantity: number; unit: string; unitPrice: number; workItemId: number }) => {
     try {
