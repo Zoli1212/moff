@@ -25,6 +25,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({ open, onOpenChang
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log(workItems)
     if (!name || !quantity || !material) return;
     setLoading(true);
     await onSubmit({ id: material.id, name, quantity: Number(quantity) });

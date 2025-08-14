@@ -127,10 +127,10 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials: 
                   onClick={e => e.stopPropagation()}
                 />
                 <div className="flex-2 font-semibold">{mat.name}</div>
-                <div className="flex-1 text-[#888] text-[14px]">
+                <div className="ml-auto font-semibold text-[14px] text-[#222] flex items-center">
                   {typeof mat.quantity !== "undefined" && mat.quantity !== null ? (
                     <>
-                      <span className="font-semibold">{mat.quantity}</span>
+                      <span>{mat.quantity}</span>
                       <span className="ml-1">{mat.unit || ""}</span>
                     </>
                   ) : (
@@ -138,19 +138,15 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials: 
                   )}
                 </div>
               </div>
-            </div>
-            <div className="w-full min-w-[120px] max-w-[220px] ml-8 mt-2 mb-2">
-              <div className="bg-[#e0e0e0] rounded-lg h-4 w-full overflow-hidden relative">
-                <div
-                  className="bg-[#4caf50] h-full rounded-lg transition-all duration-300"
-                  style={{ width: getProgress(Number(mat.quantity)) + "%" }}
-                />
-                <span
-                  className="absolute left-2 top-0 text-[12px] text-[#222] leading-4"
-                >
-                  {mat.quantity} {mat.unit}
-                </span>
-              </div>
+              <div className="w-2/3 mt-2">
+  <div className="bg-[#e0e0e0] rounded-lg h-4 w-full overflow-hidden relative">
+    <span
+      className="absolute right-2 top-0 text-[12px] text-[#222] leading-4 font-semibold"
+    >
+      {mat.quantity} {mat.unit}
+    </span>
+  </div>
+</div>
             </div>
           </div>
         ))}
