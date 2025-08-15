@@ -480,6 +480,7 @@ model ToolsRegistry {
   displayName    String?
   quantity    Int
   description String?
+  avatarUrl String?
   tenantEmail String   @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

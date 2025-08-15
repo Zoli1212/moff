@@ -187,11 +187,21 @@ const ToolsSlotsSection: React.FC<Props> = ({
               >
                 <div className="flex items-center gap-2.5">
                   <div className="flex-2 font-semibold">{name}</div>
-                  <div className="ml-auto font-semibold text-[14px] text-[#222] flex items-center">
-                    <span>{assignedCount}</span>
-                    <span className="mx-1">/</span>
-                    <span>{q}</span>
-                    <span className="ml-1">db</span>
+                  <div className="ml-auto flex items-center gap-2">
+                    {/* Tool image preview */}
+                    {tool.avatarUrl && (
+                      <img
+                        src={tool.avatarUrl}
+                        alt="tool"
+                        style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', border: '1px solid #ddd', background: '#fafafa' }}
+                      />
+                    )}
+                    <div className="font-semibold text-[14px] text-[#222] flex items-center">
+                      <span>{assignedCount}</span>
+                      <span className="mx-1">/</span>
+                      <span>{q}</span>
+                      <span className="ml-1">db</span>
+                    </div>
                   </div>
                 </div>
                 <div className="w-2/3 mt-2">
@@ -201,11 +211,6 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       className="bg-green-400 h-4 absolute left-0 top-0 transition-all duration-300"
                       style={{ width: `${Math.min((assignedCount / q) * 100, 100)}%` }}
                     ></div>
-                    <span
-                      className="absolute right-2 top-0 text-[12px] text-[#222] leading-4 font-semibold z-10"
-                    >
-                      {assignedCount} / {q} db
-                    </span>
                   </div>
                 </div>
               </div>

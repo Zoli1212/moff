@@ -44,7 +44,7 @@ export interface Tool {
   name: string;
   displayName?: string | null;
   quantity: number;
-  
+  avatarUrl?: string | null;
 }
 
 export interface Material {

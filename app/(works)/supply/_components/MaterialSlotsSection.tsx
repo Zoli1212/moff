@@ -142,11 +142,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({ materials: 
               </div>
               <div className="w-2/3 mt-2">
   <div className="bg-[#e0e0e0] rounded-lg h-4 w-full overflow-hidden relative">
-    <span
-      className="absolute right-2 top-0 text-[12px] text-[#222] leading-4 font-semibold"
-    >
-      {mat.quantity} {mat.unit}
-    </span>
+
   </div>
 </div>
             </div>

@@ -646,3 +646,4 @@ melyik feladathoz + mennyiséget + checkbox
 jobb oldalt mennyiség
 csúszka
 vissza navigáljon a detail page-re
+progress bar nál elég
