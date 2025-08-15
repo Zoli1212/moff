@@ -7,6 +7,7 @@ import {
   addToolToRegistry,
   createWorkToolsRegistry,
   getAssignedToolsForWork,
+  decrementWorkToolQuantity,
 } from "../../../../actions/tools-registry-actions";
 import { toast } from "sonner";
 
@@ -94,6 +95,66 @@ const ToolsSlotsSection: React.FC<Props> = ({
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showToolDetailsModal, setShowToolDetailsModal] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
+  const [selectedTools, setSelectedTools] = useState<number[]>(() => {
+  // Preselect tools that are already fully assigned
+  return tools
+    .filter(tool => {
+      const q = tool.quantity ?? 1;
+      const assignedCount = assignedTools
+        .filter(at => at.toolName === tool.name)
+        .reduce((sum, at) => sum + at.quantity, 0);
+      return assignedCount >= q;
+    })
+    .map(tool => tool.id);
+});
+
+  // Checkbox toggle handler
+  const handleToggle = async (id: number, toolName: string, required: number) => {
+    const willBeChecked = !selectedTools.includes(id);
+    setSelectedTools((prev) =>
+      willBeChecked ? [...prev, id] : prev.filter((tid) => tid !== id)
+    );
+
+    // Increment logic when checking
+    if (willBeChecked) {
+      const assignments = assignedTools.filter(at => at.toolName === toolName);
+      const assignedCount = assignments.reduce((sum, at) => sum + at.quantity, 0);
+      const toAdd = required - assignedCount;
+      if (toAdd > 0) {
+        try {
+          const tool = tools.find(t => t.id === id);
+          if (!tool) {
+            toast.error("Nem található a kiválasztott eszköz!");
+            return;
+          }
+          await createWorkToolsRegistry(workId, tool.id, toAdd, tool.name);
+          toast.success("A szükséges mennyiségre kiegészítve az eszköz hozzárendelése.");
+          await fetchAssignedToolsAndUpdateState();
+        } catch (err) {
+          toast.error("Nem sikerült növelni az eszköz mennyiségét: " + (err as Error).message);
+        }
+      }
+    } else {
+      // Decrement logic when unchecking: remove all assignments for this tool
+      const assignments = assignedTools.filter(at => at.toolName === toolName);
+      let errors = 0;
+      for (const at of assignments) {
+        for (let i = 0; i < at.quantity; i++) {
+          try {
+            await decrementWorkToolQuantity(at.id);
+          } catch (err) {
+            errors++;
+            toast.error("Nem sikerült törölni az eszköz hozzárendelését: " + (err as Error).message);
+            break;
+          }
+        }
+      }
+      if (assignments.length > 0 && errors === 0) {
+        toast.success("Az összes hozzárendelés eltávolítva az eszközből.");
+      }
+      await fetchAssignedToolsAndUpdateState();
+    }
+  };
 
   // Helper to fetch assignedTools from server and update state
   const fetchAssignedToolsAndUpdateState = async () => {
@@ -186,6 +247,13 @@ const ToolsSlotsSection: React.FC<Props> = ({
                 }}
               >
                 <div className="flex items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    checked={selectedTools.includes(tool.id)}
+                    onChange={e => { e.stopPropagation(); handleToggle(tool.id, tool.name, tool.quantity ?? 1); }}
+                    className="mr-2.5 w-[18px] h-[18px]"
+                    onClick={e => e.stopPropagation()}
+                  />
                   <div className="flex-2 font-semibold">{name}</div>
                   <div className="ml-auto flex items-center gap-2">
                     {/* Tool image preview */}

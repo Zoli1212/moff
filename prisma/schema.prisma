@@ -251,6 +251,8 @@ model Material {
   workItemId     Int
   workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   quantity       Float       @default(1)
+  availableFull  Boolean     @default(false)
+  availableQuantity Int     @default(0)
   unit           String
   unitPrice      Float
   totalPrice     Float

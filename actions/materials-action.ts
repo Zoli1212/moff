@@ -44,23 +44,50 @@ export async function addMaterial({ name, quantity, unit, unitPrice, workId, wor
 
 interface UpdateMaterialInput {
   id: number;
-  name: string;
-  quantity: number;
+  name?: string;
+  quantity?: number;
+  availableQuantity?: number;
+  availableFull?: boolean;
 }
 
-export async function updateMaterial({ id, name, quantity }: UpdateMaterialInput) {
+export async function updateMaterial({ id, name, quantity, availableQuantity, availableFull }: UpdateMaterialInput) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  // Find material and check ownership if needed
+  const tenantEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress || "";
+  // Find material and check ownership
   const material = await prisma.material.findUnique({ where: { id } });
   if (!material) throw new Error("Material not found");
-  // Optionally: check if the user owns the material
+  if (material.tenantEmail !== tenantEmail) throw new Error("Not authorized for this tenant");
+  const updateData: any = {
+    tenantEmail,
+  };
+  if (name !== undefined) updateData.name = name;
+  if (quantity !== undefined) {
+    updateData.quantity = quantity;
+    updateData.totalPrice = material.unitPrice * quantity;
+  }
+  if (availableQuantity !== undefined) updateData.availableQuantity = availableQuantity;
+  if (availableFull !== undefined) updateData.availableFull = availableFull;
+  const updated = await prisma.material.update({
+    where: { id },
+    data: updateData,
+  });
+  revalidatePath(`/supply/${material.workId}`);
+  revalidatePath(`/supply`);
+  return updated;
+}
+
+// Set availableQuantity to quantity and availableFull to true
+export async function setMaterialAvailableFull(id: number) {
+  const user = await currentUser();
+  if (!user) throw new Error("Not authenticated");
+  const material = await prisma.material.findUnique({ where: { id } });
+  if (!material) throw new Error("Material not found");
   const updated = await prisma.material.update({
     where: { id },
     data: {
-      name,
-      quantity,
-      totalPrice: material.unitPrice * quantity,
+      availableQuantity: Math.round(material.quantity),
+      availableFull: true,
     },
   });
   revalidatePath(`/supply/${material.workId}`);
