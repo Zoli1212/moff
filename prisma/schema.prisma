@@ -498,6 +498,6 @@ model WorkToolsRegistry {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
   tenantEmail    String         @default("")
-
+  availableFull  Boolean        @default(false)
   @@unique([workId, toolId])
 }
