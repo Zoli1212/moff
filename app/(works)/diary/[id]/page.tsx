@@ -6,7 +6,7 @@ import {
 
 import DiaryTaskCardList from "./_components/DiaryTaskCardList";
 import { notFound } from "next/navigation";
-import { WorkItem } from "@/types/work";
+import { WorkItem, WorkItemWorker } from "@/types/work";
 
 interface DiaryPageProps {
   params: Promise<{ id: string }>;
@@ -21,13 +21,13 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
   let error: string | null = null;
   try {
     const rawItems = await getWorkItemsWithWorkers(workId);
-    items = rawItems.map((item: any) => ({
+    items = rawItems.map((item: WorkItem) => ({
       ...item,
       materials: Array.isArray(item.materials) ? item.materials : [],
       workers: Array.isArray(item.workers) ? item.workers : [],
       description: item.description ?? undefined,
       workItemWorkers:
-        item.workItemWorkers?.map((w: any) => ({
+        item.workItemWorkers?.map((w: WorkItemWorker) => ({
           ...w,
           name: w.name ?? undefined,
           role: w.role ?? undefined,

@@ -18,6 +18,8 @@ export type WorkItemFromDb = Omit<
   workItemWorkers?: WorkItemWorker[] | null;
 };
 
+import { WorkDiary } from "./work-diary";
+
 export interface WorkItem {
   id: number;
   workId: number;
@@ -37,6 +39,7 @@ export interface WorkItem {
   createdAt: Date;
   updatedAt: Date;
   tenantEmail: string;
+  workDiaryEntries?: WorkDiary[];
 }
 
 export interface Tool {
@@ -75,6 +78,8 @@ export interface WorkItemWorker {
   id: number;
   workerId: number;
   workItemId: number;
+  name?: string | null;
+  role?: string | null;
   quantity: number;
 }
 

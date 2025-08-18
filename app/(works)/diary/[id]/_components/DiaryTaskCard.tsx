@@ -23,6 +23,8 @@ const DiaryTaskCard: React.FC<TaskCardProps> = ({
   children,
   className = "",
 }) => {
+  console.log(id, onCheck)
+  
   return (
     <div
       className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? 'border-2 border-blue-500 bg-blue-50' : 'border border-gray-200 bg-white'} ${className}`}

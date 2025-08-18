@@ -3,13 +3,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary, deleteWorkDiary } from "@/actions/workdiary-actions";
-import { getWorkDiariesByWorkId } from "@/actions/get-workdiariesbyworkid-actions";
 import { useParams } from "next/navigation";
 import {
-  getWorkById,
-  getWorkItemsWithWorkers,
   fetchWorkAndItems,
 } from "@/actions/work-actions";
+
+import { WorkDiary } from "@/types/work-diary";
 
 export interface WorkItem {
   id: number;
@@ -19,7 +18,7 @@ export interface WorkItem {
   progress?: number;
   inProgress?: boolean;
   workItemWorkers?: { id: number; name?: string; role?: string }[];
-  workDiaryEntries?: any[];
+  workDiaryEntries?: WorkDiary[];
 }
 
 interface Work {
