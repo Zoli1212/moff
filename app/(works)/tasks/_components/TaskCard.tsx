@@ -1,4 +1,5 @@
 import React from "react";
+import { toast } from "sonner";
 
 interface TaskCardProps {
   id: number;
@@ -49,7 +50,28 @@ const TaskCard: React.FC<TaskCardProps> = ({
       <input
         type="checkbox"
         checked={checked}
-        onChange={() => onCheck && onCheck(!checked)}
+        onChange={async () => {
+          if (!onCheck) return;
+          toast("Napló elem frissítése", {
+            id: "frissites",
+            duration: 50000,
+            style: {
+              background: '#d1fae5', // light green
+              color: '#065f46', // dark green text
+              fontSize: 13,
+              padding: '6px 18px',
+              borderRadius: 8,
+              minHeight: 0,
+              boxShadow: '0 2px 8px rgba(16,185,129,0.08)',
+            },
+            className: 'sonner-toast--mini',
+          });
+          try {
+            await onCheck(!checked);
+          } finally {
+            toast.dismiss("frissites");
+          }
+        }}
         className="ml-4 mt-2 w-5 h-5 accent-blue-500 rounded border-gray-300"
       />
     </div>

@@ -64,6 +64,23 @@ export async function deleteWork(id: number) {
 
 
 // --- ÚJ: AI válasz szerinti mentés ---
+import { normalizeWork } from "@/lib/normalize";
+
+export async function fetchWorkAndItems(workId: number) {
+  const rawWork = await getWorkById(workId);
+  const normWork = normalizeWork(rawWork);
+  const items = (await getWorkItemsWithWorkers(workId)).map((item: any) => ({
+    ...item,
+    description: item.description ?? undefined,
+    workItemWorkers: item.workItemWorkers?.map((w: any) => ({
+      ...w,
+      name: w.name ?? undefined,
+      role: w.role ?? undefined,
+    })),
+  }));
+  return { work: normWork, workItems: items };
+}
+
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
@@ -489,6 +506,7 @@ return prisma.workItem.findMany({
     tools: true,
     materials: true,
     workers: true,
+    workDiaryEntries: true,
   },
 });
 }
