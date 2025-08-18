@@ -486,7 +486,9 @@ return prisma.workItem.findMany({
   },
   include: {
     workItemWorkers: true,
-    tools: true
+    tools: true,
+    materials: true,
+    workers: true,
   },
 });
 }

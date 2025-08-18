@@ -12,7 +12,7 @@ interface TaskCardProps {
   className?: string;
 }
 
-const TaskCard: React.FC<TaskCardProps> = ({
+const DiaryTaskCard: React.FC<TaskCardProps> = ({
   id,
   title,
   deadline = "",
@@ -46,14 +46,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
         {/* Render children below progress bar */}
         {children}
       </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={() => onCheck && onCheck(!checked)}
-        className="ml-4 mt-2 w-5 h-5 accent-blue-500 rounded border-gray-300"
-      />
+
     </div>
   );
 };
 
-export default TaskCard;
+export default DiaryTaskCard;

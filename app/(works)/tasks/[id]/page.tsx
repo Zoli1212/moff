@@ -2,11 +2,13 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import TaskCard from "../_components/TaskCard";
+import { createWorkDiary } from "@/actions/workdiary-actions";
+import { getWorkDiariesByWorkId } from "@/actions/get-workdiariesbyworkid-actions";
 import { useParams } from "next/navigation";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
 
 
-interface WorkItem {
+export interface WorkItem {
   id: number;
   workId: number;
   name: string;
@@ -72,9 +74,15 @@ export default function TasksPage() {
   const workId = Number(params.id);
   const [work, setWork] = useState<Work | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  const [diaryIds, setDiaryIds] = useState<number[]>([]); // Track assigned diary workItemIds
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [assigning, setAssigning] = useState<number | null>(null); // For loading spinner per task
+  const [assignError, setAssignError] = useState<string | null>(null);
+// Removed duplicate state declarations below
 
+
+  // Fetch work, items, and assigned diaries
   useEffect(() => {
     async function fetchWorkAndItems() {
       setLoading(true);
@@ -93,6 +101,13 @@ export default function TasksPage() {
           })),
         }));
         setWorkItems(items);
+        // Fetch assigned diaries for this work
+        try {
+          const diaries = await getWorkDiariesByWorkId(workId);
+          setDiaryIds(diaries.map((d: any) => d.workItemId));
+        } catch {
+          setDiaryIds([]);
+        }
       } catch (e) {
         setError((e as Error).message || "Hiba történt a lekérdezéskor");
       } finally {
@@ -101,6 +116,27 @@ export default function TasksPage() {
     }
     if (!isNaN(workId)) fetchWorkAndItems();
   }, [workId]);
+
+  // Assign diary to workItem (checkbox)
+  const handleAssignDiary = async (workItemId: number) => {
+    setAssigning(workItemId);
+    setAssignError(null);
+    try {
+      // Optimistic update
+      setDiaryIds((prev) => prev.includes(workItemId) ? prev : [...prev, workItemId]);
+      const result = await createWorkDiary({ workId, workItemId });
+      if (!result.success) {
+        setAssignError(result.message || "Nem sikerült naplót rendelni.");
+        setDiaryIds((prev) => prev.filter((id) => id !== workItemId));
+      }
+    } catch (e) {
+      setAssignError((e as Error).message || "Hiba történt a napló rendelésekor");
+      setDiaryIds((prev) => prev.filter((id) => id !== workItemId));
+    } finally {
+      setAssigning(null);
+    }
+  };
+// Removed duplicate useEffect and state declarations
 
   const router = useRouter();
   return (
@@ -171,6 +207,8 @@ export default function TasksPage() {
                 title={item.name}
                 summary={item.description}
                 progress={item.progress || 0}
+                checked={diaryIds.includes(item.id)}
+                onCheck={() => handleAssignDiary(item.id)}
               >
                 {item.workItemWorkers && item.workItemWorkers.length > 0 && (
                   <ul
@@ -188,6 +226,8 @@ export default function TasksPage() {
                     ))}
                   </ul>
                 )}
+                {assigning === item.id && <span style={{ color: '#3498db', marginLeft: 8 }}>Mentés...</span>}
+                {assignError && assigning === item.id && <span style={{ color: 'red', marginLeft: 8 }}>{assignError}</span>}
               </TaskCard>
             ))
           )}
