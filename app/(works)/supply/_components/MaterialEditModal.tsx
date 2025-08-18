@@ -9,26 +9,27 @@ interface MaterialEditModalProps {
   onOpenChange: (open: boolean) => void;
   material: Material | null;
   workItems: WorkItem[];
-  onSubmit: (data: { id: number; name: string; quantity: number }) => Promise<void>;
+  onSubmit: (data: { id: number; name: string; quantity: number; availableQuantity: number }) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
 }
 
 const MaterialEditModal: React.FC<MaterialEditModalProps> = ({ open, onOpenChange, material, workItems, onSubmit, onDelete }) => {
   const [name, setName] = useState(material?.name || "");
   const [quantity, setQuantity] = useState(material?.quantity?.toString() || "");
+  const [availableQuantity, setAvailableQuantity] = useState(material?.availableQuantity?.toString() || "");
   const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
     setName(material?.name || "");
     setQuantity(material?.quantity?.toString() || "");
+    setAvailableQuantity(material?.availableQuantity?.toString() || "");
   }, [material]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(workItems)
     if (!name || !quantity || !material) return;
     setLoading(true);
-    await onSubmit({ id: material.id, name, quantity: Number(quantity) });
+    await onSubmit({ id: material.id, name, quantity: Number(quantity), availableQuantity: Number(availableQuantity) });
     setLoading(false);
     onOpenChange(false);
   };
@@ -65,6 +66,18 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({ open, onOpenChang
               min={0}
               value={quantity}
               onChange={e => setQuantity(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Elérhető mennyiség</label>
+            <input
+              className="w-full border rounded px-2 py-1"
+              type="number"
+              min={0}
+              max={quantity}
+              value={availableQuantity}
+              onChange={e => setAvailableQuantity(e.target.value)}
               required
             />
           </div>

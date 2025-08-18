@@ -106,6 +106,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
     id: number;
     name: string;
     quantity: number;
+    availableQuantity: number;
   }) => {
     try {
       const updated = await updateMaterial(data);
