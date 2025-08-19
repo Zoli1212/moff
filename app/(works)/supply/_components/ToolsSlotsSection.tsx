@@ -274,7 +274,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                 <div className="flex items-center gap-2.5">
                   <input
                     type="checkbox"
-                    checked={selectedTools.includes(tool.id)}
+                    checked={selectedTools.includes(tool.id) || assignedCount === q}
                     onChange={e => { e.stopPropagation(); handleToggle(tool.id, tool.name, tool.quantity ?? 1); }}
                     className="mr-2.5 w-[18px] h-[18px]"
                     onClick={e => e.stopPropagation()}

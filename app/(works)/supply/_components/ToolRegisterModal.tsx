@@ -1,6 +1,28 @@
-"use cliente";
+"use client";
 import React, { useState } from "react";
 import type { Tool } from "@/types/work";
+import { checkToolExists } from "../../../../actions/tool-exists.server";
+
+// shadcn/ui components
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { X, ImagePlus } from "lucide-react";
 
 interface ToolRegisterModalProps {
   open: boolean;
@@ -10,8 +32,6 @@ interface ToolRegisterModalProps {
   maxQuantity: number;
   requiredToolName?: string; // ÚJ: csak ezt lehet kiválasztani
 }
-
-import { checkToolExists } from "../../../../actions/tool-exists.server";
 
 const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   open,
@@ -23,9 +43,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
 }) => {
   const [selectedToolId, setSelectedToolId] = useState<string | number>("");
   const [toolName, setToolName] = useState<string>(requiredToolName || "");
-  const [displayName, setDisplayName] = useState<string>(
-    requiredToolName || ""
-  );
+  const [displayName, setDisplayName] = useState<string>(requiredToolName || "");
   const [customDescription, setCustomDescription] = useState("");
   const [quantity, setQuantity] = useState<number>(1);
   const [error, setError] = useState("");
@@ -64,9 +82,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   };
 
   // Csak a slothoz tartozó eszköz választható
-  const filteredTools = requiredToolName
-    ? tools.filter((t) => t.name === requiredToolName)
-    : tools;
+  const filteredTools = requiredToolName ? tools.filter((t) => t.name === requiredToolName) : tools;
   const isOutOfStock = filteredTools.length === 0;
 
   const handleSave = async () => {
@@ -82,9 +98,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
     }
     // Megnézzük, van-e ilyen nevű eszköz a filteredTools-ban
     const resolvedDisplayName = displayName || requiredToolName;
-    let found = filteredTools.find(
-      (t) => t.id === selectedToolId || t.name === selectedToolId
-    );
+    let found = filteredTools.find((t) => t.id === selectedToolId || t.name === selectedToolId);
 
     // Ha nem találtad a filteredTools-ban, akkor nézd meg a registry-ben (API hívás)
     if (!found) {
@@ -98,7 +112,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         displayName: resolvedDisplayName,
         description: customDescription,
         avatarUrl,
-      };
+      } as Tool;
       setError("");
       onSave(tool, quantity, customDescription);
       onClose();
@@ -111,93 +125,37 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         description: customDescription,
         quantity,
         avatarUrl,
-      };
+      } as unknown as Tool;
       setError("");
       onSave(newTool, quantity, customDescription);
       onClose();
     }
   };
 
+  // Select value sosem legyen üres string: undefined-ként hagyjuk, hogy a placeholder látszódjon
+  const selectValue: string | undefined =
+    toolAvailable === false && requiredToolName
+      ? "nem_elérhető"
+      : selectedToolId
+      ? String(selectedToolId)
+      : requiredToolName
+      ? String(requiredToolName)
+      : undefined;
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(0,0,0,0.4)",
-        zIndex: 2000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 12,
-      }}
-    >
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 18,
-          boxShadow: "0 6px 32px 0 rgba(0,0,0,0.15)",
-          padding: 20,
-          width: "100%",
-          maxWidth: 370,
-          minWidth: 0,
-          margin: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 18,
-        }}
-      >
-        <h2
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            margin: 0,
-            marginBottom: 4,
-            textAlign: "center",
-            letterSpacing: 0.2,
-          }}
-        >
-          Eszköz kiválasztása
-        </h2>
+    <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : null)}>
+      <DialogContent className="sm:max-w-md rounded-2xl p-6">
+        <DialogHeader>
+          <DialogTitle className="text-center text-xl sm:text-2xl tracking-tight">Eszköz kiválasztása</DialogTitle>
+        </DialogHeader>
+
         {/* Tool image upload UI */}
-        <div style={{ marginBottom: 0 }}>
-          <label
-            style={{
-              fontWeight: 500,
-              display: "block",
-              marginBottom: 4,
-              textAlign: "center",
-            }}
-          >
-            Kis kép (opcionális)
-          </label>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              justifyContent: "center",
-              marginBottom: 6,
-            }}
-          >
+        <div className="space-y-2">
+          <Label className="text-center">Kis kép (opcionális)</Label>
+          <div className="flex items-center justify-center gap-3">
             <label
               htmlFor="tool-avatar-upload"
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: "50%",
-                border: avatarPreview ? "2px solid #0070f3" : "2px dashed #bbb",
-                background: avatarPreview ? "#f5faff" : "#fafbfc",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                transition: "border 0.2s",
-                position: "relative",
-                boxShadow: avatarPreview ? "0 2px 8px #0070f311" : "none",
-              }}
+              className={`relative inline-flex h-16 w-16 items-center justify-center rounded-full border ${avatarPreview ? "border-primary bg-primary/5 shadow-sm" : "border-dashed border-muted-foreground/40 bg-muted"} cursor-pointer transition`}
               title="Kis kép kiválasztása"
             >
               {avatarPreview && (
@@ -208,85 +166,28 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                     setAvatarPreview("");
                     setAvatarUrl("");
                   }}
-                  style={{
-                    position: "absolute",
-                    top: -8,
-                    right: -8,
-                    background: "transparent",
-                    border: ".5px solid #f00",
-                    color: "#f00",
-                    borderRadius: "50%",
-                    width: 24,
-                    height: 24,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                    fontWeight: 900,
-                    fontSize: 22,
-                    zIndex: 2000,
-                    pointerEvents: "auto",
-                    transition: "box-shadow 0.15s",
-                  }}
+                  className="absolute -top-2 -right-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-destructive text-destructive bg-background hover:shadow"
                   title="Kép törlése"
                 >
-                  ×
+                  <X className="h-4 w-4" />
                 </button>
               )}
               {avatarPreview ? (
-                <span
-                  style={{
-                    position: "relative",
-                    display: "inline-block",
-                    width: 64,
-                    height: 64,
-                    overflow: "visible",
-                  }}
-                >
-                  <img
-                    src={avatarPreview}
-                    alt="Tool preview"
-                    style={{
-                      width: 64,
-                      height: 64,
-                      objectFit: "cover",
-                      borderRadius: "50%",
-                      display: "block",
-                    }}
-                  />
+                <span className="relative block h-16 w-16 overflow-visible">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={avatarPreview} alt="Tool preview" className="h-16 w-16 rounded-full object-cover" />
                 </span>
               ) : (
-                <span
-                  style={{
-                    color: "#bbb",
-                    fontSize: 28,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                  }}
-                >
-                  <svg
-                    width="32"
-                    height="32"
-                    fill="none"
-                    stroke="#bbb"
-                    strokeWidth="2"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle cx="12" cy="12" r="9" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                  <span style={{ fontSize: 13, color: "#888", marginTop: 3 }}>
-                    Kép feltöltése
-                  </span>
+                <span className="flex flex-col items-center text-muted-foreground">
+                  <ImagePlus className="h-8 w-8" />
+                  <span className="mt-1 text-xs">Kép feltöltése</span>
                 </span>
               )}
-
               <input
                 id="tool-avatar-upload"
                 type="file"
                 accept="image/*"
-                style={{ display: "none" }}
+                className="hidden"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -304,9 +205,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                     if (data.url) {
                       setAvatarUrl(data.url);
                     } else {
-                      setAvatarError(
-                        data.error || "Hiba történt a feltöltésnél."
-                      );
+                      setAvatarError(data.error || "Hiba történt a feltöltésnél.");
                       setAvatarUrl("");
                     }
                   } catch (err) {
@@ -319,185 +218,91 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                 }}
               />
             </label>
-            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span style={{ fontSize: 14, color: "#888" }}>
-                Max 1 kép, 2 MB
-              </span>
-              {avatarUploading && (
-                <span style={{ color: "#0070f3", fontSize: 13 }}>
-                  Feltöltés...
-                </span>
-              )}
-              {avatarError && (
-                <span style={{ color: "red", fontSize: 13 }}>
-                  {avatarError}
-                </span>
-              )}
+            <div className="flex flex-col gap-0.5 text-sm">
+              <span className="text-muted-foreground">Max 1 kép, 2 MB</span>
+              {avatarUploading && <span className="text-primary text-xs">Feltöltés...</span>}
+              {avatarError && <span className="text-destructive text-xs">{avatarError}</span>}
             </div>
           </div>
         </div>
         {/* End Tool image upload UI */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontWeight: 500, marginBottom: 2 }}>
-            Választható eszköz:
-          </label>
-          <select
-            value={
-              toolAvailable === false && requiredToolName
-                ? "nem_elérhető"
-                : selectedToolId || requiredToolName || ""
-            }
-            onChange={(e) => setSelectedToolId(e.target.value)}
-            style={{
-              border: "1px solid #ddd",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontSize: 16,
-              background: toolAvailable === false ? "#fbeaea" : "#fafbfc",
-              color: toolAvailable === false ? "#d32f2f" : "#222",
-              outline: "none",
-              width: "100%",
-            }}
+
+        <div className="space-y-2">
+          <Label>Választható eszköz:</Label>
+          <Select
             disabled={loading}
+            value={selectValue}
+            onValueChange={(val) => setSelectedToolId(val)}
           >
-            {loading ? (
-              <option value="">Ellenőrzés...</option>
-            ) : toolAvailable === false && requiredToolName ? (
-              <option value="nem_elérhető" disabled style={{ color: "red" }}>
-                nem elérhető
-              </option>
-            ) : (
-              <option value={requiredToolName}>{requiredToolName}</option>
-            )}
-          </select>
+            <SelectTrigger className={`${toolAvailable === false ? "bg-destructive/10 text-destructive" : ""}`}>
+              <SelectValue placeholder={loading ? "Ellenőrzés..." : "Válassz eszközt"} />
+            </SelectTrigger>
+            <SelectContent>
+              {loading ? (
+                <SelectItem value="ellenorzes">Ellenőrzés...</SelectItem>
+              ) : toolAvailable === false && requiredToolName ? (
+                <SelectItem value="nem_elérhető" disabled>nem elérhető</SelectItem>
+              ) : requiredToolName ? (
+                <SelectItem value={requiredToolName}>{requiredToolName}</SelectItem>
+              ) : null}
+            </SelectContent>
+          </Select>
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontWeight: 500, marginBottom: 2 }}>Név:</label>
-          <input
+
+        <div className="space-y-2">
+          <Label>Név:</Label>
+          <Input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             disabled={loading}
-            style={{
-              width: "100%",
-              border: "1px solid #ddd",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontSize: 16,
-              background: !!requiredToolName ? "#f5f5f5" : "#fafbfc",
-              outline: "none",
-            }}
             required
           />
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontWeight: 500 }}>
-            Leírás <span style={{ color: "#e53935" }}>*</span>:
-          </label>
-          <textarea
+
+        <div className="space-y-2">
+          <Label>
+            Leírás <span className="text-destructive">*</span>:
+          </Label>
+          <Textarea
             value={customDescription || ""}
             onChange={(e) => setCustomDescription(e.target.value)}
-            style={{
-              width: "100%",
-              border: "1px solid #ddd",
-              borderRadius: 10,
-              padding: "10px 12px",
-              fontSize: 16,
-              minHeight: 54,
-              background: "#fafbfc",
-              outline: "none",
-              resize: "vertical",
-            }}
             placeholder="Rövid leírás az eszközről"
+            className="min-h-14"
             required
           />
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <label style={{ fontWeight: 500, minWidth: 72 }}>
-            Mennyiség <span style={{ color: "#e53935" }}>*</span>:
-          </label>
-          <input
+
+        <div className="flex items-center gap-3">
+          <Label className="min-w-20">Mennyiség <span className="text-destructive">*</span>:</Label>
+          <Input
             type="number"
             value={quantity}
             min={1}
             max={maxQuantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
-            style={{
-              width: 80,
-              border: "1px solid #ddd",
-              borderRadius: 10,
-              padding: "8px 10px",
-              fontSize: 16,
-              background: isOutOfStock ? "#f5f5f5" : "#fafbfc",
-              outline: "none",
-            }}
+            className={`w-24 ${isOutOfStock ? "bg-muted" : ""}`}
             required
             disabled={isOutOfStock}
           />
-          <span style={{ color: "#888", fontSize: 15 }}>
-            (max: {maxQuantity})
-          </span>
+          <span className="text-sm text-muted-foreground">(max: {maxQuantity})</span>
         </div>
+
         {error && (
-          <div
-            style={{
-              color: "#e53935",
-              fontWeight: 500,
-              marginTop: 2,
-              marginBottom: -8,
-              textAlign: "center",
-            }}
-          >
-            {error}
-          </div>
+          <div className="text-center font-medium text-destructive -mt-1">{error}</div>
         )}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            gap: 12,
-            marginTop: 10,
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1,
-              padding: "12px 0",
-              background: "#f2f2f2",
-              color: "#333",
-              borderRadius: 10,
-              border: "none",
-              fontWeight: 600,
-              fontSize: 17,
-              transition: "background 0.2s",
-              marginRight: 2,
-            }}
-          >
-            Mégse
-          </button>
-          <button
+
+        <DialogFooter className="mt-2 flex gap-3 sm:gap-4">
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Mégse</Button>
+          <Button
+            className="flex-1"
             onClick={handleSave}
-            style={{
-              flex: 1,
-              padding: "12px 0",
-              background: isOutOfStock ? "#bdbdbd" : "#1976d2",
-              color: "#fff",
-              borderRadius: 10,
-              border: "none",
-              fontWeight: 700,
-              fontSize: 17,
-              boxShadow: isOutOfStock ? "none" : "0 2px 8px 0 #1976d233",
-              cursor: isOutOfStock ? "not-allowed" : "pointer",
-              opacity: isOutOfStock ? 0.7 : 1,
-              marginLeft: 2,
-            }}
             disabled={isOutOfStock}
           >
             Mentés
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
