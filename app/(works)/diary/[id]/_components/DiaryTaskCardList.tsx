@@ -14,12 +14,15 @@ export default function DiaryTaskCardList({
   diaryIds,
 }: DiaryTaskCardListProps) {
   const [checkedId, setCheckedId] = useState<number | null>(null);
+  console.log(checkedId)
 
   const handleCheck = (id: number, checked: boolean) => {
     setCheckedId(checked ? id : null);
     // TODO: Indítsd el a naplózási workflow-t itt (pl. open modal, navigate, stb.)
     // Például: router.push(`/diary/${id}/new`)
   };
+
+  console.log(handleCheck)
 
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: 16 }}>

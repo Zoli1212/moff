@@ -230,6 +230,8 @@ const ToolsSlotsSection: React.FC<Props> = ({
         onOpenChange={setShowAddToolModal}
         onSubmit={async ({ name, quantity, workItemId }) => {
           // Itt kell meghívni a megfelelő szerver oldali függvényt (pl. addToolToRegistry és createWorkToolsRegistry)
+
+          console.log(workItemId)
           try {
             const savedTool = await addToolToRegistry(name, quantity, '', name);
             await createWorkToolsRegistry(workId, savedTool.id, quantity, savedTool.name);
