@@ -34,8 +34,8 @@ export default async function DiaryPage({ params }: DiaryPageProps) {
         })) ?? [],
     }));
     diaries = await getWorkDiariesByWorkId(workId);
-  } catch (e: any) {
-    error = e?.message || "Munkafázisok vagy napló betöltési hiba";
+  } catch (e) {
+    error = (e as Error)?.message || "Munkafázisok vagy napló betöltési hiba";
   }
 
   // workItemId-k amikhez van napló

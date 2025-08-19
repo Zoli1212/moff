@@ -19,6 +19,11 @@ export async function deleteWorkDiary({ workId, workItemId }: { workId: number; 
   }
 
   await prisma.workDiary.delete({ where: { id: diary.id } });
+  // Set inProgress to false for this workItem
+  await prisma.workItem.update({
+    where: { id: workItemId },
+    data: { inProgress: false },
+  });
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);
   return { success: true };
@@ -46,6 +51,12 @@ export async function createWorkDiary({ workId, workItemId }: { workId: number; 
       date: new Date(),
       description: "",
     },
+  });
+
+  // Set inProgress to true for this workItem
+  await prisma.workItem.update({
+    where: { id: workItemId },
+    data: { inProgress: true },
   });
 
   revalidatePath(`/works/diary/${workId}`);

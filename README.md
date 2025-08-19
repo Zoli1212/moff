@@ -647,3 +647,64 @@ jobb oldalt mennyiség
 csúszka
 vissza navigáljon a detail page-re
 progress bar nál elég
+
+1. kérdés
+
+anyagok az egyes munkafázisra vonatkoznak 
+dátum
+e-napló
+magyarázd el milyen sorai 
+külső hőm
+létszám adatok
+építési bontási hulladák
+azt naplózza, hogy az adott feladatot hányan csinálták
+mennyit haladtak
+kik
+egy tétel egy embernek az adott napi munkája !
+
+elvégzett feladat id
+melyik feladat konkrétan
+mennyit csinált
+burkolás "csináltam hány nm" konkrétan mennyit csinált meg
+90 % csempézés + fugázás
+mennyiség max összesen % 
+hány órát foglalkoztam bele
+fénykép
+e-napló munka / mennyiség törvényi
+chatgpt
+hatékonyság ellenőrzése is legyen egy nap mennyit burkol Pista
+----
+naptár formájú legyen
+múlt amit elfogadott
+terv
+megvalósult
+progress bar huzza, hogy hány % fel kell osztani napokra
+többletmunka
+mennyi időt foglalkoztam bele
+fénykép
+chatgpt
+hatékonyság ellenőrzése is legyen egy nap mennyit burkol Pista
+csúszka
+dátum következő munkanappal kezdődik + uj elemet lehessen hozzáadni
+kiválasztja, hogy melyik feladathoz tartozik és vagy egyéb!
+naptár nézet benne kártyák, hogy aznap mit csinál egy ember
+naplóelem az adott napon az adott ember hány órát foglalkozott egy embernek
+munkásnak azt kell rögzítenie, hogy az adott nap mit csinált
+és a naplót is az AI tölti
+azok a feladatok ami hozzá tartozik azokat látja
+----
+kiválasztja a folyamatot a munkát és egy megjegyzésbe meg egy képet,
+az AI meghatározza hol tart a progress
+változtathatja a progress az vállalkozó
+óra / mennyiség / megjegyzés / fenykép
+
+próbálunk egy progresst csinálni naplóba ezt látja
+e-naplóban az adott munkát látja
+
+happy path - 
+
+----
+e-napló:
+- munka
+- anyagok
+- eszközök
