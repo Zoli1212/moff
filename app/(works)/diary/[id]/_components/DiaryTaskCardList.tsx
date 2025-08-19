@@ -25,7 +25,29 @@ export default function DiaryTaskCardList({
 
   const handleCardClick = (itemId: number) => {
     const diary = diaries.find((d) => d.workItemId === itemId);
-    if (diary) setSelectedDiary(diary);
+    if (diary) {
+      setSelectedDiary(diary);
+    } else {
+      // Open DiaryEntryDetail with empty diary for this item
+      setSelectedDiary({
+        id: 0,
+        workId: items.find(i => i.id === itemId)?.workId || 0,
+        workItemId: itemId,
+        date: new Date(),
+        description: "",
+        weather: "",
+        temperature: null,
+        progress: null,
+        issues: "",
+        notes: "",
+        images: [],
+        reportedByName: "",
+        workItem: items.find(i => i.id === itemId),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        tenantEmail: ""
+      });
+    }
   };
 
   return (
@@ -37,7 +59,6 @@ export default function DiaryTaskCardList({
         <div>Nincs egyetlen munkafázis sem.</div>
       ) : (
         items
-          .filter((item) => diaryIds.includes(item.id))
           .map((item) => {
             return (
               <div key={item.id} onClick={() => handleCardClick(item.id)} style={{ cursor: "pointer" }}>
