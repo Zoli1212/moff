@@ -25,7 +25,10 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
   workId,
   workItems,
 }) => {
-  const [materials, setMaterials] = useState<Material[]>(initialMaterials);
+  // Szűrés: csak azok az anyagok jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
+  const inProgressWorkItemIds = workItems.filter(wi => wi.inProgress).map(wi => wi.id);
+  const filteredMaterials = initialMaterials.filter(mat => inProgressWorkItemIds.includes(mat.workItemId));
+  const [materials, setMaterials] = useState<Material[]>(filteredMaterials); // csak in-progress workItem-hez tartozó anyagok
   const [selected, setSelected] = useState<number[]>(() =>
     initialMaterials
       .filter(

@@ -81,12 +81,16 @@ export type AssignedTool = {
   quantity: number;
   tool: Tool & { description: string | null };
 };
-type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[] };
+import type { WorkItem } from "@/types/work";
+type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[]; workItems: WorkItem[] };
 
+import ToolAddModal from "./ToolAddModal";
+import { Button } from "@/components/ui/button";
 const ToolsSlotsSection: React.FC<Props> = ({
   tools,
   workId,
   assignedTools: assignedToolsProp,
+  workItems,
 }) => {
   // Local state for assignedTools to enable instant UI update
   const [assignedTools, setAssignedTools] =
@@ -95,6 +99,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
   const [showToolDetailsModal, setShowToolDetailsModal] = useState(false);
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
+  const [showAddToolModal, setShowAddToolModal] = useState(false);
   const [selectedTools, setSelectedTools] = useState<number[]>(() => {
   // Preselect tools that are already fully assigned
   return tools
@@ -220,16 +225,36 @@ const ToolsSlotsSection: React.FC<Props> = ({
 
   return (
     <div style={{ marginBottom: 32 }}>
-      <h3
-        style={{
-          fontSize: 20,
-          fontWeight: 600,
-          marginBottom: 12,
-          textAlign: "center",
+      <ToolAddModal
+        open={showAddToolModal}
+        onOpenChange={setShowAddToolModal}
+        onSubmit={async ({ name, quantity, workItemId }) => {
+          // Itt kell meghívni a megfelelő szerver oldali függvényt (pl. addToolToRegistry és createWorkToolsRegistry)
+          try {
+            const savedTool = await addToolToRegistry(name, quantity, '', name);
+            await createWorkToolsRegistry(workId, savedTool.id, quantity, savedTool.name);
+            toast.success("Új eszköz sikeresen hozzáadva!");
+            await fetchAssignedToolsAndUpdateState();
+          } catch (err) {
+            toast.error("Hiba az eszköz hozzáadásakor: " + (err as Error).message);
+          }
         }}
-      >
-        Szükséges eszközök
-      </h3>
+        workItems={workItems}
+      />
+    
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18, gap: 16 }}>
+        <span style={{ fontSize: 20, fontWeight: 600, whiteSpace: 'nowrap' }}>Szükséges eszközök</span>
+        <div style={{ flex: 1, height: 1 }} />
+        <Button
+          onClick={() => setShowAddToolModal(true)}
+          variant="outline"
+          aria-label="Új eszköz hozzáadása"
+          className="border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
+          style={{ marginLeft: 8, width: 40, height: 40, minWidth: 40, minHeight: 40, borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}
+        >
+          +
+        </Button>
+      </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
         {Object.entries(grouped).map(([name, tool]) => {
           const q = tool.quantity ?? 1;

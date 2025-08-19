@@ -161,6 +161,7 @@ export default async function SupplyPage({
           tools={tools}
           workId={workId}
           assignedTools={assignedTools}
+          workItems={workItems}
         />
       )}
     </div>

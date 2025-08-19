@@ -32,6 +32,7 @@ export interface WorkItem {
   workTotal?: number | null;
   materialTotal?: number | null;
   totalPrice: number;
+  inProgress?: boolean;
   tools: Tool[];
   materials: Material[];
   workers: Worker[];
@@ -57,6 +58,7 @@ export interface Material {
   unit: string;
   availableFull?: boolean;
   availableQuantity?: number;
+  workItemId: number; // Added for filtering and type safety
 }
 
 export interface Worker {

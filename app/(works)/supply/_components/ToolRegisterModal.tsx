@@ -85,7 +85,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
     let found = filteredTools.find(
       (t) => t.id === selectedToolId || t.name === selectedToolId
     );
-  
+
     // Ha nem találtad a filteredTools-ban, akkor nézd meg a registry-ben (API hívás)
     if (!found) {
       found = await findToolInRegistryByName(toolName);
@@ -163,69 +163,122 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         </h2>
         {/* Tool image upload UI */}
         <div style={{ marginBottom: 0 }}>
-          <label style={{ fontWeight: 500, display: 'block', marginBottom: 4, textAlign: 'center' }}>Kis kép (opcionális)</label>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 6 }}>
+          <label
+            style={{
+              fontWeight: 500,
+              display: "block",
+              marginBottom: 4,
+              textAlign: "center",
+            }}
+          >
+            Kis kép (opcionális)
+          </label>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              justifyContent: "center",
+              marginBottom: 6,
+            }}
+          >
             <label
               htmlFor="tool-avatar-upload"
               style={{
                 width: 64,
                 height: 64,
-                borderRadius: '50%',
-                border: avatarPreview ? '2px solid #0070f3' : '2px dashed #bbb',
-                background: avatarPreview ? '#f5faff' : '#fafbfc',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                transition: 'border 0.2s',
-                position: 'relative',
-                boxShadow: avatarPreview ? '0 2px 8px #0070f311' : 'none',
+                borderRadius: "50%",
+                border: avatarPreview ? "2px solid #0070f3" : "2px dashed #bbb",
+                background: avatarPreview ? "#f5faff" : "#fafbfc",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                transition: "border 0.2s",
+                position: "relative",
+                boxShadow: avatarPreview ? "0 2px 8px #0070f311" : "none",
               }}
               title="Kis kép kiválasztása"
             >
               {avatarPreview && (
                 <button
                   type="button"
-                  onClick={e => {
+                  onClick={(e) => {
                     e.preventDefault();
                     setAvatarPreview("");
                     setAvatarUrl("");
                   }}
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: -8,
                     right: -8,
-                    background: 'transparent',
-                    border: '.5px solid #f00',
-                    color: '#f00',
-                    borderRadius: '50%',
+                    background: "transparent",
+                    border: ".5px solid #f00",
+                    color: "#f00",
+                    borderRadius: "50%",
                     width: 24,
                     height: 24,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
                     fontWeight: 900,
                     fontSize: 22,
                     zIndex: 2000,
-                    pointerEvents: 'auto',
-                    transition: 'box-shadow 0.15s',
+                    pointerEvents: "auto",
+                    transition: "box-shadow 0.15s",
                   }}
                   title="Kép törlése"
-                >×</button>
+                >
+                  ×
+                </button>
               )}
               {avatarPreview ? (
-                <span style={{ position: 'relative', display: 'inline-block', width: 64, height: 64, overflow: 'visible' }}>
+                <span
+                  style={{
+                    position: "relative",
+                    display: "inline-block",
+                    width: 64,
+                    height: 64,
+                    overflow: "visible",
+                  }}
+                >
                   <img
                     src={avatarPreview}
                     alt="Tool preview"
-                    style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: '50%', display: 'block' }}
+                    style={{
+                      width: 64,
+                      height: 64,
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                      display: "block",
+                    }}
                   />
                 </span>
               ) : (
-                <span style={{ color: '#bbb', fontSize: 28, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <svg width="32" height="32" fill="none" stroke="#bbb" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg>
-                  <span style={{ fontSize: 13, color: '#888', marginTop: 3 }}>Kép feltöltése</span>
+                <span
+                  style={{
+                    color: "#bbb",
+                    fontSize: 28,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <svg
+                    width="32"
+                    height="32"
+                    fill="none"
+                    stroke="#bbb"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                  <span style={{ fontSize: 13, color: "#888", marginTop: 3 }}>
+                    Kép feltöltése
+                  </span>
                 </span>
               )}
 
@@ -233,7 +286,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                 id="tool-avatar-upload"
                 type="file"
                 accept="image/*"
-                style={{ display: 'none' }}
+                style={{ display: "none" }}
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
@@ -251,23 +304,35 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                     if (data.url) {
                       setAvatarUrl(data.url);
                     } else {
-                      setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                      setAvatarError(
+                        data.error || "Hiba történt a feltöltésnél."
+                      );
                       setAvatarUrl("");
                     }
                   } catch (err) {
                     setAvatarError("Hiba a feltöltés során.");
                     setAvatarUrl("");
-                    console.log(err)
+                    console.log(err);
                   } finally {
                     setAvatarUploading(false);
                   }
                 }}
               />
             </label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: 14, color: '#888' }}>Max 1 kép, 2 MB</span>
-              {avatarUploading && <span style={{ color: '#0070f3', fontSize: 13 }}>Feltöltés...</span>}
-              {avatarError && <span style={{ color: 'red', fontSize: 13 }}>{avatarError}</span>}
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <span style={{ fontSize: 14, color: "#888" }}>
+                Max 1 kép, 2 MB
+              </span>
+              {avatarUploading && (
+                <span style={{ color: "#0070f3", fontSize: 13 }}>
+                  Feltöltés...
+                </span>
+              )}
+              {avatarError && (
+                <span style={{ color: "red", fontSize: 13 }}>
+                  {avatarError}
+                </span>
+              )}
             </div>
           </div>
         </div>
