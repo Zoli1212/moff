@@ -89,6 +89,7 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
           <h2 className="text-2xl font-bold mb-6">Munkanapló</h2>
           <WorkerDiaryEditForm
             diary={localDiary}
+            workItems={workItems}
             onSave={handleSave}
             onCancel={handleCancel}
           />

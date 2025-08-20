@@ -68,6 +68,7 @@ export default function DiaryPageClient({ items, diaries, error, type, diaryIds 
           <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto w-full">
             <WorkerDiaryEditForm
               diary={selectedDiary}
+              workItems={items}
               onSave={() => setShowDiaryModal(false)}
               onCancel={handleCloseModal}
             />

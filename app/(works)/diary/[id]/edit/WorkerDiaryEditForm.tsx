@@ -7,17 +7,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
 
+import type { WorkItem } from "@/types/work";
+
 interface WorkerDiaryEditFormProps {
   diary: WorkDiaryWithItem;
+  workItems: WorkItem[];
   onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
 }
 
 export default function WorkerDiaryEditForm({
   diary,
+  workItems,
   onSave,
   onCancel,
 }: WorkerDiaryEditFormProps) {
+  const [selectedWorkItemId, setSelectedWorkItemId] = useState<number | "">(
+    typeof diary.workItemId === "number" ? diary.workItemId : ""
+  );
   const [date, setDate] = useState<string>(
     diary.date ? new Date(diary.date).toISOString().substring(0, 10) : ""
   );
@@ -74,11 +81,30 @@ export default function WorkerDiaryEditForm({
       unit: unit || null,
       workHours: workHours === "" ? null : Number(workHours),
       images,
+      workItemId: selectedWorkItemId === "" ? null : Number(selectedWorkItemId),
     });
   };
 
+
   return (
     <form className="space-y-6 max-w-4xl mx-auto" onSubmit={handleSubmit}>
+      <div>
+        <Label htmlFor="work-item-select">Munkafolyamat</Label>
+        <select
+          id="work-item-select"
+          className="w-full border rounded px-3 py-2 mt-1 mb-4"
+          value={selectedWorkItemId}
+          onChange={(e) => setSelectedWorkItemId(e.target.value === "" ? "" : Number(e.target.value))}
+          required
+        >
+          <option value="">Válassz munkafolyamatot…</option>
+          {workItems.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+      </div>
       <div>
         <Label htmlFor="diary-date">
           Dátum <Calendar className="inline ml-1 h-4 w-4" />
