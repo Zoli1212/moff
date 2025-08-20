@@ -77,11 +77,11 @@ export default function WorkerDiaryEditForm({
       ...diary,
       date: new Date(date),
       description,
-      quantity: quantity === "" ? null : Number(quantity),
-      unit: unit || null,
-      workHours: workHours === "" ? null : Number(workHours),
+      quantity: quantity === "" ? undefined : Number(quantity),
+      unit: unit || undefined,
+      workHours: workHours === "" ? undefined : Number(workHours),
       images,
-      workItemId: selectedWorkItemId === "" ? null : Number(selectedWorkItemId),
+      workItemId: selectedWorkItemId === "" ? undefined : Number(selectedWorkItemId),
     });
   };
 

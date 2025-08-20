@@ -280,6 +280,7 @@ model WorkDiary {
   notes          String?
   reportedById   String?     // Could be linked to a User model if needed
   reportedByName String?
+  unit           String?    // measurement unit, e.g. 'm2', 'db', etc.
   images         String[]    // URLs to stored images
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
