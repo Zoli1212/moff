@@ -10,8 +10,12 @@ export interface WorkDiaryWithItem extends WorkDiary {
 }
 
 export async function getWorkDiariesByWorkId(workId: number): Promise<WorkDiaryWithItem[]> {
+  // Only return diaries that have at least one WorkDiaryItem
   const diaries = await prisma.workDiary.findMany({
-    where: { workId },
+    where: {
+      workId,
+      workDiaryItems: { some: {} },
+    },
     orderBy: { date: 'desc' },
     include: {
       workItem: {

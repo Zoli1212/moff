@@ -10,6 +10,7 @@ import { WorkDiaryWithItem } from '@/actions/get-workdiariesbyworkid-actions';
 interface GoogleCalendarViewProps {
   diaries: WorkDiaryWithItem[];
   onEventClick: (diary: WorkDiaryWithItem) => void;
+  onDateClick?: (date: Date) => void;
 }
 
 export default function GoogleCalendarView({ diaries = [], onDateClick, onEventClick }: GoogleCalendarViewProps) {
@@ -35,6 +36,9 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
       eventClick={(info: any) => {
         const diary = diaries.find(d => String(d.id) === info.event.id);
         if (diary) onEventClick(diary);
+      }}
+      dateClick={(info: any) => {
+        if (onDateClick) onDateClick(info.date);
       }}
       height="80vh"
       locale={huLocale}

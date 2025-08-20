@@ -27,9 +27,17 @@ export default function WorkerDiaryEditForm({
   const [selectedWorkItemId, setSelectedWorkItemId] = useState<number | "">(
     typeof diary.workItemId === "number" ? diary.workItemId : ""
   );
-  const [date, setDate] = useState<string>(
-    diary.date ? new Date(diary.date).toISOString().substring(0, 10) : ""
-  );
+  // Format a date to YYYY-MM-DD in LOCAL time to avoid UTC shifts
+  const formatLocalDate = (value?: Date | string) => {
+    if (!value) return "";
+    const d = new Date(value);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  };
+
+  const [date, setDate] = useState<string>(formatLocalDate(diary.date));
   const [description, setDescription] = useState(diary.description || "");
   const [quantity, setQuantity] = useState<number | "">(
     typeof diary.quantity === "number" ? diary.quantity : ""
@@ -77,11 +85,18 @@ export default function WorkerDiaryEditForm({
     if (!date) return;
     // Use strict types for payloads
     if (selectedWorkItemId === "" || isNaN(Number(selectedWorkItemId))) return; // Don't submit if not selected
+    // Convert YYYY-MM-DD to a Date in LOCAL time (year, monthIndex, day)
+    const toLocalDate = (ymd: string): Date | undefined => {
+      if (!ymd) return undefined;
+      const [y, m, d] = ymd.split("-").map(Number);
+      return new Date(y, (m || 1) - 1, d || 1);
+    };
+
     const payload: WorkDiaryItemCreate = {
       workId: diary.workId,
       workItemId: Number(selectedWorkItemId), // always number for create
       workerId: undefined, // No workerId on diary
-      date: new Date(date),
+      date: toLocalDate(date),
       quantity: quantity === "" ? undefined : Number(quantity),
       workHours: workHours === "" ? undefined : Number(workHours),
       images,

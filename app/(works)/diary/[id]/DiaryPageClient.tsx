@@ -61,6 +61,7 @@ export default function DiaryPageClient({ items, diaries, error, type, diaryIds 
           setSelectedDiary(diary);
           setShowDiaryModal(true);
         }}
+        onDateClick={handleDateSelect}
       />
       {/* DiaryEntryDetail modal - always opens for selected day */}
       {showDiaryModal && selectedDiary && (
