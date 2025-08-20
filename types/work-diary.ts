@@ -20,3 +20,25 @@ export interface WorkDiary {
   progress?: number | null;
   workHours?: number | null;
 }
+
+// Types for WorkDiaryItem create/update actions
+type WorkDiaryItemBase = {
+  workId?: number;
+  workItemId?: number;
+  workerId?: number;
+  date?: Date;
+  quantity?: number;
+  workHours?: number;
+  images?: string[];
+  notes?: string;
+};
+
+export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId"> & {
+  workId: number;
+  workItemId: number;
+};
+
+export type WorkDiaryItemUpdate = WorkDiaryItemBase & {
+  id: number;
+};
+

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { updateWorkDiaryItem, createWorkDiaryItem } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
 
 import type { WorkItem } from "@/types/work";
+import type { WorkDiaryItemCreate, WorkDiaryItemUpdate } from "@/types/work-diary";
 
 interface WorkerDiaryEditFormProps {
   diary: WorkDiaryWithItem;
@@ -73,18 +75,39 @@ export default function WorkerDiaryEditForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return;
-    onSave({
-      ...diary,
+    // Use strict types for payloads
+    if (selectedWorkItemId === "" || isNaN(Number(selectedWorkItemId))) return; // Don't submit if not selected
+    const payload: WorkDiaryItemCreate = {
+      workId: diary.workId,
+      workItemId: Number(selectedWorkItemId), // always number for create
+      workerId: undefined, // No workerId on diary
       date: new Date(date),
-      description,
       quantity: quantity === "" ? undefined : Number(quantity),
-      unit: unit || undefined,
       workHours: workHours === "" ? undefined : Number(workHours),
       images,
-      workItemId: selectedWorkItemId === "" ? undefined : Number(selectedWorkItemId),
-    });
+      notes: description,
+    };
+    if (diary.id !== undefined) {
+      // Update
+      const updatePayload: import('@/types/work-diary').WorkDiaryItemUpdate = { ...payload, id: diary.id };
+      updateWorkDiaryItem(updatePayload).then((result: any) => {
+        if (result.success) {
+          onSave(result.data);
+        } else {
+          // handle error (optional)
+        }
+      });
+    } else {
+      // Create
+      createWorkDiaryItem(payload).then((result: any) => {
+        if (result.success) {
+          onSave(result.data);
+        } else {
+          // handle error (optional)
+        }
+      });
+    }
   };
-
 
   return (
     <form className="space-y-6 max-w-4xl mx-auto" onSubmit={handleSubmit}>

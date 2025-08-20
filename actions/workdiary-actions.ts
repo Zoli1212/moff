@@ -10,7 +10,6 @@ export async function deleteWorkDiary({ workId, workItemId }: { workId: number; 
   const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error("No tenant email found");
 
-  // Find the diary for this workItem and user
   const diary = await prisma.workDiary.findFirst({
     where: { workId, workItemId, tenantEmail },
   });
@@ -19,11 +18,12 @@ export async function deleteWorkDiary({ workId, workItemId }: { workId: number; 
   }
 
   await prisma.workDiary.delete({ where: { id: diary.id } });
-  // Set inProgress to false for this workItem
+
   await prisma.workItem.update({
     where: { id: workItemId },
     data: { inProgress: false },
   });
+
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);
   return { success: true };
@@ -63,7 +63,6 @@ export async function updateWorkDiary({
   const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error("No tenant email found");
 
-  // Only allow updating the contractor's own diary entry
   const diary = await prisma.workDiary.findFirst({
     where: { id, workId, workItemId, tenantEmail },
   });
@@ -71,7 +70,6 @@ export async function updateWorkDiary({
     return { success: false, message: "Diary not found or not owned by user." };
   }
 
-  // Only update fields that exist in WorkDiary and are provided
   const data: any = {};
   if (description !== undefined) data.description = description;
   if (weather !== undefined) data.weather = weather;
@@ -88,14 +86,13 @@ export async function updateWorkDiary({
     where: { id },
     data,
   });
+
   revalidatePath(`/works/diary/${workId}`);
   return { success: true, data: updated };
 }
 
 /**
  * Update a WorkDiaryItem (not WorkDiary) entry
- * @param fields Fields for WorkDiaryItem: id, workId, workItemId, workerId, date, quantity, workHours, images, notes
- * @returns { success, data } or { success, message }
  */
 export async function updateWorkDiaryItem({
   id,
@@ -106,7 +103,7 @@ export async function updateWorkDiaryItem({
   quantity,
   workHours,
   images,
-  notes
+  notes,
 }: {
   id: number;
   workId?: number;
@@ -123,9 +120,6 @@ export async function updateWorkDiaryItem({
   const userEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
   if (!userEmail) throw new Error("No user email found");
 
-  // Optionally check user permissions here if needed
-
-  // Build update data object
   const updateData: any = {};
   if (workId !== undefined) updateData.workId = workId;
   if (workItemId !== undefined) updateData.workItemId = workItemId;
@@ -149,6 +143,60 @@ export async function updateWorkDiaryItem({
   } catch (error) {
     return { success: false, message: (error as Error).message };
   }
+} // <-- EZ HIÁNYZOTT
+
+/**
+ * Create a new WorkDiaryItem entry
+ */
+export async function createWorkDiaryItem({
+  workId,
+  workItemId,
+  workerId,
+  date,
+  quantity,
+  workHours,
+  images,
+  notes,
+}: {
+  workId: number;
+  workItemId: number;
+  workerId?: number;
+  date?: Date;
+  quantity?: number;
+  workHours?: number;
+  images?: string[];
+  notes?: string;
+  // id is intentionally omitted for creation
+}) {
+  const user = await currentUser();
+  if (!user) throw new Error("Not authenticated");
+  const userEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  if (!userEmail) throw new Error("No user email found");
+
+  try {
+    const createData: any = {
+      workId,
+      workItemId,
+      tenantEmail: userEmail,
+    };
+    if (workerId !== undefined) createData.workerId = workerId;
+    if (date !== undefined) createData.date = date;
+    if (quantity !== undefined) createData.quantity = quantity;
+    if (workHours !== undefined) createData.workHours = workHours;
+    if (images !== undefined) createData.images = images;
+    if (notes !== undefined) createData.notes = notes;
+
+    const created = await prisma.workDiaryItem.create({
+      data: createData,
+    });
+    if (workId) {
+      revalidatePath(`/works/diary/${workId}`);
+      revalidatePath(`/works/tasks/${workId}`);
+    }
+    return { success: true, data: created };
+  } catch (error) {
+    return { success: false, message: (error as Error).message };
+  }
 }
 
 export async function createWorkDiary({ workId, workItemId }: { workId: number; workItemId: number }) {
@@ -157,7 +205,6 @@ export async function createWorkDiary({ workId, workItemId }: { workId: number; 
   const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error("No tenant email found");
 
-  // Check if diary already exists for this workItem
   const existing = await prisma.workDiary.findFirst({
     where: { workId, workItemId, tenantEmail },
   });
@@ -175,7 +222,6 @@ export async function createWorkDiary({ workId, workItemId }: { workId: number; 
     },
   });
 
-  // Set inProgress to true for this workItem
   await prisma.workItem.update({
     where: { id: workItemId },
     data: { inProgress: true },
