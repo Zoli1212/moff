@@ -13,12 +13,22 @@ interface WorkerDiaryEditFormProps {
   onCancel: () => void;
 }
 
-export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerDiaryEditFormProps) {
-  const [date, setDate] = useState<string>(diary.date ? new Date(diary.date).toISOString().substring(0, 10) : "");
+export default function WorkerDiaryEditForm({
+  diary,
+  onSave,
+  onCancel,
+}: WorkerDiaryEditFormProps) {
+  const [date, setDate] = useState<string>(
+    diary.date ? new Date(diary.date).toISOString().substring(0, 10) : ""
+  );
   const [description, setDescription] = useState(diary.description || "");
-  const [quantity, setQuantity] = useState<number | "">(typeof diary.quantity === "number" ? diary.quantity : "");
+  const [quantity, setQuantity] = useState<number | "">(
+    typeof diary.quantity === "number" ? diary.quantity : ""
+  );
   const [unit, setUnit] = useState<string>(diary.unit || "");
-  const [workHours, setWorkHours] = useState<number | "">(typeof diary.workHours === "number" ? diary.workHours : "");
+  const [workHours, setWorkHours] = useState<number | "">(
+    typeof diary.workHours === "number" ? diary.workHours : ""
+  );
   const [images, setImages] = useState<string[]>(diary.images || []);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -70,7 +80,9 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
   return (
     <form className="space-y-6 max-w-4xl mx-auto" onSubmit={handleSubmit}>
       <div>
-        <Label htmlFor="diary-date">Dátum <Calendar className="inline ml-1 h-4 w-4" /></Label>
+        <Label htmlFor="diary-date">
+          Dátum <Calendar className="inline ml-1 h-4 w-4" />
+        </Label>
         <Input
           id="diary-date"
           type="date"
@@ -104,7 +116,9 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
           id="diary-work-hours"
           type="number"
           value={workHours}
-          onChange={(e) => setWorkHours(e.target.value === "" ? "" : Number(e.target.value))}
+          onChange={(e) =>
+            setWorkHours(e.target.value === "" ? "" : Number(e.target.value))
+          }
           min={0}
           step={0.1}
         />
@@ -114,7 +128,9 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
         <Input
           type="number"
           value={quantity}
-          onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
+          onChange={(e) =>
+            setQuantity(e.target.value === "" ? "" : Number(e.target.value))
+          }
           min={0}
           step={0.01}
         />
@@ -125,7 +141,11 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
           {images.map((img, idx) => (
             <div key={img} className="relative group">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img} alt={`napló kép ${idx + 1}`} className="w-20 h-20 object-cover rounded shadow" />
+              <img
+                src={img}
+                alt={`napló kép ${idx + 1}`}
+                className="w-20 h-20 object-cover rounded shadow"
+              />
               <button
                 type="button"
                 onClick={() => handleRemoveImage(img)}
@@ -137,7 +157,9 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
             </div>
           ))}
           <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed rounded cursor-pointer hover:bg-muted-foreground/10 transition">
-            <span className="text-xs text-muted-foreground">Kép hozzáadása</span>
+            <span className="text-xs text-muted-foreground">
+              Kép hozzáadása
+            </span>
             <Input
               type="file"
               accept="image/*"
@@ -147,8 +169,12 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
             />
           </label>
         </div>
-        {imageUploading && <div className="text-blue-600 text-xs mt-1">Feltöltés...</div>}
-        {imageError && <div className="text-red-600 text-xs mt-1">{imageError}</div>}
+        {imageUploading && (
+          <div className="text-blue-600 text-xs mt-1">Feltöltés...</div>
+        )}
+        {imageError && (
+          <div className="text-red-600 text-xs mt-1">{imageError}</div>
+        )}
       </div>
       <div className="flex gap-2 justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
-import DiaryEntryDetail from "./_components/DiaryEntryDetail";
+import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
 import { WorkItem } from "@/types/work";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 
@@ -57,7 +57,6 @@ export default function DiaryPageClient({ items, diaries, error, type, diaryIds 
       )}
       <GoogleCalendarView
         diaries={diaries}
-        onDateClick={handleDateSelect}
         onEventClick={diary => {
           setSelectedDiary(diary);
           setShowDiaryModal(true);
@@ -65,12 +64,15 @@ export default function DiaryPageClient({ items, diaries, error, type, diaryIds 
       />
       {/* DiaryEntryDetail modal - always opens for selected day */}
       {showDiaryModal && selectedDiary && (
-        <DiaryEntryDetail
-          diary={selectedDiary}
-          diaries={diaries}
-          workItems={items ?? []}
-          onClose={handleCloseModal}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto w-full">
+            <WorkerDiaryEditForm
+              diary={selectedDiary}
+              onSave={() => setShowDiaryModal(false)}
+              onCancel={handleCloseModal}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

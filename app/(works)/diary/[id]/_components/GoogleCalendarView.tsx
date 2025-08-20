@@ -9,24 +9,15 @@ import { WorkDiaryWithItem } from '@/actions/get-workdiariesbyworkid-actions';
 
 interface GoogleCalendarViewProps {
   diaries: WorkDiaryWithItem[];
-  onDateClick: (date: Date) => void;
   onEventClick: (diary: WorkDiaryWithItem) => void;
 }
 
 export default function GoogleCalendarView({ diaries = [], onDateClick, onEventClick }: GoogleCalendarViewProps) {
-  // Csoportosítsuk a naplókat dátum szerint, hogy naponta csak egy esemény jelenjen meg
-  const eventMap: { [date: string]: WorkDiaryWithItem[] } = {};
-  (diaries ?? []).forEach(diary => {
-    const date = new Date(diary.date).toISOString().slice(0, 10);
-    if (!eventMap[date]) eventMap[date] = [];
-    eventMap[date].push(diary);
-  });
-  const events = Object.entries(eventMap).map(([date, diaries]) => ({
-    id: String(diaries[0].id),
-    title: diaries.length === 1
-      ? (diaries[0].workItem?.name || 'Napló')
-      : `*${diaries[0].workItem?.name || 'Napló'} +${diaries.length - 1} további`,
-    start: date,
+  // Minden naplóbejegyzést külön eseményként jelenítünk meg
+  const events = (diaries ?? []).map(diary => ({
+    id: String(diary.id),
+    title: diary.workItem?.name || 'Napló',
+    start: diary.date,
     allDay: true,
   }));
 
@@ -40,7 +31,7 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       }}
       events={events}
-      dateClick={(info: any) => onDateClick(info.date)}
+
       eventClick={(info: any) => {
         const diary = diaries.find(d => String(d.id) === info.event.id);
         if (diary) onEventClick(diary);
