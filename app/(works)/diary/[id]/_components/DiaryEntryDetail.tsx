@@ -3,9 +3,12 @@ import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-action
 import WorkerDiaryEditForm from "../edit/WorkerDiaryEditForm";
 import { generateDiaryPdf } from "./DiaryPdfExport";
 
+import type { WorkItem } from "@/types/work";
+
 interface DiaryEntryDetailProps {
   diary: WorkDiaryWithItem;
   diaries: WorkDiaryWithItem[];
+  workItems: WorkItem[];
   onEdit?: () => void;
   onClose?: () => void;
 }
@@ -13,6 +16,7 @@ interface DiaryEntryDetailProps {
 export default function DiaryEntryDetail({
   diary,
   diaries,
+  workItems,
   onEdit,
   onClose,
 }: DiaryEntryDetailProps) {
@@ -34,7 +38,7 @@ export default function DiaryEntryDetail({
   // Find diary for selectedDate, but do NOT reset localDiary if already editing
   React.useEffect(() => {
     if (!editMode) {
-      const found = diaries.find(
+      const found = (diaries ?? []).find(
         (d) =>
           d.date && new Date(d.date).toISOString().slice(0, 10) === selectedDate
       );
@@ -107,7 +111,21 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
         )}
       </div>
       <div className="mb-3 text-sm text-gray-600">
-        <b>Munkafázis:</b> {diary.workItem?.name || "-"} <br />
+        <b>Munkafázis:</b>
+        <select
+          className="border rounded px-2 py-1 ml-2"
+          value={localDiary.workItemId}
+          onChange={e => {
+            const wid = Number(e.target.value);
+            const selected = workItems.find((w: WorkItem) => w.id === wid);
+            setLocalDiary({ ...localDiary, workItemId: wid, workItem: selected });
+          }}
+        >
+          {workItems.map((w: WorkItem) => (
+            <option key={w.id} value={w.id}>{w.name}</option>
+          ))}
+        </select>
+        <br />
         <b>Dátum:</b>{" "}
         <input
           type="date"
