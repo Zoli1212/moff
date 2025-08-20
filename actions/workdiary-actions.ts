@@ -36,9 +36,11 @@ export async function updateWorkDiary({
   description,
   weather,
   temperature,
-  progress,
+  quantity,
   issues,
   notes,
+  unit,
+  workHours,
 }: {
   id: number;
   workId: number;
@@ -46,9 +48,11 @@ export async function updateWorkDiary({
   description?: string;
   weather?: string | null;
   temperature?: number | null;
-  progress?: number | null;
+  quantity?: number | null;
   issues?: string | null;
   notes?: string | null;
+  unit?: string | null;
+  workHours?: number | null;
 }) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
@@ -69,9 +73,11 @@ export async function updateWorkDiary({
       description,
       weather,
       temperature,
-      progress,
+      quantity,
       issues,
       notes,
+      unit,
+      workHours,
     },
   });
   revalidatePath(`/works/diary/${workId}`);

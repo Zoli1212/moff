@@ -59,9 +59,11 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
         description: updated.description,
         weather: updated.weather,
         temperature: updated.temperature,
-        progress: updated.progress,
+        quantity: updated.quantity,
         issues: updated.issues,
         notes: updated.notes,
+        unit: updated.unit,
+        workHours: updated.workHours,
       });
       if (res.success) {
         setLocalDiary({ ...localDiary, ...updated });
@@ -74,7 +76,7 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
     } finally {
       setSaving(false);
     }
-  };
+  };;
 
   if (editMode) {
     return (
@@ -119,23 +121,34 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
         />
         <b>Jelentő:</b> {diary.reportedByName || "-"}
       </div>
-      <div className="mb-4">
-        <b>Leírás:</b>
-        <div className="bg-gray-50 rounded p-2 mt-1 whitespace-pre-line">
-          {diary.description || "-"}
+      <div className="flex flex-col gap-2">
+        <div>
+          <span className="font-semibold">Dátum:</span> {localDiary.date ? new Date(localDiary.date).toLocaleDateString() : "-"}
         </div>
-      </div>
-      <div className="mb-2">
-        <b>Időjárás:</b> {diary.weather || "-"} <br />
-        <b>Hőmérséklet:</b>{" "}
-        {diary.temperature != null ? `${diary.temperature} °C` : "-"}
-      </div>
-      <div className="mb-2">
-        <b>Előrehaladás:</b>{" "}
-        {diary.progress != null ? `${diary.progress}%` : "-"}
-      </div>
-      <div className="mb-2">
-        <b>Problémák:</b> {diary.issues || "-"}
+        <div>
+          <span className="font-semibold">Leírás:</span> {localDiary.description || "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Mennyiség:</span> {localDiary.quantity != null ? localDiary.quantity : "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Mennyiségi egység:</span> {localDiary.unit || "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Munkaóra:</span> {localDiary.workHours != null ? localDiary.workHours : "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Időjárás:</span> {localDiary.weather || "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Hőmérséklet:</span> {localDiary.temperature != null ? `${localDiary.temperature} °C` : "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Problémák:</span> {localDiary.issues || "-"}
+        </div>
+        <div>
+          <span className="font-semibold">Jegyzetek:</span> {localDiary.notes || "-"}
+        </div>
       </div>
       <div className="mb-2">
         <b>Jegyzetek:</b> {diary.notes || "-"}

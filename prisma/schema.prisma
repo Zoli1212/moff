@@ -177,7 +177,7 @@ model Work {
   workers       Worker[]
   tools         Tool[]
   materials     Material[]
-  
+  workDiaryItems WorkDiaryItem[]
   offerItems    Json?  
   updatedByAI   Boolean   @default(false)     
 }
@@ -200,6 +200,7 @@ model WorkItem {
   materials      Material[]
   workDiaryEntries WorkDiary[]
   workItemWorkers WorkItemWorker[]
+  workDiaryItems WorkDiaryItem[]
   inProgress     Boolean   @default(false)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -223,6 +224,7 @@ model Worker {
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
   workItemWorkers WorkItemWorker[] @relation("WorkerToWorkItemWorker")
+  workDiaryItems WorkDiaryItem[]
   workers        Json?      
  
 }
@@ -282,6 +284,7 @@ model WorkDiary {
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
+  workDiaryItems WorkDiaryItem[]
 }
 
 model MyInvoices {
@@ -502,4 +505,25 @@ model WorkToolsRegistry {
   tenantEmail    String         @default("")
   availableFull  Boolean        @default(false)
   @@unique([workId, toolId])
+}
+
+model WorkDiaryItem {
+  id            Int        @id @default(autoincrement())
+  diaryId       Int
+  diary         WorkDiary  @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  workId        Int
+  work          Work       @relation(fields: [workId], references: [id], onDelete: Cascade)
+  workItemId    Int
+  workItem      WorkItem   @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  workerId      Int
+  worker        Worker     @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  quantity      Float?
+  workHours     Float?
+  date          DateTime   @default(now())
+  images        String[]
+  notes         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@unique([diaryId, workId, workItemId, workerId, date])
 }

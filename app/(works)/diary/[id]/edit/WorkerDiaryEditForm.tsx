@@ -16,7 +16,9 @@ interface WorkerDiaryEditFormProps {
 export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerDiaryEditFormProps) {
   const [date, setDate] = useState<string>(diary.date ? new Date(diary.date).toISOString().substring(0, 10) : "");
   const [description, setDescription] = useState(diary.description || "");
-  const [progress, setProgress] = useState<number | "">(typeof diary.progress === "number" ? diary.progress : "");
+  const [quantity, setQuantity] = useState<number | "">(typeof diary.quantity === "number" ? diary.quantity : "");
+  const [unit, setUnit] = useState<string>(diary.unit || "");
+  const [workHours, setWorkHours] = useState<number | "">(typeof diary.workHours === "number" ? diary.workHours : "");
   const [images, setImages] = useState<string[]>(diary.images || []);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -58,7 +60,9 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
       ...diary,
       date: new Date(date),
       description,
-      progress: progress === "" ? null : Number(progress),
+      quantity: quantity === "" ? null : Number(quantity),
+      unit: unit || null,
+      workHours: workHours === "" ? null : Number(workHours),
       images,
     });
   };
@@ -75,30 +79,45 @@ export default function WorkerDiaryEditForm({ diary, onSave, onCancel }: WorkerD
           required
         />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <Label htmlFor="diary-description">Leírás</Label>
-          <Textarea
-            id="diary-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={4}
-            required
-          />
-        </div>
-        <div>
-          <Label htmlFor="diary-progress">Mennyiség (haladás)</Label>
-          <Input
-            id="diary-progress"
-            type="number"
-            min={0}
-            step={0.01}
-            placeholder="Pl. 12.5"
-            value={progress}
-            onChange={e => setProgress(e.target.value === "" ? "" : Number(e.target.value))}
-            required
-          />
-        </div>
+      <div>
+        <Label htmlFor="diary-description">Leírás</Label>
+        <Textarea
+          id="diary-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={4}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="diary-unit">Mennyiségi egység</Label>
+        <Input
+          id="diary-unit"
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+          placeholder="pl. m², fm, db"
+        />
+      </div>
+      <div>
+        <Label htmlFor="diary-work-hours">Munkaóra</Label>
+        <Input
+          id="diary-work-hours"
+          type="number"
+          value={workHours}
+          onChange={(e) => setWorkHours(e.target.value === "" ? "" : Number(e.target.value))}
+          min={0}
+          step={0.1}
+        />
+      </div>
+      <div>
+        <Label>Mennyiség</Label>
+        <Input
+          type="number"
+          value={quantity}
+          onChange={(e) => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
+          min={0}
+          step={0.01}
+        />
       </div>
       <div>
         <Label>Képek feltöltése</Label>

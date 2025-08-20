@@ -65,7 +65,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
           className={`px-6 py-2 text-base font-semibold rounded-lg ${type === "contractor" ? "bg-primary text-white" : "bg-gray-100 text-gray-700"}`}
           style={{ textDecoration: "none" }}
         >
-          Vállalkozó naplója
+          E napló
         </a>
       </div>
       {error && (

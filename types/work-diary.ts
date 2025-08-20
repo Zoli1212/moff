@@ -7,7 +7,7 @@ export interface WorkDiary {
   description: string;
   weather?: string | null;
   temperature?: number | null;
-  progress?: number | null; // 0-100 percentage
+  quantity?: number | null;
   issues?: string | null;
   notes?: string | null;
   reportedById?: string | null;
@@ -16,4 +16,7 @@ export interface WorkDiary {
   createdAt: Date;
   updatedAt: Date;
   tenantEmail: string;
+  unit?: string | null;
+  progress?: number | null;
+  workHours?: number | null;
 }
