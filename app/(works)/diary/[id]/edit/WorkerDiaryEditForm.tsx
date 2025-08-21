@@ -166,15 +166,6 @@ export default function WorkerDiaryEditForm({
         />
       </div>
       <div>
-        <Label htmlFor="diary-unit">Mennyiségi egység</Label>
-        <Input
-          id="diary-unit"
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          placeholder="pl. m², fm, db"
-        />
-      </div>
-      <div>
         <Label htmlFor="diary-work-hours">Munkaóra</Label>
         <Input
           id="diary-work-hours"
@@ -197,6 +188,15 @@ export default function WorkerDiaryEditForm({
           }
           min={0}
           step={0.01}
+        />
+      </div>
+      <div>
+        <Label htmlFor="diary-unit">Mennyiségi egység</Label>
+        <Input
+          id="diary-unit"
+          value={unit}
+          onChange={(e) => setUnit(e.target.value)}
+          placeholder="pl. m², fm, db"
         />
       </div>
       <div>

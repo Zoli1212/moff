@@ -708,3 +708,32 @@ e-napló:
 - munka
 - anyagok
 - eszközök
+---
+kombo box
+----
+kibontjuk
+mennyiség egység
+havi nézet
+ki dolgozott munkás
+munkás neve
+havi: + monogrammok + munkaidő
+heti: óra nem kell neve + munkaidő
+eltűnik az óra: 
+item
+ki hány órában
+neve + munkaidő
+leírás ...
+item
+név
+munkaidő
+mennyiség
+mennyiségi egység
+----
+vállalkozó tudja szerkeszteni
+progress: mennyiséget alapján nézzük a progresset
+elfogadás: munkaóra kötelező, képek elfogadott  vagy nem a vállalkozó által
+elfogadott az egy színkép, a progress t az elfogadott változtatja
+progress változtatás 
+hogy állunk
+képek alapján
+héti a default

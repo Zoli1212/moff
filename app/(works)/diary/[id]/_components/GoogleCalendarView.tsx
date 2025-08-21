@@ -35,7 +35,7 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
     <div className="fc-mobile-wrap">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
+        initialView="timeGridWeek"
         headerToolbar={headerToolbar}
         titleFormat={{ year: 'numeric', month: 'short' }}
         buttonText={{
@@ -69,6 +69,16 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
           .fc-mobile-wrap .fc .fc-header-toolbar {
             margin-bottom: 0.35rem;
             gap: 0.2rem;
+          }
+          /* Hide hour labels in weekly view, keep the grid */
+          .fc-mobile-wrap .fc .fc-timegrid-slot-label {
+            display: none;
+          }
+          /* Remove the first (left) axis column entirely */
+          .fc-mobile-wrap .fc .fc-timegrid-axis,
+          .fc-mobile-wrap .fc .fc-scrollgrid-shrink,
+          .fc-mobile-wrap .fc .fc-timegrid-divider {
+            display: none;
           }
           /* Add spacing between grouped header buttons */
           .fc-mobile-wrap .fc .fc-button-group .fc-button + .fc-button {
