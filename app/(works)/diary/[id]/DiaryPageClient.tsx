@@ -50,8 +50,8 @@ export default function DiaryPageClient({ items, diaries, error, type, diaryIds 
   const handleCloseModal = () => setShowDiaryModal(false);
 
   return (
-    <div className="max-w-3xl mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Munkanapló</h1>
+    <div className="max-w-3xl mx-auto py-6 md:py-8">
+      <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 md:mb-6">Munkanapló</h1>
       {error && (
         <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>
       )}

@@ -1,5 +1,6 @@
 "use client";
 import FullCalendar from '@fullcalendar/react';
+import React from 'react';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -22,39 +23,72 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
     allDay: true,
   }));
 
-  return (
-    <FullCalendar
-      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-      initialView="dayGridMonth"
-      headerToolbar={{
-        left: 'prev,next today',
-        center: 'title',
-        right: 'dayGridMonth,timeGridWeek,timeGridDay'
-      }}
-      buttonText={{
-        today: 'ma',
-        month: 'Hó',
-        week: 'Hét',
-        day: 'Nap',
-      }}
-      events={events}
+  // Header toolbar: always show Month, Week, Day
+  const headerToolbar = React.useMemo(() => ({
+    left: 'prev,next today',
+    center: 'title',
+    right: 'dayGridMonth,timeGridWeek,timeGridDay',
+  }), []);
 
-      eventClick={(info: any) => {
-        const diary = diaries.find(d => String(d.id) === info.event.id);
-        if (diary) onEventClick(diary);
-      }}
-      dateClick={(info: any) => {
-        if (onDateClick) onDateClick(info.date);
-      }}
-      height="80vh"
-      locale={huLocale}
-      selectable={true}
-      longPressDelay={0}
-      dayMaxEvents={3}
-      nowIndicator={true}
-      slotMinTime="06:00:00"
-      slotMaxTime="20:00:00"
-      fixedWeekCount={false}
-    />
+  return (
+    <div className="fc-mobile-wrap">
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        headerToolbar={headerToolbar}
+        titleFormat={{ year: 'numeric', month: 'short' }}
+        buttonText={{
+          today: 'ma',
+          month: 'Hó',
+          week: 'Hét',
+          day: 'Nap',
+        }}
+        events={events}
+
+        eventClick={(info: any) => {
+          const diary = diaries.find(d => String(d.id) === info.event.id);
+          if (diary) onEventClick(diary);
+        }}
+        dateClick={(info: any) => {
+          if (onDateClick) onDateClick(info.date);
+        }}
+        height="80vh"
+        locale={huLocale}
+        selectable={true}
+        longPressDelay={0}
+        dayMaxEvents={3}
+        nowIndicator={true}
+        slotMinTime="06:00:00"
+        slotMaxTime="20:00:00"
+        fixedWeekCount={false}
+      />
+      <style jsx global>{`
+        /* Compact header/title on small screens */
+        @media (max-width: 480px) {
+          .fc-mobile-wrap .fc .fc-header-toolbar {
+            margin-bottom: 0.35rem;
+            gap: 0.2rem;
+          }
+          /* Add spacing between grouped header buttons */
+          .fc-mobile-wrap .fc .fc-button-group .fc-button + .fc-button {
+            margin-left: 0.25rem;
+          }
+          .fc-mobile-wrap .fc-toolbar-title {
+            font-size: 0.875rem; /* text-sm */
+            font-weight: 500;
+            line-height: 1rem;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .fc-mobile-wrap .fc .fc-button {
+            padding: 0.2rem 0.45rem; /* even smaller */
+            font-size: 0.7rem; /* slightly smaller than xs */
+            border-radius: 0.375rem; /* rounded-md */
+          }
+        }
+      `}</style>
+    </div>
   );
 }
