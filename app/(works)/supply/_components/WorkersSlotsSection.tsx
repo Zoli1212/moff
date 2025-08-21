@@ -62,7 +62,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
         const sum = ((wi?.workItemWorkers ?? []) as any[])
           .filter((wiw) => wiw?.workerId === w?.id)
           .reduce(
-            (acc, wiw) => acc + (typeof wiw?.quantity === "number" ? wiw.quantity : 1),
+            (acc, wiw) =>
+              acc + (typeof wiw?.quantity === "number" ? wiw.quantity : 1),
             0
           );
         if (sum > maxForThisWorker) maxForThisWorker = sum;
