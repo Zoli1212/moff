@@ -31,6 +31,12 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
         center: 'title',
         right: 'dayGridMonth,timeGridWeek,timeGridDay'
       }}
+      buttonText={{
+        today: 'ma',
+        month: 'Hó',
+        week: 'Hét',
+        day: 'Nap',
+      }}
       events={events}
 
       eventClick={(info: any) => {

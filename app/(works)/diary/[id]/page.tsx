@@ -41,13 +41,15 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
   const type: "workers" | "contractor" = diaryType === "contractor" ? "contractor" : "workers";
 
   return (
-    <DiaryPageClient
-      items={items}
-      diaries={diaries}
-      error={error}
-      type={type}
-      diaryIds={diaryIds}
-    />
+    <div className="px-3 sm:px-4 md:px-0 pt-3 sm:pt-4 md:pt-0">
+      <DiaryPageClient
+        items={items}
+        diaries={diaries}
+        error={error}
+        type={type}
+        diaryIds={diaryIds}
+      />
+    </div>
   );
 }
 
