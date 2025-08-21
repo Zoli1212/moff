@@ -228,6 +228,9 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
       const key = a.role || "Ismeretlen";
       const bestId = roleBestWorkItemId[key];
       if (bestId && (a as any).workItemId !== bestId) continue;
+      // Only count as filled if it has meaningful data
+      const hasData = Boolean((a as any).name) || Boolean((a as any).email);
+      if (!hasData) continue;
       if (!map[key]) map[key] = [];
       map[key].push(a);
     }
@@ -287,14 +290,15 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
                     {Math.min(list.length, required)} / {required}
                   </div>
                 </div>
-                <div className="flex flex-row flex-wrap gap-2 mt-2">
+                <div className="flex flex-col gap-2 mt-2">
                   {slots.map((_, idx) => {
                     const w = list[idx];
-                    if (w) {
+                    const hasData = !!(w && ((w as any).name || (w as any).email));
+                    if (hasData) {
                       return (
                         <div
                           key={`${role}-filled-${w.id}`}
-                          className="flex items-center gap-2 bg-white rounded border border-[#eee] px-3 py-2 cursor-pointer hover:bg-[#fafafa]"
+                          className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 cursor-pointer hover:bg-[#fafafa] w-full"
                           onClick={() =>
                             setEditAssignment({
                               id: w.id,
@@ -307,23 +311,26 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
                             })
                           }
                         >
-                          {(w as any).avatarUrl ? (
-                            <img
-                              src={(w as any).avatarUrl}
-                              alt={w.name ?? ""}
-                              style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1px solid #eee" }}
-                            />
-                          ) : (
-                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#eee" }} />
-                          )}
-                          <div className="text-[14px] text-[#333] font-medium">{w.name}</div>
+                          <div className="flex items-center gap-2">
+                            {(w as any).avatarUrl ? (
+                              <img
+                                src={(w as any).avatarUrl}
+                                alt={w.name ?? ""}
+                                style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1px solid #eee" }}
+                              />
+                            ) : (
+                              <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#eee" }} />
+                            )}
+                            <div className="text-[14px] text-[#333] font-medium">{w.name}</div>
+                          </div>
+                          <div className="ml-auto text-[13px] text-[#555] truncate max-w-[55%]">{(w as any).email || ""}</div>
                         </div>
                       );
                     }
                     return (
                       <button
                         key={`${role}-empty-${idx}`}
-                        className="flex items-center justify-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
+                        className="w-full flex items-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
                         onClick={() => {
                           const bestId = roleBestWorkItemId[role];
                           setAddLock({ role, workItemId: bestId });
@@ -331,7 +338,7 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
                         }}
                         title={role}
                       >
-                        +
+                        <span className="text-lg leading-none">+</span>
                       </button>
                     );
                   })}

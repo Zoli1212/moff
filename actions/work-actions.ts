@@ -4,6 +4,7 @@ import { OfferItem } from "@/lib/offer-parser";
 import type { WorkItemAIResult } from "../types/work.types";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
+import util from "node:util"
 
 export async function getUserWorks() {
   const user = await currentUser();
@@ -87,6 +88,15 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   const email =
     user.emailAddresses[0]?.emailAddress ||
     user.primaryEmailAddress?.emailAddress;
+
+
+      // --- AI result debug log ---
+  console.log("[AI RESULT RAW]:", util.inspect(aiResult, { depth: null, colors: true }));
+  // vagy egyszerű JSON formában (BigInt-safe):
+  console.log(
+    "[AI RESULT JSON]:",
+    JSON.stringify(aiResult, (k, v) => (typeof v === "bigint" ? v.toString() : v), 2)
+  );
 
   // Ellenőrzés, hogy a work a felhasználóhoz tartozik
   const work = await prisma.work.findUnique({

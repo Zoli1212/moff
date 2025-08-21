@@ -611,7 +611,7 @@ ha bepipálolom a beszerzést , hogy megjött akkor megjött, ha viszont rákatt
 BUG 1 ha felemelem a db ben a quantity-t de eltér a visszaküldött quantity -t akkor a régit fogja használni a kevesebbet, mivel szóbeli felemelést implementáltunk. És hiába db ben van változás a requirementsben nincs a DemendTextben tehát ujra az alacsonayabb értkkel fog számolni
 
 ---
-Budapest Sass u 1 Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérjek ajánlatot
+Budapest Sass u 1 Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérek ajánlatot
 
 Best Regards,
 

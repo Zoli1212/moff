@@ -101,16 +101,27 @@ const ToolsSlotsSection: React.FC<Props> = ({
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
   const [showAddToolModal, setShowAddToolModal] = useState(false);
   const [selectedTools, setSelectedTools] = useState<number[]>(() => {
-  // Preselect tools that are already fully assigned
-  return tools
-    .filter(tool => {
-      const q = tool.quantity ?? 1;
+  // Preselect based on required quantities aggregated from all work items (max per name)
+  const requiredByName: Record<string, number> = {};
+  workItems.forEach((wi) => {
+    (wi.tools || []).forEach((t) => {
+      const name = t.name;
+      if (!name) return;
+      const q = t.quantity ?? 1;
+      requiredByName[name] = Math.max(requiredByName[name] || 0, q);
+    });
+  });
+  return Object.entries(requiredByName)
+    .map(([name, required]) => {
       const assignedCount = assignedTools
-        .filter(at => at.toolName === tool.name)
+        .filter((at) => at.toolName === name)
         .reduce((sum, at) => sum + at.quantity, 0);
-      return assignedCount >= q;
+      const candidate = tools
+        .filter((t) => t.name === name)
+        .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0))[0];
+      return assignedCount >= required && candidate ? candidate.id : -1;
     })
-    .map(tool => tool.id);
+    .filter((id) => id !== -1);
 });
 
   // Checkbox toggle handler
@@ -212,16 +223,29 @@ const ToolsSlotsSection: React.FC<Props> = ({
 
   if (!tools.length) return null;
 
-  // Group tools by name, but only keep the one with the highest quantity for each name
-  const grouped: Record<string, Tool> = {};
-  tools.forEach((tool) => {
-    if (
-      !grouped[tool.name] ||
-      (tool.quantity ?? 1) > (grouped[tool.name].quantity ?? 1)
-    ) {
-      grouped[tool.name] = tool;
-    }
+  // Build display list from required tools across ALL work items (max quantity per name)
+  type DisplayTool = { name: string; required: number; tool: Tool };
+  const requiredByName: Record<string, number> = {};
+  workItems.forEach((wi) => {
+    (wi.tools || []).forEach((t) => {
+      const name = t.name;
+      if (!name) return;
+      const q = t.quantity ?? 1;
+      requiredByName[name] = Math.max(requiredByName[name] || 0, q);
+    });
   });
+
+  const displayTools: DisplayTool[] = Object.entries(requiredByName).map(
+    ([name, required]) => {
+      const registryCandidates = tools
+        .filter((t) => t.name === name)
+        .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0));
+      const candidate =
+        registryCandidates[0] || ({ id: -1, name, quantity: required } as Tool);
+      // Ensure the displayed quantity reflects requirement, not registry stock
+      return { name, required, tool: { ...candidate, quantity: required } };
+    }
+  );
 
   return (
     <div style={{ marginBottom: 32 }}>
@@ -258,30 +282,39 @@ const ToolsSlotsSection: React.FC<Props> = ({
         </Button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {Object.entries(grouped).map(([name, tool]) => {
-          const q = tool.quantity ?? 1;
-          const assignedCount = assignedTools.filter(
-            (at) => at.toolName === tool.name
-          ).length;
+        {displayTools.map(({ name, required, tool }) => {
+          const q = required;
+          const assignedCount = assignedTools
+            .filter((at) => at.toolName === name)
+            .reduce((sum, at) => sum + at.quantity, 0);
+          const hasRegistry = tools.some((t) => t.name === name);
           return (
             <div key={name}>
               <div
                 className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 cursor-pointer hover:bg-[#ececec]"
                 onClick={() => {
                   setSelectedTool(tool);
-                  setMaxQuantity(tool.quantity ?? 1);
+                  setMaxQuantity(q);
                   setModalOpen(true);
                 }}
               >
                 <div className="flex items-center gap-2.5">
                   <input
                     type="checkbox"
-                    checked={selectedTools.includes(tool.id) || assignedCount === q}
-                    onChange={e => { e.stopPropagation(); handleToggle(tool.id, tool.name, tool.quantity ?? 1); }}
+                    checked={selectedTools.includes(tool.id) || assignedCount >= q}
+                    onChange={e => { e.stopPropagation(); handleToggle(tool.id, name, q); }}
                     className="mr-2.5 w-[18px] h-[18px]"
+                    disabled={!hasRegistry}
                     onClick={e => e.stopPropagation()}
                   />
-                  <div className="flex-2 font-semibold">{name}</div>
+                  <div className="flex-2 font-semibold flex items-center gap-2">
+                    <span>{name}</span>
+                    {!hasRegistry && (
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
+                        nincs regisztrálva
+                      </span>
+                    )}
+                  </div>
                   <div className="ml-auto flex items-center gap-2">
                     {/* Tool image preview */}
                     {tool.avatarUrl && (
@@ -291,6 +324,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                         style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', border: '1px solid #ddd', background: '#fafafa' }}
                       />
                     )}
+                    {/* No inline register button per request */}
                     <div className="font-semibold text-[14px] text-[#222] flex items-center">
                       <span>{assignedCount}</span>
                       <span className="mx-1">/</span>
@@ -327,13 +361,6 @@ const ToolsSlotsSection: React.FC<Props> = ({
           requiredToolName={selectedTool?.name}
         />
       )}
-      {modalOpen &&
-        selectedTool &&
-        tools.filter((t) => t.name === selectedTool.name).length === 0 && (
-          <div style={{ color: "red", textAlign: "center", marginTop: 12 }}>
-            Nincs raktáron ilyen eszköz!
-          </div>
-        )}
       <ToolDetailsModal
         open={showToolDetailsModal}
         onClose={() => setShowToolDetailsModal(false)}

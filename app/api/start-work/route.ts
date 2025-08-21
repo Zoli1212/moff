@@ -14,49 +14,67 @@ export async function POST(req: NextRequest) {
     }
 
     // Create the OpenAI prompt
-    const prompt = `A következő információk alapján hozz létre egy részletes munkafelosztást ÉRVÉNYES JSON formátumban, az alábbi szabályok szerint:
+    const prompt = `A következő információk alapján hozz létre egy részletes munkafelosztást ÉRVÉNYES JSON formátumban, az alábbi SZIGORÚ szabályokkal:
 
-- Minden workItem pontosan tükrözze a hozzá tartozó offerItem mezőit: name, quantity, unit, unitPrice, materialUnitPrice, workTotal, materialTotal, totalPrice (EZEKET MÁSOLD ÁT az offerItem-ből VÁLTOZTATÁS NÉLKÜL!).
-- Csak a következő mezőket generáld: requiredProfessionals (szakemberek listája), tools (szükséges eszközök), materials (szükséges anyagok listája, objektum tömb formátumban).
-- A requiredProfessionals és materials is tartalmazza a "type" és "quantity" mezőket (a materials tartalmazza a "unit"-ot is).
-- A fenti mezők (name, quantity, unit, unitPrice, materialUnitPrice, workTotal, materialTotal, totalPrice) értéke legyen azonos az offerItem megfelelő mezőjével, VÁLTOZTATÁS NÉLKÜL!
-- NE írj magyarázatot, NE használj markdown-t, CSAK ÉRVÉNYES JSON-t adj vissza!
-
-Helyszín: ${location}
-Leírás: ${offerDescription}
-Becsült időtartam: ${estimatedDuration}
-
-Tételek (offerItems):
-${JSON.stringify(offerItems, null, 2)}
-
-A válasz JSON formátuma:
-{
-  "location": "helyszín",
-  "description": "leírás",
-  "estimatedDuration": "időtartam",
-  "workItems": [
+    Általános elv:
+    - Minden workItem KÖTELEZŐEN tartalmazza: description (1–3 mondat), requiredProfessionals (>=1), tools (nem üres string), materials (>=1).
+    - TILOS üres stringet, üres tömböt, "N/A", "-", "none" stb. helykitöltőt használni.
+    - Minden szám mező pozitív; minden "type" és "unit" nem üres string.
+    - Ha bármelyik kötelező mező üres lenne, NE add vissza a választ – addig állítsd össze, míg MIND megfelel.
+    
+    OfferItem átvétel:
+    - A következő mezőket VÁLTOZTATÁS NÉLKÜL MÁSOLD át az offerItem-ből a workItem-be:
+      name, quantity, unit, unitPrice, materialUnitPrice, workTotal, materialTotal, totalPrice
+    
+    Csak az alábbi mezőket generáld:
+    - description: rövid szakmai leírás (1–3 mondat)
+    - requiredProfessionals: objektumok tömbje, MIND: { "type": string!=üres, "quantity": number>0 }
+    - tools: részletes eszközlista szövegként (nem üres)
+    - materials: objektumok tömbje, MIND: { "type": string!=üres, "quantity": number>0, "unit": string!=üres }
+    
+    Kimeneti formátum:
+    - CSAK ÉRVÉNYES JSON, semmi magyarázat, semmi markdown.
+    
+    Bemenet:
+    Helyszín: ${location}
+    Leírás: ${offerDescription}
+    Becsült időtartam: ${estimatedDuration}
+    
+    Tételek (offerItems):
+    ${JSON.stringify(offerItems, null, 2)}
+    
+    Válasz JSON váz:
     {
-      "name": "Tétel neve",
-      "quantity": "mennyiség",
-      "unit": "mértékegység",
-      "unitPrice": "munka egységár",
-      "materialUnitPrice": "anyag egységár",
-      "workTotal": "munka összes ár",
-      "materialTotal": "anyag összes ár",
-      "totalPrice": "összes ár",
-      "description": "rövid szakmai leírás (AI által generált)",
-      "requiredProfessionals": [
-         { "type": "szakember típusa", "quantity": "mennyiség" }
-      ],
-      "tools": "részletes eszközlista",
-       "materials": [
-        { "type": "anyag típusa", "quantity": "mennyiség", "unit": "mértékegység" }
+      "location": "helyszín",
+      "description": "leírás",
+      "estimatedDuration": "időtartam",
+      "workItems": [
+        {
+          "name": "Tétel neve",
+          "quantity": <number | string>,
+          "unit": "mértékegység",
+          "unitPrice": <number | string>,
+          "materialUnitPrice": <number | string>,
+          "workTotal": <number | string>,
+          "materialTotal": <number | string>,
+          "totalPrice": <number | string>,
+          "description": "rövid szakmai leírás",
+          "requiredProfessionals": [
+            { "type": "szakember típusa", "quantity": <number> }
+          ],
+          "tools": "részletes eszközlista",
+          "materials": [
+            { "type": "anyag típusa", "quantity": <number>, "unit": "mértékegység" }
+          ]
+        }
       ]
     }
-  ]
-}
-
-Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabályok betartásával! description-t mindig generálj!`;
+    
+    Megjegyzés:
+    - MINDEN workItem-hez legalább 1 szakember és legalább 1 anyag kötelező. A tools NEM lehet üres.
+    - A fenti átvett mezők értékeinek pontosan egyezniük kell az offerItem megfelelő értékeivel.
+    - NE írj magyarázatot, NE használj markdown-t, CSAK ÉRVÉNYES JSON-t adj vissza!
+    - Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabályok betartásával! description-t mindig generálj!`;
 
     // Make the OpenAI API request
     const openaiResponse = await fetch(

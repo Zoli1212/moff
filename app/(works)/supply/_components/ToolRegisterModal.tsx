@@ -280,12 +280,17 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
             min={1}
             max={maxQuantity}
             onChange={(e) => setQuantity(Number(e.target.value))}
-            className={`w-24 ${isOutOfStock ? "bg-muted" : ""}`}
+            className={`w-24`}
             required
-            disabled={isOutOfStock}
           />
           <span className="text-sm text-muted-foreground">(max: {maxQuantity})</span>
         </div>
+
+        {toolAvailable === false && requiredToolName && (
+          <div className="text-xs text-muted-foreground">
+            Ez az eszköz jelenleg nincs regisztrálva. Mentéskor új eszköz kerül regisztrálásra és azonnal hozzárendelésre.
+          </div>
+        )}
 
         {error && (
           <div className="text-center font-medium text-destructive -mt-1">{error}</div>
@@ -296,7 +301,6 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
           <Button
             className="flex-1"
             onClick={handleSave}
-            disabled={isOutOfStock}
           >
             Mentés
           </Button>

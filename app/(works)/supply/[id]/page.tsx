@@ -47,7 +47,7 @@ export default async function SupplyPage({
   }
 
   return (
-    <div style={{ maxWidth: 450, margin: "0 auto", padding: 0 }}>
+    <div style={{ maxWidth: 450, margin: "0 auto", padding: 0, paddingBottom: 120 }}>
       {/* Header with back arrow and work name */}
       <div
         style={{
