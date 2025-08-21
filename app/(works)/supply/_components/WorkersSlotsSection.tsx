@@ -30,21 +30,110 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
 
   const [assignments, setAssignments] = useState<WorkItemWorker[]>(initialAssignments);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [addLock, setAddLock] = useState<{ role?: string; workItemId?: number } | null>(null);
   const [editAssignment, setEditAssignment] = useState<WorkerAssignment | null>(null);
 
-  const professions = useMemo(() => {
-    // Prefer roles appearing in WorkItemWorker entries across work items
-    const fromAssignments = workItems
-      .flatMap((wi: any) => (wi.workItemWorkers ?? []))
-      .map((w: any) => w?.role)
-      .filter((r: any): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
-    if (fromAssignments.length > 0) {
-      return Array.from(new Set(fromAssignments)).sort((a, b) => a.localeCompare(b, 'hu'));
+  // Build required slots per profession from ALL workItems (ParticipantsSection parity)
+  // Source of truth: workItems[].requiredProfessionals
+  // For each workItem: sum required quantities per role within that item, then requiredPerProfession[role] = max(previous, sumForThisItem)
+  const requiredPerProfession: Record<string, number> = useMemo(() => {
+    // Primary: from requiredProfessionals if present anywhere
+    const maxMap: Record<string, number> = {};
+    let foundAnyRequired = false;
+    for (const item of workItems as any[]) {
+      const withinItem: Record<string, number> = {};
+      const req = Array.isArray((item as any)?.requiredProfessionals)
+        ? (item as any).requiredProfessionals
+        : [];
+      if (req.length > 0) foundAnyRequired = true;
+      for (const rp of req) {
+        const role: string | undefined = (rp?.type ?? undefined) as any;
+        if (!role) continue;
+        const qty = typeof rp?.quantity === "number" && rp.quantity > 0 ? rp.quantity : 1;
+        withinItem[role] = (withinItem[role] || 0) + qty;
+      }
+      for (const role of Object.keys(withinItem)) {
+        const current = maxMap[role] || 0;
+        maxMap[role] = Math.max(current, withinItem[role]);
+      }
     }
-    // Fallback: worker rows (professions) attached to the work
-    const fromWorkerRows = workers.map(w => w.name).filter((n): n is string => !!n && n.trim().length > 0);
-    return Array.from(new Set(fromWorkerRows)).sort((a, b) => a.localeCompare(b, 'hu'));
+    if (foundAnyRequired && Object.keys(maxMap).length > 0) return maxMap;
+
+    // Fallback (ParticipantsSection parity): derive from workItemWorkers quantities per workerId
+    const fallback: Record<string, number> = {};
+    for (const w of workers as any[]) {
+      const role = (w?.name as string) || "Ismeretlen";
+      let maxForThisWorker = 0;
+      for (const wi of workItems as any[]) {
+        const sum = ((wi?.workItemWorkers ?? []) as any[])
+          .filter((wiw) => wiw?.workerId === w?.id)
+          .reduce((acc, wiw) => acc + (typeof wiw?.quantity === 'number' ? wiw.quantity : 1), 0);
+        if (sum > maxForThisWorker) maxForThisWorker = sum;
+      }
+      // At least 1 slot visible per profession
+      const needed = Math.max(maxForThisWorker, 1);
+      fallback[role] = Math.max(fallback[role] || 0, needed);
+    }
+    return fallback;
   }, [workItems, workers]);
+
+  // Decide which single workItem's assignments should fill the slots for each role
+  // Prefer an in-progress item with the max requirement; if none, fall back to any item with the max
+  const roleBestWorkItemId: Record<string, number | undefined> = useMemo(() => {
+    const bestAny: Record<string, { count: number; id: number } | undefined> = {};
+    const bestInProg: Record<string, { count: number; id: number } | undefined> = {};
+    const inProgIds = new Set(inProgressWorkItemIds);
+    for (const item of workItems as any[]) {
+      const withinItem: Record<string, number> = {};
+      const req = Array.isArray((item as any)?.requiredProfessionals)
+        ? (item as any).requiredProfessionals
+        : [];
+      if (req.length > 0) {
+        for (const rp of req) {
+          const role: string | undefined = (rp?.type ?? undefined) as any;
+          if (!role) continue;
+          const qty = typeof rp?.quantity === "number" && rp.quantity > 0 ? rp.quantity : 1;
+          withinItem[role] = (withinItem[role] || 0) + qty;
+        }
+      } else {
+        // Fallback: count by workerId quantities in this item and map to role via workers list
+        const byWorkerId: Record<number, number> = {};
+        for (const wiw of (((item as any)?.workItemWorkers) ?? []) as any[]) {
+          const q = typeof wiw?.quantity === 'number' ? wiw.quantity : 1;
+          const id = wiw?.workerId;
+          if (typeof id === 'number') byWorkerId[id] = (byWorkerId[id] || 0) + q;
+        }
+        for (const w of workers as any[]) {
+          if (!w?.id) continue;
+          const role = (w?.name as string) || "Ismeretlen";
+          const cnt = byWorkerId[w.id] || 0;
+          if (cnt > 0) withinItem[role] = (withinItem[role] || 0) + cnt;
+        }
+      }
+      for (const role of Object.keys(withinItem)) {
+        const count = withinItem[role];
+        const currAny = bestAny[role];
+        const currIn = bestInProg[role];
+        if (!currAny || count > currAny.count) bestAny[role] = { count, id: (item as any).id };
+        if (inProgIds.has((item as any).id)) {
+          if (!currIn || count > currIn.count) bestInProg[role] = { count, id: (item as any).id };
+        }
+      }
+    }
+    const out: Record<string, number | undefined> = {};
+    const roles = new Set<string>([...Object.keys(bestAny), ...Object.keys(bestInProg)]);
+    for (const role of roles) out[role] = (bestInProg[role] ?? bestAny[role])?.id;
+    return out;
+  }, [workItems, inProgressWorkItemIds, workers]);
+
+  // Show all professions required (source of truth = requiredPerProfession)
+  const professions = useMemo(() => {
+    const keys = Object.keys(requiredPerProfession);
+    if (keys.length > 0) return keys.sort((a, b) => a.localeCompare(b, "hu"));
+    // Fallback: from workers list
+    const names = Array.from(new Set((workers as any[]).map(w => (w?.name as string) || "Ismeretlen").filter(Boolean)));
+    return names.sort((a, b) => a.localeCompare(b, "hu"));
+  }, [requiredPerProfession, workers]);
 
   const refreshAssignments = async () => {
     try {
@@ -132,16 +221,18 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
     }
   };
 
-  // Group assignments by role (profession)
+  // Group assignments by role (profession) but only from the best workItem per role
   const grouped = useMemo(() => {
     const map: Record<string, WorkItemWorker[]> = {};
     for (const a of assignments) {
       const key = a.role || "Ismeretlen";
+      const bestId = roleBestWorkItemId[key];
+      if (bestId && (a as any).workItemId !== bestId) continue;
       if (!map[key]) map[key] = [];
       map[key].push(a);
     }
     return map;
-  }, [assignments]);
+  }, [assignments, roleBestWorkItemId]);
 
   return (
     <div className="relative bg-white rounded-xl shadow-sm px-5 py-3 mb-5">
@@ -151,9 +242,11 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
         onSubmit={handleAdd}
         workItems={workItems}
         professions={professions}
+        lockedProfession={addLock?.role}
+        lockedWorkItemId={addLock?.workItemId}
       />
       <Button
-        onClick={() => setIsAddOpen(true)}
+        onClick={() => { setAddLock(null); setIsAddOpen(true); }}
         variant="outline"
         aria-label="Új munkás hozzáadása"
         className="absolute top-[14px] right-[18px] rounded-full border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] w-9 h-9 p-0 flex items-center justify-center"
@@ -161,7 +254,13 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
         <Plus className="h-5 w-5" />
       </Button>
       <div className="h-8" />
-      <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">Munkások</div>
+      <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">
+        Munkások (
+        {professions.reduce((sum, role) => sum + Math.min((grouped[role]?.length || 0), (requiredPerProfession[role] || 0)), 0)}
+        {" / "}
+        {professions.reduce((s, role) => s + (requiredPerProfession[role] || 0), 0)}
+        )
+      </div>
 
       <WorkerEditModal
         open={!!editAssignment}
@@ -171,39 +270,76 @@ const WorkersSlotsSection: React.FC<Props> = ({ workId, workItems, workers }) =>
         onDelete={async (id) => handleDelete(id)}
       />
 
-      <div className="flex flex-col gap-3 max-h-[calc(100vh-250px)] overflow-y-auto pb-20">
-        {Object.entries(grouped).length === 0 && (
-          <span className="text-[#bbb]">Nincs hozzárendelés</span>
+      <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
+        {professions.length === 0 && (
+          <span className="text-[#bbb]">Nincs szükség meghatározva</span>
         )}
-        {Object.entries(grouped).map(([role, list]) => (
-          <div key={role}>
-            <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
-              <div className="flex items-center gap-2.5">
-                <div className="flex-2 font-semibold">{role}</div>
-                <div className="ml-auto font-semibold text-[14px] text-[#222]">{list.length} fő</div>
-              </div>
-              <div className="grid grid-cols-1 gap-2 mt-2">
-                {list.map((w) => (
-                  <div
-                    key={w.id}
-                    className="flex items-center justify-between bg-white rounded border border-[#eee] px-3 py-2 cursor-pointer hover:bg-[#fafafa]"
-                    onClick={() => setEditAssignment({ id: w.id, name: w.name ?? undefined, email: (w as any).email ?? undefined, phone: (w as any).phone ?? undefined, role: w.role ?? undefined, quantity: w.quantity ?? undefined, avatarUrl: (w as any).avatarUrl ?? null })}
-                  >
-                    <div className="flex items-center gap-2">
-                      {(w as any).avatarUrl ? (
-                        <img src={(w as any).avatarUrl} alt={w.name ?? ''} style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover', border: '1px solid #eee' }} />
-                      ) : (
-                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#eee', display: 'inline-block' }} />
-                      )}
-                      <div className="text-[14px] text-[#333] font-medium">{w.name}</div>
-                    </div>
-                    <div className="text-[13px] text-[#666]">{(w as any).email}</div>
+        {professions.map((role) => {
+          const required = requiredPerProfession[role] || 0;
+          const list = grouped[role] || [];
+          const slots = Array.from({ length: required });
+          return (
+            <div key={role}>
+              <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex-2 font-semibold">{role}</div>
+                  <div className="ml-auto font-semibold text-[14px] text-[#222]">
+                    {Math.min(list.length, required)} / {required}
                   </div>
-                ))}
+                </div>
+                <div className="flex flex-row flex-wrap gap-2 mt-2">
+                  {slots.map((_, idx) => {
+                    const w = list[idx];
+                    if (w) {
+                      return (
+                        <div
+                          key={`${role}-filled-${w.id}`}
+                          className="flex items-center gap-2 bg-white rounded border border-[#eee] px-3 py-2 cursor-pointer hover:bg-[#fafafa]"
+                          onClick={() =>
+                            setEditAssignment({
+                              id: w.id,
+                              name: w.name ?? undefined,
+                              email: (w as any).email ?? undefined,
+                              phone: (w as any).phone ?? undefined,
+                              role: w.role ?? undefined,
+                              quantity: w.quantity ?? undefined,
+                              avatarUrl: (w as any).avatarUrl ?? null,
+                            })
+                          }
+                        >
+                          {(w as any).avatarUrl ? (
+                            <img
+                              src={(w as any).avatarUrl}
+                              alt={w.name ?? ""}
+                              style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", border: "1px solid #eee" }}
+                            />
+                          ) : (
+                            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#eee" }} />
+                          )}
+                          <div className="text-[14px] text-[#333] font-medium">{w.name}</div>
+                        </div>
+                      );
+                    }
+                    return (
+                      <button
+                        key={`${role}-empty-${idx}`}
+                        className="flex items-center justify-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
+                        onClick={() => {
+                          const bestId = roleBestWorkItemId[role];
+                          setAddLock({ role, workItemId: bestId });
+                          setIsAddOpen(true);
+                        }}
+                        title={role}
+                      >
+                        +
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

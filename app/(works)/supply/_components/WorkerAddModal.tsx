@@ -17,14 +17,19 @@ interface WorkerAddModalProps {
     workItemId: number;
     avatarUrl?: string;
   }) => Promise<void> | void;
+  // If provided, lock the profession to this value (per-slot add)
+  lockedProfession?: string;
+  // If provided, preselect and lock workItem to this id
+  lockedWorkItemId?: number;
 }
 
-const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, workItems, professions, onSubmit }) => {
+const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, workItems, professions, onSubmit, lockedProfession, lockedWorkItemId }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [profession, setProfession] = useState("");
-  const [workItemId, setWorkItemId] = useState<number | "">("");
+  const [profession, setProfession] = useState(lockedProfession ?? "");
+  const [workItemId, setWorkItemId] = useState<number | "">(lockedWorkItemId ?? "");
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,6 +42,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
       phone,
       profession,
       workItemId: Number(workItemId),
+      avatarUrl: avatarUrl || undefined,
     });
     setLoading(false);
     setName("");
@@ -44,6 +50,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
     setPhone("");
     setProfession("");
     setWorkItemId("");
+    setAvatarUrl("");
     onOpenChange(false);
   };
 
@@ -59,8 +66,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
     const fromAssignments = ((selected?.workItemWorkers ?? []) as any[])
       .map(w => w?.role)
       .filter((r: any): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
-    return Array.from(new Set([...fromWorkers, ...fromAssignments])).sort((a,b) => a.localeCompare(b, 'hu'));
-  }, [workItemId, workItems]);
+    let options = Array.from(new Set([...fromWorkers, ...fromAssignments])).sort((a,b) => a.localeCompare(b, 'hu'));
+    // If profession is locked, restrict to only that one (if present)
+    if (lockedProfession) options = options.filter(p => p === lockedProfession);
+    return options;
+  }, [workItemId, workItems, lockedProfession]);
 
   // Keep profession consistent with the available options for the selected work item
   useEffect(() => {
@@ -68,6 +78,22 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
       setProfession("");
     }
   }, [professionsForSelected, profession]);
+
+  // Reset/initialize when modal opens (handle locks)
+  useEffect(() => {
+    if (open) {
+      setProfession(lockedProfession ?? "");
+      setWorkItemId(lockedWorkItemId ?? "");
+    } else {
+      // clear fields on close
+      setName("");
+      setEmail("");
+      setPhone("");
+      setProfession("");
+      setWorkItemId("");
+      setAvatarUrl("");
+    }
+  }, [open, lockedProfession, lockedWorkItemId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -82,6 +108,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
             onChange={(e) => setWorkItemId(e.target.value ? Number(e.target.value) : "")}
             className="border rounded px-3 py-2 mt-2"
             required
+            disabled={typeof lockedWorkItemId === 'number'}
           >
             <option value="">Válassz munkafázist...</option>
             {workItems.map((item) => (
@@ -94,7 +121,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
             value={profession}
             onChange={(e) => setProfession(e.target.value)}
             className="border rounded px-3 py-2"
-            disabled={!!workItemId && professionsForSelected.length === 0}
+            disabled={!!workItemId && professionsForSelected.length === 0 || !!lockedProfession}
             required
           >
             <option value="">Válassz szakmát...</option>
@@ -126,6 +153,22 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
             className="border rounded px-3 py-2"
             required
           />
+          {/* Simple avatar URL with preview */}
+          <div className="flex items-center gap-3 mt-1">
+            <div className="w-12 h-12 rounded-full bg-[#eee] overflow-hidden border border-[#e5e7eb]">
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+              ) : null}
+            </div>
+            <input
+              type="url"
+              placeholder="Avatar URL (opcionális)"
+              value={avatarUrl}
+              onChange={(e) => setAvatarUrl(e.target.value)}
+              className="flex-1 border rounded px-3 py-2"
+            />
+          </div>
           
           <DialogFooter>
             <Button type="submit" disabled={loading || !name || !email || !phone || !profession || !workItemId}>
