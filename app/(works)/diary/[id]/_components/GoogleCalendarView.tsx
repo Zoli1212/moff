@@ -4,7 +4,8 @@ import React from 'react';
 
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import interactionPlugin, { DateClickArg } from '@fullcalendar/interaction';
+import { EventClickArg } from '@fullcalendar/core';
 import huLocale from '@fullcalendar/core/locales/hu';
 import { WorkDiaryWithItem } from '@/actions/get-workdiariesbyworkid-actions';
 
@@ -45,11 +46,11 @@ export default function GoogleCalendarView({ diaries = [], onDateClick, onEventC
         }}
         events={events}
 
-        eventClick={(info: any) => {
+        eventClick={(info: EventClickArg) => {
           const diary = diaries.find(d => String(d.id) === info.event.id);
           if (diary) onEventClick(diary);
         }}
-        dateClick={(info: any) => {
+        dateClick={(info: DateClickArg) => {
           if (onDateClick) onDateClick(info.date);
         }}
         height="80vh"
