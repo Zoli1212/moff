@@ -303,7 +303,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profess
                           setAvatarPreview("");
                         }
                       } catch (err) {
-                        setAvatarError("Hiba a feltöltés során.");
+                        setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
                         setAvatarUrl("");
                         setAvatarPreview("");
                       } finally {

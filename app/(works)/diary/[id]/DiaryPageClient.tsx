@@ -13,13 +13,11 @@ interface DiaryPageClientProps {
   diaryIds: number[];
 }
 
-export default function DiaryPageClient({ items, diaries, error, type, diaryIds }: DiaryPageClientProps) {
+export default function DiaryPageClient({ items, diaries, error }: DiaryPageClientProps) {
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
     const found = (diaries ?? []).find(d => new Date(d.date).toDateString() === date.toDateString());
     if (found) {
       setSelectedDiary(found);

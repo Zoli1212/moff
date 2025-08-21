@@ -5,6 +5,14 @@ import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-action
 export async function generateDiaryPdf(diary: WorkDiaryWithItem): Promise<Blob> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const FONT = "helvetica"; // használható még: "times", "courier"
+  type ImageFormat = "JPEG" | "PNG";
+  type WithMain = { mainDiaryNumber?: string | number };
+  type WithSub = { subDiaryNumber?: string | number };
+  type WithDiaryType = { diaryType?: string };
+  type WithStatus = { status?: string };
+  type Responsible = { name?: string | null; role?: string | null };
+  type Attachment = { filename?: string | null; name?: string | null };
+  type WorkerLite = { name?: string | null; role?: string | null; profession?: string | null };
 
   // Alap font
   doc.setFont(FONT, "normal");
@@ -42,43 +50,25 @@ export async function generateDiaryPdf(diary: WorkDiaryWithItem): Promise<Blob> 
     y
   );
   y += 5;
-  doc.text(
-    `Főnapló száma: ${
-      "mainDiaryNumber" in diary && (diary as any).mainDiaryNumber
-        ? (diary as any).mainDiaryNumber
-        : "-"
-    }`,
-    14,
-    y
-  );
+  {
+    const main = (diary as Partial<WithMain>).mainDiaryNumber;
+    doc.text(`Főnapló száma: ${main ?? "-"}`, 14, y);
+  }
   y += 5;
-  doc.text(
-    `Alnapló száma: ${
-      "subDiaryNumber" in diary && (diary as any).subDiaryNumber
-        ? (diary as any).subDiaryNumber
-        : "-"
-    }`,
-    14,
-    y
-  );
+  {
+    const sub = (diary as Partial<WithSub>).subDiaryNumber;
+    doc.text(`Alnapló száma: ${sub ?? "-"}`, 14, y);
+  }
   y += 5;
-  doc.text(
-    `Napló típusa: ${
-      "diaryType" in diary && (diary as any).diaryType
-        ? (diary as any).diaryType
-        : "Vállalkozói napló"
-    }`,
-    14,
-    y
-  );
+  {
+    const dType = (diary as Partial<WithDiaryType>).diaryType;
+    doc.text(`Napló típusa: ${dType ?? "Vállalkozói napló"}`, 14, y);
+  }
   y += 5;
-  doc.text(
-    `Napló státusza: ${
-      "status" in diary && (diary as any).status ? (diary as any).status : "-"
-    }`,
-    14,
-    y
-  );
+  {
+    const status = (diary as Partial<WithStatus>).status;
+    doc.text(`Napló státusza: ${status ?? "-"}`, 14, y);
+  }
   y += 5;
   doc.text(
     `Dátum: ${diary.date ? new Date(diary.date).toLocaleDateString("hu-HU") : "-"}`,
@@ -92,19 +82,12 @@ export async function generateDiaryPdf(diary: WorkDiaryWithItem): Promise<Blob> 
   doc.text("Felelősök:", 14, y);
   doc.setFont(FONT, "normal");
   y += 5;
-  if (
-    "responsibles" in diary &&
-    Array.isArray((diary as any).responsibles) &&
-    (diary as any).responsibles.length > 0
-  ) {
-    (diary as any).responsibles.forEach((p: any) => {
-      doc.text(
-        `- ${p.name && p.name !== "" ? p.name : "-"} (${
-          p.role && p.role !== "" ? p.role : "-"
-        })`,
-        16,
-        y
-      );
+  const responsibles = (diary as { responsibles?: Responsible[] }).responsibles;
+  if (Array.isArray(responsibles) && responsibles.length > 0) {
+    responsibles.forEach((p: Responsible) => {
+      const nm = p?.name && p.name !== "" ? String(p.name) : "-";
+      const rl = p?.role && p.role !== "" ? String(p.role) : "-";
+      doc.text(`- ${nm} (${rl})`, 16, y);
       y += 5;
     });
   } else {
@@ -117,16 +100,16 @@ export async function generateDiaryPdf(diary: WorkDiaryWithItem): Promise<Blob> 
   doc.text("Résztvevők:", 14, y);
   doc.setFont(FONT, "normal");
   y += 5;
-  if (
-    diary.workItem &&
-    "workers" in diary.workItem &&
-    Array.isArray((diary.workItem as any).workers) &&
-    (diary.workItem as any).workers.length > 0
-  ) {
-    (diary.workItem as any).workers.forEach((w: any) => {
-      const role =
-        w.role && w.role !== "" ? w.role : w.profession && w.profession !== "" ? w.profession : "-";
-      doc.text(`- ${w.name && w.name !== "" ? w.name : "-"} (${role})`, 16, y);
+  const workersArr = (diary.workItem as { workers?: WorkerLite[] } | undefined)?.workers;
+  if (Array.isArray(workersArr) && workersArr.length > 0) {
+    workersArr.forEach((w) => {
+      const role = w?.role && w.role !== ""
+        ? String(w.role)
+        : w?.profession && w.profession !== ""
+        ? String(w.profession)
+        : "-";
+      const nm = w?.name && w.name !== "" ? String(w.name) : "-";
+      doc.text(`- ${nm} (${role})`, 16, y);
       y += 5;
     });
   } else {
@@ -188,15 +171,15 @@ export async function generateDiaryPdf(diary: WorkDiaryWithItem): Promise<Blob> 
   doc.text("Csatolmányok:", 14, y);
   doc.setFont(FONT, "normal");
   y += 5;
-  if (
-    "attachments" in diary &&
-    Array.isArray((diary as any).attachments) &&
-    (diary as any).attachments.length > 0
-  ) {
-    (diary as any).attachments.forEach((a: any) => {
-      const name =
-        a.filename && a.filename !== "" ? a.filename : a.name && a.name !== "" ? a.name : "-";
-      doc.text(`- ${name}`, 16, y);
+  const attachments = (diary as { attachments?: Attachment[] }).attachments;
+  if (Array.isArray(attachments) && attachments.length > 0) {
+    attachments.forEach((a) => {
+      const nm = a?.filename && a.filename !== ""
+        ? String(a.filename)
+        : a?.name && a.name !== ""
+        ? String(a.name)
+        : "-";
+      doc.text(`- ${nm}`, 16, y);
       y += 5;
     });
   } else {
@@ -218,12 +201,15 @@ export async function generateDiaryPdf(diary: WorkDiaryWithItem): Promise<Blob> 
         const blob = await res.blob();
         const reader = new FileReader();
         const base64: string = await new Promise((resolve, reject) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
+          reader.onloadend = () => {
+            if (typeof reader.result === "string") resolve(reader.result);
+            else reject(new Error("Invalid image data"));
+          };
+          reader.onerror = () => reject(new Error("Image read error"));
           reader.readAsDataURL(blob);
         });
-        const format = base64.startsWith("data:image/png") ? "PNG" : "JPEG";
-        doc.addImage(base64, format as any, 14 + ((i % 3) * 60), y + Math.floor(i / 3) * 45, 50, 40);
+        const format: ImageFormat = base64.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(base64, format, 14 + ((i % 3) * 60), y + Math.floor(i / 3) * 45, 50, 40);
       } catch {
         // kép kihagyása hibánál
       }
