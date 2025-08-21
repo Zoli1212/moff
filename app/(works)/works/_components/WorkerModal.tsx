@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useTransition } from "react";
+import React, { useState, useEffect, useTransition, useRef } from "react";
 import { getWorkforce } from "@/actions/workforce-actions";
 import type { WorkItem } from "@/types/work";
 
@@ -34,6 +34,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profess
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
   const [avatarError, setAvatarError] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 
   console.log(relevantWorkItemsWithWorkers, 'relevantWorkItemsWithWorkers')
@@ -223,83 +224,103 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({ open, onClose, profess
               />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <label style={{ fontWeight: 500, display: 'block', marginBottom: 4 }}>Profilkép</label>
-              {avatarPreview ? (
-                <div style={{ position: 'relative', display: 'inline-block', marginBottom: 8 }}>
+              <label style={{ fontWeight: 600, display: 'block', marginBottom: 8 }}>Profilkép</label>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                <div style={{ position: 'relative' }}>
                   <img
-                    src={avatarPreview}
+                    src={avatarPreview || avatarUrl || '/worker.jpg'}
                     alt="Avatar preview"
-                    style={{ width: 64, height: 64, borderRadius: '50%', objectFit: 'cover', border: '1px solid #ddd' }}
+                    style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', border: '1px solid #e6e6e6', boxShadow: '0 2px 8px #0001' }}
                   />
                   <button
                     type="button"
-                    onClick={() => {
-                      setAvatarPreview("");
-                      setAvatarUrl("");
-                    }}
+                    onClick={() => fileInputRef.current?.click()}
                     style={{
                       position: 'absolute',
-                      top: -8,
-                      right: -8,
-                      background: '#fff',
-                      border: '1px solid #f00',
-                      color: '#f00',
-                      borderRadius: '50%',
-                      width: 22,
-                      height: 22,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      bottom: -6,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      background: '#111',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 16,
+                      padding: '4px 10px',
+                      fontSize: 12,
                       cursor: 'pointer',
-                      fontWeight: 700,
-                      fontSize: 16,
-                      boxShadow: '0 1px 4px #ccc',
-                      zIndex: 2
+                      boxShadow: '0 1px 6px #0002'
                     }}
-                    title="Profilkép törlése"
                   >
-                    ×
+                    {avatarPreview || avatarUrl ? 'Csere' : 'Kép feltöltése'}
                   </button>
+                  {(avatarPreview || avatarUrl) && (
+                    <button
+                      type="button"
+                      onClick={() => { setAvatarPreview(""); setAvatarUrl(""); setAvatarError(""); }}
+                      title="Profilkép törlése"
+                      style={{
+                        position: 'absolute',
+                        top: -6,
+                        right: -6,
+                        width: 24,
+                        height: 24,
+                        borderRadius: '50%',
+                        background: '#fff',
+                        border: '1px solid #ddd',
+                        color: '#d00',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        boxShadow: '0 1px 4px #0002',
+                        fontWeight: 700
+                      }}
+                    >
+                      ×
+                    </button>
+                  )}
                 </div>
-              ) : (
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setAvatarError("");
-                    setAvatarUploading(true);
-                    setAvatarPreview(URL.createObjectURL(file));
-                    const formData = new FormData();
-                    formData.append("file", file);
-                    console.log('UPLOAD started')
-                    try {
-                      const res = await fetch("/api/upload-avatar", {
-                        method: "POST",
-                        body: formData,
-                      });
-                      const data = await res.json();
-                      console.log(data.url, 'DATAURL')
-                      if (data.url) {
-                        setAvatarUrl(data.url);
-                      } else {
-                        setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                <div style={{ flex: 1 }}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setAvatarError("");
+                      setAvatarUploading(true);
+                      setAvatarPreview(URL.createObjectURL(file));
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      try {
+                        const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });
+                        const data = await res.json();
+                        if (data.url) {
+                          setAvatarUrl(data.url);
+                        } else {
+                          setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                          setAvatarUrl("");
+                          setAvatarPreview("");
+                        }
+                      } catch (err) {
+                        setAvatarError("Hiba a feltöltés során.");
                         setAvatarUrl("");
+                        setAvatarPreview("");
+                      } finally {
+                        setAvatarUploading(false);
                       }
-                    } catch (err) {
-                      setAvatarError("Hiba a feltöltés során.");
-                      setAvatarUrl("");
-                      console.log(err)
-                    } finally {
-                      setAvatarUploading(false);
-                    }
-                  }}
-                  style={{ marginBottom: 8 }}
-                />
-              )}
-              {avatarUploading && <div style={{ color: '#0070f3', marginBottom: 4 }}>Feltöltés...</div>}
-              {avatarError && <div style={{ color: 'red', marginBottom: 4 }}>{avatarError}</div>}
+                    }}
+                    style={{ display: 'none' }}
+                  />
+                  <div style={{ fontSize: 12, color: '#666' }}>PNG vagy JPG, max 5MB</div>
+                  {avatarUploading && (
+                    <div style={{ marginTop: 8, height: 6, background: '#f1f1f1', borderRadius: 999, overflow: 'hidden' }}>
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(90deg, #0070f3, #42a5f5)', animation: 'progressSlide 1.2s infinite linear' }}></div>
+                    </div>
+                  )}
+                  {avatarError && <div style={{ color: 'red', marginTop: 6, fontSize: 12 }}>{avatarError}</div>}
+                </div>
+              </div>
             </div>
             <button
               style={{

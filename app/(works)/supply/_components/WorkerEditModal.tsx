@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -26,9 +26,11 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
   const [email, setEmail] = useState(worker?.email ?? "");
   const [phone, setPhone] = useState(worker?.phone ?? "");
   const [role, setRole] = useState(worker?.role ?? "");
-  const [quantity, setQuantity] = useState<string>(
-    typeof worker?.quantity === "number" ? String(worker?.quantity) : ""
-  );
+  const [avatarUrl, setAvatarUrl] = useState<string>(worker?.avatarUrl ?? "");
+  const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
+  const [avatarError, setAvatarError] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -36,7 +38,10 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
     setEmail(worker?.email ?? "");
     setPhone(worker?.phone ?? "");
     setRole(worker?.role ?? "");
-    setQuantity(typeof worker?.quantity === "number" ? String(worker?.quantity) : "");
+    setAvatarUrl(worker?.avatarUrl ?? "");
+    setAvatarPreview("");
+    setAvatarError("");
+    setAvatarUploading(false);
   }, [worker]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,8 +54,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
       email: email || undefined,
       phone: phone || undefined,
       role: role || undefined,
-      quantity: quantity === "" ? undefined : Number(quantity),
-      avatarUrl: worker.avatarUrl ?? null,
+      avatarUrl: avatarUrl || null,
     });
     setLoading(false);
     onOpenChange(false);
@@ -105,15 +109,77 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               onChange={(e) => setRole(e.target.value)}
             />
           </div>
+          {/* Avatar upload with preview - polished UI */}
           <div>
-            <label className="block text-sm font-medium mb-1">Létszám</label>
-            <input
-              className="w-full border rounded px-2 py-1"
-              type="number"
-              min={1}
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-            />
+            <label className="block text-sm font-medium mb-1">Profilkép</label>
+            <div className="flex items-center gap-4 mt-1">
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={avatarPreview || avatarUrl || "/worker.jpg"}
+                  alt="Avatar preview"
+                  className="w-24 h-24 rounded-full object-cover border border-[#e6e6e6] shadow-sm"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black text-white rounded-full px-3 py-0.5 text-[12px] shadow"
+                >
+                  {avatarPreview || avatarUrl ? "Csere" : "Kép feltöltése"}
+                </button>
+                {(avatarPreview || avatarUrl) && (
+                  <button
+                    type="button"
+                    onClick={() => { setAvatarPreview(""); setAvatarUrl(""); setAvatarError(""); }}
+                    title="Profilkép törlése"
+                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-[#ddd] text-red-600 inline-flex items-center justify-center shadow"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+              <div className="flex-1">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setAvatarError("");
+                    setAvatarUploading(true);
+                    setAvatarPreview(URL.createObjectURL(file));
+                    try {
+                      const formData = new FormData();
+                      formData.append("file", file);
+                      const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });
+                      const data = await res.json();
+                      if (data.url) {
+                        setAvatarUrl(data.url);
+                      } else {
+                        setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                        setAvatarUrl("");
+                        setAvatarPreview("");
+                      }
+                    } catch (err) {
+                      setAvatarError("Hiba a feltöltés során.");
+                      setAvatarUrl("");
+                      setAvatarPreview("");
+                    } finally {
+                      setAvatarUploading(false);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <div className="text-xs text-[#666]">PNG vagy JPG, max 5MB</div>
+                {avatarUploading && (
+                  <div className="mt-2 h-1.5 bg-[#f1f1f1] rounded-full overflow-hidden">
+                    <div className="w-full h-full bg-gradient-to-r from-[#0070f3] to-[#42a5f5] animate-pulse"></div>
+                  </div>
+                )}
+                {avatarError && <div className="text-red-600 text-xs mt-2">{avatarError}</div>}
+              </div>
+            </div>
           </div>
           <DialogFooter className="flex flex-row justify-between mt-2 gap-2">
             <Button type="submit" disabled={loading} className="flex-1">
