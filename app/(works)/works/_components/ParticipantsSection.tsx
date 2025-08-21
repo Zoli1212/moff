@@ -483,19 +483,26 @@ export default function ParticipantsSection({
         onClose={() => setShowWorkerDetailsModal(false)}
         worker={selectedWorker}
         onDelete={async () => {
-          if (!selectedWorker || !selectedWorker.name || !selectedWorker.email) return;
+          if (!selectedWorker || !selectedWorker.name || !selectedWorker.email)
+            return;
           // Find the parent Worker record for this mini-worker
           const parentWorker = workers.find(
-            (w) => Array.isArray(w.workers) && (w.workers as Worker[]).some(
-              (mw: Worker) => mw.name === selectedWorker.name && mw.email === selectedWorker.email
-            )
+            (w) =>
+              Array.isArray(w.workers) &&
+              (w.workers as Worker[]).some(
+                (mw: Worker) =>
+                  mw.name === selectedWorker.name &&
+                  mw.email === selectedWorker.email
+              )
           );
           if (!parentWorker) {
             toast.error("Nem található a szülő Worker rekord.");
             return;
           }
           try {
-            const { removeWorkerFromJsonArray } = await import("@/actions/works.action");
+            const { removeWorkerFromJsonArray } = await import(
+              "@/actions/works.action"
+            );
             await removeWorkerFromJsonArray({
               workerId: parentWorker.id,
               workId,
@@ -503,11 +510,24 @@ export default function ParticipantsSection({
               email: selectedWorker.email,
             });
             // Update local state
-            setWorkers(ws => ws.map(w =>
-              w.id === parentWorker.id
-                ? { ...w, workers: Array.isArray(w.workers) ? (w.workers as Worker[]).filter((mw: Worker) => !(mw.name === selectedWorker.name && mw.email === selectedWorker.email)) : [] }
-                : w
-            ));
+            setWorkers((ws) =>
+              ws.map((w) =>
+                w.id === parentWorker.id
+                  ? {
+                      ...w,
+                      workers: Array.isArray(w.workers)
+                        ? (w.workers as Worker[]).filter(
+                            (mw: Worker) =>
+                              !(
+                                mw.name === selectedWorker.name &&
+                                mw.email === selectedWorker.email
+                              )
+                          )
+                        : [],
+                    }
+                  : w
+              )
+            );
             setShowWorkerDetailsModal(false);
             setSelectedWorker(null);
             toast.success("Sikeres törlés!");
