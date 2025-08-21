@@ -1,9 +1,10 @@
 import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection";
-import type { WorkItem, WorkItemFromDb, Material, Tool } from "@/types/work";
+import WorkersSlotsSection from "../_components/WorkersSlotsSection";
+import type { WorkItem, WorkItemFromDb, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
-import { getWorkById } from "@/actions/work-actions";
+import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
 import { getToolsRegistryByTenant, getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 
 export default async function SupplyPage({
@@ -21,13 +22,15 @@ export default async function SupplyPage({
 
   let materials: Material[] = [];
   let workItems: WorkItem[] = [];
+  let workers: Worker[] = [];
   let workName = "";
   let tools: Tool[] = [];
   let assignedTools: AssignedTool[] = [];
   try {
     const work = await getWorkById(workId);
     materials = work.materials || [];
-    workItems = (work.workItems || []).map((item: WorkItemFromDb) => ({
+    const richItems = await getWorkItemsWithWorkers(workId);
+    workItems = (richItems || []).map((item: any) => ({
       ...item,
       tools: item.tools || [],
       materials: item.materials || [],
@@ -37,6 +40,7 @@ export default async function SupplyPage({
     workName = work.title || "";
     tools = await getToolsRegistryByTenant();
     assignedTools = await getAssignedToolsForWork(workId) as AssignedTool[];
+    workers = work.workers || [];
   } catch (e) {
     console.error(e);
     return <div>Nem sikerült betölteni az anyagokat vagy szerszámokat.</div>;
@@ -132,7 +136,7 @@ export default async function SupplyPage({
           href={`?tab=tools`}
           style={{
             padding: "8px 30px",
-            borderRadius: "0 22px 22px 0",
+            borderRadius: 0,
             border: "none",
             background: tab === "tools" ? "#ddd" : "#f7f7f7",
             color: tab === "tools" ? "#222" : "#888",
@@ -148,6 +152,26 @@ export default async function SupplyPage({
         >
           Szerszámok
         </a>
+        <a
+          href={`?tab=workers`}
+          style={{
+            padding: "8px 30px",
+            borderRadius: "0 22px 22px 0",
+            border: "none",
+            background: tab === "workers" ? "#ddd" : "#f7f7f7",
+            color: tab === "workers" ? "#222" : "#888",
+            fontWeight: 600,
+            fontSize: 16,
+            boxShadow: "0 1px 2px #eee",
+            outline: "none",
+            cursor: "pointer",
+            marginLeft: -2,
+            zIndex: 0,
+            textDecoration: "none",
+          }}
+        >
+          Munkások
+        </a>
       </div>
       {/* Tab content */}
       {(!tab || tab === "materials") ? (
@@ -156,12 +180,18 @@ export default async function SupplyPage({
           workId={workId}
           workItems={workItems}
         />
-      ) : (
+      ) : tab === "tools" ? (
         <ToolsSlotsSection
           tools={tools}
           workId={workId}
           assignedTools={assignedTools}
           workItems={workItems}
+        />
+      ) : (
+        <WorkersSlotsSection
+          workId={workId}
+          workItems={workItems}
+          workers={workers}
         />
       )}
     </div>
