@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 // Get all workflows for the current user
 export async function getWorkflows() {
@@ -231,6 +232,14 @@ export async function removeWorkerFromJsonArray({
     where: { id: workerId },
     data: { workers: workersArr },
   });
+  // Revalidate work pages so UI (slots/registry) refreshes immediately
+  try {
+    revalidatePath("/works");
+    revalidatePath(`/works/${workId}`);
+    revalidatePath(`/supply/${workId}`);
+  } catch (_) {
+    // no-op
+  }
   return updated;
 }
 

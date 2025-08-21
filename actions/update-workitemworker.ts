@@ -30,5 +30,7 @@ export async function deleteWorkItemWorker(id: number) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
   // tenantEmail existence already verified above if needed later
-  return prisma.workItemWorker.delete({ where: { id } });
+  // Use deleteMany to avoid P2025 when the record is already gone
+  await prisma.workItemWorker.deleteMany({ where: { id } });
+  return { success: true } as const;
 }

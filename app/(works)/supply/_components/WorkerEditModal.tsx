@@ -18,7 +18,7 @@ interface WorkerEditModalProps {
   onOpenChange: (open: boolean) => void;
   worker: WorkerAssignment | null;
   onSubmit: (data: { id: number; name?: string; email?: string; phone?: string; role?: string; quantity?: number; avatarUrl?: string | null }) => Promise<void>;
-  onDelete: (id: number) => Promise<void>;
+  onDelete: (args: { id: number; name?: string | null; email?: string | null; role?: string | null }) => Promise<void>;
 }
 
 const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, worker, onSubmit, onDelete }) => {
@@ -63,7 +63,12 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
   const handleDelete = async () => {
     if (!worker) return;
     setLoading(true);
-    await onDelete(worker.id);
+    await onDelete({
+      id: worker.id,
+      name: worker.name ?? null,
+      email: worker.email ?? null,
+      role: worker.role ?? null,
+    });
     setLoading(false);
     onOpenChange(false);
   };

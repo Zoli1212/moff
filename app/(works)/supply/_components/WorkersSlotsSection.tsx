@@ -14,6 +14,7 @@ import {
   updateWorkItemWorker,
   deleteWorkItemWorker,
 } from "@/actions/update-workitemworker";
+import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 
 interface Props {
   workId: number;
@@ -73,6 +74,34 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
     return byRole;
   }, [workItems, workers]);
+
+  // Compute per-Worker maximum required quantity across all workItems (mirror of ParticipantsSection)
+  const workerIdToMaxNeeded: Record<number, number> = useMemo(() => {
+    const map: Record<number, number> = {};
+    for (const w of workers as any[]) {
+      const workerId = (w as any)?.id as number | undefined;
+      if (typeof workerId !== "number") continue;
+      let max = 0;
+      for (const wi of workItems as any[]) {
+        const sum = ((wi?.workItemWorkers ?? []) as any[])
+          .filter((wiw) => wiw?.workerId === workerId)
+          .reduce(
+            (acc, wiw) =>
+              acc + (typeof wiw?.quantity === "number" ? wiw.quantity : 1),
+            0
+          );
+        if (sum > max) max = sum;
+      }
+      map[workerId] = max;
+    }
+    return map;
+  }, [workItems, workers]);
+
+  // Persist latest maxima to the server whenever they change
+  React.useEffect(() => {
+    updateWorkersMaxRequiredAction(workId, workerIdToMaxNeeded);
+    // eslint-disable-next-line
+  }, [workId, JSON.stringify(workerIdToMaxNeeded)]);
 
   // Decide which single workItem's assignments should fill the slots for each role
   // Prefer an in-progress item with the max requirement; if none, fall back to any item with the max
@@ -136,6 +165,44 @@ const WorkersSlotsSection: React.FC<Props> = ({
       out[role] = (bestInProg[role] ?? bestAny[role])?.id;
     return out;
   }, [workItems, inProgressWorkItemIds, workers]);
+
+  // Denominator for the header: from the BEST work item per role only.
+  // Sum quantities of null-email WorkItemWorkers that belong to that role.
+  const denominatorRequiredPerProfession: Record<string, number> = useMemo(() => {
+    const byRole: Record<string, number> = {};
+    // Map workerId -> role name
+    const workerIdToRole = new Map<number, string>();
+    for (const w of workers as any[]) {
+      if (typeof (w as any)?.id === "number") {
+        workerIdToRole.set((w as any).id, (w?.name as string) || "Ismeretlen");
+      }
+    }
+    // role -> allowed workerIds
+    const roleToWorkerIds = new Map<string, Set<number>>();
+    for (const [wid, role] of workerIdToRole.entries()) {
+      if (!roleToWorkerIds.has(role)) roleToWorkerIds.set(role, new Set<number>());
+      roleToWorkerIds.get(role)!.add(wid);
+    }
+    const roles = new Set<string>([
+      ...Object.keys(requiredPerProfession),
+      ...Object.keys(roleBestWorkItemId),
+    ]);
+    for (const role of roles) {
+      const bestId = roleBestWorkItemId[role];
+      if (!bestId) { byRole[role] = 0; continue; }
+      const item = (workItems as any[]).find((it) => (it as any)?.id === bestId);
+      if (!item) { byRole[role] = 0; continue; }
+      const allowedIds = roleToWorkerIds.get(role) || new Set<number>();
+      let sum = 0;
+      for (const wiw of (((item as any)?.workItemWorkers ?? []) as any[])) {
+        if (wiw?.email == null && typeof wiw?.workerId === "number" && allowedIds.has(wiw.workerId)) {
+          sum += typeof wiw?.quantity === "number" ? wiw.quantity : 1;
+        }
+      }
+      byRole[role] = sum;
+    }
+    return byRole;
+  }, [workItems, workers, roleBestWorkItemId, requiredPerProfession]);
 
   // Show all professions required (source of truth = requiredPerProfession)
   const professions = useMemo(() => {
@@ -257,9 +324,60 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async ({
+    id,
+    name,
+    email,
+    role,
+  }: {
+    id: number;
+    name?: string | null;
+    email?: string | null;
+    role?: string | null;
+  }) => {
     try {
-      await deleteWorkItemWorker(id);
+      // 1) Remove from Worker.workers registry by locating parent Worker row
+      const assignment = assignments.find((a) => a.id === id);
+      const effectiveEmail = (email || (assignment as any)?.email || "").trim();
+      const effectiveName = (name || (assignment as any)?.name || "").trim();
+      const effectiveRole = role || (assignment as any)?.role || null;
+      if (effectiveEmail) {
+        try {
+          const workerIdFromAssignment = (assignment as any)?.workerId as
+            | number
+            | undefined;
+          let parentWorkerId: number | undefined = workerIdFromAssignment;
+          if (typeof parentWorkerId !== "number" && effectiveRole) {
+            const workerRow = workers.find(
+              (w: any) => (w?.name as string) === effectiveRole
+            );
+            if (workerRow && typeof (workerRow as any).id === "number") {
+              parentWorkerId = (workerRow as any).id;
+            }
+          }
+          if (typeof parentWorkerId === "number") {
+            const { removeWorkerFromJsonArray } = await import(
+              "@/actions/works.action"
+            );
+            await removeWorkerFromJsonArray({
+              workerId: parentWorkerId,
+              workId,
+              name: effectiveName,
+              email: effectiveEmail,
+            });
+          }
+        } catch (innerErr) {
+          console.warn(
+            "Registry removal failed (continuing with assignment delete)",
+            innerErr
+          );
+        }
+      }
+
+      // 2) Delete the WorkItemWorker assignment (only if it exists locally)
+      if (assignment) {
+        await deleteWorkItemWorker(id);
+      }
       toast.success("Hozzárendelés törölve!");
       setEditAssignment(null);
       await refreshAssignments();
@@ -354,7 +472,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         }, 0)}
         {" / "}
         {professions.reduce(
-          (s, role) => s + (requiredPerProfession[role] || 0),
+          (s, role) => s + (denominatorRequiredPerProfession[role] || 0),
           0
         )}
         )
@@ -367,7 +485,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         }}
         worker={editAssignment}
         onSubmit={handleEdit}
-        onDelete={async (id) => handleDelete(id)}
+        onDelete={async (args) => handleDelete(args)}
       />
 
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
@@ -379,6 +497,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
           const primary = grouped[role] || [];
           const fallback = registryByRole[role] || [];
           const list = primary.length > 0 ? primary : fallback;
+          // Use per-role denominator from best work item; fallback to required if missing/zero
+          const rawDenom = denominatorRequiredPerProfession[role] as number | undefined;
+          const displayDenom = typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
           const slots = Array.from({ length: required });
           return (
             <div key={role}>
@@ -386,7 +507,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                 <div className="flex items-center gap-2.5">
                   <div className="flex-2 font-semibold">{role}</div>
                   <div className="ml-auto font-semibold text-[14px] text-[#222]">
-                    {Math.min(list.length, required)} / {required}
+                    {Math.min(list.length, required)} / {displayDenom}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
