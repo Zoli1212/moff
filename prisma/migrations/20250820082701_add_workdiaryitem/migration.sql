@@ -1,16 +1,3 @@
-/*
-  Warnings:
-
-  - You are about to drop the column `quantity` on the `WorkDiary` table. All the data in the column will be lost.
-  - You are about to drop the column `unit` on the `WorkDiary` table. All the data in the column will be lost.
-  - You are about to drop the column `workHours` on the `WorkDiary` table. All the data in the column will be lost.
-
-*/
--- AlterTable
-ALTER TABLE "WorkDiary" DROP COLUMN "quantity",
-DROP COLUMN "unit",
-DROP COLUMN "workHours";
-
 -- CreateTable
 CREATE TABLE "WorkDiaryItem" (
     "id" SERIAL NOT NULL,

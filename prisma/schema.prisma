@@ -280,7 +280,6 @@ model WorkDiary {
   notes          String?
   reportedById   String?     // Could be linked to a User model if needed
   reportedByName String?
-  unit           String?    // measurement unit, e.g. 'm2', 'db', etc.
   images         String[]    // URLs to stored images
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -512,6 +511,7 @@ model WorkDiaryItem {
   id            Int        @id @default(autoincrement())
   diaryId       Int
   diary         WorkDiary  @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  email         String     @default("")
   workId        Int
   work          Work       @relation(fields: [workId], references: [id], onDelete: Cascade)
   workItemId    Int
@@ -519,6 +519,7 @@ model WorkDiaryItem {
   workerId      Int
   worker        Worker     @relation(fields: [workerId], references: [id], onDelete: Cascade)
   quantity      Float?
+  unit String?
   workHours     Float?
   date          DateTime   @default(now())
   images        String[]

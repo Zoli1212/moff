@@ -95,22 +95,28 @@ export async function updateWorkDiary({
  * Update a WorkDiaryItem (not WorkDiary) entry
  */
 export async function updateWorkDiaryItem({
+  diaryId,
   id,
   workId,
   workItemId,
   workerId,
+  email,
   date,
   quantity,
+  unit,
   workHours,
   images,
   notes,
 }: {
+  diaryId?: number;
   id: number;
   workId?: number;
   workItemId?: number;
   workerId?: number;
+  email?: string;
   date?: Date;
   quantity?: number;
+  unit?: string;
   workHours?: number;
   images?: string[];
   notes?: string;
@@ -121,11 +127,14 @@ export async function updateWorkDiaryItem({
   if (!userEmail) throw new Error("No user email found");
 
   const updateData: any = {};
+  if (diaryId !== undefined) updateData.diaryId = diaryId;
   if (workId !== undefined) updateData.workId = workId;
   if (workItemId !== undefined) updateData.workItemId = workItemId;
   if (workerId !== undefined) updateData.workerId = workerId;
+  if (email !== undefined) updateData.email = email;
   if (date !== undefined) updateData.date = date;
   if (quantity !== undefined) updateData.quantity = quantity;
+  if (unit !== undefined) updateData.unit = unit;
   if (workHours !== undefined) updateData.workHours = workHours;
   if (images !== undefined) updateData.images = images;
   if (notes !== undefined) updateData.notes = notes;
@@ -149,20 +158,26 @@ export async function updateWorkDiaryItem({
  * Create a new WorkDiaryItem entry
  */
 export async function createWorkDiaryItem({
+  diaryId,
   workId,
   workItemId,
   workerId,
+  email,
   date,
   quantity,
+  unit,
   workHours,
   images,
   notes,
 }: {
+  diaryId: number;
   workId: number;
   workItemId: number;
   workerId?: number;
+  email?: string;
   date?: Date;
   quantity?: number;
+  unit?: string;
   workHours?: number;
   images?: string[];
   notes?: string;
@@ -175,13 +190,16 @@ export async function createWorkDiaryItem({
 
   try {
     const createData: any = {
+      diaryId,
       workId,
       workItemId,
       tenantEmail: userEmail,
     };
     if (workerId !== undefined) createData.workerId = workerId;
+    if (email !== undefined) createData.email = email;
     if (date !== undefined) createData.date = date;
     if (quantity !== undefined) createData.quantity = quantity;
+    if (unit !== undefined) createData.unit = unit;
     if (workHours !== undefined) createData.workHours = workHours;
     if (images !== undefined) createData.images = images;
     if (notes !== undefined) createData.notes = notes;

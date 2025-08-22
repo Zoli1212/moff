@@ -23,17 +23,21 @@ export interface WorkDiary {
 
 // Types for WorkDiaryItem create/update actions
 type WorkDiaryItemBase = {
+  diaryId?: number;
   workId?: number;
   workItemId?: number;
   workerId?: number;
+  email?: string;
   date?: Date;
   quantity?: number;
+  unit?: string;
   workHours?: number;
   images?: string[];
   notes?: string;
 };
 
-export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId"> & {
+export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId" | "diaryId"> & {
+  diaryId: number;
   workId: number;
   workItemId: number;
 };

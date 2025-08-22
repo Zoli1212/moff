@@ -82,6 +82,7 @@ export interface WorkItemWorker {
   workItemId: number;
   name?: string | null;
   role?: string | null;
+  email?: string | null;
   quantity: number;
 }
 
