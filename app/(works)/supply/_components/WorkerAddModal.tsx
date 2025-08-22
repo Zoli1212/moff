@@ -23,6 +23,76 @@ interface WorkerAddModalProps {
   lockedWorkItemId?: number;
 }
 
+// Lightweight custom dropdown (no external deps)
+function CustomSelect({
+  value,
+  onChange,
+  options,
+  placeholder,
+  disabled,
+  className = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+  disabled?: boolean;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    function handleEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEsc);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEsc);
+    };
+  }, []);
+
+  const selected = options.find(o => o.value === value);
+
+  return (
+    <div ref={ref} className={`relative ${className}`}>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => !disabled && setOpen(o => !o)}
+        className={`border rounded px-3 py-2 w-full max-w-full text-left flex items-center justify-between ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
+      >
+        <span className={`truncate ${!selected ? 'text-gray-400' : ''}`}>
+          {selected ? selected.label : (placeholder || 'Válassz...')}
+        </span>
+        <span aria-hidden className="ml-2 text-gray-500">▾</span>
+      </button>
+      {open && !disabled && (
+        <div
+          className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-50"
+        >
+          {options.map(opt => (
+            <div
+              key={opt.value + opt.label}
+              className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${opt.value === value ? 'bg-gray-50 font-medium' : ''}`}
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              role="option"
+              aria-selected={opt.value === value}
+            >
+              <span className="truncate block">{opt.label}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, workItems, professions, onSubmit, lockedProfession, lockedWorkItemId }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -120,36 +190,30 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Select work phase first to filter professions */}
-          <select
-            value={workItemId}
-            onChange={(e) => setWorkItemId(e.target.value ? Number(e.target.value) : "")}
-            className="border rounded px-3 py-2 mt-2 w-full max-w-full block truncate"
-            required
+          <CustomSelect
+            className="mt-2"
+            value={workItemId === "" ? "" : String(workItemId)}
+            onChange={(val) => setWorkItemId(val ? Number(val) : "")}
             disabled={typeof lockedWorkItemId === 'number'}
-          >
-            <option value="">Válassz munkafázist...</option>
-            {workItems.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-            <option value={0}>Egyéb munkafázis</option>
-          </select>
-          <select
+            placeholder="Válassz munkafázist..."
+            options={[
+              { value: "", label: "Válassz munkafázist..." },
+              ...workItems.map((item) => ({ value: String(item.id), label: item.name })),
+              { value: "0", label: "Egyéb munkafázis" },
+            ]}
+          />
+
+          <CustomSelect
             value={profession}
-            onChange={(e) => setProfession(e.target.value)}
-            className="border rounded px-3 py-2 w-full max-w-full block truncate"
-            disabled={!!workItemId && professionsForSelected.length === 0 || !!lockedProfession}
-            required
-          >
-            <option value="">Válassz szakmát...</option>
-            {professionsForSelected.map((p) => (
-              <option key={p} value={p}>{p}</option>
-            ))}
-            {!lockedProfession && (
-              <option value={"Egyéb"}>Egyéb</option>
-            )}
-          </select>
+            onChange={(val) => setProfession(val)}
+            disabled={workItemId === "" || (!!workItemId && professionsForSelected.length === 0) || !!lockedProfession}
+            placeholder="Válassz szakmát..."
+            options={[
+              { value: "", label: "Válassz szakmát..." },
+              ...professionsForSelected.map((p) => ({ value: p, label: p })),
+              ...(!lockedProfession ? [{ value: "Egyéb", label: "Egyéb" }] : []),
+            ]}
+          />
           <input
             type="text"
             placeholder="Név"
@@ -247,7 +311,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
             </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex gap-2">
             <Button type="submit" disabled={loading || !name || !email || !phone || !profession || !workItemId}>
               {loading ? "Mentés..." : "Hozzáadás"}
             </Button>
