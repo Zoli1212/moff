@@ -83,7 +83,6 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
 
   // Csak a slothoz tartozó eszköz választható
   const filteredTools = requiredToolName ? tools.filter((t) => t.name === requiredToolName) : tools;
-  const isOutOfStock = filteredTools.length === 0;
 
   const handleSave = async () => {
     // Validáció

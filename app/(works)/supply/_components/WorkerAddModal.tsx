@@ -142,13 +142,13 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
     }
 
     // With a selected workItem: restrict strictly to that phase
-    const selected = workItems.find(w => w.id === Number(workItemId)) as any;
-    const fromWorkers = ((selected?.workers ?? []) as any[])
-      .map(w => w?.role ?? w?.name)
-      .filter((r: any): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
-    const fromAssignments = ((selected?.workItemWorkers ?? []) as any[])
-      .map(w => w?.role)
-      .filter((r: any): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
+    const selected = workItems.find(w => w.id === Number(workItemId));
+    const fromWorkers = (selected?.workers ?? [])
+      .map(w => w.role ?? w.name)
+      .filter((r): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
+    const fromAssignments = (selected?.workItemWorkers ?? [])
+      .map(w => w.role ?? undefined)
+      .filter((r): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
     let options = Array.from(new Set([...fromWorkers, ...fromAssignments])).sort((a,b) => a.localeCompare(b, 'hu'));
     // If profession is locked, restrict to only that one (if present)
     if (lockedProfession) options = options.filter(p => p === lockedProfession);
@@ -291,7 +291,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
                         setAvatarPreview("");
                       }
                     } catch (err) {
-                      setAvatarError("Hiba a feltöltés során.");
+                      setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
                       setAvatarUrl("");
                       setAvatarPreview("");
                     } finally {

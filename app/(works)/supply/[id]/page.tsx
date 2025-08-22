@@ -2,7 +2,7 @@ import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection";
 import WorkersSlotsSection from "../_components/WorkersSlotsSection";
-import type { WorkItem, WorkItemFromDb, Material, Tool, Worker } from "@/types/work";
+import type { WorkItem, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
 import { getToolsRegistryByTenant, getAssignedToolsForWork } from "@/actions/tools-registry-actions";
@@ -30,7 +30,7 @@ export default async function SupplyPage({
     const work = await getWorkById(workId);
     materials = work.materials || [];
     const richItems = await getWorkItemsWithWorkers(workId);
-    workItems = (richItems || []).map((item: any) => ({
+    workItems = (richItems || []).map((item: WorkItem) => ({
       ...item,
       tools: item.tools || [],
       materials: item.materials || [],
@@ -181,7 +181,7 @@ export default async function SupplyPage({
             textOverflow: "ellipsis",
           }}
         >
-          Munkások
+          Munkaerő
         </a>
       </div>
       {/* Tab content */}

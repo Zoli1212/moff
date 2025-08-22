@@ -2,7 +2,7 @@ import { getWorkItemsWithWorkers } from "@/actions/work-actions";
 import { getWorkDiariesByWorkId, WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 
 import { notFound } from "next/navigation";
-import { WorkItem } from "@/types/work";
+import { WorkItem, WorkItemWorker } from "@/types/work";
 import DiaryPageClient from "./DiaryPageClient";
 
 interface DiaryPageProps {
@@ -27,7 +27,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
       workers: Array.isArray(item.workers) ? item.workers : [],
       description: item.description ?? undefined,
       workItemWorkers:
-        item.workItemWorkers?.map((w: any) => ({
+        item.workItemWorkers?.map((w: WorkItemWorker) => ({
           ...w,
           name: w.name ?? undefined,
           role: w.role ?? undefined,

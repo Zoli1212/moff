@@ -9,7 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
 
 import type { WorkItem } from "@/types/work";
-import type { WorkDiaryItemCreate, WorkDiaryItemUpdate } from "@/types/work-diary";
+import type { WorkDiaryItemCreate } from "@/types/work-diary";
+
+type ActionResult<T> = { success: boolean; data?: T };
 
 interface WorkerDiaryEditFormProps {
   diary: WorkDiaryWithItem;
@@ -70,7 +72,7 @@ export default function WorkerDiaryEditForm({
         setImageError(data.error || "Hiba történt a feltöltésnél.");
       }
     } catch (err) {
-      setImageError("Hiba a feltöltés során.");
+      setImageError("Hiba a feltöltés során: " + (err as Error).message);
     } finally {
       setImageUploading(false);
     }
@@ -105,8 +107,8 @@ export default function WorkerDiaryEditForm({
     if (diary.id !== undefined) {
       // Update
       const updatePayload: import('@/types/work-diary').WorkDiaryItemUpdate = { ...payload, id: diary.id };
-      updateWorkDiaryItem(updatePayload).then((result: any) => {
-        if (result.success) {
+      updateWorkDiaryItem(updatePayload).then((result: ActionResult<Partial<WorkDiaryWithItem>>) => {
+        if (result.success && result.data) {
           onSave(result.data);
         } else {
           // handle error (optional)
@@ -114,8 +116,8 @@ export default function WorkerDiaryEditForm({
       });
     } else {
       // Create
-      createWorkDiaryItem(payload).then((result: any) => {
-        if (result.success) {
+      createWorkDiaryItem(payload).then((result: ActionResult<Partial<WorkDiaryWithItem>>) => {
+        if (result.success && result.data) {
           onSave(result.data);
         } else {
           // handle error (optional)

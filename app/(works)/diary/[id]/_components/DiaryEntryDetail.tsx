@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Image from "next/image";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import WorkerDiaryEditForm from "../edit/WorkerDiaryEditForm";
 import { generateDiaryPdf } from "./DiaryPdfExport";
@@ -46,7 +47,8 @@ export default function DiaryEntryDetail({
     }
   }, [selectedDate, diaries, editMode]);
 
-const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditMode(false);
+  const handleEdit = () => { onEdit?.(); setEditMode(true); };
+  const handleCancel = () => setEditMode(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,11 +65,9 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
         description: updated.description,
         weather: updated.weather,
         temperature: updated.temperature,
-        quantity: updated.quantity,
         issues: updated.issues,
         notes: updated.notes,
         unit: updated.unit,
-        workHours: updated.workHours,
       });
       if (res.success) {
         setLocalDiary({ ...localDiary, ...updated });
@@ -75,8 +75,9 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
       } else {
         setError(res.message || "Hiba a mentéskor");
       }
-    } catch (e: any) {
-      setError(e?.message || "Hiba a mentéskor");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Ismeretlen hiba";
+      setError(msg || "Hiba a mentéskor");
     } finally {
       setSaving(false);
     }
@@ -111,6 +112,12 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
           </button>
         )}
       </div>
+      {saving && (
+        <div className="text-sm text-blue-600 mb-2">Mentés folyamatban…</div>
+      )}
+      {error && (
+        <div className="text-sm text-red-600 mb-2">{error}</div>
+      )}
       <div className="mb-3 text-sm text-gray-600">
         <b>Munkafázis:</b>
         <select
@@ -177,11 +184,13 @@ const handleEdit = () => setEditMode(true);  const handleCancel = () => setEditM
         <div className="flex gap-2 flex-wrap mt-2">
           {diary.images && diary.images.length > 0 ? (
             diary.images.map((img, i) => (
-              <img
+              <Image
                 key={i}
                 src={img}
                 alt={`img-${i}`}
-                className="w-24 h-24 object-cover rounded border"
+                width={96}
+                height={96}
+                className="object-cover rounded border"
               />
             ))
           ) : (

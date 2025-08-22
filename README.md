@@ -717,7 +717,8 @@ havi nézet
 ki dolgozott munkás
 munkás neve
 havi: + monogrammok + munkaidő
-heti: óra nem kell neve + munkaidő
+heti:  neve + munkaidő
+napi minden
 eltűnik az óra: 
 item
 ki hány órában

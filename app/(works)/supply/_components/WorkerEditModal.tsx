@@ -167,7 +167,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
                         setAvatarPreview("");
                       }
                     } catch (err) {
-                      setAvatarError("Hiba a feltöltés során.");
+                      setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
                       setAvatarUrl("");
                       setAvatarPreview("");
                     } finally {
