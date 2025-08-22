@@ -47,7 +47,7 @@ export default async function SupplyPage({
   }
 
   return (
-    <div style={{ maxWidth: 450, margin: "0 auto", padding: 0, paddingBottom: 120 }}>
+    <div style={{ maxWidth: 450, margin: "0 auto", padding: "0 8px", paddingBottom: 120 }}>
       {/* Header with back arrow and work name */}
       <div
         style={{
@@ -106,28 +106,33 @@ export default async function SupplyPage({
         style={{
           display: "flex",
           gap: 0,
-          margin: "0 0 18px 0",
-          alignItems: "center",
-          justifyContent: "center",
+          width: "100%",
+          margin: "0 0 12px 0",
+          alignItems: "stretch",
+          justifyContent: "space-between",
         }}
       >
         {/* Tab links */}
         <a
           href={`?tab=materials`}
           style={{
-            padding: "8px 30px",
+            flex: 1,
+            padding: "10px 0",
             borderRadius: "22px 0 0 22px",
             border: "none",
             background: !tab || tab === "materials" ? "#ddd" : "#f7f7f7",
             color: !tab || tab === "materials" ? "#222" : "#888",
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: 15,
             boxShadow: "0 1px 2px #eee",
             outline: "none",
             cursor: "pointer",
             transition: "background .2s",
-            zIndex: 1,
             textDecoration: "none",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           Anyagok
@@ -135,19 +140,22 @@ export default async function SupplyPage({
         <a
           href={`?tab=tools`}
           style={{
-            padding: "8px 30px",
+            flex: 1,
+            padding: "10px 0",
             borderRadius: 0,
             border: "none",
             background: tab === "tools" ? "#ddd" : "#f7f7f7",
             color: tab === "tools" ? "#222" : "#888",
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: 15,
             boxShadow: "0 1px 2px #eee",
             outline: "none",
             cursor: "pointer",
-            marginLeft: -2,
-            zIndex: 0,
             textDecoration: "none",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           Szerszámok
@@ -155,19 +163,22 @@ export default async function SupplyPage({
         <a
           href={`?tab=workers`}
           style={{
-            padding: "8px 30px",
+            flex: 1,
+            padding: "10px 0",
             borderRadius: "0 22px 22px 0",
             border: "none",
             background: tab === "workers" ? "#ddd" : "#f7f7f7",
             color: tab === "workers" ? "#222" : "#888",
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: 15,
             boxShadow: "0 1px 2px #eee",
             outline: "none",
             cursor: "pointer",
-            marginLeft: -2,
-            zIndex: 0,
             textDecoration: "none",
+            textAlign: "center",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
           }}
         >
           Munkások

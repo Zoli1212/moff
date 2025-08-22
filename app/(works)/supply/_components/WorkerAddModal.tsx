@@ -62,8 +62,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
   };
 
   const professionsForSelected = useMemo(() => {
-    // Force user to pick a workItem first
-    if (!workItemId) return [] as string[];
+    // No selection: empty list (prompt user)
+    if (workItemId === "") return [] as string[];
+    // Special case: 0 => show ALL professions
+    if (Number(workItemId) === 0) {
+      let all = [...professions].sort((a, b) => a.localeCompare(b, 'hu'));
+      if (lockedProfession) all = all.filter(p => p === lockedProfession);
+      return all;
+    }
 
     // With a selected workItem: restrict strictly to that phase
     const selected = workItems.find(w => w.id === Number(workItemId)) as any;
@@ -77,11 +83,12 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
     // If profession is locked, restrict to only that one (if present)
     if (lockedProfession) options = options.filter(p => p === lockedProfession);
     return options;
-  }, [workItemId, workItems, lockedProfession]);
+  }, [workItemId, workItems, professions, lockedProfession]);
 
   // Keep profession consistent with the available options for the selected work item
   useEffect(() => {
-    if (profession && !professionsForSelected.includes(profession)) {
+    // Don't clear if user selected the generic "Egyéb"
+    if (profession && profession !== "Egyéb" && !professionsForSelected.includes(profession)) {
       setProfession("");
     }
   }, [professionsForSelected, profession]);
@@ -116,7 +123,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
           <select
             value={workItemId}
             onChange={(e) => setWorkItemId(e.target.value ? Number(e.target.value) : "")}
-            className="border rounded px-3 py-2 mt-2"
+            className="border rounded px-3 py-2 mt-2 w-full max-w-full block truncate"
             required
             disabled={typeof lockedWorkItemId === 'number'}
           >
@@ -126,11 +133,12 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
                 {item.name}
               </option>
             ))}
+            <option value={0}>Egyéb munkafázis</option>
           </select>
           <select
             value={profession}
             onChange={(e) => setProfession(e.target.value)}
-            className="border rounded px-3 py-2"
+            className="border rounded px-3 py-2 w-full max-w-full block truncate"
             disabled={!!workItemId && professionsForSelected.length === 0 || !!lockedProfession}
             required
           >
@@ -138,6 +146,9 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
             {professionsForSelected.map((p) => (
               <option key={p} value={p}>{p}</option>
             ))}
+            {!lockedProfession && (
+              <option value={"Egyéb"}>Egyéb</option>
+            )}
           </select>
           <input
             type="text"
