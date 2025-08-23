@@ -4,6 +4,25 @@ import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+// Resolve the effective tenant email. If the current user is a worker,
+// look up their tenant in WorkforceRegistry by the worker's email.
+// Prefer an explicitly provided workerEmail (selected in the UI),
+// otherwise fall back to the logged-in user's email.
+async function resolveTenantEmail(userEmail: string, workerEmail?: string) {
+  const emailToLookup = workerEmail || userEmail;
+  try {
+    const registry = await prisma.workforceRegistry.findFirst({
+      where: { email: emailToLookup },
+      select: { tenantEmail: true },
+    });
+    if (registry?.tenantEmail) return registry.tenantEmail;
+  } catch (_) {
+    // noop – fallback below
+  }
+  // If not found in registry, assume userEmail is the tenant (tenant account case)
+  return userEmail;
+}
+
 export async function deleteWorkDiary({
   workId,
   workItemId,
@@ -203,11 +222,12 @@ export async function createWorkDiaryItem({
   if (!userEmail) throw new Error("No user email found");
 
   try {
+    const tenantEmail = await resolveTenantEmail(userEmail, email);
     const createData: any = {
       diaryId,
       workId,
       workItemId,
-      tenantEmail: userEmail,
+      tenantEmail,
     };
     if (workerId !== undefined) createData.workerId = workerId;
     if (email !== undefined) createData.email = email;
@@ -240,10 +260,12 @@ export async function createWorkDiary({
 }) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  const tenantEmail =
+  const loggedEmail =
     user.emailAddresses?.[0]?.emailAddress ||
     user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) throw new Error("No tenant email found");
+  if (!loggedEmail) throw new Error("No tenant email found");
+  // No explicit worker email here, resolve based on the logged-in account.
+  const tenantEmail = await resolveTenantEmail(loggedEmail);
 
   const existing = await prisma.workDiary.findFirst({
     where: { workId, workItemId, tenantEmail },
