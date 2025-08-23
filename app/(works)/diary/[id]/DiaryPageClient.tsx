@@ -4,6 +4,7 @@ import GoogleCalendarView from "./_components/GoogleCalendarView";
 import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
 import { WorkItem } from "@/types/work";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
+import type { WorkDiaryItemUpdate } from "@/types/work-diary";
 
 interface DiaryPageClientProps {
   items: WorkItem[];
@@ -16,6 +17,7 @@ interface DiaryPageClientProps {
 export default function DiaryPageClient({ items, diaries, error }: DiaryPageClientProps) {
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(null);
+  const [editingItem, setEditingItem] = useState<(Partial<WorkDiaryItemUpdate> & { id: number }) | undefined>(undefined);
 
   const handleDateSelect = (date: Date) => {
     const found = (diaries ?? []).find(d => new Date(d.date).toDateString() === date.toDateString());
@@ -39,13 +41,15 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
         workItem: firstItem || undefined,
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantEmail: ""
+        tenantEmail: "",
+        workDiaryItems: []
       });
     }
+    setEditingItem(undefined); // new item mode
     setShowDiaryModal(true);
   };
 
-  const handleCloseModal = () => setShowDiaryModal(false);
+  const handleCloseModal = () => { setShowDiaryModal(false); setEditingItem(undefined); };
 
   return (
     <div className="max-w-3xl mx-auto py-6 md:py-8">
@@ -56,6 +60,26 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
       <GoogleCalendarView
         diaries={diaries}
         onEventClick={diary => {
+          // extract clicked WorkDiaryItem id set by calendar
+          const clickedId = (diary as any).__editingItemId as number | undefined;
+          let itemForEdit: (Partial<WorkDiaryItemUpdate> & { id: number }) | undefined = undefined;
+          if (clickedId && Array.isArray((diary as any).workDiaryItems)) {
+            const it = (diary as any).workDiaryItems.find((i: any) => i.id === clickedId);
+            if (it) {
+              itemForEdit = {
+                id: it.id,
+                workItemId: it.workItemId,
+                workerId: it.workerId,
+                date: it.date,
+                quantity: it.quantity,
+                unit: it.unit,
+                workHours: it.workHours,
+                images: it.images,
+                notes: it.notes,
+              };
+            }
+          }
+          setEditingItem(itemForEdit);
           setSelectedDiary(diary);
           setShowDiaryModal(true);
         }}
@@ -68,7 +92,8 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
             <WorkerDiaryEditForm
               diary={selectedDiary}
               workItems={items}
-              onSave={() => setShowDiaryModal(false)}
+              editingItem={editingItem}
+              onSave={() => { setShowDiaryModal(false); setEditingItem(undefined); }}
               onCancel={handleCloseModal}
             />
           </div>

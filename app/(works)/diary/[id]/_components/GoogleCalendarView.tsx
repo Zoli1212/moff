@@ -76,7 +76,23 @@ export default function GoogleCalendarView({
           week: "Hét",
           day: "Nap",
         }}
+        /* no header plus buttons to avoid duplicates */
         events={events}
+        dayCellContent={(arg) => {
+          // Egyetlen "+" ikon minden nap alján jobb sarokban
+          const d = arg.date; // cella dátuma
+          const handleClick = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onDateClick?.(d);
+          };
+          return (
+            <div className="fc-daycell-wrap">
+              <span className="fc-daynum">{arg.dayNumberText}</span>
+              <button className="fc-add-btn" onClick={handleClick} title="Új napló tétel">+</button>
+            </div>
+          );
+        }}
         eventContent={(arg) => {
           const p: any = arg.event.extendedProps || {};
           const isDay = arg.view.type === "timeGridDay";
@@ -113,8 +129,13 @@ export default function GoogleCalendarView({
         }}
         eventClick={(info: EventClickArg) => {
           const diaryId = (info.event.extendedProps as any)?.diaryId;
+          const itemId = Number(info.event.id);
           const diary = diaries.find((d) => d.id === diaryId);
-          if (diary) onEventClick(diary);
+          if (diary) {
+            // Megjelöljük, melyik WorkDiaryItem-re kattintottak (szükség esetére)
+            (diary as any).__editingItemId = itemId;
+            onEventClick(diary);
+          }
         }}
         dateClick={(info: DateClickArg) => {
           if (onDateClick) onDateClick(info.date);
@@ -130,6 +151,32 @@ export default function GoogleCalendarView({
         fixedWeekCount={false}
       />
       <style jsx global>{`
+        /* Day number + plus button container (whole cell) */
+        .fc-mobile-wrap .fc .fc-daygrid-day-frame .fc-daycell-wrap {
+          position: relative;
+          display: block;
+          height: 100%;
+          padding: 2px 4px 20px 4px; /* bottom space for + */
+          box-sizing: border-box;
+        }
+        .fc-mobile-wrap .fc .fc-add-btn {
+          position: absolute;
+          right: 2px;
+          bottom: 2px;
+          width: 16px;
+          height: 16px;
+          line-height: 14px;
+          padding: 0;
+          font-size: 12px;
+          border-radius: 4px;
+          border: 1px solid #a7f3d0;
+          background: #ecfdf5; /* emerald-50 */
+          color: #047857;      /* emerald-700 */
+          cursor: pointer;
+        }
+        .fc-mobile-wrap .fc .fc-add-btn:hover {
+          background: #d1fae5;
+        }
         /* Compact header/title on small screens */
         @media (max-width: 480px) {
           .fc-mobile-wrap .fc .fc-header-toolbar {
