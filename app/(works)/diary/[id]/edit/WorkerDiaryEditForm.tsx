@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   updateWorkDiaryItem,
   createWorkDiaryItem,
+  createWorkDiary,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,10 @@ import { Calendar } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 
 import type { WorkItem } from "@/types/work";
-import type { WorkDiaryItemCreate, WorkDiaryItemUpdate } from "@/types/work-diary";
+import type {
+  WorkDiaryItemCreate,
+  WorkDiaryItemUpdate,
+} from "@/types/work-diary";
 
 type ActionResult<T> = { success: boolean; data?: T };
 
@@ -22,6 +26,8 @@ interface WorkerDiaryEditFormProps {
   workItems: WorkItem[];
   onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
+  // Optional: when provided, the form acts in "edit" mode for this WorkDiaryItem
+  editingItem?: Partial<WorkDiaryItemUpdate> & { id: number };
 }
 
 export default function WorkerDiaryEditForm({
@@ -29,6 +35,7 @@ export default function WorkerDiaryEditForm({
   workItems,
   onSave,
   onCancel,
+  editingItem,
 }: WorkerDiaryEditFormProps) {
   const { user } = useUser();
   const currentEmail = useMemo(
@@ -39,13 +46,21 @@ export default function WorkerDiaryEditForm({
     [user]
   );
   const [selectedWorkItemId, setSelectedWorkItemId] = useState<number | "">(
-    typeof diary.workItemId === "number" ? diary.workItemId : ""
+    typeof (editingItem?.workItemId ?? diary.workItemId) === "number"
+      ? ((editingItem?.workItemId as number) ?? diary.workItemId)
+      : ""
   );
   // Worker selection based on WorkItem.workItemWorkers
-  const [selectedWorkerId, setSelectedWorkerId] = useState<number | "">("");
+  const [selectedWorkerId, setSelectedWorkerId] = useState<number | "">(
+    typeof editingItem?.workerId === "number"
+      ? (editingItem?.workerId as number)
+      : ""
+  );
   useEffect(() => {
     // Reset worker selection when work item changes
-    setSelectedWorkerId("");
+    if (!editingItem?.workerId) {
+      setSelectedWorkerId("");
+    }
   }, [selectedWorkItemId]);
   // Format a date to YYYY-MM-DD in LOCAL time to avoid UTC shifts
   const formatLocalDate = (value?: Date | string) => {
@@ -57,18 +72,43 @@ export default function WorkerDiaryEditForm({
     return `${y}-${m}-${day}`;
   };
 
-  const [date, setDate] = useState<string>(formatLocalDate(diary.date));
-  const [description, setDescription] = useState(diary.description || "");
+  const [date, setDate] = useState<string>(
+    formatLocalDate(editingItem?.date ?? diary.date)
+  );
+  const [description, setDescription] = useState(
+    (editingItem?.notes as string | undefined) ?? diary.description ?? ""
+  );
   const [quantity, setQuantity] = useState<number | "">(
-    typeof diary.quantity === "number" ? diary.quantity : ""
+    typeof editingItem?.quantity === "number"
+      ? (editingItem?.quantity as number)
+      : typeof diary.quantity === "number"
+        ? diary.quantity
+        : ""
   );
-  const [unit, setUnit] = useState<string>(diary.unit || "");
+  const [unit, setUnit] = useState<string>(
+    (editingItem?.unit as string | undefined) ?? diary.unit ?? ""
+  );
   const [workHours, setWorkHours] = useState<number | "">(
-    typeof diary.workHours === "number" ? diary.workHours : ""
+    typeof editingItem?.workHours === "number"
+      ? (editingItem?.workHours as number)
+      : typeof diary.workHours === "number"
+        ? diary.workHours
+        : ""
   );
-  const [images, setImages] = useState<string[]>(diary.images || []);
+  const [images, setImages] = useState<string[]>(
+    (editingItem?.images as string[] | undefined) ?? diary.images ?? []
+  );
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
+  // simple toast state
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Derived: selected WorkItem and its assigned workers
   const selectedItem =
@@ -130,7 +170,7 @@ export default function WorkerDiaryEditForm({
     setImages((prev) => prev.filter((img) => img !== url));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return;
     // Use strict types for payloads
@@ -144,15 +184,17 @@ export default function WorkerDiaryEditForm({
       return new Date(y, (m || 1) - 1, d || 1);
     };
 
-    const selectedEmail = (
-      workersById.get(Number(selectedWorkerId))?.email ??
-      assignedWorkers.find((aw) => aw.workerId === Number(selectedWorkerId))?.email
-    ) || undefined;
+    const selectedEmail =
+      (workersById.get(Number(selectedWorkerId))?.email ??
+        assignedWorkers.find((aw) => aw.workerId === Number(selectedWorkerId))
+          ?.email) ||
+      undefined;
 
-    const payload: WorkDiaryItemCreate = {
+    // Prepare base fields
+    const base = {
       diaryId: diary.id!,
       workId: diary.workId,
-      workItemId: Number(selectedWorkItemId), // always number for create
+      workItemId: Number(selectedWorkItemId),
       workerId: Number(selectedWorkerId),
       email: selectedEmail,
       date: toLocalDate(date),
@@ -161,33 +203,51 @@ export default function WorkerDiaryEditForm({
       workHours: workHours === "" ? undefined : Number(workHours),
       images,
       notes: description,
-    };
-    if (diary.id !== undefined) {
-      // Update
+    } as const;
+
+    if (editingItem?.id) {
+      // Update existing WorkDiaryItem
       const updatePayload: WorkDiaryItemUpdate = {
-        ...payload,
-        id: diary.id,
+        id: editingItem.id,
+        ...base,
       };
-      updateWorkDiaryItem(updatePayload).then(
-        (result: ActionResult<Partial<WorkDiaryWithItem>>) => {
-          if (result.success && result.data) {
-            onSave(result.data);
-          } else {
-            // handle error (optional)
-          }
-        }
-      );
+      const result = await updateWorkDiaryItem(updatePayload);
+      if (result.success && result.data) {
+        showToast("success", "Napló bejegyzés frissítve.");
+        onSave(result.data);
+      } else {
+        showToast("error", (result as any)?.message || "Sikertelen mentés.");
+      }
     } else {
-      // Create
-      createWorkDiaryItem(payload).then(
-        (result: ActionResult<Partial<WorkDiaryWithItem>>) => {
-          if (result.success && result.data) {
-            onSave(result.data);
-          } else {
-            // handle error (optional)
-          }
+      // Create new WorkDiaryItem
+      // Ensure there is a real WorkDiary.id (DiaryPageClient may pass id: 0 for a new day)
+      let diaryIdToUse = diary.id;
+      if (!diaryIdToUse || diaryIdToUse === 0) {
+        const created = await createWorkDiary({
+          workId: diary.workId,
+          workItemId: Number(selectedWorkItemId),
+        });
+        if (!created?.success || !created?.data?.id) {
+          showToast(
+            "error",
+            (created as any)?.message || "Napló létrehozása sikertelen."
+          );
+          return;
         }
-      );
+        diaryIdToUse = created.data.id as number;
+      }
+
+      const createPayload: WorkDiaryItemCreate = {
+        ...base,
+        diaryId: diaryIdToUse,
+      };
+      const result = await createWorkDiaryItem(createPayload);
+      if (result.success && result.data) {
+        showToast("success", "Napló bejegyzés mentve.");
+        onSave(result.data);
+      } else {
+        showToast("error", (result as any)?.message || "Sikertelen mentés.");
+      }
     }
   };
 
@@ -230,7 +290,8 @@ export default function WorkerDiaryEditForm({
         >
           <option value="">Válassz dolgozót…</option>
           {assignedWorkers.map((w) => {
-            const email = workersById.get(w.workerId)?.email || w.email || undefined;
+            const email =
+              workersById.get(w.workerId)?.email || w.email || undefined;
             return (
               <option key={w.id} value={w.workerId}>
                 {w.name ?? `#${w.workerId}`} {w.role ? `(${w.role})` : ""}
@@ -358,6 +419,19 @@ export default function WorkerDiaryEditForm({
           Mentés
         </Button>
       </div>
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed bottom-6 right-6 px-4 py-3 rounded shadow-lg text-sm ${
+            toast.type === "success"
+              ? "bg-green-600 text-white"
+              : "bg-red-600 text-white"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </form>
   );
 }

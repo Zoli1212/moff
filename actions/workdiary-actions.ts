@@ -4,10 +4,18 @@ import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
-export async function deleteWorkDiary({ workId, workItemId }: { workId: number; workItemId: number }) {
+export async function deleteWorkDiary({
+  workId,
+  workItemId,
+}: {
+  workId: number;
+  workItemId: number;
+}) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  const tenantEmail =
+    user.emailAddresses?.[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error("No tenant email found");
 
   const diary = await prisma.workDiary.findFirst({
@@ -60,7 +68,9 @@ export async function updateWorkDiary({
 }) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  const tenantEmail =
+    user.emailAddresses?.[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error("No tenant email found");
 
   const diary = await prisma.workDiary.findFirst({
@@ -123,7 +133,9 @@ export async function updateWorkDiaryItem({
 }) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  const userEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  const userEmail =
+    user.emailAddresses?.[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
   if (!userEmail) throw new Error("No user email found");
 
   const updateData: any = {};
@@ -185,7 +197,9 @@ export async function createWorkDiaryItem({
 }) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  const userEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  const userEmail =
+    user.emailAddresses?.[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
   if (!userEmail) throw new Error("No user email found");
 
   try {
@@ -217,10 +231,18 @@ export async function createWorkDiaryItem({
   }
 }
 
-export async function createWorkDiary({ workId, workItemId }: { workId: number; workItemId: number }) {
+export async function createWorkDiary({
+  workId,
+  workItemId,
+}: {
+  workId: number;
+  workItemId: number;
+}) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
-  const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  const tenantEmail =
+    user.emailAddresses?.[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) throw new Error("No tenant email found");
 
   const existing = await prisma.workDiary.findFirst({
