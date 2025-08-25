@@ -216,13 +216,13 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
     <div
       style={{
         position: "fixed",
-        bottom: 18,
-        left: 0,
-        width: "100vw",
+        inset: 0,
         zIndex: 9999,
         display: "flex",
+        alignItems: "center",
         justifyContent: "center",
-        pointerEvents: "none",
+        background: "rgba(0,0,0,0.35)", // overlay opacity
+        pointerEvents: "auto", // block background clicks (ne kattints el)
         transition: "opacity 0.6s cubic-bezier(.4,0,.2,1)",
       }}
     >
@@ -252,6 +252,15 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
           }}
         >
           AI frissítés folyamatban
+        </div>
+        <div
+          style={{
+            fontSize: fontSize - 2,
+            color: "#ddd",
+            marginBottom: 10,
+          }}
+        >
+          Ne kattints el
         </div>
         <div
           style={{
