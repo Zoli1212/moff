@@ -4,8 +4,8 @@ import React from "react";
 
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
-import { EventClickArg, type EventInput } from "@fullcalendar/core";
+import interactionPlugin from "@fullcalendar/interaction";
+import { EventClickArg, DateSelectArg, type EventInput } from "@fullcalendar/core";
 import huLocale from "@fullcalendar/core/locales/hu";
 import {
   WorkDiaryWithItem,
@@ -54,7 +54,7 @@ export default function GoogleCalendarView({
       const items = d.workDiaryItems as WorkDiaryItemDTO[] | undefined;
       if (!items || items.length === 0) continue;
       for (const it of items) {
-        const accepted = (it as any).accepted as boolean | undefined;
+        const accepted = (it as { accepted?: boolean }).accepted;
         const ev: EventInput = {
           id: String(it.id),
           title: d.workItem?.name || "Napló",
@@ -68,7 +68,7 @@ export default function GoogleCalendarView({
             workId: it.workId,
             workerId: it.workerId,
             email: it.email,
-            name: (it as any).name ?? null,
+            name: it.name ?? null,
             quantity: it.quantity,
             unit: it.unit,
             workHours: it.workHours,
@@ -86,7 +86,7 @@ export default function GoogleCalendarView({
           workItemName: d.workItem?.name,
           date: it.date,
           accepted,
-          extendedProps: (ev as any).extendedProps,
+          extendedProps: (ev.extendedProps as EventExtProps),
         });
         list.push(ev);
       }
@@ -113,6 +113,11 @@ export default function GoogleCalendarView({
         initialView="timeGridWeek"
         headerToolbar={headerToolbar}
         titleFormat={{ year: "numeric", month: "short" }}
+        views={{
+          timeGridDay: {
+            titleFormat: { year: "numeric", month: "short", day: "2-digit", weekday: "long" },
+          },
+        }}
         buttonText={{
           today: "ma",
           month: "Hó",
@@ -121,28 +126,7 @@ export default function GoogleCalendarView({
         }}
         /* no header plus buttons to avoid duplicates */
         events={events}
-        dayCellContent={(arg) => {
-          // Egyetlen "+" ikon minden nap alján jobb sarokban
-          const d = arg.date; // cella dátuma
-          const handleClick = (e: React.MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onDateClick?.(d);
-            console.log("[Calendar] dayCell + clicked:", { date: d });
-          };
-          return (
-            <div className="fc-daycell-wrap">
-              <span className="fc-daynum">{arg.dayNumberText}</span>
-              <button
-                className="fc-add-btn"
-                onClick={handleClick}
-                title="Új napló tétel"
-              >
-                +
-              </button>
-            </div>
-          );
-        }}
+        /* Default day cells (no custom '+') */
         eventContent={(arg) => {
           const p = (arg.event.extendedProps || {}) as EventExtProps;
           const viewType = arg.view.type; // 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
@@ -154,22 +138,6 @@ export default function GoogleCalendarView({
             console.groupEnd();
           } catch {}
 
-          const getInitials = (name?: string | null, email?: string | null) => {
-            const n = (name || "").trim();
-            if (n) {
-              const parts = n.split(/\s+/).filter(Boolean);
-              const first = parts[0]?.[0] || "";
-              const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-              return (first + last).toUpperCase();
-            }
-            const mail = email || "";
-            const loc = mail.split("@")[0] || "";
-            if (!loc) return "";
-            const lp = loc.split(/[._-]+/).filter(Boolean);
-            if (lp.length >= 2) return (lp[0][0] + lp[1][0]).toUpperCase();
-            return loc.slice(0, 2).toUpperCase();
-          };
-
           const getInitialsFromNameOnly = (name?: string | null) => {
             const n = (name || "").trim();
             if (!n) return "";
@@ -178,8 +146,6 @@ export default function GoogleCalendarView({
             const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
             return (first + last).toUpperCase();
           };
-
-          const initials = getInitials(p.name ?? null, p.email ?? null);
           const hours = p.workHours != null ? `${p.workHours} óra` : "";
 
           if (viewType === "dayGridMonth") {
@@ -251,14 +217,15 @@ export default function GoogleCalendarView({
             onEventClick(diary);
           }
         }}
-        dateClick={(info: DateClickArg) => {
-          if (onDateClick) onDateClick(info.date);
-          console.log("[Calendar] dateClick:", info);
+        /* Long-press (touch) or drag select to create new */
+        selectable={true}
+        selectLongPressDelay={400}
+        select={(info: DateSelectArg) => {
+          onDateClick?.(info.start);
+          console.log("[Calendar] select:", info);
         }}
         height="80vh"
         locale={huLocale}
-        selectable={true}
-        longPressDelay={0}
         dayMaxEvents={3}
         nowIndicator={true}
         slotMinTime="06:00:00"
@@ -266,32 +233,6 @@ export default function GoogleCalendarView({
         fixedWeekCount={false}
       />
       <style jsx global>{`
-        /* Day number + plus button container (whole cell) */
-        .fc-mobile-wrap .fc .fc-daygrid-day-frame .fc-daycell-wrap {
-          position: relative;
-          display: block;
-          height: 100%;
-          padding: 2px 4px 20px 4px; /* bottom space for + */
-          box-sizing: border-box;
-        }
-        .fc-mobile-wrap .fc .fc-add-btn {
-          position: absolute;
-          right: 2px;
-          bottom: 2px;
-          width: 16px;
-          height: 16px;
-          line-height: 14px;
-          padding: 0;
-          font-size: 12px;
-          border-radius: 4px;
-          border: 1px solid #a7f3d0;
-          background: #ecfdf5; /* emerald-50 */
-          color: #047857; /* emerald-700 */
-          cursor: pointer;
-        }
-        .fc-mobile-wrap .fc .fc-add-btn:hover {
-          background: #d1fae5;
-        }
         /* Compact header/title on small screens */
         @media (max-width: 480px) {
           .fc-mobile-wrap .fc .fc-header-toolbar {
