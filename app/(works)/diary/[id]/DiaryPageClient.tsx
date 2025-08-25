@@ -1,9 +1,10 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
 import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
 import { WorkItem } from "@/types/work";
-import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
+import type { WorkDiaryWithItem, WorkDiaryItemDTO } from "@/actions/get-workdiariesbyworkid-actions";
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
 
 type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number };
@@ -17,6 +18,7 @@ interface DiaryPageClientProps {
 }
 
 export default function DiaryPageClient({ items, diaries, error }: DiaryPageClientProps) {
+  const router = useRouter();
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(null);
   const [editingItem, setEditingItem] = useState<(Partial<WorkDiaryItemUpdate> & { id: number }) | undefined>(undefined);
@@ -51,7 +53,12 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
     setShowDiaryModal(true);
   };
 
-  const handleCloseModal = () => { setShowDiaryModal(false); setEditingItem(undefined); };
+  const handleCloseModal = () => {
+    setShowDiaryModal(false);
+    setEditingItem(undefined);
+    // Ensure latest data (e.g., accepted flag) is fetched
+    try { router.refresh(); } catch {}
+  };
 
   return (
     <div className="max-w-3xl mx-auto py-6 md:py-8">
@@ -67,7 +74,7 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
           const clickedId = d.__editingItemId;
           let itemForEdit: (Partial<WorkDiaryItemUpdate> & { id: number }) | undefined = undefined;
           if (clickedId && Array.isArray(d.workDiaryItems)) {
-            const it = d.workDiaryItems.find((i) => i.id === clickedId);
+            const it = (d.workDiaryItems as WorkDiaryItemDTO[]).find((i) => i.id === clickedId);
             if (it) {
               itemForEdit = {
                 id: it.id,
@@ -79,6 +86,8 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
                 workHours: it.workHours ?? undefined,
                 images: it.images ?? [],
                 notes: it.notes ?? undefined,
+                // ensure tenant sees current accepted state in the form
+                accepted: it.accepted ?? undefined,
               };
             }
           }
@@ -96,7 +105,11 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
               diary={selectedDiary}
               workItems={items}
               editingItem={editingItem}
-              onSave={() => { setShowDiaryModal(false); setEditingItem(undefined); }}
+              onSave={() => {
+                setShowDiaryModal(false);
+                setEditingItem(undefined);
+                try { router.refresh(); } catch {}
+              }}
               onCancel={handleCloseModal}
             />
           </div>

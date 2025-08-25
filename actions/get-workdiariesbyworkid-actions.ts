@@ -15,6 +15,7 @@ export interface WorkDiaryItemDTO {
   date: Date;
   images: string[];
   notes?: string | null;
+  accepted?: boolean | null;
   tenantEmail: string;
   createdAt: Date;
   updatedAt: Date;
@@ -58,6 +59,7 @@ export async function getWorkDiariesByWorkId(
           date: true,
           images: true,
           notes: true,
+          accepted: true,
           tenantEmail: true,
           createdAt: true,
           updatedAt: true,

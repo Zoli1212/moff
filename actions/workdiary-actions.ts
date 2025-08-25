@@ -11,16 +11,74 @@ import { revalidatePath } from "next/cache";
 async function resolveTenantEmail(userEmail: string, workerEmail?: string) {
   const emailToLookup = workerEmail || userEmail;
   try {
+    console.log("[workdiary-actions] resolveTenantEmail input", {
+      userEmail,
+      workerEmail,
+    });
+  } catch {}
+  try {
     const registry = await prisma.workforceRegistry.findFirst({
       where: { email: emailToLookup },
       select: { tenantEmail: true },
     });
-    if (registry?.tenantEmail) return registry.tenantEmail;
+    if (registry?.tenantEmail) {
+      try {
+        console.log("[workdiary-actions] tenant resolved via registry", {
+          emailToLookup,
+          tenantEmail: registry.tenantEmail,
+        });
+      } catch {}
+      return registry.tenantEmail;
+    }
   } catch (_) {
     // noop – fallback below
   }
   // If not found in registry, assume userEmail is the tenant (tenant account case)
+  try {
+    console.log("[workdiary-actions] tenant fallback to userEmail", {
+      userEmail,
+    });
+  } catch {}
   return userEmail;
+}
+
+// Try to derive the worker's email by WorkItemWorker.id.
+// 1) Prefer WorkItemWorker.email
+// 2) If missing, and workforceRegistryId is present, read WorkforceRegistry.email
+async function getWorkerEmailFromAssignment(workItemWorkerId: number): Promise<string | undefined> {
+  try {
+    const assignment = await prisma.workItemWorker.findUnique({
+      where: { id: workItemWorkerId },
+      select: { email: true, workforceRegistryId: true },
+    });
+    if (!assignment) return undefined;
+    if (assignment.email) {
+      try {
+        console.log("[workdiary-actions] assignment email", {
+          workItemWorkerId,
+          email: assignment.email,
+        });
+      } catch {}
+      return assignment.email;
+    }
+    if (assignment.workforceRegistryId) {
+      const reg = await prisma.workforceRegistry.findUnique({
+        where: { id: assignment.workforceRegistryId },
+        select: { email: true },
+      });
+      try {
+        console.log("[workdiary-actions] registry email via assignment", {
+          workItemWorkerId,
+          registryId: assignment.workforceRegistryId,
+          email: reg?.email,
+        });
+      } catch {}
+      return reg?.email ?? undefined;
+    }
+  } catch (_) {
+    // ignore
+  }
+  return undefined;
 }
 
 export async function deleteWorkDiary({
@@ -138,6 +196,7 @@ export async function updateWorkDiaryItem({
   workHours,
   images,
   notes,
+  accepted,
 }: {
   diaryId?: number;
   id: number;
@@ -153,6 +212,7 @@ export async function updateWorkDiaryItem({
   workHours?: number;
   images?: string[];
   notes?: string;
+  accepted?: boolean;
 }) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
@@ -175,12 +235,29 @@ export async function updateWorkDiaryItem({
   if (workHours !== undefined) updateData.workHours = workHours;
   if (images !== undefined) updateData.images = images;
   if (notes !== undefined) updateData.notes = notes;
+  if (typeof accepted === "boolean") updateData.accepted = accepted;
+
+  // If email or assignment changed, recompute tenantEmail from worker's email if possible
+  if (email !== undefined || workItemWorkerId !== undefined) {
+    let effectiveWorkerEmail: string | undefined = email;
+    if (!effectiveWorkerEmail && workItemWorkerId) {
+      effectiveWorkerEmail = await getWorkerEmailFromAssignment(workItemWorkerId);
+    }
+    const resolvedTenant = await resolveTenantEmail(userEmail, effectiveWorkerEmail);
+    updateData.tenantEmail = resolvedTenant;
+  }
 
   try {
     const updated = await prisma.workDiaryItem.update({
       where: { id },
       data: updateData,
     });
+    try {
+      console.log("[workdiary-actions] updateWorkDiaryItem", {
+        id,
+        updateData,
+      });
+    } catch {}
     if (workId) {
       revalidatePath(`/works/diary/${workId}`);
       revalidatePath(`/works/tasks/${workId}`);
@@ -208,6 +285,7 @@ export async function createWorkDiaryItem({
   workHours,
   images,
   notes,
+  accepted,
 }: {
   diaryId: number;
   workId: number;
@@ -222,6 +300,7 @@ export async function createWorkDiaryItem({
   workHours?: number;
   images?: string[];
   notes?: string;
+  accepted?: boolean;
   // id is intentionally omitted for creation
 }) {
   const user = await currentUser();
@@ -232,7 +311,12 @@ export async function createWorkDiaryItem({
   if (!userEmail) throw new Error("No user email found");
 
   try {
-    const tenantEmail = await resolveTenantEmail(userEmail, email);
+    // Determine worker email either from explicit email or from workItemWorker assignment
+    let effectiveWorkerEmail: string | undefined = email;
+    if (!effectiveWorkerEmail && workItemWorkerId) {
+      effectiveWorkerEmail = await getWorkerEmailFromAssignment(workItemWorkerId);
+    }
+    const tenantEmail = await resolveTenantEmail(userEmail, effectiveWorkerEmail);
     const createData: any = {
       diaryId,
       workId,
@@ -249,6 +333,7 @@ export async function createWorkDiaryItem({
     if (workHours !== undefined) createData.workHours = workHours;
     if (images !== undefined) createData.images = images;
     if (notes !== undefined) createData.notes = notes;
+    if (typeof accepted === "boolean") createData.accepted = accepted;
 
     const created = await prisma.workDiaryItem.create({
       data: createData,

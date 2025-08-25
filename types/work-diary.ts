@@ -36,6 +36,7 @@ type WorkDiaryItemBase = {
   workHours?: number;
   images?: string[];
   notes?: string;
+  accepted?: boolean;
 };
 
 export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId" | "diaryId"> & {

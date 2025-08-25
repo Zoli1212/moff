@@ -45,6 +45,11 @@ export default function WorkerDiaryEditForm({
       "",
     [user]
   );
+  const isTenant = useMemo(() => {
+    const a = (currentEmail || "").toLowerCase();
+    const b = (diary?.tenantEmail || "").toLowerCase();
+    return !!a && !!b && a === b;
+  }, [currentEmail, diary?.tenantEmail]);
   const [selectedWorkItemId, setSelectedWorkItemId] = useState<number | "">(
     typeof (editingItem?.workItemId ?? diary.workItemId) === "number"
       ? ((editingItem?.workItemId as number) ?? diary.workItemId)
@@ -97,6 +102,9 @@ export default function WorkerDiaryEditForm({
   );
   const [images, setImages] = useState<string[]>(
     (editingItem?.images as string[] | undefined) ?? diary.images ?? []
+  );
+  const [accepted, setAccepted] = useState<boolean>(
+    editingItem?.accepted ?? false
   );
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
@@ -228,7 +236,16 @@ export default function WorkerDiaryEditForm({
       workHours: workHours === "" ? undefined : Number(workHours),
       images,
       notes: description,
+      accepted: isTenant ? accepted : undefined,
     } as const;
+
+    try {
+      console.log("[WorkerDiaryEditForm] submit", {
+        isTenant,
+        accepted,
+        base,
+      });
+    } catch {}
 
     if (editingItem?.id) {
       // Update existing WorkDiaryItem
@@ -438,6 +455,18 @@ export default function WorkerDiaryEditForm({
           <div className="text-red-600 text-xs mt-1">{imageError}</div>
         )}
       </div>
+      {isTenant && (
+        <div className="flex items-center gap-2 border-t pt-4">
+          <input
+            id="accepted-checkbox"
+            type="checkbox"
+            className="h-4 w-4"
+            checked={!!accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+          />
+          <Label htmlFor="accepted-checkbox">Elfogadva</Label>
+        </div>
+      )}
       <div className="flex gap-2 justify-end">
         <Button type="button" variant="outline" onClick={onCancel}>
           Mégsem
