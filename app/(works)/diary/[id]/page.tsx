@@ -6,13 +6,13 @@ import { WorkItem, WorkItemWorker } from "@/types/work";
 import DiaryPageClient from "./DiaryPageClient";
 
 interface DiaryPageProps {
-  params: { id: string };
-  searchParams: { diaryType?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ diaryType?: string }>;
 }
 
 export default async function DiaryPage({ params, searchParams }: DiaryPageProps) {
-  const { id } = params;
-  const { diaryType } = searchParams;
+  const { id } = await params;
+  const { diaryType } = await searchParams;
   const workId = Number(id);
   if (!workId) return notFound();
 

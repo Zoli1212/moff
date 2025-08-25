@@ -662,7 +662,7 @@ feljön a progress e egy csúszka ha van mennyiség
 bar mennyiségi progress bar legyen alul jelezve mennyit változott
 alul jóváhagyhatja
 jelezze hogyan változott a mennyiség
-a csúcska az globális
+a csúszka az globális
 haladást mutatja
 emberenként rögzítjük ez a globális progressből mit jelent
 itt emberenként is trackeljük mennyit dolgozott

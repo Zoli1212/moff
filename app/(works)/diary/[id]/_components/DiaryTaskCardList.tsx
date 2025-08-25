@@ -45,7 +45,8 @@ export default function DiaryTaskCardList({
         workItem: items.find(i => i.id === itemId),
         createdAt: new Date(),
         updatedAt: new Date(),
-        tenantEmail: ""
+        tenantEmail: "",
+        workDiaryItems: [],
       });
     }
   };
@@ -87,7 +88,7 @@ export default function DiaryTaskCardList({
       )}
       {selectedDiary && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <DiaryEntryDetail diary={selectedDiary} diaries={diaries} onClose={() => setSelectedDiary(null)} />
+          <DiaryEntryDetail diary={selectedDiary} diaries={diaries} workItems={items} onClose={() => setSelectedDiary(null)} />
         </div>
       )}
     </div>
