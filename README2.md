@@ -646,3 +646,25 @@ melyik feladathoz + mennyiséget + checkbox
 jobb oldalt mennyiség
 csúszka
 vissza navigáljon a detail page-re
+-----
+
+monogramm + óra
+feladat 7-8 karakter monogramm + óra
+munkás neve email helyett
+plussz felső sarokban
+hosszan nyomod akkor ujat veszünk fel
+elfogadott vagy nem elfogadott progress
+ami nem elfogadott az narancssárga
+ebből 
+alul jóváhagyja 
+és húzogatja a progresst
+feljön a progress e egy csúszka ha van mennyiség
+bar mennyiségi progress bar legyen alul jelezve mennyit változott
+alul jóváhagyhatja
+jelezze hogyan változott a mennyiség
+a csúcska az globális
+haladást mutatja
+emberenként rögzítjük ez a globális progressből mit jelent
+itt emberenként is trackeljük mennyit dolgozott
+óra / összes haladás hányadosa
+---

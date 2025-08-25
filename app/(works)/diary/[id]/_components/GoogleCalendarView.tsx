@@ -5,9 +5,26 @@ import React from "react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
-import { EventClickArg } from "@fullcalendar/core";
+import { EventClickArg, type EventInput } from "@fullcalendar/core";
 import huLocale from "@fullcalendar/core/locales/hu";
 import { WorkDiaryWithItem, WorkDiaryItemDTO } from "@/actions/get-workdiariesbyworkid-actions";
+
+type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number };
+interface EventExtProps {
+  diaryId: number;
+  workItemName?: string;
+  workItemId?: number | null;
+  workId?: number | null;
+  workerId?: number | null;
+  email?: string | null;
+  quantity?: number | null;
+  unit?: string | null;
+  workHours?: number | null;
+  notes?: string | null;
+  images?: string[] | null;
+  tenantEmail?: string | null;
+  date?: Date | string;
+}
 
 interface GoogleCalendarViewProps {
   diaries: WorkDiaryWithItem[];
@@ -22,9 +39,9 @@ export default function GoogleCalendarView({
 }: GoogleCalendarViewProps) {
   // Egy WorkDiaryItem = egy naptár esemény, hogy minden információ látszódjon
   const events = React.useMemo(() => {
-    const list = [] as any[];
+    const list: EventInput[] = [];
     for (const d of diaries ?? []) {
-      const items = (d as any).workDiaryItems as WorkDiaryItemDTO[] | undefined;
+      const items = d.workDiaryItems as WorkDiaryItemDTO[] | undefined;
       if (!items || items.length === 0) continue;
       for (const it of items) {
         list.push({
@@ -44,9 +61,9 @@ export default function GoogleCalendarView({
             workHours: it.workHours,
             notes: it.notes,
             images: it.images,
-            tenantEmail: (it as any).tenantEmail,
+            tenantEmail: (it as unknown as { tenantEmail?: string | null }).tenantEmail ?? null,
             date: it.date,
-          },
+          } as EventExtProps,
         });
       }
     }
@@ -94,7 +111,7 @@ export default function GoogleCalendarView({
           );
         }}
         eventContent={(arg) => {
-          const p: any = arg.event.extendedProps || {};
+          const p = (arg.event.extendedProps || {}) as EventExtProps;
           const isDay = arg.view.type === "timeGridDay";
           const lines = [
             p.workItemName ? `${p.workItemName}` : undefined,
@@ -128,12 +145,12 @@ export default function GoogleCalendarView({
           );
         }}
         eventClick={(info: EventClickArg) => {
-          const diaryId = (info.event.extendedProps as any)?.diaryId;
+          const diaryId = (info.event.extendedProps as EventExtProps)?.diaryId;
           const itemId = Number(info.event.id);
           const diary = diaries.find((d) => d.id === diaryId);
           if (diary) {
             // Megjelöljük, melyik WorkDiaryItem-re kattintottak (szükség esetére)
-            (diary as any).__editingItemId = itemId;
+            (diary as DiaryWithEditing).__editingItemId = itemId;
             onEventClick(diary);
           }
         }}

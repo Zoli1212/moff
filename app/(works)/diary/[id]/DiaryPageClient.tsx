@@ -6,6 +6,8 @@ import { WorkItem } from "@/types/work";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
 
+type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number };
+
 interface DiaryPageClientProps {
   items: WorkItem[];
   diaries: WorkDiaryWithItem[];
@@ -61,21 +63,22 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
         diaries={diaries}
         onEventClick={diary => {
           // extract clicked WorkDiaryItem id set by calendar
-          const clickedId = (diary as any).__editingItemId as number | undefined;
+          const d = diary as DiaryWithEditing;
+          const clickedId = d.__editingItemId;
           let itemForEdit: (Partial<WorkDiaryItemUpdate> & { id: number }) | undefined = undefined;
-          if (clickedId && Array.isArray((diary as any).workDiaryItems)) {
-            const it = (diary as any).workDiaryItems.find((i: any) => i.id === clickedId);
+          if (clickedId && Array.isArray(d.workDiaryItems)) {
+            const it = d.workDiaryItems.find((i) => i.id === clickedId);
             if (it) {
               itemForEdit = {
                 id: it.id,
-                workItemId: it.workItemId,
-                workerId: it.workerId,
+                workItemId: it.workItemId ?? undefined,
+                workerId: it.workerId ?? undefined,
                 date: it.date,
-                quantity: it.quantity,
-                unit: it.unit,
-                workHours: it.workHours,
-                images: it.images,
-                notes: it.notes,
+                quantity: it.quantity ?? undefined,
+                unit: it.unit ?? undefined,
+                workHours: it.workHours ?? undefined,
+                images: it.images ?? [],
+                notes: it.notes ?? undefined,
               };
             }
           }

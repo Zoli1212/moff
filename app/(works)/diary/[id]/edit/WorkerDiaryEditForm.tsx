@@ -19,7 +19,7 @@ import type {
   WorkDiaryItemUpdate,
 } from "@/types/work-diary";
 
-type ActionResult<T> = { success: boolean; data?: T };
+type ActionResult<T> = { success: boolean; data?: T; message?: string };
 
 interface WorkerDiaryEditFormProps {
   diary: WorkDiaryWithItem;
@@ -61,7 +61,7 @@ export default function WorkerDiaryEditForm({
     if (!editingItem?.workerId) {
       setSelectedWorkerId("");
     }
-  }, [selectedWorkItemId]);
+  }, [selectedWorkItemId, editingItem?.workerId]);
   // Format a date to YYYY-MM-DD in LOCAL time to avoid UTC shifts
   const formatLocalDate = (value?: Date | string) => {
     if (!value) return "";
@@ -115,7 +115,10 @@ export default function WorkerDiaryEditForm({
     selectedWorkItemId === ""
       ? undefined
       : workItems.find((wi) => wi.id === Number(selectedWorkItemId));
-  const assignedWorkers = selectedItem?.workItemWorkers ?? [];
+  const assignedWorkers = useMemo(
+    () => selectedItem?.workItemWorkers ?? [],
+    [selectedItem]
+  );
   const workersById = useMemo(() => {
     const map = new Map<number, { email?: string; name?: string | null }>();
     (selectedItem?.workers ?? []).forEach((w) =>
@@ -211,26 +214,26 @@ export default function WorkerDiaryEditForm({
         id: editingItem.id,
         ...base,
       };
-      const result = await updateWorkDiaryItem(updatePayload);
+      const result: ActionResult<Partial<WorkDiaryWithItem>> = await updateWorkDiaryItem(updatePayload);
       if (result.success && result.data) {
         showToast("success", "Napló bejegyzés frissítve.");
         onSave(result.data);
       } else {
-        showToast("error", (result as any)?.message || "Sikertelen mentés.");
+        showToast("error", result.message || "Sikertelen mentés.");
       }
     } else {
       // Create new WorkDiaryItem
       // Ensure there is a real WorkDiary.id (DiaryPageClient may pass id: 0 for a new day)
       let diaryIdToUse = diary.id;
       if (!diaryIdToUse || diaryIdToUse === 0) {
-        const created = await createWorkDiary({
+        const created: ActionResult<{ id: number }> = await createWorkDiary({
           workId: diary.workId,
           workItemId: Number(selectedWorkItemId),
         });
         if (!created?.success || !created?.data?.id) {
           showToast(
             "error",
-            (created as any)?.message || "Napló létrehozása sikertelen."
+            created?.message || "Napló létrehozása sikertelen."
           );
           return;
         }
@@ -241,12 +244,12 @@ export default function WorkerDiaryEditForm({
         ...base,
         diaryId: diaryIdToUse,
       };
-      const result = await createWorkDiaryItem(createPayload);
+      const result: ActionResult<Partial<WorkDiaryWithItem>> = await createWorkDiaryItem(createPayload);
       if (result.success && result.data) {
         showToast("success", "Napló bejegyzés mentve.");
         onSave(result.data);
       } else {
-        showToast("error", (result as any)?.message || "Sikertelen mentés.");
+        showToast("error", result.message || "Sikertelen mentés.");
       }
     }
   };
