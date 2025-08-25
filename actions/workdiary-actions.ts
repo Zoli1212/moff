@@ -130,6 +130,8 @@ export async function updateWorkDiaryItem({
   workItemId,
   workerId,
   email,
+  name,
+  workItemWorkerId,
   date,
   quantity,
   unit,
@@ -143,6 +145,8 @@ export async function updateWorkDiaryItem({
   workItemId?: number;
   workerId?: number;
   email?: string;
+  name?: string;
+  workItemWorkerId?: number;
   date?: Date;
   quantity?: number;
   unit?: string;
@@ -163,6 +167,8 @@ export async function updateWorkDiaryItem({
   if (workItemId !== undefined) updateData.workItemId = workItemId;
   if (workerId !== undefined) updateData.workerId = workerId;
   if (email !== undefined) updateData.email = email;
+  if (name !== undefined) updateData.name = name;
+  if (workItemWorkerId !== undefined) updateData.workItemWorkerId = workItemWorkerId;
   if (date !== undefined) updateData.date = date;
   if (quantity !== undefined) updateData.quantity = quantity;
   if (unit !== undefined) updateData.unit = unit;
@@ -194,6 +200,8 @@ export async function createWorkDiaryItem({
   workItemId,
   workerId,
   email,
+  name,
+  workItemWorkerId,
   date,
   quantity,
   unit,
@@ -206,6 +214,8 @@ export async function createWorkDiaryItem({
   workItemId: number;
   workerId?: number;
   email?: string;
+  name?: string;
+  workItemWorkerId?: number;
   date?: Date;
   quantity?: number;
   unit?: string;
@@ -231,6 +241,8 @@ export async function createWorkDiaryItem({
     };
     if (workerId !== undefined) createData.workerId = workerId;
     if (email !== undefined) createData.email = email;
+    if (name !== undefined) createData.name = name;
+    if (workItemWorkerId !== undefined) createData.workItemWorkerId = workItemWorkerId;
     if (date !== undefined) createData.date = date;
     if (quantity !== undefined) createData.quantity = quantity;
     if (unit !== undefined) createData.unit = unit;

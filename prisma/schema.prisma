@@ -325,6 +325,8 @@ model WorkItemWorker {
   updatedAt  DateTime @updatedAt
   tenantEmail String   @default("")
   avatarUrl String?
+  // Back-relation for WorkDiaryItem.workItemWorker
+  workDiaryItems WorkDiaryItem[]
 }
 
 model myPrompt {
@@ -518,6 +520,11 @@ model WorkDiaryItem {
   workItem      WorkItem   @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   workerId      Int
   worker        Worker     @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  /// Optional: snapshot of the assigned name at the time of logging
+  name          String?
+  /// Optional: reference to the WorkItemWorker assignment used
+  workItemWorker   WorkItemWorker? @relation(fields: [workItemWorkerId], references: [id])
+  workItemWorkerId Int?
   quantity      Float?
   unit String?
   workHours     Float?

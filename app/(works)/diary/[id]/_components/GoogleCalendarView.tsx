@@ -7,7 +7,10 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin, { DateClickArg } from "@fullcalendar/interaction";
 import { EventClickArg, type EventInput } from "@fullcalendar/core";
 import huLocale from "@fullcalendar/core/locales/hu";
-import { WorkDiaryWithItem, WorkDiaryItemDTO } from "@/actions/get-workdiariesbyworkid-actions";
+import {
+  WorkDiaryWithItem,
+  WorkDiaryItemDTO,
+} from "@/actions/get-workdiariesbyworkid-actions";
 
 type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number };
 interface EventExtProps {
@@ -17,6 +20,7 @@ interface EventExtProps {
   workId?: number | null;
   workerId?: number | null;
   email?: string | null;
+  name?: string | null;
   quantity?: number | null;
   unit?: string | null;
   workHours?: number | null;
@@ -24,6 +28,7 @@ interface EventExtProps {
   images?: string[] | null;
   tenantEmail?: string | null;
   date?: Date | string;
+  accepted?: boolean;
 }
 
 interface GoogleCalendarViewProps {
@@ -37,18 +42,25 @@ export default function GoogleCalendarView({
   onDateClick,
   onEventClick,
 }: GoogleCalendarViewProps) {
+
+
+  console.log(diaries, 'DIARIES')
   // Egy WorkDiaryItem = egy naptár esemény, hogy minden információ látszódjon
   const events = React.useMemo(() => {
     const list: EventInput[] = [];
+    console.groupCollapsed("[Calendar] Build events");
+    console.log("Diaries count:", diaries?.length ?? 0);
     for (const d of diaries ?? []) {
       const items = d.workDiaryItems as WorkDiaryItemDTO[] | undefined;
       if (!items || items.length === 0) continue;
       for (const it of items) {
-        list.push({
+        const accepted = (it as any).accepted as boolean | undefined;
+        const ev: EventInput = {
           id: String(it.id),
           title: d.workItem?.name || "Napló",
           start: it.date,
           allDay: true,
+          classNames: accepted !== true ? ["pending"] : [],
           extendedProps: {
             diaryId: d.id,
             workItemName: d.workItem?.name,
@@ -56,17 +68,31 @@ export default function GoogleCalendarView({
             workId: it.workId,
             workerId: it.workerId,
             email: it.email,
+            name: (it as any).name ?? null,
             quantity: it.quantity,
             unit: it.unit,
             workHours: it.workHours,
             notes: it.notes,
             images: it.images,
-            tenantEmail: (it as unknown as { tenantEmail?: string | null }).tenantEmail ?? null,
+            tenantEmail:
+              (it as unknown as { tenantEmail?: string | null }).tenantEmail ??
+              null,
             date: it.date,
+            accepted,
           } as EventExtProps,
+        };
+        console.log("Event built:", {
+          itemId: it.id,
+          workItemName: d.workItem?.name,
+          date: it.date,
+          accepted,
+          extendedProps: (ev as any).extendedProps,
         });
+        list.push(ev);
       }
     }
+    console.log("Total events:", list.length);
+    console.groupEnd();
     return list;
   }, [diaries]);
 
@@ -102,40 +128,105 @@ export default function GoogleCalendarView({
             e.preventDefault();
             e.stopPropagation();
             onDateClick?.(d);
+            console.log("[Calendar] dayCell + clicked:", { date: d });
           };
           return (
             <div className="fc-daycell-wrap">
               <span className="fc-daynum">{arg.dayNumberText}</span>
-              <button className="fc-add-btn" onClick={handleClick} title="Új napló tétel">+</button>
+              <button
+                className="fc-add-btn"
+                onClick={handleClick}
+                title="Új napló tétel"
+              >
+                +
+              </button>
             </div>
           );
         }}
         eventContent={(arg) => {
           const p = (arg.event.extendedProps || {}) as EventExtProps;
-          const isDay = arg.view.type === "timeGridDay";
-          const lines = [
-            p.workItemName ? `${p.workItemName}` : undefined,
-            p.email ? `Munkás: ${p.email}` : undefined,
-            p.quantity != null || p.unit ? `Menny.: ${p.quantity ?? "-"} ${p.unit ?? ""}` : undefined,
-            p.workHours != null ? `Munkaóra: ${p.workHours}` : undefined,
-            p.notes ? `Megjegyzés: ${p.notes}` : undefined,
-            Array.isArray(p.images) ? `Képek: ${p.images.length}` : undefined,
-            p.tenantEmail ? `Tenant: ${p.tenantEmail}` : undefined,
-          ].filter(Boolean) as string[];
+          const viewType = arg.view.type; // 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
+          try {
+            console.groupCollapsed("[Calendar] render eventContent");
+            console.log("View:", viewType);
+            console.log("Event:", arg.event);
+            console.log("ExtendedProps:", p);
+            console.groupEnd();
+          } catch {}
 
-          if (!isDay) {
-            // Hét/Hónap: kompakt, első 2-3 sor
-            const compact = lines.slice(0, 3);
+          const getInitials = (name?: string | null, email?: string | null) => {
+            const n = (name || "").trim();
+            if (n) {
+              const parts = n.split(/\s+/).filter(Boolean);
+              const first = parts[0]?.[0] || "";
+              const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+              return (first + last).toUpperCase();
+            }
+            const mail = email || "";
+            const loc = mail.split("@")[0] || "";
+            if (!loc) return "";
+            const lp = loc.split(/[._-]+/).filter(Boolean);
+            if (lp.length >= 2) return (lp[0][0] + lp[1][0]).toUpperCase();
+            return loc.slice(0, 2).toUpperCase();
+          };
+
+          const getInitialsFromNameOnly = (name?: string | null) => {
+            const n = (name || "").trim();
+            if (!n) return "";
+            const parts = n.split(/\s+/).filter(Boolean);
+            const first = parts[0]?.[0] || "";
+            const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+            return (first + last).toUpperCase();
+          };
+
+          const initials = getInitials(p.name ?? null, p.email ?? null);
+          const hours = p.workHours != null ? `${p.workHours} óra` : "";
+
+          if (viewType === "dayGridMonth") {
+            // Hónap nézet: monogram (csak névből), vagy ha nincs név, akkor teljes email + munkaóra
+            const nameInitials = getInitialsFromNameOnly(p.name ?? null);
+            const label = nameInitials || (p.email ?? "");
             return (
               <div className="fc-event-inner compact">
-                {compact.map((l, i) => (
-                  <div key={i}>{l}</div>
-                ))}
+                <div>{[label, hours].filter(Boolean).join(", ")}</div>
               </div>
             );
           }
 
-          // Nap nézet: minden részlet
+          // Részletek: hét/nap nézetben nincs megjegyzés és képek, és NINCS külön "Munkás:" sor
+          const workerLine = p.name && p.email
+            ? `Munkás: ${p.name} (${p.email})`
+            : p.name
+            ? `Munkás: ${p.name}`
+            : p.email
+            ? `Munkás: ${p.email}`
+            : undefined;
+          const qtyLine =
+            p.quantity != null || p.unit
+              ? `Menny.: ${p.quantity ?? "-"} ${p.unit ?? ""}`
+              : undefined;
+
+          const restLines =
+            viewType === "timeGridWeek"
+              ? [qtyLine].filter(Boolean) // hét: csak mennyiség
+              : [
+                  workerLine,
+                  qtyLine,
+                  p.notes ? `Megjegyzés: ${p.notes}` : undefined,
+                  Array.isArray(p.images) ? `Képek: ${p.images.length}` : undefined,
+                ].filter(Boolean); // nap és többi: minden (tenantEmail továbbra sem jelenik meg)
+
+          // Hét/Nap: első sor workItemName[0..8] + (monogram névből VAGY teljes email) + munkaóra, utána minden
+          const nameInitials = getInitialsFromNameOnly(p.name ?? null);
+          const nameOrEmail = nameInitials || (p.email ?? "");
+          const headerParts = [
+            (p.workItemName || "").slice(0, 8),
+            nameOrEmail,
+            hours,
+          ].filter(Boolean);
+          const header = headerParts.join(", ");
+          const lines = [header, ...restLines];
+
           return (
             <div className="fc-event-inner detailed">
               {lines.map((l, i) => (
@@ -148,6 +239,12 @@ export default function GoogleCalendarView({
           const diaryId = (info.event.extendedProps as EventExtProps)?.diaryId;
           const itemId = Number(info.event.id);
           const diary = diaries.find((d) => d.id === diaryId);
+          console.log("[Calendar] eventClick:", {
+            diaryId,
+            itemId,
+            event: info.event,
+            extendedProps: info.event.extendedProps,
+          });
           if (diary) {
             // Megjelöljük, melyik WorkDiaryItem-re kattintottak (szükség esetére)
             (diary as DiaryWithEditing).__editingItemId = itemId;
@@ -156,6 +253,7 @@ export default function GoogleCalendarView({
         }}
         dateClick={(info: DateClickArg) => {
           if (onDateClick) onDateClick(info.date);
+          console.log("[Calendar] dateClick:", info);
         }}
         height="80vh"
         locale={huLocale}
@@ -188,7 +286,7 @@ export default function GoogleCalendarView({
           border-radius: 4px;
           border: 1px solid #a7f3d0;
           background: #ecfdf5; /* emerald-50 */
-          color: #047857;      /* emerald-700 */
+          color: #047857; /* emerald-700 */
           cursor: pointer;
         }
         .fc-mobile-wrap .fc .fc-add-btn:hover {
@@ -249,16 +347,24 @@ export default function GoogleCalendarView({
         .fc-mobile-wrap .fc .fc-daygrid-event,
         .fc-mobile-wrap .fc .fc-timegrid-event {
           background-color: #d1fae5 !important; /* emerald-100 */
-          border-color: #a7f3d0 !important;     /* emerald-200 */
-          color: #065f46 !important;            /* emerald-900 for readability */
-          font-size: 0.75rem;                   /* text-sm */
-          line-height: 1rem;                    /* tight lines */
+          border-color: #a7f3d0 !important; /* emerald-200 */
+          color: #065f46 !important; /* emerald-900 for readability */
+          font-size: 0.75rem; /* text-sm */
+          line-height: 1rem; /* tight lines */
+        }
+        /* PENDING (accepted === false): orange */
+        .fc-mobile-wrap .fc .fc-event.pending,
+        .fc-mobile-wrap .fc .fc-daygrid-event.pending,
+        .fc-mobile-wrap .fc .fc-timegrid-event.pending {
+          background-color: #fed7aa !important; /* orange-200 */
+          border-color: #fdba74 !important; /* orange-300 */
+          color: #9a3412 !important; /* orange-800 */
         }
         /* Ensure inner content inherits readable color */
         .fc-mobile-wrap .fc .fc-event .fc-event-main,
         .fc-mobile-wrap .fc .fc-event-inner {
           color: inherit;
-          padding: 2px 4px;                    /* compact padding */
+          padding: 2px 4px; /* compact padding */
         }
         /* Prevent horizontal overflow: keep events inside the cell */
         .fc-mobile-wrap .fc .fc-daygrid-event,

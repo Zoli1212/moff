@@ -1,5 +1,5 @@
-import { prisma } from '@/lib/prisma';
-import { WorkDiary } from '@/types/work-diary';
+import { prisma } from "@/lib/prisma";
+import { WorkDiary } from "@/types/work-diary";
 
 export interface WorkDiaryItemDTO {
   id: number;
@@ -8,6 +8,7 @@ export interface WorkDiaryItemDTO {
   workItemId: number;
   workerId: number;
   email: string;
+  name?: string | null;
   quantity?: number | null;
   unit?: string | null;
   workHours?: number | null;
@@ -28,14 +29,16 @@ export interface WorkDiaryWithItem extends WorkDiary {
   workDiaryItems: WorkDiaryItemDTO[];
 }
 
-export async function getWorkDiariesByWorkId(workId: number): Promise<WorkDiaryWithItem[]> {
+export async function getWorkDiariesByWorkId(
+  workId: number
+): Promise<WorkDiaryWithItem[]> {
   // Only return diaries that have at least one WorkDiaryItem
   const diaries = await prisma.workDiary.findMany({
     where: {
       workId,
       workDiaryItems: { some: {} },
     },
-    orderBy: { date: 'desc' },
+    orderBy: { date: "desc" },
     include: {
       workItem: {
         select: { id: true, name: true, description: true },
@@ -48,6 +51,7 @@ export async function getWorkDiariesByWorkId(workId: number): Promise<WorkDiaryW
           workItemId: true,
           workerId: true,
           email: true,
+          name: true,
           quantity: true,
           unit: true,
           workHours: true,
@@ -58,16 +62,16 @@ export async function getWorkDiariesByWorkId(workId: number): Promise<WorkDiaryW
           createdAt: true,
           updatedAt: true,
         },
-        orderBy: { date: 'asc' },
+        orderBy: { date: "asc" },
       },
-    }
+    },
   });
   return diaries.map((d) => ({
     ...d,
     date: new Date(d.date),
     createdAt: new Date(d.createdAt),
     updatedAt: new Date(d.updatedAt),
-    workDiaryItems: (d.workDiaryItems || []).map((it) => ({
+    workDiaryItems: (d.workDiaryItems || []).map((it: any) => ({
       ...it,
       date: new Date(it.date as unknown as string),
       createdAt: new Date(it.createdAt as unknown as string),
@@ -75,4 +79,3 @@ export async function getWorkDiariesByWorkId(workId: number): Promise<WorkDiaryW
     })),
   }));
 }
-

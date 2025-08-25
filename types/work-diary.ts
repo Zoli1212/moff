@@ -28,6 +28,8 @@ type WorkDiaryItemBase = {
   workItemId?: number;
   workerId?: number;
   email?: string;
+  name?: string;
+  workItemWorkerId?: number;
   date?: Date;
   quantity?: number;
   unit?: string;

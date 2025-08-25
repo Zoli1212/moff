@@ -127,6 +127,19 @@ export default function WorkerDiaryEditForm({
     return map;
   }, [selectedItem]);
 
+  // DEBUG: Log data relevant to the worker dropdown (no logic change)
+  useEffect(() => {
+    try {
+      console.log("[WorkerDiaryEditForm] dropdown sources", {
+        selectedWorkItemId,
+        selectedItemId: selectedItem?.id,
+        workers: selectedItem?.workers,
+        workItemWorkers: selectedItem?.workItemWorkers,
+        workersById: Array.from((workersById ?? new Map()).entries()),
+      });
+    } catch {}
+  }, [selectedWorkItemId, selectedItem, workersById]);
+
   // Auto-select by current user's email if there's a matching worker assigned to the selected item
   useEffect(() => {
     if (!currentEmail || !selectedItem || assignedWorkers.length === 0) return;
@@ -193,6 +206,13 @@ export default function WorkerDiaryEditForm({
           ?.email) ||
       undefined;
 
+    // derive name and workItemWorkerId from the selected assignment (no UI change)
+    const selectedAssignment = assignedWorkers.find(
+      (aw) => aw.workerId === Number(selectedWorkerId)
+    );
+    const selectedName = selectedAssignment?.name;
+    const selectedWorkItemWorkerId = selectedAssignment?.id;
+
     // Prepare base fields
     const base = {
       diaryId: diary.id!,
@@ -200,6 +220,8 @@ export default function WorkerDiaryEditForm({
       workItemId: Number(selectedWorkItemId),
       workerId: Number(selectedWorkerId),
       email: selectedEmail,
+      name: selectedName ?? undefined,
+      workItemWorkerId: selectedWorkItemWorkerId,
       date: toLocalDate(date),
       quantity: quantity === "" ? undefined : Number(quantity),
       unit: unit || undefined,
@@ -214,7 +236,8 @@ export default function WorkerDiaryEditForm({
         id: editingItem.id,
         ...base,
       };
-      const result: ActionResult<Partial<WorkDiaryWithItem>> = await updateWorkDiaryItem(updatePayload);
+      const result: ActionResult<Partial<WorkDiaryWithItem>> =
+        await updateWorkDiaryItem(updatePayload);
       if (result.success && result.data) {
         showToast("success", "Napló bejegyzés frissítve.");
         onSave(result.data);
@@ -244,7 +267,8 @@ export default function WorkerDiaryEditForm({
         ...base,
         diaryId: diaryIdToUse,
       };
-      const result: ActionResult<Partial<WorkDiaryWithItem>> = await createWorkDiaryItem(createPayload);
+      const result: ActionResult<Partial<WorkDiaryWithItem>> =
+        await createWorkDiaryItem(createPayload);
       if (result.success && result.data) {
         showToast("success", "Napló bejegyzés mentve.");
         onSave(result.data);
@@ -293,6 +317,14 @@ export default function WorkerDiaryEditForm({
         >
           <option value="">Válassz dolgozót…</option>
           {assignedWorkers.map((w) => {
+            // DEBUG: per-option log (no logic change)
+            try {
+              console.log("[WorkerDiaryEditForm] option", {
+                workItemWorker: w,
+                workerId: w.workerId,
+                mapEntry: workersById.get(w.workerId),
+              });
+            } catch {}
             const email =
               workersById.get(w.workerId)?.email || w.email || undefined;
             return (
