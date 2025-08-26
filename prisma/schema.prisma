@@ -538,3 +538,17 @@ model WorkDiaryItem {
 
   @@unique([diaryId, workId, workItemId, workerId, date])
 }
+
+model TenantWorker {
+  id            Int      @id @default(autoincrement())
+  tenantEmail   String
+  role          String             
+  roleNormalized String                       
+  totalAssigned Int      @default(0)
+  lastSeenAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([tenantEmail, roleNormalized], map: "tenant_role_unique_norm")
+}
+

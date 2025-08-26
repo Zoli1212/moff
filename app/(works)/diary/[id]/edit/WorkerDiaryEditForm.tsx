@@ -135,18 +135,7 @@ export default function WorkerDiaryEditForm({
     return map;
   }, [selectedItem]);
 
-  // DEBUG: Log data relevant to the worker dropdown (no logic change)
-  useEffect(() => {
-    try {
-      console.log("[WorkerDiaryEditForm] dropdown sources", {
-        selectedWorkItemId,
-        selectedItemId: selectedItem?.id,
-        workers: selectedItem?.workers,
-        workItemWorkers: selectedItem?.workItemWorkers,
-        workersById: Array.from((workersById ?? new Map()).entries()),
-      });
-    } catch {}
-  }, [selectedWorkItemId, selectedItem, workersById]);
+  //
 
   // Auto-select by current user's email if there's a matching worker assigned to the selected item
   useEffect(() => {
@@ -239,13 +228,7 @@ export default function WorkerDiaryEditForm({
       accepted: isTenant ? accepted : undefined,
     } as const;
 
-    try {
-      console.log("[WorkerDiaryEditForm] submit", {
-        isTenant,
-        accepted,
-        base,
-      });
-    } catch {}
+    //
 
     if (editingItem?.id) {
       // Update existing WorkDiaryItem
@@ -296,7 +279,10 @@ export default function WorkerDiaryEditForm({
   };
 
   return (
-    <form className="space-y-6 max-w-4xl mx-auto" onSubmit={handleSubmit}>
+    <form
+      className="space-y-6 max-w-4xl mx-auto max-h-[100dvh] overflow-y-auto p-4"
+      onSubmit={handleSubmit}
+    >
       <div>
         <Label htmlFor="work-item-select">Munkafolyamat</Label>
         <select
@@ -334,14 +320,6 @@ export default function WorkerDiaryEditForm({
         >
           <option value="">Válassz dolgozót…</option>
           {assignedWorkers.map((w) => {
-            // DEBUG: per-option log (no logic change)
-            try {
-              console.log("[WorkerDiaryEditForm] option", {
-                workItemWorker: w,
-                workerId: w.workerId,
-                mapEntry: workersById.get(w.workerId),
-              });
-            } catch {}
             const email =
               workersById.get(w.workerId)?.email || w.email || undefined;
             return (

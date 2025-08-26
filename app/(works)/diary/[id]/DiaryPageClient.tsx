@@ -100,7 +100,7 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
       {/* DiaryEntryDetail modal - always opens for selected day */}
       {showDiaryModal && selectedDiary && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto w-full">
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-2xl w-[90%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
             <WorkerDiaryEditForm
               diary={selectedDiary}
               workItems={items}
