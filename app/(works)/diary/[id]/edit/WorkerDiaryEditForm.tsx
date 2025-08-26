@@ -15,7 +15,7 @@ import { useUser } from "@clerk/nextjs";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
 
-import type { WorkItem } from "@/types/work";
+import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type {
   WorkDiaryItemCreate,
   WorkDiaryItemUpdate,
@@ -161,12 +161,12 @@ export default function WorkerDiaryEditForm({
   // Build worker options for the dropdown: prefer assignments, otherwise fallback to plain workers
   const workerOptions = useMemo(() => {
     if (assignedWorkers.length > 0) {
-      return assignedWorkers.map((w) => ({
+      return assignedWorkers.map((w: WorkItemWorker) => ({
         key: w.id,
         token: `aw:${w.id}`,
         workerId: w.workerId,
         name: w.name ?? workersById.get(w.workerId)?.name ?? `#${w.workerId}`,
-        role: (w as any).role as string | undefined,
+        role: (w.role ?? undefined) as string | undefined,
         email: w.email ?? workersById.get(w.workerId)?.email,
       }));
     }
@@ -667,29 +667,31 @@ export default function WorkerDiaryEditForm({
               disabled={selectedWorkItemId === ""}
               onClick={async () => {
                 if (selectedWorkItemId === "") return;
-                const result = await updateWorkItemCompletion({
+                type SimpleResult = { success?: boolean; message?: string };
+                const result = (await updateWorkItemCompletion({
                   workItemId: Number(selectedWorkItemId),
                   completedQuantity: Number(completedQtyValue) || 0,
-                });
-                if ((result as any)?.success) {
+                })) as unknown as SimpleResult;
+                if (result?.success) {
                   showToast("success", "Készültség mentve.");
                   // If we are editing an existing diary item and the tenant checked acceptance,
                   // persist accepted=true immediately so it's not lost if the user doesn't submit the main form.
                   try {
                     if (isTenant && accepted && editingItem?.id) {
-                      await updateWorkDiaryItem({
+                      const acceptPayload: WorkDiaryItemUpdate = {
                         id: editingItem.id,
                         workId: diary.workId,
                         workItemId: Number(selectedWorkItemId),
                         accepted: true,
-                      } as any);
+                      };
+                      await updateWorkDiaryItem(acceptPayload);
                     }
                   } catch {}
                   setProgressOpen(false);
                 } else {
                   showToast(
                     "error",
-                    (result as any)?.message || "Készültség mentése sikertelen."
+                    result?.message || "Készültség mentése sikertelen."
                   );
                 }
               }}
