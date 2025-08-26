@@ -58,20 +58,44 @@ export default function TasksPage() {
 
   // Fetch work, items, and assigned diaries
   useEffect(() => {
-    async function doFetchWorkAndItems() {
+    if (isNaN(workId)) return;
+    let mounted = true;
+    const doFetchWorkAndItems = async () => {
       setLoading(true);
       setError(null);
       try {
         const { work, workItems } = await fetchWorkAndItems(workId);
+        if (!mounted) return;
         setWork(work);
         setWorkItems(workItems);
       } catch (e) {
+        if (!mounted) return;
         setError((e as Error).message || "Hiba történt a lekérdezéskor");
       } finally {
+        if (!mounted) return;
         setLoading(false);
       }
-    }
-    if (!isNaN(workId)) doFetchWorkAndItems();
+    };
+    doFetchWorkAndItems();
+
+    const onFocus = () => doFetchWorkAndItems();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") doFetchWorkAndItems();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    // Optional light polling (comment out if not needed)
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") doFetchWorkAndItems();
+    }, 15000);
+
+    return () => {
+      mounted = false;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearInterval(interval);
+    };
   }, [workId]);
 
   // Assign diary to workItem (checkbox)
@@ -197,13 +221,15 @@ export default function TasksPage() {
               Nincsenek feladatok ehhez a projekthez.
             </div>
           ) : (
-            workItems.map((item: WorkItem) => (
+            workItems.map((item: WorkItem) => {
+              const p = Math.max(0, Math.min(100, Math.round(item.progress || 0)));
+              return (
               <TaskCard
                 key={item.id}
                 id={item.id}
                 title={item.name}
                 summary={item.description}
-                progress={item.progress || 0}
+                progress={p}
                 checked={
                   item.workDiaryEntries && item.workDiaryEntries.length > 0
                 }
@@ -241,7 +267,7 @@ export default function TasksPage() {
                   </span>
                 )}
               </TaskCard>
-            ))
+            );})
           )}
         </div>
       )}

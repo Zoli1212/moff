@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import type { WorkItem } from "@/types/work";
 

@@ -17,6 +17,7 @@ type Tool = BaseTool & { quantity?: number };
 type WorkDiary = { id?: number | string; title?: string };
 
 import ParticipantsSection from "../_components/ParticipantsSection";
+import CollapsibleSection from "../_components/CollapsibleSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 import Link from "next/link";
 import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
@@ -141,6 +142,7 @@ export default async function WorkDetailPage({
     <div
       style={{
         padding: 24,
+        paddingBottom: 140,
         maxWidth: 420,
         margin: "0 auto",
         fontFamily: "inherit",
@@ -331,43 +333,51 @@ export default async function WorkDetailPage({
           </span>
         </div>
       </div>
-      {/* Résztvevők */}
-      <ParticipantsSection
-        initialWorkers={workers}
-        totalWorkers={work.totalWorkers}
-        workItems={workItemsWithWorkers.map((item) => ({
-          ...item,
-          tools: item.tools ?? [],
-          materials: item.materials ?? [],
-          workers: item.workers ?? [],
-          workItemWorkers: item.workItemWorkers ?? [],
-        }))}
-        workId={work.id}
-      />
-      {/* Merge all assigned + available tools for slot prefill */}
-      {(() => {
-        const assignedToolObjects = assignedTools
-          .map((at: AssignedTool) => at.tool)
-          .filter(Boolean);
-        const allToolsMap = new Map<number, Tool>();
-        [...(tools || []), ...assignedToolObjects].forEach((tool) => {
-          if (tool && !allToolsMap.has(tool.id)) {
-            allToolsMap.set(tool.id, tool);
-          }
-        });
-        const allTools = Array.from(allToolsMap.values());
-        return (
-          <ToolsSlotsSection
-            tools={allTools}
-            workId={work.id}
-            assignedTools={assignedTools}
-          />
-        );
-      })()}
+      {/* Résztvevők (lenyíló) */}
+      <CollapsibleSection title="Munkások" count={work.totalWorkers} defaultOpen={false}>
+        <ParticipantsSection
+          initialWorkers={workers}
+          totalWorkers={work.totalWorkers}
+          workItems={workItemsWithWorkers.map((item) => ({
+            ...item,
+            tools: item.tools ?? [],
+            materials: item.materials ?? [],
+            workers: item.workers ?? [],
+            workItemWorkers: item.workItemWorkers ?? [],
+          }))}
+          workId={work.id}
+        />
+      </CollapsibleSection>
 
-      {/* Szegmensek (workItems) */}
-      <Tasks workItems={workItems} />
-      {/* Eszközök */}
+      {/* Eszköz slotok (lenyíló) */}
+      <CollapsibleSection title="Szükséges eszközök" defaultOpen={false}>
+        {(() => {
+          const assignedToolObjects = assignedTools
+            .map((at: AssignedTool) => at.tool)
+            .filter(Boolean);
+          const allToolsMap = new Map<number, Tool>();
+          [...(tools || []), ...assignedToolObjects].forEach((tool) => {
+            if (tool && !allToolsMap.has(tool.id)) {
+              allToolsMap.set(tool.id, tool);
+            }
+          });
+          const allTools = Array.from(allToolsMap.values());
+          return (
+            <ToolsSlotsSection
+              tools={allTools}
+              workId={work.id}
+              assignedTools={assignedTools}
+            />
+          );
+        })()}
+      </CollapsibleSection>
+
+      {/* Szegmensek (workItems) - lenyíló */}
+      <CollapsibleSection title="Feladatok" count={workItems.length} defaultOpen={false}>
+        <Tasks workItems={workItems} />
+      </CollapsibleSection>
+      {/* Eszközök - lenyíló */}
+      <CollapsibleSection title="Eszközök" count={tools.length} defaultOpen={false}>
       <div
         style={{
           background: "#fff",
@@ -417,7 +427,9 @@ export default async function WorkDetailPage({
           ))}
         </div>
       </div>
-      {/* Anyagok */}
+      </CollapsibleSection>
+      {/* Anyagok - lenyíló */}
+      <CollapsibleSection title="Anyagok" count={materials.length} defaultOpen={false}>
       <div
         style={{
           background: "#fff",
@@ -467,7 +479,9 @@ export default async function WorkDetailPage({
           ))}
         </div>
       </div>
-      {/* Naplók */}
+      </CollapsibleSection>
+      {/* Naplók - lenyíló */}
+      <CollapsibleSection title="Naplóelemek" count={workDiaries.length} defaultOpen={false}>
       <div
         style={{
           background: "#fff",
@@ -515,6 +529,7 @@ export default async function WorkDetailPage({
           ))}
         </div>
       </div>
+      </CollapsibleSection>
 
       {/* Bottom Nav */}
     </div>

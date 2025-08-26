@@ -4,6 +4,7 @@ import { OfferItem } from "@/lib/offer-parser";
 import type { WorkItemAIResult } from "../types/work.types";
 import { prisma } from "@/lib/prisma";
 import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 import util from "node:util";
 
 export async function getUserWorks() {
@@ -676,4 +677,84 @@ export async function getWorkById(id: number) {
     ...work,
     totalWorkers: work.workers.length,
   };
+}
+
+// Update WorkItem progress percentage (0-100)
+export async function updateWorkItemProgress(params: {
+  workItemId: number;
+  progress: number;
+}) {
+  const { workItemId, progress } = params;
+  const user = await currentUser();
+  if (!user) throw new Error("Not authenticated");
+  const email =
+    user.emailAddresses[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
+
+  // Verify ownership by tenantEmail
+  const item = await prisma.workItem.findUnique({
+    where: { id: workItemId },
+    select: { tenantEmail: true, id: true },
+  });
+  if (!item)
+    return { success: false, message: "WorkItem nem található." } as const;
+  if (item.tenantEmail !== email)
+    return {
+      success: false,
+      message: "Nincs jogosultság a WorkItem módosításához.",
+    } as const;
+
+  const clamped = Math.max(
+    0,
+    Math.min(100, Math.round(Number.isFinite(progress) ? (progress as number) : 0))
+  );
+  const updated = await prisma.workItem.update({
+    where: { id: workItemId },
+    data: { progress: clamped },
+  });
+  return { success: true, data: updated } as const;
+}
+
+// Update WorkItem completedQuantity (0..quantity) and derive progress (0..100)
+export async function updateWorkItemCompletion(params: {
+  workItemId: number;
+  completedQuantity: number;
+}) {
+  const { workItemId, completedQuantity } = params;
+  const user = await currentUser();
+  if (!user) throw new Error("Not authenticated");
+  const email =
+    user.emailAddresses[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
+
+  const item = await prisma.workItem.findUnique({
+    where: { id: workItemId },
+    select: { tenantEmail: true, quantity: true, id: true, workId: true },
+  });
+  if (!item)
+    return { success: false, message: "WorkItem nem található." } as const;
+  if (item.tenantEmail !== email)
+    return {
+      success: false,
+      message: "Nincs jogosultság a WorkItem módosításához.",
+    } as const;
+
+  const qty = Number(item.quantity) || 0;
+  const input = Number.isFinite(completedQuantity)
+    ? (completedQuantity as number)
+    : 0;
+  const clampedCompleted = Math.max(0, Math.min(qty, input));
+  const progress = qty > 0 ? Math.floor((clampedCompleted / qty) * 100) : 0;
+
+  const updated = await prisma.workItem.update({
+    where: { id: workItemId },
+    data: { completedQuantity: clampedCompleted, progress },
+  });
+  // Revalidate the Tasks page so progress bars update immediately
+  try {
+    if (item?.workId) revalidatePath(`/works/tasks/${item.workId}`);
+  } catch (err) {
+    console.error("revalidatePath failed for /works/tasks/", item?.workId, err);
+  }
+  return { success: true, data: updated } as const;
 }

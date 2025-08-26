@@ -32,6 +32,8 @@ export interface WorkItem {
   workTotal?: number | null;
   materialTotal?: number | null;
   totalPrice: number;
+  progress?: number | null;
+  completedQuantity?: number | null;
   inProgress?: boolean;
   tools: Tool[];
   materials: Material[];
