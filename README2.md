@@ -668,3 +668,18 @@ emberenként rögzítjük ez a globális progressből mit jelent
 itt emberenként is trackeljük mennyit dolgozott
 óra / összes haladás hányadosa
 ---
+
+feladat teljes név óra, képek + db
+mennyiség
+mennsiségi egység alapból a feladatból jön
+mennyiség 
+sorrendbe legyenek a munkafolyaomatok
+amit kiválasztott rögtön a legtetejére kerül ott
+de amit kiválasztott 
+a feladatok bekattintása esetén egy is interface
+törlés legyen balra jóváhagyás legyen
+és legyen jóváhagyás 
+interface t blokkoljuk
+egy munkást több szakmára oszthatjuk is fel tudjuk venni
+--
+görgetés

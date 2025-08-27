@@ -44,7 +44,6 @@ export default function GoogleCalendarView({
 }: GoogleCalendarViewProps) {
 
 
-  console.log(diaries, 'DIARIES')
   // Egy WorkDiaryItem = egy naptár esemény, hogy minden információ látszódjon
   const events = React.useMemo(() => {
     const list: EventInput[] = [];
@@ -152,16 +151,19 @@ export default function GoogleCalendarView({
             // Hónap nézet: monogram (csak névből), vagy ha nincs név, akkor teljes email + munkaóra
             const nameInitials = getInitialsFromNameOnly(p.name ?? null);
             const label = nameInitials || (p.email ?? "");
+            const parts = [label, hours].filter(Boolean);
             return (
               <div className="fc-event-inner compact">
-                <div>{[label, hours].filter(Boolean).join(", ")}</div>
+                {parts.map((part, i) => (
+                  <div key={i}>{part}</div>
+                ))}
               </div>
             );
           }
 
           // Részletek: hét/nap nézetben nincs megjegyzés és képek, és NINCS külön "Munkás:" sor
           const workerLine = p.name && p.email
-            ? `Munkás: ${p.name} (${p.email})`
+            ? `${p.name}`
             : p.name
             ? `Munkás: ${p.name}`
             : p.email
@@ -169,7 +171,7 @@ export default function GoogleCalendarView({
             : undefined;
           const qtyLine =
             p.quantity != null || p.unit
-              ? `Menny.: ${p.quantity ?? "-"} ${p.unit ?? ""}`
+              ? ` ${p.quantity ?? "-"} ${p.unit ?? ""}`
               : undefined;
 
           const restLines =
@@ -190,7 +192,7 @@ export default function GoogleCalendarView({
             nameOrEmail,
             hours,
           ].filter(Boolean);
-          const header = headerParts.join(", ");
+          const header = headerParts.join("\n");
           const lines = [header, ...restLines];
 
           return (
@@ -317,7 +319,7 @@ export default function GoogleCalendarView({
         .fc-mobile-wrap .fc .fc-daygrid-event,
         .fc-mobile-wrap .fc .fc-daygrid-event .fc-event-main,
         .fc-mobile-wrap .fc .fc-event-inner {
-          white-space: normal;
+          white-space: pre-line;;
           word-break: break-word;
           overflow-wrap: anywhere;
         }
