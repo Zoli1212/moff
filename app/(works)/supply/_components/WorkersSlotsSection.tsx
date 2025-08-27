@@ -264,6 +264,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
     workItemId: number;
     avatarUrl?: string;
   }) => {
+    // Use the locked role and workItemId if they exist
+    const role = addLock?.role || data.profession;
+    const workItemId = addLock?.workItemId || data.workItemId;
     try {
       // 1) Find or create workforce registry member
       const all = await getWorkforce();
@@ -283,9 +286,15 @@ const WorkersSlotsSection: React.FC<Props> = ({
       }
 
       // 2) Find the Worker row (profession) for this work
+      // Use the role from the locked state if available, otherwise fall back to member.role or data.profession
       const workerRow = workers.find(
-        (w) => w.name === (member?.role || data.profession)
+        (w) => w.name === role
       );
+      
+      if (!workerRow) {
+        toast.error(`Nem található '${role}' szakma a rendszerben.`);
+        return;
+      }
       if (!workerRow || typeof workerRow.id !== "number") {
         toast.error(
           "Nincs megfelelő 'Worker' rekord ehhez a szakmához a munkán belül."
@@ -309,13 +318,13 @@ const WorkersSlotsSection: React.FC<Props> = ({
 
       // 4) Assign to selected workItem via WorkItemWorker
       await assignWorkerToWorkItem({
-        workItemId: data.workItemId,
+        workItemId: workItemId, // Use the workItemId from locked state or form
         workerId: workerRow.id,
         workforceRegistryId: member!.id,
         name: member!.name,
         email: member!.email,
         phone: member!.phone,
-        role: member!.role || data.profession,
+        role: role, // Use the role from locked state or form
         avatarUrl: data.avatarUrl,
         quantity: 1,
       });

@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import type { WorkItem } from "@/types/work";
 
 interface WorkerAddModalProps {
@@ -108,27 +109,44 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !email || !phone || !profession || !workItemId) return;
+    
+    // Use locked values if they exist, otherwise use form values
+    const finalProfession = lockedProfession || profession;
+    const finalWorkItemId = lockedWorkItemId || workItemId;
+    
+    if (!name || !email || !phone || !finalProfession || !finalWorkItemId) {
+      toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
+      return;
+    }
+    
     setLoading(true);
-    await onSubmit({
-      name,
-      email,
-      phone,
-      profession,
-      workItemId: Number(workItemId),
-      avatarUrl: avatarUrl || undefined,
-    });
-    setLoading(false);
-    setName("");
-    setEmail("");
-    setPhone("");
-    setProfession("");
-    setWorkItemId("");
-    setAvatarUrl("");
-    setAvatarPreview("");
-    setAvatarError("");
-    setAvatarUploading(false);
-    onOpenChange(false);
+    try {
+      await onSubmit({
+        name,
+        email,
+        phone,
+        profession: finalProfession,
+        workItemId: Number(finalWorkItemId),
+        avatarUrl: avatarUrl || undefined,
+      });
+      
+      // Reset form on success
+      setName("");
+      setEmail("");
+      setPhone("");
+      setProfession("");
+      setWorkItemId("");
+      setAvatarUrl("");
+      setAvatarPreview("");
+      setAvatarError("");
+      setAvatarUploading(false);
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error saving worker:", error);
+      toast.error("Hiba történt a mentés során. Kérlek próbáld újra.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const professionsForSelected = useMemo(() => {
@@ -189,31 +207,46 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
           <DialogTitle>Új munkás regisztrálása és hozzárendelése munkafázishoz</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* Select work phase first to filter professions */}
-          <CustomSelect
-            className="mt-2"
-            value={workItemId === "" ? "" : String(workItemId)}
-            onChange={(val) => setWorkItemId(val ? Number(val) : "")}
-            disabled={typeof lockedWorkItemId === 'number'}
-            placeholder="Válassz munkafázist..."
-            options={[
-              { value: "", label: "Válassz munkafázist..." },
-              ...workItems.map((item) => ({ value: String(item.id), label: item.name })),
-              { value: "0", label: "Egyéb munkafázis" },
-            ]}
-          />
+          {/* Work Item Selection - Disabled if locked */}
+<div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Munkafázis</label>
+            <CustomSelect
+              className="mt-2"
+              value={workItemId === "" ? "" : String(workItemId)}
+              onChange={(val) => setWorkItemId(val ? Number(val) : "")}
+              disabled={!!lockedWorkItemId}
+              placeholder="Válassz munkafázist..."
+              options={[
+                { value: "", label: "Válassz munkafázist..." },
+                ...workItems.map((item) => ({ value: String(item.id), label: item.name })),
+                { value: "0", label: "Egyéb munkafázis" },
+              ]}
+            />
+          </div>
 
-          <CustomSelect
-            value={profession}
-            onChange={(val) => setProfession(val)}
-            disabled={workItemId === "" || (!!workItemId && professionsForSelected.length === 0) || !!lockedProfession}
-            placeholder="Válassz szakmát..."
-            options={[
-              { value: "", label: "Válassz szakmát..." },
-              ...professionsForSelected.map((p) => ({ value: p, label: p })),
-              ...(!lockedProfession ? [{ value: "Egyéb", label: "Egyéb" }] : []),
-            ]}
-          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">Szakma</label>
+            {lockedProfession ? (
+              <div className="p-2 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-700">
+                {lockedProfession} (rögzítve)
+              </div>
+            ) : (
+              <CustomSelect
+                value={profession}
+                onChange={setProfession}
+                disabled={professionsForSelected.length === 0}
+                placeholder={professionsForSelected.length === 0 ? "Először válassz munkafázist" : "Válassz szakmát..."}
+                options={[
+                  { value: "", label: "Válassz szakmát..." },
+                  ...professionsForSelected.map((p) => ({
+                    value: p,
+                    label: p,
+                  })),
+                ]}
+              />
+            )}
+          </div>
+
           <input
             type="text"
             placeholder="Név"
@@ -311,12 +344,21 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
             </div>
           </div>
           
-          <DialogFooter className="flex gap-2">
-            <Button type="submit" disabled={loading || !name || !email || !phone || !profession || !workItemId}>
-              {loading ? "Mentés..." : "Hozzáadás"}
+          <DialogFooter className="mt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
+              Mégse
             </Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Mégsem
+            <Button 
+              type="submit" 
+              disabled={loading || !name || !email || !phone || !(lockedProfession || profession) || !(lockedWorkItemId || workItemId)}
+              className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
+            >
+              {loading ? 'Mentés...' : 'Mentés'}
             </Button>
           </DialogFooter>
         </form>
