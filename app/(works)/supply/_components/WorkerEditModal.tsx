@@ -187,9 +187,6 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
             </div>
           </div>
           <DialogFooter className="flex flex-row justify-between mt-2 gap-2">
-            <Button type="submit" disabled={loading} className="flex-1">
-              Mentés
-            </Button>
             <Button
               type="button"
               variant="destructive"
@@ -198,6 +195,9 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               className="flex-1"
             >
               Törlés
+            </Button>
+            <Button type="submit" disabled={loading} className="flex-1">
+              Mentés
             </Button>
           </DialogFooter>
         </form>

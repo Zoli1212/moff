@@ -1,12 +1,10 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary, deleteWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
-import {
-  fetchWorkAndItems,
-} from "@/actions/work-actions";
+import { fetchWorkAndItems } from "@/actions/work-actions";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -46,7 +44,8 @@ interface Work {
 
 export default function TasksPage() {
   const params = useParams();
-  const workId = Number(params.id);
+  const workId = useMemo(() => Number(params.id), [params.id]);
+
   const [work, setWork] = useState<Work | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
 
@@ -54,49 +53,41 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<number | null>(null); // For loading spinner per task
   const [assignError, setAssignError] = useState<string | null>(null);
-  // Removed duplicate state declarations below
 
-  // Fetch work, items, and assigned diaries
+  const doFetchWorkAndItems = useCallback(async () => {
+    if (isNaN(workId)) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { work, workItems } = await fetchWorkAndItems(workId);
+      setWork(work);
+      setWorkItems(workItems);
+    } catch (e) {
+      setError((e as Error).message || "Hiba történt a lekérdezéskor");
+    } finally {
+      setLoading(false);
+    }
+  }, [workId]);
+
   useEffect(() => {
-    if (isNaN(workId)) return;
-    let mounted = true;
-    const doFetchWorkAndItems = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const { work, workItems } = await fetchWorkAndItems(workId);
-        if (!mounted) return;
-        setWork(work);
-        setWorkItems(workItems);
-      } catch (e) {
-        if (!mounted) return;
-        setError((e as Error).message || "Hiba történt a lekérdezéskor");
-      } finally {
-        if (!mounted) return;
-        setLoading(false);
-      }
-    };
     doFetchWorkAndItems();
 
     const onFocus = () => doFetchWorkAndItems();
     const onVisibility = () => {
       if (document.visibilityState === "visible") doFetchWorkAndItems();
     };
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
 
-    // Optional light polling (comment out if not needed)
-    const interval = window.setInterval(() => {
-      if (document.visibilityState === "visible") doFetchWorkAndItems();
-    }, 15000);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("visibilitychange", onVisibility);
 
     return () => {
-      mounted = false;
       window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.clearInterval(interval);
+      window.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [workId]);
+  }, [doFetchWorkAndItems]);
 
   // Assign diary to workItem (checkbox)
   const handleAssignDiary = async (workItemId: number, checked: boolean) => {
@@ -117,14 +108,8 @@ export default function TasksPage() {
               : "Nem sikerült eltávolítani a naplót.")
         );
       } else {
-        // Re-fetch work items to update UI (no global loading)
-        try {
-          const { work, workItems } = await fetchWorkAndItems(workId);
-          setWork(work);
-          setWorkItems(workItems);
-        } catch (e) {
-          setError((e as Error).message || "Hiba történt a lekérdezéskor");
-        }
+        // Re-fetch work items to update UI
+        await doFetchWorkAndItems();
       }
     } catch (e) {
       setAssignError(
@@ -188,7 +173,7 @@ export default function TasksPage() {
         {work?.title}
       </h2>
       {loading ? (
-        <div>Frissítés...</div>
+        <div>AI Frissítés...</div>
       ) : error ? (
         <div style={{ color: "red" }}>{error}</div>
       ) : !work ? (
@@ -221,53 +206,59 @@ export default function TasksPage() {
               Nincsenek feladatok ehhez a projekthez.
             </div>
           ) : (
-            workItems.map((item: WorkItem) => {
-              const p = Math.max(0, Math.min(100, Math.round(item.progress || 0)));
+            [...workItems]
+              .sort((a, b) => {
+                const aInProgress = a.workDiaryEntries && a.workDiaryEntries.length > 0;
+                const bInProgress = b.workDiaryEntries && b.workDiaryEntries.length > 0;
+                return (bInProgress ? 1 : 0) - (aInProgress ? 1 : 0);
+              })
+              .map((item: WorkItem) => {
+              const p = Math.max(
+                0,
+                Math.min(100, Math.round(item.progress || 0))
+              );
               return (
-              <TaskCard
-                key={item.id}
-                id={item.id}
-                title={item.name}
-                summary={item.description}
-                progress={p}
-                checked={
-                  item.workDiaryEntries && item.workDiaryEntries.length > 0
-                }
-                className={
-                  item.workDiaryEntries && item.workDiaryEntries.length > 0
-                    ? "border-green-500 border-2 bg-green-50"
-                    : ""
-                }
-                onCheck={(checked) => handleAssignDiary(item.id, checked)}
-              >
-                {item.workItemWorkers && item.workItemWorkers.length > 0 && (
-                  <ul
-                    style={{
-                      fontSize: 13,
-                      margin: "4px 0 0 0",
-                      paddingLeft: 18,
-                      color: "#555",
-                    }}
-                  >
-                    {item.workItemWorkers.map((w) => (
-                      <li key={w.id}>
-                        {w.name || "Dolgozó"} ({w.role || "munkás"})
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {assigning === item.id && (
-                  <span style={{ color: "#3498db", marginLeft: 8 }}>
-                    Mentés...
-                  </span>
-                )}
-                {assignError && assigning === item.id && (
-                  <span style={{ color: "red", marginLeft: 8 }}>
-                    {assignError}
-                  </span>
-                )}
-              </TaskCard>
-            );})
+                <TaskCard
+                  key={item.id}
+                  id={item.id}
+                  title={item.name}
+                  summary={item.description}
+                  progress={p}
+                  isLoading={assigning === item.id}
+                  checked={
+                    item.workDiaryEntries && item.workDiaryEntries.length > 0
+                  }
+                  className={
+                    item.workDiaryEntries && item.workDiaryEntries.length > 0
+                      ? "border-green-500 border-2 bg-green-50"
+                      : ""
+                  }
+                  onCheck={(checked) => handleAssignDiary(item.id, checked)}
+                >
+                  {item.workItemWorkers && item.workItemWorkers.length > 0 && (
+                    <ul
+                      style={{
+                        fontSize: 13,
+                        margin: "4px 0 0 0",
+                        paddingLeft: 18,
+                        color: "#555",
+                      }}
+                    >
+                      {item.workItemWorkers.map((w) => (
+                        <li key={w.id}>
+                          {w.name || "Dolgozó"} ({w.role || "munkás"})
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {assignError && assigning === item.id && (
+                    <span style={{ color: "red", marginLeft: 8 }}>
+                      {assignError}
+                    </span>
+                  )}
+                </TaskCard>
+              );
+            })
           )}
         </div>
       )}

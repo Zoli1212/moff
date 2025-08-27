@@ -8,6 +8,7 @@ interface TaskCardProps {
   summary?: string;
   progress?: number;
   checked?: boolean;
+  isLoading?: boolean;
   onCheck?: (checked: boolean) => void;
   children?: React.ReactNode;
   className?: string;
@@ -20,6 +21,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   summary = "",
   progress = 0,
   checked = false,
+  isLoading = false,
   onCheck,
   children,
   className = "",
@@ -49,33 +51,59 @@ const TaskCard: React.FC<TaskCardProps> = ({
         {/* Render children below progress bar */}
         {children}
       </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={async () => {
-          if (!onCheck) return;
-          toast("Napló elem frissítése", {
-            id: "frissites",
-            duration: 50000,
-            style: {
-              background: '#d1fae5', // light green
-              color: '#065f46', // dark green text
-              fontSize: 13,
-              padding: '6px 18px',
-              borderRadius: 8,
-              minHeight: 0,
-              boxShadow: '0 2px 8px rgba(16,185,129,0.08)',
-            },
-            className: 'sonner-toast--mini',
-          });
-          try {
-            await onCheck(!checked);
-          } finally {
-            toast.dismiss("frissites");
-          }
-        }}
-        className="ml-4 mt-2 w-5 h-5 accent-blue-500 rounded border-gray-300"
-      />
+      {isLoading ? (
+        <div className="ml-4 mt-2 w-5 h-5 flex items-center justify-center">
+          <svg
+            className="animate-spin h-5 w-5 text-blue-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+        </div>
+      ) : (
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={isLoading}
+          onChange={async () => {
+            if (!onCheck) return;
+            toast("Napló elem frissítése", {
+              id: "frissites",
+              duration: 50000,
+              style: {
+                background: "#d1fae5", // light green
+                color: "#065f46", // dark green text
+                fontSize: 13,
+                padding: "6px 18px",
+                borderRadius: 8,
+                minHeight: 0,
+                boxShadow: "0 2px 8px rgba(16,185,129,0.08)",
+              },
+              className: "sonner-toast--mini",
+            });
+            try {
+              await onCheck(!checked);
+            } finally {
+              toast.dismiss("frissites");
+            }
+          }}
+          className="ml-4 mt-2 w-5 h-5 accent-blue-500 rounded border-gray-300"
+        />
+      )}
     </div>
   );
 };
