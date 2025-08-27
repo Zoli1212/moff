@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import {
   updateWorkDiaryItem,
   createWorkDiaryItem,
@@ -111,6 +111,7 @@ export default function WorkerDiaryEditForm({
   const [completedQtyValue, setCompletedQtyValue] = useState<number>(0);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
+  const initialAutoSelectDone = useRef(false);
   // simple toast state
   const [toast, setToast] = useState<{
     type: "success" | "error";
@@ -205,6 +206,7 @@ export default function WorkerDiaryEditForm({
 
   // Auto-select by current user's email if there's a matching worker assigned to the selected item
   useEffect(() => {
+    if (initialAutoSelectDone.current) return;
     if (!currentEmail || !selectedItem || assignedWorkers.length === 0) return;
     if (selectedWorkerToken !== "") return; // do not override manual choice
     const matchWorker = (selectedItem.workers ?? []).find(
@@ -216,11 +218,13 @@ export default function WorkerDiaryEditForm({
     );
     if (assigned) {
       setSelectedWorkerToken(`aw:${assigned.id}`);
+      initialAutoSelectDone.current = true;
     }
   }, [currentEmail, selectedItem, assignedWorkers, selectedWorkerToken]);
 
   // Auto-select for fallback worker list (no assignments), based on current user's email
   useEffect(() => {
+    if (initialAutoSelectDone.current) return;
     if (!currentEmail || !selectedItem) return;
     if (assignedWorkers.length > 0) return; // handled above
     if (selectedWorkerToken !== "") return;
@@ -229,6 +233,7 @@ export default function WorkerDiaryEditForm({
     );
     if (matchWorker) {
       setSelectedWorkerToken(`w:${matchWorker.id}`);
+      initialAutoSelectDone.current = true;
     }
   }, [currentEmail, selectedItem, assignedWorkers.length, selectedWorkerToken]);
 

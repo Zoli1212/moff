@@ -186,7 +186,9 @@ export default function GoogleCalendarView({
 
           // Hét/Nap: első sor workItemName[0..8] + (monogram névből VAGY teljes email) + munkaóra, utána minden
           const nameInitials = getInitialsFromNameOnly(p.name ?? null);
-          const nameOrEmail = nameInitials || (p.email ?? "");
+          const nameOrEmail = viewType === 'timeGridDay' 
+            ? (p.name || p.email || "") 
+            : (nameInitials || p.email || "");
           const headerParts = [
             (p.workItemName || "").slice(0, 8),
             nameOrEmail,
