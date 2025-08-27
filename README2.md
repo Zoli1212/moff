@@ -676,8 +676,6 @@ mennyiség
 sorrendbe legyenek a munkafolyaomatok
 amit kiválasztott rögtön a legtetejére kerül ott
 de amit kiválasztott 
-a feladatok bekattintása esetén egy is interface
-törlés legyen balra jóváhagyás legyen
 és legyen jóváhagyás 
 interface t blokkoljuk
 egy munkást több szakmára oszthatjuk is fel tudjuk venni

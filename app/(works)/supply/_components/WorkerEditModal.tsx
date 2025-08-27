@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -32,6 +33,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
   const [avatarError, setAvatarError] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isConfirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     setName(worker?.name ?? "");
@@ -70,11 +72,13 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
       role: worker.role ?? null,
     });
     setLoading(false);
+    setConfirmOpen(false);
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Munkás hozzárendelés szerkesztése</DialogTitle>
@@ -190,7 +194,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
             <Button
               type="button"
               variant="destructive"
-              onClick={handleDelete}
+              onClick={() => setConfirmOpen(true)}
               disabled={loading}
               className="flex-1"
             >
@@ -201,8 +205,16 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
             </Button>
           </DialogFooter>
         </form>
+        <ConfirmationDialog
+          isOpen={isConfirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          onConfirm={handleDelete}
+          title="Munkás törlése"
+          description="Biztos, hogy törlöd ezt a munkást? A művelet nem vonható vissza."
+        />
       </DialogContent>
     </Dialog>
+    </>
   );
 };
 
