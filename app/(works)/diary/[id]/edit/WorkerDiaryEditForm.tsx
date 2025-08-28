@@ -345,6 +345,19 @@ export default function WorkerDiaryEditForm({
     }
   }, [currentEmail, selectedItem, assignedWorkers.length, selectedWorkerToken]);
 
+  // Keep inline progress slider in sync with the selected WorkItem's saved completion
+  useEffect(() => {
+    if (!accepted) return;
+    const maxQty = Number(selectedItem?.quantity || 0);
+    const baseCompleted = Number(
+      typeof selectedItem?.completedQuantity === "number"
+        ? selectedItem?.completedQuantity
+        : 0
+    );
+    const initial = Math.max(0, Math.min(maxQty, baseCompleted));
+    setCompletedQtyValue(initial);
+  }, [accepted, selectedItem?.completedQuantity, selectedItem?.quantity]);
+
   // (parseToken defined above)
 
   // Handle image upload (adapted from ToolRegisterModal)
@@ -448,7 +461,26 @@ export default function WorkerDiaryEditForm({
       accepted: isTenant ? accepted : undefined,
     } as const;
 
-    //
+    // Option A: save WorkItem completion first (if applicable), then save diary
+    try {
+      if (
+        isTenant &&
+        accepted &&
+        selectedItem &&
+        typeof selectedItem.completedQuantity === "number" &&
+        Number.isFinite(completedQtyValue) &&
+        Number(completedQtyValue) !== Number(selectedItem.completedQuantity)
+      ) {
+        const res = (await updateWorkItemCompletion({
+          workItemId: Number(selectedWorkItemId),
+          completedQuantity: Number(completedQtyValue) || 0,
+        })) as unknown as { success?: boolean; message?: string };
+        if (!res?.success) {
+          showToast("error", res?.message || "Készültség mentése sikertelen.");
+          return;
+        }
+      }
+    } catch {}
 
     if (editingItem?.id) {
       // Update existing WorkDiaryItem
@@ -701,34 +733,66 @@ export default function WorkerDiaryEditForm({
         )}
       </div>
       {isTenant && (
-        <div className="flex items-center gap-2 border-t pt-4">
-          <input
-            id="accepted-checkbox"
-            type="checkbox"
-            className="h-4 w-4"
-            checked={!!accepted}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setAccepted(checked);
-              if (checked) {
-                // Open completion modal for tenant to set completed quantity
-                const baseCompleted = Number(
-                  typeof selectedItem?.completedQuantity === "number"
-                    ? selectedItem?.completedQuantity
-                    : 0
-                );
-                const addCurrent = Number(quantity === "" ? 0 : quantity);
-                const maxQty = Number(selectedItem?.quantity || 0);
-                const initial = Math.max(
-                  0,
-                  Math.min(maxQty, baseCompleted + addCurrent)
-                );
-                setCompletedQtyValue(initial);
-                setProgressOpen(true);
-              }
-            }}
-          />
-          <Label htmlFor="accepted-checkbox">Elfogadva</Label>
+        <div className="border-t pt-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <input
+              id="accepted-checkbox"
+              type="checkbox"
+              className="h-4 w-4"
+              checked={!!accepted}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setAccepted(checked);
+                if (checked) {
+                  // Initialize inline completion controls
+                  const baseCompleted = Number(
+                    typeof selectedItem?.completedQuantity === "number"
+                      ? selectedItem?.completedQuantity
+                      : 0
+                  );
+                  const maxQty = Number(selectedItem?.quantity || 0);
+                  const initial = Math.max(0, Math.min(maxQty, baseCompleted));
+                  setCompletedQtyValue(initial);
+                }
+              }}
+            />
+            <Label htmlFor="accepted-checkbox">Elfogadva</Label>
+          </div>
+
+          {accepted && (
+            <div className="space-y-2 rounded-md border p-3 bg-muted/20">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="completed-inline">Elkészült mennyiség</Label>
+                <div className="text-right text-sm">
+                  <div className="font-medium">
+                    {`${(Number.isFinite(completedQtyValue) ? completedQtyValue : 0).toFixed(2)} / ${Number(selectedItem?.quantity || 0)} ${selectedItem?.unit || ""}`}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {selectedItem?.quantity
+                      ? Math.floor(
+                          ((completedQtyValue || 0) /
+                            (selectedItem.quantity || 1)) *
+                            100
+                        )
+                      : 0}
+                    %
+                  </div>
+                </div>
+              </div>
+              <input
+                id="completed-inline"
+                type="range"
+                min={0}
+                max={Number(selectedItem?.quantity || 0)}
+                step={0.01}
+                value={Number.isFinite(completedQtyValue) ? completedQtyValue : 0}
+                onChange={(e) => setCompletedQtyValue(Number(e.target.value))}
+                className="w-full"
+                disabled={!selectedItem}
+              />
+              <div className="text-xs text-muted-foreground text-right">A készültség a fő Mentés gombbal kerül mentésre.</div>
+            </div>
+          )}
         </div>
       )}
       <div className="flex gap-2 justify-end">
