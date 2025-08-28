@@ -347,7 +347,6 @@ export default function WorkerDiaryEditForm({
 
   // Keep inline progress slider in sync with the selected WorkItem's saved completion
   useEffect(() => {
-    if (!accepted) return;
     const maxQty = Number(selectedItem?.quantity || 0);
     const baseCompleted = Number(
       typeof selectedItem?.completedQuantity === "number"
@@ -356,7 +355,7 @@ export default function WorkerDiaryEditForm({
     );
     const initial = Math.max(0, Math.min(maxQty, baseCompleted));
     setCompletedQtyValue(initial);
-  }, [accepted, selectedItem?.completedQuantity, selectedItem?.quantity]);
+  }, [selectedItem?.completedQuantity, selectedItem?.quantity]);
 
   // (parseToken defined above)
 
@@ -465,11 +464,9 @@ export default function WorkerDiaryEditForm({
     try {
       if (
         isTenant &&
-        accepted &&
         selectedItem &&
-        typeof selectedItem.completedQuantity === "number" &&
         Number.isFinite(completedQtyValue) &&
-        Number(completedQtyValue) !== Number(selectedItem.completedQuantity)
+        Number(completedQtyValue) !== Number((selectedItem as any).completedQuantity ?? -1)
       ) {
         const res = (await updateWorkItemCompletion({
           workItemId: Number(selectedWorkItemId),
@@ -759,7 +756,7 @@ export default function WorkerDiaryEditForm({
             <Label htmlFor="accepted-checkbox">Elfogadva</Label>
           </div>
 
-          {accepted && (
+          {
             <div className="space-y-2 rounded-md border p-3 bg-muted/20">
               <div className="flex items-center justify-between">
                 <Label htmlFor="completed-inline">Elkészült mennyiség</Label>
@@ -792,7 +789,7 @@ export default function WorkerDiaryEditForm({
               />
               <div className="text-xs text-muted-foreground text-right">A készültség a fő Mentés gombbal kerül mentésre.</div>
             </div>
-          )}
+          }
         </div>
       )}
       <div className="flex gap-2 justify-end">
