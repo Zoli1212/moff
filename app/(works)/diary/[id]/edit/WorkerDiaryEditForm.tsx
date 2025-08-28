@@ -35,7 +35,9 @@ interface WorkerDiaryEditFormProps {
   onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
   // Optional: when provided, the form acts in "edit" mode for this WorkDiaryItem
-  editingItem?: Partial<WorkDiaryItemUpdate> & { id: number };
+  editingItem?: Partial<
+    WorkDiaryItemUpdate & { name?: string; email?: string }
+  > & { id: number };
 }
 
 export default function WorkerDiaryEditForm({
@@ -221,7 +223,10 @@ export default function WorkerDiaryEditForm({
           : editingItem.workerId
             ? `w:${editingItem.workerId}`
             : "";
-        console.log("[WorkerDiaryEditForm][DEBUG] computed token from editingItem", token);
+        console.log(
+          "[WorkerDiaryEditForm][DEBUG] computed token from editingItem",
+          token
+        );
       }
     } catch {}
   }, [
@@ -238,21 +243,21 @@ export default function WorkerDiaryEditForm({
   // Extend options with a synthetic one from editingItem when missing (so select can display it)
   const displayWorkerOptions = useMemo(() => {
     if (!editingItem?.id) return workerOptions;
-    const token = (editingItem as any).workItemWorkerId
-      ? `aw:${(editingItem as any).workItemWorkerId}`
+    const token = editingItem.workItemWorkerId
+      ? `aw:${editingItem.workItemWorkerId}`
       : editingItem.workerId
         ? `w:${editingItem.workerId}`
         : "";
     if (!token) return workerOptions;
-    if (workerOptions.some(o => o.token === token)) return workerOptions;
+    if (workerOptions.some((o) => o.token === token)) return workerOptions;
     return [
       {
         key: -1,
         token,
         workerId: (editingItem.workerId as number | undefined) ?? -1,
-        name: (editingItem as any).name || `#${editingItem.workerId ?? ""}`,
+        name: editingItem.name || `#${editingItem.workerId ?? ""}`,
         role: undefined,
-        email: (editingItem as any).email || undefined,
+        email: editingItem.email || undefined,
       },
       ...workerOptions,
     ];
@@ -265,14 +270,14 @@ export default function WorkerDiaryEditForm({
     if (selectedWorkItemId === "" && editingItem.workItemId) {
       setSelectedWorkItemId(editingItem.workItemId);
     }
-    // Prefill worker token if not yet selected
-    if (!selectedWorkerToken) {
-      const token = (editingItem as any).workItemWorkerId
-        ? `aw:${(editingItem as any).workItemWorkerId}`
-        : editingItem.workerId
-          ? `w:${editingItem.workerId}`
-          : "";
-      if (token) setSelectedWorkerToken(token);
+    // Prefill worker if not yet selected
+    const token = editingItem.workItemWorkerId
+      ? `aw:${editingItem.workItemWorkerId}`
+      : editingItem.workerId
+        ? `w:${editingItem.workerId}`
+        : "";
+    if (token && !selectedWorkerToken) {
+      setSelectedWorkerToken(token);
     }
   }, [editingItem, selectedWorkItemId, selectedWorkerToken]);
 
@@ -281,7 +286,9 @@ export default function WorkerDiaryEditForm({
     if (selectedWorkerToken === "") return;
     try {
       const sel = parseToken(selectedWorkerToken);
-      const opt = displayWorkerOptions.find((o) => o.token === selectedWorkerToken);
+      const opt = displayWorkerOptions.find(
+        (o) => o.token === selectedWorkerToken
+      );
       const assigned = sel.assignedId
         ? assignedWorkers.find((aw) => aw.id === sel.assignedId)
         : undefined;
@@ -308,6 +315,7 @@ export default function WorkerDiaryEditForm({
     assignedWorkers,
     workersById,
     parseToken,
+    displayWorkerOptions,
   ]);
 
   //
@@ -466,7 +474,8 @@ export default function WorkerDiaryEditForm({
         isTenant &&
         selectedItem &&
         Number.isFinite(completedQtyValue) &&
-        Number(completedQtyValue) !== Number((selectedItem as any).completedQuantity ?? -1)
+        Number(completedQtyValue) !==
+          Number(selectedItem.completedQuantity ?? -1)
       ) {
         const res = (await updateWorkItemCompletion({
           workItemId: Number(selectedWorkItemId),
@@ -776,18 +785,41 @@ export default function WorkerDiaryEditForm({
                   </div>
                 </div>
               </div>
-              <input
-                id="completed-inline"
-                type="range"
-                min={0}
-                max={Number(selectedItem?.quantity || 0)}
-                step={0.01}
-                value={Number.isFinite(completedQtyValue) ? completedQtyValue : 0}
-                onChange={(e) => setCompletedQtyValue(Number(e.target.value))}
-                className="w-full"
-                disabled={!selectedItem}
-              />
-              <div className="text-xs text-muted-foreground text-right">A készültség a fő Mentés gombbal kerül mentésre.</div>
+              <div className="relative w-full pt-2">
+                <input
+                  id="completed-inline"
+                  type="range"
+                  min={0}
+                  max={Number(selectedItem?.quantity || 0)}
+                  step={0.01}
+                  value={
+                    Number.isFinite(completedQtyValue) ? completedQtyValue : 0
+                  }
+                  onChange={(e) => setCompletedQtyValue(Number(e.target.value))}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
+                  style={{
+                    background: `linear-gradient(to right, #3b82f6 ${((Number.isFinite(completedQtyValue) ? completedQtyValue : 0) / (Number(selectedItem?.quantity) || 1)) * 100}%, rgb(229 231 235) ${((Number.isFinite(completedQtyValue) ? completedQtyValue : 0) / (Number(selectedItem?.quantity) || 1)) * 100}%)`,
+                  }}
+                  disabled={!selectedItem}
+                />
+                {!accepted && Number(quantity) > 0 && selectedItem && (
+                  <div
+                    className="absolute top-1/2 h-4 w-1 bg-yellow-400 pointer-events-none transform -translate-y-1/2"
+                    style={{
+                      left: `${
+                        (((Number(selectedItem.completedQuantity) || 0) +
+                          (Number(quantity) || 0)) /
+                          (Number(selectedItem.quantity) || 1)) *
+                        100
+                      }%`,
+                    }}
+                    title={`+${quantity} ${selectedItem.unit}`}
+                  ></div>
+                )}
+              </div>
+              <div className="text-xs text-muted-foreground text-right">
+                A készültség a fő Mentés gombbal kerül mentésre.
+              </div>
             </div>
           }
         </div>

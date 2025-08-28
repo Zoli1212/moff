@@ -21,6 +21,7 @@ interface MaterialEditModalProps {
     name: string;
     quantity: number;
     availableQuantity: number;
+    unit: string;
   }) => Promise<void>;
   onDelete: (id: number) => Promise<void>;
 }
@@ -40,6 +41,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   const [availableQuantity, setAvailableQuantity] = useState(
     material?.availableQuantity?.toString() || ""
   );
+  const [unit, setUnit] = useState(material?.unit || "");
   const [loading, setLoading] = useState(false);
   const [isConfirmOpen, setConfirmOpen] = useState(false);
 
@@ -49,6 +51,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
     setName(material?.name || "");
     setQuantity(material?.quantity?.toString() || "");
     setAvailableQuantity(material?.availableQuantity?.toString() || "");
+    setUnit(material?.unit || "");
   }, [material]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,6 +63,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       name,
       quantity: Number(quantity),
       availableQuantity: Number(availableQuantity),
+      unit,
     });
     setLoading(false);
     onOpenChange(false);
@@ -100,6 +104,15 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Mennyiségi egység</label>
+            <input
+              className="w-full border rounded px-2 py-1"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="pl. kg, db, m²"
             />
           </div>
           <div>

@@ -46,11 +46,12 @@ interface UpdateMaterialInput {
   id: number;
   name?: string;
   quantity?: number;
+  unit?: string;
   availableQuantity?: number;
   availableFull?: boolean;
 }
 
-export async function updateMaterial({ id, name, quantity, availableQuantity, availableFull }: UpdateMaterialInput) {
+export async function updateMaterial({ id, name, quantity, unit, availableQuantity, availableFull }: UpdateMaterialInput) {
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
   const tenantEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress || "";
@@ -62,6 +63,7 @@ export async function updateMaterial({ id, name, quantity, availableQuantity, av
     tenantEmail,
   };
   if (name !== undefined) updateData.name = name;
+  if (unit !== undefined) updateData.unit = unit;
   if (quantity !== undefined) {
     updateData.quantity = quantity;
     updateData.totalPrice = material.unitPrice * quantity;
