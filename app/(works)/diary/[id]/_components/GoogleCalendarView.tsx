@@ -174,15 +174,23 @@ export default function GoogleCalendarView({
               ? ` ${p.quantity ?? "-"} ${p.unit ?? ""}`
               : undefined;
 
-          const restLines =
-            viewType === "timeGridWeek"
-              ? [qtyLine].filter(Boolean) // hét: csak mennyiség
-              : [
-                  workerLine,
-                  qtyLine,
-                  p.notes ? `Megjegyzés: ${p.notes}` : undefined,
-                  Array.isArray(p.images) ? `Képek: ${p.images.length}` : undefined,
-                ].filter(Boolean); // nap és többi: minden (tenantEmail továbbra sem jelenik meg)
+          const restLines = (() => {
+            const lines = [
+              qtyLine,
+              p.notes ? `Megjegyzés: ${p.notes}` : undefined,
+              Array.isArray(p.images) ? `Képek: ${p.images.length}` : undefined,
+            ];
+            // For day view, worker name is in the header, so don't add it here.
+            // For week view, we show a more detailed worker line.
+            if (viewType !== 'timeGridDay') {
+              lines.unshift(workerLine);
+            }
+            if (viewType === 'timeGridWeek') {
+              // Week view only shows quantity, but let's adjust to show only what's needed
+              return [qtyLine].filter(Boolean);
+            }
+            return lines.filter(Boolean);
+          })();
 
           // Hét/Nap: első sor workItemName[0..8] + (monogram névből VAGY teljes email) + munkaóra, utána minden
           const nameInitials = getInitialsFromNameOnly(p.name ?? null);

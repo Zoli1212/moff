@@ -33,6 +33,21 @@ export async function assignWorkerToWorkItem(params: AssignParams) {
     quantity = 1,
   } = params;
 
+  // Check for existing assignment with the same email for the same work item
+  if (email) {
+    const existingAssignment = await prisma.workItemWorker.findFirst({
+      where: {
+        workItemId: workItemId,
+        email: email,
+        tenantEmail: tenantEmail, // Ensure check is within the same tenant
+      },
+    });
+
+    if (existingAssignment) {
+      throw new Error(`A(z) '${email}' email című dolgozó már hozzá van rendelve ehhez a feladathoz.`);
+    }
+  }
+
   // Create assignment
   const created = await prisma.workItemWorker.create({
     data: {

@@ -52,6 +52,13 @@ export async function updateWorkerJsonArray({
     // Update existing
     workersArr[idx] = { ...workersArr[idx], ...workerData };
   } else {
+    // Before inserting, check for email uniqueness to prevent duplicates
+    if (workerData.email && workersArr.some(w => w.email?.toLowerCase() === workerData.email.toLowerCase())) {
+      console.log('Duplicate email found. Aborting add.');
+      // Optionally, return an error or a specific status
+      // For now, we just prevent the addition and return the current state
+      return worker; 
+    }
     // Insert new
     workersArr.push(workerData);
   }
