@@ -681,3 +681,10 @@ interface t blokkoljuk
 egy munkást több szakmára oszthatjuk is fel tudjuk venni
 --
 görgetés
+----
+kevesebb slot lehessen a meghatározottnál is
+pending state a formon
+feladatoknal monogramm + avatar
+mennyiségi egység 
+progress slot legyen alul
+----

@@ -21,7 +21,9 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
   const router = useRouter();
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(null);
-  const [editingItem, setEditingItem] = useState<(Partial<WorkDiaryItemUpdate> & { id: number }) | undefined>(undefined);
+  const [editingItem, setEditingItem] = useState<
+    (Partial<WorkDiaryItemUpdate> & { id: number; name?: string; email?: string }) | undefined
+  >(undefined);
 
   const handleDateSelect = (date: Date) => {
     const found = (diaries ?? []).find(d => new Date(d.date).toDateString() === date.toDateString());
@@ -72,7 +74,7 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
           // extract clicked WorkDiaryItem id set by calendar
           const d = diary as DiaryWithEditing;
           const clickedId = d.__editingItemId;
-          let itemForEdit: (Partial<WorkDiaryItemUpdate> & { id: number }) | undefined = undefined;
+          let itemForEdit: (Partial<WorkDiaryItemUpdate> & { id: number; name?: string; email?: string }) | undefined = undefined;
           if (clickedId && Array.isArray(d.workDiaryItems)) {
             const it = (d.workDiaryItems as WorkDiaryItemDTO[]).find((i) => i.id === clickedId);
             if (it) {
@@ -86,6 +88,8 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
                 workHours: it.workHours ?? undefined,
                 images: it.images ?? [],
                 notes: it.notes ?? undefined,
+                name: it.name ?? undefined,
+                email: it.email ?? undefined,
                 // ensure tenant sees current accepted state in the form
                 accepted: it.accepted ?? undefined,
               };

@@ -12,7 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
@@ -60,7 +66,9 @@ export default function WorkerDiaryEditForm({
   // Worker selection based on WorkItem.workItemWorkers
   // Keep select value as string token to avoid collisions and preserve exact choice
   // Token format: 'aw:<assignmentId>' for assigned worker entries, 'w:<workerId>' for plain workers
-  const [selectedWorkerToken, setSelectedWorkerToken] = useState<string | "">("");
+  const [selectedWorkerToken, setSelectedWorkerToken] = useState<string | "">(
+    ""
+  );
   useEffect(() => {
     // Reset worker selection when work item changes
     if (!editingItem?.workerId) {
@@ -142,11 +150,20 @@ export default function WorkerDiaryEditForm({
   // Helpers to parse selection token (must be declared before effects that use it)
   const parseToken = useMemo(() => {
     return (token: string | "") => {
-      if (!token) return { source: "", workerId: undefined as number | undefined, assignedId: undefined as number | undefined };
+      if (!token)
+        return {
+          source: "",
+          workerId: undefined as number | undefined,
+          assignedId: undefined as number | undefined,
+        };
       if (token.startsWith("aw:")) {
         const assignedId = Number(token.slice(3));
         const assigned = assignedWorkers.find((a) => a.id === assignedId);
-        return { source: "aw" as const, workerId: assigned?.workerId, assignedId };
+        return {
+          source: "aw" as const,
+          workerId: assigned?.workerId,
+          assignedId,
+        };
       }
       if (token.startsWith("w:")) {
         const workerId = Number(token.slice(2));
@@ -155,7 +172,9 @@ export default function WorkerDiaryEditForm({
       // fallback: legacy numeric
       const workerId = Number(token);
       const assigned = assignedWorkers.find((a) => a.workerId === workerId);
-      return assigned ? { source: "aw" as const, workerId, assignedId: assigned.id } : { source: "w" as const, workerId, assignedId: undefined };
+      return assigned
+        ? { source: "aw" as const, workerId, assignedId: assigned.id }
+        : { source: "w" as const, workerId, assignedId: undefined };
     };
   }, [assignedWorkers]);
 
@@ -182,15 +201,98 @@ export default function WorkerDiaryEditForm({
     }));
   }, [assignedWorkers, selectedItem, workersById]);
 
+  // DEBUG: dump incoming props and derived state
+  useEffect(() => {
+    try {
+      console.log("[WorkerDiaryEditForm][DEBUG] props/state", {
+        diary,
+        editingItem,
+        workItemsCount: workItems?.length ?? 0,
+        workItems,
+        selectedWorkItemId,
+        selectedItem,
+        assignedWorkers,
+        workerOptions,
+        selectedWorkerToken,
+      });
+      if (editingItem?.id && !selectedWorkerToken) {
+        const token = editingItem.workItemWorkerId
+          ? `aw:${editingItem.workItemWorkerId}`
+          : editingItem.workerId
+            ? `w:${editingItem.workerId}`
+            : "";
+        console.log("[WorkerDiaryEditForm][DEBUG] computed token from editingItem", token);
+      }
+    } catch {}
+  }, [
+    diary,
+    editingItem,
+    workItems,
+    selectedWorkItemId,
+    selectedItem,
+    assignedWorkers,
+    workerOptions,
+    selectedWorkerToken,
+  ]);
+
+  // Extend options with a synthetic one from editingItem when missing (so select can display it)
+  const displayWorkerOptions = useMemo(() => {
+    if (!editingItem?.id) return workerOptions;
+    const token = (editingItem as any).workItemWorkerId
+      ? `aw:${(editingItem as any).workItemWorkerId}`
+      : editingItem.workerId
+        ? `w:${editingItem.workerId}`
+        : "";
+    if (!token) return workerOptions;
+    if (workerOptions.some(o => o.token === token)) return workerOptions;
+    return [
+      {
+        key: -1,
+        token,
+        workerId: (editingItem.workerId as number | undefined) ?? -1,
+        name: (editingItem as any).name || `#${editingItem.workerId ?? ""}`,
+        role: undefined,
+        email: (editingItem as any).email || undefined,
+      },
+      ...workerOptions,
+    ];
+  }, [editingItem, workerOptions]);
+
+  // Ensure prefill for both work item and worker in edit mode
+  useEffect(() => {
+    if (!editingItem?.id) return;
+    // Prefill work item if not yet selected
+    if (selectedWorkItemId === "" && editingItem.workItemId) {
+      setSelectedWorkItemId(editingItem.workItemId);
+    }
+    // Prefill worker token if not yet selected
+    if (!selectedWorkerToken) {
+      const token = (editingItem as any).workItemWorkerId
+        ? `aw:${(editingItem as any).workItemWorkerId}`
+        : editingItem.workerId
+          ? `w:${editingItem.workerId}`
+          : "";
+      if (token) setSelectedWorkerToken(token);
+    }
+  }, [editingItem, selectedWorkItemId, selectedWorkerToken]);
+
   // Instant log whenever selection changes (debug)
   useEffect(() => {
     if (selectedWorkerToken === "") return;
     try {
       const sel = parseToken(selectedWorkerToken);
-      const opt = workerOptions.find((o) => o.token === selectedWorkerToken);
-      const assigned = sel.assignedId ? assignedWorkers.find((aw) => aw.id === sel.assignedId) : undefined;
-      const name = opt?.name ?? assigned?.name ?? (sel.workerId ? workersById.get(sel.workerId)?.name : undefined);
-      const email = opt?.email ?? (sel.workerId ? workersById.get(sel.workerId)?.email : undefined) ?? assigned?.email;
+      const opt = displayWorkerOptions.find((o) => o.token === selectedWorkerToken);
+      const assigned = sel.assignedId
+        ? assignedWorkers.find((aw) => aw.id === sel.assignedId)
+        : undefined;
+      const name =
+        opt?.name ??
+        assigned?.name ??
+        (sel.workerId ? workersById.get(sel.workerId)?.name : undefined);
+      const email =
+        opt?.email ??
+        (sel.workerId ? workersById.get(sel.workerId)?.email : undefined) ??
+        assigned?.email;
       console.log("[WorkerDiaryEditForm] selected worker changed:", {
         selectedWorkerToken,
         parsed: sel,
@@ -200,7 +302,13 @@ export default function WorkerDiaryEditForm({
         email,
       });
     } catch {}
-  }, [selectedWorkerToken, workerOptions, assignedWorkers, workersById, parseToken]);
+  }, [
+    selectedWorkerToken,
+    workerOptions,
+    assignedWorkers,
+    workersById,
+    parseToken,
+  ]);
 
   //
 
@@ -284,12 +392,16 @@ export default function WorkerDiaryEditForm({
     };
 
     // Prefer name/email coming from the exact option the user selected in the dropdown
-    const selectedOpt = workerOptions.find((o) => o.token === selectedWorkerToken);
+    const selectedOpt = displayWorkerOptions.find(
+      (o) => o.token === selectedWorkerToken
+    );
     const sel = parseToken(selectedWorkerToken);
     const selectedEmail =
       selectedOpt?.email ||
       (sel.workerId ? workersById.get(sel.workerId)?.email : undefined) ||
-      (sel.assignedId ? assignedWorkers.find((aw) => aw.id === sel.assignedId)?.email : undefined) ||
+      (sel.assignedId
+        ? assignedWorkers.find((aw) => aw.id === sel.assignedId)?.email
+        : undefined) ||
       undefined;
 
     // derive name and workItemWorkerId from the selected assignment (no UI change)
@@ -368,10 +480,11 @@ export default function WorkerDiaryEditForm({
       // Ensure there is a real WorkDiary.id (DiaryPageClient may pass id: 0 for a new day)
       let diaryIdToUse = diary.id;
       if (!diaryIdToUse || diaryIdToUse === 0) {
-        const res: ActionResult<{ id: number }> = await getOrCreateWorkDiaryForTask({
-          workId: diary.workId,
-          workItemId: Number(selectedWorkItemId),
-        });
+        const res: ActionResult<{ id: number }> =
+          await getOrCreateWorkDiaryForTask({
+            workId: diary.workId,
+            workItemId: Number(selectedWorkItemId),
+          });
         if (!res?.success || !res?.data?.id) {
           showToast(
             "error",
@@ -445,10 +558,22 @@ export default function WorkerDiaryEditForm({
             setSelectedWorkerToken(token);
             try {
               const sel = parseToken(token);
-              const opt = workerOptions.find((o) => o.token === token);
-              const assigned = sel.assignedId ? assignedWorkers.find((aw) => aw.id === sel.assignedId) : undefined;
-              const name = opt?.name ?? assigned?.name ?? (sel.workerId ? workersById.get(sel.workerId)?.name : undefined);
-              const email = opt?.email ?? (sel.workerId ? workersById.get(sel.workerId)?.email : undefined) ?? assigned?.email;
+              const opt = displayWorkerOptions.find((o) => o.token === token);
+              const assigned = sel.assignedId
+                ? assignedWorkers.find((aw) => aw.id === sel.assignedId)
+                : undefined;
+              const name =
+                opt?.name ??
+                assigned?.name ??
+                (sel.workerId
+                  ? workersById.get(sel.workerId)?.name
+                  : undefined);
+              const email =
+                opt?.email ??
+                (sel.workerId
+                  ? workersById.get(sel.workerId)?.email
+                  : undefined) ??
+                assigned?.email;
               console.log("[WorkerDiaryEditForm] select change:", {
                 selectedWorkerToken: token,
                 parsed: sel,
@@ -463,18 +588,20 @@ export default function WorkerDiaryEditForm({
           required
         >
           <option value="">Válassz dolgozót…</option>
-          {workerOptions.map((w) => (
+          {displayWorkerOptions.map((w) => (
             <option key={w.key} value={w.token}>
               {w.name} {w.role ? `(${w.role})` : ""}
               {w.email ? ` - ${w.email}` : ""}
             </option>
           ))}
         </select>
-        {selectedWorkItemId !== "" && assignedWorkers.length === 0 && (selectedItem?.workers ?? []).length === 0 && (
-          <div className="text-xs text-muted-foreground">
-            Ehhez a munkafolyamathoz nincs dolgozó rendelve.
-          </div>
-        )}
+        {selectedWorkItemId !== "" &&
+          assignedWorkers.length === 0 &&
+          (selectedItem?.workers ?? []).length === 0 && (
+            <div className="text-xs text-muted-foreground">
+              Ehhez a munkafolyamathoz nincs dolgozó rendelve.
+            </div>
+          )}
       </div>
       <div>
         <Label htmlFor="diary-date">
@@ -592,7 +719,10 @@ export default function WorkerDiaryEditForm({
                 );
                 const addCurrent = Number(quantity === "" ? 0 : quantity);
                 const maxQty = Number(selectedItem?.quantity || 0);
-                const initial = Math.max(0, Math.min(maxQty, baseCompleted + addCurrent));
+                const initial = Math.max(
+                  0,
+                  Math.min(maxQty, baseCompleted + addCurrent)
+                );
                 setCompletedQtyValue(initial);
                 setProgressOpen(true);
               }
@@ -644,7 +774,14 @@ export default function WorkerDiaryEditForm({
                   {`${(Number.isFinite(completedQtyValue) ? completedQtyValue : 0).toFixed(2)} / ${Number(selectedItem?.quantity || 0)} ${selectedItem?.unit || ""}`}
                 </div>
                 <div className="text-muted-foreground">
-                  {selectedItem?.quantity ? Math.floor(((completedQtyValue || 0) / (selectedItem.quantity || 1)) * 100) : 0}%
+                  {selectedItem?.quantity
+                    ? Math.floor(
+                        ((completedQtyValue || 0) /
+                          (selectedItem.quantity || 1)) *
+                          100
+                      )
+                    : 0}
+                  %
                 </div>
               </div>
             </div>
@@ -664,7 +801,11 @@ export default function WorkerDiaryEditForm({
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setProgressOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setProgressOpen(false)}
+            >
               Mégsem
             </Button>
             <Button
