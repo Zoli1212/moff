@@ -3,7 +3,7 @@ import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import type { WorkItem, Worker, WorkItemWorker, Professional } from "@/types/work";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Trash2, Minus } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
@@ -16,6 +16,7 @@ import {
   deleteWorkItemWorker,
 } from "@/actions/update-workitemworker";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
+import { useWorkerSlotsStore } from "@/store/useWorkerSlotsStore";
 
 interface Props {
   workId: number;
@@ -114,6 +115,15 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
     return byRole;
   }, [workItems, workers]);
+
+  const { slots, setSlots, addSlot, removeSlot } = useWorkerSlotsStore();
+
+  // Initialize the store with the calculated required slots
+  React.useEffect(() => {
+    if (Object.keys(requiredPerProfession).length > 0) {
+      setSlots(requiredPerProfession);
+    }
+  }, [requiredPerProfession, setSlots]);
 
   // Compute per-Worker maximum required quantity across all workItems (mirror of ParticipantsSection)
   const workerIdToMaxNeeded: Record<number, number> = useMemo(() => {
@@ -527,18 +537,27 @@ const WorkersSlotsSection: React.FC<Props> = ({
           // Use per-role denominator from best work item; fallback to required if missing/zero
           const rawDenom = denominatorRequiredPerProfession[role] as number | undefined;
           const displayDenom = typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
-          const slots = Array.from({ length: required });
+          const slotCount = slots[role] ?? required;
+          const slotArray = Array.from({ length: slotCount });
           return (
             <div key={role}>
               <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
                 <div className="flex items-center gap-2.5">
                   <div className="flex-2 font-semibold">{role}</div>
-                  <div className="ml-auto font-semibold text-[14px] text-[#222]">
-                    {Math.min(list.length, required)} / {displayDenom}
+                  <div className="flex items-center gap-2 ml-auto">
+                    <button
+                      onClick={() => addSlot(role)}
+                      className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <div className="font-semibold text-[14px] text-[#222]">
+                      {Math.min(list.length, required)} / {displayDenom}
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
-                  {slots.map((_, idx) => {
+                  {slotArray.map((_, idx) => {
                     const w = list[idx] as AssignmentEx | undefined;
                     const hasData = !!(
                       w && (w.name || w.email)
@@ -590,18 +609,26 @@ const WorkersSlotsSection: React.FC<Props> = ({
                       );
                     }
                     return (
-                      <button
-                        key={`${role}-empty-${idx}`}
-                        className="w-full flex items-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
-                        onClick={() => {
-                          const bestId = roleBestWorkItemId[role];
-                          setAddLock({ role, workItemId: bestId });
-                          setIsAddOpen(true);
-                        }}
-                        title={role}
-                      >
-                        <span className="text-lg leading-none">+</span>
-                      </button>
+                      <div key={`${role}-empty-${idx}`} className="flex items-center w-full">
+                        <button
+                          className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
+                          onClick={() => {
+                            const bestId = roleBestWorkItemId[role];
+                            setAddLock({ role, workItemId: bestId });
+                            setIsAddOpen(true);
+                          }}
+                          title={role}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => removeSlot(role)}
+                          className="px-2 py-2 rounded-r border border-dashed border-l-0 border-[#aaa] bg-[#fafbfc] hover:bg-red-100"
+                          title="Slot törlése"
+                        >
+                          <Trash2 className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </div>
                     );
                   })}
                 </div>

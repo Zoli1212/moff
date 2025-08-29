@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary, deleteWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
@@ -41,6 +42,16 @@ interface Work {
   updatedAt: Date;
   tenantEmail: string;
 }
+
+const getMonogram = (name?: string): string => {
+  if (!name) return "D"; // Default for 'Dolgozó'
+  return name
+    .split(" ")
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+};
 
 export default function TasksPage() {
   const params = useParams();
@@ -236,20 +247,45 @@ export default function TasksPage() {
                   onCheck={(checked) => handleAssignDiary(item.id, checked)}
                 >
                   {item.workItemWorkers && item.workItemWorkers.length > 0 && (
-                    <ul
+                    <div
                       style={{
-                        fontSize: 13,
-                        margin: "4px 0 0 0",
-                        paddingLeft: 18,
-                        color: "#555",
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: "12px",
+                        marginTop: "8px",
                       }}
                     >
                       {item.workItemWorkers.map((w) => (
-                        <li key={w.id}>
-                          {w.name || "Dolgozó"} ({w.role || "munkás"})
-                        </li>
+                        <div
+                          key={w.id}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            backgroundColor: "#f0f0f0",
+                            padding: "4px 8px",
+                            borderRadius: "12px",
+                          }}
+                        >
+                          <Image
+                            src="/worker.jpg"
+                            alt="worker avatar"
+                            width={24}
+                            height={24}
+                            style={{ borderRadius: "50%" }}
+                          />
+                          <span
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: "11px",
+                              lineHeight: "1.2",
+                            }}
+                          >
+                            {getMonogram(w.name)}
+                          </span>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
                   )}
                   {assignError && assigning === item.id && (
                     <span style={{ color: "red", marginLeft: 8 }}>

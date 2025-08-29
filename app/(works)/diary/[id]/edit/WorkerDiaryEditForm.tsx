@@ -119,6 +119,7 @@ export default function WorkerDiaryEditForm({
   // Completion modal state (quantity-based)
   const [progressOpen, setProgressOpen] = useState(false);
   const [completedQtyValue, setCompletedQtyValue] = useState<number>(0);
+  const [isSliderTouched, setIsSliderTouched] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
   const initialAutoSelectDone = useRef(false);
@@ -474,16 +475,34 @@ export default function WorkerDiaryEditForm({
         isTenant &&
         selectedItem &&
         Number.isFinite(completedQtyValue) &&
-        Number(completedQtyValue) !==
-          Number(selectedItem.completedQuantity ?? -1)
+        accepted
       ) {
-        const res = (await updateWorkItemCompletion({
-          workItemId: Number(selectedWorkItemId),
-          completedQuantity: Number(completedQtyValue) || 0,
-        })) as unknown as { success?: boolean; message?: string };
-        if (!res?.success) {
-          showToast("error", res?.message || "Készültség mentése sikertelen.");
-          return;
+        let newCompletedQuantity: number;
+        const maxQty = Number(selectedItem.quantity || Infinity);
+
+        if (isSliderTouched) {
+          newCompletedQuantity = Number(completedQtyValue) || 0;
+        } else {
+          const currentCompleted = Number(selectedItem.completedQuantity || 0);
+          const reportedQty = Number(quantity) || 0;
+          newCompletedQuantity = currentCompleted + reportedQty;
+        }
+
+        // Clamp the value to be between 0 and the max quantity
+        const finalCompletedQuantity = Math.max(
+          0,
+          Math.min(newCompletedQuantity, maxQty)
+        );
+
+        if (finalCompletedQuantity !== selectedItem.completedQuantity) {
+          const res = (await updateWorkItemCompletion({
+            workItemId: Number(selectedWorkItemId),
+            completedQuantity: finalCompletedQuantity,
+          })) as unknown as { success?: boolean; message?: string };
+          if (!res?.success) {
+            showToast("error", res?.message || "Készültség mentése sikertelen.");
+            return;
+          }
         }
       }
     } catch {}
@@ -749,6 +768,7 @@ export default function WorkerDiaryEditForm({
               onChange={(e) => {
                 const checked = e.target.checked;
                 setAccepted(checked);
+                setIsSliderTouched(false); // Reset on check/uncheck
                 if (checked) {
                   // Initialize inline completion controls
                   const baseCompleted = Number(
@@ -795,7 +815,10 @@ export default function WorkerDiaryEditForm({
                   value={
                     Number.isFinite(completedQtyValue) ? completedQtyValue : 0
                   }
-                  onChange={(e) => setCompletedQtyValue(Number(e.target.value))}
+                  onChange={(e) => {
+                    setCompletedQtyValue(Number(e.target.value));
+                    setIsSliderTouched(true);
+                  }}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
                   style={{
                     background: `linear-gradient(to right, #3b82f6 ${((Number.isFinite(completedQtyValue) ? completedQtyValue : 0) / (Number(selectedItem?.quantity) || 1)) * 100}%, rgb(229 231 235) ${((Number.isFinite(completedQtyValue) ? completedQtyValue : 0) / (Number(selectedItem?.quantity) || 1)) * 100}%)`,
