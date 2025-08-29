@@ -3,7 +3,7 @@ import React, { useMemo, useState } from "react";
 import Image from "next/image";
 import type { WorkItem, Worker, WorkItemWorker, Professional } from "@/types/work";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Minus } from "lucide-react";
+import { Plus, Trash2} from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
