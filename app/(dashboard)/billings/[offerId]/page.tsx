@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { getOfferById } from "@/actions/offer-actions";
 import { createBilling } from "@/actions/billing-actions";
 import { ArrowLeft } from "lucide-react";
@@ -33,12 +33,13 @@ interface Offer {
   description?: string | null;
 }
 
-export default function BillingsDetailPage({ params }: { params: { offerId: string } }) {
+export default function BillingsDetailPage() {
+  const params = useParams();
+  const offerId = params.offerId as string;
   const router = useRouter();
   const [offer, setOffer] = useState<Offer | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isBillingCreated, setIsBillingCreated] = useState(false);
 
   const {
     selectedItems,
@@ -52,12 +53,14 @@ export default function BillingsDetailPage({ params }: { params: { offerId: stri
     const fetchOffer = async () => {
       try {
         setLoading(true);
-        const data = await getOfferById(Number(params.offerId));
+        if (!offerId) return;
+        const data = await getOfferById(Number(offerId));
         if (data) {
-          const itemsWithIds = data.items?.map((item: OfferItem, index: number) => ({
-            ...item,
-            id: item.id ?? index,
-          })) ?? [];
+          const itemsWithIds =
+            data.items?.map((item: OfferItem, index: number) => ({
+              ...item,
+              id: item.id ?? index,
+            })) ?? [];
           setOffer({ ...data, items: itemsWithIds });
         } else {
           setError("Ajánlat nem található.");
@@ -76,7 +79,7 @@ export default function BillingsDetailPage({ params }: { params: { offerId: stri
     return () => {
       clearSelectedItems();
     };
-  }, [params.offerId, clearSelectedItems]);
+  }, [offerId, clearSelectedItems]);
 
   const currentTotal = totalSelectedPrice();
 
@@ -90,7 +93,7 @@ export default function BillingsDetailPage({ params }: { params: { offerId: stri
         items: selectedItems,
       });
       if (result.success) {
-        router.push("/billings/my-invoices");
+        router.push(`/billings/drafts/${result.billingId}`);
       } else {
         console.error("Failed to create billing:", result.error);
         // Optionally, show an error message to the user
@@ -107,7 +110,9 @@ export default function BillingsDetailPage({ params }: { params: { offerId: stri
           <Link href="/billings" className="p-2">
             <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
-          <h1 className="text-xl font-bold text-gray-800 truncate">{offer?.title || 'Számla létrehozása'}</h1>
+          <h1 className="text-xl font-bold text-gray-800 truncate">
+            {offer?.title || "Számla létrehozása"}
+          </h1>
           <div className="w-8"></div>
         </div>
 
@@ -118,21 +123,48 @@ export default function BillingsDetailPage({ params }: { params: { offerId: stri
             {offer.items?.map((item) => (
               <div
                 key={item.id}
-                className={`bg-white rounded-lg shadow-sm p-4 transition-all flex justify-between items-start ${isItemSelected(item.id!) ? 'ring-2 ring-blue-500' : ''}`}
+                className={`bg-white rounded-lg shadow-sm p-4 transition-all flex justify-between items-start ${isItemSelected(item.id!) ? "ring-2 ring-blue-500" : ""}`}
               >
                 <div className="flex-1 pr-4">
-                  <label htmlFor={`item-${item.id}`} className="font-medium text-gray-800 cursor-pointer">{item.name}</label>
+                  <label
+                    htmlFor={`item-${item.id}`}
+                    className="font-medium text-gray-800 cursor-pointer"
+                  >
+                    {item.name}
+                  </label>
                   <div className="mt-3 text-sm text-gray-600 space-y-1">
                     <div className="flex justify-between">
                       <span>Munkadíj:</span>
-                      <span>{new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(item.workTotal ?? 0)}</span>
+                      <span>
+                        {new Intl.NumberFormat("hu-HU", {
+                          style: "currency",
+                          currency: "HUF",
+                          maximumFractionDigits: 0,
+                        }).format(item.workTotal ?? 0)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span>Anyagköltség:</span>
-                      <span>{new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(item.materialTotal ?? 0)}</span>
+                      <span>
+                        {new Intl.NumberFormat("hu-HU", {
+                          style: "currency",
+                          currency: "HUF",
+                          maximumFractionDigits: 0,
+                        }).format(item.materialTotal ?? 0)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-xs text-gray-500">
-                      <span>({item.quantity} {item.unit} x {new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(item.unitPrice + (item.materialUnitPrice ?? 0))})</span>
+                      <span>
+                        ({item.quantity} {item.unit} x{" "}
+                        {new Intl.NumberFormat("hu-HU", {
+                          style: "currency",
+                          currency: "HUF",
+                          maximumFractionDigits: 0,
+                        }).format(
+                          item.unitPrice + (item.materialUnitPrice ?? 0)
+                        )}
+                        )
+                      </span>
                     </div>
                   </div>
                   <div className="flex justify-between items-end mt-3 border-t pt-2">
@@ -164,12 +196,21 @@ export default function BillingsDetailPage({ params }: { params: { offerId: stri
             <div className="max-w-4xl mx-auto">
               <div className="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
                 <div>
-                  <p className="text-sm text-gray-600">Kiválasztott tételek ({selectedItems.length})</p>
+                  <p className="text-sm text-gray-600">
+                    Kiválasztott tételek ({selectedItems.length})
+                  </p>
                   <p className="text-xl font-bold text-gray-900">
-                    {new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(currentTotal)}
+                    {new Intl.NumberFormat("hu-HU", {
+                      style: "currency",
+                      currency: "HUF",
+                      maximumFractionDigits: 0,
+                    }).format(currentTotal)}
                   </p>
                 </div>
-                <Button onClick={handleCreateBilling} disabled={selectedItems.length === 0}>
+                <Button
+                  onClick={handleCreateBilling}
+                  disabled={selectedItems.length === 0}
+                >
                   Számla létrehozása
                 </Button>
               </div>

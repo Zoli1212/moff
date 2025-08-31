@@ -570,5 +570,6 @@ model Billing {
   invoiceNumber  String?     // Hivatalos számlaszám
   issuedDate     DateTime?   // Kiállítás dátuma
   dueDate        DateTime?   // Fizetési határidő
+  invoicePdfUrl  String?     // Számla PDF linkje
 }
 
