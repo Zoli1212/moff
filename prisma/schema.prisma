@@ -138,6 +138,7 @@ model Offer {
   createdBy      String?
   tenantEmail    String      @default("")
   work           Work?       @relation("OfferWork")
+  billings       Billing[]   // Kapcsolat az új Billing modellhez
   
   @@unique([recordId])
 }
@@ -550,5 +551,24 @@ model TenantWorker {
   updatedAt     DateTime @updatedAt
 
   @@unique([tenantEmail, roleNormalized], map: "tenant_role_unique_norm")
+}
+
+model Billing {
+  id             Int         @id @default(autoincrement())
+  title          String
+  description    String?
+  totalPrice     Float
+  status         String      @default("draft") // Lehetséges állapotok: draft, sent, paid, overdue
+  offerId        Int         // Kapcsolat az eredeti ajánlathoz
+  offer          Offer       @relation(fields: [offerId], references: [id])
+  items          Json?       // Ugyanaz a struktúra, mint az Offer.items
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  createdBy      String?
+  tenantEmail    String      @default("")
+  invoiceNumber  String?     // Hivatalos számlaszám
+  issuedDate     DateTime?   // Kiállítás dátuma
+  dueDate        DateTime?   // Fizetési határidő
 }
 

@@ -93,11 +93,11 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
     // Parse the offer content (could be JSON or raw text)
     let parsedContent: ParsedOfferContent;
-    console.log("OfferContent", offerContent, typeof offerContent, 'ENDRAW');
+    console.log("OfferContent", offerContent, typeof offerContent, "ENDRAW");
     try {
       parsedContent = JSON.parse(offerContent) as ParsedOfferContent;
     } catch (e) {
-      console.log("OfferContent", offerContent, typeof offerContent, 'ENDTEXT');
+      console.log("OfferContent", offerContent, typeof offerContent, "ENDTEXT");
       // If not valid JSON, try to parse as raw text
       parsedContent = formatOfferForSave(parseOfferText(offerContent));
     }
@@ -251,7 +251,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     if (existingWork) {
       // Use existing work
 
-      console.log(existingWork, 'EXISTINGWORK')
+      console.log(existingWork, "EXISTINGWORK");
       work = existingWork;
     } else {
       const finalTitle = title && title.trim() !== "" ? title : uuidv4();
@@ -299,9 +299,8 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       ? latestRequirement.versionNumber + 1
       : 1;
 
-
-    console.log(latestRequirement, 'LATESTREQUIREMENT', newVersionNumber)
-    console.log(work.title, 'WORK TITLE')
+    console.log(latestRequirement, "LATESTREQUIREMENT", newVersionNumber);
+    console.log(work.title, "WORK TITLE");
 
     // Prepare requirement data
     const requirementData = {
@@ -576,7 +575,26 @@ export async function getOfferById(id: number) {
     }
 
     // Parse items and notes if they exist
-    const items = offer.items ? JSON.parse(offer.items as string) : [];
+    const items = (offer.items ? JSON.parse(offer.items as string) : []).map((item: any) => {
+      const quantity = parseFloat(item.quantity) || 0;
+      const unitPrice = parseFloat(item.unitPrice) || 0; // This is work unit price
+      const materialUnitPrice = parseFloat(item.materialUnitPrice) || 0;
+
+      // Calculate totals, ensuring they are numbers
+      const workTotal = quantity * unitPrice;
+      const materialTotal = quantity * materialUnitPrice;
+      const totalPrice = workTotal + materialTotal;
+
+      return {
+        ...item,
+        quantity,
+        unitPrice, // Munkadíj egységár
+        materialUnitPrice, // Anyag egységár
+        workTotal, // Munkadíj összesen
+        materialTotal, // Anyagköltség összesen
+        totalPrice, // Teljes ár (munkadíj + anyag)
+      };
+    });
     const notes = offer.notes ? JSON.parse(offer.notes as string) : [];
 
     // Log the parsed data for debugging
@@ -729,8 +747,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 }
 
 export async function updateOfferStatus(offerId: number, status: string) {
-
-  console.log(offerId, 'OFFERID')
+  console.log(offerId, "OFFERID");
   try {
     const user = await currentUser();
     if (!user) {
@@ -739,94 +756,97 @@ export async function updateOfferStatus(offerId: number, status: string) {
 
     // 1. Ellenőrizzük, hogy létezik-e már work ehhez az ajánlathoz
     const existingWork = await prisma.work.findFirst({
-      where: { offerId }
+      where: { offerId },
     });
 
     // 2. Lekérjük az ajánlatot a requirementtel együtt
     const offer = await prisma.offer.findUnique({
       where: { id: offerId },
       include: {
-        requirement: {
-         
-        }
-      }
+        requirement: {},
+      },
     });
 
     if (!offer) {
       return { success: false, message: "Az ajánlat nem található!" };
     }
 
-
-
     // 4. Tranzakció kezdete
     const result = await prisma.$transaction(async (tx) => {
       // 4.1. Frissítjük az ajánlat státuszát
       const updatedOffer = await tx.offer.update({
         where: { id: offerId },
-        data: { 
+        data: {
           status,
-          updatedAt: new Date() 
-        }
+          updatedAt: new Date(),
+        },
       });
 
       // 4.2. Munka státusz logika (logikai törlés/aktiválás)
-      if (status === 'work') {
+      if (status === "work") {
         if (existingWork) {
           // Ha már van work, csak aktiváljuk
           await tx.work.update({
             where: { id: existingWork.id },
-            data: { isActive: true }
+            data: { isActive: true },
           });
         } else {
           // Ha nincs, mindig létrehozzuk
-          const workTitle = offer.title || 'Új munka';
+          const workTitle = offer.title || "Új munka";
           await tx.work.create({
             data: {
               offerId: updatedOffer.id,
-              status: 'pending',
+              status: "pending",
               title: workTitle,
               offerDescription: offer.description || null,
-              location: offer.title || 'N/A',
+              location: offer.title || "N/A",
               totalWorkers: 0,
               totalLaborCost: 0,
               totalTools: 0,
               totalToolCost: 0,
-              totalMaterials:  0,
-              totalMaterialCost: offer.materialTotal ? Number(offer.materialTotal) : 0,
-              estimatedDuration: '0',
+              totalMaterials: 0,
+              totalMaterialCost: offer.materialTotal
+                ? Number(offer.materialTotal)
+                : 0,
+              estimatedDuration: "0",
               progress: 0,
-              tenantEmail: user.primaryEmailAddress?.emailAddress || '',
-              offerItems: offer.items ? JSON.parse(JSON.stringify(offer.items)) : null,
-              isActive: true
-            }
+              tenantEmail: user.primaryEmailAddress?.emailAddress || "",
+              offerItems: offer.items
+                ? JSON.parse(JSON.stringify(offer.items))
+                : null,
+              isActive: true,
+            },
           });
         }
-      } else if (status === 'draft' && existingWork) {
+      } else if (status === "draft" && existingWork) {
         // Ha draftba állítjuk, csak logikailag inaktiváljuk
         await tx.work.update({
           where: { id: existingWork.id },
-          data: { isActive: false }
+          data: { isActive: false },
         });
       }
-      
+
       return updatedOffer;
     });
 
     // 5. Cache frissítése
     revalidatePath(`/dashboard/offers/${offerId}`);
-    revalidatePath('/dashboard/offers');
-    revalidatePath('/works');
+    revalidatePath("/dashboard/offers");
+    revalidatePath("/works");
 
-    return { 
-      success: true, 
-      message: `Az ajánlat sikeresen ${status === 'work' ? 'munkába állítva' : 'frissítve'}!`,
-      offer: result
+    return {
+      success: true,
+      message: `Az ajánlat sikeresen ${status === "work" ? "munkába állítva" : "frissítve"}!`,
+      offer: result,
     };
   } catch (error) {
     console.error("Hiba az állapot frissítésekor:", error);
-    return { 
-      success: false, 
-      message: error instanceof Error ? error.message : "Ismeretlen hiba történt az állapot frissítésekor" 
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt az állapot frissítésekor",
     };
   }
 }

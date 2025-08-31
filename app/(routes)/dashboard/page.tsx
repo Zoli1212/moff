@@ -57,7 +57,7 @@ export default function Dashboard() {
           position={positions.billings}
           onPositionChange={(x, y) => updatePosition('billings', x, y)}
         >
-          <Link href="/dashboard/billings" className="block w-20 h-20">
+          <Link href="/billings" className="block w-20 h-20">
             <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
               <DollarSign className="text-orange-500" size={32} />
             </div>
