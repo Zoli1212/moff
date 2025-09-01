@@ -46,7 +46,12 @@ export default function BillingDraftPage() {
         const data = await getBillingById(billingId);
         if (data) {
           setBilling(data as Billing);
-          setEditableItems(data.items || []);
+          setEditableItems(
+            (data.items || []).map((item: OfferItem) => ({
+              ...item,
+              id: item.id || Math.random(),
+            }))
+          );
         } else {
           setError("Számlapiszkozat nem található.");
         }
@@ -63,7 +68,12 @@ export default function BillingDraftPage() {
 
   useEffect(() => {
     if (billing) {
-      setEditableItems(billing.items || []);
+      setEditableItems(
+        (billing.items || []).map((item: OfferItem) => ({
+          ...item,
+          id: item.id || Math.random(),
+        }))
+      );
     }
   }, [billing]);
 
@@ -129,7 +139,7 @@ export default function BillingDraftPage() {
           };
           setBilling(updatedBilling);
           setEditableItems(
-            parsedItems.map((item: any) => ({
+            parsedItems.map((item: OfferItem) => ({
               ...item,
               id: item.id || Math.random(),
             }))
@@ -139,6 +149,7 @@ export default function BillingDraftPage() {
         toast.error(result.error || "Hiba történt a mentés során.");
       }
     } catch (err) {
+      console.log(err)
       toast.error("Váratlan hiba történt a mentés során.");
     } finally {
       setIsSaving(false);
@@ -200,6 +211,7 @@ export default function BillingDraftPage() {
       }
     } catch (err) {
       setError("Hiba történt a számla véglegesítésekor.");
+      console.log(err)
       toast.error("Hiba történt a számla véglegesítésekor.");
     } finally {
       setIsFinalizing(false);

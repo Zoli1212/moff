@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { OfferItem } from "@/types/offer.types";
 import { Pencil, Plus, Trash2 } from "lucide-react";
