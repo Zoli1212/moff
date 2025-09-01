@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { getBillingById, updateBilling, finalizeAndGenerateInvoice } from "@/actions/billing-actions";
+import {
+  getBillingById,
+  updateBilling,
+  finalizeAndGenerateInvoice,
+} from "@/actions/billing-actions";
 
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save } from "lucide-react";
@@ -10,7 +14,8 @@ import Link from "next/link";
 
 import { OfferItem } from "@/types/offer.types";
 import { toast } from "sonner";
-import { BillingItems } from "../../[offerId]/_components/BillingItems";
+import { InvoiceItemsTable } from "./_components/InvoiceItemsTable";
+import { FinalizedInvoiceItems } from "./_components/FinalizedInvoiceItems";
 
 interface Billing {
   id: number;
@@ -64,16 +69,18 @@ export default function BillingDraftPage() {
 
   const total = useMemo(() => {
     return editableItems
-      .filter(item => item.isSelected)
+      .filter((item) => item.isSelected)
       .reduce((acc, item) => {
-        const materialTotal = parseFloat(String(item.materialTotal).replace(/[^0-9.-]+/g, '')) || 0;
-        const workTotal = parseFloat(String(item.workTotal).replace(/[^0-9.-]+/g, '')) || 0;
+        const materialTotal =
+          parseFloat(String(item.materialTotal).replace(/[^0-9.-]+/g, "")) || 0;
+        const workTotal =
+          parseFloat(String(item.workTotal).replace(/[^0-9.-]+/g, "")) || 0;
         return acc + materialTotal + workTotal;
-    }, 0);
+      }, 0);
   }, [editableItems]);
 
   const hasSelectedItems = useMemo(() => {
-    return editableItems.some(item => item.isSelected);
+    return editableItems.some((item) => item.isSelected);
   }, [editableItems]);
 
   const handleUpdateBilling = async () => {
@@ -82,36 +89,51 @@ export default function BillingDraftPage() {
 
     const parseCurrency = (value: string | undefined): number => {
       if (!value) return 0;
-      const numericValue = String(value).replace(/[^0-9,-]+/g, "").replace(",", ".");
+      const numericValue = String(value)
+        .replace(/[^0-9,-]+/g, "")
+        .replace(",", ".");
       return parseFloat(numericValue) || 0;
     };
 
-    const itemsToSave = editableItems.filter(item => item.isSelected).map(item => {
-      const materialTotal = parseCurrency(item.materialTotal);
-      const workTotal = parseCurrency(item.workTotal);
-      return {
-        ...item,
-        quantity: parseFloat(String(item.quantity).replace(',', '.')) || 0,
-        unitPrice: parseCurrency(item.unitPrice),
-        materialUnitPrice: parseCurrency(item.materialUnitPrice),
-        workTotal: workTotal,
-        materialTotal: materialTotal,
-        totalPrice: materialTotal + workTotal,
-      };
-    });
+    const itemsToSave = editableItems
+      .filter((item) => item.isSelected)
+      .map((item) => {
+        const materialTotal = parseCurrency(item.materialTotal);
+        const workTotal = parseCurrency(item.workTotal);
+        return {
+          ...item,
+          quantity: parseFloat(String(item.quantity).replace(",", ".")) || 0,
+          unitPrice: parseCurrency(item.unitPrice),
+          materialUnitPrice: parseCurrency(item.materialUnitPrice),
+          workTotal: workTotal,
+          materialTotal: materialTotal,
+          totalPrice: materialTotal + workTotal,
+        };
+      });
 
     try {
-      const result = await updateBilling(billing.id, { title: billing.title, items: itemsToSave });
+      const result = await updateBilling(billing.id, {
+        title: billing.title,
+        items: itemsToSave,
+      });
       if (result.success) {
         toast.success("Számlatervezet sikeresen frissítve!");
         if (result.billing) {
-          const parsedItems = typeof result.billing.items === 'string' ? JSON.parse(result.billing.items) : result.billing.items;
+          const parsedItems =
+            typeof result.billing.items === "string"
+              ? JSON.parse(result.billing.items)
+              : result.billing.items;
           const updatedBilling: Billing = {
             ...result.billing,
             items: parsedItems,
           };
           setBilling(updatedBilling);
-          setEditableItems(parsedItems.map((item: any) => ({...item, id: item.id || Math.random() })));
+          setEditableItems(
+            parsedItems.map((item: any) => ({
+              ...item,
+              id: item.id || Math.random(),
+            }))
+          );
         }
       } else {
         toast.error(result.error || "Hiba történt a mentés során.");
@@ -131,28 +153,38 @@ export default function BillingDraftPage() {
       // First, save the current state of selected items to ensure consistency
       const parseCurrency = (value: string | undefined): number => {
         if (!value) return 0;
-        const numericValue = String(value).replace(/[^0-9,-]+/g, "").replace(",", ".");
+        const numericValue = String(value)
+          .replace(/[^0-9,-]+/g, "")
+          .replace(",", ".");
         return parseFloat(numericValue) || 0;
       };
 
-      const itemsToSave = editableItems.filter(item => item.isSelected).map(item => {
-        const materialTotal = parseCurrency(item.materialTotal);
-        const workTotal = parseCurrency(item.workTotal);
-        return {
-          ...item,
-          quantity: parseFloat(String(item.quantity).replace(',', '.')) || 0,
-          unitPrice: parseCurrency(item.unitPrice),
-          materialUnitPrice: parseCurrency(item.materialUnitPrice),
-          workTotal: workTotal,
-          materialTotal: materialTotal,
-          totalPrice: materialTotal + workTotal,
-        };
+      const itemsToSave = editableItems
+        .filter((item) => item.isSelected)
+        .map((item) => {
+          const materialTotal = parseCurrency(item.materialTotal);
+          const workTotal = parseCurrency(item.workTotal);
+          return {
+            ...item,
+            quantity: parseFloat(String(item.quantity).replace(",", ".")) || 0,
+            unitPrice: parseCurrency(item.unitPrice),
+            materialUnitPrice: parseCurrency(item.materialUnitPrice),
+            workTotal: workTotal,
+            materialTotal: materialTotal,
+            totalPrice: materialTotal + workTotal,
+          };
+        });
+
+      const updateResult = await updateBilling(billing.id, {
+        title: billing.title,
+        items: itemsToSave,
       });
 
-      const updateResult = await updateBilling(billing.id, { title: billing.title, items: itemsToSave });
-
       if (!updateResult.success) {
-        toast.error(updateResult.error || "Hiba történt a piszkozat mentésekor a véglegesítés előtt.");
+        toast.error(
+          updateResult.error ||
+            "Hiba történt a piszkozat mentésekor a véglegesítés előtt."
+        );
         setIsFinalizing(false);
         return;
       }
@@ -216,13 +248,21 @@ export default function BillingDraftPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {billing.status === 'draft' && hasSelectedItems && (
+              {billing.status === "draft" && hasSelectedItems && (
                 <>
-                  <Button onClick={handleUpdateBilling} disabled={isSaving} size="sm">
+                  <Button
+                    onClick={handleUpdateBilling}
+                    disabled={isSaving}
+                    size="sm"
+                  >
                     <Save className="h-4 w-4 mr-2" />
-                    {isSaving ? 'Mentés...' : 'Piszkozat mentése'}
+                    {isSaving ? "Mentés..." : "Piszkozat mentése"}
                   </Button>
-                  <Button onClick={handleFinalize} disabled={isFinalizing} size="sm">
+                  <Button
+                    onClick={handleFinalize}
+                    disabled={isFinalizing}
+                    size="sm"
+                  >
                     {isFinalizing
                       ? "Véglegesítés..."
                       : "Jóváhagyás és Számla Kiállítása"}
@@ -232,20 +272,16 @@ export default function BillingDraftPage() {
             </div>
           </div>
 
-          {billing.status === 'draft' ? (
-            <BillingItems items={editableItems} onItemsChange={setEditableItems} />
+          {billing.status === "draft" ? (
+            <InvoiceItemsTable items={editableItems} onItemsChange={setEditableItems} />
           ) : (
-            <div className="space-y-3 mb-4">
-              {editableItems.map((item, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
-                  {/* Static view for finalized bills */}
-                </div>
-              ))}
-            </div>
+            <FinalizedInvoiceItems items={editableItems} />
           )}
 
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
-            <span className="text-lg font-bold text-gray-800">Teljes összeg:</span>
+            <span className="text-lg font-bold text-gray-800">
+              Teljes összeg:
+            </span>
             <span className="text-xl font-bold text-gray-900">
               {new Intl.NumberFormat("hu-HU", {
                 style: "currency",
