@@ -1,32 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import {
-  getBillingById,
-  finalizeAndGenerateInvoice,
-} from "@/actions/billing-actions";
+import { getBillingById, updateBilling, finalizeAndGenerateInvoice } from "@/actions/billing-actions";
+
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 
-interface BillingItem {
-  id?: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number;
-  workTotal?: number;
-  materialTotal?: number;
-  totalPrice: number;
-  description?: string;
-}
+import { OfferItem } from "@/types/offer.types";
+import { toast } from "sonner";
+import { BillingItems } from "../../[offerId]/_components/BillingItems";
 
 interface Billing {
   id: number;
   title: string;
   status: string;
-  items: BillingItem[];
+  items: OfferItem[];
   totalPrice: number;
   invoiceNumber?: string | null;
   invoicePdfUrl?: string | null;
@@ -35,9 +25,11 @@ interface Billing {
 
 export default function BillingDraftPage() {
   const params = useParams();
-  const billingId = params.billingId as string;
+  const billingId = Number(params.billingId as string);
   const [billing, setBilling] = useState<Billing | null>(null);
+  const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
 
@@ -46,9 +38,10 @@ export default function BillingDraftPage() {
       try {
         setLoading(true);
         if (!billingId) return;
-        const data = await getBillingById(Number(billingId));
+        const data = await getBillingById(billingId);
         if (data) {
-          setBilling(data);
+          setBilling(data as Billing);
+          setEditableItems(data.items || []);
         } else {
           setError("Számlapiszkozat nem található.");
         }
@@ -63,20 +56,119 @@ export default function BillingDraftPage() {
     fetchBilling();
   }, [billingId]);
 
+  useEffect(() => {
+    if (billing) {
+      setEditableItems(billing.items || []);
+    }
+  }, [billing]);
+
+  const total = useMemo(() => {
+    return editableItems
+      .filter(item => item.isSelected)
+      .reduce((acc, item) => {
+        const materialTotal = parseFloat(String(item.materialTotal).replace(/[^0-9.-]+/g, '')) || 0;
+        const workTotal = parseFloat(String(item.workTotal).replace(/[^0-9.-]+/g, '')) || 0;
+        return acc + materialTotal + workTotal;
+    }, 0);
+  }, [editableItems]);
+
+  const hasSelectedItems = useMemo(() => {
+    return editableItems.some(item => item.isSelected);
+  }, [editableItems]);
+
+  const handleUpdateBilling = async () => {
+    if (!billing) return;
+    setIsSaving(true);
+
+    const parseCurrency = (value: string | undefined): number => {
+      if (!value) return 0;
+      const numericValue = String(value).replace(/[^0-9,-]+/g, "").replace(",", ".");
+      return parseFloat(numericValue) || 0;
+    };
+
+    const itemsToSave = editableItems.filter(item => item.isSelected).map(item => {
+      const materialTotal = parseCurrency(item.materialTotal);
+      const workTotal = parseCurrency(item.workTotal);
+      return {
+        ...item,
+        quantity: parseFloat(String(item.quantity).replace(',', '.')) || 0,
+        unitPrice: parseCurrency(item.unitPrice),
+        materialUnitPrice: parseCurrency(item.materialUnitPrice),
+        workTotal: workTotal,
+        materialTotal: materialTotal,
+        totalPrice: materialTotal + workTotal,
+      };
+    });
+
+    try {
+      const result = await updateBilling(billing.id, { title: billing.title, items: itemsToSave });
+      if (result.success) {
+        toast.success("Számlatervezet sikeresen frissítve!");
+        if (result.billing) {
+          const parsedItems = typeof result.billing.items === 'string' ? JSON.parse(result.billing.items) : result.billing.items;
+          const updatedBilling: Billing = {
+            ...result.billing,
+            items: parsedItems,
+          };
+          setBilling(updatedBilling);
+          setEditableItems(parsedItems.map((item: any) => ({...item, id: item.id || Math.random() })));
+        }
+      } else {
+        toast.error(result.error || "Hiba történt a mentés során.");
+      }
+    } catch (err) {
+      toast.error("Váratlan hiba történt a mentés során.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleFinalize = async () => {
     if (!billing) return;
 
     setIsFinalizing(true);
     try {
+      // First, save the current state of selected items to ensure consistency
+      const parseCurrency = (value: string | undefined): number => {
+        if (!value) return 0;
+        const numericValue = String(value).replace(/[^0-9,-]+/g, "").replace(",", ".");
+        return parseFloat(numericValue) || 0;
+      };
+
+      const itemsToSave = editableItems.filter(item => item.isSelected).map(item => {
+        const materialTotal = parseCurrency(item.materialTotal);
+        const workTotal = parseCurrency(item.workTotal);
+        return {
+          ...item,
+          quantity: parseFloat(String(item.quantity).replace(',', '.')) || 0,
+          unitPrice: parseCurrency(item.unitPrice),
+          materialUnitPrice: parseCurrency(item.materialUnitPrice),
+          workTotal: workTotal,
+          materialTotal: materialTotal,
+          totalPrice: materialTotal + workTotal,
+        };
+      });
+
+      const updateResult = await updateBilling(billing.id, { title: billing.title, items: itemsToSave });
+
+      if (!updateResult.success) {
+        toast.error(updateResult.error || "Hiba történt a piszkozat mentésekor a véglegesítés előtt.");
+        setIsFinalizing(false);
+        return;
+      }
+
+      // If save was successful, proceed to finalize
       const result = await finalizeAndGenerateInvoice(billing.id);
       if (result.success && result.updatedBilling) {
-        setBilling(result.updatedBilling);
-        // Optionally, show a success message
+        setBilling(result.updatedBilling as Billing);
+        toast.success("Számla sikeresen véglegesítve!");
       } else {
         setError(result.error || "A számla véglegesítése sikertelen.");
+        toast.error(result.error || "A számla véglegesítése sikertelen.");
       }
     } catch (err) {
       setError("Hiba történt a számla véglegesítésekor.");
+      toast.error("Hiba történt a számla véglegesítésekor.");
     } finally {
       setIsFinalizing(false);
     }
@@ -90,7 +182,7 @@ export default function BillingDraftPage() {
     <div className="min-h-screen w-full bg-gray-50 pt-4 pb-24">
       <main className="flex-grow w-full mx-auto px-4 max-w-4xl">
         <div className="flex items-center justify-between mb-6">
-          <Link href={`/billings/${billing.offerId}`} className="p-2">
+          <Link href={`/billings/my-invoices`} className="p-2">
             <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
           <h1 className="text-xl font-bold text-gray-800 truncate">
@@ -123,60 +215,43 @@ export default function BillingDraftPage() {
                 )}
               </div>
             </div>
-            {billing.status === "draft" && (
-              <Button onClick={handleFinalize} disabled={isFinalizing}>
-                {isFinalizing
-                  ? "Véglegesítés..."
-                  : "Jóváhagyás és Számla Kiállítása"}
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {billing.status === 'draft' && hasSelectedItems && (
+                <>
+                  <Button onClick={handleUpdateBilling} disabled={isSaving} size="sm">
+                    <Save className="h-4 w-4 mr-2" />
+                    {isSaving ? 'Mentés...' : 'Piszkozat mentése'}
+                  </Button>
+                  <Button onClick={handleFinalize} disabled={isFinalizing} size="sm">
+                    {isFinalizing
+                      ? "Véglegesítés..."
+                      : "Jóváhagyás és Számla Kiállítása"}
+                  </Button>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="space-y-3 mb-4">
-            {billing.items.map((item, index) => (
-              <div
-                key={index}
-                className="flex justify-between items-center py-2 border-b last:border-0"
-              >
-                <div className="flex-1 pr-4">
-                  <p className="font-medium text-gray-800">{item.name}</p>
-                  <div className="mt-3 text-sm text-gray-600 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Munkadíj:</span>
-                      <span>{new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(item.workTotal ?? 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Anyagköltség:</span>
-                      <span>{new Intl.NumberFormat("hu-HU", { style: "currency", currency: "HUF", maximumFractionDigits: 0 }).format(item.materialTotal ?? 0)}</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-end mt-3 border-t pt-2">
-                    <span className="text-sm font-semibold text-gray-600">
-                      Összesen:
-                    </span>
-                    <span className="font-semibold text-gray-900">
-                      {new Intl.NumberFormat("hu-HU", {
-                        style: "currency",
-                        currency: "HUF",
-                        maximumFractionDigits: 0,
-                      }).format(item.totalPrice ?? 0)}
-                    </span>
-                  </div>
+          {billing.status === 'draft' ? (
+            <BillingItems items={editableItems} onItemsChange={setEditableItems} />
+          ) : (
+            <div className="space-y-3 mb-4">
+              {editableItems.map((item, index) => (
+                <div key={index} className="flex justify-between items-center py-2 border-b last:border-0">
+                  {/* Static view for finalized bills */}
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
-            <span className="text-lg font-bold text-gray-800">
-              Teljes összeg:
-            </span>
+            <span className="text-lg font-bold text-gray-800">Teljes összeg:</span>
             <span className="text-xl font-bold text-gray-900">
               {new Intl.NumberFormat("hu-HU", {
                 style: "currency",
                 currency: "HUF",
                 maximumFractionDigits: 0,
-              }).format(billing.totalPrice)}
+              }).format(total)}
             </span>
           </div>
         </div>

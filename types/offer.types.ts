@@ -11,6 +11,7 @@ export interface OfferItem {
   workTotal: string;
   totalPrice?: string;
   description?: string;
+  isSelected?: boolean;
 }
 export interface OfferItemQuestion {
   id?: number;

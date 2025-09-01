@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getOfferById } from "@/actions/offer-actions";
 import { createBilling } from "@/actions/billing-actions";
@@ -8,21 +8,9 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-import { useBillingStore } from "@/store/billingStore";
-import { Checkbox } from "@/components/ui/checkbox";
+import { BillingItems } from "./_components/BillingItems";
+import { OfferItem } from "@/types/offer.types";
 
-interface OfferItem {
-  id?: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number; // Munkadíj egységár
-  materialUnitPrice?: number; // Anyag egységár
-  workTotal?: number; // Munkadíj összesen
-  materialTotal?: number; // Anyagköltség összesen
-  totalPrice: number; // Teljes ár
-  description?: string;
-}
 
 interface Offer {
   id: number;
@@ -41,13 +29,11 @@ export default function BillingsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const {
-    selectedItems,
-    toggleItem,
-    isItemSelected,
-    clearSelectedItems,
-    totalSelectedPrice,
-  } = useBillingStore();
+    const [billingItems, setBillingItems] = useState<OfferItem[]>([]);
+
+  const hasSelectedItems = useMemo(() => {
+    return billingItems.some(item => item.isSelected);
+  }, [billingItems]);
 
   useEffect(() => {
     const fetchOffer = async () => {
@@ -74,23 +60,42 @@ export default function BillingsDetailPage() {
     };
 
     fetchOffer();
+  }, [offerId]);
 
-    // Clear selected items on component unmount or offer change
-    return () => {
-      clearSelectedItems();
-    };
-  }, [offerId, clearSelectedItems]);
-
-  const currentTotal = totalSelectedPrice();
+  useEffect(() => {
+    if (offer) {
+      setBillingItems((offer.items || []).map(item => ({ ...item, isSelected: false })));
+    }
+  }, [offer]);
 
   const handleCreateBilling = async () => {
-    if (!offer || selectedItems.length === 0) return;
+    if (!offer || billingItems.length === 0) return;
+
+    const parseCurrency = (value: string | undefined): number => {
+      if (!value) return 0;
+      const numericValue = String(value).replace(/[^0-9,-]+/g, "").replace(",", ".");
+      return parseFloat(numericValue) || 0;
+    };
+
+    const itemsForBilling = billingItems.filter(item => item.isSelected).map(item => {
+      const materialTotal = parseCurrency(item.materialTotal);
+      const workTotal = parseCurrency(item.workTotal);
+      return {
+        ...item,
+        quantity: parseFloat(String(item.quantity).replace(',', '.')) || 0,
+        unitPrice: parseCurrency(item.unitPrice),
+        materialUnitPrice: parseCurrency(item.materialUnitPrice),
+        workTotal: workTotal,
+        materialTotal: materialTotal,
+        totalPrice: materialTotal + workTotal,
+      };
+    });
 
     try {
       const result = await createBilling({
         title: offer.title,
         offerId: offer.id,
-        items: selectedItems,
+        items: itemsForBilling,
       });
       if (result.success) {
         router.push(`/billings/drafts/${result.billingId}`);
@@ -119,101 +124,21 @@ export default function BillingsDetailPage() {
         {loading && <p>Betöltés...</p>}
         {error && <p className="text-red-500">{error}</p>}
         {offer && (
-          <div className="space-y-3">
-            {offer.items?.map((item) => (
-              <div
-                key={item.id}
-                className={`bg-white rounded-lg shadow-sm p-4 transition-all flex justify-between items-start ${isItemSelected(item.id!) ? "ring-2 ring-blue-500" : ""}`}
-              >
-                <div className="flex-1 pr-4">
-                  <label
-                    htmlFor={`item-${item.id}`}
-                    className="font-medium text-gray-800 cursor-pointer"
-                  >
-                    {item.name}
-                  </label>
-                  <div className="mt-3 text-sm text-gray-600 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Munkadíj:</span>
-                      <span>
-                        {new Intl.NumberFormat("hu-HU", {
-                          style: "currency",
-                          currency: "HUF",
-                          maximumFractionDigits: 0,
-                        }).format(item.workTotal ?? 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Anyagköltség:</span>
-                      <span>
-                        {new Intl.NumberFormat("hu-HU", {
-                          style: "currency",
-                          currency: "HUF",
-                          maximumFractionDigits: 0,
-                        }).format(item.materialTotal ?? 0)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-xs text-gray-500">
-                      <span>
-                        ({item.quantity} {item.unit} x{" "}
-                        {new Intl.NumberFormat("hu-HU", {
-                          style: "currency",
-                          currency: "HUF",
-                          maximumFractionDigits: 0,
-                        }).format(
-                          item.unitPrice + (item.materialUnitPrice ?? 0)
-                        )}
-                        )
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-end mt-3 border-t pt-2">
-                    <span className="text-sm font-semibold text-gray-600">
-                      Összesen:
-                    </span>
-                    <span className="font-semibold text-gray-900">
-                      {new Intl.NumberFormat("hu-HU", {
-                        style: "currency",
-                        currency: "HUF",
-                        maximumFractionDigits: 0,
-                      }).format(item.totalPrice ?? 0)}
-                    </span>
-                  </div>
-                </div>
-                <Checkbox
-                  id={`item-${item.id}`}
-                  checked={isItemSelected(item.id!)}
-                  onCheckedChange={() => toggleItem(item)}
-                  className="h-5 w-5"
-                />
-              </div>
-            ))}
-          </div>
+          <BillingItems 
+            items={billingItems} 
+            onItemsChange={setBillingItems} 
+          />
         )}
 
-        {selectedItems.length > 0 && (
-          <div className="mt-6">
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-gray-50 rounded-lg p-4 flex justify-between items-center">
-                <div>
-                  <p className="text-sm text-gray-600">
-                    Kiválasztott tételek ({selectedItems.length})
-                  </p>
-                  <p className="text-xl font-bold text-gray-900">
-                    {new Intl.NumberFormat("hu-HU", {
-                      style: "currency",
-                      currency: "HUF",
-                      maximumFractionDigits: 0,
-                    }).format(currentTotal)}
-                  </p>
-                </div>
+        {hasSelectedItems && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg-top">
+            <div className="max-w-7xl mx-auto flex justify-end">
                 <Button
                   onClick={handleCreateBilling}
-                  disabled={selectedItems.length === 0}
+                                    size="lg"
                 >
                   Számla létrehozása
                 </Button>
-              </div>
             </div>
           </div>
         )}

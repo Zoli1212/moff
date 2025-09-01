@@ -64,22 +64,22 @@ export async function getBillingById(id: number) {
         id,
         tenantEmail: userEmail,
       },
-      include: {
-        offer: true, // Assuming relation is set up
-      },
     });
 
     if (!billing) {
       return null;
     }
 
+    // Parse the items string into an array before returning
     return {
       ...billing,
       items: billing.items ? JSON.parse(billing.items as string) : [],
     };
+
   } catch (error) {
-    console.error("Error fetching billing by id:", error);
-    throw new Error("Failed to fetch billing");
+    console.error(`Error fetching billing by id: ${id}`, error);
+    // Return null or throw a more specific error to be handled by the client
+    return null;
   }
 }
 
@@ -247,6 +247,65 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Ismeretlen hiba történt a számla véglegesítésekor.",
+    };
+  }
+}
+
+export async function updateBilling(billingId: number, data: { title: string; items: OfferItem[] }) {
+  const { items, title } = data;
+
+  try {
+    const user = await currentUser();
+    const userEmail = user?.primaryEmailAddress?.emailAddress;
+
+    if (!userEmail) {
+      throw new Error("Nincs bejelentkezve felhasználó!");
+    }
+
+    if (!items || items.length === 0) {
+      throw new Error("Nincsenek tételek a számlához.");
+    }
+
+    const existingBilling = await prisma.billing.findFirst({
+      where: {
+        id: billingId,
+        tenantEmail: userEmail,
+      },
+    });
+
+    if (!existingBilling) {
+      throw new Error("Számlatervezet nem található.");
+    }
+
+    if (existingBilling.status !== 'draft') {
+        throw new Error("Csak a piszkozat állapotú számlák módosíthatók.");
+    }
+
+    const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
+
+    const updatedBilling = await prisma.billing.update({
+      where: {
+        id: billingId,
+      },
+      data: {
+        title,
+        items: JSON.stringify(items),
+        totalPrice,
+      },
+    });
+
+    revalidatePath(`/billings/drafts/${billingId}`);
+    revalidatePath("/billings/my-invoices");
+
+    return {
+      success: true,
+      billing: updatedBilling,
+    };
+  } catch (error) {
+    console.error("Error updating billing:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Ismeretlen hiba történt a számla frissítésekor.",
     };
   }
 }
