@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { BillingItems } from "./_components/BillingItems";
 import { OfferItem } from "@/types/offer.types";
 
-
 interface Offer {
   id: number;
   title: string;
@@ -29,10 +28,10 @@ export default function BillingsDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-    const [billingItems, setBillingItems] = useState<OfferItem[]>([]);
+  const [billingItems, setBillingItems] = useState<OfferItem[]>([]);
 
   const hasSelectedItems = useMemo(() => {
-    return billingItems.some(item => item.isSelected);
+    return billingItems.some((item) => item.isSelected);
   }, [billingItems]);
 
   useEffect(() => {
@@ -64,7 +63,9 @@ export default function BillingsDetailPage() {
 
   useEffect(() => {
     if (offer) {
-      setBillingItems((offer.items || []).map(item => ({ ...item, isSelected: false })));
+      setBillingItems(
+        (offer.items || []).map((item) => ({ ...item, isSelected: false }))
+      );
     }
   }, [offer]);
 
@@ -73,23 +74,27 @@ export default function BillingsDetailPage() {
 
     const parseCurrency = (value: string | undefined): number => {
       if (!value) return 0;
-      const numericValue = String(value).replace(/[^0-9,-]+/g, "").replace(",", ".");
+      const numericValue = String(value)
+        .replace(/[^0-9,-]+/g, "")
+        .replace(",", ".");
       return parseFloat(numericValue) || 0;
     };
 
-    const itemsForBilling = billingItems.filter(item => item.isSelected).map(item => {
-      const materialTotal = parseCurrency(item.materialTotal);
-      const workTotal = parseCurrency(item.workTotal);
-      return {
-        ...item,
-        quantity: parseFloat(String(item.quantity).replace(',', '.')) || 0,
-        unitPrice: parseCurrency(item.unitPrice),
-        materialUnitPrice: parseCurrency(item.materialUnitPrice),
-        workTotal: workTotal,
-        materialTotal: materialTotal,
-        totalPrice: materialTotal + workTotal,
-      };
-    });
+    const itemsForBilling = billingItems
+      .filter((item) => item.isSelected)
+      .map((item) => {
+        const materialTotal = parseCurrency(item.materialTotal);
+        const workTotal = parseCurrency(item.workTotal);
+        return {
+          ...item,
+          quantity: parseFloat(String(item.quantity).replace(",", ".")) || 0,
+          unitPrice: parseCurrency(item.unitPrice),
+          materialUnitPrice: parseCurrency(item.materialUnitPrice),
+          workTotal: workTotal,
+          materialTotal: materialTotal,
+          totalPrice: materialTotal + workTotal,
+        };
+      });
 
     try {
       const result = await createBilling({
@@ -124,23 +129,31 @@ export default function BillingsDetailPage() {
         {loading && <p>Betöltés...</p>}
         {error && <p className="text-red-500">{error}</p>}
         {offer && (
-          <BillingItems 
-            items={billingItems} 
-            onItemsChange={setBillingItems} 
-          />
+          <BillingItems items={billingItems} onItemsChange={setBillingItems} />
         )}
 
         {hasSelectedItems && (
-          <div className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg-top">
-            <div className="max-w-7xl mx-auto flex justify-end">
-                <Button
-                  onClick={handleCreateBilling}
-                                    size="lg"
-                >
+          <>
+            {/* Desktop view - bottom fixed bar */}
+            <div className="hidden sm:block fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg-top">
+              <div className="max-w-7xl mx-auto flex justify-end">
+                <Button onClick={handleCreateBilling} size="lg">
                   Számla létrehozása
                 </Button>
+              </div>
             </div>
-          </div>
+            
+            {/* Mobile view - floating bottom center button */}
+            <div className="sm:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 pointer-events-auto z-50">
+              <Button 
+                onClick={handleCreateBilling} 
+                size="lg"
+                className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8 py-4 text-lg font-semibold rounded-full"
+              >
+                Számla létrehozása
+              </Button>
+            </div>
+          </>
         )}
       </main>
     </div>

@@ -15,6 +15,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface BillingItemsProps {
   items: OfferItem[];
@@ -198,7 +199,10 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 <Input
                   id="materialUnitPrice"
                   value={formatNumberWithSpace(
-                    editingItem?.item.materialUnitPrice?.replace(/\s*Ft$/, "")
+                    String(editingItem?.item.materialUnitPrice ?? "").replace(
+                      /\s*Ft$/,
+                      ""
+                    )
                   )}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleModalChange(
@@ -219,7 +223,10 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 <Input
                   id="workUnitPrice"
                   value={formatNumberWithSpace(
-                    editingItem?.item.unitPrice?.replace(/\s*Ft$/, "")
+                    String(editingItem?.item.unitPrice ?? "").replace(
+                      /\s*Ft$/,
+                      ""
+                    )
                   )}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleModalChange(
@@ -236,7 +243,10 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               <Label className="text-right font-medium">Anyag összesen</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(
-                  editingItem?.item.materialTotal?.replace(/\s*Ft$/, "")
+                  String(editingItem?.item.materialTotal ?? "").replace(
+                    /\s*Ft$/,
+                    ""
+                  )
                 )}{" "}
                 Ft
               </div>
@@ -245,7 +255,10 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               <Label className="text-right font-medium">Díj összesen</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(
-                  editingItem?.item.workTotal?.replace(/\s*Ft$/, "")
+                  String(editingItem?.item.workTotal ?? "").replace(
+                    /\s*Ft$/,
+                    ""
+                  )
                 )}{" "}
                 Ft
               </div>
@@ -331,7 +344,9 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                   </Button>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+
+              {/* Desktop layout */}
+              <div className="mt-4 hidden sm:grid grid-cols-3 gap-4 text-sm">
                 <div className="col-span-1 font-medium text-gray-500">
                   Egységár ({item.unit})
                 </div>
@@ -355,6 +370,63 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 <div className="col-span-1 text-right font-semibold text-gray-900">
                   {formatCurrency(parseCurrency(item.workTotal || "0"))}
                 </div>
+              </div>
+
+              {/* Mobile layout */}
+              <div className="mt-4 sm:hidden space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="font-medium text-gray-500">Mennyiség:</span>
+                  <span className="font-semibold">
+                    {item.quantity} {item.unit}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">ANYAG</div>
+                    <div className="text-sm">
+                      {formatCurrency(
+                        parseCurrency(item.materialUnitPrice || "0")
+                      )}
+                      /db
+                    </div>
+                    <div className="font-semibold text-gray-900">
+                      {formatCurrency(parseCurrency(item.materialTotal || "0"))}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-gray-500 text-xs mb-1">MUNKADÍJ</div>
+                    <div className="text-sm">
+                      {formatCurrency(parseCurrency(item.unitPrice || "0"))}/db
+                    </div>
+                    <div className="font-semibold text-gray-900">
+                      {formatCurrency(parseCurrency(item.workTotal || "0"))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                <ProgressBar
+                  label="Teljes"
+                  value={item.billedQuantity || 0}
+                  max={Number(item.quantity) ?? 0}
+                  unit={item.unit}
+                  color="bg-blue-500"
+                />
+                <ProgressBar
+                  label="Számlázható"
+                  value={item.billableQuantity || 0}
+                  max={item.totalQuantity || 0}
+                  unit={item.unit}
+                  color="bg-yellow-500"
+                />
+                <ProgressBar
+                  label="Számlázott"
+                  value={item.billedQuantity || 0}
+                  max={item.billableQuantity || 0}
+                  unit={item.unit}
+                  color="bg-green-500"
+                />
               </div>
             </div>
           ))}

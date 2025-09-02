@@ -12,6 +12,9 @@ export interface OfferItem {
   totalPrice?: string;
   description?: string;
   isSelected?: boolean;
+  totalQuantity?: number;
+  billableQuantity?: number;
+  billedQuantity?: number;
 }
 export interface OfferItemQuestion {
   id?: number;

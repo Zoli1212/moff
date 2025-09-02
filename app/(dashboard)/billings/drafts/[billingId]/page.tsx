@@ -37,6 +37,8 @@ export default function BillingDraftPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
 
   useEffect(() => {
     const fetchBilling = async () => {
@@ -46,6 +48,7 @@ export default function BillingDraftPage() {
         const data = await getBillingById(billingId);
         if (data) {
           setBilling(data as Billing);
+          setEditedTitle(data.title);
           setEditableItems(
             (data.items || []).map((item: OfferItem) => ({
               ...item,
@@ -95,6 +98,12 @@ export default function BillingDraftPage() {
 
   const handleUpdateBilling = async () => {
     if (!billing) return;
+    
+    // Update the title if it was edited
+    if (editedTitle !== billing.title) {
+      const updatedBilling = { ...billing, title: editedTitle };
+      setBilling(updatedBilling);
+    }
     setIsSaving(true);
 
     const parseCurrency = (value: string | undefined): number => {
@@ -123,7 +132,7 @@ export default function BillingDraftPage() {
 
     try {
       const result = await updateBilling(billing.id, {
-        title: billing.title,
+        title: editedTitle,
         items: itemsToSave,
       });
       if (result.success) {
@@ -187,7 +196,7 @@ export default function BillingDraftPage() {
         });
 
       const updateResult = await updateBilling(billing.id, {
-        title: billing.title,
+        title: editedTitle,
         items: itemsToSave,
       });
 
@@ -223,49 +232,62 @@ export default function BillingDraftPage() {
   if (!billing) return <p>Nincs megjeleníthető adat.</p>;
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 pt-4 pb-24">
+    <div className="min-h-screen w-full bg-gray-50 pt-4 pb-24 sm:pb-16">
       <main className="flex-grow w-full mx-auto px-4 max-w-4xl">
+        {/* Back button and title */}
         <div className="flex items-center justify-between mb-6">
-          <Link href={`/billings/my-invoices`} className="p-2">
+          <Link href={`/billings/${billing?.offerId}`} className="p-2">
             <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
-          <h1 className="text-xl font-bold text-gray-800 truncate">
-            {billing.title}
-          </h1>
+          <div className="flex-1 px-2">
+            {isEditingTitle ? (
+              <input
+                type="text"
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onBlur={() => setIsEditingTitle(false)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setIsEditingTitle(false);
+                  }
+                }}
+                className="w-full text-center sm:text-left text-xl font-bold text-gray-800 bg-transparent border-b-2 border-blue-500 outline-none px-1"
+                autoFocus
+              />
+            ) : (
+              <h1 
+                className="text-center sm:text-left text-xl font-bold text-gray-800 truncate cursor-pointer hover:text-blue-600"
+                onClick={() => setIsEditingTitle(true)}
+              >
+                {billing.title}
+              </h1>
+            )}
+          </div>
           <div className="w-8"></div>
         </div>
 
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex justify-between items-center mb-4 pb-4 border-b">
-            <div>
-              <p className="text-sm text-gray-500">Státusz</p>
-              <div className="flex flex-col">
-                <p
-                  className={`font-semibold ${billing.status === "draft" ? "text-orange-500" : "text-green-600"}`}
-                >
-                  {billing.status === "draft"
-                    ? "Piszkozat"
-                    : `Számlázva (${billing.invoiceNumber})`}
-                </p>
-                {billing.invoicePdfUrl && (
-                  <a
-                    href={billing.invoicePdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-500 hover:underline"
-                  >
-                    Számla megtekintése
-                  </a>
-                )}
+          <div className="mb-4 pb-4 border-b">
+            {/* Status and action buttons */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
+              <div className="flex-shrink-0">
+                <span className="text-sm text-gray-500">
+                  Státusz: 
+                  <span className={`font-semibold ml-1 ${billing.status === "draft" ? "text-orange-500" : "text-green-600"}`}>
+                    {billing.status === "draft"
+                      ? "Piszkozat"
+                      : `Számlázva (${billing.invoiceNumber})`}
+                  </span>
+                </span>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
+              
               {billing.status === "draft" && hasSelectedItems && (
-                <>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
                     onClick={handleUpdateBilling}
                     disabled={isSaving}
                     size="sm"
+                    className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {isSaving ? "Mentés..." : "Piszkozat mentése"}
@@ -274,14 +296,28 @@ export default function BillingDraftPage() {
                     onClick={handleFinalize}
                     disabled={isFinalizing}
                     size="sm"
+                    className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
                   >
                     {isFinalizing
                       ? "Véglegesítés..."
                       : "Jóváhagyás és Számla Kiállítása"}
                   </Button>
-                </>
+                </div>
               )}
             </div>
+            
+            {billing.invoicePdfUrl && (
+              <div className="flex justify-center mt-3">
+                <a
+                  href={billing.invoicePdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  Számla megtekintése
+                </a>
+              </div>
+            )}
           </div>
 
           {billing.status === "draft" ? (

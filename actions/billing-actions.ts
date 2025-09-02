@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Client, Currency, Language, PaymentMethod } from '@/lib/szamlazz';
+import { Client, Currency, Language, PaymentMethod } from "@/lib/szamlazz";
 import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -35,7 +35,7 @@ export async function getBillings() {
         tenantEmail: userEmail,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
@@ -43,7 +43,6 @@ export async function getBillings() {
       ...billing,
       items: billing.items ? JSON.parse(billing.items as string) : [],
     }));
-
   } catch (error) {
     console.error("Error fetching billings:", error);
     throw new Error("Failed to fetch billings");
@@ -64,21 +63,58 @@ export async function getBillingById(id: number) {
         id,
         tenantEmail: userEmail,
       },
+      include: {
+        offer: {
+          include: {
+            work: {
+              include: {
+                workItems: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!billing) {
       return null;
     }
 
-    // Parse the items string into an array before returning
+    const otherFinalizedBillings = await prisma.billing.findMany({
+      where: {
+        offerId: billing.offerId,
+        status: "finalized",
+        id: { not: billing.id },
+      },
+    });
+
+    const billedQuantities: { [itemName: string]: number } = {};
+    otherFinalizedBillings.forEach((b) => {
+      const items = b.items ? JSON.parse(b.items as string) : [];
+      items.forEach((item: any) => {
+        billedQuantities[item.name] =
+          (billedQuantities[item.name] || 0) + (parseFloat(item.quantity) || 0);
+      });
+    });
+
+    const billItems = billing.items ? JSON.parse(billing.items as string) : [];
+
+    // Only return items that are actually in the billing draft
+    const finalItems = billItems.map((billItem: any) => {
+      const billedQuantity = billedQuantities[billItem.name] || 0;
+      
+      return {
+        ...billItem,
+        billedQuantity: billedQuantity,
+      };
+    });
+
     return {
       ...billing,
-      items: billing.items ? JSON.parse(billing.items as string) : [],
+      items: finalItems,
     };
-
   } catch (error) {
     console.error(`Error fetching billing by id: ${id}`, error);
-    // Return null or throw a more specific error to be handled by the client
     return null;
   }
 }
@@ -90,8 +126,11 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       throw new Error("Nincs bejelentkezve felhasználó!");
     }
 
-        const billing = await prisma.billing.findFirst({
-      where: { id: billingId, tenantEmail: user.primaryEmailAddress.emailAddress },
+    const billing = await prisma.billing.findFirst({
+      where: {
+        id: billingId,
+        tenantEmail: user.primaryEmailAddress.emailAddress,
+      },
       include: {
         offer: {
           include: {
@@ -105,37 +144,46 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       },
     });
 
-    if (!billing || !billing.offer || !billing.offer.requirement || !billing.offer.requirement.myWork) {
-      throw new Error("A számlázáshoz szükséges adatok hiányosak (ügyfél nem található).");
+    if (
+      !billing ||
+      !billing.offer ||
+      !billing.offer.requirement ||
+      !billing.offer.requirement.myWork
+    ) {
+      throw new Error(
+        "A számlázáshoz szükséges adatok hiányosak (ügyfél nem található)."
+      );
     }
 
     const customer = billing.offer.requirement.myWork;
 
     // More robust address parsing
-    const location = customer.location || '';
+    const location = customer.location || "";
     const zipMatch = location.match(/^\d{4}/);
-    const zip = zipMatch ? zipMatch[0] : '';
+    const zip = zipMatch ? zipMatch[0] : "";
     // Get everything after the zip code
     const addressWithoutZip = zip ? location.substring(4).trim() : location;
     // Find the first word that is likely a street suffix or contains a number (house number)
-    const cityEndIndex = addressWithoutZip.search(/\s(utca|út|tér|krt\.|u\.|I|V|X|\d+\.)/);
+    const cityEndIndex = addressWithoutZip.search(
+      /\s(utca|út|tér|krt\.|u\.|I|V|X|\d+\.)/
+    );
 
     let city = addressWithoutZip;
-    let street = '';
+    let street = "";
 
     if (cityEndIndex > 0) {
-        city = addressWithoutZip.substring(0, cityEndIndex).trim();
-        street = addressWithoutZip.substring(cityEndIndex).trim();
+      city = addressWithoutZip.substring(0, cityEndIndex).trim();
+      street = addressWithoutZip.substring(cityEndIndex).trim();
     } else {
-        // Fallback if a clear street part is not found, assume first word is city
-        const parts = addressWithoutZip.split(' ');
-        city = parts[0] || '';
-        street = parts.slice(1).join(' ');
+      // Fallback if a clear street part is not found, assume first word is city
+      const parts = addressWithoutZip.split(" ");
+      city = parts[0] || "";
+      street = parts.slice(1).join(" ");
     }
     const billingItems = JSON.parse(billing.items as string);
 
     const client = new Client({
-      key: process.env.SZAMLAZZHU_API_KEY || '',
+      key: process.env.SZAMLAZZHU_API_KEY || "",
     });
 
     const items = billingItems.flatMap((item: any) => {
@@ -199,30 +247,30 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       language: Language.HU,
       paymentMethod: PaymentMethod.Transfer,
       settled: false, // Assuming payment is not yet settled
-      comment: billing.notes || '',
+      comment: billing.notes || "",
       sendEmail: false, // Do not send email via szamlazz.hu
       customer: {
         name: customer.customerName,
-        email: customer.customerEmail || '',
+        email: customer.customerEmail || "",
         address: street,
         city: city,
         zip: zip,
-        country: 'HU',
-        taxNumber: '', // Tax number is not in MyWork
+        country: "HU",
+        taxNumber: "", // Tax number is not in MyWork
       },
       seller: {
-        bank: 'Magnet Bank',
-        bankAccount: '16200106-11663204-00000000',
-      }
+        bank: "Magnet Bank",
+        bankAccount: "16200106-11663204-00000000",
+      },
     };
 
     let result;
     try {
       result = await client.generateInvoice(invoiceData, items);
-      console.log('Invoice generated successfully:', result);
+      console.log("Invoice generated successfully:", result);
     } catch (error) {
-      console.error('Error generating invoice:', error);
-      return { success: false, error: 'Failed to generate invoice.' };
+      console.error("Error generating invoice:", error);
+      return { success: false, error: "Failed to generate invoice." };
     }
 
     const updatedBilling = await prisma.billing.update({
@@ -230,7 +278,7 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       data: {
         invoiceNumber: result.invoice.number,
         invoicePdfUrl: result.invoice.pdfUrl,
-        status: 'finalized',
+        status: "finalized",
       },
     });
 
@@ -238,20 +286,27 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       success: true,
       updatedBilling: {
         ...updatedBilling,
-        items: updatedBilling.items ? JSON.parse(updatedBilling.items as string) : [],
+        items: updatedBilling.items
+          ? JSON.parse(updatedBilling.items as string)
+          : [],
       },
     };
-
   } catch (error) {
     console.error("Error finalizing billing:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Ismeretlen hiba történt a számla véglegesítésekor.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a számla véglegesítésekor.",
     };
   }
 }
 
-export async function updateBilling(billingId: number, data: { title: string; items: OfferItem[] }) {
+export async function updateBilling(
+  billingId: number,
+  data: { title: string; items: OfferItem[] }
+) {
   const { items, title } = data;
 
   try {
@@ -277,8 +332,8 @@ export async function updateBilling(billingId: number, data: { title: string; it
       throw new Error("Számlatervezet nem található.");
     }
 
-    if (existingBilling.status !== 'draft') {
-        throw new Error("Csak a piszkozat állapotú számlák módosíthatók.");
+    if (existingBilling.status !== "draft") {
+      throw new Error("Csak a piszkozat állapotú számlák módosíthatók.");
     }
 
     const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
@@ -305,7 +360,10 @@ export async function updateBilling(billingId: number, data: { title: string; it
     console.error("Error updating billing:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Ismeretlen hiba történt a számla frissítésekor.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a számla frissítésekor.",
     };
   }
 }
@@ -348,7 +406,10 @@ export async function createBilling(data: CreateBillingData) {
     console.error("Error creating billing:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Ismeretlen hiba történt a számla létrehozásakor.",
+      error:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a számla létrehozásakor.",
     };
   }
 }

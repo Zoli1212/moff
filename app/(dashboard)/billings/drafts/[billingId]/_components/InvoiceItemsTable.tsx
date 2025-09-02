@@ -109,7 +109,8 @@ export function InvoiceItemsTable({ items, onItemsChange }: InvoiceItemsTablePro
         </Button>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      {/* Desktop Table View */}
+      <div className="hidden sm:block border rounded-lg overflow-hidden">
         <Table>
           <TableHeader className="bg-gray-50">
             <TableRow>
@@ -180,6 +181,149 @@ export function InvoiceItemsTable({ items, onItemsChange }: InvoiceItemsTablePro
             })}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="sm:hidden space-y-4">
+        <div className="flex items-center gap-3 p-3 border rounded-md bg-gray-50">
+          <Checkbox
+            id="select-all-mobile"
+            checked={items.length > 0 && items.every(item => item.isSelected)}
+            onCheckedChange={(checked) => handleToggleSelectAll(checked === 'indeterminate' ? false : !!checked)}
+          />
+          <label htmlFor="select-all-mobile" className="font-medium text-sm text-gray-700">
+            Összes kijelölése
+          </label>
+        </div>
+
+        {items.map((item, index) => {
+          const isEditing = editingIndex === index;
+          const currentItem = isEditing && editedItem ? editedItem : item;
+
+          return (
+            <div
+              key={item.id}
+              className={`border rounded-lg p-4 ${item.isSelected ? 'bg-blue-50/50 border-blue-200' : 'bg-gray-50/50'}`}
+            >
+              {isEditing ? (
+                // EDITING CARD
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="font-medium text-gray-800">Tétel szerkesztése</h4>
+                    <div className="flex gap-1">
+                      <Button size="icon" variant="ghost" onClick={saveItem}>
+                        <Save className="h-4 w-4 text-green-600" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={cancelEditing}>
+                        <X className="h-4 w-4 text-gray-500" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-500">Megnevezés</label>
+                      <Input 
+                        value={currentItem.name} 
+                        onChange={e => handleFieldChange('name', e.target.value)} 
+                        placeholder="Tétel neve" 
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Mennyiség</label>
+                        <Input 
+                          value={currentItem.quantity} 
+                          onChange={e => handleFieldChange('quantity', e.target.value)} 
+                          placeholder="0" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Egység</label>
+                        <Input 
+                          value={currentItem.unit} 
+                          onChange={e => handleFieldChange('unit', e.target.value)} 
+                          placeholder="db" 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Anyag egységár</label>
+                        <Input 
+                          value={String(currentItem.materialUnitPrice)} 
+                          onChange={e => handleFieldChange('materialUnitPrice', e.target.value)} 
+                          placeholder="0" 
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Díj egységár</label>
+                        <Input 
+                          value={String(currentItem.unitPrice)} 
+                          onChange={e => handleFieldChange('unitPrice', e.target.value)} 
+                          placeholder="0" 
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3 pt-2 border-t">
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Anyag összesen</label>
+                        <div className="font-semibold">{formatCurrency(parseCurrency(currentItem.materialTotal || '0'))}</div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">Díj összesen</label>
+                        <div className="font-semibold">{formatCurrency(parseCurrency(currentItem.workTotal || '0'))}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // DISPLAY CARD
+                <div>
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        checked={item.isSelected}
+                        onCheckedChange={(checked) => handleToggleSelect(index, !!checked)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-800">{item.name}</h4>
+                        <div className="text-sm text-gray-500 mt-1">
+                          {item.quantity} {item.unit}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="icon" variant="ghost" onClick={() => startEditing(index, item)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}>
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">ANYAG</div>
+                      <div>{formatCurrency(parseCurrency(item.materialUnitPrice || '0'))}/db</div>
+                      <div className="font-semibold text-gray-900">{formatCurrency(parseCurrency(item.materialTotal || '0'))}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs mb-1">DÍJ</div>
+                      <div>{formatCurrency(parseCurrency(item.unitPrice || '0'))}/db</div>
+                      <div className="font-semibold text-gray-900">{formatCurrency(parseCurrency(item.workTotal || '0'))}</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
