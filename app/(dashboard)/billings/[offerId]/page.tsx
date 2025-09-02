@@ -69,6 +69,34 @@ export default function BillingsDetailPage() {
     }
   }, [offer]);
 
+  // Refresh offer data when returning to this page
+  useEffect(() => {
+    const handleFocus = () => {
+      if (offer) {
+        // Refetch offer data to get updated billedQuantity values
+        const fetchUpdatedOffer = async () => {
+          try {
+            const data = await getOfferById(Number(offerId));
+            if (data) {
+              const itemsWithIds =
+                data.items?.map((item: OfferItem, index: number) => ({
+                  ...item,
+                  id: item.id ?? index,
+                })) ?? [];
+              setOffer({ ...data, items: itemsWithIds });
+            }
+          } catch (err) {
+            console.error('Error refreshing offer:', err);
+          }
+        };
+        fetchUpdatedOffer();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [offerId, offer]);
+
   const handleCreateBilling = async () => {
     if (!offer || billingItems.length === 0) return;
 

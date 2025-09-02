@@ -10,12 +10,12 @@ export default function BillingsLayout({ children }: { children: React.ReactNode
   const menu = [
     {
       href: "/billings",
-      label: "Számlázás",
+      label: "Számlázható",
       icon: <ListChecks size={24} />,
     },
     {
       href: "/billings/my-invoices",
-      label: "Számláim",
+      label: "Számlázott",
       icon: <FileText size={24} />,
     },
   ];

@@ -100,14 +100,7 @@ export async function getBillingById(id: number) {
     const billItems = billing.items ? JSON.parse(billing.items as string) : [];
 
     // Only return items that are actually in the billing draft
-    const finalItems = billItems.map((billItem: any) => {
-      const billedQuantity = billedQuantities[billItem.name] || 0;
-      
-      return {
-        ...billItem,
-        billedQuantity: billedQuantity,
-      };
-    });
+    const finalItems = billItems;
 
     return {
       ...billing,
@@ -281,6 +274,45 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
         status: "finalized",
       },
     });
+
+    // Update offer items with billed quantities
+    const offer = await prisma.offer.findUnique({
+      where: { id: billing.offerId },
+    });
+
+    if (offer && offer.items) {
+      const offerItems = JSON.parse(offer.items as string);
+      const updatedOfferItems = offerItems.map((offerItem: any) => {
+        // Find matching billing item by name
+        const billingItem = billingItems.find(
+          (billItem: any) => billItem.name === offerItem.name
+        );
+
+        if (billingItem) {
+          const currentBilledQuantity = parseFloat(
+            offerItem.billedQuantity || "0"
+          );
+          const newBilledQuantity = parseFloat(billingItem.quantity || "0");
+
+          return {
+            ...offerItem,
+            billedQuantity: (
+              currentBilledQuantity + newBilledQuantity
+            ).toString(),
+          };
+        }
+
+        return offerItem;
+      });
+
+      // Update the offer with new billed quantities
+      await prisma.offer.update({
+        where: { id: billing.offerId },
+        data: {
+          items: JSON.stringify(updatedOfferItems),
+        },
+      });
+    }
 
     return {
       success: true,
