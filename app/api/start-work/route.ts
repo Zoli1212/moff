@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     - description: rövid szakmai leírás (1–3 mondat)
     - requiredProfessionals: objektumok tömbje, MIND: { "type": string!=üres, "quantity": number>0 }
     - A requiredProfessionals mező egy objektumokból álló tömb, amelynek minden eleme KÉT KULCSOT tartalmaz: "type" és "quantity".
-    - A "type" mezőbe KIZÁRÓLAG az alábbi lista szakmáit használd: 'Kőműves', 'Burkoló', 'Villanyszerelő', 'Víz- és gázszerelő', 'Festő-mázoló', 'Ács', 'Asztalos', 'Gipszkartonozó', 'Földmunkagép-kezelő', 'Építésvezető', 'Építőmérnök', 'Statikus', 'Hegesztő', 'Bádogos', 'Tetőfedő', 'Szigetelő szakember', 'Kertépítő', 'Díszburkoló', 'Lakatos', 'Homlokzati szakember', 'Belsőépítész', 'Gépszerelő', 'Darukezelő', 'Kőfaragó', 'Szobafestő', 'Takarító', 'Segédmunkás', 'Tartószerkezet-tervező mérnök', 'Épületgépész mérnök', 'Villamosmérnök'. TILOS bármilyen más, a listán nem szereplő szakmát megadni.
+    - A "type" mezőbe KIZÁRÓLAG az alábbi lista szakmáit használd: 'kőműves', 'burkoló', 'villanyszerelő', 'vízvezetékszerelő', 'gázszerelő', 'festő', 'ács', 'asztalos', 'gipszkartonozó', 'földmunkagép-kezelő', 'építésvezető', 'építőmérnök', 'statikus', 'hegesztő', 'bádogos', 'tetőfedő', 'szigetelő', 'kertépítő', 'díszburkoló', 'lakatos', 'homlokzati-szakember', 'belsőépítész', 'gépszerelő', 'Darukezelő', 'kőfaragó', 'takarító', 'segédmunkás', 'tartószerkezet-tervező mérnök', 'gépészmérnök', 'villamosmérnök'. TILOS bármilyen más, a listán nem szereplő szakmát megadni.
     - tools: részletes eszközlista szövegként (nem üres)
     - materials: objektumok tömbje, MIND: { "type": string!=üres, "quantity": number>0, "unit": string!=üres }
     
