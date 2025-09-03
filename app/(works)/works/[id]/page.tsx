@@ -344,6 +344,7 @@ export default async function WorkDetailPage({
             workItemWorkers: item.workItemWorkers ?? [],
           }))}
           workers={workers}
+          showAllWorkItems={true}
         />
       </CollapsibleSection>
 

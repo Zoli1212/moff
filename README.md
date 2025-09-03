@@ -738,3 +738,5 @@ progress változtatás
 hogy állunk
 képek alapján
 héti a default
+---
+git merge -X theirs workforce

@@ -22,6 +22,7 @@ interface Props {
   workId: number;
   workItems: WorkItem[];
   workers: Worker[]; // Worker rows for this work (professions)
+  showAllWorkItems?: boolean; // If true, treat all workItems as active (for works/[id] page)
 }
 
 // Extend WorkItemWorker with optional fields that can be present from the API/DB
@@ -74,19 +75,22 @@ const WorkersSlotsSection: React.FC<Props> = ({
   workId,
   workItems,
   workers,
+  showAllWorkItems = false,
 }) => {
-  // Only in-progress work items
-  const inProgressWorkItemIds = useMemo(
-    () => workItems.filter((w) => w.inProgress).map((w) => w.id),
-    [workItems]
+  // Filter work items based on showAllWorkItems flag
+  const activeWorkItemIds = useMemo(
+    () => showAllWorkItems 
+      ? workItems.map((w) => w.id)
+      : workItems.filter((w) => w.inProgress).map((w) => w.id),
+    [workItems, showAllWorkItems]
   );
-  // Only show assignments from in-progress workItems
+  // Show assignments from active workItems (based on showAllWorkItems flag)
   const initialAssignments = useMemo(
     () =>
       workItems
-        .filter(wi => wi.inProgress)
+        .filter(wi => showAllWorkItems || wi.inProgress)
         .flatMap((wi) => (wi.workItemWorkers ?? []).map((w) => ({ ...w } as AssignmentEx))),
-    [workItems]
+    [workItems, showAllWorkItems]
   );
 
   const [assignments, setAssignments] = useState<AssignmentEx[]>(initialAssignments);
@@ -99,14 +103,14 @@ const WorkersSlotsSection: React.FC<Props> = ({
     null
   );
 
-  // Build required slots per profession from IN-PROGRESS workItems only
+  // Build required slots per profession from active workItems
   // Only show roles that are actually needed by active workItems
   const requiredPerProfession: Record<string, number> = useMemo(() => {
     const byRole: Record<string, number> = {};
-    const inProgressItems = workItems.filter(wi => wi.inProgress);
+    const activeItems = workItems.filter(wi => showAllWorkItems || wi.inProgress);
     
-    // Collect all required roles from in-progress workItems
-    for (const wi of inProgressItems) {
+    // Collect all required roles from active workItems
+    for (const wi of activeItems) {
       // From workItemWorkers
       for (const wiw of wi.workItemWorkers ?? []) {
         const worker = workers.find(w => w.id === wiw.workerId);
@@ -128,7 +132,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
     
     return byRole;
-  }, [workItems, workers]);
+  }, [workItems, workers, showAllWorkItems]);
 
   const { slots, setSlots, addSlot, removeSlot } = useWorkerSlotsStore();
 
@@ -139,13 +143,13 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
   }, [requiredPerProfession, setSlots]);
 
-  // Compute per-Worker maximum required quantity across IN-PROGRESS workItems only (mirror of ParticipantsSection)
+  // Compute per-Worker maximum required quantity across active workItems (mirror of ParticipantsSection)
   const workerIdToMaxNeeded: Record<number, number> = useMemo(() => {
     const map: Record<number, number> = {};
     for (const w of workers) {
       const workerId = w.id;
       let max = 0;
-      for (const wi of workItems.filter(wi => wi.inProgress)) {
+      for (const wi of workItems.filter(wi => showAllWorkItems || wi.inProgress)) {
         const sum = (wi.workItemWorkers ?? [])
           .filter((wiw) => wiw.workerId === workerId)
           .reduce((acc, wiw) => acc + (typeof wiw.quantity === "number" ? wiw.quantity : 1), 0);
@@ -154,7 +158,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       map[workerId] = max;
     }
     return map;
-  }, [workItems, workers]);
+  }, [workItems, workers, showAllWorkItems]);
 
   // Persist latest maxima to the server whenever they change
   React.useEffect(() => {
@@ -171,7 +175,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       string,
       { count: number; id: number } | undefined
     > = {};
-    const inProgIds = new Set(inProgressWorkItemIds);
+    const activeIds = new Set(activeWorkItemIds);
     for (const item of workItems) {
       const withinItem: Record<string, number> = {};
       const req = getRequiredProfessionals(item);
@@ -202,7 +206,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         const currIn = bestInProg[role];
         if (!currAny || count > currAny.count)
           bestAny[role] = { count, id: item.id };
-        if (inProgIds.has(item.id)) {
+        if (activeIds.has(item.id)) {
           if (!currIn || count > currIn.count)
             bestInProg[role] = { count, id: item.id };
         }
@@ -216,7 +220,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
     for (const role of roles)
       out[role] = (bestInProg[role] ?? bestAny[role])?.id;
     return out;
-  }, [workItems, inProgressWorkItemIds, workers]);
+  }, [workItems, activeWorkItemIds, workers, showAllWorkItems]);
 
   // Denominator for the header: from the BEST work item per role only.
   // Sum quantities of null-email WorkItemWorkers that belong to that role.
@@ -272,9 +276,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
   const refreshAssignments = async () => {
     try {
       const items = await getWorkItemsWithWorkers(workId);
-      // Only include workers from in-progress workItems
+      // Include workers from active workItems (based on showAllWorkItems flag)
       const list: AssignmentEx[] = items
-        .filter(wi => wi.inProgress)
+        .filter(wi => showAllWorkItems || wi.inProgress)
         .flatMap((wi: WorkItem) => (wi.workItemWorkers ?? [] as AssignmentEx[]));
       setAssignments(list);
     } catch (err) {
@@ -460,6 +464,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         professions={professions}
         lockedProfession={addLock?.role}
         lockedWorkItemId={addLock?.workItemId}
+        showAllWorkItems={showAllWorkItems}
       />
       <Button
         onClick={() => {

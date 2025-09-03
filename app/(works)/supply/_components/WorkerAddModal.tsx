@@ -22,6 +22,8 @@ interface WorkerAddModalProps {
   lockedProfession?: string;
   // If provided, preselect and lock workItem to this id
   lockedWorkItemId?: number;
+  // If true, show all workItems instead of only in-progress ones
+  showAllWorkItems?: boolean;
 }
 
 // Lightweight custom dropdown (no external deps)
@@ -94,7 +96,7 @@ function CustomSelect({
   );
 }
 
-const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, workItems, professions, onSubmit, lockedProfession, lockedWorkItemId }) => {
+const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, workItems, professions, onSubmit, lockedProfession, lockedWorkItemId, showAllWorkItems = false }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -155,12 +157,12 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
 
     // With a selected workItem: allow any profession from all active workItems
     const selected = workItems.find(w => w.id === Number(workItemId));
-    // Only allow adding workers to in-progress workItems
-    if (!selected || !selected.inProgress) return [];
+    // Only allow adding workers to active workItems (based on showAllWorkItems flag)
+    if (!selected || (!showAllWorkItems && !selected.inProgress)) return [];
     
     // Collect all professions from ALL active workItems (not just selected one)
     const allActiveProfessions = new Set<string>();
-    const activeItems = workItems.filter(wi => wi.inProgress);
+    const activeItems = workItems.filter(wi => showAllWorkItems || wi.inProgress);
     
     for (const item of activeItems) {
       // From workers
@@ -233,7 +235,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
               placeholder="Válassz munkafázist..."
               options={[
                 { value: "", label: "Válassz munkafázist..." },
-                ...workItems.filter(item => item.inProgress).map((item) => ({ value: String(item.id), label: item.name })),
+                ...workItems.filter(item => showAllWorkItems || item.inProgress).map((item) => ({ value: String(item.id), label: item.name })),
               ]}
             />
           </div>
