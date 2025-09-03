@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { WorkItem } from "@/types/work";
 
 interface ToolAddModalProps {
   open: boolean;
@@ -26,7 +27,7 @@ interface ToolAddModalProps {
     quantity: number;
     workItemId: number;
   }) => Promise<void>;
-  workItems: any[];
+  workItems: WorkItem[];
 }
 
 const ToolAddModal: React.FC<ToolAddModalProps> = ({
@@ -129,7 +130,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
               <SelectContent>
                 {workItems.map((item) => (
                   <SelectItem key={item.id} value={item.id.toString()}>
-                    {item.title || item.name || item.description || `Feladat ${item.id}`}
+                    {item.name || item.description || `Feladat ${item.id}`}
                   </SelectItem>
                 ))}
               </SelectContent>

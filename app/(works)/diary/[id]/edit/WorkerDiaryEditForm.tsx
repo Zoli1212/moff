@@ -1036,6 +1036,7 @@ export default function WorkerDiaryEditForm({
                     }
                   }
                 } catch (error) {
+                  console.log((error as Error).message)
                   showToast("error", "Hiba történt a törlés során.");
                 }
               }}

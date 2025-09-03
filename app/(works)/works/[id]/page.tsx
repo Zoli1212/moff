@@ -15,8 +15,6 @@ type Tool = BaseTool & { quantity?: number };
 // WorkDiary interface remains here if not imported, but Tool, Material, Worker are now imported from '@/types/work'.
 
 type WorkDiary = { id?: number | string; title?: string };
-
-import ParticipantsSection from "../_components/ParticipantsSection";
 import CollapsibleSection from "../_components/CollapsibleSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
@@ -367,7 +365,13 @@ export default async function WorkDetailPage({
               tools={allTools}
               workId={work.id}
               assignedTools={assignedTools}
-              workItems={workItemsWithWorkers}
+              workItems={workItemsWithWorkers.map((item) => ({
+                ...item,
+                tools: item.tools ?? [],
+                materials: item.materials ?? [],
+                workers: item.workers ?? [],
+                workItemWorkers: item.workItemWorkers ?? [],
+              }))}
             />
           );
         })()}

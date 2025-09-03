@@ -93,7 +93,6 @@ const ToolsSlotsSection: React.FC<Props> = ({
   workItems,
 }) => {
   // Szűrés: csak azok az eszközök jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
-  const inProgressWorkItemIds = workItems.filter(wi => wi.inProgress).map(wi => wi.id);
   
   // Local state for assignedTools to enable instant UI update
   const [assignedTools, setAssignedTools] =

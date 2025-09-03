@@ -7,9 +7,7 @@ import { Plus, Trash2} from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
-import { getWorkforce, addWorkforceMember } from "@/actions/workforce-actions";
-import { updateWorkerJsonArray } from "@/actions/update-worker-json-array";
-import { assignWorkerToWorkItem } from "@/actions/assign-worker-to-workitem";
+import { getWorkforce} from "@/actions/workforce-actions";
 import { getWorkItemsWithWorkers } from "@/actions/work-actions";
 import {
   updateWorkItemWorker,
@@ -49,28 +47,28 @@ function getRequiredProfessionals(item: WorkItem): Professional[] {
 }
 
 // Registry entry shape stored in Worker.workers (unknown by default)
-type RegistryEntry = {
-  id?: number;
-  workItemId?: number;
-  name?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  profession?: string | null;
-  avatarUrl?: string | null;
-};
+// type RegistryEntry = {
+//   id?: number;
+//   workItemId?: number;
+//   name?: string | null;
+//   email?: string | null;
+//   phone?: string | null;
+//   profession?: string | null;
+//   avatarUrl?: string | null;
+// };
 
-function isRegistryEntry(obj: unknown): obj is RegistryEntry {
-  if (!obj || typeof obj !== "object") return false;
-  const o = obj as Record<string, unknown>;
-  const okId = o.id === undefined || typeof o.id === "number";
-  const okWorkItemId = o.workItemId === undefined || typeof o.workItemId === "number";
-  const okName = o.name === undefined || typeof o.name === "string";
-  const okEmail = o.email === undefined || typeof o.email === "string";
-  const okPhone = o.phone === undefined || typeof o.phone === "string";
-  const okProfession = o.profession === undefined || typeof o.profession === "string";
-  const okAvatarUrl = o.avatarUrl === undefined || typeof o.avatarUrl === "string";
-  return okId && okWorkItemId && okName && okEmail && okPhone && okProfession && okAvatarUrl;
-}
+// function isRegistryEntry(obj: unknown): obj is RegistryEntry {
+//   if (!obj || typeof obj !== "object") return false;
+//   const o = obj as Record<string, unknown>;
+//   const okId = o.id === undefined || typeof o.id === "number";
+//   const okWorkItemId = o.workItemId === undefined || typeof o.workItemId === "number";
+//   const okName = o.name === undefined || typeof o.name === "string";
+//   const okEmail = o.email === undefined || typeof o.email === "string";
+//   const okPhone = o.phone === undefined || typeof o.phone === "string";
+//   const okProfession = o.profession === undefined || typeof o.profession === "string";
+//   const okAvatarUrl = o.avatarUrl === undefined || typeof o.avatarUrl === "string";
+//   return okId && okWorkItemId && okName && okEmail && okPhone && okProfession && okAvatarUrl;
+// }
 
 const WorkersSlotsSection: React.FC<Props> = ({
   workId,
@@ -426,31 +424,31 @@ const WorkersSlotsSection: React.FC<Props> = ({
   }, [assignments, roleBestWorkItemId]);
 
   // Fallback list built from Worker.workers registry (ParticipantsSection parity)
-  const registryByRole: Record<string, AssignmentEx[]> = useMemo(() => {
-    const map: Record<string, AssignmentEx[]> = {};
-    for (const w of workers) {
-      const role = w.name || "Ismeretlen";
-      const arrUnknown = w.workers;
-      const arr: RegistryEntry[] = Array.isArray(arrUnknown)
-        ? (arrUnknown as unknown[]).filter(isRegistryEntry)
-        : [];
-      for (const reg of arr) {
-        if (!map[role]) map[role] = [];
-        map[role].push({
-          id: (reg.id ?? Math.floor(Math.random() * 1_000_000)) as number,
-          workItemId: reg.workItemId ?? 0,
-          workerId: w.id,
-          name: reg.name ?? null,
-          email: reg.email ?? null,
-          phone: reg.phone ?? null,
-          role: (reg.profession as string) ?? role,
-          avatarUrl: reg.avatarUrl ?? null,
-          quantity: 1,
-        });
-      }
-    }
-    return map;
-  }, [workers]);
+  // const registryByRole: Record<string, AssignmentEx[]> = useMemo(() => {
+  //   const map: Record<string, AssignmentEx[]> = {};
+  //   for (const w of workers) {
+  //     const role = w.name || "Ismeretlen";
+  //     const arrUnknown = w.workers;
+  //     const arr: RegistryEntry[] = Array.isArray(arrUnknown)
+  //       ? (arrUnknown as unknown[]).filter(isRegistryEntry)
+  //       : [];
+  //     for (const reg of arr) {
+  //       if (!map[role]) map[role] = [];
+  //       map[role].push({
+  //         id: (reg.id ?? Math.floor(Math.random() * 1_000_000)) as number,
+  //         workItemId: reg.workItemId ?? 0,
+  //         workerId: w.id,
+  //         name: reg.name ?? null,
+  //         email: reg.email ?? null,
+  //         phone: reg.phone ?? null,
+  //         role: (reg.profession as string) ?? role,
+  //         avatarUrl: reg.avatarUrl ?? null,
+  //         quantity: 1,
+  //       });
+  //     }
+  //   }
+  //   return map;
+  // }, [workers]);
 
   return (
     <div className="relative bg-white rounded-xl shadow-sm px-5 py-3 mb-5">

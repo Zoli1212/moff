@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import type { Tool as BaseTool, Tool } from "@/types/work";
+import type { Tool as BaseTool, Tool, WorkItem } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
 // import { checkToolExists } from "../../../../actions/tool-exists.server";
 import {
@@ -83,7 +83,7 @@ export type AssignedTool = {
   quantity: number;
   tool: Tool & { description: string | null };
 };
-type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[]; workItems?: any[] };
+type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[]; workItems?: WorkItem[] };
 
 const ToolsSlotsSection: React.FC<Props> = ({
   tools,
