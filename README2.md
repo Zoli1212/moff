@@ -616,6 +616,20 @@ Budapest Sass u 1 Fürdőszoba felújítás, 12nm , szerelvénybontása, burkola
 Best Regards,
 
 Martin Retai
+----
+Tárgy: Ajánlatkérés – tisztasági festés
+
+Tisztelt Cím,
+
+Budapest, Sólyom utca 1. szám alatti ingatlanban szeretnék ajánlatot kérni egy 110 m²-es tisztasági festés elvégzésére.
+
+Kérem, szíveskedjenek ajánlatot adni a munkálatokra.
+
+Best Regards,
+Martin Retai
+----
+Budapest Sólyom utca 1 ban, szeretnek egy tisztasagi festest kerni egy 100nm es alapteruletu lakasban, a festendo fal feluletek 450 nm plusz 100nm plafon. Erre kerek ajanlatot
+-----
 
 Menesi ut 456 ban szeretnek egy irodat felujitani. 150 nm en fel kell
 Szedni a regi ko burkolatot es le kell tenni az ujat. Ezen kivul 200 nm en kene feherrel kifesteni.
