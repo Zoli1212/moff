@@ -19,6 +19,7 @@ type WorkDiary = { id?: number | string; title?: string };
 import ParticipantsSection from "../_components/ParticipantsSection";
 import CollapsibleSection from "../_components/CollapsibleSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
+import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
 import Link from "next/link";
 import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 import { AssignedTool } from "@/types/tools.types";
@@ -333,11 +334,10 @@ export default async function WorkDetailPage({
           </span>
         </div>
       </div>
-      {/* Résztvevők (lenyíló) */}
-      <CollapsibleSection title="Munkások" count={work.totalWorkers} defaultOpen={false}>
-        <ParticipantsSection
-          initialWorkers={workers}
-          totalWorkers={work.totalWorkers}
+      {/* Munkások (lenyíló) */}
+      <CollapsibleSection title="Munkások felvétele" defaultOpen={false}>
+        <WorkersSlotsSection
+          workId={work.id}
           workItems={workItemsWithWorkers.map((item) => ({
             ...item,
             tools: item.tools ?? [],
@@ -345,12 +345,12 @@ export default async function WorkDetailPage({
             workers: item.workers ?? [],
             workItemWorkers: item.workItemWorkers ?? [],
           }))}
-          workId={work.id}
+          workers={workers}
         />
       </CollapsibleSection>
 
       {/* Eszköz slotok (lenyíló) */}
-      <CollapsibleSection title="Szükséges eszközök" defaultOpen={false}>
+      <CollapsibleSection title="Szükséges eszközök felvétele" defaultOpen={false}>
         {(() => {
           const assignedToolObjects = assignedTools
             .map((at: AssignedTool) => at.tool)
@@ -367,6 +367,7 @@ export default async function WorkDetailPage({
               tools={allTools}
               workId={work.id}
               assignedTools={assignedTools}
+              workItems={workItemsWithWorkers}
             />
           );
         })()}
