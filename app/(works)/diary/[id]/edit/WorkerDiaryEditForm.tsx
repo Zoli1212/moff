@@ -4,6 +4,8 @@ import {
   updateWorkDiaryItem,
   createWorkDiaryItem,
   getOrCreateWorkDiaryForTask,
+  deleteWorkDiary,
+  deleteWorkDiaryItem,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
@@ -36,8 +38,8 @@ interface WorkerDiaryEditFormProps {
   onCancel: () => void;
   // Optional: when provided, the form acts in "edit" mode for this WorkDiaryItem
   editingItem?: Partial<
-    WorkDiaryItemUpdate & { name?: string; email?: string }
-  > & { id: number };
+    WorkDiaryItemUpdate & { id: number; name?: string; email?: string }
+  >;
 }
 
 export default function WorkerDiaryEditForm({
@@ -116,6 +118,7 @@ export default function WorkerDiaryEditForm({
   const [accepted, setAccepted] = useState<boolean>(
     editingItem?.accepted ?? false
   );
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   // Completion modal state (quantity-based)
   const [progressOpen, setProgressOpen] = useState(false);
   const [completedQtyValue, setCompletedQtyValue] = useState<number>(0);
@@ -500,7 +503,10 @@ export default function WorkerDiaryEditForm({
             completedQuantity: finalCompletedQuantity,
           })) as unknown as { success?: boolean; message?: string };
           if (!res?.success) {
-            showToast("error", res?.message || "Készültség mentése sikertelen.");
+            showToast(
+              "error",
+              res?.message || "Készültség mentése sikertelen."
+            );
             return;
           }
         }
@@ -847,21 +853,32 @@ export default function WorkerDiaryEditForm({
           }
         </div>
       )}
-      <div className="flex gap-2 justify-end">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Mégsem
-        </Button>
-        <Button
-          type="submit"
-          disabled={
-            !date ||
-            imageUploading ||
-            selectedWorkItemId === "" ||
-            selectedWorkerToken === ""
-          }
-        >
-          Mentés
-        </Button>
+      <div className="flex gap-2 justify-between">
+        {diary.id > 0 && (
+          <Button 
+            type="button" 
+            variant="destructive" 
+            onClick={() => setShowDeleteConfirm(true)}
+          >
+            Napló törlése
+          </Button>
+        )}
+        <div className="flex gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Mégsem
+          </Button>
+          <Button
+            type="submit"
+            disabled={
+              !date ||
+              imageUploading ||
+              selectedWorkItemId === "" ||
+              selectedWorkerToken === ""
+            }
+          >
+            Mentés
+          </Button>
+        </div>
       </div>
       {toast && (
         <div
@@ -959,6 +976,71 @@ export default function WorkerDiaryEditForm({
               }}
             >
               Mentés
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Napló törlése</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p>
+              {editingItem?.id 
+                ? "Biztosan törölni szeretnéd ezt a napló bejegyzést?" 
+                : "Biztosan törölni szeretnéd ezt a naplót?"
+              }
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Ez a művelet nem vonható vissza.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+            >
+              Mégsem
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  if (editingItem?.id) {
+                    // Delete specific workDiaryItem
+                    const result = await deleteWorkDiaryItem({
+                      id: editingItem.id,
+                    });
+                    if (result.success) {
+                      setShowDeleteConfirm(false);
+                      onSave({});
+                    } else {
+                      showToast("error", "Nem sikerült törölni a napló bejegyzést.");
+                    }
+                  } else {
+                    // Delete entire workDiary if no specific item
+                    const result = await deleteWorkDiary({
+                      workId: diary.workId,
+                      workItemId: diary.workItemId,
+                    });
+                    if (result.success) {
+                      setShowDeleteConfirm(false);
+                      onSave({});
+                    } else {
+                      showToast("error", result.message || "Nem sikerült törölni a naplót.");
+                    }
+                  }
+                } catch (error) {
+                  showToast("error", "Hiba történt a törlés során.");
+                }
+              }}
+            >
+              Törlés
             </Button>
           </DialogFooter>
         </DialogContent>

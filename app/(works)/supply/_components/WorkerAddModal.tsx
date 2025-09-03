@@ -75,7 +75,7 @@ function CustomSelect({
       </button>
       {open && !disabled && (
         <div
-          className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-50"
+          className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-[9999]"
         >
           {options.map(opt => (
             <div
@@ -152,22 +152,37 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
   const professionsForSelected = useMemo(() => {
     // No selection: empty list (prompt user)
     if (workItemId === "") return [] as string[];
-    // Special case: 0 => show ALL professions
-    if (Number(workItemId) === 0) {
-      let all = [...professions].sort((a, b) => a.localeCompare(b, 'hu'));
-      if (lockedProfession) all = all.filter(p => p === lockedProfession);
-      return all;
-    }
 
-    // With a selected workItem: restrict strictly to that phase
+    // With a selected workItem: allow any profession from all active workItems
     const selected = workItems.find(w => w.id === Number(workItemId));
-    const fromWorkers = (selected?.workers ?? [])
-      .map(w => w.role ?? w.name)
-      .filter((r): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
-    const fromAssignments = (selected?.workItemWorkers ?? [])
-      .map(w => w.role ?? undefined)
-      .filter((r): r is string => !!r && typeof r === 'string' && r.trim().length > 0);
-    let options = Array.from(new Set([...fromWorkers, ...fromAssignments])).sort((a,b) => a.localeCompare(b, 'hu'));
+    // Only allow adding workers to in-progress workItems
+    if (!selected || !selected.inProgress) return [];
+    
+    // Collect all professions from ALL active workItems (not just selected one)
+    const allActiveProfessions = new Set<string>();
+    const activeItems = workItems.filter(wi => wi.inProgress);
+    
+    for (const item of activeItems) {
+      // From workers
+      (item.workers ?? []).forEach(w => {
+        const role = w.role ?? w.name;
+        if (role && typeof role === 'string' && role.trim().length > 0) {
+          allActiveProfessions.add(role);
+        }
+      });
+      
+      // From workItemWorkers
+      (item.workItemWorkers ?? []).forEach(w => {
+        if (w.role && typeof w.role === 'string' && w.role.trim().length > 0) {
+          allActiveProfessions.add(w.role);
+        }
+      });
+    }
+    
+    // Also include all available professions to allow new ones
+    professions.forEach(p => allActiveProfessions.add(p));
+    
+    let options = Array.from(allActiveProfessions).sort((a,b) => a.localeCompare(b, 'hu'));
     // If profession is locked, restrict to only that one (if present)
     if (lockedProfession) options = options.filter(p => p === lockedProfession);
     return options;
@@ -218,8 +233,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
               placeholder="Válassz munkafázist..."
               options={[
                 { value: "", label: "Válassz munkafázist..." },
-                ...workItems.map((item) => ({ value: String(item.id), label: item.name })),
-                { value: "0", label: "Egyéb munkafázis" },
+                ...workItems.filter(item => item.inProgress).map((item) => ({ value: String(item.id), label: item.name })),
               ]}
             />
           </div>

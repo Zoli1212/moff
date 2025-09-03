@@ -92,6 +92,9 @@ const ToolsSlotsSection: React.FC<Props> = ({
   assignedTools: assignedToolsProp,
   workItems,
 }) => {
+  // Szűrés: csak azok az eszközök jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
+  const inProgressWorkItemIds = workItems.filter(wi => wi.inProgress).map(wi => wi.id);
+  
   // Local state for assignedTools to enable instant UI update
   const [assignedTools, setAssignedTools] =
     useState<AssignedTool[]>(assignedToolsProp);
@@ -101,9 +104,9 @@ const ToolsSlotsSection: React.FC<Props> = ({
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
   const [showAddToolModal, setShowAddToolModal] = useState(false);
   const [selectedTools, setSelectedTools] = useState<number[]>(() => {
-  // Preselect based on required quantities aggregated from all work items (max per name)
+  // Preselect based on required quantities aggregated from in-progress work items only (max per name)
   const requiredByName: Record<string, number> = {};
-  workItems.forEach((wi) => {
+  workItems.filter(wi => wi.inProgress).forEach((wi) => {
     (wi.tools || []).forEach((t) => {
       const name = t.name;
       if (!name) return;
@@ -223,10 +226,10 @@ const ToolsSlotsSection: React.FC<Props> = ({
 
   if (!tools.length) return null;
 
-  // Build display list from required tools across ALL work items (max quantity per name)
+  // Build display list from required tools across IN-PROGRESS work items only (max quantity per name)
   type DisplayTool = { name: string; required: number; tool: Tool };
   const requiredByName: Record<string, number> = {};
-  workItems.forEach((wi) => {
+  workItems.filter(wi => wi.inProgress).forEach((wi) => {
     (wi.tools || []).forEach((t) => {
       const name = t.name;
       if (!name) return;

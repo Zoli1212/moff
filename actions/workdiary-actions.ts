@@ -45,7 +45,9 @@ async function resolveTenantEmail(userEmail: string, workerEmail?: string) {
 // Try to derive the worker's email by WorkItemWorker.id.
 // 1) Prefer WorkItemWorker.email
 // 2) If missing, and workforceRegistryId is present, read WorkforceRegistry.email
-async function getWorkerEmailFromAssignment(workItemWorkerId: number): Promise<string | undefined> {
+async function getWorkerEmailFromAssignment(
+  workItemWorkerId: number
+): Promise<string | undefined> {
   try {
     const assignment = await prisma.workItemWorker.findUnique({
       where: { id: workItemWorkerId },
@@ -79,6 +81,20 @@ async function getWorkerEmailFromAssignment(workItemWorkerId: number): Promise<s
     // ignore
   }
   return undefined;
+}
+
+export async function deleteWorkDiaryItem({
+  id,
+}: {
+  id: number;
+}) {
+  const user = await currentUser();
+  if (!user) throw new Error("Not authenticated");
+
+  await prisma.workDiaryItem.delete({ where: { id } });
+  
+  revalidatePath(`/works/diary`);
+  return { success: true };
 }
 
 export async function deleteWorkDiary({
@@ -228,7 +244,8 @@ export async function updateWorkDiaryItem({
   if (workerId !== undefined) updateData.workerId = workerId;
   if (email !== undefined) updateData.email = email;
   if (name !== undefined) updateData.name = name;
-  if (workItemWorkerId !== undefined) updateData.workItemWorkerId = workItemWorkerId;
+  if (workItemWorkerId !== undefined)
+    updateData.workItemWorkerId = workItemWorkerId;
   if (date !== undefined) updateData.date = date;
   if (quantity !== undefined) updateData.quantity = quantity;
   if (unit !== undefined) updateData.unit = unit;
@@ -241,9 +258,13 @@ export async function updateWorkDiaryItem({
   if (email !== undefined || workItemWorkerId !== undefined) {
     let effectiveWorkerEmail: string | undefined = email;
     if (!effectiveWorkerEmail && workItemWorkerId) {
-      effectiveWorkerEmail = await getWorkerEmailFromAssignment(workItemWorkerId);
+      effectiveWorkerEmail =
+        await getWorkerEmailFromAssignment(workItemWorkerId);
     }
-    const resolvedTenant = await resolveTenantEmail(userEmail, effectiveWorkerEmail);
+    const resolvedTenant = await resolveTenantEmail(
+      userEmail,
+      effectiveWorkerEmail
+    );
     updateData.tenantEmail = resolvedTenant;
   }
 
@@ -326,9 +347,13 @@ export async function createWorkDiaryItem({
     // Determine worker email either from explicit email or from workItemWorker assignment
     let effectiveWorkerEmail: string | undefined = email;
     if (!effectiveWorkerEmail && workItemWorkerId) {
-      effectiveWorkerEmail = await getWorkerEmailFromAssignment(workItemWorkerId);
+      effectiveWorkerEmail =
+        await getWorkerEmailFromAssignment(workItemWorkerId);
     }
-    const tenantEmail = await resolveTenantEmail(userEmail, effectiveWorkerEmail);
+    const tenantEmail = await resolveTenantEmail(
+      userEmail,
+      effectiveWorkerEmail
+    );
     const createData: any = {
       diaryId,
       workId,
@@ -338,7 +363,8 @@ export async function createWorkDiaryItem({
     if (workerId !== undefined) createData.workerId = workerId;
     if (email !== undefined) createData.email = email;
     if (name !== undefined) createData.name = name;
-    if (workItemWorkerId !== undefined) createData.workItemWorkerId = workItemWorkerId;
+    if (workItemWorkerId !== undefined)
+      createData.workItemWorkerId = workItemWorkerId;
     if (date !== undefined) createData.date = date;
     if (quantity !== undefined) createData.quantity = quantity;
     if (unit !== undefined) createData.unit = unit;
@@ -358,7 +384,10 @@ export async function createWorkDiaryItem({
         email,
         workItemWorkerId,
       });
-      console.log("[workdiary-actions] createWorkDiaryItem createData", createData);
+      console.log(
+        "[workdiary-actions] createWorkDiaryItem createData",
+        createData
+      );
     } catch {}
     const created = await prisma.workDiaryItem.create({
       data: createData,

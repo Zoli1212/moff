@@ -255,7 +255,9 @@ export default function TasksPage() {
                         marginTop: "8px",
                       }}
                     >
-                      {item.workItemWorkers.map((w) => (
+                      {item.workItemWorkers
+                        .filter((w) => w.name && w.name.trim() !== "")
+                        .map((w) => (
                         <div
                           key={w.id}
                           style={{
