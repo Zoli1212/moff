@@ -33,7 +33,6 @@ function getRequiredProfessionals(item: WorkItem): Professional[] {
 }
 
 const WorkersSummary: React.FC<Props> = ({
-  workId,
   workItems,
   workers,
   showAllWorkItems = false,
@@ -247,7 +246,7 @@ const WorkersSummary: React.FC<Props> = ({
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
-                  {list.map((w, idx) => {
+                  {list.map((w) => {
                     const hasData = !!(w && (w.name || w.email));
                     if (hasData) {
                       return (

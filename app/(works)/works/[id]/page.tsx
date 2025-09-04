@@ -16,8 +16,8 @@ type Tool = BaseTool & { quantity?: number };
 
 type WorkDiary = { id?: number | string; title?: string };
 import CollapsibleSection from "../_components/CollapsibleSection";
-import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
-import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
+// import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
+// import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
 import Link from "next/link";
 import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 import { AssignedTool } from "@/types/tools.types";

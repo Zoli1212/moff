@@ -1,5 +1,5 @@
 import React from "react";
-import type { WorkItemFromDb } from "@/types/work";
+import type { WorkItemFromDb, Tool } from "@/types/work";
 import { AssignedTool } from "@/types/tools.types";
 
 interface ToolsSummaryProps {
@@ -9,12 +9,11 @@ interface ToolsSummaryProps {
 }
 
 export default function ToolsSummary({
-  workId,
   workItems,
   assignedTools,
 }: ToolsSummaryProps) {
   // Collect tools from workItems (required tools)
-  const requiredToolsMap = new Map<string, { tool: any; workItems: string[]; totalQuantity: number }>();
+  const requiredToolsMap = new Map<string, { tool: Tool; workItems: string[]; totalQuantity: number }>();
   
   workItems
     .filter(wi => wi.inProgress) // Only show tools for in-progress workItems
@@ -42,7 +41,7 @@ export default function ToolsSummary({
     });
 
   // Collect assigned tools (actual assignments)
-  const assignedToolsMap = new Map<string, { tool: any; quantity: number }>();
+  const assignedToolsMap = new Map<string, { tool: Tool; quantity: number }>();
   
   assignedTools.forEach((assignedTool) => {
     if (assignedTool.tool) {
