@@ -147,8 +147,6 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateC
   // Mobile-friendly bottom sheet style
   const [hideNoUpdateMsg, setHideNoUpdateMsg] = useState(false);
   const isMobile = typeof window !== "undefined" && window.innerWidth <= 600;
-  const barWidth = isMobile ? "90vw" : 340;
-  const barHeight = isMobile ? 18 : 14;
   const fontSize = isMobile ? 17 : 15;
   const iconSize = isMobile ? 28 : 22;
 
