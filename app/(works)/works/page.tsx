@@ -1,4 +1,5 @@
-import React from "react";
+"use client";
+import React, { useState, useCallback } from "react";
 import { getUserWorks } from "@/actions/work-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
@@ -19,7 +20,11 @@ export type Work = {
   [key: string]: unknown;
 };
 
-function toCardProps(work: Work): WorkCardProps {
+function toCardProps(work: Work, workStates: Record<string | number, string>): WorkCardProps {
+  const workState = workStates[work.id];
+  const isUpdating = workState === 'updating';
+  const isDisabled = isUpdating;
+  
   return {
     ...work,
     id: Number(work.id),
@@ -50,18 +55,46 @@ function toCardProps(work: Work): WorkCardProps {
         : "Hiányzik a pénzügyi jelentés!"),
     urgentLevel:
       work.urgentLevel || (Math.random() > 0.5 ? "warning" : "danger"),
+    isUpdating,
+    isDisabled,
   };
 }
 
-const WorkListPage = async () => {
-  let works: Work[] = [];
-  try {
-    works = await getUserWorks();
+const WorkListPage = () => {
+  const [works, setWorks] = useState<Work[]>([]);
+  const [workStates, setWorkStates] = useState<Record<string | number, string>>({});
+  const [loading, setLoading] = useState(true);
 
-    console.log("WORKS", works);
-  } catch {
-    works = [];
+  React.useEffect(() => {
+    const fetchWorks = async () => {
+      try {
+        const fetchedWorks = await getUserWorks();
+        setWorks(fetchedWorks);
+        console.log("WORKS", fetchedWorks);
+      } catch {
+        setWorks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchWorks();
+  }, []);
+
+  const handleWorkStateChange = useCallback((workId: number | string, state: 'updating' | 'done' | 'failed' | 'idle') => {
+    setWorkStates(prev => ({
+      ...prev,
+      [workId]: state
+    }));
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ padding: 32, background: "#f8f9fa", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div>Munkák betöltése...</div>
+      </div>
+    );
   }
+
   let activeWorks = works.filter((w) => w.active !== false);
 
   console.log(activeWorks, "ACTIVE WORKS");
@@ -134,16 +167,29 @@ const WorkListPage = async () => {
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>Munkák</h2>
       </div>
       {/* Automatically update all works that have not been AI-updated */}
-      <WorksAutoUpdater works={activeWorks} />
+      <WorksAutoUpdater works={activeWorks} onWorkStateChange={handleWorkStateChange} />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
         {activeWorks.length === 0 ? (
           <div>Nincs aktív munka.</div>
         ) : (
-          activeWorks.map((work) => (
-            <Link key={work.id} href={`/works/${work.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <WorkCard {...toCardProps(work)} />
-            </Link>
-          ))
+          activeWorks.map((work) => {
+            const cardProps = toCardProps(work, workStates);
+            const isDisabled = cardProps.isDisabled;
+            
+            if (isDisabled) {
+              return (
+                <div key={work.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <WorkCard {...cardProps} />
+                </div>
+              );
+            }
+            
+            return (
+              <Link key={work.id} href={`/works/${work.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <WorkCard {...cardProps} />
+              </Link>
+            );
+          })
         )}
       </div>
     </div>

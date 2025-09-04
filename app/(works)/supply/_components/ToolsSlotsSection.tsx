@@ -103,9 +103,9 @@ const ToolsSlotsSection: React.FC<Props> = ({
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
   const [showAddToolModal, setShowAddToolModal] = useState(false);
   const [selectedTools, setSelectedTools] = useState<number[]>(() => {
-  // Preselect based on required quantities aggregated from in-progress work items only (max per name)
+  // Preselect based on required quantities aggregated from all work items (max per name)
   const requiredByName: Record<string, number> = {};
-  workItems.filter(wi => wi.inProgress).forEach((wi) => {
+  workItems.forEach((wi) => {
     (wi.tools || []).forEach((t) => {
       const name = t.name;
       if (!name) return;
@@ -228,7 +228,11 @@ const ToolsSlotsSection: React.FC<Props> = ({
   // Build display list from required tools across IN-PROGRESS work items only (max quantity per name)
   type DisplayTool = { name: string; required: number; tool: Tool };
   const requiredByName: Record<string, number> = {};
-  workItems.filter(wi => wi.inProgress).forEach((wi) => {
+  
+  // Show only inProgress workItems in supply section
+  const relevantItems = workItems.filter(wi => wi.inProgress);
+  
+  relevantItems.forEach((wi) => {
     (wi.tools || []).forEach((t) => {
       const name = t.name;
       if (!name) return;

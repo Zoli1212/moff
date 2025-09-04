@@ -262,16 +262,21 @@ const WorkersSlotsSection: React.FC<Props> = ({
   const professions = useMemo(() => {
     const keys = Object.keys(requiredPerProfession);
     if (keys.length > 0) return keys.sort((a, b) => a.localeCompare(b, "hu"));
-    // Fallback: from workers list
-    const names = Array.from(
-      new Set(
-        workers
-          .map((w) => w.name || "Ismeretlen")
-          .filter(Boolean)
-      )
-    );
-    return names.sort((a, b) => a.localeCompare(b, "hu"));
-  }, [requiredPerProfession, workers]);
+    // If showAllWorkItems is true (main page), fallback to workers list
+    // If showAllWorkItems is false (supply page), show empty if no active workItems
+    if (showAllWorkItems) {
+      const names = Array.from(
+        new Set(
+          workers
+            .map((w) => w.name || "Ismeretlen")
+            .filter(Boolean)
+        )
+      );
+      return names.sort((a, b) => a.localeCompare(b, "hu"));
+    }
+    // Supply page with no active workItems - show empty
+    return [];
+  }, [requiredPerProfession, workers, showAllWorkItems]);
 
   const refreshAssignments = async () => {
     try {
@@ -504,7 +509,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
 
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
         {professions.length === 0 && (
-          <span className="text-[#bbb]">Nincs szükség meghatározva</span>
+          <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
         )}
         {professions.map((role) => {
           const required = requiredPerProfession[role] || 0;

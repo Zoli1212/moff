@@ -17,38 +17,47 @@ export interface Work {
 
 interface WorksAutoUpdaterProps {
   works: Work[];
+  onWorkStateChange?: (workId: number | string, state: 'updating' | 'done' | 'failed' | 'idle') => void;
 }
 
-const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
+const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateChange }) => {
   const [updatingIds, setUpdatingIds] = useState<(number | string)[]>([]);
   const [doneIds, setDoneIds] = useState<(number | string)[]>([]);
   const [failedIds, setFailedIds] = useState<(number | string)[]>([]);
   const [showStatus, setShowStatus] = useState(false);
   const [hideBar, setHideBar] = useState(false);
 
-  const [stopOnError, setStopOnError] = useState(false);
+  // Remove stopOnError - we want to continue processing other works
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  console.log(showStatus)
+  console.log(showStatus);
 
   useEffect(() => {
-    if (stopOnError) return; // Stop all further updates if error occurred
     const notUpdated = works.filter((w) => w.updatedByAI !== true);
     if (notUpdated.length === 0) {
       setShowStatus(false);
       return;
     }
     setShowStatus(true);
-    // Only update one at a time; stop on first error
+    
+    // Process multiple works concurrently, but limit to 2 at a time to avoid overwhelming
     const updateNext = async () => {
+      const currentlyUpdating = updatingIds.length;
+      const maxConcurrent = 2;
+      
+      if (currentlyUpdating >= maxConcurrent) return;
+      
       const next = notUpdated.find(
         (work) =>
           !updatingIds.includes(work.id) &&
           !doneIds.includes(work.id) &&
           !failedIds.includes(work.id)
       );
+      
       if (!next) return;
+      
       setUpdatingIds((ids) => [...ids, next.id]);
+      onWorkStateChange?.(next.id, 'updating');
       try {
         const workData = {
           location: next.location || "",
@@ -65,34 +74,45 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
         if (data && !data.error) {
           const dbResult = await updateWorkWithAIResult(Number(next.id), data);
           if (!dbResult.success) {
-            const msg = `AI update save error: ${dbResult.error || "Unknown error"}`;
+            const msg = `Work ${next.id} save error: ${dbResult.error || "Unknown error"}`;
             toast.error(msg);
             setFailedIds((ids) => [...ids, next.id]);
+            onWorkStateChange?.(next.id, 'failed');
             setErrorMsg(msg);
-            setStopOnError(true);
           } else {
             toast.success(`Work ${next.id} AI-updated!`);
             setDoneIds((ids) => [...ids, next.id]);
+            onWorkStateChange?.(next.id, 'done');
           }
         } else {
-          const msg = data?.error || "AI processing error!";
+          const msg = `Work ${next.id}: ${data?.error || "AI processing error!"}`;
           toast.error(msg);
           setFailedIds((ids) => [...ids, next.id]);
+          onWorkStateChange?.(next.id, 'failed');
           setErrorMsg(msg);
-          setStopOnError(true);
         }
       } catch (err) {
-        const msg = "Network/server error during AI update! "+(err as Error).message;
+        const msg = `Work ${next.id} network error: ${(err as Error).message}`;
         toast.error(msg);
         setFailedIds((ids) => [...ids, next.id]);
+        onWorkStateChange?.(next.id, 'failed');
         setErrorMsg(msg);
-        setStopOnError(true);
+      } finally {
+        setUpdatingIds((ids) => ids.filter(id => id !== next.id));
       }
     };
-    updateNext();
+    
+    // Start multiple updates if possible
+    const startUpdates = async () => {
+      for (let i = 0; i < 2; i++) {
+        await updateNext();
+      }
+    };
+    
+    startUpdates();
     // eslint-disable-next-line
-  }, [works, updatingIds, doneIds, failedIds, stopOnError]);
-  
+  }, [works, updatingIds, doneIds, failedIds, onWorkStateChange]);
+
   useEffect(() => {
     // Hide status bar when all are done
     const notUpdated = works.filter((w) => w.updatedByAI !== true);
@@ -103,14 +123,14 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
       setTimeout(() => setShowStatus(false), 2000); // Hide after 2s
     }
   }, [doneIds, failedIds, works]);
-  
+
   const notUpdated = works.filter((w) => w.updatedByAI !== true);
   const total = notUpdated.length;
   const done = doneIds.length;
   const failed = failedIds.length;
   const progress =
-  total === 0 ? 100 : Math.round(((done + failed) / total) * 100);
-  
+    total === 0 ? 100 : Math.round(((done + failed) / total) * 100);
+
   useEffect(() => {
     if (done === total && total > 0) {
       const timeout = setTimeout(() => setHideBar(true), 1500);
@@ -132,7 +152,7 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
   const fontSize = isMobile ? 17 : 15;
   const iconSize = isMobile ? 28 : 22;
 
-  console.log(errorMsg)
+  console.log(errorMsg);
 
   if (total === 0 && !hideNoUpdateMsg) {
     return (
@@ -206,9 +226,8 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
     );
   }
 
-  
   // Fade out when done
-  
+
   if (total === 0) return null;
   if (hideBar) return null;
 
@@ -216,67 +235,65 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
     <div
       style={{
         position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(0,0,0,0.35)", // overlay opacity
-        pointerEvents: "auto", // block background clicks (ne kattints el)
+        top: 20,
+        right: 20,
+        zIndex: 1000,
+        pointerEvents: "none",
         transition: "opacity 0.6s cubic-bezier(.4,0,.2,1)",
       }}
     >
       <div
         style={{
-          background: "rgba(34,34,34,0.82)",
+          background: "rgba(34,34,34,0.9)",
           color: "#fff",
-          borderRadius: 20,
-          boxShadow: "0 2px 16px #0004",
+          borderRadius: 12,
+          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
           backdropFilter: "blur(8px)",
-          padding: isMobile ? "15px 18px 15px 18px" : "14px 34px 14px 28px",
+          padding: "12px 16px",
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
-          minWidth: 220,
-          maxWidth: 420,
+          alignItems: "flex-start",
+          minWidth: 200,
+          maxWidth: 300,
           pointerEvents: "auto",
-          opacity: 0.93,
+          opacity: 0.95,
         }}
       >
         <div
           style={{
-            fontWeight: 700,
-            fontSize,
-            marginBottom: 10,
-            letterSpacing: 0.2,
+            fontWeight: 600,
+            fontSize: 14,
+            marginBottom: 8,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
           }}
         >
+          <div
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: "50%",
+              background: "#27ae60",
+              animation: "pulse 2s infinite",
+            }}
+          />
           AI frissítés folyamatban
         </div>
         <div
           style={{
-            fontSize: fontSize - 2,
-            color: "#ddd",
-            marginBottom: 10,
-          }}
-        >
-          Ne kattints el
-        </div>
-        <div
-          style={{
-            width: barWidth,
+            width: "100%",
             background: "#444",
-            borderRadius: 10,
-            height: barHeight,
+            borderRadius: 6,
+            height: 6,
             overflow: "hidden",
-            marginBottom: 8,
-            boxShadow: "0 1px 2px #0001",
+            marginBottom: 6,
           }}
         >
           <div
             style={{
               width: `${progress}%`,
-              height: barHeight,
+              height: "100%",
               background: failed > 0 ? "#e74c3c" : "#27ae60",
               transition: "width 0.4s",
             }}
@@ -284,14 +301,19 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works }) => {
         </div>
         <div
           style={{
-            fontWeight: 500,
-            fontSize: fontSize - 2,
-            color: failed > 0 ? "#e74c3c" : "#fff",
+            fontSize: 12,
+            color: failed > 0 ? "#e74c3c" : "#ddd",
           }}
         >
           {done} / {total} kész{failed > 0 ? `, ${failed} hiba` : ""}
         </div>
       </div>
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </div>
   );
 };

@@ -15,9 +15,10 @@ export default function ToolsSummary({
   // Collect tools from workItems (required tools)
   const requiredToolsMap = new Map<string, { tool: Tool; workItems: string[]; totalQuantity: number }>();
   
-  workItems
-    .filter(wi => wi.inProgress) // Only show tools for in-progress workItems
-    .forEach((workItem) => {
+  // Show all workItems for now, not just inProgress ones
+  const relevantWorkItems = workItems; // .filter(wi => wi.inProgress);
+  
+  relevantWorkItems.forEach((workItem) => {
       if (workItem.tools && workItem.tools.length > 0) {
         workItem.tools.forEach((tool) => {
           const key = tool.id?.toString() || tool.name;

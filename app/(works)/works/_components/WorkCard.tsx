@@ -21,6 +21,8 @@ export interface WorkCardProps {
   location?: string;
   offerDescription?: string;
   estimatedDuration?: string;
+  isUpdating?: boolean;
+  isDisabled?: boolean;
 }
 
 const getUrgentColor = (level: "warning" | "danger") => {
@@ -45,6 +47,8 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     financialPlanned,
     urgentTask,
     urgentLevel,
+    isUpdating = false,
+    isDisabled = false,
     // offerItems = [],
     // location = "",
     // offerDescription = "",
@@ -58,11 +62,36 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         borderRadius: 12,
         marginBottom: 24,
         padding: 20,
-        background: "#fff",
+        background: isUpdating ? "#f8f9fa" : "#fff",
         boxShadow: "0 2px 8px #eee",
         maxWidth: 420,
+        opacity: isDisabled ? 0.6 : 1,
+        position: "relative",
+        overflow: "hidden",
+        cursor: isDisabled ? "not-allowed" : "pointer",
+        transition: "all 0.3s ease",
       }}
     >
+      {isUpdating && (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            background: "linear-gradient(90deg, #3498db, #2ecc71, #3498db)",
+            backgroundSize: "200% 100%",
+            animation: "loading 2s linear infinite",
+          }}
+        />
+      )}
+      <style jsx>{`
+        @keyframes loading {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
       <div
         style={{
           display: "flex",
@@ -70,11 +99,31 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           alignItems: "center",
         }}
       >
-        <span style={{ fontWeight: 600, fontSize: 18 }}>{title}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontWeight: 600, fontSize: 18 }}>{title}</span>
+          {isUpdating && (
+            <div
+              style={{
+                width: 12,
+                height: 12,
+                border: "2px solid #3498db",
+                borderTop: "2px solid transparent",
+                borderRadius: "50%",
+                animation: "spin 1s linear infinite",
+              }}
+            />
+          )}
+        </div>
         <span style={{ color: "#888", fontSize: 14 }}>
           Határidő: {deadline}
         </span>
       </div>
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
       <div
         style={{
           margin: "12px 0 10px 0",
