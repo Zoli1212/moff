@@ -23,6 +23,8 @@ import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 import { AssignedTool } from "@/types/tools.types";
 
 import Tasks from "../_components/Tasks";
+import ToolsSummary from "../_components/ToolsSummary";
+import WorkersSummary from "../_components/WorkersSummary";
 
 
 export default async function WorkDetailPage({
@@ -333,8 +335,8 @@ export default async function WorkDetailPage({
         </div>
       </div>
       {/* Munkások (lenyíló) */}
-      <CollapsibleSection title="Munkások felvétele" defaultOpen={false}>
-        <WorkersSlotsSection
+      <CollapsibleSection title="Munkára felvett munkások" defaultOpen={false}>
+        <WorkersSummary
           workId={work.id}
           workItems={workItemsWithWorkers.map((item) => ({
             ...item,
@@ -349,8 +351,15 @@ export default async function WorkDetailPage({
       </CollapsibleSection>
 
       {/* Eszköz slotok (lenyíló) */}
-      <CollapsibleSection title="Szükséges eszközök felvétele" defaultOpen={false}>
-        {(() => {
+      <CollapsibleSection title="Hozzárendelt eszközök" defaultOpen={false}>
+      <ToolsSummary workId={work.id} workItems={workItemsWithWorkers.map((item) => ({
+        ...item,
+        tools: item.tools ?? [],
+        materials: item.materials ?? [],
+        workers: item.workers ?? [],
+        workItemWorkers: item.workItemWorkers ?? [],
+      }))} assignedTools={assignedTools} />
+        {/* {(() => {
           const assignedToolObjects = assignedTools
             .map((at: AssignedTool) => at.tool)
             .filter(Boolean);
@@ -375,7 +384,7 @@ export default async function WorkDetailPage({
               }))}
             />
           );
-        })()}
+        })()} */}
       </CollapsibleSection>
 
       {/* Szegmensek (workItems) - lenyíló */}
