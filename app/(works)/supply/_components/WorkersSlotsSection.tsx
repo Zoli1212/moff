@@ -330,10 +330,16 @@ const WorkersSlotsSection: React.FC<Props> = ({
     email: string;
     phone: string;
     profession: string;
-    workItemId: number;
+    workItemId: number | null;
     avatarUrl?: string;
   }) => {
     try {
+      // Validate that workItemId is provided
+      if (data.workItemId === null) {
+        toast.error("Munkafázis kiválasztása kötelező!");
+        return;
+      }
+
       // Check if a worker with this email already exists in the workforce
       const workforce = await getWorkforce();
       const existingWorker = workforce.find((w) => w.email === data.email);
