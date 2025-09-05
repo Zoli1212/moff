@@ -104,8 +104,8 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           {isUpdating && (
             <div
               style={{
-                width: 12,
-                height: 12,
+                width: 16,
+                height: 16,
                 border: "2px solid #3498db",
                 borderTop: "2px solid transparent",
                 borderRadius: "50%",
