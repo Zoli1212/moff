@@ -9,6 +9,7 @@ import type {
   Material,
   Worker,
 } from "@/types/work";
+import type { GeneralWorkerFromDB } from "../_components/WorkersSummary";
 // Tool típust bővítjük quantity-vel
 
 type Tool = BaseTool & { quantity?: number };
@@ -26,7 +27,6 @@ import { AssignedTool } from "@/types/tools.types";
 import Tasks from "../_components/Tasks";
 import ToolsSummary from "../_components/ToolsSummary";
 import WorkersSummary from "../_components/WorkersSummary";
-
 
 export default async function WorkDetailPage({
   params,
@@ -58,7 +58,7 @@ export default async function WorkDetailPage({
 
   let workItemsWithWorkers: WorkItemFromDb[] = [];
   let assignedTools: AssignedTool[] = [];
-  let generalWorkersFromDB: any[] = [];
+  let generalWorkersFromDB: GeneralWorkerFromDB[] = [];
   if (work && work.id) {
     try {
       // ÚJ: lekérjük a workItemeket a WorkItemWorker kapcsolattal
@@ -120,15 +120,33 @@ export default async function WorkDetailPage({
 
   console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
   console.log(workers, "WORKERS - from work.workers");
-  console.log(generalWorkersFromDB, "GENERAL_WORKERS_FROM_DB - workItemId=null from workItemWorkers table");
-  
+  console.log(
+    generalWorkersFromDB,
+    "GENERAL_WORKERS_FROM_DB - workItemId=null from workItemWorkers table"
+  );
+
   // Debug: Check if we have general workers from both sources
-  const generalWorkers = workers.filter(w => w.workItemId === null);
-  const specificWorkers = workers.filter(w => w.workItemId !== null);
-  console.log(`[CLIENT DEBUG] Total workers from work.workers: ${workers.length}`);
-  console.log(`[CLIENT DEBUG] General workers from work.workers (workItemId=null): ${generalWorkers.length}`, generalWorkers);
-  console.log(`[CLIENT DEBUG] Specific workers from work.workers (workItemId!=null): ${specificWorkers.length}`, specificWorkers.map(w => ({ id: w.id, name: w.name, workItemId: w.workItemId })));
-  console.log(`[CLIENT DEBUG] General workers from workItemWorkers table: ${generalWorkersFromDB.length}`, generalWorkersFromDB);
+  const generalWorkers = workers.filter((w) => w.workItemId === null);
+  const specificWorkers = workers.filter((w) => w.workItemId !== null);
+  console.log(
+    `[CLIENT DEBUG] Total workers from work.workers: ${workers.length}`
+  );
+  console.log(
+    `[CLIENT DEBUG] General workers from work.workers (workItemId=null): ${generalWorkers.length}`,
+    generalWorkers
+  );
+  console.log(
+    `[CLIENT DEBUG] Specific workers from work.workers (workItemId!=null): ${specificWorkers.length}`,
+    specificWorkers.map((w) => ({
+      id: w.id,
+      name: w.name,
+      workItemId: w.workItemId,
+    }))
+  );
+  console.log(
+    `[CLIENT DEBUG] General workers from workItemWorkers table: ${generalWorkersFromDB.length}`,
+    generalWorkersFromDB
+  );
 
   // --- TOOL AGGREGÁCIÓ ---
   const toolMap = new Map<string, { tool: Tool; quantity: number }>();
@@ -369,13 +387,17 @@ export default async function WorkDetailPage({
 
       {/* Eszköz slotok (lenyíló) */}
       <CollapsibleSection title="Hozzárendelt eszközök" defaultOpen={false}>
-      <ToolsSummary workId={work.id} workItems={workItemsWithWorkers.map((item) => ({
-        ...item,
-        tools: item.tools ?? [],
-        materials: item.materials ?? [],
-        workers: item.workers ?? [],
-        workItemWorkers: item.workItemWorkers ?? [],
-      }))} assignedTools={assignedTools} />
+        <ToolsSummary
+          workId={work.id}
+          workItems={workItemsWithWorkers.map((item) => ({
+            ...item,
+            tools: item.tools ?? [],
+            materials: item.materials ?? [],
+            workers: item.workers ?? [],
+            workItemWorkers: item.workItemWorkers ?? [],
+          }))}
+          assignedTools={assignedTools}
+        />
         {/* {(() => {
           const assignedToolObjects = assignedTools
             .map((at: AssignedTool) => at.tool)
@@ -405,162 +427,178 @@ export default async function WorkDetailPage({
       </CollapsibleSection>
 
       {/* Szegmensek (workItems) - lenyíló */}
-      <CollapsibleSection title="Feladatok" count={workItems.length} defaultOpen={false}>
+      <CollapsibleSection
+        title="Feladatok"
+        count={workItems.length}
+        defaultOpen={false}
+      >
         <Tasks workItems={workItems} />
       </CollapsibleSection>
       {/* Eszközök - lenyíló */}
-      <CollapsibleSection title="Eszközök" count={tools.length} defaultOpen={false}>
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 14,
-          boxShadow: "0 1px 5px #eee",
-          padding: "14px 18px",
-          marginBottom: 18,
-        }}
+      <CollapsibleSection
+        title="Eszközök"
+        count={tools.length}
+        defaultOpen={false}
       >
         <div
           style={{
-            fontWeight: 700,
-            fontSize: 17,
-            marginBottom: 8,
-            letterSpacing: 0.5,
+            background: "#fff",
+            borderRadius: 14,
+            boxShadow: "0 1px 5px #eee",
+            padding: "14px 18px",
+            marginBottom: 18,
           }}
         >
-          Eszközök ({tools.length})
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 17,
+              marginBottom: 8,
+              letterSpacing: 0.5,
+            }}
+          >
+            Eszközök ({tools.length})
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              minHeight: 36,
+              flexWrap: "wrap",
+            }}
+          >
+            {tools.length === 0 && (
+              <span style={{ color: "#bbb" }}>Nincs eszköz</span>
+            )}
+            {tools.map((tool: Tool, idx: number) => (
+              <div
+                key={tool.id || idx}
+                style={{
+                  padding: "4px 11px",
+                  background: "#f1f8fe",
+                  borderRadius: 8,
+                  fontWeight: 500,
+                  fontSize: 15,
+                  color: "#3498db",
+                  marginBottom: 4,
+                }}
+              >
+                {tool.name || tool.id}
+              </div>
+            ))}
+          </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "center",
-            minHeight: 36,
-            flexWrap: "wrap",
-          }}
-        >
-          {tools.length === 0 && (
-            <span style={{ color: "#bbb" }}>Nincs eszköz</span>
-          )}
-          {tools.map((tool: Tool, idx: number) => (
-            <div
-              key={tool.id || idx}
-              style={{
-                padding: "4px 11px",
-                background: "#f1f8fe",
-                borderRadius: 8,
-                fontWeight: 500,
-                fontSize: 15,
-                color: "#3498db",
-                marginBottom: 4,
-              }}
-            >
-              {tool.name || tool.id}
-            </div>
-          ))}
-        </div>
-      </div>
       </CollapsibleSection>
       {/* Anyagok - lenyíló */}
-      <CollapsibleSection title="Anyagok" count={materials.length} defaultOpen={false}>
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 14,
-          boxShadow: "0 1px 5px #eee",
-          padding: "14px 18px",
-          marginBottom: 18,
-        }}
+      <CollapsibleSection
+        title="Anyagok"
+        count={materials.length}
+        defaultOpen={false}
       >
         <div
           style={{
-            fontWeight: 700,
-            fontSize: 17,
-            marginBottom: 8,
-            letterSpacing: 0.5,
+            background: "#fff",
+            borderRadius: 14,
+            boxShadow: "0 1px 5px #eee",
+            padding: "14px 18px",
+            marginBottom: 18,
           }}
         >
-          Anyagok ({materials.length})
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 17,
+              marginBottom: 8,
+              letterSpacing: 0.5,
+            }}
+          >
+            Anyagok ({materials.length})
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "center",
+              minHeight: 36,
+              flexWrap: "wrap",
+            }}
+          >
+            {materials.length === 0 && (
+              <span style={{ color: "#bbb" }}>Nincs anyag</span>
+            )}
+            {materials.map((material: Material, idx: number) => (
+              <div
+                key={material.id || idx}
+                style={{
+                  padding: "4px 11px",
+                  background: "#fef7e0",
+                  borderRadius: 8,
+                  fontWeight: 500,
+                  fontSize: 15,
+                  color: "#e67e22",
+                  marginBottom: 4,
+                }}
+              >
+                {material.name || material.id}
+              </div>
+            ))}
+          </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            gap: 10,
-            alignItems: "center",
-            minHeight: 36,
-            flexWrap: "wrap",
-          }}
-        >
-          {materials.length === 0 && (
-            <span style={{ color: "#bbb" }}>Nincs anyag</span>
-          )}
-          {materials.map((material: Material, idx: number) => (
-            <div
-              key={material.id || idx}
-              style={{
-                padding: "4px 11px",
-                background: "#fef7e0",
-                borderRadius: 8,
-                fontWeight: 500,
-                fontSize: 15,
-                color: "#e67e22",
-                marginBottom: 4,
-              }}
-            >
-              {material.name || material.id}
-            </div>
-          ))}
-        </div>
-      </div>
       </CollapsibleSection>
       {/* Naplók - lenyíló */}
-      <CollapsibleSection title="Naplóelemek" count={workDiaries.length} defaultOpen={false}>
-      <div
-        style={{
-          background: "#fff",
-          borderRadius: 14,
-          boxShadow: "0 1px 5px #eee",
-          padding: "14px 18px",
-          marginBottom: 18,
-        }}
+      <CollapsibleSection
+        title="Naplóelemek"
+        count={workDiaries.length}
+        defaultOpen={false}
       >
         <div
           style={{
-            fontWeight: 700,
-            fontSize: 17,
-            marginBottom: 8,
-            letterSpacing: 0.5,
+            background: "#fff",
+            borderRadius: 14,
+            boxShadow: "0 1px 5px #eee",
+            padding: "14px 18px",
+            marginBottom: 18,
           }}
         >
-          Naplók ({workDiaries.length})
+          <div
+            style={{
+              fontWeight: 700,
+              fontSize: 17,
+              marginBottom: 8,
+              letterSpacing: 0.5,
+            }}
+          >
+            Naplók ({workDiaries.length})
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+              minHeight: 24,
+            }}
+          >
+            {workDiaries.length === 0 && (
+              <span style={{ color: "#bbb" }}>Nincs napló</span>
+            )}
+            {workDiaries.map((diary: WorkDiary, idx: number) => (
+              <div
+                key={diary.id || idx}
+                style={{
+                  padding: "4px 11px",
+                  background: "#f4f4fa",
+                  borderRadius: 8,
+                  fontWeight: 500,
+                  fontSize: 15,
+                  color: "#6363a2",
+                }}
+              >
+                {diary.title || diary.id}
+              </div>
+            ))}
+          </div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 6,
-            minHeight: 24,
-          }}
-        >
-          {workDiaries.length === 0 && (
-            <span style={{ color: "#bbb" }}>Nincs napló</span>
-          )}
-          {workDiaries.map((diary: WorkDiary, idx: number) => (
-            <div
-              key={diary.id || idx}
-              style={{
-                padding: "4px 11px",
-                background: "#f4f4fa",
-                borderRadius: 8,
-                fontWeight: 500,
-                fontSize: 15,
-                color: "#6363a2",
-              }}
-            >
-              {diary.title || diary.id}
-            </div>
-          ))}
-        </div>
-      </div>
       </CollapsibleSection>
 
       {/* Bottom Nav */}

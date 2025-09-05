@@ -7,11 +7,34 @@ import { Trash2 } from "lucide-react";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import type { WorkItem, Worker, WorkItemWorker, Professional } from "@/types/work";
 
+export interface GeneralWorkerFromDB {
+  id: number;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  role: string | null;
+  workerId: number | null;
+  workItemId: number | null;
+  quantity: number | null;
+  avatarUrl: string | null;
+  worker: {
+    workId: number;
+  } | null;
+}
+
+interface WorkerFromJSON {
+  workforceRegistryId?: number;
+  name: string;
+  email?: string;
+  phone?: string;
+  avatarUrl?: string;
+}
+
 interface Props {
   workId: number;
   workItems: WorkItem[];
   workers: Worker[]; // Worker rows for this work (professions)
-  generalWorkersFromDB?: any[]; // General workers from workItemWorkers table (workItemId = null)
+  generalWorkersFromDB?: GeneralWorkerFromDB[]; // General workers from workItemWorkers table (workItemId = null)
   showAllWorkItems?: boolean; // If true, treat all workItems as active (for works/[id] page)
 }
 
@@ -101,7 +124,7 @@ const WorkersSummary: React.FC<Props> = ({
         .flatMap(w => {
           try {
             const workersArray = w.workers ? JSON.parse(w.workers as string) : [];
-            return workersArray.map((worker: any) => ({
+            return workersArray.map((worker: WorkerFromJSON) => ({
               id: worker.workforceRegistryId || 0,
               workerId: w.id,
               workItemId: null,
@@ -113,6 +136,7 @@ const WorkersSummary: React.FC<Props> = ({
               avatarUrl: worker.avatarUrl,
             } as AssignmentEx));
           } catch (e) {
+            console.log((e as Error).message)
             return [];
           }
         });
@@ -361,7 +385,7 @@ const WorkersSummary: React.FC<Props> = ({
             </div>
             {(() => {
               // Group general workers by role
-              const generalByRole: Record<string, any[]> = {};
+              const generalByRole: Record<string, GeneralWorkerFromDB[]> = {};
               generalWorkersFromDB.forEach(worker => {
                 const role = worker.role || "Ismeretlen";
                 if (!generalByRole[role]) generalByRole[role] = [];
@@ -400,7 +424,7 @@ const WorkersSummary: React.FC<Props> = ({
                               {worker.email || ""}
                             </div>
                             <button
-                              onClick={() => handleRemoveGeneralWorker(worker.id, worker.name)}
+                              onClick={() => handleRemoveGeneralWorker(worker.id, worker.name || 'Névtelen munkás')}
                               className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
                               title="Munkás eltávolítása"
                             >
@@ -423,7 +447,7 @@ const WorkersSummary: React.FC<Props> = ({
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Munkás eltávolítása"
-        description={`Biztosan el szeretnéd távolítani ${confirmDialog.workerName} munkást az általános munkások közül?`}
+        description={`Biztosan el szeretnéd távolítani ${confirmDialog.workerName || 'ezt a'} munkást az általános munkások közül?`}
       />
     </div>
   );

@@ -127,9 +127,8 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateC
   const notUpdated = works.filter((w) => w.updatedByAI !== true);
   const total = notUpdated.length;
   const done = doneIds.length;
-  const failed = failedIds.length;
-  const progress =
-    total === 0 ? 100 : Math.round(((done + failed) / total) * 100);
+
+
 
   useEffect(() => {
     if (done === total && total > 0) {
