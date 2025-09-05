@@ -705,3 +705,4 @@ progress slot legyen alul
 Beszérzés folyamatban felülre
 nem kötelező a munkafázist
 napló nál sorrend ha ki van jelölve az amit kijelölt , amit csinálhat + minden mást
+----

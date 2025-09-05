@@ -1,6 +1,12 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { WorkItem } from "@/types/work";
@@ -15,7 +21,7 @@ interface WorkerAddModalProps {
     email: string;
     phone: string;
     profession: string;
-    workItemId: number;
+    workItemId: number | null;
     avatarUrl?: string;
   }) => Promise<void> | void;
   // If provided, lock the profession to this value (per-slot add)
@@ -47,7 +53,8 @@ function CustomSelect({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
     }
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
@@ -60,30 +67,33 @@ function CustomSelect({
     };
   }, []);
 
-  const selected = options.find(o => o.value === value);
+  const selected = options.find((o) => o.value === value);
 
   return (
     <div ref={ref} className={`relative ${className}`}>
       <button
         type="button"
         disabled={disabled}
-        onClick={() => !disabled && setOpen(o => !o)}
-        className={`border rounded px-3 py-2 w-full max-w-full text-left flex items-center justify-between ${disabled ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white cursor-pointer'}`}
+        onClick={() => !disabled && setOpen((o) => !o)}
+        className={`border rounded px-3 py-2 w-full max-w-full text-left flex items-center justify-between ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white cursor-pointer"}`}
       >
-        <span className={`truncate ${!selected ? 'text-gray-400' : ''}`}>
-          {selected ? selected.label : (placeholder || 'Válassz...')}
+        <span className={`truncate ${!selected ? "text-gray-400" : ""}`}>
+          {selected ? selected.label : placeholder || "Válassz..."}
         </span>
-        <span aria-hidden className="ml-2 text-gray-500">▾</span>
+        <span aria-hidden className="ml-2 text-gray-500">
+          ▾
+        </span>
       </button>
       {open && !disabled && (
-        <div
-          className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-[9999]"
-        >
-          {options.map(opt => (
+        <div className="absolute left-0 top-full mt-1 w-full max-h-56 overflow-auto bg-white border border-gray-200 rounded shadow-lg z-[9999]">
+          {options.map((opt) => (
             <div
               key={opt.value + opt.label}
-              className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${opt.value === value ? 'bg-gray-50 font-medium' : ''}`}
-              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${opt.value === value ? "bg-gray-50 font-medium" : ""}`}
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
               role="option"
               aria-selected={opt.value === value}
             >
@@ -96,12 +106,23 @@ function CustomSelect({
   );
 }
 
-const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, workItems, professions, onSubmit, lockedProfession, lockedWorkItemId, showAllWorkItems = false }) => {
+const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
+  open,
+  onOpenChange,
+  workItems,
+  professions,
+  onSubmit,
+  lockedProfession,
+  lockedWorkItemId,
+  showAllWorkItems = false,
+}) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [profession, setProfession] = useState(lockedProfession ?? "");
-  const [workItemId, setWorkItemId] = useState<number | "">(lockedWorkItemId ?? "");
+  const [workItemId, setWorkItemId] = useState<number | string | "">(
+    lockedWorkItemId ?? ""
+  );
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
@@ -111,16 +132,16 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Use locked values if they exist, otherwise use form values
     const finalProfession = lockedProfession || profession;
     const finalWorkItemId = lockedWorkItemId || workItemId;
-    
+
     if (!name || !email || !phone || !finalProfession || !finalWorkItemId) {
       toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
       return;
     }
-    
+
     setLoading(true);
     try {
       await onSubmit({
@@ -128,10 +149,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
         email,
         phone,
         profession: finalProfession,
-        workItemId: Number(finalWorkItemId),
+        workItemId: finalWorkItemId === "general" ? null : Number(finalWorkItemId),
         avatarUrl: avatarUrl || undefined,
       });
-      
+
       // Reset form on success
       setName("");
       setEmail("");
@@ -155,45 +176,59 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
     // No selection: empty list (prompt user)
     if (workItemId === "") return [] as string[];
 
+    // If "general" is selected, allow all professions
+    if (workItemId === "general") {
+      return professions.sort((a, b) => a.localeCompare(b, "hu"));
+    }
+
     // With a selected workItem: allow any profession from all active workItems
-    const selected = workItems.find(w => w.id === Number(workItemId));
+    const selected = workItems.find((w) => w.id === Number(workItemId));
     // Only allow adding workers to active workItems (based on showAllWorkItems flag)
     if (!selected || (!showAllWorkItems && !selected.inProgress)) return [];
-    
+
     // Collect all professions from ALL active workItems (not just selected one)
     const allActiveProfessions = new Set<string>();
-    const activeItems = workItems.filter(wi => showAllWorkItems || wi.inProgress);
-    
+    const activeItems = workItems.filter(
+      (wi) => showAllWorkItems || wi.inProgress
+    );
+
     for (const item of activeItems) {
       // From workers
-      (item.workers ?? []).forEach(w => {
+      (item.workers ?? []).forEach((w) => {
         const role = w.role ?? w.name;
-        if (role && typeof role === 'string' && role.trim().length > 0) {
+        if (role && typeof role === "string" && role.trim().length > 0) {
           allActiveProfessions.add(role);
         }
       });
-      
+
       // From workItemWorkers
-      (item.workItemWorkers ?? []).forEach(w => {
-        if (w.role && typeof w.role === 'string' && w.role.trim().length > 0) {
+      (item.workItemWorkers ?? []).forEach((w) => {
+        if (w.role && typeof w.role === "string" && w.role.trim().length > 0) {
           allActiveProfessions.add(w.role);
         }
       });
     }
-    
+
     // Also include all available professions to allow new ones
-    professions.forEach(p => allActiveProfessions.add(p));
-    
-    let options = Array.from(allActiveProfessions).sort((a,b) => a.localeCompare(b, 'hu'));
+    professions.forEach((p) => allActiveProfessions.add(p));
+
+    let options = Array.from(allActiveProfessions).sort((a, b) =>
+      a.localeCompare(b, "hu")
+    );
     // If profession is locked, restrict to only that one (if present)
-    if (lockedProfession) options = options.filter(p => p === lockedProfession);
+    if (lockedProfession)
+      options = options.filter((p) => p === lockedProfession);
     return options;
   }, [workItemId, workItems, professions, lockedProfession]);
 
   // Keep profession consistent with the available options for the selected work item
   useEffect(() => {
     // Don't clear if user selected the generic "Egyéb"
-    if (profession && profession !== "Egyéb" && !professionsForSelected.includes(profession)) {
+    if (
+      profession &&
+      profession !== "Egyéb" &&
+      !professionsForSelected.includes(profession)
+    ) {
       setProfession("");
     }
   }, [professionsForSelected, profession]);
@@ -221,21 +256,36 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Új munkás regisztrálása és hozzárendelése munkafázishoz</DialogTitle>
+          <DialogTitle>
+            Új munkás regisztrálása és hozzárendelése munkafázishoz
+          </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Work Item Selection - Disabled if locked */}
-<div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Munkafázis</label>
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              Munkafázis
+            </label>
             <CustomSelect
               className="mt-2"
               value={workItemId === "" ? "" : String(workItemId)}
-              onChange={(val) => setWorkItemId(val ? Number(val) : "")}
+              onChange={(val) => {
+                if (val === "general") {
+                  setWorkItemId("general");
+                } else {
+                  setWorkItemId(val ? Number(val) : "");
+                }
+              }}
               disabled={!!lockedWorkItemId}
               placeholder="Válassz munkafázist..."
               options={[
-                { value: "", label: "Válassz munkafázist..." },
-                ...workItems.filter(item => showAllWorkItems || item.inProgress).map((item) => ({ value: String(item.id), label: item.name })),
+                ...workItems
+                  .filter((item) => showAllWorkItems || item.inProgress)
+                  .map((item) => ({
+                    value: String(item.id),
+                    label: item.name,
+                  })),
+                { value: "general", label: "Általános feladatok (nem konkrét fázishoz)" },
               ]}
             />
           </div>
@@ -251,7 +301,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
                 value={profession}
                 onChange={setProfession}
                 disabled={professionsForSelected.length === 0}
-                placeholder={professionsForSelected.length === 0 ? "Először válassz munkafázist" : "Válassz szakmát..."}
+                placeholder={
+                  professionsForSelected.length === 0
+                    ? "Először válassz munkafázist"
+                    : "Válassz szakmát..."
+                }
                 options={[
                   { value: "", label: "Válassz szakmát..." },
                   ...professionsForSelected.map((p) => ({
@@ -308,7 +362,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
                 {(avatarPreview || avatarUrl) && (
                   <button
                     type="button"
-                    onClick={() => { setAvatarPreview(""); setAvatarUrl(""); setAvatarError(""); }}
+                    onClick={() => {
+                      setAvatarPreview("");
+                      setAvatarUrl("");
+                      setAvatarError("");
+                    }}
                     title="Profilkép törlése"
                     className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-[#ddd] text-red-600 inline-flex items-center justify-center shadow"
                   >
@@ -330,17 +388,24 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
                     try {
                       const formData = new FormData();
                       formData.append("file", file);
-                      const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });
+                      const res = await fetch("/api/upload-avatar", {
+                        method: "POST",
+                        body: formData,
+                      });
                       const data = await res.json();
                       if (data.url) {
                         setAvatarUrl(data.url);
                       } else {
-                        setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                        setAvatarError(
+                          data.error || "Hiba történt a feltöltésnél."
+                        );
                         setAvatarUrl("");
                         setAvatarPreview("");
                       }
                     } catch (err) {
-                      setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
+                      setAvatarError(
+                        "Hiba a feltöltés során: " + (err as Error).message
+                      );
                       setAvatarUrl("");
                       setAvatarPreview("");
                     } finally {
@@ -355,26 +420,35 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({ open, onOpenChange, wor
                     <div className="w-full h-full bg-gradient-to-r from-[#0070f3] to-[#42a5f5] animate-pulse"></div>
                   </div>
                 )}
-                {avatarError && <div className="text-red-600 text-xs mt-2">{avatarError}</div>}
+                {avatarError && (
+                  <div className="text-red-600 text-xs mt-2">{avatarError}</div>
+                )}
               </div>
             </div>
           </div>
-          
+
           <DialogFooter className="mt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
               Mégse
             </Button>
-            <Button 
-              type="submit" 
-              disabled={loading || !name || !email || !phone || !(lockedProfession || profession) || !(lockedWorkItemId || workItemId)}
+            <Button
+              type="submit"
+              disabled={
+                loading ||
+                !name ||
+                !email ||
+                !phone ||
+                !(lockedProfession || profession) ||
+                !(lockedWorkItemId || workItemId)
+              }
               className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
             >
-              {loading ? 'Mentés...' : 'Mentés'}
+              {loading ? "Mentés..." : "Mentés"}
             </Button>
           </DialogFooter>
         </form>

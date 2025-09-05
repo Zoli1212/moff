@@ -1,6 +1,7 @@
 import React from "react";
 
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
+import { getGeneralWorkersForWork } from "@/actions/workitemworker-actions";
 import type {
   WorkItem,
   WorkItemFromDb,
@@ -57,18 +58,23 @@ export default async function WorkDetailPage({
 
   let workItemsWithWorkers: WorkItemFromDb[] = [];
   let assignedTools: AssignedTool[] = [];
+  let generalWorkersFromDB: any[] = [];
   if (work && work.id) {
     try {
       // ÚJ: lekérjük a workItemeket a WorkItemWorker kapcsolattal
       workItemsWithWorkers = await getWorkItemsWithWorkers(work.id);
       assignedTools = await getAssignedToolsForWork(work.id);
+      // Fetch general workers (workItemId = null) from workItemWorkers table
+      generalWorkersFromDB = await getGeneralWorkersForWork(work.id);
       console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
       console.log(assignedTools, "ASSIGNEDTOOLS");
+      console.log(generalWorkersFromDB, "GENERAL_WORKERS_FROM_WORKITEMWORKERS");
     } catch (err) {
       // Hiba esetén fallback az eredeti workItems-re
       console.log(err);
       workItemsWithWorkers = work.workItems || [];
       assignedTools = [];
+      generalWorkersFromDB = [];
     }
   }
 
@@ -113,6 +119,16 @@ export default async function WorkDetailPage({
   );
 
   console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
+  console.log(workers, "WORKERS - from work.workers");
+  console.log(generalWorkersFromDB, "GENERAL_WORKERS_FROM_DB - workItemId=null from workItemWorkers table");
+  
+  // Debug: Check if we have general workers from both sources
+  const generalWorkers = workers.filter(w => w.workItemId === null);
+  const specificWorkers = workers.filter(w => w.workItemId !== null);
+  console.log(`[CLIENT DEBUG] Total workers from work.workers: ${workers.length}`);
+  console.log(`[CLIENT DEBUG] General workers from work.workers (workItemId=null): ${generalWorkers.length}`, generalWorkers);
+  console.log(`[CLIENT DEBUG] Specific workers from work.workers (workItemId!=null): ${specificWorkers.length}`, specificWorkers.map(w => ({ id: w.id, name: w.name, workItemId: w.workItemId })));
+  console.log(`[CLIENT DEBUG] General workers from workItemWorkers table: ${generalWorkersFromDB.length}`, generalWorkersFromDB);
 
   // --- TOOL AGGREGÁCIÓ ---
   const toolMap = new Map<string, { tool: Tool; quantity: number }>();
@@ -346,6 +362,7 @@ export default async function WorkDetailPage({
             workItemWorkers: item.workItemWorkers ?? [],
           }))}
           workers={workers}
+          generalWorkersFromDB={generalWorkersFromDB}
           showAllWorkItems={true}
         />
       </CollapsibleSection>

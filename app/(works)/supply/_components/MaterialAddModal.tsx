@@ -1,17 +1,34 @@
 "use client";
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 import type { WorkItem } from "@/types/work";
 interface MaterialAddModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { name: string; quantity: number; unit: string; unitPrice: number; workItemId: number }) => void;
+  onSubmit: (data: {
+    name: string;
+    quantity: number;
+    unit: string;
+    unitPrice: number;
+    workItemId: number;
+  }) => void;
   workItems: WorkItem[];
 }
 
-const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange, onSubmit, workItems }) => {
+const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
+  open,
+  onOpenChange,
+  onSubmit,
+  workItems,
+}) => {
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
   const [unit, setUnit] = useState("");
@@ -23,7 +40,13 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange,
     e.preventDefault();
     if (!name || !quantity || !unit || !unitPrice || !workItemId) return;
     setLoading(true);
-    await onSubmit({ name, quantity: Number(quantity), unit, unitPrice: Number(unitPrice), workItemId: Number(workItemId) });
+    await onSubmit({
+      name,
+      quantity: Number(quantity),
+      unit,
+      unitPrice: Number(unitPrice),
+      workItemId: Number(workItemId),
+    });
     setLoading(false);
     setName("");
     setQuantity("");
@@ -44,7 +67,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange,
             type="text"
             placeholder="Anyag neve"
             value={name}
-            onChange={e => setName(e.target.value)}
+            onChange={(e) => setName(e.target.value)}
             className="border rounded px-3 py-2"
             required
           />
@@ -52,7 +75,9 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange,
             type="number"
             placeholder="Mennyiség"
             value={quantity}
-            onChange={e => setQuantity(e.target.value === "" ? "" : Number(e.target.value))}
+            onChange={(e) =>
+              setQuantity(e.target.value === "" ? "" : Number(e.target.value))
+            }
             className="border rounded px-3 py-2"
             required
             min={0}
@@ -62,7 +87,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange,
             type="text"
             placeholder="Mértékegység (pl. kg, db)"
             value={unit}
-            onChange={e => setUnit(e.target.value)}
+            onChange={(e) => setUnit(e.target.value)}
             className="border rounded px-3 py-2"
             required
           />
@@ -70,7 +95,9 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange,
             type="number"
             placeholder="Egységár (Ft)"
             value={unitPrice}
-            onChange={e => setUnitPrice(e.target.value === "" ? "" : Number(e.target.value))}
+            onChange={(e) =>
+              setUnitPrice(e.target.value === "" ? "" : Number(e.target.value))
+            }
             className="border rounded px-3 py-2 mt-2"
             required
             min={0}
@@ -78,20 +105,31 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({ open, onOpenChange,
           />
           <select
             value={workItemId}
-            onChange={e => setWorkItemId(e.target.value ? Number(e.target.value) : "")}
+            onChange={(e) =>
+              setWorkItemId(e.target.value ? Number(e.target.value) : "")
+            }
             className="border rounded px-3 py-2 mt-2"
             required
           >
             <option value="">Válassz munkarészt...</option>
-            {workItems.map(item => (
-              <option key={item.id} value={item.id}>{item.name}</option>
+            {workItems.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.name}
+              </option>
             ))}
           </select>
           <DialogFooter>
-            <Button type="submit" disabled={loading || !name || !quantity || !unit}>
+            <Button
+              type="submit"
+              disabled={loading || !name || !quantity || !unit}
+            >
               {loading ? "Mentés..." : "Hozzáadás"}
             </Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Mégsem
             </Button>
           </DialogFooter>

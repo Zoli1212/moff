@@ -176,6 +176,7 @@ model Work {
   tenantEmail    String      @default("")
   
   workers       Worker[]
+  workItemWorkers WorkItemWorker[]
   tools         Tool[]
   materials     Material[]
   workDiaryItems WorkDiaryItem[]
@@ -216,8 +217,8 @@ model Worker {
   role           String?
   workId         Int
   work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
-  workItemId     Int
-  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  workItemId     Int?
+  workItem       WorkItem?   @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   hourlyRate     Float?
   hoursWorked    Float?      @default(0)
   contactInfo    String?
@@ -313,8 +314,10 @@ model MyInvoices {
 
 model WorkItemWorker {
   id         Int      @id @default(autoincrement())
-  workItem   WorkItem @relation(fields: [workItemId], references: [id], onDelete: Cascade)
-  workItemId Int
+  work       Work?    @relation(fields: [workId], references: [id], onDelete: Cascade)
+  workId     Int?
+  workItem   WorkItem? @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  workItemId Int?
   worker     Worker   @relation("WorkerToWorkItemWorker", fields: [workerId], references: [id], onDelete: Cascade)
   workerId   Int
   workforceRegistry   WorkforceRegistry? @relation(fields: [workforceRegistryId], references: [id])

@@ -68,7 +68,7 @@ export interface Worker {
   name: string;
   role?: string | null;
   workId: number;
-  workItemId: number;
+  workItemId: number | null;
   hired: boolean | null;
   workers?: unknown; // JSON field from Prisma schema
   email?: string;
@@ -81,7 +81,7 @@ export interface WorkItemWorker {
   // Define fields based on your WorkItemWorker model
   id: number;
   workerId: number;
-  workItemId: number;
+  workItemId: number | null;
   name?: string | null;
   role?: string | null;
   email?: string | null;

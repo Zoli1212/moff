@@ -101,6 +101,31 @@ export default async function SupplyPage({
       </div>
       {/* Subtitle */}
 
+      {/* Info badge */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginBottom: "16px",
+        }}
+      >
+        <div
+          style={{
+            background: "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
+            border: "1px solid #ffcc02",
+            borderRadius: "20px",
+            padding: "8px 16px",
+            fontSize: "13px",
+            fontWeight: 500,
+            color: "#e65100",
+            boxShadow: "0 2px 4px rgba(255, 153, 0, 0.15)",
+            letterSpacing: "0.3px",
+          }}
+        >
+          📋 Beszerzés folyamatban lévő munkafázisokhoz
+        </div>
+      </div>
+
       {/* Toggle button for Anyagok/Szerszámok */}
       <div
         style={{
@@ -183,31 +208,6 @@ export default async function SupplyPage({
         >
           Munkaerő
         </a>
-      </div>
-      
-      {/* Info badge */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "16px",
-        }}
-      >
-        <div
-          style={{
-            background: "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
-            border: "1px solid #ffcc02",
-            borderRadius: "20px",
-            padding: "8px 16px",
-            fontSize: "13px",
-            fontWeight: 500,
-            color: "#e65100",
-            boxShadow: "0 2px 4px rgba(255, 153, 0, 0.15)",
-            letterSpacing: "0.3px",
-          }}
-        >
-          📋 Beszerzés folyamatban lévő munkafázisokhoz
-        </div>
       </div>
       
       {/* Tab content */}

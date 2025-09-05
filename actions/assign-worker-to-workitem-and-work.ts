@@ -1,11 +1,11 @@
 "use server";
-import { prisma } from '@/lib/prisma';
-import { currentUser } from '@clerk/nextjs/server';
-import { revalidatePath } from 'next/cache';
+import { prisma } from "@/lib/prisma";
+import { currentUser } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
 
 export interface AssignWorkerToWorkItemAndWorkParams {
   workId: number;
-  workItemId: number;
+  workItemId: number | null;
   workerId: number;
   name: string;
   email: string;
@@ -15,13 +15,17 @@ export interface AssignWorkerToWorkItemAndWorkParams {
   avatarUrl?: string;
 }
 
-export async function assignWorkerToWorkItemAndWork(params: AssignWorkerToWorkItemAndWorkParams) {
+export async function assignWorkerToWorkItemAndWork(
+  params: AssignWorkerToWorkItemAndWorkParams
+) {
   const user = await currentUser();
   if (!user) {
     throw new Error("Unauthorized");
   }
 
-  const tenantEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
+  const tenantEmail =
+    user.emailAddresses[0]?.emailAddress ||
+    user.primaryEmailAddress?.emailAddress;
   if (!tenantEmail) {
     throw new Error("Tenant email not found");
   }
@@ -35,7 +39,7 @@ export async function assignWorkerToWorkItemAndWork(params: AssignWorkerToWorkIt
     phone,
     profession,
     quantity = 1,
-    avatarUrl
+    avatarUrl,
   } = params;
 
   try {
@@ -51,7 +55,7 @@ export async function assignWorkerToWorkItemAndWork(params: AssignWorkerToWorkIt
         quantity,
         avatarUrl,
         tenantEmail,
-      }
+      },
     });
 
     // 2. Find or create Worker record for this profession
@@ -60,11 +64,20 @@ export async function assignWorkerToWorkItemAndWork(params: AssignWorkerToWorkIt
         workId,
         name: profession,
         tenantEmail,
-      }
+      },
     });
 
     if (!worker) {
-      // Create new Worker record for this profession
+      // Create new Worker record for this profession with the first worker entry
+      const initialWorkerEntry = {
+        workforceRegistryId: workerId,
+        name,
+        email,
+        phone,
+        profession,
+        avatarUrl,
+      };
+
       worker = await prisma.worker.create({
         data: {
           workId,
@@ -72,42 +85,45 @@ export async function assignWorkerToWorkItemAndWork(params: AssignWorkerToWorkIt
           name: profession,
           role: profession,
           tenantEmail,
-          workers: JSON.stringify([]), // Initialize empty workers array
-        }
+          workers: JSON.stringify([initialWorkerEntry]), // Initialize with the current worker
+        },
       });
     }
 
-    // Parse existing workers array from Worker.workers JSON
-    let workersArray: any[] = [];
-    try {
-      workersArray = worker.workers ? JSON.parse(worker.workers as string) : [];
-    } catch (e) {
-      workersArray = [];
-    }
-
-    // Add new worker entry to the array
-    workersArray.push({
-      workforceRegistryId: workerId,
-      name,
-      email,
-      phone,
-      profession,
-      avatarUrl,
-    });
-
-    // Update Worker.workers JSON array
-    await prisma.worker.update({
-      where: {
-        id: worker.id,
-      },
-      data: {
-        workers: JSON.stringify(workersArray),
+    // Update Worker.workers JSON array (only if worker already existed)
+    if (worker.workers) {
+      // Parse existing workers array from Worker.workers JSON
+      let workersArray: any[] = [];
+      try {
+        workersArray = worker.workers ? JSON.parse(worker.workers as string) : [];
+      } catch (e) {
+        workersArray = [];
       }
-    });
+
+      // Add new worker entry to the array
+      workersArray.push({
+        workforceRegistryId: workerId,
+        name,
+        email,
+        phone,
+        profession,
+        avatarUrl,
+      });
+
+      // Update Worker.workers JSON array
+      await prisma.worker.update({
+        where: {
+          id: worker.id,
+        },
+        data: {
+          workers: JSON.stringify(workersArray),
+        },
+      });
+    }
 
     // Revalidate the supply page to refresh data
     revalidatePath(`/supply/${workId}`);
-    
+
     return workItemWorker;
   } catch (error) {
     console.error("Error assigning worker:", error);

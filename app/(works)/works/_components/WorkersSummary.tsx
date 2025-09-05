@@ -1,12 +1,17 @@
 "use client";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { removeGeneralWorkerFromWork } from "@/actions/workitemworker-actions";
+import { Trash2 } from "lucide-react";
+import ConfirmationDialog from "@/components/ConfirmationDialog";
 import type { WorkItem, Worker, WorkItemWorker, Professional } from "@/types/work";
 
 interface Props {
   workId: number;
   workItems: WorkItem[];
   workers: Worker[]; // Worker rows for this work (professions)
+  generalWorkersFromDB?: any[]; // General workers from workItemWorkers table (workItemId = null)
   showAllWorkItems?: boolean; // If true, treat all workItems as active (for works/[id] page)
 }
 
@@ -33,10 +38,46 @@ function getRequiredProfessionals(item: WorkItem): Professional[] {
 }
 
 const WorkersSummary: React.FC<Props> = ({
+  workId,
   workItems,
   workers,
+  generalWorkersFromDB = [],
   showAllWorkItems = false,
 }) => {
+  const router = useRouter();
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    workerId: number;
+    workerName: string;
+  }>({
+    isOpen: false,
+    workerId: 0,
+    workerName: "",
+  });
+
+  const handleRemoveGeneralWorker = (workItemWorkerId: number, workerName: string) => {
+    setConfirmDialog({
+      isOpen: true,
+      workerId: workItemWorkerId,
+      workerName: workerName,
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      await removeGeneralWorkerFromWork(confirmDialog.workerId, workId);
+      setConfirmDialog({ isOpen: false, workerId: 0, workerName: "" });
+      router.refresh();
+    } catch (error) {
+      console.error("Hiba a munkás törlése során:", error);
+      setConfirmDialog({ isOpen: false, workerId: 0, workerName: "" });
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setConfirmDialog({ isOpen: false, workerId: 0, workerName: "" });
+  };
+
   // Filter work items based on showAllWorkItems flag
   const activeWorkItemIds = useMemo(
     () => showAllWorkItems 
@@ -46,12 +87,39 @@ const WorkersSummary: React.FC<Props> = ({
   );
 
   // Show assignments from active workItems (based on showAllWorkItems flag)
+  // Also include general workers (workItemId = null) that belong to this work
   const assignments = useMemo(
-    () =>
-      workItems
+    () => {
+      // Get assignments from specific workItems
+      const workItemAssignments = workItems
         .filter(wi => showAllWorkItems || wi.inProgress)
-        .flatMap((wi) => (wi.workItemWorkers ?? []).map((w) => ({ ...w } as AssignmentEx))),
-    [workItems, showAllWorkItems]
+        .flatMap((wi) => (wi.workItemWorkers ?? []).map((w) => ({ ...w } as AssignmentEx)));
+      
+      // Get general workers (workItemId = null) for this work
+      const generalWorkers = workers
+        .filter(w => w.workItemId === null)
+        .flatMap(w => {
+          try {
+            const workersArray = w.workers ? JSON.parse(w.workers as string) : [];
+            return workersArray.map((worker: any) => ({
+              id: worker.workforceRegistryId || 0,
+              workerId: w.id,
+              workItemId: null,
+              name: worker.name,
+              email: worker.email,
+              phone: worker.phone,
+              role: w.name,
+              quantity: 1,
+              avatarUrl: worker.avatarUrl,
+            } as AssignmentEx));
+          } catch (e) {
+            return [];
+          }
+        });
+      
+      return [...workItemAssignments, ...generalWorkers];
+    },
+    [workItems, workers, showAllWorkItems]
   );
 
   // Build required slots per profession from active workItems
@@ -284,7 +352,79 @@ const WorkersSummary: React.FC<Props> = ({
             </div>
           );
         })}
+        
+        {/* General Workers Section */}
+        {generalWorkersFromDB.length > 0 && (
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="font-bold text-[16px] mb-3 text-gray-700">
+              Általános munkások
+            </div>
+            {(() => {
+              // Group general workers by role
+              const generalByRole: Record<string, any[]> = {};
+              generalWorkersFromDB.forEach(worker => {
+                const role = worker.role || "Ismeretlen";
+                if (!generalByRole[role]) generalByRole[role] = [];
+                generalByRole[role].push(worker);
+              });
+              
+              return Object.entries(generalByRole).map(([role, workers]) => (
+                <div key={`general-${role}`} className="mb-3">
+                  <div className="bg-[#f0f8ff] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-3">
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className="flex-2 font-semibold text-blue-700">{role}</div>
+                      <div className="text-[14px] text-blue-600 font-medium">
+                        {workers.length} fő
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      {workers.map((worker, idx) => (
+                        <div
+                          key={`${role}-general-${worker.id || idx}`}
+                          className="flex items-center bg-white rounded border border-blue-200 px-3 py-2 w-full"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Image
+                              src={worker.avatarUrl || "/worker.jpg"}
+                              alt={worker.name ?? ""}
+                              width={28}
+                              height={28}
+                              className="rounded-full object-cover border border-blue-200"
+                            />
+                            <div className="text-[14px] text-[#333] font-medium">
+                              {worker.name}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 ml-auto">
+                            <div className="text-[13px] text-[#555] truncate max-w-[120px]">
+                              {worker.email || ""}
+                            </div>
+                            <button
+                              onClick={() => handleRemoveGeneralWorker(worker.id, worker.name)}
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                              title="Munkás eltávolítása"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ));
+            })()}
+          </div>
+        )}
       </div>
+      
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Munkás eltávolítása"
+        description={`Biztosan el szeretnéd távolítani ${confirmDialog.workerName} munkást az általános munkások közül?`}
+      />
     </div>
   );
 };
