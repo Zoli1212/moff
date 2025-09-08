@@ -706,8 +706,8 @@ Beszérzés folyamatban felülre
 nem kötelező a munkafázist
 napló nál sorrend ha ki van jelölve az amit kijelölt , amit csinálhat + minden mást
 ----
-Napló: először amire rátették, utána a szakmája feladatok, utána az összes
-Bugos az általános munkafázis (nincs meghatározva) ez a neve!
+Napló: először amire rátették, utána a szakmája feladatok, utána az összes Done
+Bugos az általános munkafázis (nincs meghatározva) ez a neve! Done
 ----
 PROMPT:
 asszinkron legyen

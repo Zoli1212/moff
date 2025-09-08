@@ -10,6 +10,7 @@ import { OfferItem, OfferWithItems } from "@/types/offer.types";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import dynamic from "next/dynamic";
+import ConfirmationDialog from "./ConfirmationDialog";
 
 // Dynamically import the email sender component to avoid SSR issues
 const OfferLetterEmailSender = dynamic(
@@ -113,6 +114,8 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isEmailExpanded, setIsEmailExpanded] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -227,11 +230,45 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
     }, 100);
   };
 
+  // Show delete confirmation
+  const showDeleteConfirmation = (index: number) => {
+    setItemToDelete(index);
+    setShowDeleteConfirm(true);
+  };
+
   // Remove item
-  const handleRemoveItem = (index: number) => {
+  const handleRemoveItem = async () => {
+    if (itemToDelete === null) return;
+    
     const newItems = [...editableItems];
-    newItems.splice(index, 1);
-    setEditableItems(newItems);
+    newItems.splice(itemToDelete, 1);
+    
+    setIsSaving(true);
+    try {
+      const result = await updateOfferItems(
+        parseInt(offer.id.toString()),
+        newItems
+      );
+
+      if (result.success) {
+        toast.success("A tétel sikeresen törölve");
+        setEditableItems(newItems);
+        setOriginalItems(newItems.map((item) => ({ ...item })));
+      } else {
+        toast.error(result.error || "Hiba történt a törlés során");
+        // Restore original state on error
+        setEditableItems([...editableItems]);
+      }
+    } catch (error) {
+      console.error("Error deleting item:", error);
+      toast.error("Hiba történt a törlés során");
+      // Restore original state on error
+      setEditableItems([...editableItems]);
+    } finally {
+      setIsSaving(false);
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+    }
   };
 
   // Start editing an item in modal
@@ -972,6 +1009,19 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
             }))}
           />
         </div>
+        
+        {/* Custom Confirmation Dialog */}
+        <ConfirmationDialog
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false);
+            setItemToDelete(null);
+          }}
+          onConfirm={handleRemoveItem}
+          title="Tétel törlése"
+          description="Biztosan törölni szeretnéd ezt a tételt? Ez a művelet nem vonható vissza."
+        />
+        
         {/* Notes Section */}
         {notes.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -1063,13 +1113,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (
-                              window.confirm(
-                                "Biztosan törölni szeretnéd ezt a tételt?"
-                              )
-                            ) {
-                              handleRemoveItem(index);
-                            }
+                            showDeleteConfirmation(index);
                           }}
                           className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
                         >

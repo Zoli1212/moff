@@ -185,17 +185,48 @@ export async function POST(req: NextRequest) {
           "totalPrice",
         ];
         for (const field of fields as (keyof WorkItem)[]) {
-          if (String(work[field]) !== String(offer[field])) {
-            return NextResponse.json(
-              {
-                error: `workItem[${i}].${field} nem egyezik az offerItem-mel`,
-                offerValue: offer[field],
-                workValue: work[field],
-                offerItem: offer,
-                workItem: work,
-              },
-              { status: 400 }
-            );
+          // Special handling for totalPrice - calculate it from materialTotal + workTotal
+          if (field === "totalPrice") {
+            const parseCurrency = (value: string | number): number => {
+              if (typeof value === "number") return value;
+              const numericValue = String(value)
+                .replace(/[^0-9,-]+/g, "")
+                .replace(",", ".");
+              return parseFloat(numericValue) || 0;
+            };
+            
+            const offerMaterialTotal = parseCurrency(offer.materialTotal || "0");
+            const offerWorkTotal = parseCurrency(offer.workTotal || "0");
+            const expectedTotalPrice = offerMaterialTotal + offerWorkTotal;
+            
+            const workTotalPrice = parseCurrency(work[field]);
+            
+            // Allow small rounding differences (1 Ft tolerance)
+            if (Math.abs(workTotalPrice - expectedTotalPrice) > 1) {
+              return NextResponse.json(
+                {
+                  error: `workItem[${i}].${field} nem egyezik az offerItem-mel`,
+                  offerValue: expectedTotalPrice,
+                  workValue: workTotalPrice,
+                  offerItem: offer,
+                  workItem: work,
+                },
+                { status: 400 }
+              );
+            }
+          } else {
+            if (String(work[field]) !== String(offer[field])) {
+              return NextResponse.json(
+                {
+                  error: `workItem[${i}].${field} nem egyezik az offerItem-mel`,
+                  offerValue: offer[field],
+                  workValue: work[field],
+                  offerItem: offer,
+                  workItem: work,
+                },
+                { status: 400 }
+              );
+            }
           }
         }
       }

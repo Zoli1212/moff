@@ -685,7 +685,6 @@ export default function WorkerDiaryEditForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
-          required
         />
       </div>
       <div>
