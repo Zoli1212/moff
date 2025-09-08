@@ -334,11 +334,11 @@ const WorkersSlotsSection: React.FC<Props> = ({
     avatarUrl?: string;
   }) => {
     try {
-      // Validate that workItemId is provided
-      if (data.workItemId === null) {
-        toast.error("Munkafázis kiválasztása kötelező!");
-        return;
-      }
+      // Allow null workItemId for general tasks
+      // if (data.workItemId === null) {
+      //   toast.error("Munkafázis kiválasztása kötelező!");
+      //   return;
+      // }
 
       // Check if a worker with this email already exists in the workforce
       const workforce = await getWorkforce();

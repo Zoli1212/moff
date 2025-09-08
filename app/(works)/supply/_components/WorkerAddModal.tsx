@@ -137,7 +137,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     const finalProfession = lockedProfession || profession;
     const finalWorkItemId = lockedWorkItemId || workItemId;
 
-    if (!name || !email || !phone || !finalProfession || !finalWorkItemId) {
+    if (!name || !email || !phone || !finalProfession || (finalWorkItemId !== "general" && !finalWorkItemId)) {
       toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
       return;
     }
@@ -285,7 +285,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                     value: String(item.id),
                     label: item.name,
                   })),
-                { value: "general", label: "Általános feladatok (nem konkrét fázishoz)" },
+                { value: "general", label: "Nincs meghatározva!" },
               ]}
             />
           </div>
@@ -444,7 +444,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 !email ||
                 !phone ||
                 !(lockedProfession || profession) ||
-                !(lockedWorkItemId || workItemId)
+                !(lockedWorkItemId || workItemId === "general" || workItemId)
               }
               className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
             >
