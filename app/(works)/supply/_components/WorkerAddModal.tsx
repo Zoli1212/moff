@@ -300,7 +300,9 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   // Reset/initialize when modal opens (handle locks)
   useEffect(() => {
     if (open) {
-      setWorkerMode("existing");
+      // If no existing workers are available, default to "new" mode (orange)
+      const shouldDefaultToNew = existingWorkers.length === 0;
+      setWorkerMode(shouldDefaultToNew ? "new" : "existing");
       setProfession(lockedProfession ?? "");
       setWorkItemId(lockedWorkItemId ?? "");
       setSelectedExistingWorker("");
@@ -319,7 +321,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setSelectedExistingWorker("");
       setExistingWorkers([]);
     }
-  }, [open, lockedProfession, lockedWorkItemId]);
+  }, [open, lockedProfession, lockedWorkItemId, existingWorkers.length]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
