@@ -712,3 +712,5 @@ Bugos az általános munkafázis (nincs meghatározva) ez a neve! Done
 PROMPT:
 asszinkron legyen
 ----
+Ha nincs meghatározva mindegyikhez jelenjen meg ami folyamatban van
+----

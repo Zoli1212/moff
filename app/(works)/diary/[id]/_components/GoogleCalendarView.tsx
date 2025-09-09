@@ -5,7 +5,11 @@ import React from "react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { EventClickArg, DateSelectArg, type EventInput } from "@fullcalendar/core";
+import {
+  EventClickArg,
+  DateSelectArg,
+  type EventInput,
+} from "@fullcalendar/core";
 import huLocale from "@fullcalendar/core/locales/hu";
 import {
   WorkDiaryWithItem,
@@ -42,8 +46,6 @@ export default function GoogleCalendarView({
   onDateClick,
   onEventClick,
 }: GoogleCalendarViewProps) {
-
-
   // Egy WorkDiaryItem = egy naptár esemény, hogy minden információ látszódjon
   const events = React.useMemo(() => {
     const list: EventInput[] = [];
@@ -85,7 +87,7 @@ export default function GoogleCalendarView({
           workItemName: d.workItem?.name,
           date: it.date,
           accepted,
-          extendedProps: (ev.extendedProps as EventExtProps),
+          extendedProps: ev.extendedProps as EventExtProps,
         });
         list.push(ev);
       }
@@ -114,7 +116,12 @@ export default function GoogleCalendarView({
         titleFormat={{ year: "numeric", month: "short" }}
         views={{
           timeGridDay: {
-            titleFormat: { year: "numeric", month: "short", day: "2-digit", weekday: "long" },
+            titleFormat: {
+              year: "numeric",
+              month: "short",
+              day: "2-digit",
+              weekday: "long",
+            },
           },
         }}
         buttonText={{
@@ -162,13 +169,14 @@ export default function GoogleCalendarView({
           }
 
           // Részletek: hét/nap nézetben nincs megjegyzés és képek, és NINCS külön "Munkás:" sor
-          const workerLine = p.name && p.email
-            ? `${p.name}`
-            : p.name
-            ? `Munkás: ${p.name}`
-            : p.email
-            ? `Munkás: ${p.email}`
-            : undefined;
+          const workerLine =
+            p.name && p.email
+              ? `${p.name}`
+              : p.name
+                ? `Munkás: ${p.name}`
+                : p.email
+                  ? `Munkás: ${p.email}`
+                  : undefined;
           const qtyLine =
             p.quantity != null || p.unit
               ? ` ${p.quantity ?? "-"} ${p.unit ?? ""}`
@@ -182,10 +190,10 @@ export default function GoogleCalendarView({
             ];
             // For day view, worker name is in the header, so don't add it here.
             // For week view, we show a more detailed worker line.
-            if (viewType !== 'timeGridDay') {
+            if (viewType !== "timeGridDay") {
               lines.unshift(workerLine);
             }
-            if (viewType === 'timeGridWeek') {
+            if (viewType === "timeGridWeek") {
               // Week view only shows quantity, but let's adjust to show only what's needed
               return [qtyLine].filter(Boolean);
             }
@@ -194,9 +202,10 @@ export default function GoogleCalendarView({
 
           // Hét/Nap: első sor workItemName[0..8] + (monogram névből VAGY teljes email) + munkaóra, utána minden
           const nameInitials = getInitialsFromNameOnly(p.name ?? null);
-          const nameOrEmail = viewType === 'timeGridDay' 
-            ? (p.name || p.email || "") 
-            : (nameInitials || p.email || "");
+          const nameOrEmail =
+            viewType === "timeGridDay"
+              ? p.name || p.email || ""
+              : nameInitials || p.email || "";
           const headerParts = [
             (p.workItemName || "").slice(0, 8),
             nameOrEmail,
@@ -251,16 +260,7 @@ export default function GoogleCalendarView({
             margin-bottom: 0.35rem;
             gap: 0.2rem;
           }
-          /* Hide hour labels in weekly view, keep the grid */
-          .fc-mobile-wrap .fc .fc-timegrid-slot-label {
-            display: none;
-          }
-          /* Remove the first (left) axis column entirely */
-          .fc-mobile-wrap .fc .fc-timegrid-axis,
-          .fc-mobile-wrap .fc .fc-scrollgrid-shrink,
-          .fc-mobile-wrap .fc .fc-timegrid-divider {
-            display: none;
-          }
+          /* Mobile: keep axis elements but make them 0 width */
           /* Add spacing between grouped header buttons */
           .fc-mobile-wrap .fc .fc-button-group .fc-button + .fc-button {
             margin-left: 0.25rem;
@@ -280,19 +280,31 @@ export default function GoogleCalendarView({
             border-radius: 0.375rem; /* rounded-md */
           }
         }
-        /* DAY VIEW ONLY: hide the first hours column (timeGridDay) */
-        /* FullCalendar adds view-specific root class names: .fc-timeGridDay-view */
-        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-axis,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-scrollgrid-shrink,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-slot-label,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-divider {
-          display: none !important;
-        }
-        /* WEEK VIEW ONLY: hide the first hours column (timeGridWeek) */
-        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-axis,
+        /* ===== DESKTOP & MOBILE: Az első (axis) oszlop maradjon a layoutban, de 0 szélességgel ===== */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-scrollgrid-shrink,
+        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-scrollgrid-shrink,
+        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-axis,
+        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-axis {
+          width: 0 !important;
+          min-width: 0 !important;
+          max-width: 0 !important;
+          padding: 0 !important;
+          border: 0 !important;
+          flex: 0 0 0 !important; /* fontos! */
+        }
+
+        /* A tartalmat tüntesd el (óra-címkék) */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-slot-label,
-        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-divider {
+        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-slot-label,
+        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-axis .fc-timegrid-axis-cushion,
+        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-axis .fc-timegrid-axis-cushion {
+          display: none !important;
+          visibility: hidden !important;
+        }
+
+        /* A vékony függőleges elválasztót is rejtsd el */
+        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-divider,
+        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-divider {
           display: none !important;
         }
         /* ITEMS: light green background in all views */
@@ -329,7 +341,7 @@ export default function GoogleCalendarView({
         .fc-mobile-wrap .fc .fc-daygrid-event,
         .fc-mobile-wrap .fc .fc-daygrid-event .fc-event-main,
         .fc-mobile-wrap .fc .fc-event-inner {
-          white-space: pre-line;;
+          white-space: pre-line;
           word-break: break-word;
           overflow-wrap: anywhere;
         }
