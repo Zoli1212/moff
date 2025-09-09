@@ -507,6 +507,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       <WorkerAddModal
         open={isAddOpen}
         onOpenChange={setIsAddOpen}
+        workId={workId}
         onSubmit={handleAdd}
         workItems={workItems}
         professions={professions}

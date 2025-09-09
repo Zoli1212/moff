@@ -46,6 +46,7 @@ export async function assignWorkerToWorkItemAndWork(
     // 1. Add to workItemWorkers table
     const workItemWorker = await prisma.workItemWorker.create({
       data: {
+        workId: workId, // Add workId for general workers support
         workItemId,
         workerId,
         name,

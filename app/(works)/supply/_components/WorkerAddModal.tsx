@@ -10,10 +10,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { WorkItem } from "@/types/work";
+import { getWorkersForWork, type WorkerForWork } from "@/actions/get-workers-for-work";
 
 interface WorkerAddModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  workId: number;
   workItems: WorkItem[];
   professions: string[];
   onSubmit: (data: {
@@ -109,6 +111,7 @@ function CustomSelect({
 const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   open,
   onOpenChange,
+  workId,
   workItems,
   professions,
   onSubmit,
@@ -116,6 +119,9 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   lockedWorkItemId,
   showAllWorkItems = false,
 }) => {
+  const [workerMode, setWorkerMode] = useState<"new" | "existing">("existing");
+  const [existingWorkers, setExistingWorkers] = useState<WorkerForWork[]>([]);
+  const [selectedExistingWorker, setSelectedExistingWorker] = useState<string>("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -130,45 +136,103 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Load existing workers when modal opens
+  useEffect(() => {
+    if (open && workerMode === "existing") {
+      const loadExistingWorkers = async () => {
+        try {
+          const workers = await getWorkersForWork(workId);
+          setExistingWorkers(workers);
+        } catch (error) {
+          console.error("Error loading existing workers:", error);
+          toast.error("Hiba a munkások betöltése során");
+        }
+      };
+      loadExistingWorkers();
+    }
+  }, [open, workerMode, workId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Use locked values if they exist, otherwise use form values
-    const finalProfession = lockedProfession || profession;
-    const finalWorkItemId = lockedWorkItemId || workItemId;
+    if (workerMode === "existing") {
+      // Handle existing worker assignment
+      if (!selectedExistingWorker) {
+        toast.error("Kérjük válassz egy munkást!");
+        return;
+      }
 
-    if (!name || !email || !phone || !finalProfession || (finalWorkItemId !== "general" && !finalWorkItemId)) {
-      toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
-      return;
-    }
+      const worker = existingWorkers.find(w => w.id.toString() === selectedExistingWorker);
+      if (!worker) {
+        toast.error("A kiválasztott munkás nem található!");
+        return;
+      }
 
-    setLoading(true);
-    try {
-      await onSubmit({
-        name,
-        email,
-        phone,
-        profession: finalProfession,
-        workItemId: finalWorkItemId === "general" ? null : Number(finalWorkItemId),
-        avatarUrl: avatarUrl || undefined,
-      });
+      const finalWorkItemId = lockedWorkItemId || workItemId;
+      if (finalWorkItemId !== "general" && !finalWorkItemId) {
+        toast.error("Kérjük válassz munkafázist!");
+        return;
+      }
 
-      // Reset form on success
-      setName("");
-      setEmail("");
-      setPhone("");
-      setProfession("");
-      setWorkItemId("");
-      setAvatarUrl("");
-      setAvatarPreview("");
-      setAvatarError("");
-      setAvatarUploading(false);
-      onOpenChange(false);
-    } catch (error) {
-      console.error("Error saving worker:", error);
-      toast.error("Hiba történt a mentés során. Kérlek próbáld újra.");
-    } finally {
-      setLoading(false);
+      setLoading(true);
+      try {
+        await onSubmit({
+          name: worker.name || "",
+          email: worker.email || "",
+          phone: worker.phone || "",
+          profession: worker.role || "",
+          workItemId: finalWorkItemId === "general" ? null : Number(finalWorkItemId),
+          avatarUrl: worker.avatarUrl || undefined,
+        });
+
+        // Reset form on success
+        setSelectedExistingWorker("");
+        setWorkItemId("");
+        onOpenChange(false);
+      } catch (error) {
+        console.error("Error assigning existing worker:", error);
+        toast.error("Hiba történt a munkás hozzárendelése során.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Handle new worker creation
+      const finalProfession = lockedProfession || profession;
+      const finalWorkItemId = lockedWorkItemId || workItemId;
+
+      if (!name || !finalProfession || (finalWorkItemId !== "general" && !finalWorkItemId)) {
+        toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await onSubmit({
+          name,
+          email,
+          phone,
+          profession: finalProfession,
+          workItemId: finalWorkItemId === "general" ? null : Number(finalWorkItemId),
+          avatarUrl: avatarUrl || undefined,
+        });
+
+        // Reset form on success
+        setName("");
+        setEmail("");
+        setPhone("");
+        setProfession("");
+        setWorkItemId("");
+        setAvatarUrl("");
+        setAvatarPreview("");
+        setAvatarError("");
+        setAvatarUploading(false);
+        onOpenChange(false);
+      } catch (error) {
+        console.error("Error saving worker:", error);
+        toast.error("Hiba történt a mentés során. Kérlek próbáld újra.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -236,10 +300,13 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   // Reset/initialize when modal opens (handle locks)
   useEffect(() => {
     if (open) {
+      setWorkerMode("existing");
       setProfession(lockedProfession ?? "");
       setWorkItemId(lockedWorkItemId ?? "");
+      setSelectedExistingWorker("");
     } else {
       // clear fields on close
+      setWorkerMode("existing");
       setName("");
       setEmail("");
       setPhone("");
@@ -249,6 +316,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setAvatarPreview("");
       setAvatarError("");
       setAvatarUploading(false);
+      setSelectedExistingWorker("");
+      setExistingWorkers([]);
     }
   }, [open, lockedProfession, lockedWorkItemId]);
 
@@ -261,6 +330,37 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {/* Worker Mode Selection */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none">
+              Munkás típusa
+            </label>
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => setWorkerMode("new")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  workerMode === "new"
+                    ? "bg-gray-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Új munkás
+              </button>
+              <button
+                type="button"
+                onClick={() => setWorkerMode("existing")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  workerMode === "existing"
+                    ? "bg-[#FF9900] text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Meglévő munkás
+              </button>
+            </div>
+          </div>
+
           {/* Work Item Selection - Disabled if locked */}
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">
@@ -290,142 +390,164 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none">Szakma</label>
-            {lockedProfession ? (
-              <div className="p-2 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-700">
-                {lockedProfession} (rögzítve)
-              </div>
-            ) : (
+          {/* Existing Worker Selection */}
+          {workerMode === "existing" && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium leading-none">
+                Válassz munkást
+              </label>
               <CustomSelect
-                value={profession}
-                onChange={setProfession}
-                disabled={professionsForSelected.length === 0}
-                placeholder={
-                  professionsForSelected.length === 0
-                    ? "Először válassz munkafázist"
-                    : "Válassz szakmát..."
-                }
-                options={[
-                  { value: "", label: "Válassz szakmát..." },
-                  ...professionsForSelected.map((p) => ({
-                    value: p,
-                    label: p,
-                  })),
-                ]}
+                className="mt-2"
+                value={selectedExistingWorker}
+                onChange={setSelectedExistingWorker}
+                placeholder="Válassz munkást..."
+                options={existingWorkers.map((worker) => ({
+                  value: worker.id.toString(),
+                  label: `${worker.name || "Névtelen"} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
+                }))}
               />
-            )}
-          </div>
-
-          <input
-            type="text"
-            placeholder="Név"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border rounded px-3 py-2"
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="border rounded px-3 py-2"
-            required
-          />
-          <input
-            type="tel"
-            placeholder="Telefon"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="border rounded px-3 py-2"
-            required
-          />
-          {/* Avatar upload with preview - polished UI */}
-          <div className="mt-2">
-            <label className="block text-sm font-medium mb-2">Profilkép</label>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={avatarPreview || avatarUrl || "/worker.jpg"}
-                  alt="Avatar preview"
-                  className="w-24 h-24 rounded-full object-cover border border-[#e6e6e6] shadow-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black text-white rounded-full px-3 py-0.5 text-[12px] shadow"
-                >
-                  {avatarPreview || avatarUrl ? "Csere" : "Kép feltöltése"}
-                </button>
-                {(avatarPreview || avatarUrl) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAvatarPreview("");
-                      setAvatarUrl("");
-                      setAvatarError("");
-                    }}
-                    title="Profilkép törlése"
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-[#ddd] text-red-600 inline-flex items-center justify-center shadow"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-              <div className="flex-1">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setAvatarError("");
-                    setAvatarUploading(true);
-                    setAvatarPreview(URL.createObjectURL(file));
-                    try {
-                      const formData = new FormData();
-                      formData.append("file", file);
-                      const res = await fetch("/api/upload-avatar", {
-                        method: "POST",
-                        body: formData,
-                      });
-                      const data = await res.json();
-                      if (data.url) {
-                        setAvatarUrl(data.url);
-                      } else {
-                        setAvatarError(
-                          data.error || "Hiba történt a feltöltésnél."
-                        );
-                        setAvatarUrl("");
-                        setAvatarPreview("");
-                      }
-                    } catch (err) {
-                      setAvatarError(
-                        "Hiba a feltöltés során: " + (err as Error).message
-                      );
-                      setAvatarUrl("");
-                      setAvatarPreview("");
-                    } finally {
-                      setAvatarUploading(false);
-                    }
-                  }}
-                  className="hidden"
-                />
-                <div className="text-xs text-[#666]">PNG vagy JPG, max 5MB</div>
-                {avatarUploading && (
-                  <div className="mt-2 h-1.5 bg-[#f1f1f1] rounded-full overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-r from-[#0070f3] to-[#42a5f5] animate-pulse"></div>
-                  </div>
-                )}
-                {avatarError && (
-                  <div className="text-red-600 text-xs mt-2">{avatarError}</div>
-                )}
-              </div>
             </div>
-          </div>
+          )}
+
+          {/* New Worker Form Fields */}
+          {workerMode === "new" && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">Szakma</label>
+                {lockedProfession ? (
+                  <div className="p-2 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-700">
+                    {lockedProfession} (rögzítve)
+                  </div>
+                ) : (
+                  <CustomSelect
+                    value={profession}
+                    onChange={setProfession}
+                    disabled={professionsForSelected.length === 0}
+                    placeholder={
+                      professionsForSelected.length === 0
+                        ? "Először válassz munkafázist"
+                        : "Válassz szakmát..."
+                    }
+                    options={[
+                      { value: "", label: "Válassz szakmát..." },
+                      ...professionsForSelected.map((p) => ({
+                        value: p,
+                        label: p,
+                      })),
+                    ]}
+                  />
+                )}
+              </div>
+
+              <input
+                type="text"
+                placeholder="Név"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="border rounded px-3 py-2"
+                required
+              />
+              <input
+                type="email"
+                placeholder="Email (opcionális)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="border rounded px-3 py-2"
+              />
+              <input
+                type="tel"
+                placeholder="Telefon (opcionális)"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="border rounded px-3 py-2"
+              />
+              {/* Avatar upload with preview - polished UI */}
+              <div className="mt-2">
+                <label className="block text-sm font-medium mb-2">Profilkép</label>
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={avatarPreview || avatarUrl || "/worker.jpg"}
+                      alt="Avatar preview"
+                      className="w-24 h-24 rounded-full object-cover border border-[#e6e6e6] shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black text-white rounded-full px-3 py-0.5 text-[12px] shadow"
+                    >
+                      {avatarPreview || avatarUrl ? "Csere" : "Kép feltöltése"}
+                    </button>
+                    {(avatarPreview || avatarUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatarPreview("");
+                          setAvatarUrl("");
+                          setAvatarError("");
+                        }}
+                        title="Profilkép törlése"
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-[#ddd] text-red-600 inline-flex items-center justify-center shadow"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setAvatarError("");
+                        setAvatarUploading(true);
+                        setAvatarPreview(URL.createObjectURL(file));
+                        try {
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          const res = await fetch("/api/upload-avatar", {
+                            method: "POST",
+                            body: formData,
+                          });
+                          const data = await res.json();
+                          if (data.url) {
+                            setAvatarUrl(data.url);
+                          } else {
+                            setAvatarError(
+                              data.error || "Hiba történt a feltöltésnél."
+                            );
+                            setAvatarUrl("");
+                            setAvatarPreview("");
+                          }
+                        } catch (err) {
+                          setAvatarError(
+                            "Hiba a feltöltés során: " + (err as Error).message
+                          );
+                          setAvatarUrl("");
+                          setAvatarPreview("");
+                        } finally {
+                          setAvatarUploading(false);
+                        }
+                      }}
+                      className="hidden"
+                    />
+                    <div className="text-xs text-[#666]">PNG vagy JPG, max 5MB</div>
+                    {avatarUploading && (
+                      <div className="mt-2 h-1.5 bg-[#f1f1f1] rounded-full overflow-hidden">
+                        <div className="w-full h-full bg-gradient-to-r from-[#0070f3] to-[#42a5f5] animate-pulse"></div>
+                      </div>
+                    )}
+                    {avatarError && (
+                      <div className="text-red-600 text-xs mt-2">{avatarError}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           <DialogFooter className="mt-4">
             <Button
@@ -440,10 +562,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               type="submit"
               disabled={
                 loading ||
-                !name ||
-                !email ||
-                !phone ||
-                !(lockedProfession || profession) ||
+                (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
+                (workerMode === "existing" && !selectedExistingWorker) ||
                 !(lockedWorkItemId || workItemId === "general" || workItemId)
               }
               className="bg-[#FF9900] hover:bg-[#e68a00] text-white"

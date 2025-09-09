@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { removeGeneralWorkerFromWork } from "@/actions/workitemworker-actions";
 import { Trash2 } from "lucide-react";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
-import type { WorkItem, Worker, WorkItemWorker, Professional } from "@/types/work";
+import type {
+  WorkItem,
+  Worker,
+  WorkItemWorker,
+  Professional,
+} from "@/types/work";
 
 export interface GeneralWorkerFromDB {
   id: number;
@@ -53,7 +58,8 @@ function isProfessional(obj: unknown): obj is Professional {
 }
 
 function getRequiredProfessionals(item: WorkItem): Professional[] {
-  const raw = (item as unknown as { requiredProfessionals?: unknown }).requiredProfessionals;
+  const raw = (item as unknown as { requiredProfessionals?: unknown })
+    .requiredProfessionals;
   if (Array.isArray(raw)) {
     return raw.filter(isProfessional);
   }
@@ -78,7 +84,10 @@ const WorkersSummary: React.FC<Props> = ({
     workerName: "",
   });
 
-  const handleRemoveGeneralWorker = (workItemWorkerId: number, workerName: string) => {
+  const handleRemoveGeneralWorker = (
+    workItemWorkerId: number,
+    workerName: string
+  ) => {
     setConfirmDialog({
       isOpen: true,
       workerId: workItemWorkerId,
@@ -103,87 +112,99 @@ const WorkersSummary: React.FC<Props> = ({
 
   // Filter work items based on showAllWorkItems flag
   const activeWorkItemIds = useMemo(
-    () => showAllWorkItems 
-      ? workItems.map((w) => w.id)
-      : workItems.filter((w) => w.inProgress).map((w) => w.id),
+    () =>
+      showAllWorkItems
+        ? workItems.map((w) => w.id)
+        : workItems.filter((w) => w.inProgress).map((w) => w.id),
     [workItems, showAllWorkItems]
   );
 
   // Show assignments from active workItems (based on showAllWorkItems flag)
   // Also include general workers (workItemId = null) that belong to this work
-  const assignments = useMemo(
-    () => {
-      // Get assignments from specific workItems
-      const workItemAssignments = workItems
-        .filter(wi => showAllWorkItems || wi.inProgress)
-        .flatMap((wi) => (wi.workItemWorkers ?? []).map((w) => ({ ...w } as AssignmentEx)));
-      
-      // Get general workers (workItemId = null) for this work
-      const generalWorkers = workers
-        .filter(w => w.workItemId === null)
-        .flatMap(w => {
-          try {
-            const workersArray = w.workers ? JSON.parse(w.workers as string) : [];
-            return workersArray.map((worker: WorkerFromJSON) => ({
-              id: worker.workforceRegistryId || 0,
-              workerId: w.id,
-              workItemId: null,
-              name: worker.name,
-              email: worker.email,
-              phone: worker.phone,
-              role: w.name,
-              quantity: 1,
-              avatarUrl: worker.avatarUrl,
-            } as AssignmentEx));
-          } catch (e) {
-            console.log((e as Error).message)
-            return [];
-          }
-        });
-      
-      return [...workItemAssignments, ...generalWorkers];
-    },
-    [workItems, workers, showAllWorkItems]
-  );
+  const assignments = useMemo(() => {
+    // Get assignments from specific workItems
+    const workItemAssignments = workItems
+      .filter((wi) => showAllWorkItems || wi.inProgress)
+      .flatMap((wi) =>
+        (wi.workItemWorkers ?? []).map((w) => ({ ...w }) as AssignmentEx)
+      );
+
+    // Get general workers (workItemId = null) for this work
+    const generalWorkers = workers
+      .filter((w) => w.workItemId === null)
+      .flatMap((w) => {
+        try {
+          const workersArray = w.workers ? JSON.parse(w.workers as string) : [];
+          return workersArray.map(
+            (worker: WorkerFromJSON) =>
+              ({
+                id: worker.workforceRegistryId || 0,
+                workerId: w.id,
+                workItemId: null,
+                name: worker.name,
+                email: worker.email,
+                phone: worker.phone,
+                role: w.name,
+                quantity: 1,
+                avatarUrl: worker.avatarUrl,
+              }) as AssignmentEx
+          );
+        } catch (e) {
+          console.log((e as Error).message);
+          return [];
+        }
+      });
+
+    return [...workItemAssignments, ...generalWorkers];
+  }, [workItems, workers, showAllWorkItems]);
 
   // Build required slots per profession from active workItems
   // Only show roles that are actually needed by active workItems
   const requiredPerProfession: Record<string, number> = useMemo(() => {
     const byRole: Record<string, number> = {};
-    const activeItems = workItems.filter(wi => showAllWorkItems || wi.inProgress);
-    
+    const activeItems = workItems.filter(
+      (wi) => showAllWorkItems || wi.inProgress
+    );
+
     // Collect all required roles from active workItems
     for (const wi of activeItems) {
       // From workItemWorkers
       for (const wiw of wi.workItemWorkers ?? []) {
-        const worker = workers.find(w => w.id === wiw.workerId);
+        const worker = workers.find((w) => w.id === wiw.workerId);
         if (worker) {
           const role = worker.name || "Ismeretlen";
           const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
           byRole[role] = Math.max(byRole[role] || 0, quantity);
         }
       }
-      
+
       // From requiredProfessionals if available
       const requiredProfs = getRequiredProfessionals(wi);
       for (const rp of requiredProfs) {
         if (rp.type) {
-          const quantity = typeof rp.quantity === "number" && rp.quantity > 0 ? rp.quantity : 1;
+          const quantity =
+            typeof rp.quantity === "number" && rp.quantity > 0
+              ? rp.quantity
+              : 1;
           byRole[rp.type] = Math.max(byRole[rp.type] || 0, quantity);
         }
       }
     }
-    
+
     return byRole;
   }, [workItems, workers, showAllWorkItems]);
 
   // Decide which single workItem's assignments should fill the slots for each role
   // Prefer an in-progress item with the max requirement; if none, fall back to any item with the max
   const roleBestWorkItemId: Record<string, number | undefined> = useMemo(() => {
-    const bestAny: Record<string, { count: number; id: number } | undefined> = {};
-    const bestInProg: Record<string, { count: number; id: number } | undefined> = {};
+    const bestAny: Record<string, { count: number; id: number } | undefined> =
+      {};
+    const bestInProg: Record<
+      string,
+      { count: number; id: number } | undefined
+    > = {};
     const activeIds = new Set(activeWorkItemIds);
-    
+
     for (const item of workItems) {
       const withinItem: Record<string, number> = {};
       const req = getRequiredProfessionals(item);
@@ -191,7 +212,10 @@ const WorkersSummary: React.FC<Props> = ({
         for (const rp of req) {
           const role: string | undefined = rp.type ?? undefined;
           if (!role) continue;
-          const qty = typeof rp.quantity === "number" && rp.quantity > 0 ? rp.quantity : 1;
+          const qty =
+            typeof rp.quantity === "number" && rp.quantity > 0
+              ? rp.quantity
+              : 1;
           withinItem[role] = (withinItem[role] || 0) + qty;
         }
       } else {
@@ -208,7 +232,7 @@ const WorkersSummary: React.FC<Props> = ({
           if (cnt > 0) withinItem[role] = (withinItem[role] || 0) + cnt;
         }
       }
-      
+
       for (const role of Object.keys(withinItem)) {
         const count = withinItem[role];
         const currAny = bestAny[role];
@@ -221,7 +245,7 @@ const WorkersSummary: React.FC<Props> = ({
         }
       }
     }
-    
+
     const out: Record<string, number | undefined> = {};
     const roles = new Set<string>([
       ...Object.keys(bestAny),
@@ -234,39 +258,50 @@ const WorkersSummary: React.FC<Props> = ({
 
   // Denominator for the header: from the BEST work item per role only.
   // Sum quantities of null-email WorkItemWorkers that belong to that role.
-  const denominatorRequiredPerProfession: Record<string, number> = useMemo(() => {
-    const byRole: Record<string, number> = {};
-    // Map workerId -> role name
-    const workerIdToRole = new Map<number, string>();
-    for (const w of workers) {
-      workerIdToRole.set(w.id, w.name || "Ismeretlen");
-    }
-    // role -> allowed workerIds
-    const roleToWorkerIds = new Map<string, Set<number>>();
-    for (const [wid, role] of workerIdToRole.entries()) {
-      if (!roleToWorkerIds.has(role)) roleToWorkerIds.set(role, new Set<number>());
-      roleToWorkerIds.get(role)!.add(wid);
-    }
-    const roles = new Set<string>([
-      ...Object.keys(requiredPerProfession),
-      ...Object.keys(roleBestWorkItemId),
-    ]);
-    for (const role of roles) {
-      const bestId = roleBestWorkItemId[role];
-      if (!bestId) { byRole[role] = 0; continue; }
-      const item = workItems.find((it) => it.id === bestId);
-      if (!item) { byRole[role] = 0; continue; }
-      const allowedIds = roleToWorkerIds.get(role) || new Set<number>();
-      let sum = 0;
-      for (const wiw of (item.workItemWorkers ?? [])) {
-        if ((wiw as AssignmentEx).email == null && allowedIds.has(wiw.workerId)) {
-          sum += typeof wiw.quantity === "number" ? wiw.quantity : 1;
-        }
+  const denominatorRequiredPerProfession: Record<string, number> =
+    useMemo(() => {
+      const byRole: Record<string, number> = {};
+      // Map workerId -> role name
+      const workerIdToRole = new Map<number, string>();
+      for (const w of workers) {
+        workerIdToRole.set(w.id, w.name || "Ismeretlen");
       }
-      byRole[role] = sum;
-    }
-    return byRole;
-  }, [workItems, workers, roleBestWorkItemId, requiredPerProfession]);
+      // role -> allowed workerIds
+      const roleToWorkerIds = new Map<string, Set<number>>();
+      for (const [wid, role] of workerIdToRole.entries()) {
+        if (!roleToWorkerIds.has(role))
+          roleToWorkerIds.set(role, new Set<number>());
+        roleToWorkerIds.get(role)!.add(wid);
+      }
+      const roles = new Set<string>([
+        ...Object.keys(requiredPerProfession),
+        ...Object.keys(roleBestWorkItemId),
+      ]);
+      for (const role of roles) {
+        const bestId = roleBestWorkItemId[role];
+        if (!bestId) {
+          byRole[role] = 0;
+          continue;
+        }
+        const item = workItems.find((it) => it.id === bestId);
+        if (!item) {
+          byRole[role] = 0;
+          continue;
+        }
+        const allowedIds = roleToWorkerIds.get(role) || new Set<number>();
+        let sum = 0;
+        for (const wiw of item.workItemWorkers ?? []) {
+          if (
+            (wiw as AssignmentEx).email == null &&
+            allowedIds.has(wiw.workerId)
+          ) {
+            sum += typeof wiw.quantity === "number" ? wiw.quantity : 1;
+          }
+        }
+        byRole[role] = sum;
+      }
+      return byRole;
+    }, [workItems, workers, roleBestWorkItemId, requiredPerProfession]);
 
   // Show all professions required (source of truth = requiredPerProfession)
   const professions = useMemo(() => {
@@ -274,11 +309,7 @@ const WorkersSummary: React.FC<Props> = ({
     if (keys.length > 0) return keys.sort((a, b) => a.localeCompare(b, "hu"));
     // Fallback: from workers list
     const names = Array.from(
-      new Set(
-        workers
-          .map((w) => w.name || "Ismeretlen")
-          .filter(Boolean)
-      )
+      new Set(workers.map((w) => w.name || "Ismeretlen").filter(Boolean))
     );
     return names.sort((a, b) => a.localeCompare(b, "hu"));
   }, [requiredPerProfession, workers]);
@@ -323,9 +354,12 @@ const WorkersSummary: React.FC<Props> = ({
           const required = requiredPerProfession[role] || 0;
           const list = grouped[role] || []; // Only show workItemWorker connections
           // Use per-role denominator from best work item; fallback to required if missing/zero
-          const rawDenom = denominatorRequiredPerProfession[role] as number | undefined;
-          const displayDenom = typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
-          
+          const rawDenom = denominatorRequiredPerProfession[role] as
+            | number
+            | undefined;
+          const displayDenom =
+            typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
+
           return (
             <div key={role}>
               <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
@@ -376,7 +410,7 @@ const WorkersSummary: React.FC<Props> = ({
             </div>
           );
         })}
-        
+
         {/* General Workers Section */}
         {generalWorkersFromDB.length > 0 && (
           <div className="mt-6 pt-4 border-t border-gray-200">
@@ -386,17 +420,19 @@ const WorkersSummary: React.FC<Props> = ({
             {(() => {
               // Group general workers by role
               const generalByRole: Record<string, GeneralWorkerFromDB[]> = {};
-              generalWorkersFromDB.forEach(worker => {
+              generalWorkersFromDB.forEach((worker) => {
                 const role = worker.role || "Ismeretlen";
                 if (!generalByRole[role]) generalByRole[role] = [];
                 generalByRole[role].push(worker);
               });
-              
+
               return Object.entries(generalByRole).map(([role, workers]) => (
                 <div key={`general-${role}`} className="mb-3">
                   <div className="bg-[#f0f8ff] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-3">
                     <div className="flex items-center gap-2.5 mb-2">
-                      <div className="flex-2 font-semibold text-blue-700">{role}</div>
+                      <div className="flex-2 font-semibold text-blue-700">
+                        {role}
+                      </div>
                       <div className="text-[14px] text-blue-600 font-medium">
                         {workers.length} fő
                       </div>
@@ -424,7 +460,12 @@ const WorkersSummary: React.FC<Props> = ({
                               {worker.email || ""}
                             </div>
                             <button
-                              onClick={() => handleRemoveGeneralWorker(worker.id, worker.name || 'Névtelen munkás')}
+                              onClick={() =>
+                                handleRemoveGeneralWorker(
+                                  worker.id,
+                                  worker.name || "Névtelen munkás"
+                                )
+                              }
                               className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
                               title="Munkás eltávolítása"
                             >
@@ -441,13 +482,13 @@ const WorkersSummary: React.FC<Props> = ({
           </div>
         )}
       </div>
-      
+
       <ConfirmationDialog
         isOpen={confirmDialog.isOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         title="Munkás eltávolítása"
-        description={`Biztosan el szeretnéd távolítani ${confirmDialog.workerName || 'ezt a'} munkást az általános munkások közül?`}
+        description={`Biztosan el szeretnéd távolítani ${confirmDialog.workerName || "ezt a"} munkást az általános munkások közül?`}
       />
     </div>
   );
