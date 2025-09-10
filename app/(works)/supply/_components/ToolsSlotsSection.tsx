@@ -223,7 +223,8 @@ const ToolsSlotsSection: React.FC<Props> = ({
     }
   };
 
-  if (!tools.length) return null;
+  // Don't return null if no tools in registry - we still want to show required tools from workItems
+  // if (!tools.length) return null;
 
   // Build display list from required tools across IN-PROGRESS work items only (max quantity per name)
   type DisplayTool = { name: string; required: number; tool: Tool };
@@ -231,6 +232,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
   
   // Show only inProgress workItems in supply section
   const relevantItems = workItems.filter(wi => wi.inProgress);
+  
   
   relevantItems.forEach((wi) => {
     (wi.tools || []).forEach((t) => {
@@ -252,6 +254,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
       return { name, required, tool: { ...candidate, quantity: required } };
     }
   );
+
 
   return (
     <div style={{ marginBottom: 32 }}>

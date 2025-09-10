@@ -41,6 +41,7 @@ export default async function SupplyPage({
     tools = await getToolsRegistryByTenant();
     assignedTools = await getAssignedToolsForWork(workId) as AssignedTool[];
     workers = work.workers || [];
+    
   } catch (e) {
     console.error(e);
     return <div>Nem sikerült betölteni az anyagokat vagy szerszámokat.</div>;
