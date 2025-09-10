@@ -68,16 +68,22 @@ export default function TasksPage() {
   const doFetchWorkAndItems = useCallback(async () => {
     if (isNaN(workId)) {
       setLoading(false);
+      setError("Érvénytelen munkalap azonosító");
       return;
     }
+
     setLoading(true);
     setError(null);
+
     try {
       const { work, workItems } = await fetchWorkAndItems(workId);
       setWork(work);
-      setWorkItems(workItems);
+      setWorkItems(workItems || []);
     } catch (e) {
-      setError((e as Error).message || "Hiba történt a lekérdezéskor");
+      console.error("Error fetching work items:", e);
+      setError(
+        "Nem sikerült betölteni a munkalapot. Kérjük, próbálja újra később."
+      );
     } finally {
       setLoading(false);
     }
@@ -104,13 +110,65 @@ export default function TasksPage() {
   const handleAssignDiary = async (workItemId: number, checked: boolean) => {
     setAssigning(workItemId);
     setAssignError(null);
+
     try {
-      let result;
+      type ApiResult = {
+        success: boolean;
+        id?: number;
+        data?: { id: number };
+        message?: string;
+      };
+      let result: ApiResult | null = null;
       if (checked) {
         result = await createWorkDiary({ workId, workItemId });
+
+        // Update UI only after successful API call
+        if (result.success) {
+          setWorkItems((prevItems) =>
+            prevItems.map((item) => {
+              if (item.id === workItemId) {
+                return {
+                  ...item,
+                  workDiaryEntries: [
+                    {
+                      id: result?.data?.id || result?.id || Date.now(),
+                      workItemId,
+                      workId,
+                    },
+                  ] as WorkDiary[],
+                };
+              }
+              return item;
+            })
+          );
+        }
       } else {
-        result = await deleteWorkDiary({ workId, workItemId });
+        // Get the diary ID before deleting
+        const workItem = workItems.find((item) => item.id === workItemId);
+        const diaryId = workItem?.workDiaryEntries?.[0]?.id;
+
+        if (diaryId) {
+          result = await deleteWorkDiary({ workId, workItemId });
+
+          // Update UI only after successful deletion
+          if (result.success) {
+            setWorkItems((prevItems) =>
+              prevItems.map((item) => {
+                if (item.id === workItemId) {
+                  return {
+                    ...item,
+                    workDiaryEntries: [],
+                  };
+                }
+                return item;
+              })
+            );
+          }
+        } else {
+          result = { success: false, message: "Nincs törlendő napló" };
+        }
       }
+
       if (!result.success) {
         setAssignError(
           result.message ||
@@ -118,9 +176,6 @@ export default function TasksPage() {
               ? "Nem sikerült naplót rendelni."
               : "Nem sikerült eltávolítani a naplót.")
         );
-      } else {
-        // Re-fetch work items to update UI
-        await doFetchWorkAndItems();
       }
     } catch (e) {
       setAssignError(
@@ -184,7 +239,10 @@ export default function TasksPage() {
         {work?.title}
       </h2>
       {loading ? (
-        <div>AI Frissítés...</div>
+        <div className="flex items-center justify-center p-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mr-3"></div>
+          <span>Betöltés...</span>
+        </div>
       ) : error ? (
         <div style={{ color: "red" }}>{error}</div>
       ) : !work ? (
@@ -219,84 +277,87 @@ export default function TasksPage() {
           ) : (
             [...workItems]
               .sort((a, b) => {
-                const aInProgress = a.workDiaryEntries && a.workDiaryEntries.length > 0;
-                const bInProgress = b.workDiaryEntries && b.workDiaryEntries.length > 0;
+                const aInProgress =
+                  a.workDiaryEntries && a.workDiaryEntries.length > 0;
+                const bInProgress =
+                  b.workDiaryEntries && b.workDiaryEntries.length > 0;
                 return (bInProgress ? 1 : 0) - (aInProgress ? 1 : 0);
               })
               .map((item: WorkItem) => {
-              const p = Math.max(
-                0,
-                Math.min(100, Math.round(item.progress || 0))
-              );
-              return (
-                <TaskCard
-                  key={item.id}
-                  id={item.id}
-                  title={item.name}
-                  summary={item.description}
-                  progress={p}
-                  isLoading={assigning === item.id}
-                  checked={
-                    item.workDiaryEntries && item.workDiaryEntries.length > 0
-                  }
-                  className={
-                    item.workDiaryEntries && item.workDiaryEntries.length > 0
-                      ? "border-green-500 border-2 bg-green-50"
-                      : ""
-                  }
-                  onCheck={(checked) => handleAssignDiary(item.id, checked)}
-                >
-                  {item.workItemWorkers && item.workItemWorkers.length > 0 && (
-                    <div
-                      style={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: "12px",
-                        marginTop: "8px",
-                      }}
-                    >
-                      {item.workItemWorkers
-                        .filter((w) => w.name && w.name.trim() !== "")
-                        .map((w) => (
+                const p = Math.max(
+                  0,
+                  Math.min(100, Math.round(item.progress || 0))
+                );
+                return (
+                  <TaskCard
+                    key={item.id}
+                    id={item.id}
+                    title={item.name}
+                    summary={item.description}
+                    progress={p}
+                    isLoading={assigning === item.id}
+                    checked={
+                      item.workDiaryEntries && item.workDiaryEntries.length > 0
+                    }
+                    className={
+                      item.workDiaryEntries && item.workDiaryEntries.length > 0
+                        ? "border-green-500 border-2 bg-green-50"
+                        : ""
+                    }
+                    onCheck={(checked) => handleAssignDiary(item.id, checked)}
+                  >
+                    {item.workItemWorkers &&
+                      item.workItemWorkers.length > 0 && (
                         <div
-                          key={w.id}
                           style={{
                             display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            backgroundColor: "#f0f0f0",
-                            padding: "4px 8px",
-                            borderRadius: "12px",
+                            flexWrap: "wrap",
+                            gap: "12px",
+                            marginTop: "8px",
                           }}
                         >
-                          <Image
-                            src="/worker.jpg"
-                            alt="worker avatar"
-                            width={24}
-                            height={24}
-                            style={{ borderRadius: "50%" }}
-                          />
-                          <span
-                            style={{
-                              fontWeight: "bold",
-                              fontSize: "11px",
-                              lineHeight: "1.2",
-                            }}
-                          >
-                            {getMonogram(w.name)}
-                          </span>
+                          {item.workItemWorkers
+                            .filter((w) => w.name && w.name.trim() !== "")
+                            .map((w) => (
+                              <div
+                                key={w.id}
+                                style={{
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "6px",
+                                  backgroundColor: "#f0f0f0",
+                                  padding: "4px 8px",
+                                  borderRadius: "12px",
+                                }}
+                              >
+                                <Image
+                                  src="/worker.jpg"
+                                  alt="worker avatar"
+                                  width={24}
+                                  height={24}
+                                  style={{ borderRadius: "50%" }}
+                                />
+                                <span
+                                  style={{
+                                    fontWeight: "bold",
+                                    fontSize: "11px",
+                                    lineHeight: "1.2",
+                                  }}
+                                >
+                                  {getMonogram(w.name)}
+                                </span>
+                              </div>
+                            ))}
                         </div>
-                      ))}
-                    </div>
-                  )}
-                  {assignError && assigning === item.id && (
-                    <span style={{ color: "red", marginLeft: 8 }}>
-                      {assignError}
-                    </span>
-                  )}
-                </TaskCard>
-              );
-            })
+                      )}
+                    {assignError && assigning === item.id && (
+                      <span style={{ color: "red", marginLeft: 8 }}>
+                        {assignError}
+                      </span>
+                    )}
+                  </TaskCard>
+                );
+              })
           )}
         </div>
       )}

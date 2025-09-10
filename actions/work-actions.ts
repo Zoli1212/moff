@@ -66,18 +66,27 @@ export async function deleteWork(id: number) {
 import { normalizeWork } from "@/lib/normalize";
 
 export async function fetchWorkAndItems(workId: number) {
-  const rawWork = await getWorkById(workId);
-  const normWork = normalizeWork(rawWork);
-  const items = (await getWorkItemsWithWorkers(workId)).map((item: any) => ({
-    ...item,
-    description: item.description ?? undefined,
-    workItemWorkers: item.workItemWorkers?.map((w: any) => ({
-      ...w,
-      name: w.name ?? undefined,
-      role: w.role ?? undefined,
-    })),
-  }));
-  return { work: normWork, workItems: items };
+  try {
+    const rawWork = await getWorkById(workId);
+    if (!rawWork) {
+      throw new Error('Work not found');
+    }
+    const normWork = await normalizeWork(rawWork);
+    const workItems = await getWorkItemsWithWorkers(workId);
+    const items = workItems.map((item: any) => ({
+      ...item,
+      description: item.description ?? undefined,
+      workItemWorkers: item.workItemWorkers?.map((w: any) => ({
+        ...w,
+        name: w.name ?? undefined,
+        role: w.role ?? undefined,
+      })),
+    }));
+    return { work: normWork, workItems: items };
+  } catch (error) {
+    console.error('Error in fetchWorkAndItems:', error);
+    throw error; // Re-throw to be caught by the component
+  }
 }
 
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {

@@ -81,7 +81,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           disabled={isLoading}
           onChange={async () => {
             if (!onCheck) return;
-            toast("Napló elem frissítése", {
+            toast("AI frissítés folyamatban ...", {
               id: "frissites",
               duration: 50000,
               style: {
