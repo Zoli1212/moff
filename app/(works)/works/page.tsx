@@ -20,11 +20,14 @@ export type Work = {
   [key: string]: unknown;
 };
 
-function toCardProps(work: Work, workStates: Record<string | number, string>): WorkCardProps {
+function toCardProps(
+  work: Work,
+  workStates: Record<string | number, string>
+): WorkCardProps {
   const workState = workStates[work.id];
-  const isUpdating = workState === 'updating';
+  const isUpdating = workState === "updating";
   const isDisabled = isUpdating;
-  
+
   return {
     ...work,
     id: Number(work.id),
@@ -62,7 +65,9 @@ function toCardProps(work: Work, workStates: Record<string | number, string>): W
 
 const WorkListPage = () => {
   const [works, setWorks] = useState<Work[]>([]);
-  const [workStates, setWorkStates] = useState<Record<string | number, string>>({});
+  const [workStates, setWorkStates] = useState<Record<string | number, string>>(
+    {}
+  );
   const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
@@ -80,16 +85,31 @@ const WorkListPage = () => {
     fetchWorks();
   }, []);
 
-  const handleWorkStateChange = useCallback((workId: number | string, state: 'updating' | 'done' | 'failed' | 'idle') => {
-    setWorkStates(prev => ({
-      ...prev,
-      [workId]: state
-    }));
-  }, []);
+  const handleWorkStateChange = useCallback(
+    (
+      workId: number | string,
+      state: "updating" | "done" | "failed" | "idle"
+    ) => {
+      setWorkStates((prev) => ({
+        ...prev,
+        [workId]: state,
+      }));
+    },
+    []
+  );
 
   if (loading) {
     return (
-      <div style={{ padding: 32, background: "#f8f9fa", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div
+        style={{
+          padding: 32,
+          background: "#f8f9fa",
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <div>Munkák betöltése...</div>
       </div>
     );
@@ -167,7 +187,10 @@ const WorkListPage = () => {
         <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>Munkák</h2>
       </div>
       {/* Automatically update all works that have not been AI-updated */}
-      <WorksAutoUpdater works={activeWorks} onWorkStateChange={handleWorkStateChange} />
+      <WorksAutoUpdater
+        works={activeWorks}
+        onWorkStateChange={handleWorkStateChange}
+      />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
         {activeWorks.length === 0 ? (
           <div>Nincs aktív munka.</div>
@@ -175,17 +198,24 @@ const WorkListPage = () => {
           activeWorks.map((work) => {
             const cardProps = toCardProps(work, workStates);
             const isDisabled = cardProps.isDisabled;
-            
+
             if (isDisabled) {
               return (
-                <div key={work.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div
+                  key={work.id}
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   <WorkCard {...cardProps} />
                 </div>
               );
             }
-            
+
             return (
-              <Link key={work.id} href={`/works/${work.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link
+                key={work.id}
+                href={`/works/${work.id}`}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
                 <WorkCard {...cardProps} />
               </Link>
             );

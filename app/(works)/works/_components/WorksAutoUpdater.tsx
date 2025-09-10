@@ -17,10 +17,16 @@ export interface Work {
 
 interface WorksAutoUpdaterProps {
   works: Work[];
-  onWorkStateChange?: (workId: number | string, state: 'updating' | 'done' | 'failed' | 'idle') => void;
+  onWorkStateChange?: (
+    workId: number | string,
+    state: "updating" | "done" | "failed" | "idle"
+  ) => void;
 }
 
-const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateChange }) => {
+const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
+  works,
+  onWorkStateChange,
+}) => {
   const [updatingIds, setUpdatingIds] = useState<(number | string)[]>([]);
   const [doneIds, setDoneIds] = useState<(number | string)[]>([]);
   const [failedIds, setFailedIds] = useState<(number | string)[]>([]);
@@ -39,25 +45,25 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateC
       return;
     }
     setShowStatus(true);
-    
+
     // Process multiple works concurrently, but limit to 2 at a time to avoid overwhelming
     const updateNext = async () => {
       const currentlyUpdating = updatingIds.length;
       const maxConcurrent = 2;
-      
+
       if (currentlyUpdating >= maxConcurrent) return;
-      
+
       const next = notUpdated.find(
         (work) =>
           !updatingIds.includes(work.id) &&
           !doneIds.includes(work.id) &&
           !failedIds.includes(work.id)
       );
-      
+
       if (!next) return;
-      
+
       setUpdatingIds((ids) => [...ids, next.id]);
-      onWorkStateChange?.(next.id, 'updating');
+      onWorkStateChange?.(next.id, "updating");
       try {
         const workData = {
           location: next.location || "",
@@ -77,38 +83,38 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateC
             const msg = `Work ${next.id} save error: ${dbResult.error || "Unknown error"}`;
             toast.error(msg);
             setFailedIds((ids) => [...ids, next.id]);
-            onWorkStateChange?.(next.id, 'failed');
+            onWorkStateChange?.(next.id, "failed");
             setErrorMsg(msg);
           } else {
             toast.success(`Work ${next.id} AI-updated!`);
             setDoneIds((ids) => [...ids, next.id]);
-            onWorkStateChange?.(next.id, 'done');
+            onWorkStateChange?.(next.id, "done");
           }
         } else {
           const msg = `Work ${next.id}: ${data?.error || "AI processing error!"}`;
           toast.error(msg);
           setFailedIds((ids) => [...ids, next.id]);
-          onWorkStateChange?.(next.id, 'failed');
+          onWorkStateChange?.(next.id, "failed");
           setErrorMsg(msg);
         }
       } catch (err) {
         const msg = `Work ${next.id} network error: ${(err as Error).message}`;
         toast.error(msg);
         setFailedIds((ids) => [...ids, next.id]);
-        onWorkStateChange?.(next.id, 'failed');
+        onWorkStateChange?.(next.id, "failed");
         setErrorMsg(msg);
       } finally {
-        setUpdatingIds((ids) => ids.filter(id => id !== next.id));
+        setUpdatingIds((ids) => ids.filter((id) => id !== next.id));
       }
     };
-    
+
     // Start multiple updates if possible
     const startUpdates = async () => {
       for (let i = 0; i < 2; i++) {
         await updateNext();
       }
     };
-    
+
     startUpdates();
     // eslint-disable-next-line
   }, [works, updatingIds, doneIds, failedIds, onWorkStateChange]);
@@ -127,8 +133,6 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({ works, onWorkStateC
   const notUpdated = works.filter((w) => w.updatedByAI !== true);
   const total = notUpdated.length;
   const done = doneIds.length;
-
-
 
   useEffect(() => {
     if (done === total && total > 0) {

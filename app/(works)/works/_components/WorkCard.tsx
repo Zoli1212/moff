@@ -1,8 +1,5 @@
 "use client";
 import React from "react";
-// import { updateWorkWithAIResult } from "@/actions/work-actions";
-// import { Loader2 } from "lucide-react";
-// import { toast } from "sonner";
 
 import type { OfferItem } from "@/types/offer.types";
 
@@ -34,13 +31,9 @@ const getUrgentColor = (level: "warning" | "danger") => {
 const WorkCard: React.FC<WorkCardProps> = (props) => {
   console.log("WorkCard props:", props);
 
-  // const [loading, setLoading] = useState(false);
-
   const {
-    // id,
     title,
     deadline,
-    summary,
     progress,
     progressPlanned,
     financial,
@@ -49,11 +42,32 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     urgentLevel,
     isUpdating = false,
     isDisabled = false,
-    // offerItems = [],
-    // location = "",
-    // offerDescription = "",
-    // estimatedDuration = "",
+    offerItems = [],
+    offerDescription = "",
   } = props;
+
+  // Generate display text: offerItems first, then offerDescription, then fallback
+  const getDisplayText = () => {
+    // First priority: offerItems
+    if (offerItems && Array.isArray(offerItems) && offerItems.length > 0) {
+      const itemsText = offerItems
+        .slice(0, 2)
+        .map(item => item.name || item.description || '')
+        .filter(Boolean)
+        .join(', ');
+      if (itemsText) {
+        return itemsText.length > 80 ? itemsText.substring(0, 80) + '...' : itemsText;
+      }
+    }
+    
+    // Second priority: offerDescription
+    if (offerDescription && typeof offerDescription === 'string') {
+      return offerDescription.length > 80 ? offerDescription.substring(0, 80) + '...' : offerDescription;
+    }
+    
+    // Fallback: hardcoded text
+    return "Munka összefoglaló";
+  };
 
   return (
     <div
@@ -65,11 +79,14 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         background: isUpdating ? "#f8f9fa" : "#fff",
         boxShadow: "0 2px 8px #eee",
         maxWidth: 420,
+        minHeight: 260,
         opacity: isDisabled ? 0.6 : 1,
         position: "relative",
         overflow: "hidden",
         cursor: isDisabled ? "not-allowed" : "pointer",
         transition: "all 0.3s ease",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {isUpdating && (
@@ -88,8 +105,12 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       )}
       <style jsx>{`
         @keyframes loading {
-          0% { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
+          0% {
+            background-position: 200% 0;
+          }
+          100% {
+            background-position: -200% 0;
+          }
         }
       `}</style>
       <div
@@ -120,19 +141,26 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       </div>
       <style jsx>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
       <div
         style={{
-          margin: "12px 0 10px 0",
-          color: "#333",
-          fontSize: 15,
-          whiteSpace: "pre-line",
+          margin: "8px 0",
+          color: "#555",
+          fontSize: 14,
+          lineHeight: "1.4",
+          minHeight: "40px",
+          maxHeight: "60px",
+          overflow: "hidden",
         }}
       >
-        {summary}
+        {getDisplayText()}
       </div>
       <div style={{ marginBottom: 8 }}>
         <div style={{ fontSize: 13, color: "#666" }}>
@@ -185,83 +213,6 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         </div>
       </div>
       <div style={{ display: "flex", alignItems: "center", marginTop: 14 }}>
-        {/* <button
-          style={{
-            background: "#2ecc71",
-            border: "none",
-            borderRadius: "50%",
-            width: 32,
-            height: 32,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 12,
-            cursor: loading ? "not-allowed" : "pointer",
-            opacity: loading ? 0.7 : 1,
-          }}
-          title="Elkezd"
-          disabled={loading}
-          onClick={async (e) => {
-            e.preventDefault();
-            setLoading(true);
-            const workData = {
-              location,
-              offerDescription,
-              estimatedDuration,
-              offerItems,
-            };
-            try {
-              const aiResponse = await fetch("/api/start-work", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(workData),
-              });
-              const data = await aiResponse.json();
-              if (data && !data.error) {
-                try {
-                  const dbResult = await updateWorkWithAIResult(id, data);
-                  if (!dbResult.success) {
-                    toast.error(`Hiba a mentéskor: ${dbResult.error || "Ismeretlen hiba"}`);
-                    console.error("DB mentés hiba:", dbResult);
-                  } else {
-                    toast.success("Feldolgozás kész!");
-                  }
-                  console.log("DB mentés eredménye:", dbResult);
-                } catch (err) {
-                  toast.error("DB mentés hiba!");
-                  console.error("DB mentés hiba:", err);
-                }
-              } else {
-                toast.error(data?.error || "AI feldolgozás hiba!");
-              }
-            } catch (err) {
-              toast.error("Hálózati vagy szerver hiba!");
-              console.error("AI feldolgozás hiba:", err);
-            } finally {
-              setLoading(false);
-            }
-          }}
-        >
-          {loading ? <Loader2 className="animate-spin" size={20} /> : <span style={{ fontSize: 20, color: "#fff" }}>▶</span>}
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 20 20"
-            fill="#fff"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="10" cy="10" r="9" fill="#27ae60" />
-            <path
-              d="M7 10.5l2 2 4-4"
-              stroke="#fff"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button> */}
         <span style={{ display: "flex", alignItems: "center", marginRight: 8 }}>
           <svg
             width="22"
