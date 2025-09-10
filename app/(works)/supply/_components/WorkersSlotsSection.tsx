@@ -344,18 +344,36 @@ const WorkersSlotsSection: React.FC<Props> = ({
       const workforce = await getWorkforce();
       const existingWorker = workforce.find((w) => w.email === data.email);
       if (existingWorker) {
-        // Worker exists, just assign to work item and work
-        await assignWorkerToWorkItemAndWork({
-          workId,
-          workItemId: data.workItemId,
-          workerId: existingWorker.id,
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          profession: data.profession,
-          avatarUrl: data.avatarUrl,
-          quantity: 1,
-        });
+        // Worker exists in workforce registry, but we need to find or create Worker record
+        // Find existing Worker record for this profession
+        let workerRecord = workers.find((w) => w.name === data.profession);
+        
+        if (workerRecord) {
+          // Worker record exists, use its ID for assignment
+          await assignWorkerToWorkItemAndWork({
+            workId,
+            workItemId: data.workItemId,
+            workerId: workerRecord.id, // Use Worker.id, not workforceRegistry.id
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            profession: data.profession,
+            avatarUrl: data.avatarUrl,
+            quantity: 1,
+          });
+        } else {
+          // Worker record doesn't exist for this profession, create it first
+          await addWorkerToRegistryAndAssign({
+            workId,
+            workItemId: data.workItemId,
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            profession: data.profession,
+            avatarUrl: data.avatarUrl,
+            quantity: 1,
+          });
+        }
       } else {
         // Worker doesn't exist, add to workforce first then assign
         await addWorkerToRegistryAndAssign({

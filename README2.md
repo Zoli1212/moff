@@ -714,3 +714,11 @@ asszinkron legyen
 ----
 Ha nincs meghatározva mindegyikhez jelenjen meg ami folyamatban van
 ----
+átkattintasz utána frissít
+----
+kattintott frissült
+be van kattintva és nem frissült
+nincs bekattintva
+----
+kártyák méretének egységesítése
+----
