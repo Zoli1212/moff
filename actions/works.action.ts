@@ -1,21 +1,12 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
 // Get all workflows for the current user
 export async function getWorkflows() {
-  const user = await currentUser();
-  
-  if (!user) {
-    throw new Error("Nincs bejelentkezve felhasználó!");
-  }
-
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) {
-    throw new Error("Nem található email cím a felhasználóhoz!");
-  }
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   return await prisma.workflow.findMany({
     where: {
@@ -43,16 +34,7 @@ export async function getWorkflows() {
 
 // Get workflows by specialty ID
 export async function getWorkflowsBySpecialty(specialtyId: number) {
-  const user = await currentUser();
-  
-  if (!user) {
-    throw new Error("Nincs bejelentkezve felhasználó!");
-  }
-
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) {
-    throw new Error("Nem található email cím a felhasználóhoz!");
-  }
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   // Verify the specialty belongs to the user
   const specialty = await prisma.specialty.findFirst({
@@ -86,16 +68,7 @@ export async function createWorkflow(
   description: string,
   specialtyId: number
 ) {
-  const user = await currentUser();
-  
-  if (!user) {
-    throw new Error("Nincs bejelentkezve felhasználó!");
-  }
-
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) {
-    throw new Error("Nem található email cím a felhasználóhoz!");
-  }
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   // Verify the specialty belongs to the user
   const specialty = await prisma.specialty.findFirst({
@@ -129,16 +102,7 @@ export async function updateWorkflow(
   workflowId: number,
   data: { name?: string; description?: string }
 ) {
-  const user = await currentUser();
-  
-  if (!user) {
-    throw new Error("Nincs bejelentkezve felhasználó!");
-  }
-
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) {
-    throw new Error("Nem található email cím a felhasználóhoz!");
-  }
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   // Verify the workflow belongs to the user
   const workflow = await prisma.workflow.findFirst({
@@ -163,16 +127,7 @@ export async function updateWorkflow(
 
 // Delete a workflow
 export async function deleteWorkflow(workflowId: number) {
-  const user = await currentUser();
-  
-  if (!user) {
-    throw new Error("Nincs bejelentkezve felhasználó!");
-  }
-
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) {
-    throw new Error("Nem található email cím a felhasználóhoz!");
-  }
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   // Verify the workflow belongs to the user
   const workflow = await prisma.workflow.findFirst({
@@ -205,10 +160,7 @@ export async function removeWorkerFromJsonArray({
   name: string;
   email: string;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   // Fetch the worker record and check ownership
   const worker = await prisma.worker.findFirst({

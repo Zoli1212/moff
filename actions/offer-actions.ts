@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 import { Prisma, Offer } from "@prisma/client";
 import { parseOfferText, formatOfferForSave } from "@/lib/offer-parser";
@@ -185,13 +185,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     console.log("PARSED CONTENT", parsedContent);
     console.log("ITEMS", parsedContent.items || parsedContent.notes);
 
-    const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress || "";
-    const emailToUse = userEmail;
-
-    if (!emailToUse) {
-      throw new Error("No email available for tenant");
-    }
+    const { user, tenantEmail: emailToUse } = await getTenantSafeAuth();
 
     // Extract title, customer name, and time from offer content
     let title = "Új ajánlat";
@@ -484,14 +478,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
 export async function getUserOffers() {
   try {
-    const user = await currentUser();
-    const userEmail =
-      user?.primaryEmailAddress?.emailAddress ||
-      user?.emailAddresses[0].emailAddress;
-
-    if (!userEmail) {
-      throw new Error("No email available for user");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     // First, get all works for the current user
     const works = await prisma.myWork.findMany({
@@ -542,14 +529,7 @@ export async function getUserOffers() {
 
 export async function getOfferById(id: number) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-
-    const userEmail =
-      user.emailAddresses[0].emailAddress ||
-      user.primaryEmailAddress?.emailAddress;
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
     console.log(`Fetching offer with ID: ${id} for user: ${userEmail}`);
 
     const offer = await prisma.offer.findFirst({
@@ -619,14 +599,7 @@ export async function getOfferById(id: number) {
 
 export async function updateOfferItems(offerId: number, items: OfferItem[]) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-
-    const userEmail =
-      user.emailAddresses[0].emailAddress ||
-      user.primaryEmailAddress?.emailAddress;
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
     console.log(
       `Updating items for offer ID: ${offerId} for user: ${userEmail}`,
       items
@@ -749,10 +722,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 export async function updateOfferStatus(offerId: number, status: string) {
   console.log(offerId, "OFFERID");
   try {
-    const user = await currentUser();
-    if (!user) {
-      return { success: false, message: "Nincs bejelentkezve felhasználó!" };
-    }
+    const { user, tenantEmail } = await getTenantSafeAuth();
 
     // 1. Ellenőrizzük, hogy létezik-e már work ehhez az ajánlathoz
     const existingWork = await prisma.work.findFirst({
@@ -810,7 +780,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
                 : 0,
               estimatedDuration: "0",
               progress: 0,
-              tenantEmail: user.primaryEmailAddress?.emailAddress || "",
+              tenantEmail: tenantEmail,
               offerItems: offer.items
                 ? JSON.parse(JSON.stringify(offer.items))
                 : null,

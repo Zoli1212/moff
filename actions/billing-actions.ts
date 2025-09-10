@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { Client, Currency, Language, PaymentMethod } from "@/lib/szamlazz";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
 interface OfferItem {
@@ -23,12 +23,7 @@ interface CreateBillingData {
 
 export async function getBillings() {
   try {
-    const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress;
-
-    if (!userEmail) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     const billings = await prisma.billing.findMany({
       where: {
@@ -51,12 +46,7 @@ export async function getBillings() {
 
 export async function getBillingById(id: number) {
   try {
-    const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress;
-
-    if (!userEmail) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     const billing = await prisma.billing.findFirst({
       where: {
@@ -114,15 +104,12 @@ export async function getBillingById(id: number) {
 
 export async function finalizeAndGenerateInvoice(billingId: number) {
   try {
-    const user = await currentUser();
-    if (!user?.primaryEmailAddress?.emailAddress) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
+    const { user, tenantEmail } = await getTenantSafeAuth();
 
     const billing = await prisma.billing.findFirst({
       where: {
         id: billingId,
-        tenantEmail: user.primaryEmailAddress.emailAddress,
+        tenantEmail: tenantEmail,
       },
       include: {
         offer: {
@@ -342,12 +329,7 @@ export async function updateBilling(
   const { items, title } = data;
 
   try {
-    const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress;
-
-    if (!userEmail) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     if (!items || items.length === 0) {
       throw new Error("Nincsenek tételek a számlához.");
@@ -404,12 +386,7 @@ export async function createBilling(data: CreateBillingData) {
   const { offerId, items, title } = data;
 
   try {
-    const user = await currentUser();
-    const userEmail = user?.primaryEmailAddress?.emailAddress;
-
-    if (!userEmail) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     if (!items || items.length === 0) {
       throw new Error("Nincsenek tételek a számlához.");

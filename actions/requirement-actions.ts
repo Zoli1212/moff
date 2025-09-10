@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { Requirement } from "@prisma/client";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 export interface RequirementWithOffers extends Requirement {
   _count: {
@@ -15,15 +15,7 @@ export async function getRequirementsByWorkId(
   workId: number
 ): Promise<RequirementWithOffers[]> {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-    
-    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-    if (!userEmail) {
-      throw new Error("Nem található email cím a felhasználóhoz!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     const requirements = await prisma.requirement.findMany({
       where: {
@@ -58,15 +50,7 @@ export async function getRequirementsByWorkId(
 
 export async function getRequirementById(requirementId: number) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-    
-    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-    if (!userEmail) {
-      throw new Error("Nem található email cím a felhasználóhoz!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     const requirement = await prisma.requirement.findFirst({
       where: { 
@@ -99,15 +83,7 @@ export async function getRequirementById(requirementId: number) {
 
 export async function getOffersByRequirementId(requirementId: number) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-    
-    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-    if (!userEmail) {
-      throw new Error("Nem található email cím a felhasználóhoz!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     // First verify the requirement belongs to the user
     const requirement = await prisma.requirement.findFirst({
@@ -183,15 +159,7 @@ export async function createRequirement(
   description: string
 ) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-    
-    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-    if (!userEmail) {
-      throw new Error("Nem található email cím a felhasználóhoz!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     // Verify the work belongs to the user
     const work = await prisma.myWork.findFirst({
@@ -248,15 +216,7 @@ export async function updateRequirement(
   }
 ) {
   try {
-    const user = await currentUser();
-    if (!user) {
-      throw new Error("Nincs bejelentkezve felhasználó!");
-    }
-    
-    const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-    if (!userEmail) {
-      throw new Error("Nem található email cím a felhasználóhoz!");
-    }
+    const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     // First verify the requirement belongs to the user
     const requirement = await prisma.requirement.findFirst({

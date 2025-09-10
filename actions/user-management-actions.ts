@@ -8,11 +8,11 @@ export async function checkIsSuperUser() {
     const user = await currentUser()
     if (!user) return { success: false, isSuperUser: false }
     
-    const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress
-    if (!tenantEmail) return { success: false, isSuperUser: false }
+    const originalUserEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress
+    if (!originalUserEmail) return { success: false, isSuperUser: false }
 
     const dbUser = await prisma.user.findFirst({
-      where: { email: tenantEmail },
+      where: { email: originalUserEmail },
       select: { 
         email: true,
         isSuperUser: true 
@@ -38,12 +38,12 @@ export async function getAllUserEmails() {
     const user = await currentUser()
     if (!user) return { success: false, error: 'Nincs bejelentkezve' }
     
-    const tenantEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress
-    if (!tenantEmail) return { success: false, error: 'Nincs email cím' }
+    const originalUserEmail = user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress
+    if (!originalUserEmail) return { success: false, error: 'Nincs email cím' }
 
     // Get current user to check if they're a super user
     const dbUser = await prisma.user.findFirst({
-      where: { email: tenantEmail },
+      where: { email: originalUserEmail },
       select: { 
         email: true,
         isSuperUser: true 

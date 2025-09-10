@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 interface AssignParams {
   workItemId: number;
@@ -15,11 +15,7 @@ interface AssignParams {
 }
 
 export async function assignWorkerToWorkItem(params: AssignParams) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const tenantEmail =
-    user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const {
     workItemId,

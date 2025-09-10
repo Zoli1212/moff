@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
 /**
@@ -21,10 +21,7 @@ export async function updateWorkerJsonArray({
 }) {
   console.log('updateWorkerJsonArray called', { workerId, workId, workerData });
   // Tenant safety: check current user
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const userEmail = user.emailAddresses[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   // Fetch the worker record and check ownership
   const worker = await prisma.worker.findFirst({

@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 export async function updateWorkItemWorker(data: {
   id: number;
@@ -11,11 +11,7 @@ export async function updateWorkItemWorker(data: {
   quantity?: number;
   avatarUrl?: string | null;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const tenantEmail =
-    user.emailAddresses?.[0]?.emailAddress || user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const { id, ...rest } = data;
   return prisma.workItemWorker.update({
@@ -27,8 +23,7 @@ export async function updateWorkItemWorker(data: {
 }
 
 export async function deleteWorkItemWorker(id: number) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
+  const { user, tenantEmail } = await getTenantSafeAuth();
   // tenantEmail existence already verified above if needed later
   // Use deleteMany to avoid P2025 when the record is already gone
   await prisma.workItemWorker.deleteMany({ where: { id } });

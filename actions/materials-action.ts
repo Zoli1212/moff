@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
 interface AddMaterialInput {
@@ -14,9 +14,7 @@ interface AddMaterialInput {
 }
 
 export async function addMaterial({ name, quantity, unit, unitPrice, workId, workItemId }: AddMaterialInput) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const tenantEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress || "";
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   // Optionally: check if the user owns the work/workItem
 
@@ -52,9 +50,7 @@ interface UpdateMaterialInput {
 }
 
 export async function updateMaterial({ id, name, quantity, unit, availableQuantity, availableFull }: UpdateMaterialInput) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const tenantEmail = user.emailAddresses[0].emailAddress || user.primaryEmailAddress?.emailAddress || "";
+  const { user, tenantEmail } = await getTenantSafeAuth();
   // Find material and check ownership
   const material = await prisma.material.findUnique({ where: { id } });
   if (!material) throw new Error("Material not found");
@@ -81,8 +77,7 @@ export async function updateMaterial({ id, name, quantity, unit, availableQuanti
 
 // Set availableQuantity to quantity and availableFull to true
 export async function setMaterialAvailableFull(id: number) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
+  const { user, tenantEmail } = await getTenantSafeAuth();
   const material = await prisma.material.findUnique({ where: { id } });
   if (!material) throw new Error("Material not found");
   const updated = await prisma.material.update({
@@ -98,8 +93,7 @@ export async function setMaterialAvailableFull(id: number) {
 }
 
 export async function deleteMaterial(id: number) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
+  const { user, tenantEmail } = await getTenantSafeAuth();
   const material = await prisma.material.findUnique({ where: { id } });
   if (!material) throw new Error("Material not found");
   await prisma.material.delete({ where: { id } });

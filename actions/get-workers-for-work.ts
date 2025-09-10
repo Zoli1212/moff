@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 export interface WorkerForWork {
   id: number;
@@ -13,17 +13,7 @@ export interface WorkerForWork {
 }
 
 export async function getWorkersForWork(workId: number): Promise<WorkerForWork[]> {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
-
-  const tenantEmail =
-    user.emailAddresses[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) {
-    throw new Error("Tenant email not found");
-  }
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   try {
     // Query all workers from workItemWorker table for this work

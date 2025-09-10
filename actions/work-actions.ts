@@ -3,23 +3,16 @@
 import { OfferItem } from "@/lib/offer-parser";
 import type { WorkItemAIResult } from "../types/work.types";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 import util from "node:util";
 
 export async function getUserWorks() {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
-
-  const emailId =
-    user.emailAddresses[0].emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const works = await prisma.work.findMany({
     where: {
-      tenantEmail: emailId,
+      tenantEmail: tenantEmail,
       isActive: true,
     },
     orderBy: {
@@ -31,10 +24,7 @@ export async function getUserWorks() {
 }
 
 export async function deleteWork(id: number) {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   // Verify the work belongs to the user
   const work = await prisma.work.findUnique({
@@ -90,11 +80,8 @@ export async function fetchWorkAndItems(workId: number) {
 }
 
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const email =
-    user.emailAddresses[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
 
   // --- AI result debug log ---
   console.log(
@@ -636,15 +623,8 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
 }
 
 export async function getWorkItemsWithWorkers(workId: number) {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
-
-  // Lekéri a workId-hoz tartozó összes WorkItem-et és a hozzájuk tartozó WorkItemWorker-t
-  const email =
-    user.emailAddresses[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
   return prisma.workItem.findMany({
     where: {
       workId,
@@ -661,10 +641,7 @@ export async function getWorkItemsWithWorkers(workId: number) {
 }
 
 export async function getWorkById(id: number) {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("Not authenticated");
-  }
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const work = await prisma.work.findUnique({
     where: { id },
@@ -691,7 +668,7 @@ export async function getWorkById(id: number) {
   console.log(`[getWorkById] Direct DB query - general workers (workItemId=null):`, allWorkersForThisWork.filter(w => w.workItemId === null));
 
   // Verify the work belongs to the user
-  if (!work || work.tenantEmail !== user.emailAddresses[0].emailAddress) {
+  if (!work || work.tenantEmail !== tenantEmail) {
     throw new Error("Unauthorized");
   }
 
@@ -707,11 +684,8 @@ export async function updateWorkItemProgress(params: {
   progress: number;
 }) {
   const { workItemId, progress } = params;
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const email =
-    user.emailAddresses[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
 
   // Verify ownership by tenantEmail
   const item = await prisma.workItem.findUnique({
@@ -743,11 +717,8 @@ export async function updateWorkItemCompletion(params: {
   completedQuantity: number;
 }) {
   const { workItemId, completedQuantity } = params;
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const email =
-    user.emailAddresses[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
 
   const item = await prisma.workItem.findUnique({
     where: { id: workItemId },

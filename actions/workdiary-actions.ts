@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
 // Resolve the effective tenant email. If the current user is a worker,
@@ -88,8 +88,7 @@ export async function deleteWorkDiaryItem({
 }: {
   id: number;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   await prisma.workDiaryItem.delete({ where: { id } });
   
@@ -104,12 +103,7 @@ export async function deleteWorkDiary({
   workId: number;
   workItemId: number;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const tenantEmail =
-    user.emailAddresses?.[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const diary = await prisma.workDiary.findFirst({
     where: { workId, workItemId, tenantEmail },
@@ -159,12 +153,7 @@ export async function updateWorkDiary({
   unit?: string | null;
   images?: string[] | null;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const tenantEmail =
-    user.emailAddresses?.[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const diary = await prisma.workDiary.findFirst({
     where: { id, workId, workItemId, tenantEmail },
@@ -230,12 +219,7 @@ export async function updateWorkDiaryItem({
   notes?: string;
   accepted?: boolean;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const userEmail =
-    user.emailAddresses?.[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) throw new Error("No user email found");
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   const updateData: any = {};
   if (diaryId !== undefined) updateData.diaryId = diaryId;
@@ -336,12 +320,7 @@ export async function createWorkDiaryItem({
   accepted?: boolean;
   // id is intentionally omitted for creation
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const userEmail =
-    user.emailAddresses?.[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!userEmail) throw new Error("No user email found");
+  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
   try {
     // Determine worker email either from explicit email or from workItemWorker assignment
@@ -409,12 +388,7 @@ export async function createWorkDiary({
   workId: number;
   workItemId: number;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const loggedEmail =
-    user.emailAddresses?.[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!loggedEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail: loggedEmail } = await getTenantSafeAuth();
   // No explicit worker email here, resolve based on the logged-in account.
   const tenantEmail = await resolveTenantEmail(loggedEmail);
 
@@ -455,12 +429,7 @@ export async function getOrCreateWorkDiaryForTask({
   workId: number;
   workItemId: number;
 }) {
-  const user = await currentUser();
-  if (!user) throw new Error("Not authenticated");
-  const loggedEmail =
-    user.emailAddresses?.[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!loggedEmail) throw new Error("No tenant email found");
+  const { user, tenantEmail: loggedEmail } = await getTenantSafeAuth();
   const tenantEmail = await resolveTenantEmail(loggedEmail);
 
   const existing = await prisma.workDiary.findFirst({

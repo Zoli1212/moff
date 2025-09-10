@@ -1,6 +1,6 @@
 "use server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
 export interface AddWorkerToRegistryAndAssignParams {
@@ -17,17 +17,7 @@ export interface AddWorkerToRegistryAndAssignParams {
 export async function addWorkerToRegistryAndAssign(
   params: AddWorkerToRegistryAndAssignParams
 ) {
-  const user = await currentUser();
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
-
-  const tenantEmail =
-    user.emailAddresses[0]?.emailAddress ||
-    user.primaryEmailAddress?.emailAddress;
-  if (!tenantEmail) {
-    throw new Error("Tenant email not found");
-  }
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   const {
     workId,
