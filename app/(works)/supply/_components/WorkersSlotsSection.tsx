@@ -346,7 +346,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       if (existingWorker) {
         // Worker exists in workforce registry, but we need to find or create Worker record
         // Find existing Worker record for this profession
-        let workerRecord = workers.find((w) => w.name === data.profession);
+        const workerRecord = workers.find((w) => w.name === data.profession);
         
         if (workerRecord) {
           // Worker record exists, use its ID for assignment
