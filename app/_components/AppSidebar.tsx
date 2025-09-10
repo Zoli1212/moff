@@ -23,6 +23,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { useThemeStore } from "@/store/theme-store";
+import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
 
 const mainItems = [
   { title: "Munkaterület", url: "/dashboard", icon: Layers },
@@ -127,6 +128,8 @@ export function AppSidebar() {
       </SidebarContent>
 
       <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-black">
+        <TenantSelectorSidebar />
+        
         <UserButton afterSignOutUrl="/" />
 
         {showThemeSelector && (

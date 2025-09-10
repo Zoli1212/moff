@@ -33,13 +33,15 @@ model PriceItem {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  role      String   @default("USER")
-  theme     String   @default("landing")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  clerkId      String?  @unique
+  name         String
+  email        String   @unique
+  role         String   @default("USER")
+  isSuperUser  Boolean  @default(false)
+  theme        String   @default("landing")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model History {

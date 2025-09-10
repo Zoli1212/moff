@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import FullscreenHandler from "./_components/FullscreenHandler";
 import { GlobalLoading } from "@/components/GlobalLoading";
 import { GlobalLoadingHandler } from "@/components/GlobalLoadingHandler";
+import { TenantSelector } from "@/components/TenantSelector";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,16 +54,14 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" className="h-full">
-        <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased h-full`}
-        >
+        <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
           <Provider>
-            <GlobalLoadingHandler />
-            {children}
-            <FullscreenHandler />
             <GlobalLoading />
+            <GlobalLoadingHandler />
+            <FullscreenHandler />
+            {children}
+            <Toaster position="top-center" />
           </Provider>
-          <Toaster position="top-center" richColors />
         </body>
       </html>
     </ClerkProvider>
