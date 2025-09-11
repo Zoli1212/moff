@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   createWorkDiaryItem,
   getOrCreateWorkDiaryForWork,
@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Calendar, X, Plus, Users, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
@@ -50,7 +49,7 @@ export default function GroupedDiaryForm({
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   // Get active work items (in progress)
   const activeWorkItems = useMemo(() => {
@@ -110,18 +109,18 @@ export default function GroupedDiaryForm({
     setSelectedGroupedItems(prev => prev.filter(item => item.workItem.id !== workItemId));
   };
 
-  const addAllActiveWorkItems = () => {
-    const newItems: GroupedWorkItem[] = [];
-    activeWorkItems.forEach(workItem => {
-      if (!selectedGroupedItems.find(item => item.workItem.id === workItem.id)) {
-        newItems.push({
-          workItem,
-          progress: workItem.progress || 0
-        });
-      }
-    });
-    setSelectedGroupedItems(prev => [...prev, ...newItems]);
-  };
+  // const addAllActiveWorkItems = () => {
+  //   const newItems: GroupedWorkItem[] = [];
+  //   activeWorkItems.forEach(workItem => {
+  //     if (!selectedGroupedItems.find(item => item.workItem.id === workItem.id)) {
+  //       newItems.push({
+  //         workItem,
+  //         progress: workItem.progress || 0
+  //       });
+  //     }
+  //   });
+  //   setSelectedGroupedItems(prev => [...prev, ...newItems]);
+  // };
 
   const removeWorker = (workerId: number) => {
     setSelectedWorkers(prev => prev.filter(w => w.workerId !== workerId));
@@ -220,7 +219,7 @@ export default function GroupedDiaryForm({
       }
 
       // Create diary items for each worker and each work item combination
-      const promises: Promise<any>[] = [];
+      const promises: Promise<unknown>[] = [];
       
       // Calculate hours per work item (each worker's total hours divided by number of work items)
       const hoursPerWorkItem = selectedGroupedItems.length > 0 ? workHours / selectedGroupedItems.length : workHours;
@@ -263,9 +262,9 @@ export default function GroupedDiaryForm({
     }
   };
 
-  const availableWorkItems = activeWorkItems.filter(
-    item => !selectedGroupedItems.find(selected => selected.workItem.id === item.id)
-  );
+  // const availableWorkItems = activeWorkItems.filter(
+  //   item => !selectedGroupedItems.find(selected => selected.workItem.id === item.id)
+  // );
 
   return (
     <div className="space-y-4">

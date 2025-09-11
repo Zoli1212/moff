@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar, Users, User, ToggleLeft, ToggleRight } from "lucide-react";
+import { Calendar, Users, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import {
   Dialog,
@@ -368,7 +368,7 @@ export default function WorkerDiaryEditForm({
       return;
     if (selectedWorkerToken !== "") return; // do not override manual choice
     const matchWorker = Array.from(allWorkersById.entries()).find(
-      ([id, worker]) => (worker.email || "").toLowerCase() === currentEmail.toLowerCase()
+      ([, worker]) => (worker.email || "").toLowerCase() === currentEmail.toLowerCase()
     );
     if (!matchWorker) return;
     const assigned = allWorkItemWorkers.find(
@@ -387,7 +387,7 @@ export default function WorkerDiaryEditForm({
     if (allWorkItemWorkers.length > 0) return; // handled above
     if (selectedWorkerToken !== "") return;
     const matchWorker = Array.from(allWorkersById.entries()).find(
-      ([id, worker]) => (worker.email || "").toLowerCase() === currentEmail.toLowerCase()
+      ([, worker]) => (worker.email || "").toLowerCase() === currentEmail.toLowerCase()
     );
     if (matchWorker) {
       setSelectedWorkerToken(`w:${matchWorker[0]}`);
