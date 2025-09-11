@@ -45,6 +45,7 @@ export default function GroupedDiaryForm({
   const [images, setImages] = useState<string[]>([]);
   const [selectedGroupedItems, setSelectedGroupedItems] = useState<GroupedWorkItem[]>([]);
   const [selectedWorkers, setSelectedWorkers] = useState<WorkItemWorker[]>([]);
+  const [workHours, setWorkHours] = useState<number>(8); // Default 8 hours
   const [showWorkerModal, setShowWorkerModal] = useState(false);
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -221,6 +222,9 @@ export default function GroupedDiaryForm({
       // Create diary items for each worker and each work item combination
       const promises: Promise<any>[] = [];
       
+      // Calculate hours per work item (each worker's total hours divided by number of work items)
+      const hoursPerWorkItem = selectedGroupedItems.length > 0 ? workHours / selectedGroupedItems.length : workHours;
+      
       for (const groupedItem of selectedGroupedItems) {
         for (const worker of selectedWorkers) {
           const diaryItemData: WorkDiaryItemCreate = {
@@ -233,6 +237,7 @@ export default function GroupedDiaryForm({
             date: new Date(date),
             notes: description,
             images: images,
+            workHours: hoursPerWorkItem,
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
           };
@@ -524,6 +529,28 @@ export default function GroupedDiaryForm({
               </div>
             </div>
           )}
+        </div>
+
+        {/* Work Hours */}
+        <div className="space-y-2">
+          <Label htmlFor="workHours" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Munkaórák száma
+          </Label>
+          <Input
+            id="workHours"
+            type="number"
+            min="0"
+            max="24"
+            step="0.5"
+            value={workHours}
+            onChange={(e) => setWorkHours(parseFloat(e.target.value) || 0)}
+            placeholder="8"
+            className="w-32"
+          />
+          <p className="text-sm text-gray-600">
+            Ez a munkaóra minden kiválasztott dolgozóra vonatkozik
+          </p>
         </div>
 
         {/* Description */}
