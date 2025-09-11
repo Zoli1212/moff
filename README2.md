@@ -722,3 +722,4 @@ nincs bekattintva
 ----
 kártyák méretének egységesítése
 ----
+feladatoknál csúszka 0/50 m^2

@@ -21,9 +21,13 @@ export const useWorkerSlotsStore = create<WorkerSlotsState>((set) => ({
     set((state) => {
       const currentSlots = state.slots[role] || 0;
       if (currentSlots <= 1) {
-        // Prevents reducing below 1, adjust if needed
-        const { [role]: _, ...rest } = state.slots;
-        return { slots: rest };
+        // Allow reducing to 0 instead of removing the role entirely
+        return {
+          slots: {
+            ...state.slots,
+            [role]: 0,
+          },
+        };
       } else {
         return {
           slots: {
