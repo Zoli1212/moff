@@ -19,6 +19,7 @@ export interface WorkDiaryItemDTO {
   tenantEmail: string;
   createdAt: Date;
   updatedAt: Date;
+  groupNo?: number | null;
 }
 
 export interface WorkDiaryWithItem extends WorkDiary {
@@ -33,13 +34,9 @@ export interface WorkDiaryWithItem extends WorkDiary {
 export async function getWorkDiariesByWorkId(
   workId: number
 ): Promise<WorkDiaryWithItem[]> {
-  // Only return diaries that have at least one WorkDiaryItem
+  // Return all diaries for this work (temporary: support both old and new structure)
   const diaries = await prisma.workDiary.findMany({
-    where: {
-      workId,
-      workDiaryItems: { some: {} },
-    },
-    orderBy: { date: "desc" },
+    where: { workId },
     include: {
       workItem: {
         select: { id: true, name: true, description: true },
@@ -67,6 +64,7 @@ export async function getWorkDiariesByWorkId(
         orderBy: { date: "asc" },
       },
     },
+    orderBy: { date: "desc" },
   });
   return diaries.map((d) => ({
     ...d,

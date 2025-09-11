@@ -101,23 +101,26 @@ export async function deleteWorkDiary({
   workItemId,
 }: {
   workId: number;
-  workItemId: number;
+  workItemId?: number;
 }) {
   const { user, tenantEmail } = await getTenantSafeAuth();
 
   const diary = await prisma.workDiary.findFirst({
-    where: { workId, workItemId, tenantEmail },
+    where: { workId, tenantEmail },
   });
   if (!diary) {
-    return { success: false, message: "Diary not found for this task." };
+    return { success: false, message: "Diary not found for this work." };
   }
 
   await prisma.workDiary.delete({ where: { id: diary.id } });
 
-  await prisma.workItem.update({
-    where: { id: workItemId },
-    data: { inProgress: false },
-  });
+  // Reset workItem inProgress status when diary is deleted
+  if (workItemId) {
+    await prisma.workItem.update({
+      where: { id: workItemId },
+      data: { inProgress: false },
+    });
+  }
 
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);
@@ -127,7 +130,6 @@ export async function deleteWorkDiary({
 export async function updateWorkDiary({
   id,
   workId,
-  workItemId,
   description,
   weather,
   temperature,
@@ -141,7 +143,6 @@ export async function updateWorkDiary({
 }: {
   id: number;
   workId?: number;
-  workItemId?: number;
   description?: string;
   weather?: string | null;
   temperature?: number | null;
@@ -156,7 +157,7 @@ export async function updateWorkDiary({
   const { user, tenantEmail } = await getTenantSafeAuth();
 
   const diary = await prisma.workDiary.findFirst({
-    where: { id, workId, workItemId, tenantEmail },
+    where: { id, workId, tenantEmail },
   });
   if (!diary) {
     return { success: false, message: "Diary not found or not owned by user." };
@@ -386,33 +387,39 @@ export async function createWorkDiary({
   workItemId,
 }: {
   workId: number;
-  workItemId: number;
+  workItemId?: number;
 }) {
   const { user, tenantEmail: loggedEmail } = await getTenantSafeAuth();
   // No explicit worker email here, resolve based on the logged-in account.
   const tenantEmail = await resolveTenantEmail(loggedEmail);
 
   const existing = await prisma.workDiary.findFirst({
-    where: { workId, workItemId, tenantEmail },
+    where: { workId, tenantEmail },
   });
   if (existing) {
-    return { success: false, message: "Diary already exists for this task." };
+    return { success: false, message: "Diary already exists for this work." };
+  }
+
+  const createData: any = {
+    workId,
+    tenantEmail,
+    date: new Date(),
+    description: "",
+  };
+  if (workItemId) {
+    createData.workItemId = workItemId;
   }
 
   const diary = await prisma.workDiary.create({
-    data: {
-      workId,
-      workItemId,
-      tenantEmail,
-      date: new Date(),
-      description: "",
-    },
+    data: createData,
   });
 
-  await prisma.workItem.update({
-    where: { id: workItemId },
-    data: { inProgress: true },
-  });
+  if (workItemId) {
+    await prisma.workItem.update({
+      where: { id: workItemId },
+      data: { inProgress: true },
+    });
+  }
 
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);
@@ -420,26 +427,25 @@ export async function createWorkDiary({
 }
 
 // Non-failing alternative used by UI flows that just need a diary id.
-// If a diary exists for (workId, workItemId, tenantEmail), return it as success.
+// If a diary exists for (workId, tenantEmail), return it as success.
 // Otherwise create it and return the new one.
-export async function getOrCreateWorkDiaryForTask({
+export async function getOrCreateWorkDiaryForWork({
   workId,
   workItemId,
 }: {
   workId: number;
-  workItemId: number;
+  workItemId?: number;
 }) {
   const { user, tenantEmail: loggedEmail } = await getTenantSafeAuth();
   const tenantEmail = await resolveTenantEmail(loggedEmail);
 
   const existing = await prisma.workDiary.findFirst({
-    where: { workId, workItemId, tenantEmail },
+    where: { workId, tenantEmail },
   });
   if (existing) {
     try {
-      console.log("[workdiary-actions] getOrCreateWorkDiaryForTask: existing", {
+      console.log("[workdiary-actions] getOrCreateWorkDiaryForWork: existing", {
         workId,
-        workItemId,
         tenantEmail,
         existingId: existing.id,
       });
@@ -447,15 +453,20 @@ export async function getOrCreateWorkDiaryForTask({
     return { success: true, data: existing };
   }
 
+  const createData: any = {
+    workId,
+    tenantEmail,
+    date: new Date(),
+    description: "",
+  };
+  if (workItemId) {
+    createData.workItemId = workItemId;
+  }
+
   const diary = await prisma.workDiary.create({
-    data: {
-      workId,
-      workItemId,
-      tenantEmail,
-      date: new Date(),
-      description: "",
-    },
+    data: createData,
   });
+  
   // Keep cache fresh on creation
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);

@@ -2,7 +2,7 @@
 export interface WorkDiary {
   id: number;
   workId: number;
-  workItemId: number;
+  workItemId: number | null; // Made optional to match Prisma schema
   date: Date;
   description: string;
   weather?: string | null;
@@ -37,6 +37,8 @@ type WorkDiaryItemBase = {
   images?: string[];
   notes?: string;
   accepted?: boolean;
+  groupNo?: number;
+  tenantEmail?: string;
 };
 
 export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId" | "diaryId"> & {

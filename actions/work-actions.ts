@@ -631,7 +631,17 @@ export async function getWorkItemsWithWorkers(workId: number) {
       tenantEmail: email,
     },
     include: {
-      workItemWorkers: { include: { worker: true } },
+      workItemWorkers: { 
+        where: {
+          AND: [
+            { name: { not: null } },
+            { name: { not: "" } },
+            { workItemId: { not: null } },
+            { workId: workId }
+          ]
+        },
+        include: { worker: true } 
+      },
       tools: true,
       materials: true,
       workers: true,
@@ -744,6 +754,41 @@ export async function updateWorkItemCompletion(params: {
     data: { completedQuantity: clampedCompleted, progress },
   });
   // Revalidate the Tasks page so progress bars update immediately
+  try {
+    if (item?.workId) revalidatePath(`/works/tasks/${item.workId}`);
+  } catch (err) {
+    console.error("revalidatePath failed for /works/tasks/", item?.workId, err);
+  }
+  return { success: true, data: updated } as const;
+}
+
+// Update WorkItem inProgress status
+export async function updateWorkItemInProgress(params: {
+  workItemId: number;
+  inProgress: boolean;
+}) {
+  const { workItemId, inProgress } = params;
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
+
+  const item = await prisma.workItem.findUnique({
+    where: { id: workItemId },
+    select: { tenantEmail: true, id: true, workId: true },
+  });
+  if (!item)
+    return { success: false, message: "WorkItem nem található." } as const;
+  if (item.tenantEmail !== email)
+    return {
+      success: false,
+      message: "Nincs jogosultság a WorkItem módosításához.",
+    } as const;
+
+  const updated = await prisma.workItem.update({
+    where: { id: workItemId },
+    data: { inProgress },
+  });
+  
+  // Revalidate the Tasks page so status updates immediately
   try {
     if (item?.workId) revalidatePath(`/works/tasks/${item.workId}`);
   } catch (err) {

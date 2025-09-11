@@ -273,12 +273,12 @@ model Material {
 
 model WorkDiary {
   id             Int         @id @default(autoincrement())
-  workId         Int
+  workId         Int         @unique
   work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
-  workItemId     Int
-  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  workItemId     Int?        // Optional: which workItem triggered diary creation
+  workItem       WorkItem?   @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   date           DateTime    @default(now())
-  description    String
+  description    String      @default("")
   weather        String?
   temperature    Float?
   progress       Float?      // 0-100 percentage
@@ -543,6 +543,7 @@ model WorkDiaryItem {
   updatedAt     DateTime   @updatedAt
   tenantEmail   String     @default("")
   accepted      Boolean    @default(false)
+  groupNo       Int?       // Group identifier for batch diary entries
 }
 
 model TenantWorker {

@@ -3,9 +3,8 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TaskCard from "../_components/TaskCard";
-import { createWorkDiary, deleteWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
-import { fetchWorkAndItems } from "@/actions/work-actions";
+import { fetchWorkAndItems, updateWorkItemInProgress } from "@/actions/work-actions";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -106,83 +105,75 @@ export default function TasksPage() {
     };
   }, [doFetchWorkAndItems]);
 
-  // Assign diary to workItem (checkbox)
+  // Toggle workItem inProgress status (checkbox)
   const handleAssignDiary = async (workItemId: number, checked: boolean) => {
     setAssigning(workItemId);
     setAssignError(null);
 
     try {
-      type ApiResult = {
-        success: boolean;
-        id?: number;
-        data?: { id: number };
-        message?: string;
-      };
-      let result: ApiResult | null = null;
-      if (checked) {
-        result = await createWorkDiary({ workId, workItemId });
-
-        // Update UI only after successful API call
-        if (result.success) {
-          setWorkItems((prevItems) =>
-            prevItems.map((item) => {
-              if (item.id === workItemId) {
-                return {
-                  ...item,
-                  workDiaryEntries: [
-                    {
-                      id: result?.data?.id || result?.id || Date.now(),
-                      workItemId,
-                      workId,
-                    },
-                  ] as WorkDiary[],
-                };
-              }
-              return item;
-            })
-          );
-        }
-      } else {
-        // Get the diary ID before deleting
-        const workItem = workItems.find((item) => item.id === workItemId);
-        const diaryId = workItem?.workDiaryEntries?.[0]?.id;
-
-        if (diaryId) {
-          result = await deleteWorkDiary({ workId, workItemId });
-
-          // Update UI only after successful deletion
-          if (result.success) {
-            setWorkItems((prevItems) =>
-              prevItems.map((item) => {
-                if (item.id === workItemId) {
-                  return {
-                    ...item,
-                    workDiaryEntries: [],
-                  };
-                }
-                return item;
-              })
-            );
-          }
-        } else {
-          result = { success: false, message: "Nincs törlendő napló" };
-        }
+      // Update workItem inProgress status directly
+      const workItem = workItems.find((item) => item.id === workItemId);
+      if (!workItem) {
+        setAssignError("WorkItem nem található");
+        return;
       }
 
+      // Update UI immediately for better UX
+      setWorkItems((prevItems) =>
+        prevItems.map((item) => {
+          if (item.id === workItemId) {
+            return {
+              ...item,
+              inProgress: checked,
+            };
+          }
+          return item;
+        })
+      );
+
+      // Call API to update the workItem.inProgress in the database
+      const result = await updateWorkItemInProgress({
+        workItemId,
+        inProgress: checked,
+      });
+
       if (!result.success) {
+        // Revert UI change if API call failed
+        setWorkItems((prevItems) =>
+          prevItems.map((item) => {
+            if (item.id === workItemId) {
+              return {
+                ...item,
+                inProgress: !checked, // Revert
+              };
+            }
+            return item;
+          })
+        );
         setAssignError(
-          result.message ||
-            (checked
-              ? "Nem sikerült naplót rendelni."
-              : "Nem sikerült eltávolítani a naplót.")
+          checked
+            ? "Nem sikerült aktiválni a munkafázist."
+            : "Nem sikerült deaktiválni a munkafázist."
         );
       }
     } catch (e) {
+      // Revert UI change on error
+      setWorkItems((prevItems) =>
+        prevItems.map((item) => {
+          if (item.id === workItemId) {
+            return {
+              ...item,
+              inProgress: !checked, // Revert
+            };
+          }
+          return item;
+        })
+      );
       setAssignError(
         (e as Error).message ||
           (checked
-            ? "Hiba történt a napló rendelésekor"
-            : "Hiba történt a napló eltávolításakor")
+            ? "Hiba történt a munkafázis aktiválásakor"
+            : "Hiba történt a munkafázis deaktiválásakor")
       );
     } finally {
       setAssigning(null);
@@ -277,10 +268,8 @@ export default function TasksPage() {
           ) : (
             [...workItems]
               .sort((a, b) => {
-                const aInProgress =
-                  a.workDiaryEntries && a.workDiaryEntries.length > 0;
-                const bInProgress =
-                  b.workDiaryEntries && b.workDiaryEntries.length > 0;
+                const aInProgress = a.inProgress || false;
+                const bInProgress = b.inProgress || false;
                 return (bInProgress ? 1 : 0) - (aInProgress ? 1 : 0);
               })
               .map((item: WorkItem) => {
@@ -296,11 +285,9 @@ export default function TasksPage() {
                     summary={item.description}
                     progress={p}
                     isLoading={assigning === item.id}
-                    checked={
-                      item.workDiaryEntries && item.workDiaryEntries.length > 0
-                    }
+                    checked={item.inProgress || false}
                     className={
-                      item.workDiaryEntries && item.workDiaryEntries.length > 0
+                      item.inProgress
                         ? "border-green-500 border-2 bg-green-50"
                         : ""
                     }

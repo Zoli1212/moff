@@ -1,0 +1,602 @@
+"use client";
+import React, { useEffect, useMemo, useState, useRef } from "react";
+import {
+  createWorkDiaryItem,
+  getOrCreateWorkDiaryForWork,
+} from "@/actions/workdiary-actions";
+import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ProgressBar } from "@/components/ui/ProgressBar";
+import { Calendar, X, Plus, Users, User } from "lucide-react";
+import { useUser } from "@clerk/nextjs";
+import { updateWorkItemCompletion } from "@/actions/work-actions";
+
+import type { WorkItem, WorkItemWorker } from "@/types/work";
+import type { WorkDiaryItemCreate } from "@/types/work-diary";
+
+type ActionResult<T> = { success: boolean; data?: T; message?: string };
+
+interface GroupedWorkItem {
+  workItem: WorkItem;
+  progress: number;
+}
+
+interface GroupedDiaryFormProps {
+  diary: WorkDiaryWithItem;
+  workItems: WorkItem[];
+  onSave: (updated: Partial<WorkDiaryWithItem>) => void;
+  onCancel: () => void;
+  onModeToggle: () => void;
+}
+
+export default function GroupedDiaryForm({
+  diary,
+  workItems,
+  onSave,
+  onCancel,
+  onModeToggle,
+}: GroupedDiaryFormProps) {
+  const { user } = useUser();
+  const [date, setDate] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [images, setImages] = useState<string[]>([]);
+  const [selectedGroupedItems, setSelectedGroupedItems] = useState<GroupedWorkItem[]>([]);
+  const [selectedWorkers, setSelectedWorkers] = useState<WorkItemWorker[]>([]);
+  const [showWorkerModal, setShowWorkerModal] = useState(false);
+  const [showWorkItemModal, setShowWorkItemModal] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get active work items (in progress)
+  const activeWorkItems = useMemo(() => {
+    return workItems.filter(item => item.inProgress === true);
+  }, [workItems]);
+
+  // Get ALL workers from the entire work (by workId from WorkItemWorker table)
+  const allWorkWorkers = useMemo(() => {
+    const workersMap = new Map<number, WorkItemWorker>();
+    workItems.forEach(workItem => {
+      (workItem.workItemWorkers || []).forEach(worker => {
+        workersMap.set(worker.workerId, worker);
+      });
+    });
+    return Array.from(workersMap.values());
+  }, [workItems]);
+
+  // Initialize with ALL active work items by default
+  useEffect(() => {
+    if (selectedGroupedItems.length === 0 && activeWorkItems.length > 0) {
+      const allActiveItems: GroupedWorkItem[] = activeWorkItems.map(workItem => ({
+        workItem,
+        progress: workItem.progress || 0
+      }));
+      setSelectedGroupedItems(allActiveItems);
+    }
+  }, [activeWorkItems, selectedGroupedItems.length]);
+
+  // Initialize with all work workers by default
+  useEffect(() => {
+    if (selectedWorkers.length === 0 && allWorkWorkers.length > 0) {
+      setSelectedWorkers(allWorkWorkers);
+    }
+  }, [allWorkWorkers, selectedWorkers.length]);
+
+  // Initialize form with current date
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setDate(today);
+  }, []);
+
+  const showToast = (type: "success" | "error", message: string) => {
+    // Toast implementation would go here
+    console.log(`${type}: ${message}`);
+  };
+
+  const addWorkItem = (workItem: WorkItem) => {
+    if (!selectedGroupedItems.find(item => item.workItem.id === workItem.id)) {
+      setSelectedGroupedItems(prev => [...prev, {
+        workItem,
+        progress: workItem.progress || 0
+      }]);
+    }
+  };
+
+  const removeWorkItem = (workItemId: number) => {
+    setSelectedGroupedItems(prev => prev.filter(item => item.workItem.id !== workItemId));
+  };
+
+  const addAllActiveWorkItems = () => {
+    const newItems: GroupedWorkItem[] = [];
+    activeWorkItems.forEach(workItem => {
+      if (!selectedGroupedItems.find(item => item.workItem.id === workItem.id)) {
+        newItems.push({
+          workItem,
+          progress: workItem.progress || 0
+        });
+      }
+    });
+    setSelectedGroupedItems(prev => [...prev, ...newItems]);
+  };
+
+  const removeWorker = (workerId: number) => {
+    setSelectedWorkers(prev => prev.filter(w => w.workerId !== workerId));
+  };
+
+  const openWorkerModal = () => {
+    setShowWorkerModal(true);
+  };
+
+  const closeWorkerModal = () => {
+    setShowWorkerModal(false);
+  };
+
+  const openWorkItemModal = () => {
+    setShowWorkItemModal(true);
+  };
+
+  const closeWorkItemModal = () => {
+    setShowWorkItemModal(false);
+  };
+
+  const addWorker = (worker: WorkItemWorker) => {
+    if (!selectedWorkers.find(w => w.workerId === worker.workerId)) {
+      setSelectedWorkers(prev => [...prev, worker]);
+    }
+  };
+
+  const updateProgress = (workItemId: number, progress: number) => {
+    // Only update local state, database update happens on form submission
+    setSelectedGroupedItems(prev => prev.map(item => 
+      item.workItem.id === workItemId 
+        ? { ...item, progress }
+        : item
+    ));
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageError("");
+    setImageUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload-avatar", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (data.url) {
+        setImages((prev) => [...prev, data.url]);
+      } else {
+        setImageError(data.error || "Hiba történt a feltöltésnél.");
+      }
+    } catch (err) {
+      setImageError("Hiba a feltöltés során: " + (err as Error).message);
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const handleRemoveImage = (url: string) => {
+    setImages((prev) => prev.filter((img) => img !== url));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!date || selectedGroupedItems.length === 0) {
+      showToast("error", "Dátum és legalább egy munkafázis szükséges.");
+      return;
+    }
+
+    // Check if workers are selected
+    if (selectedWorkers.length === 0) {
+      showToast("error", "Legalább egy dolgozót ki kell választani.");
+      return;
+    }
+
+    try {
+      // Generate unique groupNo for this group
+      const groupNo = Date.now();
+      
+      // Get or create diary
+      let diaryIdToUse = diary.id;
+      if (!diaryIdToUse || diaryIdToUse === 0) {
+        const res: ActionResult<{ id: number }> = await getOrCreateWorkDiaryForWork({
+          workId: diary.workId,
+          workItemId: selectedGroupedItems[0].workItem.id,
+        });
+        if (!res?.success || !res?.data?.id) {
+          showToast("error", "Napló azonosító megszerzése sikertelen.");
+          return;
+        }
+        diaryIdToUse = res.data.id as number;
+      }
+
+      // Create diary items for each worker and each work item combination
+      const promises: Promise<any>[] = [];
+      
+      for (const groupedItem of selectedGroupedItems) {
+        for (const worker of selectedWorkers) {
+          const diaryItemData: WorkDiaryItemCreate = {
+            diaryId: diaryIdToUse,
+            workId: diary.workId,
+            workItemId: groupedItem.workItem.id,
+            workerId: worker.workerId,
+            email: worker.email || "",
+            name: worker.name || "",
+            date: new Date(date),
+            notes: description,
+            images: images,
+            groupNo: groupNo,
+            tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
+          };
+
+          promises.push(createWorkDiaryItem(diaryItemData));
+        }
+
+        // Update work item progress
+        if (groupedItem.progress !== groupedItem.workItem.progress) {
+          promises.push(updateWorkItemCompletion({
+            workItemId: groupedItem.workItem.id,
+            completedQuantity: groupedItem.progress,
+          }));
+        }
+      }
+
+      await Promise.all(promises);
+      showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+      onSave({});
+    } catch (error) {
+      console.error("Error creating grouped diary entry:", error);
+      showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
+    }
+  };
+
+  const availableWorkItems = activeWorkItems.filter(
+    item => !selectedGroupedItems.find(selected => selected.workItem.id === item.id)
+  );
+
+  return (
+    <div className="space-y-4">
+      {/* Mode Toggle */}
+      <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-blue-600" />
+          <span className="font-medium text-blue-800">Csoportos napló bejegyzés</span>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onModeToggle}
+          className="flex items-center gap-2"
+        >
+          <User className="h-4 w-4" />
+          Egyéni módra
+        </Button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Date Field */}
+        <div className="space-y-2">
+          <Label htmlFor="date" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Dátum
+          </Label>
+          <Input
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Work Items Selection - Top Box */}
+        <div className="space-y-4">
+          <div className="border rounded-lg p-4 bg-gray-50">
+            <div className="flex items-center justify-between mb-4">
+              <Label className="text-base font-semibold">Munkafázisok</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openWorkItemModal}
+                className="border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full w-8 h-8 p-0 flex items-center justify-center"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+
+            {/* Selected Work Items - Only names and progress */}
+            <div className="space-y-2">
+              {selectedGroupedItems.map((groupedItem) => (
+                <div key={groupedItem.workItem.id} className="flex items-center justify-between p-3 bg-white border rounded">
+                  <div className="flex-1">
+                    <h3 className="font-medium">{groupedItem.workItem.name}</h3>
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm text-gray-600">Készültség</span>
+                        <span className="text-sm font-medium text-blue-600">{groupedItem.progress}%</span>
+                      </div>
+                      <div className="relative w-full">
+                        <div 
+                          className="w-full h-2 bg-gray-200 rounded-lg relative cursor-pointer"
+                          onClick={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const percent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+                            updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(100, percent)));
+                          }}
+                        >
+                          <div 
+                            className="h-full bg-blue-500 rounded-lg"
+                            style={{ width: `${groupedItem.progress}%` }}
+                          />
+                          <div 
+                            className="absolute top-1/2 w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-md cursor-grab active:cursor-grabbing transform -translate-y-1/2"
+                            style={{ left: `calc(${groupedItem.progress}% - 10px)` }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              const slider = e.currentTarget.parentElement;
+                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                                const rect = slider!.getBoundingClientRect();
+                                const percent = Math.round(((moveEvent.clientX - rect.left) / rect.width) * 100);
+                                updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(100, percent)));
+                              };
+                              const handleMouseUp = () => {
+                                document.removeEventListener('mousemove', handleMouseMove);
+                                document.removeEventListener('mouseup', handleMouseUp);
+                              };
+                              document.addEventListener('mousemove', handleMouseMove);
+                              document.addEventListener('mouseup', handleMouseUp);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeWorkItem(groupedItem.workItem.id)}
+                    className="text-red-600 hover:text-red-800 ml-2"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {selectedGroupedItems.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>Kattints a + gombra munkafázisok hozzáadásához</p>
+              </div>
+            )}
+          </div>
+
+          {/* WorkItem Selection Modal */}
+          {showWorkItemModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Munkafázis kiválasztása</h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeWorkItemModal}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="max-h-60 overflow-y-auto">
+                  {workItems.filter((w: WorkItem) => !selectedGroupedItems.find(sg => sg.workItem.id === w.id)).length > 0 ? (
+                    <div className="space-y-2">
+                      {workItems.filter((w: WorkItem) => !selectedGroupedItems.find((sg: GroupedWorkItem) => sg.workItem.id === w.id)).map((workItem: WorkItem) => (
+                        <Button
+                          key={workItem.id}
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            addWorkItem(workItem);
+                            closeWorkItemModal();
+                          }}
+                        >
+                          <Users className="h-4 w-4 mr-2" />
+                          {workItem.name}
+                          {workItem.inProgress && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Aktív</span>}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <p>Minden munkafázis hozzá van adva</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Workers Selection - Bottom Box */}
+          {selectedGroupedItems.length > 0 && (
+            <div className="border rounded-lg p-4 bg-blue-50">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-blue-800">Dolgozók kiválasztása</h3>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={openWorkerModal}
+                  className="border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full w-8 h-8 p-0 flex items-center justify-center"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              
+              {/* Selected Workers Display */}
+              {selectedWorkers.length > 0 && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {selectedWorkers.map((worker: WorkItemWorker) => (
+                    <div
+                      key={worker.workerId}
+                      className="flex items-center justify-between bg-white p-2 rounded border"
+                    >
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium">{worker.name}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeWorker(worker.workerId)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {selectedWorkers.length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Kattints a + gombra dolgozók hozzáadásához</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Worker Selection Modal */}
+          {showWorkerModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">Dolgozó kiválasztása</h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeWorkerModal}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                
+                <div className="max-h-60 overflow-y-auto">
+                  {allWorkWorkers.filter((w: WorkItemWorker) => !selectedWorkers.find(sw => sw.workerId === w.workerId)).length > 0 ? (
+                    <div className="space-y-2">
+                      {allWorkWorkers.filter((w: WorkItemWorker) => !selectedWorkers.find((sw: WorkItemWorker) => sw.workerId === w.workerId)).map((worker: WorkItemWorker) => (
+                        <Button
+                          key={worker.workerId}
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-start"
+                          onClick={() => {
+                            addWorker(worker);
+                            closeWorkerModal();
+                          }}
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          {worker.name}
+                        </Button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <p>Minden dolgozó hozzá van adva</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Description */}
+        <div className="space-y-2">
+          <Label htmlFor="description">Leírás</Label>
+          <Textarea
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={4}
+            placeholder="Csoportos munka leírása..."
+          />
+        </div>
+
+        {/* Images */}
+        <div className="space-y-2">
+          <Label>Képek feltöltése</Label>
+          <div className="flex flex-wrap gap-3 items-center">
+            {images.map((img, idx) => (
+              <div key={img} className="relative group">
+                <img
+                  src={img}
+                  alt={`napló kép ${idx + 1}`}
+                  className="w-20 h-20 object-cover rounded shadow"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(img)}
+                  className="absolute -top-2 -right-2 bg-white border border-red-500 text-red-500 rounded-full w-6 h-6 flex items-center justify-center opacity-70 group-hover:opacity-100"
+                  title="Kép törlése"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed rounded cursor-pointer hover:bg-gray-50 transition">
+              <span className="text-xs text-gray-500">Kép hozzáadása</span>
+              <Input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+                disabled={imageUploading}
+              />
+            </label>
+          </div>
+          {imageUploading && (
+            <div className="text-blue-600 text-xs mt-1">Feltöltés...</div>
+          )}
+          {imageError && (
+            <div className="text-red-600 text-xs mt-1">{imageError}</div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 justify-end">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Mégsem
+          </Button>
+          <Button
+            type="submit"
+            disabled={
+              !date ||
+              imageUploading ||
+              selectedGroupedItems.length === 0 ||
+              selectedWorkers.length === 0
+            }
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            Csoportos bejegyzés mentése
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+}
