@@ -1,6 +1,6 @@
 'use server';
 
-import { auth } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -8,16 +8,18 @@ const prisma = new PrismaClient();
 type Theme = 'landing' | 'corporate' | 'common';
 
 export async function getTheme(): Promise<Theme> {
-  const { userId } = await auth();
-  if (!userId) return 'landing';
+  const user = await currentUser();
+  if (!user || !user.emailAddresses?.[0]?.emailAddress) return 'landing';
+
+  const email = user.emailAddresses[0].emailAddress;
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { email: userId },
+    const dbUser = await prisma.user.findUnique({
+      where: { email },
       select: { theme: true }
     });
 
-    return (user?.theme as Theme) || 'landing';
+    return (dbUser?.theme as Theme) || 'landing';
   } catch (error) {
     console.error('Error getting theme:', error);
     return 'landing';
@@ -25,18 +27,23 @@ export async function getTheme(): Promise<Theme> {
 }
 
 export async function setTheme(theme: Theme): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await auth();
-  if (!userId) return { success: false, error: 'Unauthorized' };
+  const user = await currentUser();
+  if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+    return { success: false, error: 'Unauthorized' };
+  }
+
+  const email = user.emailAddresses[0].emailAddress;
+  const name = user.fullName || user.firstName || 'User';
 
   try {
     await prisma.user.upsert({
-      where: { email: userId },
+      where: { email },
       update: { theme },
       create: { 
-        email: userId, 
-        name: userId, 
+        email,
+        name,
         theme,
-        role: 'USER' // Add required field
+        role: 'USER'
       },
     });
 
