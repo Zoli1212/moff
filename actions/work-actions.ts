@@ -59,7 +59,7 @@ export async function fetchWorkAndItems(workId: number) {
   try {
     const rawWork = await getWorkById(workId);
     if (!rawWork) {
-      throw new Error('Work not found');
+      throw new Error("Work not found");
     }
     const normWork = await normalizeWork(rawWork);
     const workItems = await getWorkItemsWithWorkers(workId);
@@ -74,7 +74,7 @@ export async function fetchWorkAndItems(workId: number) {
     }));
     return { work: normWork, workItems: items };
   } catch (error) {
-    console.error('Error in fetchWorkAndItems:', error);
+    console.error("Error in fetchWorkAndItems:", error);
     throw error; // Re-throw to be caught by the component
   }
 }
@@ -655,17 +655,36 @@ export async function getWorkById(id: number) {
   });
 
   // Debug: Log all workers to see if general workers (workItemId = null) are included
-  console.log(`[getWorkById] Total workers found for work ${id}:`, work?.workers?.length);
-  console.log(`[getWorkById] Workers with workItemId = null:`, work?.workers?.filter(w => w.workItemId === null).length);
-  console.log(`[getWorkById] All workers:`, work?.workers?.map(w => ({ id: w.id, name: w.name, workItemId: w.workItemId })));
-  
+  console.log(
+    `[getWorkById] Total workers found for work ${id}:`,
+    work?.workers?.length
+  );
+  console.log(
+    `[getWorkById] Workers with workItemId = null:`,
+    work?.workers?.filter((w) => w.workItemId === null).length
+  );
+  console.log(
+    `[getWorkById] All workers:`,
+    work?.workers?.map((w) => ({
+      id: w.id,
+      name: w.name,
+      workItemId: w.workItemId,
+    }))
+  );
+
   // Debug: Check database directly for general workers
   const allWorkersForThisWork = await prisma.worker.findMany({
     where: { workId: id },
-    select: { id: true, name: true, workItemId: true, tenantEmail: true }
+    select: { id: true, name: true, workItemId: true, tenantEmail: true },
   });
-  console.log(`[getWorkById] Direct DB query - all workers for work ${id}:`, allWorkersForThisWork);
-  console.log(`[getWorkById] Direct DB query - general workers (workItemId=null):`, allWorkersForThisWork.filter(w => w.workItemId === null));
+  console.log(
+    `[getWorkById] Direct DB query - all workers for work ${id}:`,
+    allWorkersForThisWork
+  );
+  console.log(
+    `[getWorkById] Direct DB query - general workers (workItemId=null):`,
+    allWorkersForThisWork.filter((w) => w.workItemId === null)
+  );
 
   // Verify the work belongs to the user
   if (!work || work.tenantEmail !== tenantEmail) {
@@ -676,6 +695,42 @@ export async function getWorkById(id: number) {
     ...work,
     totalWorkers: work.workers.length,
   };
+}
+
+// Update WorkItem inProgress status
+export async function updateWorkItemInProgress(params: {
+  workItemId: number;
+  inProgress: boolean;
+}) {
+  const { workItemId, inProgress } = params;
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
+
+  // Verify ownership by tenantEmail
+  const item = await prisma.workItem.findUnique({
+    where: { id: workItemId },
+    select: { tenantEmail: true, id: true, workId: true },
+  });
+  if (!item)
+    return { success: false, message: "WorkItem nem található." } as const;
+  if (item.tenantEmail !== email)
+    return {
+      success: false,
+      message: "Nincs jogosultság a WorkItem módosításához.",
+    } as const;
+
+  const updated = await prisma.workItem.update({
+    where: { id: workItemId },
+    data: { inProgress },
+  });
+
+  // Revalidate the Tasks page so status updates immediately
+  try {
+    if (item?.workId) revalidatePath(`/works/tasks/${item.workId}`);
+  } catch (err) {
+    console.error("revalidatePath failed for /works/tasks/", item?.workId, err);
+  }
+  return { success: true, data: updated } as const;
 }
 
 // Update WorkItem progress percentage (0-100)
@@ -702,7 +757,10 @@ export async function updateWorkItemProgress(params: {
 
   const clamped = Math.max(
     0,
-    Math.min(100, Math.round(Number.isFinite(progress) ? (progress as number) : 0))
+    Math.min(
+      100,
+      Math.round(Number.isFinite(progress) ? (progress as number) : 0)
+    )
   );
   const updated = await prisma.workItem.update({
     where: { id: workItemId },

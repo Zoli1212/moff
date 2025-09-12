@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
 import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
+import GroupedDiaryForm from "./edit/GroupedDiaryForm";
 import { WorkItem } from "@/types/work";
 import type { WorkDiaryWithItem, WorkDiaryItemDTO } from "@/actions/get-workdiariesbyworkid-actions";
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
@@ -24,6 +25,7 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
   const [editingItem, setEditingItem] = useState<
     (Partial<WorkDiaryItemUpdate> & { id: number; name?: string; email?: string }) | undefined
   >(undefined);
+  const [isGroupedMode, setIsGroupedMode] = useState(true); // Default to grouped mode
 
   const handleDateSelect = (date: Date) => {
     const found = (diaries ?? []).find(d => new Date(d.date).toDateString() === date.toDateString());
@@ -58,8 +60,13 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
   const handleCloseModal = () => {
     setShowDiaryModal(false);
     setEditingItem(undefined);
+    setIsGroupedMode(true); // Reset to grouped mode when closing
     // Ensure latest data (e.g., accepted flag) is fetched
     try { router.refresh(); } catch {}
+  };
+
+  const handleModeToggle = () => {
+    setIsGroupedMode(!isGroupedMode);
   };
 
   return (
@@ -104,18 +111,32 @@ export default function DiaryPageClient({ items, diaries, error }: DiaryPageClie
       {/* DiaryEntryDetail modal - always opens for selected day */}
       {showDiaryModal && selectedDiary && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-2xl w-[90%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
-            <WorkerDiaryEditForm
-              diary={selectedDiary}
-              workItems={items}
-              editingItem={editingItem}
-              onSave={() => {
-                setShowDiaryModal(false);
-                setEditingItem(undefined);
-                try { router.refresh(); } catch {}
-              }}
-              onCancel={handleCloseModal}
-            />
+          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-4xl w-[95%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
+            {isGroupedMode ? (
+              <GroupedDiaryForm
+                diary={selectedDiary}
+                workItems={items}
+                onSave={() => {
+                  setShowDiaryModal(false);
+                  setEditingItem(undefined);
+                  try { router.refresh(); } catch {}
+                }}
+                onCancel={handleCloseModal}
+                onModeToggle={handleModeToggle}
+              />
+            ) : (
+              <WorkerDiaryEditForm
+                diary={selectedDiary}
+                workItems={items}
+                editingItem={editingItem}
+                onSave={() => {
+                  setShowDiaryModal(false);
+                  setEditingItem(undefined);
+                  try { router.refresh(); } catch {}
+                }}
+                onCancel={handleCloseModal}
+              />
+            )}
           </div>
         </div>
       )}

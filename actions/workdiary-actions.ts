@@ -106,7 +106,7 @@ export async function deleteWorkDiary({
   const { user, tenantEmail } = await getTenantSafeAuth();
 
   const diary = await prisma.workDiary.findFirst({
-    where: { workId, workItemId: workItemId || null, tenantEmail },
+    where: { workId, tenantEmail },
   });
   if (!diary) {
     return { success: false, message: "Diary not found for this task." };
@@ -463,6 +463,50 @@ export async function getOrCreateWorkDiaryForTask({
       description: "",
     },
   });
+  // Keep cache fresh on creation
+  revalidatePath(`/works/diary/${workId}`);
+  revalidatePath(`/works/tasks/${workId}`);
+  return { success: true, data: diary };
+}
+
+export async function getOrCreateWorkDiaryForWork({
+  workId,
+  workItemId,
+}: {
+  workId: number;
+  workItemId?: number;
+}) {
+  const { user, tenantEmail: loggedEmail } = await getTenantSafeAuth();
+  const tenantEmail = await resolveTenantEmail(loggedEmail);
+
+  const existing = await prisma.workDiary.findFirst({
+    where: { workId, tenantEmail },
+  });
+  if (existing) {
+    try {
+      console.log("[workdiary-actions] getOrCreateWorkDiaryForWork: existing", {
+        workId,
+        tenantEmail,
+        existingId: existing.id,
+      });
+    } catch {}
+    return { success: true, data: existing };
+  }
+
+  const createData: any = {
+    workId,
+    tenantEmail,
+    date: new Date(),
+    description: "",
+  };
+  if (workItemId) {
+    createData.workItemId = workItemId;
+  }
+
+  const diary = await prisma.workDiary.create({
+    data: createData,
+  });
+  
   // Keep cache fresh on creation
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);

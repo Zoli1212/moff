@@ -3,9 +3,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TaskCard from "../_components/TaskCard";
-import { createWorkDiary, deleteWorkDiary } from "@/actions/workdiary-actions";
+import { createWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
-import { fetchWorkAndItems } from "@/actions/work-actions";
+import { fetchWorkAndItems, updateWorkItemInProgress } from "@/actions/work-actions";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -106,36 +106,63 @@ export default function TasksPage() {
     };
   }, [doFetchWorkAndItems]);
 
-  // Assign diary to workItem (checkbox)
+  // Toggle workItem inProgress status (checkbox)
   const handleAssignDiary = async (workItemId: number, checked: boolean) => {
     setAssigning(workItemId);
     setAssignError(null);
 
     try {
-      type ApiResult = {
-        success: boolean;
-        id?: number;
-        data?: { id: number };
-        message?: string;
-      };
-      let result: ApiResult | null = null;
-      if (checked) {
-        result = await createWorkDiary({ workId, workItemId });
+      // Update workItem inProgress status
+      const inProgressResult = await updateWorkItemInProgress({
+        workItemId,
+        inProgress: checked,
+      });
+      
+      if (!inProgressResult.success) {
+        setAssignError(inProgressResult.message || "Nem sikerült frissíteni a munkafázis állapotát.");
+        return;
+      }
 
-        // Update UI only after successful API call
-        if (result.success) {
+      // Only create diary if checking and no diary exists for this work yet
+      if (checked) {
+        const hasExistingDiaryForWork = workItems.some(item => 
+          item.workDiaryEntries && item.workDiaryEntries.length > 0
+        );
+        
+        if (!hasExistingDiaryForWork) {
+          const result = await createWorkDiary({ workId, workItemId });
+          
+          if (result.success) {
+            setWorkItems((prevItems) =>
+              prevItems.map((item) => {
+                if (item.id === workItemId) {
+                  return {
+                    ...item,
+                    inProgress: true,
+                    workDiaryEntries: [
+                      {
+                        id: result.data?.id || Date.now(),
+                        workItemId,
+                        workId,
+                      },
+                    ] as WorkDiary[],
+                  };
+                }
+                return item;
+              })
+            );
+          } else {
+            setAssignError("Nem sikerült naplót létrehozni.");
+            return;
+          }
+        } else {
+          // Just update inProgress status in UI
           setWorkItems((prevItems) =>
             prevItems.map((item) => {
               if (item.id === workItemId) {
                 return {
                   ...item,
-                  workDiaryEntries: [
-                    {
-                      id: result?.data?.id || result?.id || Date.now(),
-                      workItemId,
-                      workId,
-                    },
-                  ] as WorkDiary[],
+                  inProgress: true,
                 };
               }
               return item;
@@ -143,46 +170,22 @@ export default function TasksPage() {
           );
         }
       } else {
-        // Get the diary ID before deleting
-        const workItem = workItems.find((item) => item.id === workItemId);
-        const diaryId = workItem?.workDiaryEntries?.[0]?.id;
-
-        if (diaryId) {
-          result = await deleteWorkDiary({ workId, workItemId });
-
-          // Update UI only after successful deletion
-          if (result.success) {
-            setWorkItems((prevItems) =>
-              prevItems.map((item) => {
-                if (item.id === workItemId) {
-                  return {
-                    ...item,
-                    workDiaryEntries: [],
-                  };
-                }
-                return item;
-              })
-            );
-          }
-        } else {
-          result = { success: false, message: "Nincs törlendő napló" };
-        }
-      }
-
-      if (!result.success) {
-        setAssignError(
-          result.message ||
-            (checked
-              ? "Nem sikerült naplót rendelni."
-              : "Nem sikerült eltávolítani a naplót.")
+        // Just update inProgress status in UI - never delete diary
+        setWorkItems((prevItems) =>
+          prevItems.map((item) => {
+            if (item.id === workItemId) {
+              return {
+                ...item,
+                inProgress: false,
+              };
+            }
+            return item;
+          })
         );
       }
     } catch (e) {
       setAssignError(
-        (e as Error).message ||
-          (checked
-            ? "Hiba történt a napló rendelésekor"
-            : "Hiba történt a napló eltávolításakor")
+        (e as Error).message || "Hiba történt a munkafázis állapot frissítésekor"
       );
     } finally {
       setAssigning(null);
@@ -277,10 +280,8 @@ export default function TasksPage() {
           ) : (
             [...workItems]
               .sort((a, b) => {
-                const aInProgress =
-                  a.workDiaryEntries && a.workDiaryEntries.length > 0;
-                const bInProgress =
-                  b.workDiaryEntries && b.workDiaryEntries.length > 0;
+                const aInProgress = a.inProgress === true;
+                const bInProgress = b.inProgress === true;
                 return (bInProgress ? 1 : 0) - (aInProgress ? 1 : 0);
               })
               .map((item: WorkItem) => {
@@ -296,11 +297,9 @@ export default function TasksPage() {
                     summary={item.description}
                     progress={p}
                     isLoading={assigning === item.id}
-                    checked={
-                      item.workDiaryEntries && item.workDiaryEntries.length > 0
-                    }
+                    checked={item.inProgress === true}
                     className={
-                      item.workDiaryEntries && item.workDiaryEntries.length > 0
+                      item.inProgress === true
                         ? "border-green-500 border-2 bg-green-50"
                         : ""
                     }

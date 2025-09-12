@@ -37,9 +37,14 @@ type WorkDiaryItemBase = {
   images?: string[];
   notes?: string;
   accepted?: boolean;
+  groupNo?: number;
+  tenantEmail?: string;
 };
 
-export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId" | "diaryId"> & {
+export type WorkDiaryItemCreate = Omit<
+  WorkDiaryItemBase,
+  "workId" | "workItemId" | "diaryId"
+> & {
   diaryId: number;
   workId: number;
   workItemId: number;
@@ -48,4 +53,3 @@ export type WorkDiaryItemCreate = Omit<WorkDiaryItemBase, "workId" | "workItemId
 export type WorkDiaryItemUpdate = WorkDiaryItemBase & {
   id: number;
 };
-
