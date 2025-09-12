@@ -83,15 +83,11 @@ async function getWorkerEmailFromAssignment(
   return undefined;
 }
 
-export async function deleteWorkDiaryItem({
-  id,
-}: {
-  id: number;
-}) {
+export async function deleteWorkDiaryItem({ id }: { id: number }) {
   const { user, tenantEmail } = await getTenantSafeAuth();
 
   await prisma.workDiaryItem.delete({ where: { id } });
-  
+
   revalidatePath(`/works/diary`);
   return { success: true };
 }
@@ -307,6 +303,7 @@ export async function createWorkDiaryItem({
   images,
   notes,
   accepted,
+  groupNo,
 }: {
   diaryId: number;
   workId: number;
@@ -322,6 +319,7 @@ export async function createWorkDiaryItem({
   images?: string[];
   notes?: string;
   accepted?: boolean;
+  groupNo?: number;
   // id is intentionally omitted for creation
 }) {
   const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
@@ -355,6 +353,7 @@ export async function createWorkDiaryItem({
     if (images !== undefined) createData.images = images;
     if (notes !== undefined) createData.notes = notes;
     if (typeof accepted === "boolean") createData.accepted = accepted;
+    if (groupNo !== undefined) createData.groupNo = groupNo;
 
     // No same-day per workItem restriction: allow multiple entries on the same day for the same workItem
     try {
@@ -506,7 +505,7 @@ export async function getOrCreateWorkDiaryForWork({
   const diary = await prisma.workDiary.create({
     data: createData,
   });
-  
+
   // Keep cache fresh on creation
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);

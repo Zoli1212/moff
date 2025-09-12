@@ -282,8 +282,8 @@ export default function GroupedDiaryForm({
     }
 
     try {
-      // Generate unique groupNo for this group
-      const groupNo = Date.now();
+      // Generate unique groupNo for this group (use smaller number to fit INT4)
+      const groupNo = Math.floor(Date.now() / 1000); // Convert to seconds, fits in INT4
 
       // Get or create diary
       let diaryIdToUse = diary.id;
@@ -364,11 +364,18 @@ export default function GroupedDiaryForm({
         );
       }
 
-      await Promise.all(promises);
-      showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+      const results = await Promise.allSettled(promises);
+      
+      // Check results
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        showToast("error", `${failed.length} művelet sikertelen volt.`);
+      } else {
+        showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+      }
+      
       onSave({});
     } catch (error) {
-      console.error("Error creating grouped diary entry:", error);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     }
   };
