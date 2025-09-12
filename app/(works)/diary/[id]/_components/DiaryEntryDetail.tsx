@@ -47,7 +47,10 @@ export default function DiaryEntryDetail({
     }
   }, [selectedDate, diaries, editMode]);
 
-  const handleEdit = () => { onEdit?.(); setEditMode(true); };
+  const handleEdit = () => {
+    onEdit?.();
+    setEditMode(true);
+  };
   const handleCancel = () => setEditMode(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +64,7 @@ export default function DiaryEntryDetail({
       ).updateWorkDiary({
         id: localDiary.id === null ? 0 : localDiary.id,
         workId: localDiary.workId,
-        workItemId: localDiary.workItemId,
+        workItemId: localDiary.workItemId ?? undefined,
         description: updated.description,
         weather: updated.weather,
         temperature: updated.temperature,
@@ -81,7 +84,7 @@ export default function DiaryEntryDetail({
     } finally {
       setSaving(false);
     }
-  };;
+  };
 
   if (editMode) {
     return (
@@ -115,22 +118,26 @@ export default function DiaryEntryDetail({
       {saving && (
         <div className="text-sm text-blue-600 mb-2">Mentés folyamatban…</div>
       )}
-      {error && (
-        <div className="text-sm text-red-600 mb-2">{error}</div>
-      )}
+      {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
       <div className="mb-3 text-sm text-gray-600">
         <b>Munkafázis:</b>
         <select
           className="border rounded px-2 py-1 ml-2"
-          value={localDiary.workItemId}
-          onChange={e => {
+          value={localDiary.workItemId ?? ""}
+          onChange={(e) => {
             const wid = Number(e.target.value);
             const selected = workItems.find((w: WorkItem) => w.id === wid);
-            setLocalDiary({ ...localDiary, workItemId: wid, workItem: selected });
+            setLocalDiary({
+              ...localDiary,
+              workItemId: wid,
+              workItem: selected,
+            });
           }}
         >
           {workItems.map((w: WorkItem) => (
-            <option key={w.id} value={w.id}>{w.name}</option>
+            <option key={w.id} value={w.id}>
+              {w.name}
+            </option>
           ))}
         </select>
         <br />
@@ -149,31 +156,44 @@ export default function DiaryEntryDetail({
       </div>
       <div className="flex flex-col gap-2">
         <div>
-          <span className="font-semibold">Dátum:</span> {localDiary.date ? new Date(localDiary.date).toLocaleDateString() : "-"}
+          <span className="font-semibold">Dátum:</span>{" "}
+          {localDiary.date
+            ? new Date(localDiary.date).toLocaleDateString()
+            : "-"}
         </div>
         <div>
-          <span className="font-semibold">Leírás:</span> {localDiary.description || "-"}
+          <span className="font-semibold">Leírás:</span>{" "}
+          {localDiary.description || "-"}
         </div>
         <div>
-          <span className="font-semibold">Mennyiség:</span> {localDiary.quantity != null ? localDiary.quantity : "-"}
+          <span className="font-semibold">Mennyiség:</span>{" "}
+          {localDiary.quantity != null ? localDiary.quantity : "-"}
         </div>
         <div>
-          <span className="font-semibold">Mennyiségi egység:</span> {localDiary.unit || "-"}
+          <span className="font-semibold">Mennyiségi egység:</span>{" "}
+          {localDiary.unit || "-"}
         </div>
         <div>
-          <span className="font-semibold">Munkaóra:</span> {localDiary.workHours != null ? localDiary.workHours : "-"}
+          <span className="font-semibold">Munkaóra:</span>{" "}
+          {localDiary.workHours != null ? localDiary.workHours : "-"}
         </div>
         <div>
-          <span className="font-semibold">Időjárás:</span> {localDiary.weather || "-"}
+          <span className="font-semibold">Időjárás:</span>{" "}
+          {localDiary.weather || "-"}
         </div>
         <div>
-          <span className="font-semibold">Hőmérséklet:</span> {localDiary.temperature != null ? `${localDiary.temperature} °C` : "-"}
+          <span className="font-semibold">Hőmérséklet:</span>{" "}
+          {localDiary.temperature != null
+            ? `${localDiary.temperature} °C`
+            : "-"}
         </div>
         <div>
-          <span className="font-semibold">Problémák:</span> {localDiary.issues || "-"}
+          <span className="font-semibold">Problémák:</span>{" "}
+          {localDiary.issues || "-"}
         </div>
         <div>
-          <span className="font-semibold">Jegyzetek:</span> {localDiary.notes || "-"}
+          <span className="font-semibold">Jegyzetek:</span>{" "}
+          {localDiary.notes || "-"}
         </div>
       </div>
       <div className="mb-2">

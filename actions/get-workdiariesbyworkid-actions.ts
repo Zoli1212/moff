@@ -19,6 +19,7 @@ export interface WorkDiaryItemDTO {
   tenantEmail: string;
   createdAt: Date;
   updatedAt: Date;
+  groupNo?: number | null;
 }
 
 export interface WorkDiaryWithItem extends WorkDiary {
@@ -63,6 +64,7 @@ export async function getWorkDiariesByWorkId(
           tenantEmail: true,
           createdAt: true,
           updatedAt: true,
+          groupNo: true,
         },
         orderBy: { date: "asc" },
       },
