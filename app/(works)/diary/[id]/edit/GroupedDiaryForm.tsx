@@ -54,6 +54,9 @@ export default function GroupedDiaryForm({
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
+  
+  // Track original completedQuantity values when form loads
+  const [originalCompletedQuantities, setOriginalCompletedQuantities] = useState<Map<number, number>>(new Map());
 
   // Get active work items (in progress)
   const activeWorkItems = useMemo(() => {
@@ -138,17 +141,20 @@ export default function GroupedDiaryForm({
     console.log(`${type}: ${message}`);
   };
 
-  const addWorkItem = (workItem: WorkItem) => {
+  const addGroupedItem = (groupedItem: GroupedWorkItem) => {
     if (
-      !selectedGroupedItems.find((item) => item.workItem.id === workItem.id)
+      !selectedGroupedItems.find(
+        (item) => item.workItem.id === groupedItem.workItem.id
+      )
     ) {
-      setSelectedGroupedItems((prev) => [
-        ...prev,
-        {
-          workItem,
-          progress: workItem.progress || 0,
-        },
-      ]);
+      setSelectedGroupedItems((prev) => [...prev, groupedItem]);
+      
+      // Store original completedQuantity value when workItem is first selected
+      setOriginalCompletedQuantities(prev => {
+        const newMap = new Map(prev);
+        newMap.set(groupedItem.workItem.id, groupedItem.workItem.completedQuantity || 0);
+        return newMap;
+      });
     }
   };
 
@@ -156,6 +162,13 @@ export default function GroupedDiaryForm({
     setSelectedGroupedItems((prev) =>
       prev.filter((item) => item.workItem.id !== workItemId)
     );
+    
+    // Remove original value when workItem is removed
+    setOriginalCompletedQuantities(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(workItemId);
+      return newMap;
+    });
   };
 
   // const addAllActiveWorkItems = () => {
@@ -290,22 +303,44 @@ export default function GroupedDiaryForm({
       // Create diary items for each worker and each work item combination
       const promises: Promise<unknown>[] = [];
 
-      for (const groupedItem of selectedGroupedItems) {
-        for (const worker of selectedWorkers) {
-          // Get individual worker hours, divided by number of work items
-          const workerTotalHours =
-            workerHours.get(worker.workerId) || workHours;
-          const hoursPerWorkItem =
-            selectedGroupedItems.length > 0
+      for (const worker of selectedWorkers) {
+        const workerTotalHours = workerHours.get(worker.workerId) || workHours;
+        
+        // Calculate progress changes by comparing current values with original values
+        const progressChanges = selectedGroupedItems.map(item => {
+          const currentCompleted = item.workItem.completedQuantity || 0;
+          const originalCompleted = originalCompletedQuantities.get(item.workItem.id) || 0;
+          return Math.max(0, currentCompleted - originalCompleted);
+        });
+        
+        const totalProgress = progressChanges.reduce((sum, progress) => sum + progress, 0);
+        
+        // If no progress or all zero, use equal distribution
+        const useEqualDistribution = totalProgress === 0;
+        
+        for (let i = 0; i < selectedGroupedItems.length; i++) {
+          const groupedItem = selectedGroupedItems[i];
+          
+          let hoursPerWorkItem: number;
+          
+          if (useEqualDistribution) {
+            // Equal distribution
+            hoursPerWorkItem = selectedGroupedItems.length > 0
               ? workerTotalHours / selectedGroupedItems.length
               : workerTotalHours;
+          } else {
+            // Proportional distribution based on progress
+            const itemProgress = progressChanges[i];
+            const proportion = itemProgress / totalProgress;
+            hoursPerWorkItem = workerTotalHours * proportion;
+          }
 
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
             workId: diary.workId,
             workItemId: groupedItem.workItem.id,
             workerId: worker.workerId,
-            email: worker.email || "",
+            email: worker.email || user?.emailAddresses?.[0]?.emailAddress || "",
             name: worker.name || "",
             date: new Date(date),
             notes: description,
@@ -317,16 +352,16 @@ export default function GroupedDiaryForm({
 
           promises.push(createWorkDiaryItem(diaryItemData));
         }
+      }
 
-        // Update work item progress
-        if (groupedItem.progress !== groupedItem.workItem.progress) {
-          promises.push(
-            updateWorkItemCompletion({
-              workItemId: groupedItem.workItem.id,
-              completedQuantity: groupedItem.progress,
-            })
-          );
-        }
+      // Update work item progress for all selected items
+      for (const groupedItem of selectedGroupedItems) {
+        promises.push(
+          updateWorkItemCompletion({
+            workItemId: groupedItem.workItem.id,
+            completedQuantity: groupedItem.workItem.completedQuantity || 0,
+          })
+        );
       }
 
       await Promise.all(promises);
@@ -543,7 +578,10 @@ export default function GroupedDiaryForm({
                             variant="outline"
                             className="w-full justify-start"
                             onClick={() => {
-                              addWorkItem(workItem);
+                              addGroupedItem({
+                                workItem,
+                                progress: workItem.progress || 0
+                              });
                               closeWorkItemModal();
                             }}
                           >
