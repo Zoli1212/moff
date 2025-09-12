@@ -543,6 +543,7 @@ model WorkDiaryItem {
   updatedAt     DateTime   @updatedAt
   tenantEmail   String     @default("")
   accepted      Boolean    @default(false)
+  groupNo       Int?
 }
 
 model TenantWorker {
