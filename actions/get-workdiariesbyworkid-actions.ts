@@ -27,7 +27,7 @@ export interface WorkDiaryWithItem extends WorkDiary {
     id: number;
     name: string;
     description?: string | null;
-  };
+  } | null;
   workDiaryItems: WorkDiaryItemDTO[];
 }
 
