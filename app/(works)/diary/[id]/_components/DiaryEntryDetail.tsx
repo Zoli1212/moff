@@ -61,7 +61,6 @@ export default function DiaryEntryDetail({
       ).updateWorkDiary({
         id: localDiary.id === null ? 0 : localDiary.id,
         workId: localDiary.workId,
-        workItemId: localDiary.workItemId,
         description: updated.description,
         weather: updated.weather,
         temperature: updated.temperature,
@@ -122,7 +121,7 @@ export default function DiaryEntryDetail({
         <b>Munkafázis:</b>
         <select
           className="border rounded px-2 py-1 ml-2"
-          value={localDiary.workItemId}
+          value={localDiary.workItemId || ""}
           onChange={e => {
             const wid = Number(e.target.value);
             const selected = workItems.find((w: WorkItem) => w.id === wid);

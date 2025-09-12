@@ -202,7 +202,7 @@ export default function WorkerDiaryEditForm({
     };
   }, [allWorkItemWorkers]);
 
-  // Build worker options for the dropdown: show ALL workers from the entire work
+  // Build worker options for the dropdown: show ONLY actual assigned workers (workItemWorkers)
   const workerOptions = useMemo(() => {
     const options: Array<{
       key: number;
@@ -213,7 +213,7 @@ export default function WorkerDiaryEditForm({
       email?: string;
     }> = [];
 
-    // Add all workItemWorkers from all workItems
+    // Add only workItemWorkers (actual assigned workers) - no general profession workers
     allWorkItemWorkers.forEach((w: WorkItemWorker) => {
       options.push({
         key: w.id,
@@ -225,26 +225,8 @@ export default function WorkerDiaryEditForm({
       });
     });
 
-    // Add all plain workers from all workItems (avoid duplicates)
-    const existingWorkerIds = new Set(options.map((o) => o.workerId));
-    workItems.forEach((wi) => {
-      (wi.workers ?? []).forEach((w) => {
-        if (!existingWorkerIds.has(w.id)) {
-          options.push({
-            key: w.id,
-            token: `w:${w.id}`,
-            workerId: w.id,
-            name: w.name ?? `#${w.id}`,
-            role: w.role ?? undefined,
-            email: w.email,
-          });
-          existingWorkerIds.add(w.id);
-        }
-      });
-    });
-
     return options;
-  }, [allWorkItemWorkers, allWorkersById, workItems]);
+  }, [allWorkItemWorkers, allWorkersById]);
 
   // DEBUG: dump incoming props and derived state
   useEffect(() => {
