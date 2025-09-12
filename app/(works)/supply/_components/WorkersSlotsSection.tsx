@@ -316,7 +316,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       const list: AssignmentEx[] = items
         .filter((wi) => showAllWorkItems || wi.inProgress)
         .flatMap(
-          (wi: WorkItem) => wi.workItemWorkers ?? ([] as AssignmentEx[])
+          (wi) => wi.workItemWorkers ?? ([] as AssignmentEx[])
         );
       setAssignments(list);
     } catch (err) {

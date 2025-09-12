@@ -2,7 +2,7 @@
 export interface WorkDiary {
   id: number;
   workId: number;
-  workItemId: number | null; // Made optional to match Prisma schema
+  workItemId?: number | null;
   date: Date;
   description: string;
   weather?: string | null;
