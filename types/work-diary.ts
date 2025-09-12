@@ -2,7 +2,7 @@
 export interface WorkDiary {
   id: number;
   workId: number;
-  workItemId: number;
+  workItemId?: number | null;
   date: Date;
   description: string;
   weather?: string | null;

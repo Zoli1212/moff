@@ -9,14 +9,11 @@ import type {
   Material,
   Worker,
 } from "@/types/work";
+import type { WorkDiary } from "@/types/work-diary";
 import type { GeneralWorkerFromDB } from "../_components/WorkersSummary";
 // Tool típust bővítjük quantity-vel
 
 type Tool = BaseTool & { quantity?: number };
-
-// WorkDiary interface remains here if not imported, but Tool, Material, Worker are now imported from '@/types/work'.
-
-type WorkDiary = { id?: number | string; title?: string };
 import CollapsibleSection from "../_components/CollapsibleSection";
 // import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 // import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
@@ -594,7 +591,7 @@ export default async function WorkDetailPage({
                   color: "#6363a2",
                 }}
               >
-                {diary.title || diary.id}
+                {diary.description || diary.id}
               </div>
             ))}
           </div>
