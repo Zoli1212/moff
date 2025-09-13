@@ -3,7 +3,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   createWorkDiaryItem,
   getOrCreateWorkDiaryForWork,
-  updateWorkDiaryItem,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
@@ -65,6 +64,8 @@ export default function GroupedDiaryForm({
   const activeWorkItems = useMemo(() => {
     return workItems.filter((item) => item.inProgress === true);
   }, [workItems]);
+
+  console.log(setWorkHours)
 
   // Get workers from selected workItems (including newly added ones) + general workers
   const allWorkWorkers = useMemo(() => {
@@ -443,6 +444,7 @@ export default function GroupedDiaryForm({
       
       onSave({});
     } catch (error) {
+      console.log((error as Error).message);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     }
   };

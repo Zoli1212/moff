@@ -1,12 +1,12 @@
 "use client";
 
 import React from "react";
-import type { Worker, WorkItem } from "@/types/work";
+import type { WorkItem } from "@/types/work";
 import { useState } from "react";
 import DiaryTaskCard from "./DiaryTaskCard";
 import DiaryEntryDetail from "./DiaryEntryDetail";
 
-import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
+import type { WorkDiaryWithItem, WorkDiaryItemDTO } from "@/actions/get-workdiariesbyworkid-actions";
 
 interface DiaryTaskCardListProps {
   items: WorkItem[];
@@ -16,7 +16,6 @@ interface DiaryTaskCardListProps {
 
 export default function DiaryTaskCardList({
   items,
-  diaryIds,
   diaries = [],
 }: DiaryTaskCardListProps) {
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(
@@ -33,7 +32,7 @@ export default function DiaryTaskCardList({
         (d) =>
           d.workDiaryItems &&
           d.workDiaryItems.some(
-            (item: any) => (item.groupNo || item.id) === groupNo
+            (item: WorkDiaryItemDTO) => (item.groupNo || item.id) === groupNo
           )
       );
       if (diary) {
@@ -91,7 +90,7 @@ export default function DiaryTaskCardList({
 
     diaries.forEach((diary) => {
       if (diary.workDiaryItems && diary.workDiaryItems.length > 0) {
-        diary.workDiaryItems.forEach((item: any) => {
+        diary.workDiaryItems.forEach((item: WorkDiaryItemDTO) => {
           const groupNo = item.groupNo || item.id; // fallback to item.id if no groupNo
 
           if (!groups.has(groupNo)) {

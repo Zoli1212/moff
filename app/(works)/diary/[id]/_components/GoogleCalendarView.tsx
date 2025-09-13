@@ -303,7 +303,7 @@ export default function GoogleCalendarView({
             diaries.forEach((d) => {
               if (d.workDiaryItems && d.workDiaryItems.length > 0) {
                 const matchingItems = (d.workDiaryItems as WorkDiaryItemDTO[]).filter(
-                  (item: WorkDiaryItemDTO) => item.groupNo === groupNo
+                  (item) => item.groupNo === groupNo
                 );
                 if (matchingItems.length > 0) {
                   groupItems.push(...matchingItems);
@@ -317,14 +317,19 @@ export default function GoogleCalendarView({
 
             if (baseDiary && groupItems.length > 0) {
               // Create a comprehensive grouped diary object
-              const groupedDiary: WorkDiaryWithItem & { isGrouped: boolean; groupNo: number } = {
+              const groupedDiary: WorkDiaryWithItem & { isGrouped: true; groupNo: number } = {
                 ...baseDiary as WorkDiaryWithItem,
                 isGrouped: true,
                 groupNo: groupNo,
                 workDiaryItems: groupItems,
-                date: groupItems.length > 0 && groupItems[0].date ? new Date(groupItems[0].date) : baseDiary.date,
-                // Aggregate data from all items in the group
-                notes: groupItems.map(item => item.notes || '').filter(Boolean).join('; ') || baseDiary.notes || '',
+                date: new Date(groupItems[0].date),
+                notes: (() => {
+                  const aggregatedNotes = groupItems
+                    .map((item) => item.notes ?? "")
+                    .filter((s): s is string => s.length > 0)
+                    .join("; ");
+                  return aggregatedNotes || (baseDiary as WorkDiaryWithItem).notes || "";
+                })(),
                 workHours: groupItems.reduce((sum, item) => sum + (Number(item.workHours) || 0), 0),
                 quantity: groupItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
               };
