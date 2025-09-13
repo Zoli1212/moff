@@ -114,33 +114,8 @@ export default function GoogleCalendarView({
             }
           }
         } else {
-          // Fallback: create individual events for items without groupNo
-          console.log("Creating individual event for item:", it.id);
-          const ev: EventInput = {
-            id: String(it.id),
-            title: d.workItem?.name || "Napló",
-            start: it.date,
-            allDay: true,
-            classNames: (it as { accepted?: boolean }).accepted !== true ? ["pending"] : [],
-            extendedProps: {
-              diaryId: d.id,
-              workItemName: d.workItem?.name,
-              workItemId: it.workItemId,
-              workId: it.workId,
-              workerId: it.workerId,
-              email: it.email,
-              name: it.name ?? null,
-              quantity: it.quantity,
-              unit: it.unit,
-              workHours: it.workHours,
-              notes: it.notes,
-              images: it.images,
-              tenantEmail: it.tenantEmail,
-              date: it.date,
-              accepted: (it as { accepted?: boolean }).accepted,
-            } as EventExtProps,
-          };
-          list.push(ev);
+          // Skip individual events - only show grouped events
+          console.log("Skipping individual event for item:", it.id, "(no groupNo)");
         }
       }
     }
@@ -320,29 +295,41 @@ export default function GoogleCalendarView({
           if (props.isGrouped) {
             // Handle grouped event click
             const groupNo = props.groupNo;
-            const diaryId = props.diaryId;
-            const diary = diaries.find((d) => d.id === diaryId);
             
-            if (diary) {
-              // Create a special grouped diary object with all items from this group
-              const groupItems: any[] = [];
-              diaries.forEach((d) => {
-                if (d.workDiaryItems && d.workDiaryItems.length > 0) {
-                  const matchingItems = d.workDiaryItems.filter(
-                    (item: any) => item.groupNo === groupNo
-                  );
+            // Collect all items from this group across all diaries
+            const groupItems: WorkDiaryItemDTO[] = [];
+            let baseDiary: WorkDiaryWithItem | null = null;
+            
+            diaries.forEach((d) => {
+              if (d.workDiaryItems && d.workDiaryItems.length > 0) {
+                const matchingItems = (d.workDiaryItems as WorkDiaryItemDTO[]).filter(
+                  (item: WorkDiaryItemDTO) => item.groupNo === groupNo
+                );
+                if (matchingItems.length > 0) {
                   groupItems.push(...matchingItems);
+                  // Use the first diary that has items from this group as base
+                  if (!baseDiary) {
+                    baseDiary = d;
+                  }
                 }
-              });
+              }
+            });
 
-              const groupedDiary = {
-                ...diary,
+            if (baseDiary && groupItems.length > 0) {
+              // Create a comprehensive grouped diary object
+              const groupedDiary: WorkDiaryWithItem & { isGrouped: boolean; groupNo: number } = {
+                ...baseDiary as WorkDiaryWithItem,
                 isGrouped: true,
                 groupNo: groupNo,
                 workDiaryItems: groupItems,
-                date: groupItems[0]?.date ? new Date(groupItems[0].date) : diary.date,
-              } as WorkDiaryWithItem & { isGrouped: boolean; groupNo: number };
+                date: groupItems.length > 0 && groupItems[0].date ? new Date(groupItems[0].date) : baseDiary.date,
+                // Aggregate data from all items in the group
+                notes: groupItems.map(item => item.notes || '').filter(Boolean).join('; ') || baseDiary.notes || '',
+                workHours: groupItems.reduce((sum, item) => sum + (Number(item.workHours) || 0), 0),
+                quantity: groupItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
+              };
               
+              console.log("Opening grouped diary with items:", groupItems.length, "groupNo:", groupNo);
               onEventClick(groupedDiary);
             }
           } else {

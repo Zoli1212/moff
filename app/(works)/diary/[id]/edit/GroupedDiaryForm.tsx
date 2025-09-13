@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   createWorkDiaryItem,
   getOrCreateWorkDiaryForWork,
+  updateWorkDiaryItem,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface GroupedDiaryFormProps {
   onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
   onModeToggle: () => void;
+  isEditMode?: boolean; // New prop to determine if editing existing entry
 }
 
 export default function GroupedDiaryForm({
@@ -37,6 +39,7 @@ export default function GroupedDiaryForm({
   onSave,
   onCancel,
   onModeToggle,
+  isEditMode = false,
 }: GroupedDiaryFormProps) {
   const { user } = useUser();
   const [date, setDate] = useState<string>("");
@@ -130,11 +133,75 @@ export default function GroupedDiaryForm({
     }
   }, [allWorkWorkers, selectedWorkers.length]);
 
-  // Initialize form with current date
+  // Initialize form with current date or diary date in edit mode
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    setDate(today);
-  }, []);
+    if (isEditMode && diary.date) {
+      // In edit mode, use the diary's date
+      const diaryDate = new Date(diary.date).toISOString().split("T")[0];
+      setDate(diaryDate);
+    } else {
+      // In create mode, use today's date
+      const today = new Date().toISOString().split("T")[0];
+      setDate(today);
+    }
+  }, [isEditMode, diary.date]);
+
+  // Initialize form data in edit mode
+  useEffect(() => {
+    if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
+      // Load existing diary data
+      const firstItem = diary.workDiaryItems[0];
+      
+      // Set description from first item's notes
+      if (firstItem.notes) {
+        setDescription(firstItem.notes);
+      }
+      
+      // Set images from first item
+      if (firstItem.images && firstItem.images.length > 0) {
+        setImages(firstItem.images);
+      }
+      
+      // Build grouped items from diary items
+      const groupedItemsMap = new Map<number, GroupedWorkItem>();
+      const workersMap = new Map<number, WorkItemWorker>();
+      
+      diary.workDiaryItems.forEach(item => {
+        // Add work items
+        if (item.workItemId) {
+          const workItem = workItems.find(wi => wi.id === item.workItemId);
+          if (workItem && !groupedItemsMap.has(workItem.id)) {
+            groupedItemsMap.set(workItem.id, {
+              workItem,
+              progress: workItem.progress || 0
+            });
+          }
+        }
+        
+        // Add workers
+        if (item.workerId && item.name && item.email) {
+          const worker: WorkItemWorker = {
+            id: item.workerId, // Use workerId as id for compatibility
+            workerId: item.workerId,
+            name: item.name,
+            email: item.email,
+            workItemId: item.workItemId,
+            role: '', // Default empty role
+            quantity: 1 // Default quantity
+          };
+          workersMap.set(item.workerId, worker);
+          
+          // Set worker hours
+          if (item.workHours) {
+            setWorkerHours(prev => new Map(prev.set(item.workerId, item.workHours || 0)));
+          }
+        }
+      });
+      
+      setSelectedGroupedItems(Array.from(groupedItemsMap.values()));
+      setSelectedWorkers(Array.from(workersMap.values()));
+    }
+  }, [isEditMode, diary, workItems]);
 
   const showToast = (type: "success" | "error", message: string) => {
     // Toast implementation would go here
@@ -391,7 +458,7 @@ export default function GroupedDiaryForm({
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-800">
-            Csoportos napló bejegyzés
+            {isEditMode ? 'Csoportos napló szerkesztése' : 'Csoportos napló bejegyzés'}
           </span>
         </div>
         <Button
@@ -875,7 +942,7 @@ export default function GroupedDiaryForm({
             }
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Csoportos bejegyzés mentése
+            {isEditMode ? 'Módosítások mentése' : 'Csoportos bejegyzés mentése'}
           </Button>
         </div>
       </form>

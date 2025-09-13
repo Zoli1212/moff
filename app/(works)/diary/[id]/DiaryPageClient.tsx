@@ -154,6 +154,7 @@ export default function DiaryPageClient({
                 }}
                 onCancel={handleCloseModal}
                 onModeToggle={handleModeToggle}
+                isEditMode={selectedDiary.workDiaryItems && selectedDiary.workDiaryItems.length > 0}
               />
             ) : (
               <WorkerDiaryEditForm
