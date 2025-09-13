@@ -273,12 +273,12 @@ model Material {
 
 model WorkDiary {
   id             Int         @id @default(autoincrement())
-  workId         Int         @unique
+  workId         Int
   work           Work        @relation(fields: [workId], references: [id], onDelete: Cascade)
-  workItemId     Int?        // Optional: which workItem triggered diary creation
-  workItem       WorkItem?   @relation(fields: [workItemId], references: [id], onDelete: Cascade)
+  workItemId     Int
+  workItem       WorkItem    @relation(fields: [workItemId], references: [id], onDelete: Cascade)
   date           DateTime    @default(now())
-  description    String      @default("")
+  description    String
   weather        String?
   temperature    Float?
   progress       Float?      // 0-100 percentage

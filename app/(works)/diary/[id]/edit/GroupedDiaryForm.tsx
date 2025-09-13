@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   createWorkDiaryItem,
   getOrCreateWorkDiaryForWork,
+  updateWorkDiaryItem,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ interface GroupedDiaryFormProps {
   onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
   onModeToggle: () => void;
+  isEditMode?: boolean; // New prop to determine if editing existing entry
 }
 
 export default function GroupedDiaryForm({
@@ -37,43 +39,89 @@ export default function GroupedDiaryForm({
   onSave,
   onCancel,
   onModeToggle,
+  isEditMode = false,
 }: GroupedDiaryFormProps) {
   const { user } = useUser();
   const [date, setDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
-  const [selectedGroupedItems, setSelectedGroupedItems] = useState<GroupedWorkItem[]>([]);
+  const [selectedGroupedItems, setSelectedGroupedItems] = useState<
+    GroupedWorkItem[]
+  >([]);
   const [selectedWorkers, setSelectedWorkers] = useState<WorkItemWorker[]>([]);
   const [workHours, setWorkHours] = useState<number>(8); // Default 8 hours
+  const [workerHours, setWorkerHours] = useState<Map<number, number>>(
+    new Map()
+  ); // Individual worker hours
   const [showWorkerModal, setShowWorkerModal] = useState(false);
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
-
+  
+  // Track original completedQuantity values when form loads
+  const [originalCompletedQuantities, setOriginalCompletedQuantities] = useState<Map<number, number>>(new Map());
 
   // Get active work items (in progress)
   const activeWorkItems = useMemo(() => {
-    return workItems.filter(item => item.inProgress === true);
+    return workItems.filter((item) => item.inProgress === true);
   }, [workItems]);
 
-  // Get ALL workers from the entire work (by workId from WorkItemWorker table)
+  // Get workers from selected workItems (including newly added ones) + general workers
   const allWorkWorkers = useMemo(() => {
     const workersMap = new Map<number, WorkItemWorker>();
-    workItems.forEach(workItem => {
-      (workItem.workItemWorkers || []).forEach(worker => {
-        workersMap.set(worker.workerId, worker);
+
+    // Get workItems that are either inProgress OR selected in the form
+    const selectedWorkItemIds = selectedGroupedItems.map(
+      (item) => item.workItem.id
+    );
+    const relevantWorkItems = workItems.filter(
+      (item) =>
+        item.inProgress === true || selectedWorkItemIds.includes(item.id)
+    );
+
+    // Add workers from relevant workItems
+    relevantWorkItems.forEach((workItem) => {
+      (workItem.workItemWorkers || []).forEach((worker) => {
+        // Only include workers with valid name and email
+        if (
+          worker.name &&
+          worker.name.trim() !== "" &&
+          worker.email &&
+          worker.email.trim() !== ""
+        ) {
+          workersMap.set(worker.workerId, worker);
+        }
       });
     });
+
+    // Also add general workers (workItemId == null) from ALL workItems for this work
+    workItems.forEach((workItem) => {
+      (workItem.workItemWorkers || []).forEach((worker) => {
+        // Include general workers (workItemId is null) with valid name and email
+        if (
+          worker.workItemId === null &&
+          worker.name &&
+          worker.name.trim() !== "" &&
+          worker.email &&
+          worker.email.trim() !== ""
+        ) {
+          workersMap.set(worker.workerId, worker);
+        }
+      });
+    });
+
     return Array.from(workersMap.values());
-  }, [workItems]);
+  }, [workItems, selectedGroupedItems]);
 
   // Initialize with ALL active work items by default
   useEffect(() => {
     if (selectedGroupedItems.length === 0 && activeWorkItems.length > 0) {
-      const allActiveItems: GroupedWorkItem[] = activeWorkItems.map(workItem => ({
-        workItem,
-        progress: workItem.progress || 0
-      }));
+      const allActiveItems: GroupedWorkItem[] = activeWorkItems.map(
+        (workItem) => ({
+          workItem,
+          progress: workItem.progress || 0,
+        })
+      );
       setSelectedGroupedItems(allActiveItems);
     }
   }, [activeWorkItems, selectedGroupedItems.length]);
@@ -85,28 +133,109 @@ export default function GroupedDiaryForm({
     }
   }, [allWorkWorkers, selectedWorkers.length]);
 
-  // Initialize form with current date
+  // Initialize form with current date or diary date in edit mode
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
-    setDate(today);
-  }, []);
+    if (isEditMode && diary.date) {
+      // In edit mode, use the diary's date
+      const diaryDate = new Date(diary.date).toISOString().split("T")[0];
+      setDate(diaryDate);
+    } else {
+      // In create mode, use today's date
+      const today = new Date().toISOString().split("T")[0];
+      setDate(today);
+    }
+  }, [isEditMode, diary.date]);
+
+  // Initialize form data in edit mode
+  useEffect(() => {
+    if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
+      // Load existing diary data
+      const firstItem = diary.workDiaryItems[0];
+      
+      // Set description from first item's notes
+      if (firstItem.notes) {
+        setDescription(firstItem.notes);
+      }
+      
+      // Set images from first item
+      if (firstItem.images && firstItem.images.length > 0) {
+        setImages(firstItem.images);
+      }
+      
+      // Build grouped items from diary items
+      const groupedItemsMap = new Map<number, GroupedWorkItem>();
+      const workersMap = new Map<number, WorkItemWorker>();
+      
+      diary.workDiaryItems.forEach(item => {
+        // Add work items
+        if (item.workItemId) {
+          const workItem = workItems.find(wi => wi.id === item.workItemId);
+          if (workItem && !groupedItemsMap.has(workItem.id)) {
+            groupedItemsMap.set(workItem.id, {
+              workItem,
+              progress: workItem.progress || 0
+            });
+          }
+        }
+        
+        // Add workers
+        if (item.workerId && item.name && item.email) {
+          const worker: WorkItemWorker = {
+            id: item.workerId, // Use workerId as id for compatibility
+            workerId: item.workerId,
+            name: item.name,
+            email: item.email,
+            workItemId: item.workItemId,
+            role: '', // Default empty role
+            quantity: 1 // Default quantity
+          };
+          workersMap.set(item.workerId, worker);
+          
+          // Set worker hours
+          if (item.workHours) {
+            setWorkerHours(prev => new Map(prev.set(item.workerId, item.workHours || 0)));
+          }
+        }
+      });
+      
+      setSelectedGroupedItems(Array.from(groupedItemsMap.values()));
+      setSelectedWorkers(Array.from(workersMap.values()));
+    }
+  }, [isEditMode, diary, workItems]);
 
   const showToast = (type: "success" | "error", message: string) => {
     // Toast implementation would go here
     console.log(`${type}: ${message}`);
   };
 
-  const addWorkItem = (workItem: WorkItem) => {
-    if (!selectedGroupedItems.find(item => item.workItem.id === workItem.id)) {
-      setSelectedGroupedItems(prev => [...prev, {
-        workItem,
-        progress: workItem.progress || 0
-      }]);
+  const addGroupedItem = (groupedItem: GroupedWorkItem) => {
+    if (
+      !selectedGroupedItems.find(
+        (item) => item.workItem.id === groupedItem.workItem.id
+      )
+    ) {
+      setSelectedGroupedItems((prev) => [...prev, groupedItem]);
+      
+      // Store original completedQuantity value when workItem is first selected
+      setOriginalCompletedQuantities(prev => {
+        const newMap = new Map(prev);
+        newMap.set(groupedItem.workItem.id, groupedItem.workItem.completedQuantity || 0);
+        return newMap;
+      });
     }
   };
 
   const removeWorkItem = (workItemId: number) => {
-    setSelectedGroupedItems(prev => prev.filter(item => item.workItem.id !== workItemId));
+    setSelectedGroupedItems((prev) =>
+      prev.filter((item) => item.workItem.id !== workItemId)
+    );
+    
+    // Remove original value when workItem is removed
+    setOriginalCompletedQuantities(prev => {
+      const newMap = new Map(prev);
+      newMap.delete(workItemId);
+      return newMap;
+    });
   };
 
   // const addAllActiveWorkItems = () => {
@@ -123,7 +252,12 @@ export default function GroupedDiaryForm({
   // };
 
   const removeWorker = (workerId: number) => {
-    setSelectedWorkers(prev => prev.filter(w => w.workerId !== workerId));
+    setSelectedWorkers((prev) => prev.filter((w) => w.workerId !== workerId));
+    setWorkerHours((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(workerId);
+      return newMap;
+    });
   };
 
   const openWorkerModal = () => {
@@ -143,18 +277,32 @@ export default function GroupedDiaryForm({
   };
 
   const addWorker = (worker: WorkItemWorker) => {
-    if (!selectedWorkers.find(w => w.workerId === worker.workerId)) {
-      setSelectedWorkers(prev => [...prev, worker]);
+    if (!selectedWorkers.find((w) => w.workerId === worker.workerId)) {
+      setSelectedWorkers((prev) => [...prev, worker]);
+      // Initialize with default work hours
+      setWorkerHours((prev) => new Map(prev.set(worker.workerId, workHours)));
     }
   };
 
-  const updateProgress = (workItemId: number, progress: number) => {
+  const updateWorkerHours = (workerId: number, hours: number) => {
+    setWorkerHours((prev) => new Map(prev.set(workerId, hours)));
+  };
+
+  const updateProgress = (workItemId: number, completedQuantity: number) => {
     // Only update local state, database update happens on form submission
-    setSelectedGroupedItems(prev => prev.map(item => 
-      item.workItem.id === workItemId 
-        ? { ...item, progress }
-        : item
-    ));
+    setSelectedGroupedItems((prev) =>
+      prev.map((item) =>
+        item.workItem.id === workItemId 
+          ? { 
+              ...item, 
+              workItem: { 
+                ...item.workItem, 
+                completedQuantity: completedQuantity 
+              } 
+            } 
+          : item
+      )
+    );
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -188,7 +336,7 @@ export default function GroupedDiaryForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!date || selectedGroupedItems.length === 0) {
       showToast("error", "Dátum és legalább egy munkafázis szükséges.");
       return;
@@ -201,16 +349,17 @@ export default function GroupedDiaryForm({
     }
 
     try {
-      // Generate unique groupNo for this group
-      const groupNo = Date.now();
-      
+      // Generate unique groupNo for this group (use smaller number to fit INT4)
+      const groupNo = Math.floor(Date.now() / 1000); // Convert to seconds, fits in INT4
+
       // Get or create diary
       let diaryIdToUse = diary.id;
       if (!diaryIdToUse || diaryIdToUse === 0) {
-        const res: ActionResult<{ id: number }> = await getOrCreateWorkDiaryForWork({
-          workId: diary.workId,
-          workItemId: selectedGroupedItems[0].workItem.id,
-        });
+        const res: ActionResult<{ id: number }> =
+          await getOrCreateWorkDiaryForWork({
+            workId: diary.workId,
+            workItemId: selectedGroupedItems[0].workItem.id,
+          });
         if (!res?.success || !res?.data?.id) {
           showToast("error", "Napló azonosító megszerzése sikertelen.");
           return;
@@ -220,18 +369,45 @@ export default function GroupedDiaryForm({
 
       // Create diary items for each worker and each work item combination
       const promises: Promise<unknown>[] = [];
-      
-      // Calculate hours per work item (each worker's total hours divided by number of work items)
-      const hoursPerWorkItem = selectedGroupedItems.length > 0 ? workHours / selectedGroupedItems.length : workHours;
-      
-      for (const groupedItem of selectedGroupedItems) {
-        for (const worker of selectedWorkers) {
+
+      for (const worker of selectedWorkers) {
+        const workerTotalHours = workerHours.get(worker.workerId) || workHours;
+        
+        // Calculate progress changes by comparing current values with original values
+        const progressChanges = selectedGroupedItems.map(item => {
+          const currentCompleted = item.workItem.completedQuantity || 0;
+          const originalCompleted = originalCompletedQuantities.get(item.workItem.id) || 0;
+          return Math.max(0, currentCompleted - originalCompleted);
+        });
+        
+        const totalProgress = progressChanges.reduce((sum, progress) => sum + progress, 0);
+        
+        // If no progress or all zero, use equal distribution
+        const useEqualDistribution = totalProgress === 0;
+        
+        for (let i = 0; i < selectedGroupedItems.length; i++) {
+          const groupedItem = selectedGroupedItems[i];
+          
+          let hoursPerWorkItem: number;
+          
+          if (useEqualDistribution) {
+            // Equal distribution
+            hoursPerWorkItem = selectedGroupedItems.length > 0
+              ? workerTotalHours / selectedGroupedItems.length
+              : workerTotalHours;
+          } else {
+            // Proportional distribution based on progress
+            const itemProgress = progressChanges[i];
+            const proportion = itemProgress / totalProgress;
+            hoursPerWorkItem = workerTotalHours * proportion;
+          }
+
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
             workId: diary.workId,
             workItemId: groupedItem.workItem.id,
             workerId: worker.workerId,
-            email: worker.email || "",
+            email: worker.email || user?.emailAddresses?.[0]?.emailAddress || "",
             name: worker.name || "",
             date: new Date(date),
             notes: description,
@@ -243,21 +419,30 @@ export default function GroupedDiaryForm({
 
           promises.push(createWorkDiaryItem(diaryItemData));
         }
-
-        // Update work item progress
-        if (groupedItem.progress !== groupedItem.workItem.progress) {
-          promises.push(updateWorkItemCompletion({
-            workItemId: groupedItem.workItem.id,
-            completedQuantity: groupedItem.progress,
-          }));
-        }
       }
 
-      await Promise.all(promises);
-      showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+      // Update work item progress for all selected items
+      for (const groupedItem of selectedGroupedItems) {
+        promises.push(
+          updateWorkItemCompletion({
+            workItemId: groupedItem.workItem.id,
+            completedQuantity: groupedItem.workItem.completedQuantity || 0,
+          })
+        );
+      }
+
+      const results = await Promise.allSettled(promises);
+      
+      // Check results
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        showToast("error", `${failed.length} művelet sikertelen volt.`);
+      } else {
+        showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+      }
+      
       onSave({});
     } catch (error) {
-      console.error("Error creating grouped diary entry:", error);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     }
   };
@@ -272,14 +457,17 @@ export default function GroupedDiaryForm({
       <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
-          <span className="font-medium text-blue-800">Csoportos napló bejegyzés</span>
+          <span className="font-medium text-blue-800">
+            {isEditMode ? 'Csoportos napló szerkesztése' : 'Csoportos napló bejegyzés'}
+          </span>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={onModeToggle}
-          className="flex items-center gap-2"
+          disabled={true}
+          className="flex items-center gap-2 opacity-50 cursor-not-allowed"
         >
           <User className="h-4 w-4" />
           Egyéni módra
@@ -303,10 +491,200 @@ export default function GroupedDiaryForm({
         </div>
 
         {/* Work Items Selection - Top Box */}
+        <div className="border rounded-lg p-4 bg-gray-50 mb-4">
+          <div className="flex items-center justify-between mb-4">
+            <Label className="text-base font-semibold">
+              Összesített állapot
+            </Label>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={openWorkItemModal}
+              className="border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full w-8 h-8 p-0 flex items-center justify-center"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Selected Work Items - Only names and progress */}
+          <div className="space-y-2">
+            {selectedGroupedItems.map((groupedItem) => (
+              <div
+                key={groupedItem.workItem.id}
+                className="flex items-center justify-between p-3 bg-white border rounded"
+              >
+                <div className="flex-1">
+                  <h3 className="font-medium">{groupedItem.workItem.name}</h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeWorkItem(groupedItem.workItem.id)}
+                  className="text-red-600 hover:text-red-800 ml-2"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {selectedGroupedItems.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
+              <p>Kattints a + gombra munkafázisok hozzáadásához</p>
+            </div>
+          )}
+        </div>
+
+        {/* Workers Selection - Top Box */}
         <div className="space-y-4">
+          <div className="border rounded-lg p-4 bg-blue-50">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-blue-800">
+                Dolgozók kiválasztása
+              </h3>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={openWorkerModal}
+                className="border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full w-8 h-8 p-0 flex items-center justify-center"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Selected Workers Display */}
+            {selectedWorkers.length > 0 && (
+              <div className="space-y-2">
+                {selectedWorkers.map((worker: WorkItemWorker) => (
+                  <div
+                    key={worker.workerId}
+                    className="flex items-center justify-between bg-white p-3 rounded border"
+                  >
+                    <div className="flex items-center gap-2">
+                      <User className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium">{worker.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="24"
+                          step="0.5"
+                          value={workerHours.get(worker.workerId) || workHours}
+                          onChange={(e) =>
+                            updateWorkerHours(
+                              worker.workerId,
+                              parseFloat(e.target.value) || 0
+                            )
+                          }
+                          className="w-16 h-8 text-xs"
+                          placeholder="8"
+                        />
+                        <span className="text-xs text-gray-500">óra</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeWorker(worker.workerId)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {selectedWorkers.length === 0 && (
+              <div className="text-center py-4 text-gray-500">
+                <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">
+                  Kattints a + gombra dolgozók hozzáadásához
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* WorkItem Selection Modal */}
+          {showWorkItemModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold">
+                    Munkafázis kiválasztása
+                  </h3>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeWorkItemModal}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="max-h-60 overflow-y-auto">
+                  {workItems.filter(
+                    (w: WorkItem) =>
+                      !selectedGroupedItems.find(
+                        (sg) => sg.workItem.id === w.id
+                      )
+                  ).length > 0 ? (
+                    <div className="space-y-2">
+                      {workItems
+                        .filter(
+                          (w: WorkItem) =>
+                            !selectedGroupedItems.find(
+                              (sg: GroupedWorkItem) => sg.workItem.id === w.id
+                            )
+                        )
+                        .map((workItem: WorkItem) => (
+                          <Button
+                            key={workItem.id}
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              addGroupedItem({
+                                workItem,
+                                progress: workItem.progress || 0
+                              });
+                              closeWorkItemModal();
+                            }}
+                          >
+                            <Users className="h-4 w-4 mr-2" />
+                            {workItem.name}
+                            {workItem.inProgress && (
+                              <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                Aktív
+                              </span>
+                            )}
+                          </Button>
+                        ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <p>Minden munkafázis hozzá van adva</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Work Items Selection - Bottom Box */}
           <div className="border rounded-lg p-4 bg-gray-50">
             <div className="flex items-center justify-between mb-4">
-              <Label className="text-base font-semibold">Munkafázisok</Label>
+              <Label className="text-base font-semibold">
+                Összesített állapot
+              </Label>
               <Button
                 type="button"
                 variant="outline"
@@ -318,48 +696,100 @@ export default function GroupedDiaryForm({
               </Button>
             </div>
 
-
             {/* Selected Work Items - Only names and progress */}
             <div className="space-y-2">
               {selectedGroupedItems.map((groupedItem) => (
-                <div key={groupedItem.workItem.id} className="flex items-center justify-between p-3 bg-white border rounded">
+                <div
+                  key={groupedItem.workItem.id}
+                  className="flex items-center justify-between p-3 bg-white border rounded"
+                >
                   <div className="flex-1">
                     <h3 className="font-medium">{groupedItem.workItem.name}</h3>
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-gray-600">Készültség</span>
-                        <span className="text-sm font-medium text-blue-600">{groupedItem.progress}%</span>
+                        <span className="text-sm text-gray-600">
+                          Készültség
+                        </span>
+                        <span className="text-sm font-medium text-blue-600">
+                          {groupedItem.workItem.completedQuantity || 0}/{groupedItem.workItem.quantity} ({groupedItem.workItem.unit})
+                        </span>
                       </div>
                       <div className="relative w-full">
-                        <div 
+                        <div
                           className="w-full h-2 bg-gray-200 rounded-lg relative cursor-pointer"
                           onClick={(e) => {
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const percent = Math.round(((e.clientX - rect.left) / rect.width) * 100);
-                            updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(100, percent)));
+                            const rect =
+                              e.currentTarget.getBoundingClientRect();
+                            const percent =
+                              ((e.clientX - rect.left) / rect.width) * 100;
+                            const newCompletedQuantity = Math.round(
+                              (percent / 100) * groupedItem.workItem.quantity
+                            );
+                            updateProgress(
+                              groupedItem.workItem.id,
+                              Math.max(
+                                0,
+                                Math.min(
+                                  groupedItem.workItem.quantity,
+                                  newCompletedQuantity
+                                )
+                              )
+                            );
                           }}
                         >
-                          <div 
+                          <div
                             className="h-full bg-blue-500 rounded-lg"
-                            style={{ width: `${groupedItem.progress}%` }}
+                            style={{
+                              width: `${Math.min(100, ((groupedItem.workItem.completedQuantity || 0) / groupedItem.workItem.quantity) * 100)}%`,
+                            }}
                           />
-                          <div 
+                          <div
                             className="absolute top-1/2 w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-md cursor-grab active:cursor-grabbing transform -translate-y-1/2"
-                            style={{ left: `calc(${groupedItem.progress}% - 10px)` }}
+                            style={{
+                              left: `calc(${Math.min(100, ((groupedItem.workItem.completedQuantity || 0) / groupedItem.workItem.quantity) * 100)}% - 10px)`,
+                            }}
                             onMouseDown={(e) => {
                               e.preventDefault();
                               const slider = e.currentTarget.parentElement;
-                              const handleMouseMove = (moveEvent: MouseEvent) => {
+                              let isDragging = true;
+                              
+                              const handleMouseMove = (
+                                moveEvent: MouseEvent
+                              ) => {
+                                if (!isDragging) return;
                                 const rect = slider!.getBoundingClientRect();
-                                const percent = Math.round(((moveEvent.clientX - rect.left) / rect.width) * 100);
-                                updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(100, percent)));
+                                const percent = Math.max(0, Math.min(100, 
+                                  ((moveEvent.clientX - rect.left) / rect.width) * 100
+                                ));
+                                const newCompletedQuantity = Math.round(
+                                  (percent / 100) * groupedItem.workItem.quantity
+                                );
+                                updateProgress(
+                                  groupedItem.workItem.id,
+                                  newCompletedQuantity
+                                );
                               };
+                              
                               const handleMouseUp = () => {
-                                document.removeEventListener('mousemove', handleMouseMove);
-                                document.removeEventListener('mouseup', handleMouseUp);
+                                isDragging = false;
+                                document.removeEventListener(
+                                  "mousemove",
+                                  handleMouseMove
+                                );
+                                document.removeEventListener(
+                                  "mouseup",
+                                  handleMouseUp
+                                );
                               };
-                              document.addEventListener('mousemove', handleMouseMove);
-                              document.addEventListener('mouseup', handleMouseUp);
+                              
+                              document.addEventListener(
+                                "mousemove",
+                                handleMouseMove
+                              );
+                              document.addEventListener(
+                                "mouseup",
+                                handleMouseUp
+                              );
                             }}
                           />
                         </div>
@@ -387,109 +817,14 @@ export default function GroupedDiaryForm({
             )}
           </div>
 
-          {/* WorkItem Selection Modal */}
-          {showWorkItemModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Munkafázis kiválasztása</h3>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={closeWorkItemModal}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="max-h-60 overflow-y-auto">
-                  {workItems.filter((w: WorkItem) => !selectedGroupedItems.find(sg => sg.workItem.id === w.id)).length > 0 ? (
-                    <div className="space-y-2">
-                      {workItems.filter((w: WorkItem) => !selectedGroupedItems.find((sg: GroupedWorkItem) => sg.workItem.id === w.id)).map((workItem: WorkItem) => (
-                        <Button
-                          key={workItem.id}
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            addWorkItem(workItem);
-                            closeWorkItemModal();
-                          }}
-                        >
-                          <Users className="h-4 w-4 mr-2" />
-                          {workItem.name}
-                          {workItem.inProgress && <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Aktív</span>}
-                        </Button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500">
-                      <p>Minden munkafázis hozzá van adva</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Workers Selection - Bottom Box */}
-          {selectedGroupedItems.length > 0 && (
-            <div className="border rounded-lg p-4 bg-blue-50">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold text-blue-800">Dolgozók kiválasztása</h3>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={openWorkerModal}
-                  className="border-orange-500 text-orange-500 hover:bg-orange-50 rounded-full w-8 h-8 p-0 flex items-center justify-center"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              {/* Selected Workers Display */}
-              {selectedWorkers.length > 0 && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {selectedWorkers.map((worker: WorkItemWorker) => (
-                    <div
-                      key={worker.workerId}
-                      className="flex items-center justify-between bg-white p-2 rounded border"
-                    >
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm font-medium">{worker.name}</span>
-                      </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeWorker(worker.workerId)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {selectedWorkers.length === 0 && (
-                <div className="text-center py-4 text-gray-500">
-                  <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Kattints a + gombra dolgozók hozzáadásához</p>
-                </div>
-              )}
-            </div>
-          )}
-
           {/* Worker Selection Modal */}
           {showWorkerModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-semibold">Dolgozó kiválasztása</h3>
+                  <h3 className="text-lg font-semibold">
+                    Dolgozó kiválasztása
+                  </h3>
                   <Button
                     type="button"
                     variant="ghost"
@@ -499,25 +834,35 @@ export default function GroupedDiaryForm({
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-                
+
                 <div className="max-h-60 overflow-y-auto">
-                  {allWorkWorkers.filter((w: WorkItemWorker) => !selectedWorkers.find(sw => sw.workerId === w.workerId)).length > 0 ? (
+                  {allWorkWorkers.filter(
+                    (w: WorkItemWorker) =>
+                      !selectedWorkers.find((sw) => sw.workerId === w.workerId)
+                  ).length > 0 ? (
                     <div className="space-y-2">
-                      {allWorkWorkers.filter((w: WorkItemWorker) => !selectedWorkers.find((sw: WorkItemWorker) => sw.workerId === w.workerId)).map((worker: WorkItemWorker) => (
-                        <Button
-                          key={worker.workerId}
-                          type="button"
-                          variant="outline"
-                          className="w-full justify-start"
-                          onClick={() => {
-                            addWorker(worker);
-                            closeWorkerModal();
-                          }}
-                        >
-                          <User className="h-4 w-4 mr-2" />
-                          {worker.name}
-                        </Button>
-                      ))}
+                      {allWorkWorkers
+                        .filter(
+                          (w: WorkItemWorker) =>
+                            !selectedWorkers.find(
+                              (sw: WorkItemWorker) => sw.workerId === w.workerId
+                            )
+                        )
+                        .map((worker: WorkItemWorker) => (
+                          <Button
+                            key={worker.workerId}
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-start"
+                            onClick={() => {
+                              addWorker(worker);
+                              closeWorkerModal();
+                            }}
+                          >
+                            <User className="h-4 w-4 mr-2" />
+                            {worker.name}
+                          </Button>
+                        ))}
                     </div>
                   ) : (
                     <div className="text-center py-4 text-gray-500">
@@ -528,28 +873,6 @@ export default function GroupedDiaryForm({
               </div>
             </div>
           )}
-        </div>
-
-        {/* Work Hours */}
-        <div className="space-y-2">
-          <Label htmlFor="workHours" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Munkaórák száma
-          </Label>
-          <Input
-            id="workHours"
-            type="number"
-            min="0"
-            max="24"
-            step="0.5"
-            value={workHours}
-            onChange={(e) => setWorkHours(parseFloat(e.target.value) || 0)}
-            placeholder="8"
-            className="w-32"
-          />
-          <p className="text-sm text-gray-600">
-            Ez a munkaóra minden kiválasztott dolgozóra vonatkozik
-          </p>
         </div>
 
         {/* Description */}
@@ -619,7 +942,7 @@ export default function GroupedDiaryForm({
             }
             className="bg-blue-600 hover:bg-blue-700"
           >
-            Csoportos bejegyzés mentése
+            {isEditMode ? 'Módosítások mentése' : 'Csoportos bejegyzés mentése'}
           </Button>
         </div>
       </form>

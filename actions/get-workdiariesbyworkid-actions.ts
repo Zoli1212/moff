@@ -27,16 +27,20 @@ export interface WorkDiaryWithItem extends WorkDiary {
     id: number;
     name: string;
     description?: string | null;
-  } | null;
+  };
   workDiaryItems: WorkDiaryItemDTO[];
 }
 
 export async function getWorkDiariesByWorkId(
   workId: number
 ): Promise<WorkDiaryWithItem[]> {
-  // Return all diaries for this work (temporary: support both old and new structure)
+  // Only return diaries that have at least one WorkDiaryItem
   const diaries = await prisma.workDiary.findMany({
-    where: { workId },
+    where: {
+      workId,
+      workDiaryItems: { some: {} },
+    },
+    orderBy: { date: "desc" },
     include: {
       workItem: {
         select: { id: true, name: true, description: true },
@@ -60,11 +64,11 @@ export async function getWorkDiariesByWorkId(
           tenantEmail: true,
           createdAt: true,
           updatedAt: true,
+          groupNo: true,
         },
         orderBy: { date: "asc" },
       },
     },
-    orderBy: { date: "desc" },
   });
   return diaries.map((d) => ({
     ...d,

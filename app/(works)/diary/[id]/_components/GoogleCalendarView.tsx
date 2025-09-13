@@ -39,60 +39,141 @@ interface GoogleCalendarViewProps {
   diaries: WorkDiaryWithItem[];
   onEventClick: (diary: WorkDiaryWithItem) => void;
   onDateClick?: (date: Date) => void;
+  workItems?: Array<{ id: number; name: string; }>;
 }
 
 export default function GoogleCalendarView({
   diaries = [],
   onDateClick,
   onEventClick,
+  workItems = [],
 }: GoogleCalendarViewProps) {
-  // Egy WorkDiaryItem = egy naptár esemény, hogy minden információ látszódjon
+  // Group WorkDiaryItems by groupNo and create events for groups
   const events = React.useMemo(() => {
     const list: EventInput[] = [];
-    console.groupCollapsed("[Calendar] Build events");
+    const groups = new Map<number, {
+      groupNo: number;
+      date: Date;
+      items: WorkDiaryItemDTO[];
+      diaryId: number;
+      workItemNames: string[];
+      workers: string[];
+      workerHours: Map<string, number>;
+      totalHours: number;
+    }>();
+
+    console.groupCollapsed("[Calendar] Build grouped events");
     console.log("Diaries count:", diaries?.length ?? 0);
+
+    // First, collect all items and group them by groupNo
     for (const d of diaries ?? []) {
       const items = d.workDiaryItems as WorkDiaryItemDTO[] | undefined;
+      console.log("Diary:", d.id, "Items count:", items?.length ?? 0);
       if (!items || items.length === 0) continue;
+      
       for (const it of items) {
-        const accepted = (it as { accepted?: boolean }).accepted;
-        const ev: EventInput = {
-          id: String(it.id),
-          title: d.workItem?.name || "Napló",
-          start: it.date,
-          allDay: true,
-          classNames: accepted !== true ? ["pending"] : [],
-          extendedProps: {
-            diaryId: d.id,
-            workItemName: d.workItem?.name,
-            workItemId: it.workItemId,
-            workId: it.workId,
-            workerId: it.workerId,
-            email: it.email,
-            name: it.name ?? null,
-            quantity: it.quantity,
-            unit: it.unit,
-            workHours: it.workHours,
-            notes: it.notes,
-            images: it.images,
-            tenantEmail:
-              (it as unknown as { tenantEmail?: string | null }).tenantEmail ??
-              null,
-            date: it.date,
-            accepted,
-          } as EventExtProps,
-        };
-        console.log("Event built:", {
-          itemId: it.id,
-          workItemName: d.workItem?.name,
-          date: it.date,
-          accepted,
-          extendedProps: ev.extendedProps as EventExtProps,
-        });
-        list.push(ev);
+        console.log("Item:", it.id, "groupNo:", it.groupNo, "name:", it.name);
+        // Only process items with valid groupNo
+        if (it.groupNo != null && it.groupNo !== undefined) {
+          const groupNo = it.groupNo;
+          
+          if (!groups.has(groupNo)) {
+            groups.set(groupNo, {
+              groupNo,
+              date: new Date(it.date),
+              items: [],
+              diaryId: d.id,
+              workItemNames: [],
+              workers: [],
+              workerHours: new Map<string, number>(),
+              totalHours: 0,
+            });
+          }
+          
+          const group = groups.get(groupNo)!;
+          group.items.push(it);
+          
+          // Collect unique work item names based on workItemId from the item
+          const workItem = workItems.find(wi => wi.id === it.workItemId);
+          if (workItem?.name && !group.workItemNames.includes(workItem.name)) {
+            group.workItemNames.push(workItem.name);
+          }
+          
+          // Collect unique worker names and track their hours
+          if (it.name) {
+            if (!group.workers.some(w => w === it.name)) {
+              group.workers.push(it.name);
+            }
+            
+            // Sum work hours per worker
+            if (it.workHours != null && !isNaN(Number(it.workHours))) {
+              const hours = Number(it.workHours);
+              const currentHours = group.workerHours.get(it.name) || 0;
+              group.workerHours.set(it.name, currentHours + hours);
+              group.totalHours += hours;
+            }
+          }
+        } else {
+          // Skip individual events - only show grouped events
+          console.log("Skipping individual event for item:", it.id, "(no groupNo)");
+        }
       }
     }
-    console.log("Total events:", list.length);
+
+    // Create events for each group
+    for (const group of groups.values()) {
+      console.log(`=== CSOPORT #${group.groupNo} RÉSZLETES ADATOK ===`);
+      console.log("Dátum:", group.date);
+      console.log("Összes bejegyzés:", group.items.length);
+      console.log("Dolgozók:", group.workers);
+      console.log("Munkafázisok:", group.workItemNames);
+      console.log("Összes munkaóra:", group.totalHours);
+      
+      console.log("BEJEGYZÉSEK RÉSZLETESEN:");
+      let calculatedTotal = 0;
+      group.items.forEach((item, index) => {
+        const hours = item.workHours != null && !isNaN(Number(item.workHours)) ? Number(item.workHours) : 0;
+        calculatedTotal += hours;
+        console.log(`  ${index + 1}. Bejegyzés:`, {
+          id: item.id,
+          dolgozó: item.name,
+          email: item.email,
+          munkaóra: item.workHours,
+          munkaóra_szám: hours,
+          mennyiség: item.quantity,
+          egység: item.unit,
+          workItemId: item.workItemId,
+          notes: item.notes,
+          dátum: item.date,
+        });
+      });
+      console.log("Számított összeg:", calculatedTotal);
+      console.log("Tárolt összeg:", group.totalHours);
+      console.log("=== CSOPORT VÉGE ===\n");
+
+      const ev: EventInput = {
+        id: `group-${group.groupNo}`,
+        title: `Munkanapló`,
+        start: group.date,
+        allDay: true,
+        classNames: ["grouped"], // Special class for grouped events
+        extendedProps: {
+          isGrouped: true,
+          groupNo: group.groupNo,
+          diaryId: group.diaryId,
+          workItemNames: group.workItemNames,
+          workers: group.workers,
+          workerHours: group.workerHours,
+          totalHours: calculatedTotal, // Use the recalculated total
+          itemCount: group.items.length,
+          items: group.items,
+        },
+      };
+      
+      list.push(ev);
+    }
+
+    console.log("Total grouped events:", list.length);
     console.groupEnd();
     return list;
   }, [diaries]);
@@ -130,20 +211,53 @@ export default function GoogleCalendarView({
           week: "Hét",
           day: "Nap",
         }}
-        /* no header plus buttons to avoid duplicates */
         events={events}
-        /* Default day cells (no custom '+') */
         eventContent={(arg) => {
-          const p = (arg.event.extendedProps || {}) as EventExtProps;
+          const p = arg.event.extendedProps || {};
           const viewType = arg.view.type; // 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
-          try {
-            console.groupCollapsed("[Calendar] render eventContent");
-            console.log("View:", viewType);
-            console.log("Event:", arg.event);
-            console.log("ExtendedProps:", p);
-            console.groupEnd();
-          } catch {}
+          
+          // Check if this is a grouped event
+          if (p.isGrouped) {
+            const groupData = p as {
+              groupNo: number;
+              workItemNames: string[];
+              workers: string[];
+              workerHours: Map<string, number>;
+              totalHours: number;
+              itemCount: number;
+            };
 
+            // Create worker list with individual hours
+            const workersWithHours = groupData.workers.map(worker => {
+              const hours = groupData.workerHours?.get?.(worker) || 0;
+              return `${worker} (${hours}h)`;
+            });
+
+            if (viewType === "dayGridMonth") {
+              return (
+                <div className="fc-event-inner grouped-compact">
+                  <div>👤 {workersWithHours.join(", ")}</div>
+                  <div>🔧 {groupData.workItemNames.length} munkafázis</div>
+                </div>
+              );
+            }
+
+            // Week/Day view - more detailed
+            const allWorkItems = groupData.workItemNames.join(", ");
+            
+            return (
+              <div className="fc-event-inner grouped-detailed">
+                <div className="text-xs">
+                  <div>👤 Dolgozók: {workersWithHours.join(", ")}</div>
+                  <div>🔧 Munkafázisok: {allWorkItems}</div>
+                  <div>📝 {groupData.itemCount} bejegyzés</div>
+                </div>
+              </div>
+            );
+          }
+
+          // Original individual event rendering (fallback for non-grouped items)
+          const originalProps = p as EventExtProps;
           const getInitialsFromNameOnly = (name?: string | null) => {
             const n = (name || "").trim();
             if (!n) return "";
@@ -152,12 +266,11 @@ export default function GoogleCalendarView({
             const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
             return (first + last).toUpperCase();
           };
-          const hours = p.workHours != null ? `${p.workHours} óra` : "";
+          const hours = originalProps.workHours != null ? `${originalProps.workHours} óra` : "";
 
           if (viewType === "dayGridMonth") {
-            // Hónap nézet: monogram (csak névből), vagy ha nincs név, akkor teljes email + munkaóra
-            const nameInitials = getInitialsFromNameOnly(p.name ?? null);
-            const label = nameInitials || (p.email ?? "");
+            const nameInitials = getInitialsFromNameOnly(originalProps.name ?? null);
+            const label = nameInitials || (originalProps.email ?? "");
             const parts = [label, hours].filter(Boolean);
             return (
               <div className="fc-event-inner compact">
@@ -168,74 +281,67 @@ export default function GoogleCalendarView({
             );
           }
 
-          // Részletek: hét/nap nézetben nincs megjegyzés és képek, és NINCS külön "Munkás:" sor
-          const workerLine =
-            p.name && p.email
-              ? `${p.name}`
-              : p.name
-                ? `Munkás: ${p.name}`
-                : p.email
-                  ? `Munkás: ${p.email}`
-                  : undefined;
-          const qtyLine =
-            p.quantity != null || p.unit
-              ? ` ${p.quantity ?? "-"} ${p.unit ?? ""}`
-              : undefined;
-
-          const restLines = (() => {
-            const lines = [
-              qtyLine,
-              p.notes ? `Megjegyzés: ${p.notes}` : undefined,
-              Array.isArray(p.images) ? `Képek: ${p.images.length}` : undefined,
-            ];
-            // For day view, worker name is in the header, so don't add it here.
-            // For week view, we show a more detailed worker line.
-            if (viewType !== "timeGridDay") {
-              lines.unshift(workerLine);
-            }
-            if (viewType === "timeGridWeek") {
-              // Week view only shows quantity, but let's adjust to show only what's needed
-              return [qtyLine].filter(Boolean);
-            }
-            return lines.filter(Boolean);
-          })();
-
-          // Hét/Nap: első sor workItemName[0..8] + (monogram névből VAGY teljes email) + munkaóra, utána minden
-          const nameInitials = getInitialsFromNameOnly(p.name ?? null);
-          const nameOrEmail =
-            viewType === "timeGridDay"
-              ? p.name || p.email || ""
-              : nameInitials || p.email || "";
-          const headerParts = [
-            (p.workItemName || "").slice(0, 8),
-            nameOrEmail,
-            hours,
-          ].filter(Boolean);
-          const header = headerParts.join("\n");
-          const lines = [header, ...restLines];
-
           return (
             <div className="fc-event-inner detailed">
-              {lines.map((l, i) => (
-                <div key={i}>{l}</div>
-              ))}
+              <div>{originalProps.workItemName || "Napló"}</div>
+              <div>{originalProps.name || originalProps.email}</div>
+              {hours && <div>{hours}</div>}
             </div>
           );
         }}
         eventClick={(info: EventClickArg) => {
-          const diaryId = (info.event.extendedProps as EventExtProps)?.diaryId;
-          const itemId = Number(info.event.id);
-          const diary = diaries.find((d) => d.id === diaryId);
-          console.log("[Calendar] eventClick:", {
-            diaryId,
-            itemId,
-            event: info.event,
-            extendedProps: info.event.extendedProps,
-          });
-          if (diary) {
-            // Megjelöljük, melyik WorkDiaryItem-re kattintottak (szükség esetére)
-            (diary as DiaryWithEditing).__editingItemId = itemId;
-            onEventClick(diary);
+          const props = info.event.extendedProps;
+          
+          if (props.isGrouped) {
+            // Handle grouped event click
+            const groupNo = props.groupNo;
+            
+            // Collect all items from this group across all diaries
+            const groupItems: WorkDiaryItemDTO[] = [];
+            let baseDiary: WorkDiaryWithItem | null = null;
+            
+            diaries.forEach((d) => {
+              if (d.workDiaryItems && d.workDiaryItems.length > 0) {
+                const matchingItems = (d.workDiaryItems as WorkDiaryItemDTO[]).filter(
+                  (item: WorkDiaryItemDTO) => item.groupNo === groupNo
+                );
+                if (matchingItems.length > 0) {
+                  groupItems.push(...matchingItems);
+                  // Use the first diary that has items from this group as base
+                  if (!baseDiary) {
+                    baseDiary = d;
+                  }
+                }
+              }
+            });
+
+            if (baseDiary && groupItems.length > 0) {
+              // Create a comprehensive grouped diary object
+              const groupedDiary: WorkDiaryWithItem & { isGrouped: boolean; groupNo: number } = {
+                ...baseDiary as WorkDiaryWithItem,
+                isGrouped: true,
+                groupNo: groupNo,
+                workDiaryItems: groupItems,
+                date: groupItems.length > 0 && groupItems[0].date ? new Date(groupItems[0].date) : baseDiary.date,
+                // Aggregate data from all items in the group
+                notes: groupItems.map(item => item.notes || '').filter(Boolean).join('; ') || baseDiary.notes || '',
+                workHours: groupItems.reduce((sum, item) => sum + (Number(item.workHours) || 0), 0),
+                quantity: groupItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
+              };
+              
+              console.log("Opening grouped diary with items:", groupItems.length, "groupNo:", groupNo);
+              onEventClick(groupedDiary);
+            }
+          } else {
+            // Handle individual event click (fallback)
+            const diaryId = (info.event.extendedProps as EventExtProps)?.diaryId;
+            const itemId = Number(info.event.id);
+            const diary = diaries.find((d) => d.id === diaryId);
+            
+            if (diary) {
+              (diary as DiaryWithEditing).__editingItemId = itemId;
+              onEventClick(diary);
+            }
           }
         }}
         /* Long-press (touch) or drag select to create new */
@@ -282,9 +388,9 @@ export default function GoogleCalendarView({
         }
         /* ===== DESKTOP & MOBILE: Az első (axis) oszlop maradjon a layoutban, de 0 szélességgel ===== */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-scrollgrid-shrink,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-scrollgrid-shrink,
+        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-scrollgrid-shrink,
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-axis,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-axis {
+        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-axis {
           width: 0 !important;
           min-width: 0 !important;
           max-width: 0 !important;
@@ -295,22 +401,41 @@ export default function GoogleCalendarView({
 
         /* A tartalmat tüntesd el (óra-címkék) */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-slot-label,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-slot-label,
-        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-axis .fc-timegrid-axis-cushion,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-axis .fc-timegrid-axis-cushion {
+        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-slot-label,
+        .fc-mobile-wrap
+          .fc
+          .fc-timeGridWeek-view
+          .fc-timegrid-axis
+          .fc-timegrid-axis-cushion,
+        .fc-mobile-wrap
+          .fc
+          .fc-timeGridDay-view
+          .fc-timegrid-axis
+          .fc-timegrid-axis-cushion {
           display: none !important;
           visibility: hidden !important;
         }
 
         /* A vékony függőleges elválasztót is rejtsd el */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-divider,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view  .fc-timegrid-divider {
+        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-divider {
           display: none !important;
         }
-        /* ITEMS: light green background in all views */
-        .fc-mobile-wrap .fc .fc-event,
-        .fc-mobile-wrap .fc .fc-daygrid-event,
-        .fc-mobile-wrap .fc .fc-timegrid-event {
+        /* GROUPED EVENTS: blue background */
+        .fc-mobile-wrap .fc .fc-event.grouped,
+        .fc-mobile-wrap .fc .fc-daygrid-event.grouped,
+        .fc-mobile-wrap .fc .fc-timegrid-event.grouped {
+          background-color: #dbeafe !important; /* blue-100 */
+          border-color: #93c5fd !important; /* blue-300 */
+          color: #1e40af !important; /* blue-800 for readability */
+          font-size: 0.75rem; /* text-sm */
+          line-height: 1rem; /* tight lines */
+          font-weight: 500; /* medium weight for grouped events */
+        }
+        /* INDIVIDUAL ITEMS: light green background */
+        .fc-mobile-wrap .fc .fc-event:not(.grouped),
+        .fc-mobile-wrap .fc .fc-daygrid-event:not(.grouped),
+        .fc-mobile-wrap .fc .fc-timegrid-event:not(.grouped) {
           background-color: #d1fae5 !important; /* emerald-100 */
           border-color: #a7f3d0 !important; /* emerald-200 */
           color: #065f46 !important; /* emerald-900 for readability */

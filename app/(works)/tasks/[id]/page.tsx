@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TaskCard from "../_components/TaskCard";
+import { createWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
 import { fetchWorkAndItems, updateWorkItemInProgress } from "@/actions/work-actions";
 
@@ -111,69 +112,80 @@ export default function TasksPage() {
     setAssignError(null);
 
     try {
-      // Update workItem inProgress status directly
-      const workItem = workItems.find((item) => item.id === workItemId);
-      if (!workItem) {
-        setAssignError("WorkItem nem található");
-        return;
-      }
-
-      // Update UI immediately for better UX
-      setWorkItems((prevItems) =>
-        prevItems.map((item) => {
-          if (item.id === workItemId) {
-            return {
-              ...item,
-              inProgress: checked,
-            };
-          }
-          return item;
-        })
-      );
-
-      // Call API to update the workItem.inProgress in the database
-      const result = await updateWorkItemInProgress({
+      // Update workItem inProgress status
+      const inProgressResult = await updateWorkItemInProgress({
         workItemId,
         inProgress: checked,
       });
+      
+      if (!inProgressResult.success) {
+        setAssignError(inProgressResult.message || "Nem sikerült frissíteni a munkafázis állapotát.");
+        return;
+      }
 
-      if (!result.success) {
-        // Revert UI change if API call failed
+      // Only create diary if checking and no diary exists for this work yet
+      if (checked) {
+        const hasExistingDiaryForWork = workItems.some(item => 
+          item.workDiaryEntries && item.workDiaryEntries.length > 0
+        );
+        
+        if (!hasExistingDiaryForWork) {
+          const result = await createWorkDiary({ workId, workItemId });
+          
+          if (result.success) {
+            setWorkItems((prevItems) =>
+              prevItems.map((item) => {
+                if (item.id === workItemId) {
+                  return {
+                    ...item,
+                    inProgress: true,
+                    workDiaryEntries: [
+                      {
+                        id: result.data?.id || Date.now(),
+                        workItemId,
+                        workId,
+                      },
+                    ] as WorkDiary[],
+                  };
+                }
+                return item;
+              })
+            );
+          } else {
+            setAssignError("Nem sikerült naplót létrehozni.");
+            return;
+          }
+        } else {
+          // Just update inProgress status in UI
+          setWorkItems((prevItems) =>
+            prevItems.map((item) => {
+              if (item.id === workItemId) {
+                return {
+                  ...item,
+                  inProgress: true,
+                };
+              }
+              return item;
+            })
+          );
+        }
+      } else {
+        // Just update inProgress status in UI - never delete diary
         setWorkItems((prevItems) =>
           prevItems.map((item) => {
             if (item.id === workItemId) {
               return {
                 ...item,
-                inProgress: !checked, // Revert
+                inProgress: false,
               };
             }
             return item;
           })
         );
-        setAssignError(
-          checked
-            ? "Nem sikerült aktiválni a munkafázist."
-            : "Nem sikerült deaktiválni a munkafázist."
-        );
       }
     } catch (e) {
-      // Revert UI change on error
-      setWorkItems((prevItems) =>
-        prevItems.map((item) => {
-          if (item.id === workItemId) {
-            return {
-              ...item,
-              inProgress: !checked, // Revert
-            };
-          }
-          return item;
-        })
-      );
       setAssignError(
-        (e as Error).message ||
-          (checked
-            ? "Hiba történt a munkafázis aktiválásakor"
-            : "Hiba történt a munkafázis deaktiválásakor")
+        (e as Error).message || "Hiba történt a munkafázis állapot frissítésekor"
       );
     } finally {
       setAssigning(null);
@@ -268,8 +280,8 @@ export default function TasksPage() {
           ) : (
             [...workItems]
               .sort((a, b) => {
-                const aInProgress = a.inProgress || false;
-                const bInProgress = b.inProgress || false;
+                const aInProgress = a.inProgress === true;
+                const bInProgress = b.inProgress === true;
                 return (bInProgress ? 1 : 0) - (aInProgress ? 1 : 0);
               })
               .map((item: WorkItem) => {
@@ -285,9 +297,9 @@ export default function TasksPage() {
                     summary={item.description}
                     progress={p}
                     isLoading={assigning === item.id}
-                    checked={item.inProgress || false}
+                    checked={item.inProgress === true}
                     className={
-                      item.inProgress
+                      item.inProgress === true
                         ? "border-green-500 border-2 bg-green-50"
                         : ""
                     }
