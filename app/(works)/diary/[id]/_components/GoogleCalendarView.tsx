@@ -58,6 +58,7 @@ export default function GoogleCalendarView({
       diaryId: number;
       workItemNames: string[];
       workers: string[];
+      workerHours: Map<string, number>;
       totalHours: number;
     }>();
 
@@ -84,6 +85,7 @@ export default function GoogleCalendarView({
               diaryId: d.id,
               workItemNames: [],
               workers: [],
+              workerHours: new Map<string, number>(),
               totalHours: 0,
             });
           }
@@ -97,14 +99,19 @@ export default function GoogleCalendarView({
             group.workItemNames.push(workItem.name);
           }
           
-          // Collect unique worker names with their details
-          if (it.name && !group.workers.some(w => w === it.name)) {
-            group.workers.push(it.name);
-          }
-          
-          // Sum work hours
-          if (it.workHours) {
-            group.totalHours += it.workHours;
+          // Collect unique worker names and track their hours
+          if (it.name) {
+            if (!group.workers.some(w => w === it.name)) {
+              group.workers.push(it.name);
+            }
+            
+            // Sum work hours per worker
+            if (it.workHours != null && !isNaN(Number(it.workHours))) {
+              const hours = Number(it.workHours);
+              const currentHours = group.workerHours.get(it.name) || 0;
+              group.workerHours.set(it.name, currentHours + hours);
+              group.totalHours += hours;
+            }
           }
         } else {
           // Fallback: create individual events for items without groupNo
@@ -148,12 +155,16 @@ export default function GoogleCalendarView({
       console.log("Összes munkaóra:", group.totalHours);
       
       console.log("BEJEGYZÉSEK RÉSZLETESEN:");
+      let calculatedTotal = 0;
       group.items.forEach((item, index) => {
+        const hours = item.workHours != null && !isNaN(Number(item.workHours)) ? Number(item.workHours) : 0;
+        calculatedTotal += hours;
         console.log(`  ${index + 1}. Bejegyzés:`, {
           id: item.id,
           dolgozó: item.name,
           email: item.email,
           munkaóra: item.workHours,
+          munkaóra_szám: hours,
           mennyiség: item.quantity,
           egység: item.unit,
           workItemId: item.workItemId,
@@ -161,11 +172,13 @@ export default function GoogleCalendarView({
           dátum: item.date,
         });
       });
+      console.log("Számított összeg:", calculatedTotal);
+      console.log("Tárolt összeg:", group.totalHours);
       console.log("=== CSOPORT VÉGE ===\n");
 
       const ev: EventInput = {
         id: `group-${group.groupNo}`,
-        title: `Csoport #${group.groupNo}`,
+        title: `Munkanapló`,
         start: group.date,
         allDay: true,
         classNames: ["grouped"], // Special class for grouped events
@@ -175,7 +188,8 @@ export default function GoogleCalendarView({
           diaryId: group.diaryId,
           workItemNames: group.workItemNames,
           workers: group.workers,
-          totalHours: group.totalHours,
+          workerHours: group.workerHours,
+          totalHours: calculatedTotal, // Use the recalculated total
           itemCount: group.items.length,
           items: group.items,
         },
@@ -233,31 +247,35 @@ export default function GoogleCalendarView({
               groupNo: number;
               workItemNames: string[];
               workers: string[];
+              workerHours: Map<string, number>;
               totalHours: number;
               itemCount: number;
             };
 
+            // Create worker list with individual hours
+            const workersWithHours = groupData.workers.map(worker => {
+              const hours = groupData.workerHours?.get?.(worker) || 0;
+              return `${worker} (${hours}h)`;
+            });
+
             if (viewType === "dayGridMonth") {
               return (
                 <div className="fc-event-inner grouped-compact">
-                  <div>Csoport #{groupData.groupNo}</div>
-                  <div>👤 {groupData.workers.join(", ")}</div>
+                  <div>👤 {workersWithHours.join(", ")}</div>
                   <div>🔧 {groupData.workItemNames.length} munkafázis</div>
                 </div>
               );
             }
 
             // Week/Day view - more detailed
-            const allWorkers = groupData.workers.join(", ");
             const allWorkItems = groupData.workItemNames.join(", ");
             
             return (
               <div className="fc-event-inner grouped-detailed">
-                <div className="font-semibold">Csoport #{groupData.groupNo}</div>
                 <div className="text-xs">
-                  <div>👤 Dolgozók: {allWorkers}</div>
+                  <div>👤 Dolgozók: {workersWithHours.join(", ")}</div>
                   <div>🔧 Munkafázisok: {allWorkItems}</div>
-                  <div>⏱️ {groupData.totalHours}h | {groupData.itemCount} bejegyzés</div>
+                  <div>📝 {groupData.itemCount} bejegyzés</div>
                 </div>
               </div>
             );
