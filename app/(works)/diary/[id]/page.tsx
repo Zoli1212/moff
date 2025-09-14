@@ -37,7 +37,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
   } catch (e) {
     error = (e as Error)?.message || "Munkafázisok vagy napló betöltési hiba";
   }
-  const diaryIds = Array.from(new Set(diaries.map((d) => d.workItemId)));
+  const diaryIds = Array.from(new Set(diaries.map((d) => d.workItemId).filter((id): id is number => id !== null && id !== undefined)));
   const type: "workers" | "contractor" = diaryType === "contractor" ? "contractor" : "workers";
 
   return (
