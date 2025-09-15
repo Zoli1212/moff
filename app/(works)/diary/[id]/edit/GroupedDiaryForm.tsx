@@ -496,7 +496,7 @@ export default function GroupedDiaryForm({
         <div className="border rounded-lg p-4 bg-gray-50 mb-4">
           <div className="flex items-center justify-between mb-4">
             <Label className="text-base font-semibold">
-              Összesített állapot
+              Feladatok
             </Label>
             <Button
               type="button"
@@ -685,7 +685,7 @@ export default function GroupedDiaryForm({
           <div className="border rounded-lg p-4 bg-gray-50">
             <div className="flex items-center justify-between mb-4">
               <Label className="text-base font-semibold">
-                Összesített állapot
+                Jelenlegi állapot
               </Label>
               <Button
                 type="button"

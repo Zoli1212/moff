@@ -15,6 +15,9 @@ export interface WorkItem {
   name: string;
   description?: string;
   progress?: number;
+  quantity?: number;
+  completedQuantity?: number;
+  unit?: string;
   inProgress?: boolean;
   workItemWorkers?: { id: number; name?: string; role?: string }[];
   workDiaryEntries?: WorkDiary[];
@@ -296,6 +299,9 @@ export default function TasksPage() {
                     title={item.name}
                     summary={item.description}
                     progress={p}
+                    quantity={item.quantity}
+                    completedQuantity={item.completedQuantity}
+                    unit={item.unit}
                     isLoading={assigning === item.id}
                     checked={item.inProgress === true}
                     className={

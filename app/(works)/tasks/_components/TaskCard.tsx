@@ -7,6 +7,9 @@ interface TaskCardProps {
   deadline?: string;
   summary?: string;
   progress?: number;
+  quantity?: number;
+  completedQuantity?: number;
+  unit?: string;
   checked?: boolean;
   isLoading?: boolean;
   onCheck?: (checked: boolean) => void;
@@ -20,6 +23,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   deadline = "",
   summary = "",
   progress = 0,
+  quantity,
+  completedQuantity,
+  unit,
   checked = false,
   isLoading = false,
   onCheck,
@@ -46,7 +52,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
               style={{ width: `${progress}%` }}
             />
           </div>
-          <div className="text-xs text-blue-500 mt-1">{progress}% kész</div>
+          <div className="text-xs text-blue-500 mt-1">
+            {quantity !== undefined && completedQuantity !== undefined && unit ? 
+              `${completedQuantity}/${quantity} ${unit}` : 
+              `${progress}% kész`
+            }
+          </div>
         </div>
         {/* Render children below progress bar */}
         {children}

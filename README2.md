@@ -723,3 +723,15 @@ nincs bekattintva
 kártyák méretének egységesítése
 ----
 feladatoknál csúszka 0/50 m^2
+----
+végleges db törlés
+rövidett név óra Monogramm + szóköz
+bug a dolgozó bármelyik fel kell jöjjön, bármilyen aktiv embert fel tudjak venni
+aktív emberekből bárkit fel lehessen
+állapotok jóváhagyás
+egyéni kivétel
+sárga jóváhagyás előtt zöld jóváhagyás után
+----
+progress számláló progress mennyiségi egység
+új feladatokat lehessen felvenni
+---
