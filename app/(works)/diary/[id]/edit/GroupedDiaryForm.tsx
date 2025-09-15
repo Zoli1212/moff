@@ -26,7 +26,7 @@ interface GroupedWorkItem {
 interface GroupedDiaryFormProps {
   diary: WorkDiaryWithItem;
   workItems: WorkItem[];
-  onSave: (data: any) => void;
+  onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
   isEditMode?: boolean; // New prop to determine if editing existing entry
 }
