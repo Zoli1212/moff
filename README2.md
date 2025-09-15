@@ -730,7 +730,7 @@ bug a dolgozó bármelyik fel kell jöjjön, bármilyen aktiv embert fel tudjak 
 aktív emberekből bárkit fel lehessen
 állapotok jóváhagyás
 egyéni kivétel
-sárga jóváhagyás előtt zöld jóváhagyás után
+sárga jóváhagyás előtt zöld jóváhagyás után OK
 ----
 progress számláló progress mennyiségi egység OK
 új feladatokat lehessen felvenni OK

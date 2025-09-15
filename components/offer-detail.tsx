@@ -1016,6 +1016,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           onSave={handleSaveNewItem}
         />
       </div>
-    </div>
+    </>
   );
 }

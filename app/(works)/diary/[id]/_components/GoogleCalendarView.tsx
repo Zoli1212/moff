@@ -60,6 +60,7 @@ export default function GoogleCalendarView({
       workers: string[];
       workerHours: Map<string, number>;
       totalHours: number;
+      hasUnapproved: boolean;
     }>();
 
     console.groupCollapsed("[Calendar] Build grouped events");
@@ -87,11 +88,17 @@ export default function GoogleCalendarView({
               workers: [],
               workerHours: new Map<string, number>(),
               totalHours: 0,
+              hasUnapproved: false,
             });
           }
           
           const group = groups.get(groupNo)!;
           group.items.push(it);
+          
+          // Check if this item is not accepted (jóváhagyva)
+          if (it.accepted === false || it.accepted === null || it.accepted === undefined) {
+            group.hasUnapproved = true;
+          }
           
           // Collect unique work item names based on workItemId from the item
           const workItem = workItems.find(wi => wi.id === it.workItemId);
@@ -156,7 +163,7 @@ export default function GoogleCalendarView({
         title: `Munkanapló`,
         start: group.date,
         allDay: true,
-        classNames: ["grouped"], // Special class for grouped events
+        classNames: group.hasUnapproved ? ["grouped", "unapproved"] : ["grouped"], // Add unapproved class if needed
         extendedProps: {
           isGrouped: true,
           groupNo: group.groupNo,
@@ -167,6 +174,7 @@ export default function GoogleCalendarView({
           totalHours: calculatedTotal, // Use the recalculated total
           itemCount: group.items.length,
           items: group.items,
+          hasUnapproved: group.hasUnapproved,
         },
       };
       
@@ -234,15 +242,44 @@ export default function GoogleCalendarView({
             });
 
             if (viewType === "dayGridMonth") {
+              // Month view - same compact format as week view
+              const workersCompact = groupData.workers.map(worker => {
+                const hours = groupData.workerHours?.get?.(worker) || 0;
+                const roundedHours = Math.round(hours);
+                // Get initials from worker name
+                const initials = worker.split(' ').map(n => n[0]).join('').toUpperCase();
+                return `${initials} ${roundedHours}h`;
+              });
+              
               return (
                 <div className="fc-event-inner grouped-compact">
-                  <div>👤 {workersWithHours.join(", ")}</div>
-                  <div>🔧 {groupData.workItemNames.length} munkafázis</div>
+                  <div>{workersCompact.join(", ")}</div>
+                  <div>📝 {groupData.itemCount} bejegyzés</div>
                 </div>
               );
             }
 
-            // Week/Day view - more detailed
+            // Week view - compact format: worker initials, rounded hours, entry count
+            if (viewType === "timeGridWeek") {
+              const workersCompact = groupData.workers.map(worker => {
+                const hours = groupData.workerHours?.get?.(worker) || 0;
+                const roundedHours = Math.round(hours);
+                // Get initials from worker name
+                const initials = worker.split(' ').map(n => n[0]).join('').toUpperCase();
+                return `${initials} ${roundedHours}h`;
+              });
+              
+              return (
+                <div className="fc-event-inner grouped-detailed">
+                  <div className="text-xs">
+                    <div>{workersCompact.join(", ")}</div>
+                    <div>📝 {groupData.itemCount} bejegyzés</div>
+                  </div>
+                </div>
+              );
+            }
+
+            // Day view - detailed format like before
             const allWorkItems = groupData.workItemNames.join(", ");
             
             return (
@@ -404,6 +441,40 @@ export default function GoogleCalendarView({
           flex: 0 0 0 !important; /* fontos! */
         }
 
+        /* A vékony függőleges elválasztót is rejtsd el */
+        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-divider,
+        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-divider {
+          display: none !important;
+        }
+        /* GROUPED EVENTS: blue background */
+        .fc-mobile-wrap .fc .fc-event.grouped,
+        .fc-mobile-wrap .fc .fc-daygrid-event.grouped,
+        .fc-mobile-wrap .fc .fc-timegrid-event.grouped {
+          background-color: #dbeafe !important; /* blue-100 */
+          border-color: #93c5fd !important; /* blue-300 */
+          color: #1e40af !important; /* blue-800 for readability */
+          font-size: 0.75rem; /* text-sm */
+          line-height: 1rem; /* tight lines */
+          font-weight: 500; /* medium weight for grouped events */
+        }
+        /* UNAPPROVED EVENTS: yellow background */
+        .fc-mobile-wrap .fc .fc-event.unapproved,
+        .fc-mobile-wrap .fc .fc-daygrid-event.unapproved,
+        .fc-mobile-wrap .fc .fc-timegrid-event.unapproved {
+          background-color: #fef3c7 !important; /* yellow-100 */
+          border-color: #fcd34d !important; /* yellow-300 */
+          color: #92400e !important; /* yellow-800 for readability */
+        }
+        /* INDIVIDUAL ITEMS: light green background */
+        .fc-mobile-wrap .fc .fc-event:not(.grouped),
+        .fc-mobile-wrap .fc .fc-daygrid-event:not(.grouped),
+        .fc-mobile-wrap .fc .fc-timegrid-event:not(.grouped) {
+          background-color: #d1fae5 !important; /* emerald-100 */
+          border-color: #a7f3d0 !important; /* emerald-200 */
+          color: #065f46 !important; /* emerald-900 for readability */
+          font-size: 0.75rem; /* text-sm */
+          line-height: 1rem; /* tight lines */
+        }
         /* A tartalmat tüntesd el (óra-címkék) */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-slot-label,
         .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-slot-label,
@@ -421,27 +492,6 @@ export default function GoogleCalendarView({
           visibility: hidden !important;
         }
 
-        /* A vékony függőleges elválasztót is rejtsd el */
-        .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-timegrid-divider,
-        .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-divider {
-          display: none !important;
-        }
-        /* GROUPED EVENTS: blue background */
-        .fc-mobile-wrap .fc .fc-event.grouped,
-        .fc-mobile-wrap .fc .fc-daygrid-event.grouped,
-        .fc-mobile-wrap .fc .fc-timegrid-event.grouped {
-          background-color: #dbeafe !important; /* blue-100 */
-          border-color: #93c5fd !important; /* blue-300 */
-          color: #1e40af !important; /* blue-800 for readability */
-          font-size: 0.75rem; /* text-sm */
-          line-height: 1rem; /* tight lines */
-          font-weight: 500; /* medium weight for grouped events */
-        }
-        /* INDIVIDUAL ITEMS: light green background */
-        .fc-mobile-wrap .fc .fc-event:not(.grouped),
-        .fc-mobile-wrap .fc .fc-daygrid-event:not(.grouped),
-        .fc-mobile-wrap .fc .fc-timegrid-event:not(.grouped) {
-          background-color: #d1fae5 !important; /* emerald-100 */
           border-color: #a7f3d0 !important; /* emerald-200 */
           color: #065f46 !important; /* emerald-900 for readability */
           font-size: 0.75rem; /* text-sm */
