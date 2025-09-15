@@ -83,9 +83,6 @@ export default function DiaryPageClient({
     } catch {}
   };
 
-  const handleModeToggle = () => {
-    setIsGroupedMode(!isGroupedMode);
-  };
 
   return (
     <div className="max-w-3xl mx-auto py-6 md:py-8">
