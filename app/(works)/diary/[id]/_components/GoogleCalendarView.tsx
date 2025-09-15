@@ -303,7 +303,7 @@ export default function GoogleCalendarView({
             const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
             return (first + last).toUpperCase();
           };
-          const hours = originalProps.workHours != null ? `${originalProps.workHours} óra` : "";
+          const hours = originalProps.workHours != null ? `${Math.round(originalProps.workHours * 100) / 100} óra` : "";
 
           if (viewType === "dayGridMonth") {
             const nameInitials = getInitialsFromNameOnly(originalProps.name ?? null);
@@ -367,7 +367,7 @@ export default function GoogleCalendarView({
                     .join("; ");
                   return aggregatedNotes || (baseDiary as WorkDiaryWithItem).notes || "";
                 })(),
-                workHours: groupItems.reduce((sum, item) => sum + (Number(item.workHours) || 0), 0),
+                workHours: Math.round(groupItems.reduce((sum, item) => sum + (Number(item.workHours) || 0), 0) * 100) / 100,
                 quantity: groupItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
               };
               
