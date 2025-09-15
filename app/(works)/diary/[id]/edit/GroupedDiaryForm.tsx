@@ -37,7 +37,6 @@ export default function GroupedDiaryForm({
   workItems,
   onSave,
   onCancel,
-  onModeToggle,
   isEditMode = false,
 }: GroupedDiaryFormProps) {
   const { user } = useUser();
@@ -67,40 +66,15 @@ export default function GroupedDiaryForm({
 
   console.log(setWorkHours)
 
-  // Get workers from selected workItems (including newly added ones) + general workers
+  // Get ALL workers from the work, regardless of workItemId
   const allWorkWorkers = useMemo(() => {
     const workersMap = new Map<number, WorkItemWorker>();
 
-    // Get workItems that are either inProgress OR selected in the form
-    const selectedWorkItemIds = selectedGroupedItems.map(
-      (item) => item.workItem.id
-    );
-    const relevantWorkItems = workItems.filter(
-      (item) =>
-        item.inProgress === true || selectedWorkItemIds.includes(item.id)
-    );
-
-    // Add workers from relevant workItems
-    relevantWorkItems.forEach((workItem) => {
-      (workItem.workItemWorkers || []).forEach((worker) => {
-        // Only include workers with valid name and email
-        if (
-          worker.name &&
-          worker.name.trim() !== "" &&
-          worker.email &&
-          worker.email.trim() !== ""
-        ) {
-          workersMap.set(worker.workerId, worker);
-        }
-      });
-    });
-
-    // Also add general workers (workItemId == null) from ALL workItems for this work
+    // Add ALL workers from ALL workItems for this work
     workItems.forEach((workItem) => {
       (workItem.workItemWorkers || []).forEach((worker) => {
-        // Include general workers (workItemId is null) with valid name and email
+        // Include ALL workers with valid name and email, regardless of workItemId
         if (
-          worker.workItemId === null &&
           worker.name &&
           worker.name.trim() !== "" &&
           worker.email &&
@@ -112,11 +86,12 @@ export default function GroupedDiaryForm({
     });
 
     return Array.from(workersMap.values());
-  }, [workItems, selectedGroupedItems]);
+  }, [workItems]);
 
-  // Initialize with ALL active work items by default
+  // Initialize with ALL active work items by default (only on first load)
+  const [hasInitialized, setHasInitialized] = useState(false);
   useEffect(() => {
-    if (selectedGroupedItems.length === 0 && activeWorkItems.length > 0) {
+    if (!hasInitialized && selectedGroupedItems.length === 0 && activeWorkItems.length > 0) {
       const allActiveItems: GroupedWorkItem[] = activeWorkItems.map(
         (workItem) => ({
           workItem,
@@ -124,15 +99,18 @@ export default function GroupedDiaryForm({
         })
       );
       setSelectedGroupedItems(allActiveItems);
+      setHasInitialized(true);
     }
-  }, [activeWorkItems, selectedGroupedItems.length]);
+  }, [activeWorkItems, selectedGroupedItems.length, hasInitialized]);
 
-  // Initialize with all work workers by default
+  // Initialize with all work workers by default (only on first load)
+  const [hasInitializedWorkers, setHasInitializedWorkers] = useState(false);
   useEffect(() => {
-    if (selectedWorkers.length === 0 && allWorkWorkers.length > 0) {
+    if (!hasInitializedWorkers && selectedWorkers.length === 0 && allWorkWorkers.length > 0) {
       setSelectedWorkers(allWorkWorkers);
+      setHasInitializedWorkers(true);
     }
-  }, [allWorkWorkers, selectedWorkers.length]);
+  }, [allWorkWorkers, selectedWorkers.length, hasInitializedWorkers]);
 
   // Initialize form with current date or diary date in edit mode
   useEffect(() => {
@@ -463,7 +441,7 @@ export default function GroupedDiaryForm({
             {isEditMode ? 'Csoportos napló szerkesztése' : 'Csoportos napló bejegyzés'}
           </span>
         </div>
-        <Button
+        {/* <Button
           type="button"
           variant="outline"
           size="sm"
@@ -473,7 +451,7 @@ export default function GroupedDiaryForm({
         >
           <User className="h-4 w-4" />
           Egyéni módra
-        </Button>
+        </Button> */}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
