@@ -37,6 +37,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+import { AddOfferItemModal } from "./AddOfferItemModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -116,6 +117,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
   const [isEmailExpanded, setIsEmailExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -200,34 +202,61 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
   //   setEditableItems(newItems);
   // };
 
-  // Add new item
+  // Add new item - now opens modal
   const handleAddItem = () => {
+    setShowAddModal(true);
+  };
+
+  // Handle saving new item from modal
+  const handleSaveNewItem = async (newItemData: {
+    name: string;
+    quantity: string;
+    unit: string;
+    materialUnitPrice: string;
+    unitPrice: string;
+  }) => {
     const newItem = {
-      id: Date.now(), // Use timestamp as temporary ID
-      name: "",
-      quantity: "1",
-      unit: "db",
-      materialUnitPrice: "0 Ft",
-      unitPrice: "0 Ft",
-      materialTotal: "0 Ft",
-      workTotal: "0 Ft",
+      id: Date.now(),
+      name: newItemData.name,
+      quantity: newItemData.quantity,
+      unit: newItemData.unit,
+      materialUnitPrice: newItemData.materialUnitPrice,
+      unitPrice: newItemData.unitPrice,
+      materialTotal: calculateTotal(newItemData.quantity, newItemData.materialUnitPrice),
+      workTotal: calculateTotal(newItemData.quantity, newItemData.unitPrice),
     };
 
-    const updatedItems = [...editableItems, newItem];
-    const newItemIndex = updatedItems.length - 1;
-    setEditableItems(updatedItems);
-    setEditingItem({
-      index: newItemIndex,
-      item: updatedItems[newItemIndex],
-    });
+    // Add the new item at the FIRST position
+    const updatedItems = [newItem, ...editableItems];
+    
+    setIsSaving(true);
+    try {
+      const result = await updateOfferItems(
+        parseInt(offer.id.toString()),
+        updatedItems
+      );
 
-    // Scroll to the new item
-    setTimeout(() => {
-      const element = document.getElementById(`item-${newItem.id}`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (result.success) {
+        toast.success("Az új tétel sikeresen hozzáadva");
+        setEditableItems(updatedItems);
+        setOriginalItems(updatedItems.map((item) => ({ ...item })));
+      } else {
+        toast.error(result.error || "Hiba történt a mentés során");
       }
-    }, 100);
+    } catch (error) {
+      console.error("Error saving new item:", error);
+      toast.error("Hiba történt a mentés során");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Helper function to calculate totals
+  const calculateTotal = (quantity: string, unitPrice: string) => {
+    const qty = parseFloat(quantity) || 0;
+    const price = parseFloat(unitPrice.replace(/[^\d.-]/g, '')) || 0;
+    const total = qty * price;
+    return `${total.toLocaleString('hu-HU')} Ft`;
   };
 
   // Show delete confirmation
@@ -1317,6 +1346,13 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Add Item Modal */}
+      <AddOfferItemModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleSaveNewItem}
+      />
     </>
   );
 }

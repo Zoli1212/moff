@@ -25,6 +25,7 @@ import {
   Copy,
   Printer,
 } from "lucide-react";
+import { AddOfferItemModal } from "./AddOfferItemModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -44,6 +45,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Log items when they change
   useEffect(() => {
@@ -101,30 +103,41 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     setEditableItems(newItems);
   };
 
-  // Add new item
+  // Add new item - now opens modal
   const handleAddItem = () => {
+    setShowAddModal(true);
+  };
+
+  // Handle saving new item from modal
+  const handleSaveNewItem = (newItemData: {
+    name: string;
+    quantity: string;
+    unit: string;
+    materialUnitPrice: string;
+    unitPrice: string;
+  }) => {
     const newItem = {
-      id: Date.now(), // Use timestamp as temporary ID
-      name: "",
-      quantity: "1",
-      unit: "db",
-      materialUnitPrice: "0 Ft",
-      unitPrice: "0 Ft",
-      materialTotal: "0 Ft",
-      workTotal: "0 Ft",
+      id: Date.now(),
+      name: newItemData.name,
+      quantity: newItemData.quantity,
+      unit: newItemData.unit,
+      materialUnitPrice: newItemData.materialUnitPrice,
+      unitPrice: newItemData.unitPrice,
+      materialTotal: calculateTotal(newItemData.quantity, newItemData.materialUnitPrice),
+      workTotal: calculateTotal(newItemData.quantity, newItemData.unitPrice),
     };
 
-    const updatedItems = [...editableItems, newItem];
+    // Add the new item at the FIRST position
+    const updatedItems = [newItem, ...editableItems];
     setEditableItems(updatedItems);
-    setEditingItemId(updatedItems.length - 1); // Set editing mode for the new item
+  };
 
-    // Scroll to the new item
-    setTimeout(() => {
-      const element = document.getElementById(`item-${newItem.id}`);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-    }, 100);
+  // Helper function to calculate totals
+  const calculateTotal = (quantity: string, unitPrice: string) => {
+    const qty = parseFloat(quantity) || 0;
+    const price = parseFloat(unitPrice.replace(/[^\d.-]/g, '')) || 0;
+    const total = qty * price;
+    return `${total.toLocaleString('hu-HU')} Ft`;
   };
 
   // Remove item
@@ -746,7 +759,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
                               onClick={() => startEditing(index)}
                             >
-                              {item.name.replace(/^\*\s*/, "")}
+                              {item.name.replace(/^\*\s*/, "") || "Kattints a szerkesztéshez"}
                             </div>
                           )}
                         </td>
@@ -995,7 +1008,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             </div>
           </div>
         )}
+
+        {/* Add Item Modal */}
+        <AddOfferItemModal
+          isOpen={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSave={handleSaveNewItem}
+        />
       </div>
-    </>
+    </div>
   );
 }

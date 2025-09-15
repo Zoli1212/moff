@@ -6,6 +6,8 @@ import TaskCard from "../_components/TaskCard";
 import { createWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
 import { fetchWorkAndItems, updateWorkItemInProgress } from "@/actions/work-actions";
+import { addWorkItemAndOfferItem } from "@/actions/add-work-item-actions";
+import { AddOfferItemModal } from "@/components/AddOfferItemModal";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -67,6 +69,8 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [assigning, setAssigning] = useState<number | null>(null); // For loading spinner per task
   const [assignError, setAssignError] = useState<string | null>(null);
+  const [addingNewItem, setAddingNewItem] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   const doFetchWorkAndItems = useCallback(async () => {
     if (isNaN(workId)) {
@@ -195,6 +199,56 @@ export default function TasksPage() {
     }
   };
 
+  // Handle adding new work item and offer item - now opens modal
+  const handleAddNewItem = () => {
+    setShowAddModal(true);
+  };
+
+  // Handle saving new item from modal
+  const handleSaveNewItem = async (newItemData: {
+    name: string;
+    quantity: string;
+    unit: string;
+    materialUnitPrice: string;
+    unitPrice: string;
+  }) => {
+    setAddingNewItem(true);
+    setAssignError(null);
+
+    console.log("Tasks page - saving new item:", newItemData);
+
+    try {
+      // Create the work item with the form data
+      const result = await addWorkItemAndOfferItem(workId, {
+        name: newItemData.name,
+        quantity: parseFloat(newItemData.quantity) || 1,
+        unit: newItemData.unit,
+        materialUnitPrice: newItemData.materialUnitPrice,
+        unitPrice: newItemData.unitPrice,
+      });
+      
+      console.log("Tasks page - result:", result);
+      
+      if (result.success) {
+        console.log("Tasks page - success, refreshing data");
+        // Refresh the work items to show the new item
+        await doFetchWorkAndItems();
+        // Show success message
+        alert("Új tétel sikeresen hozzáadva!");
+      } else {
+        console.error("Tasks page - error:", result.error);
+        setAssignError(result.error || "Nem sikerült új tételt létrehozni.");
+        alert("Hiba: " + (result.error || "Nem sikerült új tételt létrehozni."));
+      }
+    } catch (error) {
+      console.error("Tasks page - exception:", error);
+      setAssignError("Hiba történt az új tétel létrehozásakor.");
+      alert("Hiba történt az új tétel létrehozásakor.");
+    } finally {
+      setAddingNewItem(false);
+    }
+  };
+
   const router = useRouter();
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: 16 }}>
@@ -243,6 +297,40 @@ export default function TasksPage() {
           </svg>
         </span>
         {work?.title}
+        <button
+          onClick={handleAddNewItem}
+          disabled={addingNewItem}
+          style={{
+            marginLeft: "auto",
+            width: 40,
+            height: 40,
+            borderRadius: "50%",
+            backgroundColor: "transparent",
+            border: addingNewItem ? "2px solid #ccc" : "2px solid #f97316",
+            color: addingNewItem ? "#ccc" : "#f97316",
+            fontSize: 20,
+            fontWeight: "bold",
+            cursor: addingNewItem ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "border-color 0.2s, color 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            if (!addingNewItem) {
+              e.currentTarget.style.borderColor = "#ea580c";
+              e.currentTarget.style.color = "#ea580c";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!addingNewItem) {
+              e.currentTarget.style.borderColor = "#f97316";
+              e.currentTarget.style.color = "#f97316";
+            }
+          }}
+        >
+          {addingNewItem ? "..." : "+"}
+        </button>
       </h2>
       {loading ? (
         <div className="flex items-center justify-center p-4">
@@ -366,6 +454,13 @@ export default function TasksPage() {
           )}
         </div>
       )}
+
+      {/* Add Item Modal */}
+      <AddOfferItemModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSave={handleSaveNewItem}
+      />
     </div>
   );
 }

@@ -732,6 +732,6 @@ aktív emberekből bárkit fel lehessen
 egyéni kivétel
 sárga jóváhagyás előtt zöld jóváhagyás után
 ----
-progress számláló progress mennyiségi egység
-új feladatokat lehessen felvenni
+progress számláló progress mennyiségi egység OK
+új feladatokat lehessen felvenni OK
 ---

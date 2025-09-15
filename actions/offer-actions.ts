@@ -605,19 +605,94 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
       items
     );
 
-    // First, verify the offer belongs to the current user
+    // First, verify the offer belongs to the current user and get its status
     const existingOffer = await prisma.offer.findFirst({
       where: {
         id: offerId,
         tenantEmail: userEmail,
       },
-      select: { id: true },
+      select: { 
+        id: true, 
+        status: true,
+        items: true 
+      },
     });
 
     if (!existingOffer) {
       throw new Error(
         "Az ajánlat nem található vagy nincs jogosultságod a módosításához!"
       );
+    }
+
+    // Parse existing items to compare with new items
+    const existingItems = existingOffer.items ? 
+      (Array.isArray(existingOffer.items) ? existingOffer.items : JSON.parse(existingOffer.items as string)) : [];
+    
+    // If offer is in 'work' status, we need to sync work items
+    if (existingOffer.status === 'work') {
+      // Find the corresponding work
+      const work = await prisma.work.findFirst({
+        where: { offerId: offerId },
+        select: { id: true }
+      });
+
+      if (work) {
+        // Get existing work items
+        const existingWorkItems = await prisma.workItem.findMany({
+          where: { workId: work.id },
+          select: { id: true, name: true, quantity: true }
+        });
+
+        // Find items that were deleted (exist in old items but not in new items)
+        const deletedItems = existingItems.filter((existingItem: any) => 
+          !items.some(newItem => newItem.id === existingItem.id)
+        );
+
+        // Delete corresponding work items
+        for (const deletedItem of deletedItems) {
+          const workItemToDelete = existingWorkItems.find(wi => 
+            wi.name === deletedItem.name && wi.quantity === parseInt(deletedItem.quantity)
+          );
+          if (workItemToDelete) {
+            await prisma.workItem.delete({
+              where: { id: workItemToDelete.id }
+            });
+            console.log(`Deleted work item: ${workItemToDelete.name}`);
+          }
+        }
+
+        // Find new items (exist in new items but not in old items)
+        const newItems = items.filter(newItem => 
+          !existingItems.some((existingItem: any) => existingItem.id === newItem.id)
+        );
+
+        // Create corresponding work items for new items
+        for (const newItem of newItems) {
+          const materialUnitPriceNum = parseFloat(newItem.materialUnitPrice.replace(/[^\d.-]/g, '')) || 0;
+          const unitPriceNum = parseFloat(newItem.unitPrice.replace(/[^\d.-]/g, '')) || 0;
+          const quantityNum = parseInt(newItem.quantity) || 1;
+
+          await prisma.workItem.create({
+            data: {
+              workId: work.id,
+              name: newItem.name,
+              description: `${newItem.name} - munkaelem`,
+              quantity: quantityNum,
+              unit: newItem.unit,
+              unitPrice: unitPriceNum,
+              materialUnitPrice: materialUnitPriceNum,
+              workTotal: quantityNum * unitPriceNum,
+              materialTotal: quantityNum * materialUnitPriceNum,
+              totalPrice: (quantityNum * unitPriceNum) + (quantityNum * materialUnitPriceNum),
+              tenantEmail: userEmail,
+              progress: 0,
+              completedQuantity: 0,
+              inProgress: false,
+            },
+          });
+          console.log(`Created work item: ${newItem.name}`);
+        }
+      }
     }
 
     // Calculate new totals
