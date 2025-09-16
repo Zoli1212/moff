@@ -1,15 +1,12 @@
 "use client";
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  createWorkDiaryItem,
-  getOrCreateWorkDiaryForWork,
-} from "@/actions/workdiary-actions";
+import { getOrCreateWorkDiaryForWork, createWorkDiaryItem, deleteWorkDiaryItemsByGroup } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Calendar, X, Plus, Users, User } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
+import { Calendar, X, Plus, Users, User, Trash2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
 import {
@@ -71,11 +68,26 @@ export default function GroupedDiaryForm({
     approvedItems: number;
   } | null>(null);
   const [groupApprovalLoading, setGroupApprovalLoading] = useState(false);
+  const [pendingApprovalChange, setPendingApprovalChange] = useState<boolean | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Get active work items (in progress)
   const activeWorkItems = useMemo(() => {
     return workItems.filter((item) => item.inProgress === true);
   }, [workItems]);
+
+  // Check if current user is tenant
+  const currentEmail = useMemo(
+    () => user?.emailAddresses?.[0]?.emailAddress || "",
+    [user]
+  );
+  const isTenant = useMemo(() => {
+    const a = (currentEmail || "").toLowerCase();
+    const b = (diary?.tenantEmail || "").toLowerCase();
+    return !!a && !!b && a === b;
+  }, [currentEmail, diary?.tenantEmail]);
 
   console.log(setWorkHours);
 
@@ -177,36 +189,20 @@ export default function GroupedDiaryForm({
     }
   };
 
-  const handleGroupApprovalToggle = async () => {
-    if (!diary.workDiaryItems || diary.workDiaryItems.length === 0) return;
-
-    const firstItem = diary.workDiaryItems[0];
-    if (!firstItem.groupNo) return;
-
-    try {
-      setGroupApprovalLoading(true);
-      const newApprovalState = !groupApprovalStatus?.allApproved;
-
-      const result = await updateGroupApproval(
-        firstItem.groupNo,
-        newApprovalState
-      );
-      if (result.success) {
-        // Reload the approval status
-        await loadGroupApprovalStatus(firstItem.groupNo);
-        showToast(
-          "success",
-          result.message || "Csoportos jóváhagyás frissítve"
-        );
-      } else {
-        showToast("error", result.message || "Hiba történt");
-      }
-    } catch (error) {
-      console.error("Group approval toggle error:", error);
-      showToast("error", "Hiba történt a jóváhagyás során");
-    } finally {
-      setGroupApprovalLoading(false);
-    }
+  const handleGroupApprovalToggle = () => {
+    if (!groupApprovalStatus) return;
+    
+    // Just toggle the local state, don't call server action immediately
+    const newApprovalState = !groupApprovalStatus.allApproved;
+    setPendingApprovalChange(newApprovalState);
+    
+    // Update local display state
+    setGroupApprovalStatus(prev => prev ? {
+      ...prev,
+      allApproved: newApprovalState,
+      someApproved: newApprovalState ? false : prev.someApproved,
+      approvedItems: newApprovalState ? prev.totalItems : 0
+    } : null);
   };
 
   // Initialize form data in edit mode
@@ -229,6 +225,9 @@ export default function GroupedDiaryForm({
       const groupedItemsMap = new Map<number, GroupedWorkItem>();
       const workersMap = new Map<number, WorkItemWorker>();
 
+      // Calculate total hours per worker from all diary items
+      const workerHoursMap = new Map<number, number>();
+      
       diary.workDiaryItems.forEach((item) => {
         // Add work items
         if (item.workItemId) {
@@ -241,7 +240,7 @@ export default function GroupedDiaryForm({
           }
         }
 
-        // Add workers
+        // Add workers and accumulate their hours
         if (item.workerId && item.name && item.email) {
           const worker: WorkItemWorker = {
             id: item.workerId, // Use workerId as id for compatibility
@@ -254,13 +253,19 @@ export default function GroupedDiaryForm({
           };
           workersMap.set(item.workerId, worker);
 
-          // Set worker hours
+          // Accumulate worker hours from all diary items
           if (item.workHours) {
-            setWorkerHours(
-              (prev) => new Map(prev.set(item.workerId, item.workHours || 0))
-            );
+            const currentHours = workerHoursMap.get(item.workerId) || 0;
+            workerHoursMap.set(item.workerId, currentHours + (item.workHours || 0));
           }
         }
+      });
+
+      // Set accumulated worker hours
+      workerHoursMap.forEach((totalHours, workerId) => {
+        setWorkerHours(
+          (prev) => new Map(prev.set(workerId, Math.round(totalHours)))
+        );
       });
 
       setSelectedGroupedItems(Array.from(groupedItemsMap.values()));
@@ -347,8 +352,8 @@ export default function GroupedDiaryForm({
   const addWorker = (worker: WorkItemWorker) => {
     if (!selectedWorkers.find((w) => w.workerId === worker.workerId)) {
       setSelectedWorkers((prev) => [...prev, worker]);
-      // Initialize with default work hours
-      setWorkerHours((prev) => new Map(prev.set(worker.workerId, workHours)));
+      // Initialize with 8 hours for new workers
+      setWorkerHours((prev) => new Map(prev.set(worker.workerId, 8)));
     }
   };
 
@@ -416,9 +421,20 @@ export default function GroupedDiaryForm({
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
-      // Generate unique groupNo for this group (use smaller number to fit INT4)
-      const groupNo = Math.floor(Date.now() / 1000); // Convert to seconds, fits in INT4
+      // In edit mode, use existing groupNo; otherwise generate new one
+      let groupNo: number;
+      if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
+        groupNo = diary.workDiaryItems[0].groupNo || Math.floor(Date.now() / 1000);
+        
+        // Delete existing diary items for this group
+        await deleteWorkDiaryItemsByGroup({ groupNo });
+      } else {
+        // Generate unique groupNo for new group
+        groupNo = Math.floor(Date.now() / 1000);
+      }
 
       // Get or create diary
       let diaryIdToUse = diary.id;
@@ -505,6 +521,25 @@ export default function GroupedDiaryForm({
         );
       }
 
+      // Handle pending group approval change if exists
+      if (pendingApprovalChange !== null && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
+        const firstItem = diary.workDiaryItems[0];
+        if (firstItem.groupNo) {
+          try {
+            const result = await updateGroupApproval(firstItem.groupNo, pendingApprovalChange);
+            if (result.success) {
+              showToast("success", result.message || "Csoportos jóváhagyás frissítve");
+            } else {
+              showToast("error", result.message || "Hiba történt a jóváhagyás során");
+            }
+          } catch (error) {
+            console.error("Group approval update error:", error);
+            showToast("error", "Hiba történt a jóváhagyás során");
+          }
+        }
+        setPendingApprovalChange(null);
+      }
+
       const results = await Promise.allSettled(promises);
 
       // Check results
@@ -512,13 +547,40 @@ export default function GroupedDiaryForm({
       if (failed.length > 0) {
         showToast("error", `${failed.length} művelet sikertelen volt.`);
       } else {
-        showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+        showToast("success", isEditMode ? "Csoportos napló bejegyzés sikeresen frissítve." : "Csoportos napló bejegyzés sikeresen létrehozva.");
       }
 
       onSave({});
     } catch (error) {
       console.log((error as Error).message);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!isEditMode || !diary.workDiaryItems || diary.workDiaryItems.length === 0) {
+      return;
+    }
+
+    const groupNo = diary.workDiaryItems[0].groupNo;
+    if (!groupNo) {
+      showToast("error", "Csoport azonosító nem található.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteWorkDiaryItemsByGroup({ groupNo });
+      showToast("success", "Csoportos napló bejegyzés sikeresen törölve.");
+      onSave({}); // Close modal and refresh
+    } catch (error) {
+      console.error("Delete error:", error);
+      showToast("error", "Hiba történt a törlés során.");
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
@@ -528,6 +590,17 @@ export default function GroupedDiaryForm({
 
   return (
     <div className="space-y-4">
+      {/* Loading Overlay */}
+      {isSubmitting && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="text-lg font-medium text-gray-800">AI frissítés</div>
+            <div className="text-sm text-gray-600">Napló bejegyzések feldolgozása...</div>
+          </div>
+        </div>
+      )}
+
       {/* Mode Toggle */}
       <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
         <div className="flex items-center gap-2">
@@ -1130,23 +1203,112 @@ export default function GroupedDiaryForm({
           )}
 
         {/* Action Buttons */}
-        <div className="flex gap-2 justify-end">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Mégsem
-          </Button>
-          <Button
-            type="submit"
-            disabled={
-              !date ||
-              imageUploading ||
-              selectedGroupedItems.length === 0 ||
-              selectedWorkers.length === 0
-            }
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isEditMode ? "Módosítások mentése" : "Csoportos bejegyzés mentése"}
-          </Button>
+        <div className="flex gap-2 justify-between">
+          <div>
+            {/* Delete Button - Only for tenant in edit mode */}
+            {isEditMode && isTenant && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isDeleting || isSubmitting}
+                className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+              >
+                {isDeleting ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                    Törlés...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Trash2 className="h-4 w-4" />
+                    Csoportos bejegyzés törlése
+                  </div>
+                )}
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Mégsem
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                !date ||
+                imageUploading ||
+                selectedGroupedItems.length === 0 ||
+                selectedWorkers.length === 0 ||
+                isSubmitting ||
+                isDeleting
+              }
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  AI frissítés...
+                </div>
+              ) : (
+                isEditMode ? "Módosítások mentése" : "Csoportos bejegyzés mentése"
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Delete Confirmation Dialog */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="h-5 w-5 text-red-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Csoportos bejegyzés törlése
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Biztosan törölni szeretné ezt a csoportos napló bejegyzést?
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                <p className="text-sm text-red-800">
+                  <strong>Figyelem:</strong> Ez a művelet nem visszavonható. Az összes kapcsolódó napló bejegyzés véglegesen törlődik.
+                </p>
+              </div>
+
+              <div className="flex gap-3 justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                >
+                  Mégsem
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDeleteGroup}
+                  disabled={isDeleting}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  {isDeleting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Törlés...
+                    </div>
+                  ) : (
+                    "Igen, törlöm"
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

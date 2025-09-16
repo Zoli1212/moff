@@ -11,7 +11,7 @@ import type {
 } from "@/actions/get-workdiariesbyworkid-actions";
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
 
-type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number };
+type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number; isGrouped?: boolean; groupNo?: number };
 
 interface DiaryPageClientProps {
   items: WorkItem[];
@@ -128,6 +128,14 @@ export default function DiaryPageClient({
               };
             }
           }
+          
+          // Set editing mode based on whether we have existing items or grouping
+          if (d.isGrouped || (d.workDiaryItems && d.workDiaryItems.length > 0)) {
+            setIsGroupedMode(true);
+          } else {
+            setIsGroupedMode(false);
+          }
+          
           setEditingItem(itemForEdit);
           setSelectedDiary(diary);
           setShowDiaryModal(true);

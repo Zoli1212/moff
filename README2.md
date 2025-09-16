@@ -740,3 +740,6 @@ Legalább 1 munkafázis legalább
 ikon
 11 bejegyzés
 Dolgozók + ENTER , munkafázisok + képek vesszővel Napi nézet, pictures, óra kerekítve
+ideiglenes screen törölni
+B.C.
+nem kell abejegyzés

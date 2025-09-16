@@ -315,9 +315,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       // Include workers from active workItems (based on showAllWorkItems flag)
       const list: AssignmentEx[] = items
         .filter((wi) => showAllWorkItems || wi.inProgress)
-        .flatMap(
-          (wi) => wi.workItemWorkers ?? ([] as AssignmentEx[])
-        );
+        .flatMap((wi) => wi.workItemWorkers ?? ([] as AssignmentEx[]));
       setAssignments(list);
     } catch (err) {
       console.error(err);
@@ -347,7 +345,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         // Worker exists in workforce registry, but we need to find or create Worker record
         // Find existing Worker record for this profession
         const workerRecord = workers.find((w) => w.name === data.profession);
-        
+
         if (workerRecord) {
           // Worker record exists, use its ID for assignment
           await assignWorkerToWorkItemAndWork({

@@ -242,7 +242,7 @@ export default function GoogleCalendarView({
             });
 
             if (viewType === "dayGridMonth") {
-              // Month view - same compact format as week view
+              // Month view - compact format without entry count
               const workersCompact = groupData.workers.map(worker => {
                 const hours = groupData.workerHours?.get?.(worker) || 0;
                 const roundedHours = Math.round(hours);
@@ -254,12 +254,11 @@ export default function GoogleCalendarView({
               return (
                 <div className="fc-event-inner grouped-compact">
                   <div>{workersCompact.join(", ")}</div>
-                  <div>📝 {groupData.itemCount} bejegyzés</div>
                 </div>
               );
             }
 
-            // Week view - compact format: worker initials, rounded hours, entry count
+            // Week view - compact format without entry count
             if (viewType === "timeGridWeek") {
               const workersCompact = groupData.workers.map(worker => {
                 const hours = groupData.workerHours?.get?.(worker) || 0;
@@ -270,23 +269,24 @@ export default function GoogleCalendarView({
               });
               
               return (
-                <div className="fc-event-inner grouped-detailed">
+                <div className="fc-event-inner grouped-compact">
                   <div className="text-xs">
                     <div>{workersCompact.join(", ")}</div>
-                    <div>📝 {groupData.itemCount} bejegyzés</div>
                   </div>
                 </div>
               );
             }
 
             // Day view - detailed format like before
-            const allWorkItems = groupData.workItemNames.join(", ");
+            const workItemsLines = groupData.workItemNames.map((item, index) => (
+              <div key={index}>🔧 {item}</div>
+            ));
             
             return (
               <div className="fc-event-inner grouped-detailed">
                 <div className="text-xs">
                   <div>👤 Dolgozók: {workersWithHours.join(", ")}</div>
-                  <div>🔧 Munkafázisok: {allWorkItems}</div>
+                  {workItemsLines}
                   <div>📝 {groupData.itemCount} bejegyzés</div>
                 </div>
               </div>
@@ -303,17 +303,19 @@ export default function GoogleCalendarView({
             const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
             return (first + last).toUpperCase();
           };
-          const hours = originalProps.workHours != null ? `${Math.round(originalProps.workHours * 100) / 100} óra` : "";
+          const hours = originalProps.workHours != null ? `${Math.round(originalProps.workHours)} óra` : "";
 
-          if (viewType === "dayGridMonth") {
+          if (viewType === "dayGridMonth" || viewType === "timeGridWeek") {
             const nameInitials = getInitialsFromNameOnly(originalProps.name ?? null);
             const label = nameInitials || (originalProps.email ?? "");
-            const parts = [label, hours].filter(Boolean);
+            const hoursShort = originalProps.workHours != null ? `${Math.round(originalProps.workHours * 100) / 100}h` : "";
+            
+            // Format: "M.Z. 8h"
+            const displayText = [label, hoursShort].filter(Boolean).join(" ");
+            
             return (
               <div className="fc-event-inner compact">
-                {parts.map((part, i) => (
-                  <div key={i}>{part}</div>
-                ))}
+                <div>{displayText}</div>
               </div>
             );
           }
