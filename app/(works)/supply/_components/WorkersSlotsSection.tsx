@@ -22,6 +22,8 @@ import { assignWorkerToWorkItemAndWork } from "@/actions/assign-worker-to-workit
 import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-and-assign";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { useWorkerSlotsStore } from "@/store/useWorkerSlotsStore";
+import { decreaseWorkerQuantity } from "@/actions/decrease-worker-quantity";
+import WorkerRemoveModal from "./WorkerRemoveModal";
 
 interface Props {
   workId: number;
@@ -150,6 +152,18 @@ const WorkersSlotsSection: React.FC<Props> = ({
   }, [workItems, workers, showAllWorkItems]);
 
   const { slots, setSlots, addSlot, removeSlot } = useWorkerSlotsStore();
+  const [removeModalOpen, setRemoveModalOpen] = useState(false);
+  const [selectedRoleForRemoval, setSelectedRoleForRemoval] = useState<string>("");
+
+  const handleRemoveRole = (role: string) => {
+    setSelectedRoleForRemoval(role);
+    setRemoveModalOpen(true);
+  };
+
+  const handleRemoveFromWorkItem = async (workItemId: number) => {
+    await decreaseWorkerQuantity(workItemId, selectedRoleForRemoval);
+    await refreshAssignments();
+  };
 
   // Initialize the store with the calculated required slots
   React.useEffect(() => {
@@ -567,6 +581,14 @@ const WorkersSlotsSection: React.FC<Props> = ({
         onDelete={async (args) => handleDelete(args)}
       />
 
+      <WorkerRemoveModal
+        open={removeModalOpen}
+        onOpenChange={setRemoveModalOpen}
+        role={selectedRoleForRemoval}
+        workItems={workItems}
+        onRemove={handleRemoveFromWorkItem}
+      />
+
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
         {professions.length === 0 && (
           <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
@@ -586,7 +608,19 @@ const WorkersSlotsSection: React.FC<Props> = ({
             <div key={role}>
               <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex-2 font-semibold">{role}</div>
+                  <div className="flex-1 font-semibold flex items-center gap-2">
+                    {role}
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveRole(role);
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                      title={`${role} eltávolítása munkafázisból`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2 ml-auto">
                     <button
                       onClick={() => addSlot(role)}
