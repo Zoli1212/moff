@@ -723,54 +723,109 @@ export default function GroupedDiaryForm({
                             }}
                           />
                           <div
-                            className="absolute top-1/2 w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-md cursor-grab active:cursor-grabbing transform -translate-y-1/2"
+                            className="absolute top-1/2 transform -translate-y-1/2"
                             style={{
-                              left: `calc(${Math.min(100, ((groupedItem.workItem.completedQuantity || 0) / groupedItem.workItem.quantity) * 100)}% - 10px)`,
+                              left: `calc(${Math.min(100, ((groupedItem.workItem.completedQuantity || 0) / groupedItem.workItem.quantity) * 100)}% - 20px)`,
                             }}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              const slider = e.currentTarget.parentElement;
-                              let isDragging = true;
-                              
-                              const handleMouseMove = (
-                                moveEvent: MouseEvent
-                              ) => {
-                                if (!isDragging) return;
-                                const rect = slider!.getBoundingClientRect();
-                                const percent = Math.max(0, Math.min(100, 
-                                  ((moveEvent.clientX - rect.left) / rect.width) * 100
-                                ));
-                                const newCompletedQuantity = Math.round(
-                                  (percent / 100) * groupedItem.workItem.quantity
-                                );
-                                updateProgress(
-                                  groupedItem.workItem.id,
-                                  newCompletedQuantity
-                                );
-                              };
-                              
-                              const handleMouseUp = () => {
-                                isDragging = false;
-                                document.removeEventListener(
+                          >
+                            {/* Invisible larger touch target */}
+                            <div
+                              className="absolute inset-0 w-10 h-10 -m-2 cursor-grab active:cursor-grabbing"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                const slider = e.currentTarget.parentElement?.parentElement;
+                                let isDragging = true;
+                                
+                                const handleMouseMove = (
+                                  moveEvent: MouseEvent
+                                ) => {
+                                  if (!isDragging) return;
+                                  const rect = slider!.getBoundingClientRect();
+                                  const percent = Math.max(0, Math.min(100, 
+                                    ((moveEvent.clientX - rect.left) / rect.width) * 100
+                                  ));
+                                  const newCompletedQuantity = Math.round(
+                                    (percent / 100) * groupedItem.workItem.quantity
+                                  );
+                                  updateProgress(
+                                    groupedItem.workItem.id,
+                                    newCompletedQuantity
+                                  );
+                                };
+                                
+                                const handleMouseUp = () => {
+                                  isDragging = false;
+                                  document.removeEventListener(
+                                    "mousemove",
+                                    handleMouseMove
+                                  );
+                                  document.removeEventListener(
+                                    "mouseup",
+                                    handleMouseUp
+                                  );
+                                };
+                                
+                                document.addEventListener(
                                   "mousemove",
                                   handleMouseMove
                                 );
-                                document.removeEventListener(
+                                document.addEventListener(
                                   "mouseup",
                                   handleMouseUp
                                 );
-                              };
-                              
-                              document.addEventListener(
-                                "mousemove",
-                                handleMouseMove
-                              );
-                              document.addEventListener(
-                                "mouseup",
-                                handleMouseUp
-                              );
-                            }}
-                          />
+                              }}
+                              onTouchStart={(e) => {
+                                e.preventDefault();
+                                const slider = e.currentTarget.parentElement?.parentElement;
+                                let isDragging = true;
+                                
+                                const handleTouchMove = (
+                                  moveEvent: TouchEvent
+                                ) => {
+                                  if (!isDragging) return;
+                                  moveEvent.preventDefault();
+                                  const rect = slider!.getBoundingClientRect();
+                                  const touch = moveEvent.touches[0];
+                                  const percent = Math.max(0, Math.min(100, 
+                                    ((touch.clientX - rect.left) / rect.width) * 100
+                                  ));
+                                  const newCompletedQuantity = Math.round(
+                                    (percent / 100) * groupedItem.workItem.quantity
+                                  );
+                                  updateProgress(
+                                    groupedItem.workItem.id,
+                                    newCompletedQuantity
+                                  );
+                                };
+                                
+                                const handleTouchEnd = () => {
+                                  isDragging = false;
+                                  document.removeEventListener(
+                                    "touchmove",
+                                    handleTouchMove
+                                  );
+                                  document.removeEventListener(
+                                    "touchend",
+                                    handleTouchEnd
+                                  );
+                                };
+                                
+                                document.addEventListener(
+                                  "touchmove",
+                                  handleTouchMove,
+                                  { passive: false }
+                                );
+                                document.addEventListener(
+                                  "touchend",
+                                  handleTouchEnd
+                                );
+                              }}
+                            />
+                            {/* Visible slider handle - original size */}
+                            <div
+                              className="w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-md pointer-events-none"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
