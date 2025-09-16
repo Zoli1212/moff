@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Calendar, X, Plus, Users, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
+import { updateGroupApproval, getGroupApprovalStatus } from "@/actions/group-approval-actions";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type { WorkDiaryItemCreate } from "@/types/work-diary";
@@ -54,16 +55,26 @@ export default function GroupedDiaryForm({
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
-  
+
   // Track original completedQuantity values when form loads
-  const [originalCompletedQuantities, setOriginalCompletedQuantities] = useState<Map<number, number>>(new Map());
+  const [originalCompletedQuantities, setOriginalCompletedQuantities] =
+    useState<Map<number, number>>(new Map());
+
+  // Group approval state
+  const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
+    allApproved: boolean;
+    someApproved: boolean;
+    totalItems: number;
+    approvedItems: number;
+  } | null>(null);
+  const [groupApprovalLoading, setGroupApprovalLoading] = useState(false);
 
   // Get active work items (in progress)
   const activeWorkItems = useMemo(() => {
     return workItems.filter((item) => item.inProgress === true);
   }, [workItems]);
 
-  console.log(setWorkHours)
+  console.log(setWorkHours);
 
   // Get ALL workers from the work, regardless of workItemId
   const allWorkWorkers = useMemo(() => {
@@ -90,7 +101,11 @@ export default function GroupedDiaryForm({
   // Initialize with ALL active work items by default (only on first load)
   const [hasInitialized, setHasInitialized] = useState(false);
   useEffect(() => {
-    if (!hasInitialized && selectedGroupedItems.length === 0 && activeWorkItems.length > 0) {
+    if (
+      !hasInitialized &&
+      selectedGroupedItems.length === 0 &&
+      activeWorkItems.length > 0
+    ) {
       const allActiveItems: GroupedWorkItem[] = activeWorkItems.map(
         (workItem) => ({
           workItem,
@@ -105,7 +120,11 @@ export default function GroupedDiaryForm({
   // Initialize with all work workers by default (only on first load)
   const [hasInitializedWorkers, setHasInitializedWorkers] = useState(false);
   useEffect(() => {
-    if (!hasInitializedWorkers && selectedWorkers.length === 0 && allWorkWorkers.length > 0) {
+    if (
+      !hasInitializedWorkers &&
+      selectedWorkers.length === 0 &&
+      allWorkWorkers.length > 0
+    ) {
       setSelectedWorkers(allWorkWorkers);
       setHasInitializedWorkers(true);
     }
@@ -124,38 +143,93 @@ export default function GroupedDiaryForm({
     }
   }, [isEditMode, diary.date]);
 
+  // Load group approval status in edit mode
+  useEffect(() => {
+    if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
+      const firstItem = diary.workDiaryItems[0];
+      if (firstItem.groupNo) {
+        loadGroupApprovalStatus(firstItem.groupNo);
+      }
+    }
+  }, [isEditMode, diary.workDiaryItems]);
+
+  const loadGroupApprovalStatus = async (groupNo: number) => {
+    try {
+      setGroupApprovalLoading(true);
+      const result = await getGroupApprovalStatus(groupNo);
+      if (result.success) {
+        setGroupApprovalStatus({
+          allApproved: result.allApproved || false,
+          someApproved: result.someApproved || false,
+          totalItems: result.totalItems || 0,
+          approvedItems: result.approvedItems || 0
+        });
+      }
+    } catch (error) {
+      console.error("Failed to load group approval status:", error);
+    } finally {
+      setGroupApprovalLoading(false);
+    }
+  };
+
+  const handleGroupApprovalToggle = async () => {
+    if (!diary.workDiaryItems || diary.workDiaryItems.length === 0) return;
+    
+    const firstItem = diary.workDiaryItems[0];
+    if (!firstItem.groupNo) return;
+
+    try {
+      setGroupApprovalLoading(true);
+      const newApprovalState = !groupApprovalStatus?.allApproved;
+      
+      const result = await updateGroupApproval(firstItem.groupNo, newApprovalState);
+      if (result.success) {
+        // Reload the approval status
+        await loadGroupApprovalStatus(firstItem.groupNo);
+        showToast("success", result.message || "Csoportos jóváhagyás frissítve");
+      } else {
+        showToast("error", result.message || "Hiba történt");
+      }
+    } catch (error) {
+      console.error("Group approval toggle error:", error);
+      showToast("error", "Hiba történt a jóváhagyás során");
+    } finally {
+      setGroupApprovalLoading(false);
+    }
+  };
+
   // Initialize form data in edit mode
   useEffect(() => {
     if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
       // Load existing diary data
       const firstItem = diary.workDiaryItems[0];
-      
+
       // Set description from first item's notes
       if (firstItem.notes) {
         setDescription(firstItem.notes);
       }
-      
+
       // Set images from first item
       if (firstItem.images && firstItem.images.length > 0) {
         setImages(firstItem.images);
       }
-      
+
       // Build grouped items from diary items
       const groupedItemsMap = new Map<number, GroupedWorkItem>();
       const workersMap = new Map<number, WorkItemWorker>();
-      
-      diary.workDiaryItems.forEach(item => {
+
+      diary.workDiaryItems.forEach((item) => {
         // Add work items
         if (item.workItemId) {
-          const workItem = workItems.find(wi => wi.id === item.workItemId);
+          const workItem = workItems.find((wi) => wi.id === item.workItemId);
           if (workItem && !groupedItemsMap.has(workItem.id)) {
             groupedItemsMap.set(workItem.id, {
               workItem,
-              progress: workItem.progress || 0
+              progress: workItem.progress || 0,
             });
           }
         }
-        
+
         // Add workers
         if (item.workerId && item.name && item.email) {
           const worker: WorkItemWorker = {
@@ -164,18 +238,20 @@ export default function GroupedDiaryForm({
             name: item.name,
             email: item.email,
             workItemId: item.workItemId,
-            role: '', // Default empty role
-            quantity: 1 // Default quantity
+            role: "", // Default empty role
+            quantity: 1, // Default quantity
           };
           workersMap.set(item.workerId, worker);
-          
+
           // Set worker hours
           if (item.workHours) {
-            setWorkerHours(prev => new Map(prev.set(item.workerId, item.workHours || 0)));
+            setWorkerHours(
+              (prev) => new Map(prev.set(item.workerId, item.workHours || 0))
+            );
           }
         }
       });
-      
+
       setSelectedGroupedItems(Array.from(groupedItemsMap.values()));
       setSelectedWorkers(Array.from(workersMap.values()));
     }
@@ -193,11 +269,14 @@ export default function GroupedDiaryForm({
       )
     ) {
       setSelectedGroupedItems((prev) => [...prev, groupedItem]);
-      
+
       // Store original completedQuantity value when workItem is first selected
-      setOriginalCompletedQuantities(prev => {
+      setOriginalCompletedQuantities((prev) => {
         const newMap = new Map(prev);
-        newMap.set(groupedItem.workItem.id, groupedItem.workItem.completedQuantity || 0);
+        newMap.set(
+          groupedItem.workItem.id,
+          groupedItem.workItem.completedQuantity || 0
+        );
         return newMap;
       });
     }
@@ -207,9 +286,9 @@ export default function GroupedDiaryForm({
     setSelectedGroupedItems((prev) =>
       prev.filter((item) => item.workItem.id !== workItemId)
     );
-    
+
     // Remove original value when workItem is removed
-    setOriginalCompletedQuantities(prev => {
+    setOriginalCompletedQuantities((prev) => {
       const newMap = new Map(prev);
       newMap.delete(workItemId);
       return newMap;
@@ -270,14 +349,14 @@ export default function GroupedDiaryForm({
     // Only update local state, database update happens on form submission
     setSelectedGroupedItems((prev) =>
       prev.map((item) =>
-        item.workItem.id === workItemId 
-          ? { 
-              ...item, 
-              workItem: { 
-                ...item.workItem, 
-                completedQuantity: completedQuantity 
-              } 
-            } 
+        item.workItem.id === workItemId
+          ? {
+              ...item,
+              workItem: {
+                ...item.workItem,
+                completedQuantity: completedQuantity,
+              },
+            }
           : item
       )
     );
@@ -350,29 +429,34 @@ export default function GroupedDiaryForm({
 
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.workerId) || workHours;
-        
+
         // Calculate progress changes by comparing current values with original values
-        const progressChanges = selectedGroupedItems.map(item => {
+        const progressChanges = selectedGroupedItems.map((item) => {
           const currentCompleted = item.workItem.completedQuantity || 0;
-          const originalCompleted = originalCompletedQuantities.get(item.workItem.id) || 0;
+          const originalCompleted =
+            originalCompletedQuantities.get(item.workItem.id) || 0;
           return Math.max(0, currentCompleted - originalCompleted);
         });
-        
-        const totalProgress = progressChanges.reduce((sum, progress) => sum + progress, 0);
-        
+
+        const totalProgress = progressChanges.reduce(
+          (sum, progress) => sum + progress,
+          0
+        );
+
         // If no progress or all zero, use equal distribution
         const useEqualDistribution = totalProgress === 0;
-        
+
         for (let i = 0; i < selectedGroupedItems.length; i++) {
           const groupedItem = selectedGroupedItems[i];
-          
+
           let hoursPerWorkItem: number;
-          
+
           if (useEqualDistribution) {
             // Equal distribution
-            hoursPerWorkItem = selectedGroupedItems.length > 0
-              ? workerTotalHours / selectedGroupedItems.length
-              : workerTotalHours;
+            hoursPerWorkItem =
+              selectedGroupedItems.length > 0
+                ? workerTotalHours / selectedGroupedItems.length
+                : workerTotalHours;
           } else {
             // Proportional distribution based on progress
             const itemProgress = progressChanges[i];
@@ -385,7 +469,8 @@ export default function GroupedDiaryForm({
             workId: diary.workId,
             workItemId: groupedItem.workItem.id,
             workerId: worker.workerId,
-            email: worker.email || user?.emailAddresses?.[0]?.emailAddress || "",
+            email:
+              worker.email || user?.emailAddresses?.[0]?.emailAddress || "",
             name: worker.name || "",
             date: new Date(date),
             notes: description,
@@ -410,15 +495,15 @@ export default function GroupedDiaryForm({
       }
 
       const results = await Promise.allSettled(promises);
-      
+
       // Check results
-      const failed = results.filter(r => r.status === 'rejected');
+      const failed = results.filter((r) => r.status === "rejected");
       if (failed.length > 0) {
         showToast("error", `${failed.length} művelet sikertelen volt.`);
       } else {
         showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
       }
-      
+
       onSave({});
     } catch (error) {
       console.log((error as Error).message);
@@ -437,7 +522,9 @@ export default function GroupedDiaryForm({
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-800">
-            {isEditMode ? 'Csoportos napló szerkesztése' : 'Csoportos napló bejegyzés'}
+            {isEditMode
+              ? "Csoportos napló szerkesztése"
+              : "Csoportos napló bejegyzés"}
           </span>
         </div>
         {/* <Button
@@ -472,9 +559,7 @@ export default function GroupedDiaryForm({
         {/* Work Items Selection - Top Box */}
         <div className="border rounded-lg p-4 bg-gray-50 mb-4">
           <div className="flex items-center justify-between mb-4">
-            <Label className="text-base font-semibold">
-              Feladatok
-            </Label>
+            <Label className="text-base font-semibold">Feladatok</Label>
             <Button
               type="button"
               variant="outline"
@@ -633,7 +718,7 @@ export default function GroupedDiaryForm({
                             onClick={() => {
                               addGroupedItem({
                                 workItem,
-                                progress: workItem.progress || 0
+                                progress: workItem.progress || 0,
                               });
                               closeWorkItemModal();
                             }}
@@ -690,7 +775,9 @@ export default function GroupedDiaryForm({
                           Készültség
                         </span>
                         <span className="text-sm font-medium text-blue-600">
-                          {groupedItem.workItem.completedQuantity || 0}/{groupedItem.workItem.quantity} ({groupedItem.workItem.unit})
+                          {groupedItem.workItem.completedQuantity || 0}/
+                          {groupedItem.workItem.quantity} (
+                          {groupedItem.workItem.unit})
                         </span>
                       </div>
                       <div className="relative w-full">
@@ -733,26 +820,34 @@ export default function GroupedDiaryForm({
                               className="absolute inset-0 w-10 h-10 -m-2 cursor-grab active:cursor-grabbing"
                               onMouseDown={(e) => {
                                 e.preventDefault();
-                                const slider = e.currentTarget.parentElement?.parentElement;
+                                const slider =
+                                  e.currentTarget.parentElement?.parentElement;
                                 let isDragging = true;
-                                
+
                                 const handleMouseMove = (
                                   moveEvent: MouseEvent
                                 ) => {
                                   if (!isDragging) return;
                                   const rect = slider!.getBoundingClientRect();
-                                  const percent = Math.max(0, Math.min(100, 
-                                    ((moveEvent.clientX - rect.left) / rect.width) * 100
-                                  ));
+                                  const percent = Math.max(
+                                    0,
+                                    Math.min(
+                                      100,
+                                      ((moveEvent.clientX - rect.left) /
+                                        rect.width) *
+                                        100
+                                    )
+                                  );
                                   const newCompletedQuantity = Math.round(
-                                    (percent / 100) * groupedItem.workItem.quantity
+                                    (percent / 100) *
+                                      groupedItem.workItem.quantity
                                   );
                                   updateProgress(
                                     groupedItem.workItem.id,
                                     newCompletedQuantity
                                   );
                                 };
-                                
+
                                 const handleMouseUp = () => {
                                   isDragging = false;
                                   document.removeEventListener(
@@ -764,7 +859,7 @@ export default function GroupedDiaryForm({
                                     handleMouseUp
                                   );
                                 };
-                                
+
                                 document.addEventListener(
                                   "mousemove",
                                   handleMouseMove
@@ -776,9 +871,10 @@ export default function GroupedDiaryForm({
                               }}
                               onTouchStart={(e) => {
                                 e.preventDefault();
-                                const slider = e.currentTarget.parentElement?.parentElement;
+                                const slider =
+                                  e.currentTarget.parentElement?.parentElement;
                                 let isDragging = true;
-                                
+
                                 const handleTouchMove = (
                                   moveEvent: TouchEvent
                                 ) => {
@@ -786,18 +882,25 @@ export default function GroupedDiaryForm({
                                   moveEvent.preventDefault();
                                   const rect = slider!.getBoundingClientRect();
                                   const touch = moveEvent.touches[0];
-                                  const percent = Math.max(0, Math.min(100, 
-                                    ((touch.clientX - rect.left) / rect.width) * 100
-                                  ));
+                                  const percent = Math.max(
+                                    0,
+                                    Math.min(
+                                      100,
+                                      ((touch.clientX - rect.left) /
+                                        rect.width) *
+                                        100
+                                    )
+                                  );
                                   const newCompletedQuantity = Math.round(
-                                    (percent / 100) * groupedItem.workItem.quantity
+                                    (percent / 100) *
+                                      groupedItem.workItem.quantity
                                   );
                                   updateProgress(
                                     groupedItem.workItem.id,
                                     newCompletedQuantity
                                   );
                                 };
-                                
+
                                 const handleTouchEnd = () => {
                                   isDragging = false;
                                   document.removeEventListener(
@@ -809,7 +912,7 @@ export default function GroupedDiaryForm({
                                     handleTouchEnd
                                   );
                                 };
-                                
+
                                 document.addEventListener(
                                   "touchmove",
                                   handleTouchMove,
@@ -822,9 +925,7 @@ export default function GroupedDiaryForm({
                               }}
                             />
                             {/* Visible slider handle - original size */}
-                            <div
-                              className="w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-md pointer-events-none"
-                            />
+                            <div className="w-5 h-5 bg-blue-500 border-2 border-white rounded-full shadow-md pointer-events-none" />
                           </div>
                         </div>
                       </div>
@@ -961,6 +1062,51 @@ export default function GroupedDiaryForm({
           )}
         </div>
 
+        {/* Group Approval Checkbox - Only in Edit Mode and if diary is editable */}
+        {isEditMode && groupApprovalStatus && diary.workDiaryItems && diary.workDiaryItems.length > 0 && (
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="groupApproval"
+                  checked={groupApprovalStatus.allApproved}
+                  onChange={handleGroupApprovalToggle}
+                  disabled={groupApprovalLoading}
+                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="groupApproval" className="text-sm font-medium text-gray-700">
+                  Csoportos jóváhagyás
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="text-sm text-gray-500">
+                  {groupApprovalStatus.approvedItems} / {groupApprovalStatus.totalItems} jóváhagyva
+                </div>
+                {/* Status indicator */}
+                <div className={`w-3 h-3 rounded-full ${
+                  groupApprovalStatus.allApproved 
+                    ? 'bg-green-500' 
+                    : groupApprovalStatus.someApproved 
+                    ? 'bg-yellow-500' 
+                    : 'bg-red-500'
+                }`} title={
+                  groupApprovalStatus.allApproved 
+                    ? 'Teljesen jóváhagyva' 
+                    : groupApprovalStatus.someApproved 
+                    ? 'Részben jóváhagyva' 
+                    : 'Nincs jóváhagyva'
+                } />
+              </div>
+            </div>
+            {groupApprovalStatus.someApproved && !groupApprovalStatus.allApproved && (
+              <p className="text-xs text-amber-600 mt-2">
+                Részben jóváhagyva - kattintson a teljes jóváhagyáshoz
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="flex gap-2 justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
@@ -976,7 +1122,7 @@ export default function GroupedDiaryForm({
             }
             className="bg-blue-600 hover:bg-blue-700"
           >
-            {isEditMode ? 'Módosítások mentése' : 'Csoportos bejegyzés mentése'}
+            {isEditMode ? "Módosítások mentése" : "Csoportos bejegyzés mentése"}
           </Button>
         </div>
       </form>

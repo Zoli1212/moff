@@ -71,6 +71,17 @@ export default function TasksPage() {
   const [assignError, setAssignError] = useState<string | null>(null);
   const [addingNewItem, setAddingNewItem] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  
+  // Toast state
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   const doFetchWorkAndItems = useCallback(async () => {
     if (isNaN(workId)) {
@@ -234,16 +245,16 @@ export default function TasksPage() {
         // Refresh the work items to show the new item
         await doFetchWorkAndItems();
         // Show success message
-        alert("Új tétel sikeresen hozzáadva!");
+        showToast("success", "Új tétel sikeresen hozzáadva!");
       } else {
         console.error("Tasks page - error:", result.error);
         setAssignError(result.error || "Nem sikerült új tételt létrehozni.");
-        alert("Hiba: " + (result.error || "Nem sikerült új tételt létrehozni."));
+        showToast("error", result.error || "Nem sikerült új tételt létrehozni.");
       }
     } catch (error) {
       console.error("Tasks page - exception:", error);
       setAssignError("Hiba történt az új tétel létrehozásakor.");
-      alert("Hiba történt az új tétel létrehozásakor.");
+      showToast("error", "Hiba történt az új tétel létrehozásakor.");
     } finally {
       setAddingNewItem(false);
     }
@@ -461,6 +472,17 @@ export default function TasksPage() {
         onClose={() => setShowAddModal(false)}
         onSave={handleSaveNewItem}
       />
+
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-md shadow-lg text-white ${
+            toast.type === "success" ? "bg-green-500" : "bg-red-500"
+          }`}
+        >
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

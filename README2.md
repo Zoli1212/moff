@@ -735,3 +735,8 @@ sárga jóváhagyás előtt zöld jóváhagyás után OK
 progress számláló progress mennyiségi egység OK
 új feladatokat lehessen felvenni OK
 ---
+kérekités
+Legalább 1 munkafázis legalább
+ikon
+11 bejegyzés
+Dolgozók + ENTER , munkafázisok + képek vesszővel Napi nézet, pictures, óra kerekítve
