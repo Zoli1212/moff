@@ -12,7 +12,10 @@ import { Label } from "@/components/ui/label";
 import { Calendar, X, Plus, Users, User } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
-import { updateGroupApproval, getGroupApprovalStatus } from "@/actions/group-approval-actions";
+import {
+  updateGroupApproval,
+  getGroupApprovalStatus,
+} from "@/actions/group-approval-actions";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type { WorkDiaryItemCreate } from "@/types/work-diary";
@@ -78,19 +81,21 @@ export default function GroupedDiaryForm({
 
   // Get ALL workers from the work, regardless of workItemId
   const allWorkWorkers = useMemo(() => {
-    const workersMap = new Map<number, WorkItemWorker>();
+    const workersMap = new Map<string, WorkItemWorker>();
 
     // Add ALL workers from ALL workItems for this work
     workItems.forEach((workItem) => {
       (workItem.workItemWorkers || []).forEach((worker) => {
-        // Include ALL workers with valid name and email, regardless of workItemId
+        // Include ALL workers with valid names (not undefined, not role types)
         if (
           worker.name &&
           worker.name.trim() !== "" &&
-          worker.email &&
-          worker.email.trim() !== ""
+          worker.name !== "undefined"
         ) {
-          workersMap.set(worker.workerId, worker);
+          // Use workerId + name combination as key to ensure unique workers
+          // This allows workers with same workerId but different names to both appear
+          const uniqueKey = `${worker.workerId}-${worker.name}`;
+          workersMap.set(uniqueKey, worker);
         }
       });
     });
@@ -162,7 +167,7 @@ export default function GroupedDiaryForm({
           allApproved: result.allApproved || false,
           someApproved: result.someApproved || false,
           totalItems: result.totalItems || 0,
-          approvedItems: result.approvedItems || 0
+          approvedItems: result.approvedItems || 0,
         });
       }
     } catch (error) {
@@ -174,19 +179,25 @@ export default function GroupedDiaryForm({
 
   const handleGroupApprovalToggle = async () => {
     if (!diary.workDiaryItems || diary.workDiaryItems.length === 0) return;
-    
+
     const firstItem = diary.workDiaryItems[0];
     if (!firstItem.groupNo) return;
 
     try {
       setGroupApprovalLoading(true);
       const newApprovalState = !groupApprovalStatus?.allApproved;
-      
-      const result = await updateGroupApproval(firstItem.groupNo, newApprovalState);
+
+      const result = await updateGroupApproval(
+        firstItem.groupNo,
+        newApprovalState
+      );
       if (result.success) {
         // Reload the approval status
         await loadGroupApprovalStatus(firstItem.groupNo);
-        showToast("success", result.message || "Csoportos jóváhagyás frissítve");
+        showToast(
+          "success",
+          result.message || "Csoportos jóváhagyás frissítve"
+        );
       } else {
         showToast("error", result.message || "Hiba történt");
       }
@@ -1063,49 +1074,60 @@ export default function GroupedDiaryForm({
         </div>
 
         {/* Group Approval Checkbox - Only in Edit Mode and if diary is editable */}
-        {isEditMode && groupApprovalStatus && diary.workDiaryItems && diary.workDiaryItems.length > 0 && (
-          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  id="groupApproval"
-                  checked={groupApprovalStatus.allApproved}
-                  onChange={handleGroupApprovalToggle}
-                  disabled={groupApprovalLoading}
-                  className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="groupApproval" className="text-sm font-medium text-gray-700">
-                  Csoportos jóváhagyás
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="text-sm text-gray-500">
-                  {groupApprovalStatus.approvedItems} / {groupApprovalStatus.totalItems} jóváhagyva
+        {isEditMode &&
+          groupApprovalStatus &&
+          diary.workDiaryItems &&
+          diary.workDiaryItems.length > 0 && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="groupApproval"
+                    checked={groupApprovalStatus.allApproved}
+                    onChange={handleGroupApprovalToggle}
+                    disabled={groupApprovalLoading}
+                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <label
+                    htmlFor="groupApproval"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Csoportos jóváhagyás
+                  </label>
                 </div>
-                {/* Status indicator */}
-                <div className={`w-3 h-3 rounded-full ${
-                  groupApprovalStatus.allApproved 
-                    ? 'bg-green-500' 
-                    : groupApprovalStatus.someApproved 
-                    ? 'bg-yellow-500' 
-                    : 'bg-red-500'
-                }`} title={
-                  groupApprovalStatus.allApproved 
-                    ? 'Teljesen jóváhagyva' 
-                    : groupApprovalStatus.someApproved 
-                    ? 'Részben jóváhagyva' 
-                    : 'Nincs jóváhagyva'
-                } />
+                <div className="flex items-center gap-2">
+                  <div className="text-sm text-gray-500">
+                    {groupApprovalStatus.approvedItems} /{" "}
+                    {groupApprovalStatus.totalItems} jóváhagyva
+                  </div>
+                  {/* Status indicator */}
+                  <div
+                    className={`w-3 h-3 rounded-full ${
+                      groupApprovalStatus.allApproved
+                        ? "bg-green-500"
+                        : groupApprovalStatus.someApproved
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
+                    }`}
+                    title={
+                      groupApprovalStatus.allApproved
+                        ? "Teljesen jóváhagyva"
+                        : groupApprovalStatus.someApproved
+                          ? "Részben jóváhagyva"
+                          : "Nincs jóváhagyva"
+                    }
+                  />
+                </div>
               </div>
+              {groupApprovalStatus.someApproved &&
+                !groupApprovalStatus.allApproved && (
+                  <p className="text-xs text-amber-600 mt-2">
+                    Részben jóváhagyva - kattintson a teljes jóváhagyáshoz
+                  </p>
+                )}
             </div>
-            {groupApprovalStatus.someApproved && !groupApprovalStatus.allApproved && (
-              <p className="text-xs text-amber-600 mt-2">
-                Részben jóváhagyva - kattintson a teljes jóváhagyáshoz
-              </p>
-            )}
-          </div>
-        )}
+          )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 justify-end">
