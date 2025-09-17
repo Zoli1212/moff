@@ -597,11 +597,11 @@ const WorkersSlotsSection: React.FC<Props> = ({
           const required = requiredPerProfession[role] || 0;
           const list = grouped[role] || []; // Only show workItemWorker connections
           // Use per-role denominator from best work item; fallback to required if missing/zero
-          const rawDenom = denominatorRequiredPerProfession[role] as
-            | number
-            | undefined;
-          const displayDenom =
-            typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
+          // const rawDenom = denominatorRequiredPerProfession[role] as
+          //   | number
+          //   | undefined;
+          // const displayDenom =
+          //   typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
           // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
           const assignedCount = list.length;
           const slotCount = Math.max(slots[role] ?? required, assignedCount);
