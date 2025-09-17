@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { WorkItem, WorkItemWorker } from "@/types/work";
+import { WorkItem } from "@/types/work";
 import { toast } from "sonner";
 
 interface Props {
