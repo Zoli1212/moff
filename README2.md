@@ -748,5 +748,5 @@ bug README 2
 README 2
 a gombóc nagyon hátul van
 kép
-README kitörölt naplóbejegyzés
+README kitörölt naplóbejegyzés sortörések el elválasztva a munkások Monogram ponttal
 képek 

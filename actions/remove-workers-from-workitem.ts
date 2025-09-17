@@ -1,7 +1,8 @@
-'server only';
+'use server';
 
 import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
+import { revalidatePath } from "next/cache";
 
 export async function removeWorkersFromWorkItem(workItemId: number, role: string): Promise<{ success: boolean }> {
   try {
@@ -34,17 +35,10 @@ export async function removeWorkersFromWorkItem(workItemId: number, role: string
 
     console.log(`Deleted ${deleteResult.count} workItemWorker entries for role ${role} in workItem ${workItemId}`);
 
-    // Delete entire Worker records that match workId AND workItemId and have the specified role
-    const workerDeleteResult = await prisma.worker.deleteMany({
-      where: {
-        workId: workId,
-        workItemId: workItemId,
-        name: role,
-        work: { tenantEmail: userEmail }
-      }
-    });
-
-    console.log(`Deleted ${workerDeleteResult.count} Worker records for role ${role} in work ${workId} and workItem ${workItemId}`);
+    // NOTE: Worker records are kept in the database, only workItemWorker connections are removed
+    console.log(`Removed workItemWorker connections for role ${role} from workItem ${workItemId}, but kept Worker records intact`);
+    revalidatePath(`/supply/${workId}`)
+    revalidatePath(`/supply`)
 
     return { success: true };
   } catch (error) {

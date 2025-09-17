@@ -33,17 +33,17 @@ export async function assignWorkerToWorkItemAndWork(
   } = params;
 
   try {
-    // 0. Check if a worker with this name already exists in any workItemWorker for this work
-    const existingWorkerWithSameName = await prisma.workItemWorker.findFirst({
+    // 0. Check if a worker with this name already exists on the same workItem
+    const existingWorkerWithSameNameAndWorkItem = await prisma.workItemWorker.findFirst({
       where: {
-        workId: workId,
+        workItemId: workItemId,
         name: name,
         tenantEmail: tenantEmail,
       },
     });
 
-    if (existingWorkerWithSameName) {
-      throw new Error(`Már dolgozik ${name} nevű munkás ezen a munkán. Nem lehet ugyanazzal a névvel újat regisztrálni.`);
+    if (existingWorkerWithSameNameAndWorkItem) {
+      throw new Error(`Már dolgozik ${name} nevű munkás ezen a munkafázison. Nem lehet ugyanazzal a névvel újat regisztrálni ugyanarra a fázisra.`);
     }
 
     // 1. Add to workItemWorkers table

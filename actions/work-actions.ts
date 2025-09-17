@@ -353,6 +353,23 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
       };
       // --- /segédfüggvények ---
 
+      // Kiszámítjuk a roleTotals-t EGYSZER az összes workItem alapján
+      const roleTotals: Record<string, number> = {};
+      for (const wi of aiResult.workItems) {
+        if (Array.isArray(wi.requiredProfessionals)) {
+          for (const rp of wi.requiredProfessionals) {
+            const roleName = String(rp?.type || "")
+              .trim()
+              .toLowerCase();
+            const qty = Number(rp?.quantity) || 1;
+            if (!roleName || qty <= 0) continue;
+            roleTotals[roleName] = (roleTotals[roleName] || 0) + qty;
+          }
+        }
+      }
+
+      const normalizeRole = (s: string) => s.trim().toLowerCase();
+
       for (const item of aiResult.workItems) {
         console.log(
           `[updateWorkWithAIResult] Creating workItem for work ${workId}:`,
@@ -410,25 +427,6 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
         });
 
         // 2. Minden requiredProfessional-t mentünk a pivot táblába
-
-        const roleTotals: Record<string, number> = {};
-        if (Array.isArray(aiResult.workItems)) {
-          for (const wi of aiResult.workItems) {
-            if (Array.isArray(wi.requiredProfessionals)) {
-              for (const rp of wi.requiredProfessionals) {
-                const roleName = String(rp?.type || "")
-                  .trim()
-                  .toLowerCase();
-                const qty = Number(rp?.quantity) || 1;
-                if (!roleName || qty <= 0) continue;
-                roleTotals[roleName] = (roleTotals[roleName] || 0) + qty;
-              }
-            }
-          }
-        }
-
-        const normalizeRole = (s: string) => s.trim().toLowerCase(); // ha akarod: .toLocaleLowerCase('hu-HU')
-        // 2) Minden requiredProfessional-ból: MINDIG ÚJ Worker + pivot
         if (Array.isArray(item.requiredProfessionals)) {
           for (const rp of item.requiredProfessionals) {
             const roleNameRaw = String(rp?.type || "").trim();
