@@ -743,3 +743,10 @@ Dolgozók + ENTER , munkafázisok + képek vesszővel Napi nézet, pictures, ór
 ideiglenes screen törölni
 B.C.
 nem kell abejegyzés
+---
+bug README 2
+README 2
+a gombóc nagyon hátul van
+kép
+README kitörölt naplóbejegyzés
+képek 

@@ -22,7 +22,7 @@ import { assignWorkerToWorkItemAndWork } from "@/actions/assign-worker-to-workit
 import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-and-assign";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { useWorkerSlotsStore } from "@/store/useWorkerSlotsStore";
-import { decreaseWorkerQuantity } from "@/actions/decrease-worker-quantity";
+import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
 
 interface Props {
@@ -161,7 +161,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
   };
 
   const handleRemoveFromWorkItem = async (workItemId: number) => {
-    await decreaseWorkerQuantity(workItemId, selectedRoleForRemoval);
+    await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);
     await refreshAssignments();
   };
 
