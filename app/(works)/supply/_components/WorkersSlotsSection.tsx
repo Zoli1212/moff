@@ -602,7 +602,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
             | undefined;
           const displayDenom =
             typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
-          const slotCount = slots[role] ?? required;
+          // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
+          const assignedCount = list.length;
+          const slotCount = Math.max(slots[role] ?? required, assignedCount);
           const slotArray = Array.from({ length: slotCount });
           return (
             <div key={role}>
@@ -629,7 +631,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                       <Plus className="w-4 h-4" />
                     </button>
                     <div className="font-semibold text-[14px] text-[#222]">
-                      {Math.min(list.length, required)} / {displayDenom}
+                      {list.length} / {required}
                     </div>
                   </div>
                 </div>
