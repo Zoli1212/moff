@@ -350,7 +350,7 @@ export default function GroupedDiaryForm({
   };
 
   const addWorker = (worker: WorkItemWorker) => {
-    if (!selectedWorkers.find((w) => w.workerId === worker.workerId)) {
+    if (!selectedWorkers.find((w) => w.name?.toLowerCase() === worker.name?.toLowerCase())) {
       setSelectedWorkers((prev) => [...prev, worker]);
       // Initialize with 8 hours for new workers
       setWorkerHours((prev) => new Map(prev.set(worker.workerId, 8)));
@@ -1057,14 +1057,14 @@ export default function GroupedDiaryForm({
                 <div className="max-h-60 overflow-y-auto">
                   {allWorkWorkers.filter(
                     (w: WorkItemWorker) =>
-                      !selectedWorkers.find((sw) => sw.workerId === w.workerId)
+                      !selectedWorkers.find((sw) => sw.name?.toLowerCase() === w.name?.toLowerCase())
                   ).length > 0 ? (
                     <div className="space-y-2">
                       {allWorkWorkers
                         .filter(
                           (w: WorkItemWorker) =>
                             !selectedWorkers.find(
-                              (sw: WorkItemWorker) => sw.workerId === w.workerId
+                              (sw: WorkItemWorker) => sw.name?.toLowerCase() === w.name?.toLowerCase()
                             )
                         )
                         .map((worker: WorkItemWorker) => (
