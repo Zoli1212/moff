@@ -242,36 +242,38 @@ export default function GoogleCalendarView({
             });
 
             if (viewType === "dayGridMonth") {
-              // Month view - compact format without entry count
+              // Month view - compact format with monograms and line breaks
               const workersCompact = groupData.workers.map(worker => {
                 const hours = groupData.workerHours?.get?.(worker) || 0;
                 const roundedHours = Math.round(hours);
-                // Get initials from worker name
-                const initials = worker.split(' ').map(n => n[0]).join('').toUpperCase();
+                // Get initials from worker name with dots (M. Z.)
+                const nameParts = worker.split(' ').filter(Boolean);
+                const initials = nameParts.map(part => part[0].toUpperCase() + '.').join(' ');
                 return `${initials} ${roundedHours}h`;
               });
               
               return (
                 <div className="fc-event-inner grouped-compact">
-                  <div>{workersCompact.join(", ")}</div>
+                  <div style={{ whiteSpace: 'pre-line' }}>{workersCompact.join('\n')}</div>
                 </div>
               );
             }
 
-            // Week view - compact format without entry count
+            // Week view - compact format with monograms and line breaks
             if (viewType === "timeGridWeek") {
               const workersCompact = groupData.workers.map(worker => {
                 const hours = groupData.workerHours?.get?.(worker) || 0;
                 const roundedHours = Math.round(hours);
-                // Get initials from worker name
-                const initials = worker.split(' ').map(n => n[0]).join('').toUpperCase();
+                // Get initials from worker name with dots (M. Z.)
+                const nameParts = worker.split(' ').filter(Boolean);
+                const initials = nameParts.map(part => part[0].toUpperCase() + '.').join(' ');
                 return `${initials} ${roundedHours}h`;
               });
               
               return (
                 <div className="fc-event-inner grouped-compact">
                   <div className="text-xs">
-                    <div>{workersCompact.join(", ")}</div>
+                    <div style={{ whiteSpace: 'pre-line' }}>{workersCompact.join('\n')}</div>
                   </div>
                 </div>
               );
@@ -299,9 +301,8 @@ export default function GoogleCalendarView({
             const n = (name || "").trim();
             if (!n) return "";
             const parts = n.split(/\s+/).filter(Boolean);
-            const first = parts[0]?.[0] || "";
-            const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
-            return (first + last).toUpperCase();
+            // Create initials with dots (M. Z.)
+            return parts.map(part => part[0].toUpperCase() + '.').join(' ');
           };
           const hours = originalProps.workHours != null ? `${Math.round(originalProps.workHours)} óra` : "";
 
@@ -310,7 +311,7 @@ export default function GoogleCalendarView({
             const label = nameInitials || (originalProps.email ?? "");
             const hoursShort = originalProps.workHours != null ? `${Math.round(originalProps.workHours * 100) / 100}h` : "";
             
-            // Format: "M.Z. 8h"
+            // Format: "M. Z. 8h"
             const displayText = [label, hoursShort].filter(Boolean).join(" ");
             
             return (
