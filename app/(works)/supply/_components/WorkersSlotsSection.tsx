@@ -604,6 +604,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         onSubmit={handleAdd}
         workItems={workItems}
         professions={professions}
+        workers={workers}
         lockedProfession={addLock?.role}
         lockedWorkItemId={addLock?.workItemId}
         showAllWorkItems={showAllWorkItems}

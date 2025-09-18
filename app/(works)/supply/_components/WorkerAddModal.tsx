@@ -18,6 +18,7 @@ interface WorkerAddModalProps {
   workId: number;
   workItems?: WorkItem[]; // Made optional since not used
   professions: string[];
+  workers?: Array<{ id: number; name: string | null }>; // Workers list for role selection
   onSubmit: (data: {
     name: string;
     email: string;
@@ -113,6 +114,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   onOpenChange,
   workId,
   professions,
+  workers = [],
   onSubmit,
   lockedProfession
 }) => {
@@ -126,6 +128,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     avatarUrl?: string | null;
   }>>([]);
   const [selectedExistingWorker, setSelectedExistingWorker] = useState<string>("");
+  const [selectedRole, setSelectedRole] = useState<string>(""); // New state for role selection
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -164,6 +167,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         return;
       }
 
+      if (!selectedRole) {
+        toast.error("Kérjük válassz egy szerepkört!");
+        return;
+      }
+
       const worker = existingWorkers.find(w => w.id.toString() === selectedExistingWorker);
       if (!worker) {
         toast.error("A kiválasztott munkás nem található!");
@@ -178,13 +186,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           name: worker.name || "",
           email: worker.email || "",
           phone: worker.phone || "",
-          profession: lockedProfession || worker.role || "",
+          profession: selectedRole, // Use selected role instead of worker's original role
           workItemId: null, // Always null
           avatarUrl: worker.avatarUrl || undefined,
         });
 
         // Reset form on success
         setSelectedExistingWorker("");
+        setSelectedRole("");
         onOpenChange(false);
       } catch (error) {
         console.error("Error assigning existing worker:", error);
@@ -261,6 +270,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     if (open) {
       // Only set default mode when first opening, don't override user selection
       setProfession(lockedProfession ?? "");
+      setSelectedRole(lockedProfession ?? ""); // Set default role for existing worker mode when opened from slot
       setSelectedExistingWorker("");
     } else {
       // clear fields on close
@@ -274,9 +284,20 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setAvatarError("");
       setAvatarUploading(false);
       setSelectedExistingWorker("");
+      setSelectedRole("");
       setExistingWorkers([]);
     }
   }, [open, lockedProfession]);
+
+  // Get available roles from workers list
+  const availableRoles = useMemo(() => {
+    const roles = workers
+      .map(w => w.name)
+      .filter((name): name is string => Boolean(name))
+      .filter((name, index, arr) => arr.indexOf(name) === index) // Remove duplicates
+      .sort((a, b) => a.localeCompare(b, "hu"));
+    return roles;
+  }, [workers]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -330,21 +351,38 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
           {/* Existing Worker Selection */}
           {workerMode === "existing" && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none">
-                Válassz munkást
-              </label>
-              <CustomSelect
-                className="mt-2"
-                value={selectedExistingWorker}
-                onChange={setSelectedExistingWorker}
-                placeholder="Válassz munkást..."
-                options={existingWorkers.map((worker) => ({
-                  value: worker.id.toString(),
-                  label: `${worker.name || "Névtelen"} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
-                }))}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Szerepkör
+                </label>
+                <CustomSelect
+                  className="mt-2"
+                  value={selectedRole}
+                  onChange={setSelectedRole}
+                  placeholder="Válassz szerepkört..."
+                  options={availableRoles.map((role) => ({
+                    value: role,
+                    label: role,
+                  }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Válassz munkást
+                </label>
+                <CustomSelect
+                  className="mt-2"
+                  value={selectedExistingWorker}
+                  onChange={setSelectedExistingWorker}
+                  placeholder="Válassz munkást..."
+                  options={existingWorkers.map((worker) => ({
+                    value: worker.id.toString(),
+                    label: `${worker.name || "Névtelen"} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
+                  }))}
+                />
+              </div>
+            </>
           )}
 
           {/* New Worker Form Fields */}
@@ -497,7 +535,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               disabled={
                 loading ||
                 (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
-                (workerMode === "existing" && !selectedExistingWorker)
+                (workerMode === "existing" && (!selectedExistingWorker || !selectedRole))
               }
               className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
             >
