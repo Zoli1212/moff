@@ -21,7 +21,6 @@ import {
 import { assignWorkerToWorkItemAndWork } from "@/actions/assign-worker-to-workitem-and-work";
 import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-and-assign";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
-import { useWorkerSlotsStore } from "@/store/useWorkerSlotsStore";
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
 
@@ -93,19 +92,25 @@ const WorkersSlotsSection: React.FC<Props> = ({
         : workItems.filter((w) => w.inProgress).map((w) => w.id),
     [workItems, showAllWorkItems]
   );
-  // Show assignments from active workItems (based on showAllWorkItems flag)
-  const initialAssignments = useMemo(
-    () =>
-      workItems
-        .filter((wi) => showAllWorkItems || wi.inProgress)
-        .flatMap((wi) =>
-          (wi.workItemWorkers ?? []).map((w) => ({ ...w }) as AssignmentEx)
-        ),
-    [workItems, showAllWorkItems]
-  );
-
-  const [assignments, setAssignments] =
-    useState<AssignmentEx[]>(initialAssignments);
+  // Load assignments directly from workItemWorker table for this workId
+  const [assignments, setAssignments] = useState<AssignmentEx[]>([]);
+  
+  React.useEffect(() => {
+    const loadWorkItemWorkers = async () => {
+      try {
+        const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+        const data = await getWorkItemWorkersForWork(workId);
+        console.log("=== DEBUG workItemWorkers for workId", workId, "===");
+        console.log("Direct workItemWorker query result:", data);
+        setAssignments(data || []);
+      } catch (error) {
+        console.error("Error loading workItemWorkers:", error);
+        setAssignments([]);
+      }
+    };
+    
+    loadWorkItemWorkers();
+  }, [workId]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addLock, setAddLock] = useState<{
     role?: string;
@@ -116,22 +121,24 @@ const WorkersSlotsSection: React.FC<Props> = ({
   );
 
   // Build required slots per profession from active workItems
-  // Only show roles that are actually needed by active workItems
+  // Take maximum requirement per role across all active workItems
   const requiredPerProfession: Record<string, number> = useMemo(() => {
     const byRole: Record<string, number> = {};
     const activeItems = workItems.filter(
       (wi) => showAllWorkItems || wi.inProgress
     );
 
-    // Collect all required roles from active workItems
+    // Find maximum requirement per role across all active workItems
     for (const wi of activeItems) {
+      const roleQuantities: Record<string, number> = {};
+
       // From workItemWorkers
       for (const wiw of wi.workItemWorkers ?? []) {
         const worker = workers.find((w) => w.id === wiw.workerId);
         if (worker) {
           const role = worker.name || "Ismeretlen";
           const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
-          byRole[role] = Math.max(byRole[role] || 0, quantity);
+          roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
         }
       }
 
@@ -143,17 +150,22 @@ const WorkersSlotsSection: React.FC<Props> = ({
             typeof rp.quantity === "number" && rp.quantity > 0
               ? rp.quantity
               : 1;
-          byRole[rp.type] = Math.max(byRole[rp.type] || 0, quantity);
+          roleQuantities[rp.type] = (roleQuantities[rp.type] || 0) + quantity;
         }
+      }
+
+      // Update byRole with maximum values
+      for (const [role, quantity] of Object.entries(roleQuantities)) {
+        byRole[role] = Math.max(byRole[role] || 0, quantity);
       }
     }
 
     return byRole;
   }, [workItems, workers, showAllWorkItems]);
 
-  const { slots, setSlots, addSlot, removeSlot } = useWorkerSlotsStore();
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
-  const [selectedRoleForRemoval, setSelectedRoleForRemoval] = useState<string>("");
+  const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
+    useState<string>("");
 
   const handleRemoveRole = (role: string) => {
     setSelectedRoleForRemoval(role);
@@ -164,13 +176,6 @@ const WorkersSlotsSection: React.FC<Props> = ({
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);
     await refreshAssignments();
   };
-
-  // Initialize the store with the calculated required slots
-  React.useEffect(() => {
-    if (Object.keys(requiredPerProfession).length > 0) {
-      setSlots(requiredPerProfession);
-    }
-  }, [requiredPerProfession, setSlots]);
 
   // Compute per-Worker maximum required quantity across active workItems (mirror of ParticipantsSection)
   const workerIdToMaxNeeded: Record<number, number> = useMemo(() => {
@@ -326,10 +331,10 @@ const WorkersSlotsSection: React.FC<Props> = ({
   const refreshAssignments = async () => {
     try {
       const items = await getWorkItemsWithWorkers(workId);
-      // Include workers from active workItems (based on showAllWorkItems flag)
-      const list: AssignmentEx[] = items
-        .filter((wi) => showAllWorkItems || wi.inProgress)
-        .flatMap((wi) => wi.workItemWorkers ?? ([] as AssignmentEx[]));
+      // Include all workers for this work (not filtered by workItem status)
+      const list: AssignmentEx[] = items.flatMap(
+        (wi) => wi.workItemWorkers ?? ([] as AssignmentEx[])
+      );
       setAssignments(list);
     } catch (err) {
       console.error(err);
@@ -346,11 +351,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
     avatarUrl?: string;
   }) => {
     try {
-      // Allow null workItemId for general tasks
-      // if (data.workItemId === null) {
-      //   toast.error("Munkafázis kiválasztása kötelező!");
-      //   return;
-      // }
+      // Always set workItemId to null - workers are assigned to work, not specific workItems
+      const workItemId = null;
 
       // Check if a worker with this email already exists in the workforce
       const workforce = await getWorkforce();
@@ -364,7 +366,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
           // Worker record exists, use its ID for assignment
           await assignWorkerToWorkItemAndWork({
             workId,
-            workItemId: data.workItemId,
+            workItemId, // Always null
             workerId: workerRecord.id, // Use Worker.id, not workforceRegistry.id
             name: data.name,
             email: data.email,
@@ -377,7 +379,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
           // Worker record doesn't exist for this profession, create it first
           await addWorkerToRegistryAndAssign({
             workId,
-            workItemId: data.workItemId,
+            workItemId, // Always null
             name: data.name,
             email: data.email,
             phone: data.phone,
@@ -390,7 +392,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         // Worker doesn't exist, add to workforce first then assign
         await addWorkerToRegistryAndAssign({
           workId,
-          workItemId: data.workItemId,
+          workItemId, // Always null
           name: data.name,
           email: data.email,
           phone: data.phone,
@@ -489,8 +491,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
   };
 
-  // Group assignments by role (profession). Prefer the best workItem per role,
-  // but if azon a tételen nincs hozzárendelés, essünk vissza az összes hozzárendelésre.
+  // Group all assignments by role (profession) for this work
   const grouped = useMemo(() => {
     const allByRole: Record<string, AssignmentEx[]> = {};
     for (const a of assignments) {
@@ -501,9 +502,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
       allByRole[key].push(a);
     }
 
-    // Return all assignments grouped by role, don't filter by workItemId
+    // Return all assignments grouped by role - no workItem filtering
     return allByRole;
-  }, [assignments, roleBestWorkItemId]);
+  }, [assignments]);
 
   // Fallback list built from Worker.workers registry (ParticipantsSection parity)
   // const registryByRole: Record<string, AssignmentEx[]> = useMemo(() => {
@@ -604,7 +605,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
           //   typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
           // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
           const assignedCount = list.length;
-          const slotCount = Math.max(slots[role] ?? required, assignedCount);
+          const slotCount = Math.max(required, assignedCount);
           const slotArray = Array.from({ length: slotCount });
           return (
             <div key={role}>
@@ -612,7 +613,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                 <div className="flex items-center gap-2.5">
                   <div className="flex-1 font-semibold flex items-center gap-2">
                     {role}
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleRemoveRole(role);
@@ -624,12 +625,6 @@ const WorkersSlotsSection: React.FC<Props> = ({
                     </button>
                   </div>
                   <div className="flex items-center gap-2 ml-auto">
-                    <button
-                      onClick={() => addSlot(role)}
-                      className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
                     <div className="font-semibold text-[14px] text-[#222]">
                       {list.length} / {required}
                     </div>
@@ -682,19 +677,12 @@ const WorkersSlotsSection: React.FC<Props> = ({
                         <button
                           className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
                           onClick={() => {
-                            setAddLock({ role });
+                            setAddLock({ role, workItemId: undefined }); // Always undefined workItemId
                             setIsAddOpen(true);
                           }}
                           title={role}
                         >
                           <Plus className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => removeSlot(role)}
-                          className="px-2 py-2 rounded-r border border-dashed border-l-0 border-[#aaa] bg-[#fafbfc] hover:bg-red-100"
-                          title="Slot törlése"
-                        >
-                          <Trash2 className="h-4 w-4 text-gray-600" />
                         </button>
                       </div>
                     );

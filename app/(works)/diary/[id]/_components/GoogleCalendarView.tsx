@@ -81,7 +81,11 @@ export default function GoogleCalendarView({
           if (!groups.has(groupNo)) {
             groups.set(groupNo, {
               groupNo,
-              date: new Date(it.date),
+              date: (() => {
+                // Handle date properly to avoid timezone shifts
+                const dateStr = typeof it.date === 'string' ? it.date : it.date.toISOString().split('T')[0];
+                return new Date(dateStr + 'T00:00:00');
+              })(),
               items: [],
               diaryId: d.id,
               workItemNames: [],
@@ -362,7 +366,11 @@ export default function GoogleCalendarView({
                 isGrouped: true,
                 groupNo: groupNo,
                 workDiaryItems: groupItems,
-                date: new Date(groupItems[0].date),
+                date: (() => {
+                  // Handle date properly to avoid timezone shifts
+                  const dateStr = typeof groupItems[0].date === 'string' ? groupItems[0].date : groupItems[0].date.toISOString().split('T')[0];
+                  return new Date(dateStr + 'T00:00:00');
+                })(),
                 notes: (() => {
                   const aggregatedNotes = groupItems
                     .map((item) => item.notes ?? "")

@@ -42,18 +42,26 @@ export default function DiaryPageClient({
   const [isGroupedMode, setIsGroupedMode] = useState(true); // Default to grouped mode
 
   const handleDateSelect = (date: Date) => {
+    // Get the local date components to avoid timezone conversion
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const targetDateStr = `${year}-${month}-${day}`;
+    
     const found = (diaries ?? []).find(
-      (d) => new Date(d.date).toDateString() === date.toDateString()
+      (d) => new Date(d.date).toISOString().split('T')[0] === targetDateStr
     );
     if (found) {
       setSelectedDiary(found);
     } else {
       const firstItem = (items ?? [])[0];
+      // Create date using local date components to avoid timezone shifts
+      const localDate = new Date(year, date.getMonth(), date.getDate());
       setSelectedDiary({
         id: 0,
         workId: firstItem?.workId || 0,
         workItemId: firstItem?.id || 0,
-        date,
+        date: localDate,
         description: "",
         weather: "",
         temperature: null,

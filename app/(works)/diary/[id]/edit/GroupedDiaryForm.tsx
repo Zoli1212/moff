@@ -134,29 +134,52 @@ export default function GroupedDiaryForm({
     }
   }, [activeWorkItems, selectedGroupedItems.length, hasInitialized]);
 
-  // Initialize with all work workers by default (only on first load)
+  // Don't initialize workers by default - start with empty selection
   const [hasInitializedWorkers, setHasInitializedWorkers] = useState(false);
   useEffect(() => {
-    if (
-      !hasInitializedWorkers &&
-      selectedWorkers.length === 0 &&
-      allWorkWorkers.length > 0
-    ) {
-      setSelectedWorkers(allWorkWorkers);
+    if (!hasInitializedWorkers) {
+      setSelectedWorkers([]);
       setHasInitializedWorkers(true);
     }
-  }, [allWorkWorkers, selectedWorkers.length, hasInitializedWorkers]);
+  }, [hasInitializedWorkers]);
 
   // Initialize form with current date or diary date in edit mode
   useEffect(() => {
     if (isEditMode && diary.date) {
-      // In edit mode, use the diary's date
-      const diaryDate = new Date(diary.date).toISOString().split("T")[0];
-      setDate(diaryDate);
+      // In edit mode, use the diary's date - handle timezone properly
+      if (typeof diary.date === 'string') {
+        const dateOnly = (diary.date as string).split('T')[0];
+        setDate(dateOnly);
+      } else {
+        // Use local date components to avoid timezone conversion
+        const year = diary.date.getFullYear();
+        const month = String(diary.date.getMonth() + 1).padStart(2, '0');
+        const day = String(diary.date.getDate()).padStart(2, '0');
+        const dateOnly = `${year}-${month}-${day}`;
+        setDate(dateOnly);
+      }
     } else {
-      // In create mode, use today's date
-      const today = new Date().toISOString().split("T")[0];
-      setDate(today);
+      // In create mode, use the selected date from calendar (diary.date) or today's date as fallback
+      if (diary.date) {
+        if (typeof diary.date === 'string') {
+          const dateOnly = (diary.date as string).split('T')[0];
+          setDate(dateOnly);
+        } else {
+          // Use local date components to avoid timezone conversion
+          const year = diary.date.getFullYear();
+          const month = String(diary.date.getMonth() + 1).padStart(2, '0');
+          const day = String(diary.date.getDate()).padStart(2, '0');
+          const dateOnly = `${year}-${month}-${day}`;
+          setDate(dateOnly);
+        }
+      } else {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const dateOnly = `${year}-${month}-${day}`;
+        setDate(dateOnly);
+      }
     }
   }, [isEditMode, diary.date]);
 

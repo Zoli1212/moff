@@ -168,11 +168,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         return;
       }
 
-      const finalWorkItemId = lockedWorkItemId || workItemId;
-      if (finalWorkItemId !== "general" && !finalWorkItemId) {
-        toast.error("Kérjük válassz munkafázist!");
-        return;
-      }
+      // Always use null for workItemId
+      const finalWorkItemId = null;
 
       setLoading(true);
       try {
@@ -181,7 +178,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           email: worker.email || "",
           phone: worker.phone || "",
           profession: worker.role || "",
-          workItemId: finalWorkItemId === "general" ? null : Number(finalWorkItemId),
+          workItemId: null, // Always null
           avatarUrl: worker.avatarUrl || undefined,
         });
 
@@ -198,9 +195,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     } else {
       // Handle new worker creation
       const finalProfession = lockedProfession || profession;
-      const finalWorkItemId = lockedWorkItemId || workItemId;
+      // Always use null for workItemId
+      const finalWorkItemId = null;
 
-      if (!name || !finalProfession || (finalWorkItemId !== "general" && !finalWorkItemId)) {
+      if (!name || !finalProfession) {
         toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
         return;
       }
@@ -212,7 +210,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           email,
           phone,
           profession: finalProfession,
-          workItemId: finalWorkItemId === "general" ? null : Number(finalWorkItemId),
+          workItemId: null, // Always null
           avatarUrl: avatarUrl || undefined,
         });
 
@@ -237,55 +235,18 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   };
 
   const professionsForSelected = useMemo(() => {
-    // No selection: empty list (prompt user)
-    if (workItemId === "") return [] as string[];
-
-    // If "general" is selected, allow all professions
-    if (workItemId === "general") {
-      return professions.sort((a, b) => a.localeCompare(b, "hu"));
-    }
-
-    // With a selected workItem: allow any profession from all active workItems
-    const selected = workItems.find((w) => w.id === Number(workItemId));
-    // Only allow adding workers to active workItems (based on showAllWorkItems flag)
-    if (!selected || (!showAllWorkItems && !selected.inProgress)) return [];
-
-    // Collect all professions from ALL active workItems (not just selected one)
-    const allActiveProfessions = new Set<string>();
-    const activeItems = workItems.filter(
-      (wi) => showAllWorkItems || wi.inProgress
-    );
-
-    for (const item of activeItems) {
-      // From workers
-      (item.workers ?? []).forEach((w) => {
-        const role = w.role ?? w.name;
-        if (role && typeof role === "string" && role.trim().length > 0) {
-          allActiveProfessions.add(role);
-        }
-      });
-
-      // From workItemWorkers
-      (item.workItemWorkers ?? []).forEach((w) => {
-        if (w.role && typeof w.role === "string" && w.role.trim().length > 0) {
-          allActiveProfessions.add(w.role);
-        }
-      });
-    }
-
-    // Also include all available professions to allow new ones
-    professions.forEach((p) => allActiveProfessions.add(p));
-
-    let options = Array.from(allActiveProfessions).sort((a, b) =>
-      a.localeCompare(b, "hu")
-    );
+    // Always allow all professions since workItemId is always null
+    let options = professions.sort((a, b) => a.localeCompare(b, "hu"));
+    
     // If profession is locked, restrict to only that one (if present)
-    if (lockedProfession)
+    if (lockedProfession) {
       options = options.filter((p) => p === lockedProfession);
+    }
+    
     return options;
-  }, [workItemId, workItems, professions, lockedProfession]);
+  }, [professions, lockedProfession]);
 
-  // Keep profession consistent with the available options for the selected work item
+  // Keep profession consistent with the available options
   useEffect(() => {
     // Don't clear if user selected the generic "Egyéb"
     if (
@@ -328,7 +289,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            Új munkás regisztrálása és hozzárendelése munkafázishoz
+            Új munkás regisztrálása és hozzárendelése munkához
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -363,33 +324,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             </div>
           </div>
 
-          {/* Work Item Selection - Disabled if locked */}
+          {/* Work Item Selection - Always null, but show info */}
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">
               Munkafázis
             </label>
-            <CustomSelect
-              className="mt-2"
-              value={workItemId === "" ? "" : String(workItemId)}
-              onChange={(val) => {
-                if (val === "general") {
-                  setWorkItemId("general");
-                } else {
-                  setWorkItemId(val ? Number(val) : "");
-                }
-              }}
-              disabled={!!lockedWorkItemId}
-              placeholder="Válassz munkafázist..."
-              options={[
-                ...workItems
-                  .filter((item) => showAllWorkItems || item.inProgress)
-                  .map((item) => ({
-                    value: String(item.id),
-                    label: item.name,
-                  })),
-                { value: "general", label: "Nincs meghatározva!" },
-              ]}
-            />
+            <div className="p-2 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-700">
+              Általános hozzárendelés (nem konkrét munkafázishoz)
+            </div>
           </div>
 
           {/* Existing Worker Selection */}
@@ -425,11 +367,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                     value={profession}
                     onChange={setProfession}
                     disabled={professionsForSelected.length === 0}
-                    placeholder={
-                      professionsForSelected.length === 0
-                        ? "Először válassz munkafázist"
-                        : "Válassz szakmát..."
-                    }
+                    placeholder="Válassz szakmát..."
                     options={[
                       { value: "", label: "Válassz szakmát..." },
                       ...professionsForSelected.map((p) => ({
@@ -565,8 +503,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               disabled={
                 loading ||
                 (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
-                (workerMode === "existing" && !selectedExistingWorker) ||
-                !(lockedWorkItemId || workItemId === "general" || workItemId)
+                (workerMode === "existing" && !selectedExistingWorker)
               }
               className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
             >
