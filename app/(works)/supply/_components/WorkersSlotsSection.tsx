@@ -94,9 +94,11 @@ const WorkersSlotsSection: React.FC<Props> = ({
   );
   // Load assignments directly from workItemWorker table for this workId
   const [assignments, setAssignments] = useState<AssignmentEx[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
     const loadWorkItemWorkers = async () => {
+      setIsLoading(true);
       try {
         const { getWorkItemWorkersForWork } = await import(
           "@/actions/get-workitemworkers-for-work"
@@ -108,6 +110,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
       } catch (error) {
         console.error("Error loading workItemWorkers:", error);
         setAssignments([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -620,7 +624,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         Munkások (
         {professions.reduce((sum, role) => {
           const list = grouped[role] || [];
-          return sum + Math.min(list.length, requiredPerProfession[role] || 0);
+          return sum + list.length;
         }, 0)}
         {" / "}
         {professions.reduce(
@@ -649,10 +653,17 @@ const WorkersSlotsSection: React.FC<Props> = ({
       />
 
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
-        {professions.length === 0 && (
-          <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
-        )}
-        {professions.map((role) => {
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-8 gap-2">
+            <span className="text-[#666] font-medium">R.A.G. frissítés</span>
+            <span className="text-[#888] text-sm">Augmented context update</span>
+          </div>
+        ) : (
+          <>
+            {professions.length === 0 && (
+              <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
+            )}
+            {professions.map((role) => {
           const required = requiredPerProfession[role] || 0;
           const list = grouped[role] || []; // Only show workItemWorker connections
           // Use per-role denominator from best work item; fallback to required if missing/zero
@@ -786,7 +797,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
               </div>
             </div>
           );
-        })}
+            })}
+          </>
+        )}
       </div>
     </div>
   );

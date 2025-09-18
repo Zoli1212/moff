@@ -119,7 +119,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   lockedWorkItemId,
   showAllWorkItems = false,
 }) => {
-  const [workerMode, setWorkerMode] = useState<"new" | "existing">("existing");
+  const [workerMode, setWorkerMode] = useState<"new" | "existing">("new");
   const [existingWorkers, setExistingWorkers] = useState<any[]>([]);
   const [selectedExistingWorker, setSelectedExistingWorker] = useState<string>("");
   const [name, setName] = useState("");
@@ -177,7 +177,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           name: worker.name || "",
           email: worker.email || "",
           phone: worker.phone || "",
-          profession: worker.role || "",
+          profession: lockedProfession || worker.role || "",
           workItemId: null, // Always null
           avatarUrl: worker.avatarUrl || undefined,
         });
@@ -261,15 +261,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   // Reset/initialize when modal opens (handle locks)
   useEffect(() => {
     if (open) {
-      // If no existing workers are available, default to "new" mode (orange)
-      const shouldDefaultToNew = existingWorkers.length === 0;
-      setWorkerMode(shouldDefaultToNew ? "new" : "existing");
+      // Always default to "new" mode
+      setWorkerMode("new");
       setProfession(lockedProfession ?? "");
       setWorkItemId(lockedWorkItemId ?? "");
       setSelectedExistingWorker("");
     } else {
       // clear fields on close
-      setWorkerMode("existing");
+      setWorkerMode("new");
       setName("");
       setEmail("");
       setPhone("");
