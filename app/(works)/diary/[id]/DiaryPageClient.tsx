@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
 import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
-import GroupedDiaryForm from "./edit/GroupedDiaryForm";
+import GroupedDiaryCreateForm from "./edit/GroupedDiaryCreateForm";
+import GroupedDiaryEditForm from "./edit/GroupedDiaryEditForm";
 import { WorkItem } from "@/types/work";
 import type {
   WorkDiaryWithItem,
@@ -155,19 +156,33 @@ export default function DiaryPageClient({
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-4xl w-[95%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
             {isGroupedMode ? (
-              <GroupedDiaryForm
-                diary={selectedDiary}
-                workItems={items}
-                onSave={() => {
-                  setShowDiaryModal(false);
-                  setEditingItem(undefined);
-                  try {
-                    router.refresh();
-                  } catch {}
-                }}
-                onCancel={handleCloseModal}
-                isEditMode={selectedDiary.workDiaryItems && selectedDiary.workDiaryItems.length > 0}
-              />
+              selectedDiary.workDiaryItems && selectedDiary.workDiaryItems.length > 0 ? (
+                <GroupedDiaryEditForm
+                  diary={selectedDiary}
+                  workItems={items}
+                  onSave={() => {
+                    setShowDiaryModal(false);
+                    setEditingItem(undefined);
+                    try {
+                      router.refresh();
+                    } catch {}
+                  }}
+                  onCancel={handleCloseModal}
+                />
+              ) : (
+                <GroupedDiaryCreateForm
+                  diary={selectedDiary}
+                  workItems={items}
+                  onSave={() => {
+                    setShowDiaryModal(false);
+                    setEditingItem(undefined);
+                    try {
+                      router.refresh();
+                    } catch {}
+                  }}
+                  onCancel={handleCloseModal}
+                />
+              )
             ) : (
               <WorkerDiaryEditForm
                 diary={selectedDiary}

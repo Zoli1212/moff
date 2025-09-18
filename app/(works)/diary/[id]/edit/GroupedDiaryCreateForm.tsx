@@ -1,5 +1,9 @@
 "use client";
-import { getOrCreateWorkDiaryForWork, createWorkDiaryItem, deleteWorkDiaryItemsByGroup } from "@/actions/workdiary-actions";
+import {
+  getOrCreateWorkDiaryForWork,
+  createWorkDiaryItem,
+  deleteWorkDiaryItemsByGroup,
+} from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +33,6 @@ interface GroupedDiaryFormProps {
   workItems: WorkItem[];
   onSave: (updated: Partial<WorkDiaryWithItem>) => void;
   onCancel: () => void;
-  isEditMode?: boolean; // New prop to determine if editing existing entry
 }
 
 export default function GroupedDiaryForm({
@@ -37,7 +40,6 @@ export default function GroupedDiaryForm({
   workItems,
   onSave,
   onCancel,
-  isEditMode = false,
 }: GroupedDiaryFormProps) {
   const { user } = useUser();
   const [date, setDate] = useState<string>("");
@@ -68,7 +70,9 @@ export default function GroupedDiaryForm({
     approvedItems: number;
   } | null>(null);
   const [groupApprovalLoading, setGroupApprovalLoading] = useState(false);
-  const [pendingApprovalChange, setPendingApprovalChange] = useState<boolean | null>(null);
+  const [pendingApprovalChange, setPendingApprovalChange] = useState<
+    boolean | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -93,19 +97,22 @@ export default function GroupedDiaryForm({
 
   // Get ALL workItemWorkers from the work using server action
   const [allWorkWorkers, setAllWorkWorkers] = useState<WorkItemWorker[]>([]);
-  
+
   // Load all workItemWorkers for this work
   useEffect(() => {
     const loadWorkItemWorkers = async () => {
       try {
-        const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
-        const workItemWorkerData = await getWorkItemWorkersForWork(diary.workId);
-        console.log("=== DEBUG GroupedDiaryForm - All workItemWorkers for work ===");
-        console.log("Work ID:", diary.workId);
-        console.log("WorkItemWorkers data:", workItemWorkerData);
-        
+        const { getWorkItemWorkersForWork } = await import(
+          "@/actions/get-workitemworkers-for-work"
+        );
+        const workItemWorkerData = await getWorkItemWorkersForWork(
+          diary.workId
+        );
+
         // Convert workItemWorker data to WorkItemWorker format
-        const convertedWorkers: WorkItemWorker[] = (workItemWorkerData || []).map(worker => ({
+        const convertedWorkers: WorkItemWorker[] = (
+          workItemWorkerData || []
+        ).map((worker) => ({
           id: worker.id,
           workerId: worker.workerId || 0,
           workItemId: worker.workItemId || 0,
@@ -115,13 +122,13 @@ export default function GroupedDiaryForm({
           quantity: worker.quantity || 1,
           avatarUrl: worker.avatarUrl || null,
         }));
-        
+
         setAllWorkWorkers(convertedWorkers);
       } catch (error) {
         console.error("Error loading workItemWorkers:", error);
       }
     };
-    
+
     if (diary.workId) {
       loadWorkItemWorkers();
     }
@@ -155,55 +162,32 @@ export default function GroupedDiaryForm({
     }
   }, [hasInitializedWorkers]);
 
-  // Initialize form with current date or diary date in edit mode
+  // Initialize form with selected date from calendar or today's date as fallback
   useEffect(() => {
-    if (isEditMode && diary.date) {
-      // In edit mode, use the diary's date - handle timezone properly
-      if (typeof diary.date === 'string') {
-        const dateOnly = (diary.date as string).split('T')[0];
+    // Use the selected date from calendar (diary.date) or today's date as fallback
+    if (diary.date) {
+      if (typeof diary.date === "string") {
+        const dateOnly = (diary.date as string).split("T")[0];
         setDate(dateOnly);
       } else {
         // Use local date components to avoid timezone conversion
         const year = diary.date.getFullYear();
-        const month = String(diary.date.getMonth() + 1).padStart(2, '0');
-        const day = String(diary.date.getDate()).padStart(2, '0');
+        const month = String(diary.date.getMonth() + 1).padStart(2, "0");
+        const day = String(diary.date.getDate()).padStart(2, "0");
         const dateOnly = `${year}-${month}-${day}`;
         setDate(dateOnly);
       }
     } else {
-      // In create mode, use the selected date from calendar (diary.date) or today's date as fallback
-      if (diary.date) {
-        if (typeof diary.date === 'string') {
-          const dateOnly = (diary.date as string).split('T')[0];
-          setDate(dateOnly);
-        } else {
-          // Use local date components to avoid timezone conversion
-          const year = diary.date.getFullYear();
-          const month = String(diary.date.getMonth() + 1).padStart(2, '0');
-          const day = String(diary.date.getDate()).padStart(2, '0');
-          const dateOnly = `${year}-${month}-${day}`;
-          setDate(dateOnly);
-        }
-      } else {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const dateOnly = `${year}-${month}-${day}`;
-        setDate(dateOnly);
-      }
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      const dateOnly = `${year}-${month}-${day}`;
+      setDate(dateOnly);
     }
-  }, [isEditMode, diary.date]);
+  }, [diary.date]);
 
-  // Load group approval status in edit mode
-  useEffect(() => {
-    if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
-      const firstItem = diary.workDiaryItems[0];
-      if (firstItem.groupNo) {
-        loadGroupApprovalStatus(firstItem.groupNo);
-      }
-    }
-  }, [isEditMode, diary.workDiaryItems]);
+  // No group approval loading needed in create mode
 
   const loadGroupApprovalStatus = async (groupNo: number) => {
     try {
@@ -226,87 +210,25 @@ export default function GroupedDiaryForm({
 
   const handleGroupApprovalToggle = () => {
     if (!groupApprovalStatus) return;
-    
+
     // Just toggle the local state, don't call server action immediately
     const newApprovalState = !groupApprovalStatus.allApproved;
     setPendingApprovalChange(newApprovalState);
-    
+
     // Update local display state
-    setGroupApprovalStatus(prev => prev ? {
-      ...prev,
-      allApproved: newApprovalState,
-      someApproved: newApprovalState ? false : prev.someApproved,
-      approvedItems: newApprovalState ? prev.totalItems : 0
-    } : null);
+    setGroupApprovalStatus((prev) =>
+      prev
+        ? {
+            ...prev,
+            allApproved: newApprovalState,
+            someApproved: newApprovalState ? false : prev.someApproved,
+            approvedItems: newApprovalState ? prev.totalItems : 0,
+          }
+        : null
+    );
   };
 
-  // Initialize form data in edit mode
-  useEffect(() => {
-    if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
-      // Load existing diary data
-      const firstItem = diary.workDiaryItems[0];
-
-      // Set description from first item's notes
-      if (firstItem.notes) {
-        setDescription(firstItem.notes);
-      }
-
-      // Set images from first item
-      if (firstItem.images && firstItem.images.length > 0) {
-        setImages(firstItem.images);
-      }
-
-      // Build grouped items from diary items
-      const groupedItemsMap = new Map<number, GroupedWorkItem>();
-      const workersMap = new Map<number, WorkItemWorker>();
-
-      // Calculate total hours per worker from all diary items
-      const workerHoursMap = new Map<number, number>();
-      
-      diary.workDiaryItems.forEach((item) => {
-        // Add work items
-        if (item.workItemId) {
-          const workItem = workItems.find((wi) => wi.id === item.workItemId);
-          if (workItem && !groupedItemsMap.has(workItem.id)) {
-            groupedItemsMap.set(workItem.id, {
-              workItem,
-              progress: workItem.progress || 0,
-            });
-          }
-        }
-
-        // Add workers and accumulate their hours
-        if (item.workerId && item.name && item.email) {
-          const worker: WorkItemWorker = {
-            id: item.workerId, // Use workerId as id for compatibility
-            workerId: item.workerId,
-            name: item.name,
-            email: item.email,
-            workItemId: item.workItemId,
-            role: "", // Default empty role
-            quantity: 1, // Default quantity
-          };
-          workersMap.set(item.workerId, worker);
-
-          // Accumulate worker hours from all diary items
-          if (item.workHours) {
-            const currentHours = workerHoursMap.get(item.workerId) || 0;
-            workerHoursMap.set(item.workerId, currentHours + (item.workHours || 0));
-          }
-        }
-      });
-
-      // Set accumulated worker hours
-      workerHoursMap.forEach((totalHours, workerId) => {
-        setWorkerHours(
-          (prev) => new Map(prev.set(workerId, Math.round(totalHours)))
-        );
-      });
-
-      setSelectedGroupedItems(Array.from(groupedItemsMap.values()));
-      setSelectedWorkers(Array.from(workersMap.values()));
-    }
-  }, [isEditMode, diary, workItems]);
+  // No form data initialization needed in create mode - start with empty form
 
   const showToast = (type: "success" | "error", message: string) => {
     // Toast implementation would go here
@@ -385,7 +307,11 @@ export default function GroupedDiaryForm({
   };
 
   const addWorker = (worker: WorkItemWorker) => {
-    if (!selectedWorkers.find((w) => w.name?.toLowerCase() === worker.name?.toLowerCase())) {
+    if (
+      !selectedWorkers.find(
+        (w) => w.name?.toLowerCase() === worker.name?.toLowerCase()
+      )
+    ) {
       setSelectedWorkers((prev) => [...prev, worker]);
       // Initialize with 8 hours for new workers
       setWorkerHours((prev) => new Map(prev.set(worker.workerId, 8)));
@@ -457,19 +383,10 @@ export default function GroupedDiaryForm({
     }
 
     setIsSubmitting(true);
-    
+
     try {
-      // In edit mode, use existing groupNo; otherwise generate new one
-      let groupNo: number;
-      if (isEditMode && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
-        groupNo = diary.workDiaryItems[0].groupNo || Math.floor(Date.now() / 1000);
-        
-        // Delete existing diary items for this group
-        await deleteWorkDiaryItemsByGroup({ groupNo });
-      } else {
-        // Generate unique groupNo for new group
-        groupNo = Math.floor(Date.now() / 1000);
-      }
+      // Generate unique groupNo for new group
+      const groupNo = Math.floor(Date.now() / 1000);
 
       // Get or create diary
       let diaryIdToUse = diary.id;
@@ -557,15 +474,28 @@ export default function GroupedDiaryForm({
       }
 
       // Handle pending group approval change if exists
-      if (pendingApprovalChange !== null && diary.workDiaryItems && diary.workDiaryItems.length > 0) {
+      if (
+        pendingApprovalChange !== null &&
+        diary.workDiaryItems &&
+        diary.workDiaryItems.length > 0
+      ) {
         const firstItem = diary.workDiaryItems[0];
         if (firstItem.groupNo) {
           try {
-            const result = await updateGroupApproval(firstItem.groupNo, pendingApprovalChange);
+            const result = await updateGroupApproval(
+              firstItem.groupNo,
+              pendingApprovalChange
+            );
             if (result.success) {
-              showToast("success", result.message || "Csoportos jóváhagyás frissítve");
+              showToast(
+                "success",
+                result.message || "Csoportos jóváhagyás frissítve"
+              );
             } else {
-              showToast("error", result.message || "Hiba történt a jóváhagyás során");
+              showToast(
+                "error",
+                result.message || "Hiba történt a jóváhagyás során"
+              );
             }
           } catch (error) {
             console.error("Group approval update error:", error);
@@ -582,7 +512,10 @@ export default function GroupedDiaryForm({
       if (failed.length > 0) {
         showToast("error", `${failed.length} művelet sikertelen volt.`);
       } else {
-        showToast("success", isEditMode ? "Csoportos napló bejegyzés sikeresen frissítve." : "Csoportos napló bejegyzés sikeresen létrehozva.");
+        showToast(
+          "success",
+          "Csoportos napló bejegyzés sikeresen létrehozva."
+        );
       }
 
       onSave({});
@@ -594,30 +527,7 @@ export default function GroupedDiaryForm({
     }
   };
 
-  const handleDeleteGroup = async () => {
-    if (!isEditMode || !diary.workDiaryItems || diary.workDiaryItems.length === 0) {
-      return;
-    }
-
-    const groupNo = diary.workDiaryItems[0].groupNo;
-    if (!groupNo) {
-      showToast("error", "Csoport azonosító nem található.");
-      return;
-    }
-
-    setIsDeleting(true);
-    try {
-      await deleteWorkDiaryItemsByGroup({ groupNo });
-      showToast("success", "Csoportos napló bejegyzés sikeresen törölve.");
-      onSave({}); // Close modal and refresh
-    } catch (error) {
-      console.error("Delete error:", error);
-      showToast("error", "Hiba történt a törlés során.");
-    } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
-  };
+  // No delete functionality needed in create mode
 
   // const availableWorkItems = activeWorkItems.filter(
   //   item => !selectedGroupedItems.find(selected => selected.workItem.id === item.id)
@@ -630,8 +540,12 @@ export default function GroupedDiaryForm({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <div className="text-lg font-medium text-gray-800">AI frissítés</div>
-            <div className="text-sm text-gray-600">Napló bejegyzések feldolgozása...</div>
+            <div className="text-lg font-medium text-gray-800">
+              AI frissítés
+            </div>
+            <div className="text-sm text-gray-600">
+              Napló bejegyzések feldolgozása...
+            </div>
           </div>
         </div>
       )}
@@ -641,9 +555,7 @@ export default function GroupedDiaryForm({
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-800">
-            {isEditMode
-              ? "Csoportos napló szerkesztése"
-              : "Csoportos napló bejegyzés"}
+            Csoportos napló bejegyzés
           </span>
         </div>
         {/* <Button
@@ -1092,14 +1004,17 @@ export default function GroupedDiaryForm({
                 <div className="max-h-60 overflow-y-auto">
                   {allWorkWorkers.filter(
                     (w: WorkItemWorker) =>
-                      !selectedWorkers.find((sw) => sw.name?.toLowerCase() === w.name?.toLowerCase())
+                      !selectedWorkers.find(
+                        (sw) => sw.name?.toLowerCase() === w.name?.toLowerCase()
+                      )
                   ).length > 0 ? (
                     <div className="space-y-2">
                       {allWorkWorkers
                         .filter(
                           (w: WorkItemWorker) =>
                             !selectedWorkers.find(
-                              (sw: WorkItemWorker) => sw.name?.toLowerCase() === w.name?.toLowerCase()
+                              (sw: WorkItemWorker) =>
+                                sw.name?.toLowerCase() === w.name?.toLowerCase()
                             )
                         )
                         .map((worker: WorkItemWorker) => (
@@ -1181,169 +1096,36 @@ export default function GroupedDiaryForm({
           )}
         </div>
 
-        {/* Group Approval Checkbox - Only in Edit Mode and if diary is editable */}
-        {isEditMode &&
-          groupApprovalStatus &&
-          diary.workDiaryItems &&
-          diary.workDiaryItems.length > 0 && (
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id="groupApproval"
-                    checked={groupApprovalStatus.allApproved}
-                    onChange={handleGroupApprovalToggle}
-                    disabled={groupApprovalLoading}
-                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label
-                    htmlFor="groupApproval"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Csoportos jóváhagyás
-                  </label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-gray-500">
-                    {groupApprovalStatus.approvedItems} /{" "}
-                    {groupApprovalStatus.totalItems} jóváhagyva
-                  </div>
-                  {/* Status indicator */}
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      groupApprovalStatus.allApproved
-                        ? "bg-green-500"
-                        : groupApprovalStatus.someApproved
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                    }`}
-                    title={
-                      groupApprovalStatus.allApproved
-                        ? "Teljesen jóváhagyva"
-                        : groupApprovalStatus.someApproved
-                          ? "Részben jóváhagyva"
-                          : "Nincs jóváhagyva"
-                    }
-                  />
-                </div>
-              </div>
-              {groupApprovalStatus.someApproved &&
-                !groupApprovalStatus.allApproved && (
-                  <p className="text-xs text-amber-600 mt-2">
-                    Részben jóváhagyva - kattintson a teljes jóváhagyáshoz
-                  </p>
-                )}
-            </div>
-          )}
+        {/* No group approval needed in create mode */}
 
         {/* Action Buttons */}
-        <div className="flex gap-2 justify-between">
-          <div>
-            {/* Delete Button - Only for tenant in edit mode */}
-            {isEditMode && isTenant && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isDeleting || isSubmitting}
-                className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
-              >
-                {isDeleting ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                    Törlés...
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Trash2 className="h-4 w-4" />
-                    Csoportos bejegyzés törlése
-                  </div>
-                )}
-              </Button>
+        <div className="flex gap-2 justify-end">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Mégsem
+          </Button>
+          <Button
+            type="submit"
+            disabled={
+              !date ||
+              imageUploading ||
+              selectedGroupedItems.length === 0 ||
+              selectedWorkers.length === 0 ||
+              isSubmitting
+            }
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {isSubmitting ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                AI frissítés...
+              </div>
+            ) : (
+              "Csoportos bejegyzés mentése"
             )}
-          </div>
-          
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Mégsem
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                !date ||
-                imageUploading ||
-                selectedGroupedItems.length === 0 ||
-                selectedWorkers.length === 0 ||
-                isSubmitting ||
-                isDeleting
-              }
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {isSubmitting ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  AI frissítés...
-                </div>
-              ) : (
-                isEditMode ? "Módosítások mentése" : "Csoportos bejegyzés mentése"
-              )}
-            </Button>
-          </div>
+          </Button>
         </div>
 
-        {/* Delete Confirmation Dialog */}
-        {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70]">
-            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="h-5 w-5 text-red-600" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Csoportos bejegyzés törlése
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Biztosan törölni szeretné ezt a csoportos napló bejegyzést?
-                  </p>
-                </div>
-              </div>
-              
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                <p className="text-sm text-red-800">
-                  <strong>Figyelem:</strong> Ez a művelet nem visszavonható. Az összes kapcsolódó napló bejegyzés véglegesen törlődik.
-                </p>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={isDeleting}
-                >
-                  Mégsem
-                </Button>
-                <Button
-                  type="button"
-                  onClick={handleDeleteGroup}
-                  disabled={isDeleting}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {isDeleting ? (
-                    <div className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Törlés...
-                    </div>
-                  ) : (
-                    "Igen, törlöm"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* No delete confirmation needed in create mode */}
       </form>
     </div>
   );
