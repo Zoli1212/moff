@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import type { WorkItem } from "@/types/work";
-import { getWorkersForWork, type WorkerForWork } from "@/actions/get-workers-for-work";
+import { getActiveWorkforce } from "@/actions/get-active-workforce";
 
 interface WorkerAddModalProps {
   open: boolean;
@@ -120,7 +120,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   showAllWorkItems = false,
 }) => {
   const [workerMode, setWorkerMode] = useState<"new" | "existing">("existing");
-  const [existingWorkers, setExistingWorkers] = useState<WorkerForWork[]>([]);
+  const [existingWorkers, setExistingWorkers] = useState<any[]>([]);
   const [selectedExistingWorker, setSelectedExistingWorker] = useState<string>("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -141,7 +141,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     if (open && workerMode === "existing") {
       const loadExistingWorkers = async () => {
         try {
-          const workers = await getWorkersForWork(workId);
+          const workers = await getActiveWorkforce();
           setExistingWorkers(workers);
         } catch (error) {
           console.error("Error loading existing workers:", error);

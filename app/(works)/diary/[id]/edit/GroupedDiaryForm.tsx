@@ -91,29 +91,41 @@ export default function GroupedDiaryForm({
 
   console.log(setWorkHours);
 
-  // Get ALL workers from the work, regardless of workItemId
-  const allWorkWorkers = useMemo(() => {
-    const workersMap = new Map<string, WorkItemWorker>();
-
-    // Add ALL workers from ALL workItems for this work
-    workItems.forEach((workItem) => {
-      (workItem.workItemWorkers || []).forEach((worker) => {
-        // Include ALL workers with valid names (not undefined, not role types)
-        if (
-          worker.name &&
-          worker.name.trim() !== "" &&
-          worker.name !== "undefined"
-        ) {
-          // Use workerId + name combination as key to ensure unique workers
-          // This allows workers with same workerId but different names to both appear
-          const uniqueKey = `${worker.workerId}-${worker.name}`;
-          workersMap.set(uniqueKey, worker);
-        }
-      });
-    });
-
-    return Array.from(workersMap.values());
-  }, [workItems]);
+  // Get ALL workItemWorkers from the work using server action
+  const [allWorkWorkers, setAllWorkWorkers] = useState<WorkItemWorker[]>([]);
+  
+  // Load all workItemWorkers for this work
+  useEffect(() => {
+    const loadWorkItemWorkers = async () => {
+      try {
+        const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+        const workItemWorkerData = await getWorkItemWorkersForWork(diary.workId);
+        console.log("=== DEBUG GroupedDiaryForm - All workItemWorkers for work ===");
+        console.log("Work ID:", diary.workId);
+        console.log("WorkItemWorkers data:", workItemWorkerData);
+        
+        // Convert workItemWorker data to WorkItemWorker format
+        const convertedWorkers: WorkItemWorker[] = (workItemWorkerData || []).map(worker => ({
+          id: worker.id,
+          workerId: worker.workerId || 0,
+          workItemId: worker.workItemId || 0,
+          name: worker.name || "",
+          email: worker.email || "",
+          role: worker.role || "",
+          quantity: worker.quantity || 1,
+          avatarUrl: worker.avatarUrl || null,
+        }));
+        
+        setAllWorkWorkers(convertedWorkers);
+      } catch (error) {
+        console.error("Error loading workItemWorkers:", error);
+      }
+    };
+    
+    if (diary.workId) {
+      loadWorkItemWorkers();
+    }
+  }, [diary.workId]);
 
   // Initialize with ALL active work items by default (only on first load)
   const [hasInitialized, setHasInitialized] = useState(false);

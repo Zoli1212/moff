@@ -44,19 +44,36 @@ export async function addWorkerToRegistryAndAssign(
       throw new Error(`Már dolgozik ${name} nevű munkás ezen a munkán. Nem lehet ugyanazzal a névvel újat regisztrálni.`);
     }
 
-    // 1. Add worker to workforce registry
-    const newWorker = await prisma.workforceRegistry.create({
-      data: {
-        name,
-        email,
-        phone,
-        role: profession,
-        avatarUrl,
-        tenantEmail,
+    // 1. Check if worker already exists in workforce registry by name (case insensitive)
+    let existingWorkerInRegistry = await prisma.workforceRegistry.findFirst({
+      where: {
+        name: {
+          equals: name,
+          mode: 'insensitive'
+        },
+        tenantEmail: tenantEmail,
       },
     });
 
-    // 2. Find or create Worker record for this profession first
+    let newWorker;
+    if (!existingWorkerInRegistry) {
+      // Create new worker in workforce registry
+      newWorker = await prisma.workforceRegistry.create({
+        data: {
+          name,
+          email,
+          phone,
+          role: profession,
+          avatarUrl,
+          tenantEmail,
+        },
+      });
+    } else {
+      // Use existing worker from registry
+      newWorker = existingWorkerInRegistry;
+    }
+
+    // 2. Find or create Worker record for this profession
     let worker = await prisma.worker.findFirst({
       where: {
         workId,
@@ -66,7 +83,7 @@ export async function addWorkerToRegistryAndAssign(
     });
 
     if (!worker) {
-      // Create new Worker record for this profession with the first worker entry
+      // Create new Worker record for this profession
       const initialWorkerEntry = {
         workforceRegistryId: newWorker.id,
         name,

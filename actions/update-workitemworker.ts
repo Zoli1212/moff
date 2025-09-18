@@ -24,8 +24,17 @@ export async function updateWorkItemWorker(data: {
 
 export async function deleteWorkItemWorker(id: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
-  // tenantEmail existence already verified above if needed later
-  // Use deleteMany to avoid P2025 when the record is already gone
-  await prisma.workItemWorker.deleteMany({ where: { id } });
+  
+  console.log(`[deleteWorkItemWorker] Deleting workItemWorker with id: ${id}`);
+  
+  // Use delete instead of deleteMany to ensure only one specific record is deleted
+  const result = await prisma.workItemWorker.delete({ 
+    where: { 
+      id: id,
+      tenantEmail: tenantEmail // Add tenant safety
+    } 
+  });
+  
+  console.log(`[deleteWorkItemWorker] Successfully deleted workItemWorker:`, result);
   return { success: true } as const;
 }

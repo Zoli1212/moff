@@ -403,7 +403,11 @@ const WorkersSlotsSection: React.FC<Props> = ({
       }
 
       toast.success("Munkás regisztrálva és hozzárendelve!");
-      await refreshAssignments();
+      
+      // Reload assignments from server using the new server action
+      const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+      const workItemWorkerData = await getWorkItemWorkersForWork(workId);
+      setAssignments(workItemWorkerData || []);
     } catch (err) {
       console.error(err);
       toast.error("Hiba történt mentés közben.");
@@ -485,6 +489,22 @@ const WorkersSlotsSection: React.FC<Props> = ({
       toast.success("Hozzárendelés törölve!");
       setEditAssignment(null);
       await refreshAssignments();
+    } catch (err) {
+      console.error(err);
+      toast.error("Hiba történt törlés közben.");
+    }
+  };
+
+  // Simple delete function that only removes workItemWorker record
+  const handleDeleteWorkItemWorkerOnly = async (id: number) => {
+    try {
+      await deleteWorkItemWorker(id);
+      toast.success("Munkás eltávolítva!");
+      
+      // Reload assignments from server
+      const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+      const data = await getWorkItemWorkersForWork(workId);
+      setAssignments(data || []);
     } catch (err) {
       console.error(err);
       toast.error("Hiba történt törlés közben.");
@@ -638,20 +658,22 @@ const WorkersSlotsSection: React.FC<Props> = ({
                       return (
                         <div
                           key={`${role}-filled-${w.id}`}
-                          className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 cursor-pointer hover:bg-[#fafafa] w-full"
-                          onClick={() =>
-                            setEditAssignment({
-                              id: w.id,
-                              name: w.name ?? undefined,
-                              email: w.email ?? undefined,
-                              phone: w.phone ?? undefined,
-                              role: w.role ?? undefined,
-                              quantity: w.quantity ?? undefined,
-                              avatarUrl: w.avatarUrl ?? null,
-                            })
-                          }
+                          className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
                         >
-                          <div className="flex items-center gap-2">
+                          <div 
+                            className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
+                            onClick={() =>
+                              setEditAssignment({
+                                id: w.id,
+                                name: w.name ?? undefined,
+                                email: w.email ?? undefined,
+                                phone: w.phone ?? undefined,
+                                role: w.role ?? undefined,
+                                quantity: w.quantity ?? undefined,
+                                avatarUrl: w.avatarUrl ?? null,
+                              })
+                            }
+                          >
                             <Image
                               src={w.avatarUrl || "/worker.jpg"}
                               alt={w.name ?? ""}
@@ -663,8 +685,20 @@ const WorkersSlotsSection: React.FC<Props> = ({
                               {w.name}
                             </div>
                           </div>
-                          <div className="ml-auto text-[13px] text-[#555] truncate max-w-[55%]">
-                            {w.email || ""}
+                          <div className="flex items-center gap-2">
+                            <div className="text-[13px] text-[#555] truncate max-w-[120px]">
+                              {w.email || ""}
+                            </div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteWorkItemWorkerOnly(w.id);
+                              }}
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                              title="Munkás eltávolítása"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           </div>
                         </div>
                       );
