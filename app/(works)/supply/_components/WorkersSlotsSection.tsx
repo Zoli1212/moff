@@ -94,11 +94,13 @@ const WorkersSlotsSection: React.FC<Props> = ({
   );
   // Load assignments directly from workItemWorker table for this workId
   const [assignments, setAssignments] = useState<AssignmentEx[]>([]);
-  
+
   React.useEffect(() => {
     const loadWorkItemWorkers = async () => {
       try {
-        const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+        const { getWorkItemWorkersForWork } = await import(
+          "@/actions/get-workitemworkers-for-work"
+        );
         const data = await getWorkItemWorkersForWork(workId);
         console.log("=== DEBUG workItemWorkers for workId", workId, "===");
         console.log("Direct workItemWorker query result:", data);
@@ -108,7 +110,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         setAssignments([]);
       }
     };
-    
+
     loadWorkItemWorkers();
   }, [workId]);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -403,9 +405,11 @@ const WorkersSlotsSection: React.FC<Props> = ({
       }
 
       toast.success("Munkás regisztrálva és hozzárendelve!");
-      
+
       // Reload assignments from server using the new server action
-      const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+      const { getWorkItemWorkersForWork } = await import(
+        "@/actions/get-workitemworkers-for-work"
+      );
       const workItemWorkerData = await getWorkItemWorkersForWork(workId);
       setAssignments(workItemWorkerData || []);
     } catch (err) {
@@ -500,14 +504,48 @@ const WorkersSlotsSection: React.FC<Props> = ({
     try {
       await deleteWorkItemWorker(id);
       toast.success("Munkás eltávolítva!");
-      
+
       // Reload assignments from server
-      const { getWorkItemWorkersForWork } = await import("@/actions/get-workitemworkers-for-work");
+      const { getWorkItemWorkersForWork } = await import(
+        "@/actions/get-workitemworkers-for-work"
+      );
       const data = await getWorkItemWorkersForWork(workId);
       setAssignments(data || []);
     } catch (err) {
       console.error(err);
       toast.error("Hiba történt törlés közben.");
+    }
+  };
+
+  // State to manage dynamic slot counts per role
+  const [extraSlots, setExtraSlots] = useState<Record<string, number>>({});
+  const [reducedSlots, setReducedSlots] = useState<Record<string, number>>({});
+
+  // Handle adding extra slots for a role
+  const handleAddSlot = (role: string) => {
+    setExtraSlots(prev => ({
+      ...prev,
+      [role]: (prev[role] || 0) + 1
+    }));
+  };
+
+  // Handle removing empty slots dynamically
+  const handleRemoveEmptySlot = (role: string, slotIndex: number) => {
+    const currentExtra = extraSlots[role] || 0;
+    const currentReduced = reducedSlots[role] || 0;
+    
+    if (currentExtra > 0) {
+      // First remove extra slots
+      setExtraSlots(prev => ({
+        ...prev,
+        [role]: Math.max(0, currentExtra - 1)
+      }));
+    } else {
+      // Then allow reducing original required slots (temporarily)
+      setReducedSlots(prev => ({
+        ...prev,
+        [role]: currentReduced + 1
+      }));
     }
   };
 
@@ -625,7 +663,10 @@ const WorkersSlotsSection: React.FC<Props> = ({
           //   typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
           // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
           const assignedCount = list.length;
-          const slotCount = Math.max(required, assignedCount);
+          const extraSlotCount = extraSlots[role] || 0;
+          const reducedSlotCount = reducedSlots[role] || 0;
+          const effectiveRequired = Math.max(0, required - reducedSlotCount);
+          const slotCount = Math.max(effectiveRequired, assignedCount) + extraSlotCount;
           const slotArray = Array.from({ length: slotCount });
           return (
             <div key={role}>
@@ -648,6 +689,15 @@ const WorkersSlotsSection: React.FC<Props> = ({
                     <div className="font-semibold text-[14px] text-[#222]">
                       {list.length} / {required}
                     </div>
+                    <button
+                      onClick={() => {
+                        handleAddSlot(role);
+                      }}
+                      className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
+                      title="Slot hozzáadása"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 mt-2">
@@ -660,7 +710,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           key={`${role}-filled-${w.id}`}
                           className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
                         >
-                          <div 
+                          <div
                             className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
                             onClick={() =>
                               setEditAssignment({
@@ -717,6 +767,17 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           title={role}
                         >
                           <Plus className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Remove this empty slot from view
+                            handleRemoveEmptySlot(role, idx);
+                          }}
+                          className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
+                          title="Üres slot eltávolítása"
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     );
