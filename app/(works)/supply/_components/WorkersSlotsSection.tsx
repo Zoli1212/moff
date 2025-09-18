@@ -269,7 +269,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
     for (const role of roles)
       out[role] = (bestInProg[role] ?? bestAny[role])?.id;
     return out;
-  }, [workItems, activeWorkItemIds, workers, showAllWorkItems]);
+  }, [workItems, activeWorkItemIds, workers]);
 
   // Denominator for the header: from the BEST work item per role only.
   // Sum quantities of null-email WorkItemWorkers that belong to that role.
@@ -534,7 +534,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
   };
 
   // Handle removing empty slots dynamically
-  const handleRemoveEmptySlot = (role: string, slotIndex: number) => {
+  const handleRemoveEmptySlot = (role: string) => {
     const currentExtra = extraSlots[role] || 0;
     const currentReduced = reducedSlots[role] || 0;
     
@@ -783,7 +783,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           onClick={(e) => {
                             e.stopPropagation();
                             // Remove this empty slot from view
-                            handleRemoveEmptySlot(role, idx);
+                            handleRemoveEmptySlot(role);
                           }}
                           className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
                           title="Üres slot eltávolítása"

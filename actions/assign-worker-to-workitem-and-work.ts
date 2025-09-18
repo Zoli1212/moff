@@ -131,6 +131,6 @@ export async function assignWorkerToWorkItemAndWork(
     return workItemWorker;
   } catch (error) {
     console.error("Error assigning worker:", error);
-    throw new Error("Failed to assign worker to work item and work");
+    throw new Error("Már van ilyen nevű munkás ezen a munkán");
   }
 }

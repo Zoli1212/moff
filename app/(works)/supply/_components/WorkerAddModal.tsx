@@ -16,7 +16,7 @@ interface WorkerAddModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   workId: number;
-  workItems: WorkItem[];
+  workItems?: WorkItem[]; // Made optional since not used
   professions: string[];
   onSubmit: (data: {
     name: string;
@@ -112,23 +112,25 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   open,
   onOpenChange,
   workId,
-  workItems,
   professions,
   onSubmit,
-  lockedProfession,
-  lockedWorkItemId,
-  showAllWorkItems = false,
+  lockedProfession
 }) => {
   const [workerMode, setWorkerMode] = useState<"new" | "existing">("new");
-  const [existingWorkers, setExistingWorkers] = useState<any[]>([]);
+  const [existingWorkers, setExistingWorkers] = useState<Array<{
+    id: number;
+    name?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    role?: string;
+    avatarUrl?: string | null;
+  }>>([]);
   const [selectedExistingWorker, setSelectedExistingWorker] = useState<string>("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [profession, setProfession] = useState(lockedProfession ?? "");
-  const [workItemId, setWorkItemId] = useState<number | string | "">(
-    lockedWorkItemId ?? ""
-  );
+  // workItemId is always null in current implementation
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
@@ -169,7 +171,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       }
 
       // Always use null for workItemId
-      const finalWorkItemId = null;
 
       setLoading(true);
       try {
@@ -184,7 +185,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
         // Reset form on success
         setSelectedExistingWorker("");
-        setWorkItemId("");
         onOpenChange(false);
       } catch (error) {
         console.error("Error assigning existing worker:", error);
@@ -196,7 +196,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       // Handle new worker creation
       const finalProfession = lockedProfession || profession;
       // Always use null for workItemId
-      const finalWorkItemId = null;
 
       if (!name || !finalProfession) {
         toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
@@ -219,7 +218,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         setEmail("");
         setPhone("");
         setProfession("");
-        setWorkItemId("");
         setAvatarUrl("");
         setAvatarPreview("");
         setAvatarError("");
@@ -261,10 +259,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   // Reset/initialize when modal opens (handle locks)
   useEffect(() => {
     if (open) {
-      // Always default to "new" mode
-      setWorkerMode("new");
+      // Only set default mode when first opening, don't override user selection
       setProfession(lockedProfession ?? "");
-      setWorkItemId(lockedWorkItemId ?? "");
       setSelectedExistingWorker("");
     } else {
       // clear fields on close
@@ -273,7 +269,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setEmail("");
       setPhone("");
       setProfession("");
-      setWorkItemId("");
       setAvatarUrl("");
       setAvatarPreview("");
       setAvatarError("");
@@ -281,7 +276,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setSelectedExistingWorker("");
       setExistingWorkers([]);
     }
-  }, [open, lockedProfession, lockedWorkItemId, existingWorkers.length]);
+  }, [open, lockedProfession]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
