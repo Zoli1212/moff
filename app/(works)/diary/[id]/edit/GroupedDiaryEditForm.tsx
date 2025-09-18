@@ -77,10 +77,6 @@ export default function GroupedDiaryEditForm({
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // Get active work items (in progress)
-  const activeWorkItems = useMemo(() => {
-    return workItems.filter((item) => item.inProgress === true);
-  }, [workItems]);
 
   // Check if current user is tenant
   const currentEmail = useMemo(
@@ -207,7 +203,7 @@ export default function GroupedDiaryEditForm({
   // Initialize form data from existing diary
   useEffect(() => {
     // Check if diary has groupNo property (from GoogleCalendarView grouping)
-    const diaryGroupNo = (diary as any).groupNo;
+    const diaryGroupNo = (diary as WorkDiaryWithItem & { groupNo?: number }).groupNo;
     
     // Filter workDiaryItems by groupNo if groupNo exists
     const filteredItems = diaryGroupNo 
@@ -764,7 +760,7 @@ export default function GroupedDiaryEditForm({
                           min="0"
                           max="24"
                           step="0.5"
-                          value={workerHours.get(worker.id) || workHours}
+                          value={workerHours.get(worker.id) || ""}
                           onChange={(e) =>
                             updateWorkerHours(
                               worker.id,

@@ -2,7 +2,6 @@
 import {
   getOrCreateWorkDiaryForWork,
   createWorkDiaryItem,
-  deleteWorkDiaryItemsByGroup,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import { Button } from "@/components/ui/button";
@@ -10,12 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, X, Plus, Users, User, Trash2 } from "lucide-react";
+import { Calendar, X, Plus, Users, User } from "lucide-react";
+import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
 import {
   updateGroupApproval,
-  getGroupApprovalStatus,
 } from "@/actions/group-approval-actions";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
@@ -49,10 +48,9 @@ export default function GroupedDiaryForm({
     GroupedWorkItem[]
   >([]);
   const [selectedWorkers, setSelectedWorkers] = useState<WorkItemWorker[]>([]);
-  const [workHours, setWorkHours] = useState<number>(8); // Default 8 hours
-  const [workerHours, setWorkerHours] = useState<Map<number, number>>(
+  const [workerHours, setWorkerHours] = useState<Map<string, number>>(
     new Map()
-  ); // Individual worker hours
+  ); // Individual worker hours by name
   const [showWorkerModal, setShowWorkerModal] = useState(false);
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -62,38 +60,16 @@ export default function GroupedDiaryForm({
   const [originalCompletedQuantities, setOriginalCompletedQuantities] =
     useState<Map<number, number>>(new Map());
 
-  // Group approval state
-  const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
-    allApproved: boolean;
-    someApproved: boolean;
-    totalItems: number;
-    approvedItems: number;
-  } | null>(null);
-  const [groupApprovalLoading, setGroupApprovalLoading] = useState(false);
   const [pendingApprovalChange, setPendingApprovalChange] = useState<
     boolean | null
   >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Get active work items (in progress)
   const activeWorkItems = useMemo(() => {
     return workItems.filter((item) => item.inProgress === true);
   }, [workItems]);
 
-  // Check if current user is tenant
-  const currentEmail = useMemo(
-    () => user?.emailAddresses?.[0]?.emailAddress || "",
-    [user]
-  );
-  const isTenant = useMemo(() => {
-    const a = (currentEmail || "").toLowerCase();
-    const b = (diary?.tenantEmail || "").toLowerCase();
-    return !!a && !!b && a === b;
-  }, [currentEmail, diary?.tenantEmail]);
-
-  console.log(setWorkHours);
 
   // Get ALL workItemWorkers from the work using server action
   const [allWorkWorkers, setAllWorkWorkers] = useState<WorkItemWorker[]>([]);
@@ -189,44 +165,6 @@ export default function GroupedDiaryForm({
 
   // No group approval loading needed in create mode
 
-  const loadGroupApprovalStatus = async (groupNo: number) => {
-    try {
-      setGroupApprovalLoading(true);
-      const result = await getGroupApprovalStatus(groupNo);
-      if (result.success) {
-        setGroupApprovalStatus({
-          allApproved: result.allApproved || false,
-          someApproved: result.someApproved || false,
-          totalItems: result.totalItems || 0,
-          approvedItems: result.approvedItems || 0,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to load group approval status:", error);
-    } finally {
-      setGroupApprovalLoading(false);
-    }
-  };
-
-  const handleGroupApprovalToggle = () => {
-    if (!groupApprovalStatus) return;
-
-    // Just toggle the local state, don't call server action immediately
-    const newApprovalState = !groupApprovalStatus.allApproved;
-    setPendingApprovalChange(newApprovalState);
-
-    // Update local display state
-    setGroupApprovalStatus((prev) =>
-      prev
-        ? {
-            ...prev,
-            allApproved: newApprovalState,
-            someApproved: newApprovalState ? false : prev.someApproved,
-            approvedItems: newApprovalState ? prev.totalItems : 0,
-          }
-        : null
-    );
-  };
 
   // No form data initialization needed in create mode - start with empty form
 
@@ -281,11 +219,11 @@ export default function GroupedDiaryForm({
   //   setSelectedGroupedItems(prev => [...prev, ...newItems]);
   // };
 
-  const removeWorker = (workerId: number) => {
-    setSelectedWorkers((prev) => prev.filter((w) => w.workerId !== workerId));
+  const removeWorker = (workerName: string) => {
+    setSelectedWorkers((prev) => prev.filter((w) => w.name !== workerName));
     setWorkerHours((prev) => {
       const newMap = new Map(prev);
-      newMap.delete(workerId);
+      newMap.delete(workerName);
       return newMap;
     });
   };
@@ -314,12 +252,12 @@ export default function GroupedDiaryForm({
     ) {
       setSelectedWorkers((prev) => [...prev, worker]);
       // Initialize with 8 hours for new workers
-      setWorkerHours((prev) => new Map(prev.set(worker.workerId, 8)));
+      setWorkerHours((prev) => new Map(prev.set(worker.name || "", 8)));
     }
   };
 
-  const updateWorkerHours = (workerId: number, hours: number) => {
-    setWorkerHours((prev) => new Map(prev.set(workerId, hours)));
+  const updateWorkerHours = (workerName: string, hours: number) => {
+    setWorkerHours((prev) => new Map(prev.set(workerName, hours)));
   };
 
   const updateProgress = (workItemId: number, completedQuantity: number) => {
@@ -407,7 +345,7 @@ export default function GroupedDiaryForm({
       const promises: Promise<unknown>[] = [];
 
       for (const worker of selectedWorkers) {
-        const workerTotalHours = workerHours.get(worker.workerId) || workHours;
+        const workerTotalHours = workerHours.get(worker.name || "") || 8;
 
         // Calculate progress changes by comparing current values with original values
         const progressChanges = selectedGroupedItems.map((item) => {
@@ -670,10 +608,10 @@ export default function GroupedDiaryForm({
                           min="0"
                           max="24"
                           step="0.5"
-                          value={workerHours.get(worker.workerId) || workHours}
+                          value={workerHours.get(worker.name || "") || ""}
                           onChange={(e) =>
                             updateWorkerHours(
-                              worker.workerId,
+                              worker.name || "",
                               parseFloat(e.target.value) || 0
                             )
                           }
@@ -686,7 +624,7 @@ export default function GroupedDiaryForm({
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeWorker(worker.workerId)}
+                        onClick={() => removeWorker(worker.name || "")}
                         className="text-red-500 hover:text-red-700 p-1"
                       >
                         <X className="h-4 w-4" />
@@ -1060,12 +998,14 @@ export default function GroupedDiaryForm({
         <div className="space-y-2">
           <Label>Képek feltöltése</Label>
           <div className="flex flex-wrap gap-3 items-center">
-            {images.map((img, idx) => (
+            {images.map((img, index) => (
               <div key={img} className="relative group">
-                <img
+                <Image
                   src={img}
-                  alt={`napló kép ${idx + 1}`}
-                  className="w-20 h-20 object-cover rounded shadow"
+                  alt={`Kép ${index + 1}`}
+                  width={80}
+                  height={80}
+                  className="object-cover rounded-lg border"
                 />
                 <button
                   type="button"
