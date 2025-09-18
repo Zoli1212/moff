@@ -750,3 +750,21 @@ a gombóc nagyon hátul van
 kép
 README kitörölt naplóbejegyzés sortörések el elválasztva a munkások Monogram ponttal
 képek 
+----
+Dátum probléma
+Nem kell munkafázishoz rakni,
+rajta marad a munkástipus
+nincs törlés
+kis kuka és leveszi a workItemről
+ha olyan munkások vannak ha ne elegendő
+mindenképpen jelenjen meg a munkás
+uj munkafázis + munkástipus
+burkolás 2
+létező mutatja hogy ki tudom tölteni
+akkor is megmaradjon!
+automatikusan nem törlődnek
+fázisok at eltűnnek
+progressz
+progressz globálison
+
+----

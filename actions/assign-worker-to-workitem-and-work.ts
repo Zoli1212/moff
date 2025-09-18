@@ -42,9 +42,9 @@ export async function assignWorkerToWorkItemAndWork(
       },
     });
 
-    if (existingWorkerWithSameNameAndWorkItem) {
-      throw new Error(`Már dolgozik ${name} nevű munkás ezen a munkafázison. Nem lehet ugyanazzal a névvel újat regisztrálni ugyanarra a fázisra.`);
-    }
+    // if (existingWorkerWithSameNameAndWorkItem) {
+    //   throw new Error(`Már dolgozik ${name} nevű munkás ezen a munkafázison. Nem lehet ugyanazzal a névvel újat regisztrálni ugyanarra a fázisra.`);
+    // }
 
     // 1. Add to workItemWorkers table
     const workItemWorker = await prisma.workItemWorker.create({
