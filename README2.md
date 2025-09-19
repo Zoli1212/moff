@@ -766,5 +766,38 @@ automatikusan nem törlődnek
 fázisok at eltűnnek
 progressz
 progressz globálison
+-----
+1 tizedesre kerekítünk
+default munkások
+tenant nál ha elfogadom vissza
+string stb expected pattern
+több képet lehessen kijelölni
+kép feltöltés asszinkron (interface)
+CSOPORTOS szót min
+IKON t cseréljük
+CSOPORTOS elfogadás nem kell a CSOPORTOS szó
+Gombok kisebb label
+régi progress megmarad ha mindent kitörlünk progress
+ha nincs naplóbejegyzés akkor 0
+zöld az elfogadott napló + pipa + narancssárga saját narancssárga
 
 ----
+ÖSSZESíTŐ adatok
+hány órát dolgoztak az emberek összesítő nézet mennyit vettek fel milyen mennyiséget
+---
+visszajönnek szakmát
+---
+tenant safe legyen az összes munkás
+---
+kőműves 
+és jelnenjen meg
+----
+jelenjen meg a fő fázis ban az uj szakma (kőműves)
+
+--
+regisztrációban registry ben BUG István felvette a dolgozót de nincs a regisztrációban
+--
+mindig legyen általános munkafázis
+---
+képgaléria jó megoldása
+---

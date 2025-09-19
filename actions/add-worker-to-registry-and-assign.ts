@@ -163,6 +163,6 @@ export async function addWorkerToRegistryAndAssign(
     return { worker: newWorker, workItemWorker };
   } catch (error) {
     console.error("Error adding worker to registry and assigning:", error);
-    throw new Error("Failed to add worker to registry and assign to work item");
+    throw new Error("Hiba munkás regisztráció során során");
   }
 }

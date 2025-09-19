@@ -360,53 +360,17 @@ const WorkersSlotsSection: React.FC<Props> = ({
       // Always set workItemId to null - workers are assigned to work, not specific workItems
       const workItemId = null;
 
-      // Check if a worker with this email already exists in the workforce
-      const workforce = await getWorkforce();
-      const existingWorker = workforce.find((w) => w.email === data.email);
-      if (existingWorker) {
-        // Worker exists in workforce registry, but we need to find or create Worker record
-        // Find existing Worker record for this profession
-        const workerRecord = workers.find((w) => w.name === data.profession);
-
-        if (workerRecord) {
-          // Worker record exists, use its ID for assignment
-          await assignWorkerToWorkItemAndWork({
-            workId,
-            workItemId, // Always null
-            workerId: workerRecord.id, // Use Worker.id, not workforceRegistry.id
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            profession: data.profession,
-            avatarUrl: data.avatarUrl,
-            quantity: 1,
-          });
-        } else {
-          // Worker record doesn't exist for this profession, create it first
-          await addWorkerToRegistryAndAssign({
-            workId,
-            workItemId, // Always null
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            profession: data.profession,
-            avatarUrl: data.avatarUrl,
-            quantity: 1,
-          });
-        }
-      } else {
-        // Worker doesn't exist, add to workforce first then assign
-        await addWorkerToRegistryAndAssign({
-          workId,
-          workItemId, // Always null
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          profession: data.profession,
-          avatarUrl: data.avatarUrl,
-          quantity: 1,
-        });
-      }
+      // Always use addWorkerToRegistryAndAssign - let server decide about duplicates
+      await addWorkerToRegistryAndAssign({
+        workId,
+        workItemId, // Always null
+        name: data.name,
+        email: data.email,
+        phone: data.phone,
+        profession: data.profession,
+        avatarUrl: data.avatarUrl,
+        quantity: 1,
+      });
 
       toast.success("Munkás regisztrálva és hozzárendelve!");
 
@@ -418,7 +382,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
       setAssignments(workItemWorkerData || []);
     } catch (err) {
       console.error(err);
-      toast.error("Hiba történt mentés közben.");
+      const errorMessage = err instanceof Error ? err.message : "Hiba történt mentés közben.";
+      toast.error(errorMessage);
     }
   };
 

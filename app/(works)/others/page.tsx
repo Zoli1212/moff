@@ -1,22 +1,23 @@
 import React from 'react'
-import { getAllWorkersAcrossTenants } from '@/actions/get-all-workers-across-tenants'
-import WorkersListClient from './_components/WorkersListClient'
+import { getAllWorkforceRegistry } from '@/actions/workforce-registry-actions'
+import WorkforceRegistryClient from './_components/WorkforceRegistryClient'
+
 
 export default async function OthersPage() {
-  const workers = await getAllWorkersAcrossTenants()
+  const workforceRegistry = await getAllWorkforceRegistry()
 
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Munkások Kezelése
+          Munkásregiszter Kezelése
         </h1>
         <p className="text-gray-600">
-          Az összes tenant munkásainak áttekintése és kezelése
+          A munkásregiszter áttekintése és kezelése - hozzáadás, módosítás, törlés, aktív/inaktív státusz
         </p>
       </div>
       
-      <WorkersListClient workers={workers} />
+      <WorkforceRegistryClient workforceRegistry={workforceRegistry} />
     </div>
   )
 }
