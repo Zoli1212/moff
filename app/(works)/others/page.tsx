@@ -2,6 +2,8 @@ import React from 'react'
 import { getAllWorkforceRegistry } from '@/actions/workforce-registry-actions'
 import WorkforceRegistryClient from './_components/WorkforceRegistryClient'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 
 export default async function OthersPage() {
   const workforceRegistry = await getAllWorkforceRegistry()
