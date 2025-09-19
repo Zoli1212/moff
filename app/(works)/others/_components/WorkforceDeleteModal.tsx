@@ -31,6 +31,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
         toast.error(result.error || 'Hiba történt a munkás törlése során')
       }
     } catch (error) {
+      console.log((error as Error).message)
       toast.error('Hiba történt a munkás törlése során')
     } finally {
       setIsLoading(false)

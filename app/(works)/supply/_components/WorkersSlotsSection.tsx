@@ -12,13 +12,11 @@ import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
-import { getWorkforce } from "@/actions/workforce-actions";
 import { getWorkItemsWithWorkers } from "@/actions/work-actions";
 import {
   updateWorkItemWorker,
   deleteWorkItemWorker,
 } from "@/actions/update-workitemworker";
-import { assignWorkerToWorkItemAndWork } from "@/actions/assign-worker-to-workitem-and-work";
 import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-and-assign";
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";

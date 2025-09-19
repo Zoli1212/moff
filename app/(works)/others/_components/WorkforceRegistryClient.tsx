@@ -20,8 +20,7 @@ import {
   Calendar,
   CheckCircle,
   XCircle,
-  UserCheck,
-  UserX
+  UserCheck
 } from 'lucide-react'
 import { WorkforceRegistryData, toggleWorkforceRegistryActive, toggleWorkforceRegistryAvailability } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
@@ -82,7 +81,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
       } else {
         toast.error(result.error || 'Hiba történt')
       }
-    } catch (error) {
+    } catch {
       toast.error('Hiba történt a státusz módosítása során')
     }
   }
@@ -102,7 +101,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
       } else {
         toast.error(result.error || 'Hiba történt')
       }
-    } catch (error) {
+    } catch {
       toast.error('Hiba történt az elérhetőség módosítása során')
     }
   }
@@ -238,7 +237,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
               <select
                 id="status"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Minden státusz</option>
@@ -251,7 +250,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
               <select
                 id="availability"
                 value={availabilityFilter}
-                onChange={(e) => setAvailabilityFilter(e.target.value as any)}
+                onChange={(e) => setAvailabilityFilter(e.target.value as 'all' | 'available' | 'unavailable')}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="all">Minden elérhetőség</option>

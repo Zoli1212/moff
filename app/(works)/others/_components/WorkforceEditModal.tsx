@@ -77,6 +77,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
         toast.error(result.error || 'Hiba történt a munkás frissítése során')
       }
     } catch (error) {
+        console.log((error as Error).message)
       toast.error('Hiba történt a munkás frissítése során')
     } finally {
       setIsLoading(false)

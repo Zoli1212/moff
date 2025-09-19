@@ -40,18 +40,18 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
     try {
       const dataToSubmit = {
         ...formData,
-        hiredDate: formData.hiredDate ? new Date(formData.hiredDate) : undefined,
-        leftDate: formData.leftDate ? new Date(formData.leftDate) : undefined,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        contactInfo: formData.contactInfo || undefined,
-        notes: formData.notes || undefined,
-        avatarUrl: formData.avatarUrl || undefined
+        hiredDate: formData.hiredDate ? new Date(formData.hiredDate) : null,
+        leftDate: formData.leftDate ? new Date(formData.leftDate) : null,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        contactInfo: formData.contactInfo || null,
+        notes: formData.notes || null,
+        avatarUrl: formData.avatarUrl || null
       }
 
       const result = await createWorkforceRegistry(dataToSubmit)
       
-      if (result.success) {
+      if (result.success && result.data) {
         toast.success('Munkás sikeresen hozzáadva')
         onWorkerAdded(result.data)
         handleClose()
@@ -59,6 +59,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
         toast.error(result.error || 'Hiba történt a munkás hozzáadása során')
       }
     } catch (error) {
+      console.log((error as Error).message)
       toast.error('Hiba történt a munkás hozzáadása során')
     } finally {
       setIsLoading(false)
