@@ -241,17 +241,25 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
     }
   };
 
+  // Get available roles from workers list
+  const availableRoles = useMemo(() => {
+    const roles = workers
+      .map(w => w.name)
+      .filter((name): name is string => Boolean(name))
+      .filter((name, index, arr) => arr.indexOf(name) === index) // Remove duplicates
+      .sort((a, b) => a.localeCompare(b, "hu"));
+    return roles;
+  }, [workers]);
+
   const professionsForSelected = useMemo(() => {
-    // Always allow all professions since workItemId is always null
-    let options = professions.sort((a, b) => a.localeCompare(b, "hu"));
-    
-    // If profession is locked, restrict to only that one (if present)
+    // If profession is locked (slot-based), use only that profession
     if (lockedProfession) {
-      options = options.filter((p) => p === lockedProfession);
+      return professions.filter((p) => p === lockedProfession);
     }
     
-    return options;
-  }, [professions, lockedProfession]);
+    // If not locked (top + button), use availableRoles like "Meglévő munkás" tab
+    return availableRoles.sort((a, b) => a.localeCompare(b, "hu"));
+  }, [professions, lockedProfession, availableRoles]);
 
   // Keep profession consistent with the available options
   useEffect(() => {
@@ -288,16 +296,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setExistingWorkers([]);
     }
   }, [open, lockedProfession]);
-
-  // Get available roles from workers list
-  const availableRoles = useMemo(() => {
-    const roles = workers
-      .map(w => w.name)
-      .filter((name): name is string => Boolean(name))
-      .filter((name, index, arr) => arr.indexOf(name) === index) // Remove duplicates
-      .sort((a, b) => a.localeCompare(b, "hu"));
-    return roles;
-  }, [workers]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

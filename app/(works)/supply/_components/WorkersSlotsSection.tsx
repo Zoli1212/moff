@@ -332,6 +332,45 @@ const WorkersSlotsSection: React.FC<Props> = ({
     return [];
   }, [requiredPerProfession, workers, showAllWorkItems]);
 
+  // ALL worker types from the entire work (including inactive ones)
+  const allProfessionsFromWork = useMemo(() => {
+    const allRoles = new Set<string>();
+    
+    // Add roles from all workItems (not just active ones)
+    for (const wi of workItems) {
+      // From workItemWorkers
+      for (const wiw of wi.workItemWorkers ?? []) {
+        const worker = workers.find((w) => w.id === wiw.workerId);
+        if (worker) {
+          const role = worker.name || "Ismeretlen";
+          allRoles.add(role);
+        }
+      }
+
+      // From requiredProfessionals if available
+      const requiredProfs = getRequiredProfessionals(wi);
+      for (const rp of requiredProfs) {
+        if (rp.type) {
+          allRoles.add(rp.type);
+        }
+      }
+    }
+
+    // Add roles from workers list
+    for (const w of workers) {
+      const role = w.name || "Ismeretlen";
+      allRoles.add(role);
+    }
+
+    return Array.from(allRoles).sort((a, b) => a.localeCompare(b, "hu"));
+  }, [workItems, workers]);
+
+  // Inactive professions (not in active professions)
+  const inactiveProfessions = useMemo(() => {
+    const activeProfessionsSet = new Set(professions);
+    return allProfessionsFromWork.filter(role => !activeProfessionsSet.has(role));
+  }, [allProfessionsFromWork, professions]);
+
   const refreshAssignments = async () => {
     try {
       const items = await getWorkItemsWithWorkers(workId);
@@ -566,7 +605,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         workId={workId}
         onSubmit={handleAdd}
         workItems={workItems}
-        professions={professions}
+        professions={addLock?.role ? professions : allProfessionsFromWork} // Use all professions when not locked to specific role
         workers={workers}
         lockedProfession={addLock?.role}
         lockedWorkItemId={addLock?.workItemId}
@@ -762,6 +801,147 @@ const WorkersSlotsSection: React.FC<Props> = ({
             </div>
           );
             })}
+
+            {/* Separator and inactive worker types section */}
+            {inactiveProfessions.length > 0 && (
+              <>
+                <div className="my-6 border-t border-gray-300 relative">
+                  <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-gray-500 font-medium">
+                    Nem aktív munkafázisok
+                  </div>
+                </div>
+
+                {inactiveProfessions.map((role) => {
+                  const list = grouped[role] || []; // Show all assignments for this role
+                  const assignedCount = list.length;
+                  const extraSlotCount = extraSlots[role] || 0;
+                  const reducedSlotCount = reducedSlots[role] || 0;
+                  // For inactive roles, we don't have required count, so just show assigned workers + extra slots
+                  const slotCount = Math.max(1, assignedCount) + extraSlotCount - reducedSlotCount;
+                  const slotArray = Array.from({ length: Math.max(0, slotCount) });
+
+                  return (
+                    <div key={`inactive-${role}`}>
+                      <div className="bg-[#f0f0f0] rounded-lg font-medium text-[15px] text-[#666] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 opacity-75">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex-1 font-semibold flex items-center gap-2">
+                            {role}
+                            <span className="text-xs text-gray-400">(nem aktív)</span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveRole(role);
+                              }}
+                              className="text-red-500 hover:text-red-700"
+                              title={`${role} eltávolítása munkafázisból`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                          <div className="flex items-center gap-2 ml-auto">
+                            <div className="font-semibold text-[14px] text-[#444]">
+                              {list.length}
+                            </div>
+                            <button
+                              onClick={() => {
+                                handleAddSlot(role);
+                              }}
+                              className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
+                              title="Slot hozzáadása"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 mt-2">
+                          {slotArray.map((_, idx) => {
+                            const w = list[idx] as AssignmentEx | undefined;
+                            const hasData = !!(w && (w.name || w.email));
+                            if (hasData) {
+                              return (
+                                <div
+                                  key={`${role}-inactive-filled-${w.id}`}
+                                  className="flex items-center bg-white rounded border border-[#ddd] px-3 py-2 w-full opacity-90"
+                                >
+                                  <div
+                                    className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
+                                    onClick={() =>
+                                      setEditAssignment({
+                                        id: w.id,
+                                        name: w.name ?? undefined,
+                                        email: w.email ?? undefined,
+                                        phone: w.phone ?? undefined,
+                                        role: w.role ?? undefined,
+                                        quantity: w.quantity ?? undefined,
+                                        avatarUrl: w.avatarUrl ?? null,
+                                      })
+                                    }
+                                  >
+                                    <Image
+                                      src={w.avatarUrl || "/worker.jpg"}
+                                      alt={w.name ?? ""}
+                                      width={28}
+                                      height={28}
+                                      className="rounded-full object-cover border border-[#ddd]"
+                                    />
+                                    <div className="text-[14px] text-[#444] font-medium">
+                                      {w.name}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="text-[13px] text-[#666] truncate max-w-[120px]">
+                                      {w.email || ""}
+                                    </div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteWorkItemWorkerOnly(w.id);
+                                      }}
+                                      className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                      title="Munkás eltávolítása"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <div
+                                key={`${role}-inactive-empty-${idx}`}
+                                className="flex items-center w-full"
+                              >
+                                <button
+                                  className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#bbb] text-[#444] bg-[#f8f8f8] hover:bg-[#f0f0f0] px-3 py-2"
+                                  onClick={() => {
+                                    setAddLock({ role, workItemId: undefined }); // Always undefined workItemId
+                                    setIsAddOpen(true);
+                                  }}
+                                  title={role}
+                                >
+                                  <Plus className="w-4 h-4" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Remove this empty slot from view
+                                    handleRemoveEmptySlot(role);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#bbb] bg-[#f8f8f8] hover:bg-red-50"
+                                  title="Üres slot eltávolítása"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </>
         )}
       </div>

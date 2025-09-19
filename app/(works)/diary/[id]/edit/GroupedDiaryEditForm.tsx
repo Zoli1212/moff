@@ -1309,7 +1309,7 @@ export default function GroupedDiaryEditForm({
                     Csoportos bejegyzés törlése
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Biztosan törölni szeretné ezt a csoportos napló bejegyzést?
+                    Biztosan törölni szeretné ezt a napló bejegyzést?
                   </p>
                 </div>
               </div>
