@@ -493,7 +493,7 @@ export default function GroupedDiaryForm({
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-800">
-            Csoportos napló bejegyzés
+            Napló bejegyzés
           </span>
         </div>
         {/* <Button
@@ -1060,7 +1060,7 @@ export default function GroupedDiaryForm({
                 AI frissítés...
               </div>
             ) : (
-              "Csoportos bejegyzés mentése"
+              "Bejegyzés mentése"
             )}
           </Button>
         </div>

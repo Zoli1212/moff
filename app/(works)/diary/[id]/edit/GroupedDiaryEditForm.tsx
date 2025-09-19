@@ -645,7 +645,7 @@ export default function GroupedDiaryEditForm({
         <div className="flex items-center gap-2">
           <Users className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-800">
-            Csoportos napló szerkesztése
+            Napló szerkesztése
           </span>
         </div>
         {/* <Button
@@ -1205,7 +1205,7 @@ export default function GroupedDiaryEditForm({
                     htmlFor="groupApproval"
                     className="text-sm font-medium text-gray-700"
                   >
-                    Csoportos jóváhagyás
+                    Jóváhagyás
                   </label>
                 </div>
                 <div className="flex items-center gap-2">
@@ -1261,7 +1261,7 @@ export default function GroupedDiaryEditForm({
                 ) : (
                   <div className="flex items-center gap-2">
                     <Trash2 className="h-4 w-4" />
-                    Csoportos bejegyzés törlése
+                    Bejegyzés törlése
                   </div>
                 )}
               </Button>
@@ -1306,7 +1306,7 @@ export default function GroupedDiaryEditForm({
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
-                    Csoportos bejegyzés törlése
+                    Bejegyzés törlése
                   </h3>
                   <p className="text-sm text-gray-500">
                     Biztosan törölni szeretné ezt a napló bejegyzést?
