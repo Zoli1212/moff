@@ -397,27 +397,39 @@ export default function GroupedDiaryEditForm({
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
     setImageError("");
     setImageUploading(true);
-    const formData = new FormData();
-    formData.append("file", file);
+    
     try {
-      const res = await fetch("/api/upload-avatar", {
-        method: "POST",
-        body: formData,
+      const uploadPromises = files.map(async (file) => {
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const res = await fetch("/api/upload-avatar", {
+          method: "POST",
+          body: formData,
+        });
+        const data = await res.json();
+        
+        if (data.url) {
+          return data.url;
+        } else {
+          throw new Error(data.error || "Hiba történt a feltöltésnél.");
+        }
       });
-      const data = await res.json();
-      if (data.url) {
-        setImages((prev) => [...prev, data.url]);
-      } else {
-        setImageError(data.error || "Hiba történt a feltöltésnél.");
-      }
+      
+      const uploadedUrls = await Promise.all(uploadPromises);
+      setImages((prev) => [...prev, ...uploadedUrls]);
+      
     } catch (err) {
       setImageError("Hiba a feltöltés során: " + (err as Error).message);
     } finally {
       setImageUploading(false);
+      // Reset the input value so the same files can be selected again
+      e.target.value = '';
     }
   };
 
@@ -625,7 +637,7 @@ export default function GroupedDiaryEditForm({
 
   return (
     <div className="space-y-4">
-      {/* Loading Overlay */}
+      {/* Loading Overlay - AI Processing */}
       {isSubmitting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
@@ -635,6 +647,21 @@ export default function GroupedDiaryEditForm({
             </div>
             <div className="text-sm text-gray-600">
               Napló bejegyzések feldolgozása...
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Loading Overlay - Image Upload */}
+      {imageUploading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            <div className="text-lg font-medium text-gray-800">
+              Képek feltöltése
+            </div>
+            <div className="text-sm text-gray-600">
+              Kérjük várjon, amíg a képek feltöltődnek...
             </div>
           </div>
         </div>
@@ -1172,15 +1199,13 @@ export default function GroupedDiaryEditForm({
               <Input
                 type="file"
                 accept="image/*"
+                multiple
                 className="hidden"
                 onChange={handleImageUpload}
                 disabled={imageUploading}
               />
             </label>
           </div>
-          {imageUploading && (
-            <div className="text-blue-600 text-xs mt-1">Feltöltés...</div>
-          )}
           {imageError && (
             <div className="text-red-600 text-xs mt-1">{imageError}</div>
           )}
