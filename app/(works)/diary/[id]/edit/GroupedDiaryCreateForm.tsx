@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import React, { useEffect, useMemo, useState } from "react";
-import { Calendar, X, Plus, Users, User } from "lucide-react";
+import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
@@ -491,7 +491,7 @@ export default function GroupedDiaryForm({
       {/* Mode Toggle */}
       <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
         <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-blue-600" />
+          <BookOpen className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-800">
             Napló bejegyzés
           </span>

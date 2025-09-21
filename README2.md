@@ -751,8 +751,6 @@ kép
 README kitörölt naplóbejegyzés sortörések el elválasztva a munkások Monogram ponttal
 képek 
 ----
-Dátum probléma
-Nem kell munkafázishoz rakni,
 rajta marad a munkástipus
 nincs törlés
 kis kuka és leveszi a workItemről
@@ -767,17 +765,14 @@ fázisok at eltűnnek
 progressz
 progressz globálison
 -----
-1 tizedesre kerekítünk
+1 tizedesre kerekítünk kerekítés
 default munkások
 tenant nál ha elfogadom vissza
 string stb expected pattern
 több képet lehessen kijelölni
 kép feltöltés asszinkron (interface)
-CSOPORTOS szót min
-IKON t cseréljük
-CSOPORTOS elfogadás nem kell a CSOPORTOS szó
-Gombok kisebb label
-régi progress megmarad ha mindent kitörlünk progress
+IKON t cseréljük kis jegyzetre az emberek helyett
+régi progress megmarad ha mindent kitörlünk progress, ezt meg kell gondolni useEffect
 ha nincs naplóbejegyzés akkor 0
 zöld az elfogadott napló + pipa + narancssárga saját narancssárga
 
@@ -789,15 +784,7 @@ visszajönnek szakmát
 ---
 tenant safe legyen az összes munkás
 ---
-kőműves 
-és jelnenjen meg
-----
-jelenjen meg a fő fázis ban az uj szakma (kőműves)
-
---
-regisztrációban registry ben BUG István felvette a dolgozót de nincs a regisztrációban
---
-mindig legyen általános munkafázis
----
 képgaléria jó megoldása
+többet lehessen kijelölni, a feltöltésig blokkoljon
+
 ---

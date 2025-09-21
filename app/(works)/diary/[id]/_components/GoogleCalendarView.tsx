@@ -39,7 +39,7 @@ interface GoogleCalendarViewProps {
   diaries: WorkDiaryWithItem[];
   onEventClick: (diary: WorkDiaryWithItem) => void;
   onDateClick?: (date: Date) => void;
-  workItems?: Array<{ id: number; name: string; }>;
+  workItems?: Array<{ id: number; name: string }>;
 }
 
 export default function GoogleCalendarView({
@@ -51,17 +51,20 @@ export default function GoogleCalendarView({
   // Group WorkDiaryItems by groupNo and create events for groups
   const events = React.useMemo(() => {
     const list: EventInput[] = [];
-    const groups = new Map<number, {
-      groupNo: number;
-      date: Date;
-      items: WorkDiaryItemDTO[];
-      diaryId: number;
-      workItemNames: string[];
-      workers: string[];
-      workerHours: Map<string, number>;
-      totalHours: number;
-      hasUnapproved: boolean;
-    }>();
+    const groups = new Map<
+      number,
+      {
+        groupNo: number;
+        date: Date;
+        items: WorkDiaryItemDTO[];
+        diaryId: number;
+        workItemNames: string[];
+        workers: string[];
+        workerHours: Map<string, number>;
+        totalHours: number;
+        hasUnapproved: boolean;
+      }
+    >();
 
     console.groupCollapsed("[Calendar] Build grouped events");
     console.log("Diaries count:", diaries?.length ?? 0);
@@ -71,20 +74,23 @@ export default function GoogleCalendarView({
       const items = d.workDiaryItems as WorkDiaryItemDTO[] | undefined;
       console.log("Diary:", d.id, "Items count:", items?.length ?? 0);
       if (!items || items.length === 0) continue;
-      
+
       for (const it of items) {
         console.log("Item:", it.id, "groupNo:", it.groupNo, "name:", it.name);
         // Only process items with valid groupNo
         if (it.groupNo != null && it.groupNo !== undefined) {
           const groupNo = it.groupNo;
-          
+
           if (!groups.has(groupNo)) {
             groups.set(groupNo, {
               groupNo,
               date: (() => {
                 // Handle date properly to avoid timezone shifts
-                const dateStr = typeof it.date === 'string' ? it.date : it.date.toISOString().split('T')[0];
-                return new Date(dateStr + 'T00:00:00');
+                const dateStr =
+                  typeof it.date === "string"
+                    ? it.date
+                    : it.date.toISOString().split("T")[0];
+                return new Date(dateStr + "T00:00:00");
               })(),
               items: [],
               diaryId: d.id,
@@ -95,27 +101,31 @@ export default function GoogleCalendarView({
               hasUnapproved: false,
             });
           }
-          
+
           const group = groups.get(groupNo)!;
           group.items.push(it);
-          
+
           // Check if this item is not accepted (jóváhagyva)
-          if (it.accepted === false || it.accepted === null || it.accepted === undefined) {
+          if (
+            it.accepted === false ||
+            it.accepted === null ||
+            it.accepted === undefined
+          ) {
             group.hasUnapproved = true;
           }
-          
+
           // Collect unique work item names based on workItemId from the item
-          const workItem = workItems.find(wi => wi.id === it.workItemId);
+          const workItem = workItems.find((wi) => wi.id === it.workItemId);
           if (workItem?.name && !group.workItemNames.includes(workItem.name)) {
             group.workItemNames.push(workItem.name);
           }
-          
+
           // Collect unique worker names and track their hours
           if (it.name) {
-            if (!group.workers.some(w => w === it.name)) {
+            if (!group.workers.some((w) => w === it.name)) {
               group.workers.push(it.name);
             }
-            
+
             // Sum work hours per worker
             if (it.workHours != null && !isNaN(Number(it.workHours))) {
               const hours = Number(it.workHours);
@@ -126,7 +136,11 @@ export default function GoogleCalendarView({
           }
         } else {
           // Skip individual events - only show grouped events
-          console.log("Skipping individual event for item:", it.id, "(no groupNo)");
+          console.log(
+            "Skipping individual event for item:",
+            it.id,
+            "(no groupNo)"
+          );
         }
       }
     }
@@ -139,11 +153,14 @@ export default function GoogleCalendarView({
       console.log("Dolgozók:", group.workers);
       console.log("Munkafázisok:", group.workItemNames);
       console.log("Összes munkaóra:", group.totalHours);
-      
+
       console.log("BEJEGYZÉSEK RÉSZLETESEN:");
       let calculatedTotal = 0;
       group.items.forEach((item, index) => {
-        const hours = item.workHours != null && !isNaN(Number(item.workHours)) ? Number(item.workHours) : 0;
+        const hours =
+          item.workHours != null && !isNaN(Number(item.workHours))
+            ? Number(item.workHours)
+            : 0;
         calculatedTotal += hours;
         console.log(`  ${index + 1}. Bejegyzés:`, {
           id: item.id,
@@ -167,7 +184,9 @@ export default function GoogleCalendarView({
         title: `Munkanapló`,
         start: group.date,
         allDay: true,
-        classNames: group.hasUnapproved ? ["grouped", "unapproved"] : ["grouped"], // Add unapproved class if needed
+        classNames: group.hasUnapproved
+          ? ["grouped", "unapproved"]
+          : ["grouped"], // Add unapproved class if needed
         extendedProps: {
           isGrouped: true,
           groupNo: group.groupNo,
@@ -181,7 +200,7 @@ export default function GoogleCalendarView({
           hasUnapproved: group.hasUnapproved,
         },
       };
-      
+
       list.push(ev);
     }
 
@@ -227,7 +246,7 @@ export default function GoogleCalendarView({
         eventContent={(arg) => {
           const p = arg.event.extendedProps || {};
           const viewType = arg.view.type; // 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay'
-          
+
           // Check if this is a grouped event
           if (p.isGrouped) {
             const groupData = p as {
@@ -240,54 +259,62 @@ export default function GoogleCalendarView({
             };
 
             // Create worker list with individual hours
-            const workersWithHours = groupData.workers.map(worker => {
+            const workersWithHours = groupData.workers.map((worker) => {
               const hours = groupData.workerHours?.get?.(worker) || 0;
               return `${worker} (${hours}h)`;
             });
 
             if (viewType === "dayGridMonth") {
               // Month view - compact format with monograms and line breaks
-              const workersCompact = groupData.workers.map(worker => {
+              const workersCompact = groupData.workers.map((worker) => {
                 const hours = groupData.workerHours?.get?.(worker) || 0;
                 const roundedHours = Math.round(hours);
                 // Get initials from worker name with dots (M. Z.)
-                const nameParts = worker.split(' ').filter(Boolean);
-                const initials = nameParts.map(part => part[0].toUpperCase() + '.').join(' ');
+                const nameParts = worker.split(" ").filter(Boolean);
+                const initials = nameParts
+                  .map((part) => part[0].toUpperCase() + ".")
+                  .join(" ");
                 return `${initials} ${roundedHours}h`;
               });
-              
+
               return (
                 <div className="fc-event-inner grouped-compact">
-                  <div style={{ whiteSpace: 'pre-line' }}>{workersCompact.join('\n')}</div>
+                  <div style={{ whiteSpace: "pre-line" }}>
+                    {workersCompact.join("\n")}
+                  </div>
                 </div>
               );
             }
 
             // Week view - compact format with monograms and line breaks
             if (viewType === "timeGridWeek") {
-              const workersCompact = groupData.workers.map(worker => {
+              const workersCompact = groupData.workers.map((worker) => {
                 const hours = groupData.workerHours?.get?.(worker) || 0;
                 const roundedHours = Math.round(hours);
                 // Get initials from worker name with dots (M. Z.)
-                const nameParts = worker.split(' ').filter(Boolean);
-                const initials = nameParts.map(part => part[0].toUpperCase() + '.').join(' ');
+                const nameParts = worker.split(" ").filter(Boolean);
+                const initials = nameParts
+                  .map((part) => part[0].toUpperCase() + ".")
+                  .join(" ");
                 return `${initials} ${roundedHours}h`;
               });
-              
+
               return (
                 <div className="fc-event-inner grouped-compact">
                   <div className="text-xs">
-                    <div style={{ whiteSpace: 'pre-line' }}>{workersCompact.join('\n')}</div>
+                    <div style={{ whiteSpace: "pre-line" }}>
+                      {workersCompact.join("\n")}
+                    </div>
                   </div>
                 </div>
               );
             }
 
             // Day view - detailed format like before
-            const workItemsLines = groupData.workItemNames.map((item, index) => (
-              <div key={index}>🔧 {item}</div>
-            ));
-            
+            const workItemsLines = groupData.workItemNames.map(
+              (item, index) => <div key={index}>🔧 {item}</div>
+            );
+
             return (
               <div className="fc-event-inner grouped-detailed">
                 <div className="text-xs">
@@ -306,18 +333,26 @@ export default function GoogleCalendarView({
             if (!n) return "";
             const parts = n.split(/\s+/).filter(Boolean);
             // Create initials with dots (M. Z.)
-            return parts.map(part => part[0].toUpperCase() + '.').join(' ');
+            return parts.map((part) => part[0].toUpperCase() + ".").join(" ");
           };
-          const hours = originalProps.workHours != null ? `${Math.round(originalProps.workHours)} óra` : "";
+          const hours =
+            originalProps.workHours != null
+              ? `${Math.round(originalProps.workHours)} óra`
+              : "";
 
           if (viewType === "dayGridMonth" || viewType === "timeGridWeek") {
-            const nameInitials = getInitialsFromNameOnly(originalProps.name ?? null);
+            const nameInitials = getInitialsFromNameOnly(
+              originalProps.name ?? null
+            );
             const label = nameInitials || (originalProps.email ?? "");
-            const hoursShort = originalProps.workHours != null ? `${Math.round(originalProps.workHours * 100) / 100}h` : "";
-            
+            const hoursShort =
+              originalProps.workHours != null
+                ? `${Math.round(originalProps.workHours * 100) / 100}h`
+                : "";
+
             // Format: "M. Z. 8h"
             const displayText = [label, hoursShort].filter(Boolean).join(" ");
-            
+
             return (
               <div className="fc-event-inner compact">
                 <div>{displayText}</div>
@@ -335,20 +370,20 @@ export default function GoogleCalendarView({
         }}
         eventClick={(info: EventClickArg) => {
           const props = info.event.extendedProps;
-          
+
           if (props.isGrouped) {
             // Handle grouped event click
             const groupNo = props.groupNo;
-            
+
             // Collect all items from this group across all diaries
             const groupItems: WorkDiaryItemDTO[] = [];
             let baseDiary: WorkDiaryWithItem | null = null;
-            
+
             diaries.forEach((d) => {
               if (d.workDiaryItems && d.workDiaryItems.length > 0) {
-                const matchingItems = (d.workDiaryItems as WorkDiaryItemDTO[]).filter(
-                  (item) => item.groupNo === groupNo
-                );
+                const matchingItems = (
+                  d.workDiaryItems as WorkDiaryItemDTO[]
+                ).filter((item) => item.groupNo === groupNo);
                 if (matchingItems.length > 0) {
                   groupItems.push(...matchingItems);
                   // Use the first diary that has items from this group as base
@@ -361,36 +396,61 @@ export default function GoogleCalendarView({
 
             if (baseDiary && groupItems.length > 0) {
               // Create a comprehensive grouped diary object
-              const groupedDiary: WorkDiaryWithItem & { isGrouped: true; groupNo: number } = {
-                ...baseDiary as WorkDiaryWithItem,
+              const groupedDiary: WorkDiaryWithItem & {
+                isGrouped: true;
+                groupNo: number;
+              } = {
+                ...(baseDiary as WorkDiaryWithItem),
                 isGrouped: true,
                 groupNo: groupNo,
                 workDiaryItems: groupItems,
                 date: (() => {
                   // Handle date properly to avoid timezone shifts
-                  const dateStr = typeof groupItems[0].date === 'string' ? groupItems[0].date : groupItems[0].date.toISOString().split('T')[0];
-                  return new Date(dateStr + 'T00:00:00');
+                  const dateStr =
+                    typeof groupItems[0].date === "string"
+                      ? groupItems[0].date
+                      : groupItems[0].date.toISOString().split("T")[0];
+                  return new Date(dateStr + "T00:00:00");
                 })(),
                 notes: (() => {
                   const aggregatedNotes = groupItems
                     .map((item) => item.notes ?? "")
                     .filter((s): s is string => s.length > 0)
                     .join("; ");
-                  return aggregatedNotes || (baseDiary as WorkDiaryWithItem).notes || "";
+                  return (
+                    aggregatedNotes ||
+                    (baseDiary as WorkDiaryWithItem).notes ||
+                    ""
+                  );
                 })(),
-                workHours: Math.round(groupItems.reduce((sum, item) => sum + (Number(item.workHours) || 0), 0) * 100) / 100,
-                quantity: groupItems.reduce((sum, item) => sum + (Number(item.quantity) || 0), 0),
+                workHours:
+                  Math.round(
+                    groupItems.reduce(
+                      (sum, item) => sum + (Number(item.workHours) || 0),
+                      0
+                    ) * 100
+                  ) / 100,
+                quantity: groupItems.reduce(
+                  (sum, item) => sum + (Number(item.quantity) || 0),
+                  0
+                ),
               };
-              
-              console.log("Opening grouped diary with items:", groupItems.length, "groupNo:", groupNo);
+
+              console.log(
+                "Opening grouped diary with items:",
+                groupItems.length,
+                "groupNo:",
+                groupNo
+              );
               onEventClick(groupedDiary);
             }
           } else {
             // Handle individual event click (fallback)
-            const diaryId = (info.event.extendedProps as EventExtProps)?.diaryId;
+            const diaryId = (info.event.extendedProps as EventExtProps)
+              ?.diaryId;
             const itemId = Number(info.event.id);
             const diary = diaries.find((d) => d.id === diaryId);
-            
+
             if (diary) {
               (diary as DiaryWithEditing).__editingItemId = itemId;
               onEventClick(diary);
@@ -457,24 +517,24 @@ export default function GoogleCalendarView({
         .fc-mobile-wrap .fc .fc-timeGridDay-view .fc-timegrid-divider {
           display: none !important;
         }
-        /* GROUPED EVENTS: blue background */
+        /* GROUPED EVENTS: green background */
         .fc-mobile-wrap .fc .fc-event.grouped,
         .fc-mobile-wrap .fc .fc-daygrid-event.grouped,
         .fc-mobile-wrap .fc .fc-timegrid-event.grouped {
-          background-color: #dbeafe !important; /* blue-100 */
-          border-color: #93c5fd !important; /* blue-300 */
-          color: #1e40af !important; /* blue-800 for readability */
+          background-color: #dcfce7 !important; /* green-100 */
+          border-color: #86efac !important; /* green-300 */
+          color: #166534 !important; /* green-800 for readability */
           font-size: 0.75rem; /* text-sm */
           line-height: 1rem; /* tight lines */
           font-weight: 500; /* medium weight for grouped events */
         }
-        /* UNAPPROVED EVENTS: yellow background */
+        /* UNAPPROVED EVENTS: golden yellow background */
         .fc-mobile-wrap .fc .fc-event.unapproved,
         .fc-mobile-wrap .fc .fc-daygrid-event.unapproved,
         .fc-mobile-wrap .fc .fc-timegrid-event.unapproved {
-          background-color: #fef3c7 !important; /* yellow-100 */
-          border-color: #fcd34d !important; /* yellow-300 */
-          color: #92400e !important; /* yellow-800 for readability */
+          background-color: #fbbf24 !important; /* amber-400 - golden yellow */
+          border-color: #f59e0b !important; /* amber-500 */
+          color: #92400e !important; /* amber-800 for readability */
         }
         /* INDIVIDUAL ITEMS: light green background */
         .fc-mobile-wrap .fc .fc-event:not(.grouped),
