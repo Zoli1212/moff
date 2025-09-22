@@ -470,6 +470,7 @@ model EquipmentRegistry {
   name               String
   quantity           Float
   unit               String
+  currentlyAvailable Boolean  @default(false)
   description        String?
   acquiredAt         DateTime?
   notes              String?
@@ -483,6 +484,7 @@ model MaterialRegistry {
   name               String
   amount             Float
   unit               String
+  currentlyAvailable Boolean  @default(false)
   description        String?
   supplier           String?
   acquiredAt         DateTime?
