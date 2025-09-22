@@ -19,7 +19,6 @@ export async function addWorkforceMember({ name, email, phone, role, avatarUrl }
       phone,
       role,
       tenantEmail,
-      currentlyAvailable: true,
       ...(avatarUrl && { avatarUrl }), 
     },
   });

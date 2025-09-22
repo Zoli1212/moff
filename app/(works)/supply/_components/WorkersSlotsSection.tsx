@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Image from "next/image";
 import type {
   WorkItem,
@@ -21,6 +21,7 @@ import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-a
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
+import { useActiveWorkersStore } from "@/stores/active-workers-store";
 
 interface Props {
   workId: number;
@@ -93,6 +94,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
   // Load assignments directly from workItemWorker table for this workId
   const [assignments, setAssignments] = useState<AssignmentEx[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { setActiveWorkers, setWorkerHours, clearActiveWorkers } = useActiveWorkersStore();
 
   React.useEffect(() => {
     const loadWorkItemWorkers = async () => {
@@ -115,6 +117,11 @@ const WorkersSlotsSection: React.FC<Props> = ({
 
     loadWorkItemWorkers();
   }, [workId]);
+
+  useEffect(() => {
+    // Clear the store whenever the active work items change
+    clearActiveWorkers();
+  }, [activeWorkItemIds, workId, clearActiveWorkers]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addLock, setAddLock] = useState<{
     role?: string;
@@ -569,6 +576,27 @@ const WorkersSlotsSection: React.FC<Props> = ({
     // Return all assignments grouped by role - no workItem filtering
     return allByRole;
   }, [assignments]);
+
+  useEffect(() => {
+    const uniqueWorkers = new Map<string, WorkItemWorker>();
+    const hoursMap = new Map<string, number>();
+
+    professions.forEach(role => {
+      const workersInRole = grouped[role] || [];
+      workersInRole.forEach(worker => {
+        const workerName = worker.name || "";
+        if (workerName && !uniqueWorkers.has(workerName)) {
+          uniqueWorkers.set(workerName, worker);
+        }
+        // Default to 8 hours if not specified
+        hoursMap.set(workerName, 8);
+      });
+    });
+
+    const activeWorkerList = Array.from(uniqueWorkers.values());
+    setActiveWorkers(activeWorkerList);
+    setWorkerHours(hoursMap);
+  }, [grouped, professions, setActiveWorkers, setWorkerHours]);
 
   // Fallback list built from Worker.workers registry (ParticipantsSection parity)
   // const registryByRole: Record<string, AssignmentEx[]> = useMemo(() => {

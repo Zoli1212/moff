@@ -87,6 +87,7 @@ export interface WorkItemWorker {
   email?: string | null;
   quantity: number;
   workforceRegistry?: { dailyRate?: number | null } | null;
+  avatarUrl?: string | null;
 }
 
 export interface Professional {

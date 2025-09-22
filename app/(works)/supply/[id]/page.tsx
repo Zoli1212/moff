@@ -140,14 +140,14 @@ export default async function SupplyPage({
       >
         {/* Tab links */}
         <a
-          href={`?tab=materials`}
+          href={`?tab=workers`}
           style={{
             flex: 1,
             padding: "10px 0",
             borderRadius: "22px 0 0 22px",
             border: "none",
-            background: !tab || tab === "materials" ? "#ddd" : "#f7f7f7",
-            color: !tab || tab === "materials" ? "#222" : "#888",
+            background: !tab || tab === "workers" ? "#ddd" : "#f7f7f7",
+            color: !tab || tab === "workers" ? "#222" : "#888",
             fontWeight: 600,
             fontSize: 15,
             boxShadow: "0 1px 2px #eee",
@@ -161,7 +161,7 @@ export default async function SupplyPage({
             textOverflow: "ellipsis",
           }}
         >
-          Anyagok
+          Munkaerő
         </a>
         <a
           href={`?tab=tools`}
@@ -187,14 +187,14 @@ export default async function SupplyPage({
           Szerszámok
         </a>
         <a
-          href={`?tab=workers`}
+          href={`?tab=materials`}
           style={{
             flex: 1,
             padding: "10px 0",
             borderRadius: "0 22px 22px 0",
             border: "none",
-            background: tab === "workers" ? "#ddd" : "#f7f7f7",
-            color: tab === "workers" ? "#222" : "#888",
+            background: tab === "materials" ? "#ddd" : "#f7f7f7",
+            color: tab === "materials" ? "#222" : "#888",
             fontWeight: 600,
             fontSize: 15,
             boxShadow: "0 1px 2px #eee",
@@ -207,16 +207,16 @@ export default async function SupplyPage({
             textOverflow: "ellipsis",
           }}
         >
-          Munkaerő
+          Anyagok
         </a>
       </div>
       
       {/* Tab content */}
-      {(!tab || tab === "materials") ? (
-        <MaterialSlotsSection
-          materials={materials}
+      {(!tab || tab === "workers") ? (
+        <WorkersSlotsSection
           workId={workId}
           workItems={workItems}
+          workers={workers}
         />
       ) : tab === "tools" ? (
         <ToolsSlotsSection
@@ -226,10 +226,10 @@ export default async function SupplyPage({
           workItems={workItems}
         />
       ) : (
-        <WorkersSlotsSection
+        <MaterialSlotsSection
+          materials={materials}
           workId={workId}
           workItems={workItems}
-          workers={workers}
         />
       )}
     </div>
