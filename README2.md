@@ -751,40 +751,21 @@ kép
 README kitörölt naplóbejegyzés sortörések el elválasztva a munkások Monogram ponttal
 képek 
 ----
-rajta marad a munkástipus
-nincs törlés
-kis kuka és leveszi a workItemről
-ha olyan munkások vannak ha ne elegendő
-mindenképpen jelenjen meg a munkás
-uj munkafázis + munkástipus
-burkolás 2
-létező mutatja hogy ki tudom tölteni
-akkor is megmaradjon!
-automatikusan nem törlődnek
-fázisok at eltűnnek
-progressz
-progressz globálison
------
 1 tizedesre kerekítünk kerekítés
 default munkások
 tenant nál ha elfogadom vissza
 string stb expected pattern
-több képet lehessen kijelölni
-kép feltöltés asszinkron (interface)
-IKON t cseréljük kis jegyzetre az emberek helyett
 régi progress megmarad ha mindent kitörlünk progress, ezt meg kell gondolni useEffect
-ha nincs naplóbejegyzés akkor 0
-zöld az elfogadott napló + pipa + narancssárga saját narancssárga
-
+ha nincs naplóbejegyzés akkor 0 legyen a progress
+ikonok és csoportos kivétele
 ----
 ÖSSZESíTŐ adatok
 hány órát dolgoztak az emberek összesítő nézet mennyit vettek fel milyen mennyiséget
 ---
-visszajönnek szakmát
+teljesítmény
+visszajönnek szakmák megtérülés/díj
 ---
 tenant safe legyen az összes munkás
 ---
-képgaléria jó megoldása
 többet lehessen kijelölni, a feltöltésig blokkoljon
-
 ---
