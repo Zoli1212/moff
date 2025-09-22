@@ -84,20 +84,24 @@ export default function GroupedDiaryForm({
         );
 
         // Convert workItemWorker data to WorkItemWorker format
-        const convertedWorkers: WorkItemWorker[] = (
-          workItemWorkerData || []
-        ).map((worker) => ({
-          id: worker.id,
-          workerId: worker.workerId || 0,
-          workItemId: worker.workItemId || 0,
-          name: worker.name || "",
-          email: worker.email || "",
-          role: worker.role || "",
-          quantity: worker.quantity || 1,
-          avatarUrl: worker.avatarUrl || null,
-        }));
+        const uniqueWorkers = new Map<string, WorkItemWorker>();
+        (workItemWorkerData || []).forEach((worker) => {
+          const workerName = worker.name || "";
+          if (workerName && !uniqueWorkers.has(workerName)) {
+            uniqueWorkers.set(workerName, {
+              id: worker.id,
+              workerId: worker.workerId || 0,
+              workItemId: worker.workItemId || 0,
+              name: worker.name || "",
+              email: worker.email || "",
+              role: worker.role || "",
+              quantity: worker.quantity || 1,
+              avatarUrl: worker.avatarUrl || null,
+            });
+          }
+        });
 
-        setAllWorkWorkers(convertedWorkers);
+        setAllWorkWorkers(Array.from(uniqueWorkers.values()));
       } catch (error) {
         console.error("Error loading workItemWorkers:", error);
       }

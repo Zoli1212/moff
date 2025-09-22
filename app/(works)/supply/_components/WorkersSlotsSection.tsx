@@ -121,7 +121,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
   useEffect(() => {
     // Clear the store whenever the active work items change
     clearActiveWorkers();
-  }, [activeWorkItemIds, clearActiveWorkers]);
+  }, [activeWorkItemIds, workId, clearActiveWorkers]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [addLock, setAddLock] = useState<{
     role?: string;
@@ -578,18 +578,22 @@ const WorkersSlotsSection: React.FC<Props> = ({
   }, [assignments]);
 
   useEffect(() => {
-    const activeWorkerList: WorkItemWorker[] = [];
+    const uniqueWorkers = new Map<string, WorkItemWorker>();
     const hoursMap = new Map<string, number>();
 
     professions.forEach(role => {
       const workersInRole = grouped[role] || [];
       workersInRole.forEach(worker => {
-        activeWorkerList.push(worker);
+        const workerName = worker.name || "";
+        if (workerName && !uniqueWorkers.has(workerName)) {
+          uniqueWorkers.set(workerName, worker);
+        }
         // Default to 8 hours if not specified
-        hoursMap.set(worker.name || "", 8);
+        hoursMap.set(workerName, 8);
       });
     });
 
+    const activeWorkerList = Array.from(uniqueWorkers.values());
     setActiveWorkers(activeWorkerList);
     setWorkerHours(hoursMap);
   }, [grouped, professions, setActiveWorkers, setWorkerHours]);

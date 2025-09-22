@@ -86,6 +86,7 @@ export interface WorkItemWorker {
   role?: string | null;
   email?: string | null;
   quantity: number;
+  avatarUrl?: string | null;
 }
 
 export interface Professional {
