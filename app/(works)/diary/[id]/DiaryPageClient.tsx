@@ -1,20 +1,32 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
+import PerformanceSummary from "./_components/PerformanceSummary";
+import { usePerformanceData } from "@/hooks/usePerformanceData";
 import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
 import GroupedDiaryCreateForm from "./edit/GroupedDiaryCreateForm";
 import GroupedDiaryEditForm from "./edit/GroupedDiaryEditForm";
-import { WorkItem } from "@/types/work";
+import { WorkItem, Worker } from "@/types/work";
+
 import type {
   WorkDiaryWithItem,
   WorkDiaryItemDTO,
 } from "@/actions/get-workdiariesbyworkid-actions";
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
+import { Work } from "../../works/page";
 
-type DiaryWithEditing = WorkDiaryWithItem & { __editingItemId?: number; isGrouped?: boolean; groupNo?: number };
+// Define the Work type locally based on its usage in page.tsx
+
+
+type DiaryWithEditing = WorkDiaryWithItem & {
+  __editingItemId?: number;
+  isGrouped?: boolean;
+  groupNo?: number;
+};
 
 interface DiaryPageClientProps {
+  work: (Work & { workers: Worker[]; expectedProfitPercent: number | null }) | null;
   items: WorkItem[];
   diaries: WorkDiaryWithItem[];
   error: string | null;
@@ -23,11 +35,17 @@ interface DiaryPageClientProps {
 }
 
 export default function DiaryPageClient({
+  work,
   items,
   diaries,
   error,
+  type,
+  diaryIds,
 }: DiaryPageClientProps) {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [view, setView] = useState<'dayGridMonth' | 'timeGridWeek'>('timeGridWeek');
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(
     null
@@ -42,15 +60,30 @@ export default function DiaryPageClient({
   >(undefined);
   const [isGroupedMode, setIsGroupedMode] = useState(true); // Default to grouped mode
 
+  useEffect(() => {
+    if (items || error) {
+      setIsLoading(false);
+    }
+  }, [items, error]);
+
+  const performanceData = usePerformanceData({
+    diaries,
+    workItems: items,
+    workers: work?.workers ?? [],
+    expectedProfitPercent: work?.expectedProfitPercent ?? 0,
+    currentDate,
+    view,
+  });
+
   const handleDateSelect = (date: Date) => {
     // Get the local date components to avoid timezone conversion
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     const targetDateStr = `${year}-${month}-${day}`;
-    
+
     const found = (diaries ?? []).find(
-      (d) => new Date(d.date).toISOString().split('T')[0] === targetDateStr
+      (d) => new Date(d.date).toISOString().split("T")[0] === targetDateStr
     );
     if (found) {
       setSelectedDiary(found);
@@ -92,18 +125,24 @@ export default function DiaryPageClient({
     } catch {}
   };
 
-
   return (
     <div className="max-w-3xl mx-auto py-6 md:py-8">
       <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 md:mb-6">
         Munkanapló
       </h1>
+
+      <PerformanceSummary data={performanceData} isLoading={isLoading} />
+
       {error && (
         <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>
       )}
       <GoogleCalendarView
         diaries={diaries}
         workItems={items}
+        currentDate={currentDate}
+        setCurrentDate={setCurrentDate}
+        view={view}
+        setView={setView}
         onEventClick={(diary) => {
           // extract clicked WorkDiaryItem id set by calendar
           const d = diary as DiaryWithEditing;
@@ -137,14 +176,17 @@ export default function DiaryPageClient({
               };
             }
           }
-          
+
           // Set editing mode based on whether we have existing items or grouping
-          if (d.isGrouped || (d.workDiaryItems && d.workDiaryItems.length > 0)) {
+          if (
+            d.isGrouped ||
+            (d.workDiaryItems && d.workDiaryItems.length > 0)
+          ) {
             setIsGroupedMode(true);
           } else {
             setIsGroupedMode(false);
           }
-          
+
           setEditingItem(itemForEdit);
           setSelectedDiary(diary);
           setShowDiaryModal(true);
@@ -156,7 +198,8 @@ export default function DiaryPageClient({
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-4xl w-[95%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
             {isGroupedMode ? (
-              selectedDiary.workDiaryItems && selectedDiary.workDiaryItems.length > 0 ? (
+              selectedDiary.workDiaryItems &&
+              selectedDiary.workDiaryItems.length > 0 ? (
                 <GroupedDiaryEditForm
                   diary={selectedDiary}
                   workItems={items}

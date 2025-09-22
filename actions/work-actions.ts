@@ -63,7 +63,7 @@ export async function fetchWorkAndItems(workId: number) {
     }
     const normWork = await normalizeWork(rawWork);
     const workItems = await getWorkItemsWithWorkers(workId);
-    
+
     // Ellenőrizzük van-e workDiaryItem az adott munkához
     const { user, tenantEmail } = await getTenantSafeAuth();
     const workDiaryItems = await prisma.workDiaryItem.findMany({
@@ -72,10 +72,10 @@ export async function fetchWorkAndItems(workId: number) {
         tenantEmail: tenantEmail,
       },
     });
-    
+
     // Ha nincs workDiaryItem, akkor minden workItem completedQuantity-ját 0-ra állítjuk
     const hasWorkDiaryItems = workDiaryItems.length > 0;
-    
+
     const items = workItems.map((item: any) => ({
       ...item,
       description: item.description ?? undefined,
@@ -87,7 +87,7 @@ export async function fetchWorkAndItems(workId: number) {
         role: w.role ?? undefined,
       })),
     }));
-    
+
     // Ha nincs workDiaryItem, akkor az adatbázisban is frissítjük a completedQuantity-kat 0-ra
     if (!hasWorkDiaryItems) {
       await prisma.workItem.updateMany({
@@ -100,7 +100,7 @@ export async function fetchWorkAndItems(workId: number) {
         },
       });
     }
-    
+
     return { work: normWork, workItems: items };
   } catch (error) {
     console.error("Error in fetchWorkAndItems:", error);
@@ -658,7 +658,12 @@ export async function getWorkItemsWithWorkers(workId: number) {
       tenantEmail: email,
     },
     include: {
-      workItemWorkers: { include: { worker: true } },
+      workItemWorkers: {
+        include: {
+          worker: true,
+          workforceRegistry: true, // Itt kérjük le a registry adatokat
+        },
+      },
       tools: true,
       materials: true,
       workers: true,

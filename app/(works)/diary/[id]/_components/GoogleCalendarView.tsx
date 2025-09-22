@@ -40,6 +40,10 @@ interface GoogleCalendarViewProps {
   onEventClick: (diary: WorkDiaryWithItem) => void;
   onDateClick?: (date: Date) => void;
   workItems?: Array<{ id: number; name: string }>;
+  currentDate: Date;
+  setCurrentDate: (date: Date) => void;
+  view: 'dayGridMonth' | 'timeGridWeek';
+  setView: (view: 'dayGridMonth' | 'timeGridWeek') => void;
 }
 
 export default function GoogleCalendarView({
@@ -47,6 +51,10 @@ export default function GoogleCalendarView({
   onDateClick,
   onEventClick,
   workItems = [],
+  currentDate,
+  setCurrentDate,
+  view,
+  setView,
 }: GoogleCalendarViewProps) {
   // Group WorkDiaryItems by groupNo and create events for groups
   const events = React.useMemo(() => {
@@ -223,7 +231,14 @@ export default function GoogleCalendarView({
     <div className="fc-mobile-wrap">
       <FullCalendar
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
+        initialView={view}
+        initialDate={currentDate}
+        datesSet={(arg) => {
+          if (arg.view.type === 'dayGridMonth' || arg.view.type === 'timeGridWeek') {
+            setView(arg.view.type);
+          }
+          setCurrentDate(arg.view.currentStart);
+        }}
         headerToolbar={headerToolbar}
         titleFormat={{ year: "numeric", month: "short" }}
         views={{
