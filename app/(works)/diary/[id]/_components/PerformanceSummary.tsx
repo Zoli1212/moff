@@ -29,11 +29,37 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">Teljesítmény Összesítő</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold text-gray-800">Teljesítmény Összesítő</h2>
+        <div className="flex flex-col items-center justify-center space-y-1">
+            <h3 className="font-semibold text-gray-600 text-sm">Heti Teljesítmény</h3>
+            <div className='relative w-20 h-20 flex items-center justify-center'>
+                <svg className="transform -rotate-90" width="80" height="80" viewBox="0 0 36 36">
+                    <circle
+                        cx="18" cy="18" r="16"
+                        fill="none"
+                        className="stroke-current text-gray-200"
+                        strokeWidth="2.5"
+                    />
+                    <circle
+                        cx="18" cy="18" r="16"
+                        fill="none"
+                        className={`stroke-current ${performancePercentage >= 100 ? 'text-green-500' : performancePercentage >= 70 ? 'text-yellow-500' : 'text-red-500'}`}
+                        strokeWidth="2.5"
+                        strokeDasharray={`${Math.min(performancePercentage, 100)}, 100`}
+                        strokeLinecap="round"
+                    />
+                </svg>
+                <span className="absolute text-2xl font-bold text-gray-800">
+                    {performancePercentage}%
+                </span>
+            </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Bal oldali oszlop: Haladás */}
-        <div className="md:col-span-1 space-y-2">
+        <div className="space-y-2">
           <h3 className="font-semibold text-gray-600 border-b pb-1">Haladás</h3>
           {progressByWorkItem.length > 0 ? (
             progressByWorkItem.map((item, index) => (
@@ -49,8 +75,8 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
           )}
         </div>
 
-        {/* Középső oszlop: Munkások */}
-        <div className="md:col-span-1 space-y-2">
+        {/* Jobb oldali oszlop: Munkások */}
+        <div className="space-y-2">
           <h3 className="font-semibold text-gray-600 border-b pb-1">Ledolgozott órák</h3>
           {hoursByWorker.length > 0 ? (
             hoursByWorker.map((worker, index) => (
@@ -64,32 +90,6 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
           ) : (
             <p className="text-sm text-gray-500">Nincsenek rögzített órák.</p>
           )}
-        </div>
-
-        {/* Jobb oldali oszlop: Teljesítmény % */}
-        <div className="md:col-span-1 flex flex-col items-center justify-center space-y-2">
-            <h3 className="font-semibold text-gray-600">Heti Teljesítmény</h3>
-            <div className='relative w-28 h-28 flex items-center justify-center'>
-                <svg className="transform -rotate-90" width="112" height="112" viewBox="0 0 36 36">
-                    <circle
-                        cx="18" cy="18" r="16"
-                        fill="none"
-                        className="stroke-current text-gray-200"
-                        strokeWidth="2"
-                    />
-                    <circle
-                        cx="18" cy="18" r="16"
-                        fill="none"
-                        className={`stroke-current ${performancePercentage >= 100 ? 'text-green-500' : performancePercentage >= 70 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeWidth="2"
-                        strokeDasharray={`${Math.min(performancePercentage, 100)}, 100`}
-                        strokeLinecap="round"
-                    />
-                </svg>
-                <span className="absolute text-3xl font-bold text-gray-800">
-                    {performancePercentage}%
-                </span>
-            </div>
         </div>
 
       </div>
