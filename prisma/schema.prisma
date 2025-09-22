@@ -141,6 +141,7 @@ model Offer {
   tenantEmail    String      @default("")
   work           Work?       @relation("OfferWork")
   billings       Billing[]   // Kapcsolat az új Billing modellhez
+  performances   Performance[] // Kapcsolat a Performance táblához
   
   @@unique([recordId])
 }
@@ -183,7 +184,9 @@ model Work {
   materials     Material[]
   workDiaryItems WorkDiaryItem[]
   offerItems    Json?  
-  updatedByAI   Boolean   @default(false)     
+  updatedByAI   Boolean   @default(false)
+  performances  Performance[] // Kapcsolat a Performance táblához
+  workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez
 }
 
 model WorkItem {
@@ -459,6 +462,7 @@ model WorkforceRegistry {
   tenantEmail        String   @default("")
   workItemWorkers    WorkItemWorker[]
   avatarUrl          String?
+  performances       WorkforceRegistryPerformance[]
 }
 
 model EquipmentRegistry {
@@ -578,5 +582,124 @@ model Billing {
   issuedDate     DateTime?   // Kiállítás dátuma
   dueDate        DateTime?   // Fizetési határidő
   invoicePdfUrl  String?     // Számla PDF linkje
+}
+
+model Performance {
+  id                    Int         @id @default(autoincrement())
+  
+  // KÖTELEZŐ mezők (amit említettél)
+  offerPrice            Float       // Ajánlat díja (eredeti ajánlott ár) - KÖTELEZŐ
+  ownCosts              Float       // Saját költségek - KÖTELEZŐ  
+  expectedProfitPercent Float       // Százalékos elvárás (profit margin) - KÖTELEZŐ
+  
+  // OPCIONÁLIS mezők (minden más)
+  title                 String?     // A teljesítmény megnevezése
+  description           String?     // Részletes leírás
+  
+  // Opcionális pénzügyi adatok
+  actualRevenue         Float?      // Tényleges bevétel
+  materialCosts         Float?      // Anyagköltségek
+  laborCosts            Float?      // Munkaerő költségek
+  equipmentCosts        Float?      // Eszköz/gép költségek
+  otherCosts            Float?      // Egyéb költségek
+  
+  // Opcionális százalékos mutatók
+  actualProfitPercent   Float?      // Tényleges profit százalék
+  costEfficiencyPercent Float?      // Költséghatékonyság százalék
+  
+  // Opcionális teljesítmény mutatók
+  profit                Float?      // Profit (bevétel - összes költség)
+  profitMargin          Float?      // Profit margin
+  roi                   Float?      // Return on Investment
+  
+  // Opcionális időbeli adatok
+  plannedDuration       Int?        // Tervezett időtartam (napokban)
+  actualDuration        Int?        // Tényleges időtartam (napokban)
+  startDate             DateTime?   // Kezdés dátuma
+  endDate               DateTime?   // Befejezés dátuma
+  
+  // Opcionális kapcsolatok
+  workId                Int?        // Kapcsolat a Work táblához
+  work                  Work?       @relation(fields: [workId], references: [id])
+  offerId               Int?        // Kapcsolat az Offer táblához
+  offer                 Offer?      @relation(fields: [offerId], references: [id])
+  
+  // Opcionális státusz és kategorizálás
+  status                String?     // active, completed, cancelled
+  category              String?     // Kategória (pl. építkezés, felújítás, stb.)
+  priority              String?     // low, medium, high
+  
+  // Opcionális értékelés és megjegyzések
+  qualityRating         Float?      // Minőségi értékelés (1-10)
+  customerSatisfaction  Float?      // Ügyfél elégedettség (1-10)
+  notes                 String?     // Megjegyzések
+  lessons               String?     // Tanulságok
+  
+  // Opcionális metaadatok
+  createdBy             String?     // Ki hozta létre
+  tenantEmail           String?     // Multi-tenant támogatás
+  
+  // Kötelező időbélyegek
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  
+  // Indexek a gyorsabb lekérdezésekhez
+  @@index([workId])
+  @@index([offerId])
+  @@index([status])
+  @@index([tenantEmail])
+}
+
+model WorkforceRegistryPerformance {
+  id                    Int                 @id @default(autoincrement())
+  
+  // Kapcsolat a WorkforceRegistry táblához
+  workforceRegistryId   Int
+  workforceRegistry     WorkforceRegistry   @relation(fields: [workforceRegistryId], references: [id], onDelete: Cascade)
+  
+  // Kapcsolat a Work táblához (melyik munkán dolgozott)
+  workId                Int?
+  work                  Work?               @relation(fields: [workId], references: [id])
+  
+  // Időszak és dátumok
+  workDate              DateTime            // Munka dátuma
+  periodStart           DateTime?           // Időszak kezdete (opcionális)
+  periodEnd             DateTime?           // Időszak vége (opcionális)
+  
+  // Munka teljesítmény
+  hoursWorked           Float               @default(0) // Ledolgozott órák
+  daysWorked            Float?              @default(0) // Ledolgozott napok
+  progressMade          Float?              @default(0) // Haladás százalékban (0-100)
+  tasksCompleted        Int?                @default(0) // Elvégzett feladatok száma
+  
+  // Pénzügyi adatok
+  dailyRate             Float?              // Napi díjszabás
+  hourlyRate            Float?              // Órabér
+  totalEarned           Float               @default(0) // Összesen keresett összeg
+  bonusEarned           Float?              @default(0) // Bónusz
+  overtimeHours         Float?              @default(0) // Túlóra órák
+  overtimePay           Float?              @default(0) // Túlóra díj
+  
+  // Teljesítmény mutatók
+  efficiency            Float?              // Hatékonyság százalék
+  qualityScore          Float?              // Minőségi pontszám (1-10)
+  punctuality           Boolean?            @default(true) // Pontos volt-e
+  
+  // Megjegyzések és jegyzetek
+  notes                 String?             // Megjegyzések
+  issues                String?             // Problémák, nehézségek
+  achievements          String?             // Eredmények, kiemelkedő teljesítmény
+  
+  // Metaadatok
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  tenantEmail           String              @default("")
+  createdBy             String?             // Ki rögzítette
+  
+  // Indexek
+  @@index([workforceRegistryId])
+  @@index([workId])
+  @@index([workDate])
+  @@index([tenantEmail])
 }
 
