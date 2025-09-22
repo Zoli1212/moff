@@ -63,15 +63,44 @@ export async function fetchWorkAndItems(workId: number) {
     }
     const normWork = await normalizeWork(rawWork);
     const workItems = await getWorkItemsWithWorkers(workId);
+    
+    // Ellenőrizzük van-e workDiaryItem az adott munkához
+    const { user, tenantEmail } = await getTenantSafeAuth();
+    const workDiaryItems = await prisma.workDiaryItem.findMany({
+      where: {
+        workId: workId,
+        tenantEmail: tenantEmail,
+      },
+    });
+    
+    // Ha nincs workDiaryItem, akkor minden workItem completedQuantity-ját 0-ra állítjuk
+    const hasWorkDiaryItems = workDiaryItems.length > 0;
+    
     const items = workItems.map((item: any) => ({
       ...item,
       description: item.description ?? undefined,
+      // Ha nincs workDiaryItem, akkor completedQuantity = 0
+      completedQuantity: hasWorkDiaryItems ? item.completedQuantity : 0,
       workItemWorkers: item.workItemWorkers?.map((w: any) => ({
         ...w,
         name: w.name ?? undefined,
         role: w.role ?? undefined,
       })),
     }));
+    
+    // Ha nincs workDiaryItem, akkor az adatbázisban is frissítjük a completedQuantity-kat 0-ra
+    if (!hasWorkDiaryItems) {
+      await prisma.workItem.updateMany({
+        where: {
+          workId: workId,
+          tenantEmail: tenantEmail,
+        },
+        data: {
+          completedQuantity: 0,
+        },
+      });
+    }
+    
     return { work: normWork, workItems: items };
   } catch (error) {
     console.error("Error in fetchWorkAndItems:", error);

@@ -28,10 +28,10 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
     contactInfo: '',
     hiredDate: '',
     leftDate: '',
-    currentlyAvailable: true,
     isActive: true,
     notes: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    dailyRate: ''
   })
 
   useEffect(() => {
@@ -44,10 +44,10 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
         contactInfo: worker.contactInfo || '',
         hiredDate: worker.hiredDate ? new Date(worker.hiredDate).toISOString().split('T')[0] : '',
         leftDate: worker.leftDate ? new Date(worker.leftDate).toISOString().split('T')[0] : '',
-        currentlyAvailable: worker.currentlyAvailable,
         isActive: worker.isActive,
         notes: worker.notes || '',
-        avatarUrl: worker.avatarUrl || ''
+        avatarUrl: worker.avatarUrl || '',
+        dailyRate: worker.dailyRate?.toString() || ''
       })
     }
   }, [worker])
@@ -65,7 +65,8 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
         phone: formData.phone || undefined,
         contactInfo: formData.contactInfo || undefined,
         notes: formData.notes || undefined,
-        avatarUrl: formData.avatarUrl || undefined
+        avatarUrl: formData.avatarUrl || undefined,
+        dailyRate: formData.dailyRate ? parseFloat(formData.dailyRate) : undefined
       }
 
       const result = await updateWorkforceRegistry(worker.id!, dataToSubmit)
@@ -151,6 +152,21 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
               />
             </div>
 
+            {/* Daily Rate */}
+            <div>
+              <Label htmlFor="dailyRate">Napi díj (Ft)</Label>
+              <Input
+                id="dailyRate"
+                type="number"
+                value={formData.dailyRate}
+                onChange={(e) => handleInputChange('dailyRate', e.target.value)}
+                placeholder="25000"
+                min="0"
+                step="1000"
+                className="mt-1"
+              />
+            </div>
+
             {/* Hired Date */}
             <div>
               <Label htmlFor="hiredDate">Felvétel dátuma</Label>
@@ -215,28 +231,15 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
           </div>
 
           {/* Switches */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => handleInputChange('isActive', checked)}
-              />
-              <Label htmlFor="isActive" className="text-sm font-medium">
-                Aktív munkás
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="currentlyAvailable"
-                checked={formData.currentlyAvailable}
-                onCheckedChange={(checked) => handleInputChange('currentlyAvailable', checked)}
-              />
-              <Label htmlFor="currentlyAvailable" className="text-sm font-medium">
-                Jelenleg elérhető
-              </Label>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isActive"
+              checked={formData.isActive}
+              onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+            />
+            <Label htmlFor="isActive" className="text-sm font-medium">
+              Aktív munkás
+            </Label>
           </div>
 
           {/* Action Buttons */}

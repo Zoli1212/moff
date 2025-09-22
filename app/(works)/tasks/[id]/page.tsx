@@ -5,7 +5,10 @@ import Image from "next/image";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
-import { fetchWorkAndItems, updateWorkItemInProgress } from "@/actions/work-actions";
+import {
+  fetchWorkAndItems,
+  updateWorkItemInProgress,
+} from "@/actions/work-actions";
 import { addWorkItemAndOfferItem } from "@/actions/add-work-item-actions";
 import { AddOfferItemModal } from "@/components/AddOfferItemModal";
 
@@ -71,13 +74,13 @@ export default function TasksPage() {
   const [assignError, setAssignError] = useState<string | null>(null);
   const [addingNewItem, setAddingNewItem] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  
+
   // Toast state
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
   } | null>(null);
-  
+
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
@@ -135,21 +138,24 @@ export default function TasksPage() {
         workItemId,
         inProgress: checked,
       });
-      
+
       if (!inProgressResult.success) {
-        setAssignError(inProgressResult.message || "Nem sikerült frissíteni a munkafázis állapotát.");
+        setAssignError(
+          inProgressResult.message ||
+            "Nem sikerült frissíteni a munkafázis állapotát."
+        );
         return;
       }
 
       // Only create diary if checking and no diary exists for this work yet
       if (checked) {
-        const hasExistingDiaryForWork = workItems.some(item => 
-          item.workDiaryEntries && item.workDiaryEntries.length > 0
+        const hasExistingDiaryForWork = workItems.some(
+          (item) => item.workDiaryEntries && item.workDiaryEntries.length > 0
         );
-        
+
         if (!hasExistingDiaryForWork) {
           const result = await createWorkDiary({ workId, workItemId });
-          
+
           if (result.success) {
             setWorkItems((prevItems) =>
               prevItems.map((item) => {
@@ -203,7 +209,8 @@ export default function TasksPage() {
       }
     } catch (e) {
       setAssignError(
-        (e as Error).message || "Hiba történt a munkafázis állapot frissítésekor"
+        (e as Error).message ||
+          "Hiba történt a munkafázis állapot frissítésekor"
       );
     } finally {
       setAssigning(null);
@@ -237,9 +244,9 @@ export default function TasksPage() {
         materialUnitPrice: newItemData.materialUnitPrice,
         unitPrice: newItemData.unitPrice,
       });
-      
+
       console.log("Tasks page - result:", result);
-      
+
       if (result.success) {
         console.log("Tasks page - success, refreshing data");
         // Refresh the work items to show the new item
@@ -249,7 +256,10 @@ export default function TasksPage() {
       } else {
         console.error("Tasks page - error:", result.error);
         setAssignError(result.error || "Nem sikerült új tételt létrehozni.");
-        showToast("error", result.error || "Nem sikerült új tételt létrehozni.");
+        showToast(
+          "error",
+          result.error || "Nem sikerült új tételt létrehozni."
+        );
       }
     } catch (error) {
       console.error("Tasks page - exception:", error);

@@ -22,7 +22,7 @@ import {
   XCircle,
   UserCheck
 } from 'lucide-react'
-import { WorkforceRegistryData, toggleWorkforceRegistryActive, toggleWorkforceRegistryAvailability } from '@/actions/workforce-registry-actions'
+import { WorkforceRegistryData, toggleWorkforceRegistryActive } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
 import WorkforceAddModal from './WorkforceAddModal'
 import WorkforceEditModal from './WorkforceEditModal'
@@ -37,7 +37,6 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
   const [workforceRegistry, setWorkforceRegistry] = useState<WorkforceRegistryData[]>(initialData)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
-  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all')
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false)
@@ -58,12 +57,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
       (statusFilter === 'active' && worker.isActive) ||
       (statusFilter === 'inactive' && !worker.isActive)
     
-    const matchesAvailability = 
-      availabilityFilter === 'all' || 
-      (availabilityFilter === 'available' && worker.currentlyAvailable) ||
-      (availabilityFilter === 'unavailable' && !worker.currentlyAvailable)
-    
-    return matchesSearch && matchesStatus && matchesAvailability
+    return matchesSearch && matchesStatus
   })
 
   const handleToggleActive = async (workerId: number) => {
@@ -86,25 +80,6 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
     }
   }
 
-  const handleToggleAvailability = async (workerId: number) => {
-    try {
-      const result = await toggleWorkforceRegistryAvailability(workerId)
-      if (result.success) {
-        setWorkforceRegistry(prev => 
-          prev.map(worker => 
-            worker.id === workerId 
-              ? { ...worker, currentlyAvailable: !worker.currentlyAvailable }
-              : worker
-          )
-        )
-        toast.success('Elérhetőség sikeresen módosítva')
-      } else {
-        toast.error(result.error || 'Hiba történt')
-      }
-    } catch {
-      toast.error('Hiba történt az elérhetőség módosítása során')
-    }
-  }
 
   const handleEdit = (worker: WorkforceRegistryData) => {
     setSelectedWorker(worker)
@@ -150,13 +125,12 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
   }
 
   const activeCount = workforceRegistry.filter(w => w.isActive).length
-  const availableCount = workforceRegistry.filter(w => w.currentlyAvailable).length
   const totalCount = workforceRegistry.length
 
   return (
     <div className="space-y-6">
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center space-x-2">
@@ -181,17 +155,6 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
           </CardContent>
         </Card>
         
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
-              <UserCheck className="h-8 w-8 text-emerald-600" />
-              <div>
-                <p className="text-2xl font-bold text-emerald-600">{availableCount}</p>
-                <p className="text-sm text-gray-600">Elérhető munkások</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         <Card>
           <CardContent className="p-6">
@@ -221,7 +184,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <Label htmlFor="search">Keresés</Label>
               <Input
@@ -245,26 +208,12 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                 <option value="inactive">Csak inaktív</option>
               </select>
             </div>
-            <div>
-              <Label htmlFor="availability">Elérhetőség</Label>
-              <select
-                id="availability"
-                value={availabilityFilter}
-                onChange={(e) => setAvailabilityFilter(e.target.value as 'all' | 'available' | 'unavailable')}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="all">Minden elérhetőség</option>
-                <option value="available">Csak elérhető</option>
-                <option value="unavailable">Csak nem elérhető</option>
-              </select>
-            </div>
             <div className="flex items-end">
               <Button 
                 variant="outline" 
                 onClick={() => {
                   setSearchTerm('')
                   setStatusFilter('all')
-                  setAvailabilityFilter('all')
                 }}
                 className="w-full"
               >
@@ -310,12 +259,6 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                         >
                           {worker.isActive ? 'Aktív' : 'Inaktív'}
                         </Badge>
-                        <Badge 
-                          variant={worker.currentlyAvailable ? "default" : "secondary"}
-                          className={worker.currentlyAvailable ? "bg-emerald-600" : "bg-orange-500"}
-                        >
-                          {worker.currentlyAvailable ? 'Elérhető' : 'Nem elérhető'}
-                        </Badge>
                       </div>
                     </div>
                     
@@ -354,31 +297,18 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                   </div>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4 md:pt-0 border-t md:border-t-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4 pt-4 md:pt-0 border-t md:border-t-0 w-full">
                   {/* Toggle Switches */}
-                  <div className="flex flex-row sm:flex-col justify-center sm:justify-start space-x-6 sm:space-x-0 sm:space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Label htmlFor={`active-${worker.id}`} className="text-sm font-medium">
-                        Aktív
-                      </Label>
-                      <Switch
-                        id={`active-${worker.id}`}
-                        checked={worker.isActive}
-                        onCheckedChange={() => handleToggleActive(worker.id!)}
-                        className={worker.isActive ? 'data-[state=checked]:bg-green-600' : ''}
-                      />
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Label htmlFor={`available-${worker.id}`} className="text-sm font-medium">
-                        Elérhető
-                      </Label>
-                      <Switch
-                        id={`available-${worker.id}`}
-                        checked={worker.currentlyAvailable}
-                        onCheckedChange={() => handleToggleAvailability(worker.id!)}
-                        className={worker.currentlyAvailable ? 'data-[state=checked]:bg-emerald-600' : ''}
-                      />
-                    </div>
+                  <div className="flex items-center justify-center space-x-2 w-full">
+                    <Label htmlFor={`active-${worker.id}`} className="text-sm font-medium">
+                      Aktív
+                    </Label>
+                    <Switch
+                      id={`active-${worker.id}`}
+                      checked={worker.isActive}
+                      onCheckedChange={() => handleToggleActive(worker.id!)}
+                      className={`${worker.isActive ? 'data-[state=checked]:bg-green-600' : ''}`}
+                    />
                   </div>
                   
                   {/* Action Buttons */}

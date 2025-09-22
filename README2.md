@@ -752,12 +752,11 @@ README kitörölt naplóbejegyzés sortörések el elválasztva a munkások Mono
 képek 
 ----
 1 tizedesre kerekítünk kerekítés
-default munkások
+default munkások legyenek benne
 tenant nál ha elfogadom vissza
 string stb expected pattern
-régi progress megmarad ha mindent kitörlünk progress, ezt meg kell gondolni useEffect
+régi progress megmarad ha mindent kitörlünk progress, ezt meg kell gondolni useEffect csökkentse a progresst
 ha nincs naplóbejegyzés akkor 0 legyen a progress
-ikonok és csoportos kivétele
 ----
 ÖSSZESíTŐ adatok
 hány órát dolgoztak az emberek összesítő nézet mennyit vettek fel milyen mennyiséget
@@ -765,7 +764,7 @@ hány órát dolgoztak az emberek összesítő nézet mennyit vettek fel milyen 
 teljesítmény
 visszajönnek szakmák megtérülés/díj
 ---
-tenant safe legyen az összes munkás
+tenant safe legyen az összes munkás a registry is
 ---
 többet lehessen kijelölni, a feltöltésig blokkoljon
 ---

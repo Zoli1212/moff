@@ -13,10 +13,10 @@ export interface WorkforceRegistryData {
   contactInfo: string | null
   hiredDate: Date | null
   leftDate: Date | null
-  currentlyAvailable: boolean
   isActive: boolean
   notes: string | null
   avatarUrl: string | null
+  dailyRate: number | null
 }
 
 // Get all workforce registry entries for current tenant
@@ -152,34 +152,3 @@ export async function toggleWorkforceRegistryActive(id: number) {
   }
 }
 
-// Toggle availability status
-export async function toggleWorkforceRegistryAvailability(id: number) {
-  try {
-    const { user, tenantEmail } = await getTenantSafeAuth()
-
-    // Get current entry
-    const existingEntry = await prisma.workforceRegistry.findFirst({
-      where: {
-        id: id,
-        tenantEmail: tenantEmail
-      }
-    })
-
-    if (!existingEntry) {
-      return { success: false, error: 'Munkás nem található vagy nincs jogosultság' }
-    }
-
-    const updatedEntry = await prisma.workforceRegistry.update({
-      where: { id: id },
-      data: {
-        currentlyAvailable: !existingEntry.currentlyAvailable
-      }
-    })
-
-    revalidatePath('/others')
-    return { success: true, data: updatedEntry }
-  } catch (error) {
-    console.error('Error toggling workforce registry availability:', error)
-    return { success: false, error: 'Hiba az elérhetőség módosítása során' }
-  }
-}

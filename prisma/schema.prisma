@@ -451,9 +451,9 @@ model WorkforceRegistry {
   contactInfo        String?
   hiredDate          DateTime?
   leftDate           DateTime?
-  currentlyAvailable Boolean  @default(false)
   isActive           Boolean  @default(true)
   notes              String?
+  dailyRate          Float?   @default(0)
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
   tenantEmail        String   @default("")

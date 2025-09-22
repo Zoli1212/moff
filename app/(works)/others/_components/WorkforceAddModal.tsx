@@ -27,10 +27,10 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
     contactInfo: '',
     hiredDate: '',
     leftDate: '',
-    currentlyAvailable: true,
     isActive: true,
     notes: '',
-    avatarUrl: ''
+    avatarUrl: '',
+    dailyRate: ''
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +46,8 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
         phone: formData.phone || null,
         contactInfo: formData.contactInfo || null,
         notes: formData.notes || null,
-        avatarUrl: formData.avatarUrl || null
+        avatarUrl: formData.avatarUrl || null,
+        dailyRate: formData.dailyRate ? parseFloat(formData.dailyRate) : null
       }
 
       const result = await createWorkforceRegistry(dataToSubmit)
@@ -75,10 +76,10 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
       contactInfo: '',
       hiredDate: '',
       leftDate: '',
-      currentlyAvailable: true,
       isActive: true,
       notes: '',
-      avatarUrl: ''
+      avatarUrl: '',
+      dailyRate: ''
     })
     onClose()
   }
@@ -150,6 +151,21 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
               />
             </div>
 
+            {/* Daily Rate */}
+            <div>
+              <Label htmlFor="dailyRate">Napi díj (Ft)</Label>
+              <Input
+                id="dailyRate"
+                type="number"
+                value={formData.dailyRate}
+                onChange={(e) => handleInputChange('dailyRate', e.target.value)}
+                placeholder="25000"
+                min="0"
+                step="1000"
+                className="mt-1"
+              />
+            </div>
+
             {/* Hired Date */}
             <div>
               <Label htmlFor="hiredDate">Felvétel dátuma</Label>
@@ -214,28 +230,15 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
           </div>
 
           {/* Switches */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => handleInputChange('isActive', checked)}
-              />
-              <Label htmlFor="isActive" className="text-sm font-medium">
-                Aktív munkás
-              </Label>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="currentlyAvailable"
-                checked={formData.currentlyAvailable}
-                onCheckedChange={(checked) => handleInputChange('currentlyAvailable', checked)}
-              />
-              <Label htmlFor="currentlyAvailable" className="text-sm font-medium">
-                Jelenleg elérhető
-              </Label>
-            </div>
+          <div className="flex items-center space-x-2">
+            <Switch
+              id="isActive"
+              checked={formData.isActive}
+              onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+            />
+            <Label htmlFor="isActive" className="text-sm font-medium">
+              Aktív munkás
+            </Label>
           </div>
 
           {/* Action Buttons */}

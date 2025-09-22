@@ -92,14 +92,18 @@ export async function deleteWorkDiaryItem({ id }: { id: number }) {
   return { success: true };
 }
 
-export async function deleteWorkDiaryItemsByGroup({ groupNo }: { groupNo: number }) {
+export async function deleteWorkDiaryItemsByGroup({
+  groupNo,
+}: {
+  groupNo: number;
+}) {
   const { user, tenantEmail } = await getTenantSafeAuth();
 
-  await prisma.workDiaryItem.deleteMany({ 
-    where: { 
+  await prisma.workDiaryItem.deleteMany({
+    where: {
       groupNo,
-      tenantEmail 
-    } 
+      tenantEmail,
+    },
   });
 
   revalidatePath(`/works/diary`);
