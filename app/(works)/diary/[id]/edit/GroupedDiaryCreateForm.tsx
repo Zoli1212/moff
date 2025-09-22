@@ -13,9 +13,8 @@ import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
-import {
-  updateGroupApproval,
-} from "@/actions/group-approval-actions";
+import { updateGroupApproval } from "@/actions/group-approval-actions";
+import { useActiveWorkersStore } from "@/stores/active-workers-store";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type { WorkDiaryItemCreate } from "@/types/work-diary";
@@ -69,7 +68,6 @@ export default function GroupedDiaryForm({
   const activeWorkItems = useMemo(() => {
     return workItems.filter((item) => item.inProgress === true);
   }, [workItems]);
-
 
   // Get ALL workItemWorkers from the work using server action
   const [allWorkWorkers, setAllWorkWorkers] = useState<WorkItemWorker[]>([]);
@@ -130,13 +128,18 @@ export default function GroupedDiaryForm({
   }, [activeWorkItems, selectedGroupedItems.length, hasInitialized]);
 
   // Don't initialize workers by default - start with empty selection
-  const [hasInitializedWorkers, setHasInitializedWorkers] = useState(false);
+  const { activeWorkers, workerHours: activeWorkerHours } = useActiveWorkersStore();
+
   useEffect(() => {
-    if (!hasInitializedWorkers) {
-      setSelectedWorkers([]);
-      setHasInitializedWorkers(true);
+    // Initialize workers from the Zustand store on first load
+    if (activeWorkers.length > 0) {
+      setSelectedWorkers(activeWorkers);
     }
-  }, [hasInitializedWorkers]);
+    if (activeWorkerHours.size > 0) {
+      setWorkerHours(new Map(activeWorkerHours));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   // Initialize form with selected date from calendar or today's date as fallback
   useEffect(() => {
@@ -164,7 +167,6 @@ export default function GroupedDiaryForm({
   }, [diary.date]);
 
   // No group approval loading needed in create mode
-
 
   // No form data initialization needed in create mode - start with empty form
 
@@ -280,37 +282,36 @@ export default function GroupedDiaryForm({
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
-    
+
     setImageError("");
     setImageUploading(true);
-    
+
     try {
       const uploadPromises = files.map(async (file) => {
         const formData = new FormData();
         formData.append("file", file);
-        
+
         const res = await fetch("/api/upload-avatar", {
           method: "POST",
           body: formData,
         });
         const data = await res.json();
-        
+
         if (data.url) {
           return data.url;
         } else {
           throw new Error(data.error || "Hiba történt a feltöltésnél.");
         }
       });
-      
+
       const uploadedUrls = await Promise.all(uploadPromises);
       setImages((prev) => [...prev, ...uploadedUrls]);
-      
     } catch (err) {
       setImageError("Hiba a feltöltés során: " + (err as Error).message);
     } finally {
       setImageUploading(false);
       // Reset the input value so the same files can be selected again
-      e.target.value = '';
+      e.target.value = "";
     }
   };
 
@@ -462,10 +463,7 @@ export default function GroupedDiaryForm({
       if (failed.length > 0) {
         showToast("error", `${failed.length} művelet sikertelen volt.`);
       } else {
-        showToast(
-          "success",
-          "Csoportos napló bejegyzés sikeresen létrehozva."
-        );
+        showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
       }
 
       onSave({});
@@ -519,9 +517,7 @@ export default function GroupedDiaryForm({
       <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
         <div className="flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-blue-600" />
-          <span className="font-medium text-blue-800">
-            Napló bejegyzés
-          </span>
+          <span className="font-medium text-blue-800">Napló bejegyzés</span>
         </div>
         {/* <Button
           type="button"
