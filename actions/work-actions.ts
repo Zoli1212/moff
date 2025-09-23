@@ -683,6 +683,7 @@ export async function getWorkById(id: number) {
       materials: true,
       tools: true,
       workDiaries: true,
+      performances: true, // Include Performance table
     },
   });
 
@@ -723,9 +724,13 @@ export async function getWorkById(id: number) {
     throw new Error("Unauthorized");
   }
 
+  // Get expectedProfitPercent from the first performance record
+  const expectedProfitPercent = work?.performances?.[0]?.expectedProfitPercent || null;
+
   return {
     ...work,
     totalWorkers: work.workers.length,
+    expectedProfitPercent,
   };
 }
 

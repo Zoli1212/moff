@@ -29,6 +29,7 @@ interface DiaryPageClientProps {
   work: (Work & { workers: Worker[]; expectedProfitPercent: number | null }) | null;
   items: WorkItem[];
   diaries: WorkDiaryWithItem[];
+  workforceRegistry: any[];
   error: string | null;
   type: "workers" | "contractor";
   diaryIds: number[];
@@ -38,6 +39,7 @@ export default function DiaryPageClient({
   work,
   items,
   diaries,
+  workforceRegistry,
   error,
   type,
   diaryIds,
@@ -70,6 +72,7 @@ export default function DiaryPageClient({
     diaries,
     workItems: items,
     workers: work?.workers ?? [],
+    workforceRegistry,
     expectedProfitPercent: work?.expectedProfitPercent ?? 0,
     currentDate,
     view,

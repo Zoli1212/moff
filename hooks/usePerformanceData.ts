@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { WorkItem, Worker } from '@/types/work';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, parseISO } from 'date-fns';
+import { calculatePerformance, type PerformanceCalculationResult } from '@/utils/performance-calculator';
 
 // --- Típusok ---
 export interface PerformanceData {
@@ -15,22 +16,18 @@ interface PerformanceHookProps {
   diaries: any[]; // A típus-inkonzisztenciák miatt egyelőre 'any'
   workItems: WorkItem[];
   workers: Worker[];
+  workforceRegistry: any[]; // WorkforceRegistry adatok
   expectedProfitPercent: number | null;
   currentDate: Date;
   view: 'dayGridMonth' | 'timeGridWeek';
 }
-
-// --- Segédfüggvények ---
-const getHourlyRate = (dailyRate: number | null | undefined): number => {
-  if (!dailyRate) return 0;
-  return dailyRate / 8; // Feltételezzük a 8 órás munkanapot
-};
 
 // --- A Hook ---
 export const usePerformanceData = ({
   diaries,
   workItems,
   workers, // Ez a teljes 'work.workers' lista
+  workforceRegistry,
   expectedProfitPercent,
   currentDate,
   view,
@@ -77,89 +74,14 @@ export const usePerformanceData = ({
         return null;
     }
 
-    let totalRevenue = 0;
-    let totalCost = 0;
-    const progressByWorkItemMap = new Map<number, { name: string; totalProgress: number; unit: string }>();
-    const hoursByWorkerMap = new Map<string, { name: string; totalHours: number }>();
-
-    // 3. Költségek és bevételek számítása a releváns workDiaryItem-ek alapján
-    relevantWorkDiaryItems.forEach((diaryItem: any) => {
-            const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
-            if (!workItem) return;
-
-            // Bevétel számítása: a haladás arányában az ajánlati munkadíjból
-            const progressMade = diaryItem.quantity || 0;
-            if (progressMade > 0 && workItem.workTotal && workItem.quantity > 0) {
-                const revenuePerUnit = workItem.workTotal / workItem.quantity;
-                totalRevenue += progressMade * revenuePerUnit;
-            }
-
-            // Költség számítása: a naplóban rögzített munkások órái alapján
-            const workerAssignment = workItem.workItemWorkers.find(wiw => wiw.workerId === diaryItem.workerId);
-            const dailyRate = workerAssignment?.workforceRegistry?.dailyRate;
-            const hourlyRate = getHourlyRate(dailyRate);
-            const hoursWorked = diaryItem.workHours || 0;
-            totalCost += hoursWorked * hourlyRate;
-
-            // Munkás óráinak aggregálása
-            if (hoursWorked > 0) {
-              // Munkás nevének meghatározása
-              let workerName = 'Ismeretlen';
-              
-              // 1. Ha van név közvetlenül a diaryItem-ben
-              if (diaryItem.name) {
-                workerName = diaryItem.name;
-              }
-              // 2. Ha van workerId, keressük a workers tömbben
-              else if (diaryItem.workerId) {
-                const workerDetails = workers.find(w => w.id === diaryItem.workerId);
-                if (workerDetails?.name) {
-                  workerName = workerDetails.name;
-                }
-              }
-              
-              // A nevet használjuk kulcsként (nem a workerId-t), mert több munkásnak lehet ugyanaz a workerId
-              if (workerName && workerName !== 'Ismeretlen') {
-                const existingWorker = hoursByWorkerMap.get(workerName);
-                hoursByWorkerMap.set(workerName, {
-                    name: workerName,
-                    totalHours: (existingWorker?.totalHours || 0) + hoursWorked,
-                });
-              }
-            }
-
-            // Munkafázis haladásának aggregálása - minden workItem megjelenik, ahol dolgoztak
-            const existingProgress = progressByWorkItemMap.get(workItem.id);
-            progressByWorkItemMap.set(workItem.id, {
-                name: workItem.name,
-                totalProgress: (existingProgress?.totalProgress || 0) + progressMade,
-                unit: workItem.unit,
-            });
+    // 3. Teljesítmény számítás a külön függvénnyel
+    return calculatePerformance({
+      workDiaryItems: relevantWorkDiaryItems,
+      workItems,
+      workers,
+      workforceRegistry,
+      expectedProfitPercent
     });
-
-    // 2. Teljesítmény százalék számítása a megadott képlet alapján
-    const calculatePerformance = (cost: number, revenue: number, targetProfitPercent: number | null) => {
-      if (cost <= 0) {
-        return revenue > 0 ? 200 : 0;
-      }
-      const actualProfitRatio = (revenue / cost - 1);
-      const targetProfitRatio = (targetProfitPercent ?? 100) / 100;
-      if (targetProfitRatio <= 0) {
-        return actualProfitRatio > 0 ? 200 : 100;
-      }
-      const performance = (actualProfitRatio / targetProfitRatio) * 100;
-      return Math.max(0, performance);
-    }
-
-    const performancePercentage = calculatePerformance(totalCost, totalRevenue, expectedProfitPercent);
-
-    return {
-        totalRevenue,
-        totalCost,
-        performancePercentage: Math.round(Math.min(200, Math.max(0, performancePercentage))),
-        progressByWorkItem: Array.from(progressByWorkItemMap.values()),
-        hoursByWorker: Array.from(hoursByWorkerMap.values()),
-    };
 
   }, [diaries, workItems, workers, expectedProfitPercent, currentDate, view]);
 

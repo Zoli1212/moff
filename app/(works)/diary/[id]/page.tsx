@@ -3,6 +3,7 @@ import {
   getWorkDiariesByWorkId,
   WorkDiaryWithItem,
 } from "@/actions/get-workdiariesbyworkid-actions";
+import { getAllWorkforceRegistry } from "@/actions/workforce-registry-actions";
 import { notFound } from "next/navigation";
 import { WorkItem, Worker } from "@/types/work"; // Importáljuk a hiányzó típusokat
 import DiaryPageClient from "./DiaryPageClient";
@@ -21,13 +22,15 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
   let work: (Work & { workers: Worker[], expectedProfitPercent: number | null }) | null = null;
   let items: WorkItem[] = [];
   let diaries: WorkDiaryWithItem[] = [];
+  let workforceRegistry: any[] = [];
   let error: string | null = null;
 
   try {
-    const [workData, itemData, diaryData] = await Promise.all([
+    const [workData, itemData, diaryData, workforceData] = await Promise.all([
       getWorkById(workId),
       getWorkItemsWithWorkers(workId),
       getWorkDiariesByWorkId(workId),
+      getAllWorkforceRegistry(),
     ]);
 
     if (!workData) {
@@ -37,6 +40,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
     work = workData as any;
     items = itemData;
     diaries = diaryData;
+    workforceRegistry = workforceData || [];
 
   } catch (e: any) {
     error = e.message || "Hiba történt az adatok lekérése közben.";
@@ -58,6 +62,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
         work={work} // Átadjuk a work objektumot
         items={items}
         diaries={diaries}
+        workforceRegistry={workforceRegistry}
         error={error}
         type={type}
         diaryIds={diaryIds}

@@ -41,8 +41,8 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
             className={`h-6 rounded-full transition-all duration-300 ${
               performancePercentage >= 100 
                 ? 'bg-green-500' 
-                : performancePercentage >= 70 
-                ? 'bg-yellow-500' 
+                : performancePercentage > 0 
+                ? 'bg-orange-500' 
                 : 'bg-red-500'
             }`}
             style={{ width: `${Math.min(performancePercentage, 100)}%` }}
