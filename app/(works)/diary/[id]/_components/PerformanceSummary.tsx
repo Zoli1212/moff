@@ -30,9 +30,8 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold text-gray-800">Teljesítmény Összesítő</h2>
+                <h2 className="text-xl font-bold text-gray-800">Heti teljesítmény</h2>
         <div className="flex flex-col items-center justify-center space-y-1">
-            <h3 className="font-semibold text-gray-600 text-sm">Heti Teljesítmény</h3>
             <div className='relative w-20 h-20 flex items-center justify-center'>
                 <svg className="transform -rotate-90" width="80" height="80" viewBox="0 0 36 36">
                     <circle

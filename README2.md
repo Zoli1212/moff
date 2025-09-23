@@ -768,3 +768,24 @@ tenant safe legyen az összes munkás a registry is
 ---
 többet lehessen kijelölni, a feltöltésig blokkoljon
 ---
+felül: 
+1.Az aktív feladatokhoz rendelt munkások
+2. további feladatokhoz szükséges munkások
+-----
+anyagok esetén
+
+további munkákhoz szükséges munkerő (ami nem aktív)
+és legyen száma is mennyi szükséges
+----
+jobb felső sarokban a munkanapló sorában a munkanaló sorában van a % mellette a nyilacskák balra (hogyan változott az előző héthez,portfolió)
+---
+csikdiagram, ha 100% felett vagyunk az egész zöld, maga diagram 100% ot reprezentál
+addig zöld 
+amikor 
+50% alatt piros
+50-80 % narancssárga
+90% 
+
+telefonon képfeltöltés : error ? iphone?
+
+---

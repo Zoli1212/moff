@@ -94,7 +94,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
   // Load assignments directly from workItemWorker table for this workId
   const [assignments, setAssignments] = useState<AssignmentEx[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { setActiveWorkers, setWorkerHours, clearActiveWorkers } = useActiveWorkersStore();
+  const { setActiveWorkers, setWorkerHours, clearActiveWorkers } =
+    useActiveWorkersStore();
 
   React.useEffect(() => {
     const loadWorkItemWorkers = async () => {
@@ -173,6 +174,46 @@ const WorkersSlotsSection: React.FC<Props> = ({
 
     return byRole;
   }, [workItems, workers, showAllWorkItems]);
+
+  // Build required slots per profession from ALL workItems (including inactive ones)
+  // This is used for inactive professions to show the correct required count
+  const allRequiredPerProfession: Record<string, number> = useMemo(() => {
+    const byRole: Record<string, number> = {};
+
+    // Find maximum requirement per role across ALL workItems
+    for (const wi of workItems) {
+      const roleQuantities: Record<string, number> = {};
+
+      // From workItemWorkers
+      for (const wiw of wi.workItemWorkers ?? []) {
+        const worker = workers.find((w) => w.id === wiw.workerId);
+        if (worker) {
+          const role = worker.name || "Ismeretlen";
+          const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
+          roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
+        }
+      }
+
+      // From requiredProfessionals if available
+      const requiredProfs = getRequiredProfessionals(wi);
+      for (const rp of requiredProfs) {
+        if (rp.type) {
+          const quantity =
+            typeof rp.quantity === "number" && rp.quantity > 0
+              ? rp.quantity
+              : 1;
+          roleQuantities[rp.type] = (roleQuantities[rp.type] || 0) + quantity;
+        }
+      }
+
+      // Update byRole with maximum values
+      for (const [role, quantity] of Object.entries(roleQuantities)) {
+        byRole[role] = Math.max(byRole[role] || 0, quantity);
+      }
+    }
+
+    return byRole;
+  }, [workItems, workers]);
 
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
   const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
@@ -342,7 +383,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
   // ALL worker types from the entire work (including inactive ones)
   const allProfessionsFromWork = useMemo(() => {
     const allRoles = new Set<string>();
-    
+
     // Add roles from all workItems (not just active ones)
     for (const wi of workItems) {
       // From workItemWorkers
@@ -375,7 +416,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
   // Inactive professions (not in active professions)
   const inactiveProfessions = useMemo(() => {
     const activeProfessionsSet = new Set(professions);
-    return allProfessionsFromWork.filter(role => !activeProfessionsSet.has(role));
+    return allProfessionsFromWork.filter(
+      (role) => !activeProfessionsSet.has(role)
+    );
   }, [allProfessionsFromWork, professions]);
 
   const refreshAssignments = async () => {
@@ -426,7 +469,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
       setAssignments(workItemWorkerData || []);
     } catch (err) {
       console.error(err);
-      const errorMessage = err instanceof Error ? err.message : "Hiba történt mentés közben.";
+      const errorMessage =
+        err instanceof Error ? err.message : "Hiba történt mentés közben.";
       toast.error(errorMessage);
     }
   };
@@ -536,9 +580,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
 
   // Handle adding extra slots for a role
   const handleAddSlot = (role: string) => {
-    setExtraSlots(prev => ({
+    setExtraSlots((prev) => ({
       ...prev,
-      [role]: (prev[role] || 0) + 1
+      [role]: (prev[role] || 0) + 1,
     }));
   };
 
@@ -546,18 +590,18 @@ const WorkersSlotsSection: React.FC<Props> = ({
   const handleRemoveEmptySlot = (role: string) => {
     const currentExtra = extraSlots[role] || 0;
     const currentReduced = reducedSlots[role] || 0;
-    
+
     if (currentExtra > 0) {
       // First remove extra slots
-      setExtraSlots(prev => ({
+      setExtraSlots((prev) => ({
         ...prev,
-        [role]: Math.max(0, currentExtra - 1)
+        [role]: Math.max(0, currentExtra - 1),
       }));
     } else {
       // Then allow reducing original required slots (temporarily)
-      setReducedSlots(prev => ({
+      setReducedSlots((prev) => ({
         ...prev,
-        [role]: currentReduced + 1
+        [role]: currentReduced + 1,
       }));
     }
   };
@@ -581,9 +625,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
     const uniqueWorkers = new Map<string, WorkItemWorker>();
     const hoursMap = new Map<string, number>();
 
-    professions.forEach(role => {
+    professions.forEach((role) => {
       const workersInRole = grouped[role] || [];
-      workersInRole.forEach(worker => {
+      workersInRole.forEach((worker) => {
         const workerName = worker.name || "";
         if (workerName && !uniqueWorkers.has(workerName)) {
           uniqueWorkers.set(workerName, worker);
@@ -651,6 +695,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
         <Plus className="h-5 w-5" />
       </Button>
       <div className="h-8" />
+      <h3 className="text-md font-semibold text-gray-600 mb-3">
+        Az aktív feladatokhoz rendelt munkások
+      </h3>
       <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">
         Munkások (
         {professions.reduce((sum, role) => {
@@ -687,7 +734,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
             <span className="text-[#666] font-medium">R.A.G. frissítés</span>
-            <span className="text-[#888] text-sm">Augmented context update</span>
+            <span className="text-[#888] text-sm">
+              Augmented context update
+            </span>
           </div>
         ) : (
           <>
@@ -695,139 +744,143 @@ const WorkersSlotsSection: React.FC<Props> = ({
               <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
             )}
             {professions.map((role) => {
-          const required = requiredPerProfession[role] || 0;
-          const list = grouped[role] || []; // Only show workItemWorker connections
-          // Use per-role denominator from best work item; fallback to required if missing/zero
-          // const rawDenom = denominatorRequiredPerProfession[role] as
-          //   | number
-          //   | undefined;
-          // const displayDenom =
-          //   typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
-          // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
-          const assignedCount = list.length;
-          const extraSlotCount = extraSlots[role] || 0;
-          const reducedSlotCount = reducedSlots[role] || 0;
-          const effectiveRequired = Math.max(0, required - reducedSlotCount);
-          const slotCount = Math.max(effectiveRequired, assignedCount) + extraSlotCount;
-          const slotArray = Array.from({ length: slotCount });
-          return (
-            <div key={role}>
-              <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
-                <div className="flex items-center gap-2.5">
-                  <div className="flex-1 font-semibold flex items-center gap-2">
-                    {role}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveRole(role);
-                      }}
-                      className="text-red-500 hover:text-red-700"
-                      title={`${role} eltávolítása munkafázisból`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-2 ml-auto">
-                    <div className="font-semibold text-[14px] text-[#222]">
-                      {list.length} / {required}
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleAddSlot(role);
-                      }}
-                      className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
-                      title="Slot hozzáadása"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2 mt-2">
-                  {slotArray.map((_, idx) => {
-                    const w = list[idx] as AssignmentEx | undefined;
-                    const hasData = !!(w && (w.name || w.email));
-                    if (hasData) {
-                      return (
-                        <div
-                          key={`${role}-filled-${w.id}`}
-                          className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
-                        >
-                          <div
-                            className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
-                            onClick={() =>
-                              setEditAssignment({
-                                id: w.id,
-                                name: w.name ?? undefined,
-                                email: w.email ?? undefined,
-                                phone: w.phone ?? undefined,
-                                role: w.role ?? undefined,
-                                quantity: w.quantity ?? undefined,
-                                avatarUrl: w.avatarUrl ?? null,
-                              })
-                            }
-                          >
-                            <Image
-                              src={w.avatarUrl || "/worker.jpg"}
-                              alt={w.name ?? ""}
-                              width={28}
-                              height={28}
-                              className="rounded-full object-cover border border-[#eee]"
-                            />
-                            <div className="text-[14px] text-[#333] font-medium">
-                              {w.name}
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <div className="text-[13px] text-[#555] truncate max-w-[120px]">
-                              {w.email || ""}
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteWorkItemWorkerOnly(w.id);
-                              }}
-                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                              title="Munkás eltávolítása"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    }
-                    return (
-                      <div
-                        key={`${role}-empty-${idx}`}
-                        className="flex items-center w-full"
-                      >
-                        <button
-                          className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
-                          onClick={() => {
-                            setAddLock({ role, workItemId: undefined }); // Always undefined workItemId
-                            setIsAddOpen(true);
-                          }}
-                          title={role}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
+              const required = requiredPerProfession[role] || 0;
+              const list = grouped[role] || []; // Only show workItemWorker connections
+              // Use per-role denominator from best work item; fallback to required if missing/zero
+              // const rawDenom = denominatorRequiredPerProfession[role] as
+              //   | number
+              //   | undefined;
+              // const displayDenom =
+              //   typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
+              // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
+              const assignedCount = list.length;
+              const extraSlotCount = extraSlots[role] || 0;
+              const reducedSlotCount = reducedSlots[role] || 0;
+              const effectiveRequired = Math.max(
+                0,
+                required - reducedSlotCount
+              );
+              const slotCount =
+                Math.max(effectiveRequired, assignedCount) + extraSlotCount;
+              const slotArray = Array.from({ length: slotCount });
+              return (
+                <div key={role}>
+                  <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex-1 font-semibold flex items-center gap-2">
+                        {role}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            // Remove this empty slot from view
-                            handleRemoveEmptySlot(role);
+                            handleRemoveRole(role);
                           }}
-                          className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
-                          title="Üres slot eltávolítása"
+                          className="text-red-500 hover:text-red-700"
+                          title={`${role} eltávolítása munkafázisból`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
-                    );
-                  })}
+                      <div className="flex items-center gap-2 ml-auto">
+                        <div className="font-semibold text-[14px] text-[#222]">
+                          {list.length} / {required}
+                        </div>
+                        <button
+                          onClick={() => {
+                            handleAddSlot(role);
+                          }}
+                          className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
+                          title="Slot hozzáadása"
+                        >
+                          <Plus className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 mt-2">
+                      {slotArray.map((_, idx) => {
+                        const w = list[idx] as AssignmentEx | undefined;
+                        const hasData = !!(w && (w.name || w.email));
+                        if (hasData) {
+                          return (
+                            <div
+                              key={`${role}-filled-${w.id}`}
+                              className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
+                            >
+                              <div
+                                className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
+                                onClick={() =>
+                                  setEditAssignment({
+                                    id: w.id,
+                                    name: w.name ?? undefined,
+                                    email: w.email ?? undefined,
+                                    phone: w.phone ?? undefined,
+                                    role: w.role ?? undefined,
+                                    quantity: w.quantity ?? undefined,
+                                    avatarUrl: w.avatarUrl ?? null,
+                                  })
+                                }
+                              >
+                                <Image
+                                  src={w.avatarUrl || "/worker.jpg"}
+                                  alt={w.name ?? ""}
+                                  width={28}
+                                  height={28}
+                                  className="rounded-full object-cover border border-[#eee]"
+                                />
+                                <div className="text-[14px] text-[#333] font-medium">
+                                  {w.name}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="text-[13px] text-[#555] truncate max-w-[120px]">
+                                  {w.email || ""}
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteWorkItemWorkerOnly(w.id);
+                                  }}
+                                  className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                  title="Munkás eltávolítása"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div
+                            key={`${role}-empty-${idx}`}
+                            className="flex items-center w-full"
+                          >
+                            <button
+                              className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
+                              onClick={() => {
+                                setAddLock({ role, workItemId: undefined }); // Always undefined workItemId
+                                setIsAddOpen(true);
+                              }}
+                              title={role}
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Remove this empty slot from view
+                                handleRemoveEmptySlot(role);
+                              }}
+                              className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
+                              title="Üres slot eltávolítása"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          );
+              );
             })}
 
             {/* Separator and inactive worker types section */}
@@ -835,18 +888,23 @@ const WorkersSlotsSection: React.FC<Props> = ({
               <>
                 <div className="my-6 border-t border-gray-300 relative">
                   <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-gray-500 font-medium">
-                    Nem aktív munkafázisok
+                    További feladatokhoz szükséges munkások
                   </div>
                 </div>
-
                 {inactiveProfessions.map((role) => {
                   const list = grouped[role] || []; // Show all assignments for this role
                   const assignedCount = list.length;
                   const extraSlotCount = extraSlots[role] || 0;
                   const reducedSlotCount = reducedSlots[role] || 0;
-                  // For inactive roles, we don't have required count, so just show assigned workers + extra slots
-                  const slotCount = Math.max(1, assignedCount) + extraSlotCount - reducedSlotCount;
-                  const slotArray = Array.from({ length: Math.max(0, slotCount) });
+                  // Use allRequiredPerProfession to get the correct required count for inactive roles
+                  // If no work item assignment, default to 1 slot
+                  const required = allRequiredPerProfession[role] || 1;
+                  const effectiveRequired = Math.max(0, required - reducedSlotCount);
+                  const slotCount =
+                    Math.max(effectiveRequired, assignedCount) + extraSlotCount;
+                  const slotArray = Array.from({
+                    length: Math.max(0, slotCount),
+                  });
 
                   return (
                     <div key={`inactive-${role}`}>
@@ -854,7 +912,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
                         <div className="flex items-center gap-2.5">
                           <div className="flex-1 font-semibold flex items-center gap-2">
                             {role}
-                            <span className="text-xs text-gray-400">(nem aktív)</span>
+                            <span className="text-xs text-gray-400">
+                              (nem aktív)
+                            </span>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -868,7 +928,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           </div>
                           <div className="flex items-center gap-2 ml-auto">
                             <div className="font-semibold text-[14px] text-[#444]">
-                              {list.length}
+                              {list.length} / {required}
                             </div>
                             <button
                               onClick={() => {
