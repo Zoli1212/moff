@@ -32,30 +32,43 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
-      <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold text-gray-800">Heti teljesítmény</h2>
-        <div className="flex flex-col items-center justify-center space-y-1">
-            <div className='relative w-20 h-20 flex items-center justify-center'>
-                <svg className="transform -rotate-90" width="80" height="80" viewBox="0 0 36 36">
-                    <circle
-                        cx="18" cy="18" r="16"
-                        fill="none"
-                        className="stroke-current text-gray-200"
-                        strokeWidth="2.5"
-                    />
-                    <circle
-                        cx="18" cy="18" r="16"
-                        fill="none"
-                        className={`stroke-current ${performancePercentage >= 100 ? 'text-green-500' : performancePercentage >= 70 ? 'text-yellow-500' : 'text-red-500'}`}
-                        strokeWidth="2.5"
-                        strokeDasharray={`${Math.min(performancePercentage, 100)}, 100`}
-                        strokeLinecap="round"
-                    />
-                </svg>
-                <span className="absolute text-2xl font-bold text-gray-800">
-                    {performancePercentage}%
-                </span>
-            </div>
+      <div className="mb-4">
+        <h2 className="text-xl font-bold text-gray-800 mb-3">Heti teljesítmény</h2>
+        
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-6 relative">
+          <div
+            className={`h-6 rounded-full transition-all duration-300 ${
+              performancePercentage >= 100 
+                ? 'bg-green-500' 
+                : performancePercentage >= 70 
+                ? 'bg-yellow-500' 
+                : 'bg-red-500'
+            }`}
+            style={{ width: `${Math.min(performancePercentage, 100)}%` }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-sm font-bold text-white drop-shadow-sm">
+              {performancePercentage}%
+            </span>
+          </div>
+        </div>
+        
+        {/* Performance Status Text */}
+        <div className="mt-2 text-center">
+          <span className={`text-sm font-medium ${
+            performancePercentage >= 100 
+              ? 'text-green-600' 
+              : performancePercentage >= 70 
+              ? 'text-yellow-600' 
+              : 'text-red-600'
+          }`}>
+            {performancePercentage >= 100 
+              ? 'Cél elérve!' 
+              : performancePercentage >= 70 
+              ? 'Jó teljesítmény' 
+              : 'Nincs haladás'}
+          </span>
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

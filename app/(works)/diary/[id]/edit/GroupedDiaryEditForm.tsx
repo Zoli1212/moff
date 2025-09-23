@@ -534,6 +534,8 @@ export default function GroupedDiaryEditForm({
             notes: description,
             images: images,
             workHours: hoursPerWorkItem,
+            quantity: progressChanges[i] || 0, // A haladás mennyisége
+            unit: groupedItem.workItem.unit, // A workItem unit-ja
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
           };
