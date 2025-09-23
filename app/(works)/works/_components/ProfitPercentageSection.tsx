@@ -117,7 +117,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
           opacity: 0.8,
         }}
       >
-        Adja meg az elvárt profit margin százalékát.
+        Adja meg az elvárt profit százalékát.
       </div>
 
       <div
@@ -164,7 +164,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
             textAlign: 'center'
           }}
         >
-          Saját költségek / Ajánlat munkadíj
+          Munkadíj - Költségek / Költségek
         </div>
 
         <button

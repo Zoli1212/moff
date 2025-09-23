@@ -88,7 +88,7 @@ export const usePerformanceData = ({
             if (!workItem) return;
 
             // Bevétel számítása: a haladás arányában az ajánlati munkadíjból
-            const progressMade = diaryItem.quantity - (diaryItem.startQuantity || 0);
+            const progressMade = diaryItem.quantity || 0;
             if (progressMade > 0 && workItem.workTotal && workItem.quantity > 0) {
                 const revenuePerUnit = workItem.workTotal / workItem.quantity;
                 totalRevenue += progressMade * revenuePerUnit;
@@ -128,15 +128,13 @@ export const usePerformanceData = ({
               }
             }
 
-            // Munkafázis haladásának aggregálása
-            if (progressMade > 0) {
-                const existingProgress = progressByWorkItemMap.get(workItem.id);
-                progressByWorkItemMap.set(workItem.id, {
-                    name: workItem.name,
-                    totalProgress: (existingProgress?.totalProgress || 0) + progressMade,
-                    unit: workItem.unit,
-                });
-            }
+            // Munkafázis haladásának aggregálása - minden workItem megjelenik, ahol dolgoztak
+            const existingProgress = progressByWorkItemMap.get(workItem.id);
+            progressByWorkItemMap.set(workItem.id, {
+                name: workItem.name,
+                totalProgress: (existingProgress?.totalProgress || 0) + progressMade,
+                unit: workItem.unit,
+            });
     });
 
     // 2. Teljesítmény százalék számítása a megadott képlet alapján
