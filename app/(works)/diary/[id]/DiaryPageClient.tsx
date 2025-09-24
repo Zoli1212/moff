@@ -7,7 +7,7 @@ import { usePerformanceData } from "@/hooks/usePerformanceData";
 import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
 import GroupedDiaryCreateForm from "./edit/GroupedDiaryCreateForm";
 import GroupedDiaryEditForm from "./edit/GroupedDiaryEditForm";
-import { WorkItem, Worker } from "@/types/work";
+import { WorkItem, Worker, WorkItemWorker } from "@/types/work";
 
 import type {
   WorkDiaryWithItem,
@@ -93,7 +93,7 @@ export default function DiaryPageClient({
             grouped[role].push(assignment);
           }
 
-          const uniqueWorkers = new Map<string, any>();
+          const uniqueWorkers = new Map<string, unknown>();
           const hoursMap = new Map<string, number>();
 
           Object.values(grouped).forEach((workersInRole) => {
@@ -108,7 +108,7 @@ export default function DiaryPageClient({
             });
           });
 
-          const activeWorkerList = Array.from(uniqueWorkers.values());
+          const activeWorkerList = Array.from(uniqueWorkers.values()) as WorkItemWorker[];
           setActiveWorkers(activeWorkerList);
           setWorkerHours(hoursMap);
         }
