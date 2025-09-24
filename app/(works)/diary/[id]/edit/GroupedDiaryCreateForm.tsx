@@ -14,8 +14,9 @@ import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
 import { updateGroupApproval } from "@/actions/group-approval-actions";
-import { useActiveWorkersStore } from "@/stores/active-workers-store";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
+import { useActiveWorkersStore } from "@/stores/active-workers-store";
+import UpdateWorkItemQuantityModal from "./_components/UpdateWorkItemQuantityModal";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type { WorkDiaryItemCreate } from "@/types/work-diary";
@@ -68,30 +69,62 @@ export default function GroupedDiaryForm({
 
   // Quantity modification modal state
   const [showQuantityModal, setShowQuantityModal] = useState(false);
-  const [selectedWorkItemId, setSelectedWorkItemId] = useState<number | null>(null);
+  const [selectedWorkItemId, setSelectedWorkItemId] = useState<number | null>(
+    null
+  );
   const [newQuantity, setNewQuantity] = useState<string>("");
 
-  // Quantity change handler
-  const handleQuantityChange = async (workItemId: number, newQuantity: number | null) => {
+  const handleQuantityChange = (
+    workItemId: number | null,
+    quantity: number | null
+  ) => {
+    if (workItemId === null) return;
+
+    setSelectedGroupedItems((prev) =>
+      prev.map((item) =>
+        item.workItem.id === workItemId
+          ? {
+              ...item,
+              modifiedQuantity: quantity,
+              workItem: { ...item.workItem, modifiedQuantity: quantity }, // Also update nested workItem
+            }
+          : item
+      )
+    );
+  };
+
+  // This function updates the quantity in the local state AND saves to server
+  const handleUpdateQuantity = async (
+    workItemId: number,
+    newQuantity: number
+  ) => {
+    console.log("[Form] handleUpdateQuantity function started.");
+    // Update UI immediately for better UX
+    setSelectedGroupedItems((prev) =>
+      prev.map((item) =>
+        item.workItem.id === workItemId
+          ? {
+              ...item,
+              modifiedQuantity: newQuantity,
+              workItem: { ...item.workItem, modifiedQuantity: newQuantity },
+            }
+          : item
+      )
+    );
+
+    // Close modal immediately for better UX
+    setShowQuantityModal(false);
+
+    // Save to server
     try {
       const result = await updateWorkItemQuantity(workItemId, newQuantity);
       if (result.success) {
-        // Update local state
-        setSelectedGroupedItems(prev => 
-          prev.map(item => 
-            item.workItem.id === workItemId 
-              ? { ...item, modifiedQuantity: newQuantity }
-              : item
-          )
-        );
-        setShowQuantityModal(false);
-        setSelectedWorkItemId(null);
-        setNewQuantity("");
+        showToast("success", "Mennyiség sikeresen frissítve!");
       } else {
-        console.error("Error updating quantity:", result.error);
+        showToast("error", result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      showToast("error", "Hiba a mennyiség frissítése során");
     }
   };
 
@@ -164,7 +197,8 @@ export default function GroupedDiaryForm({
   }, [activeWorkItems, selectedGroupedItems.length, hasInitialized]);
 
   // Don't initialize workers by default - start with empty selection
-  const { activeWorkers, workerHours: activeWorkerHours } = useActiveWorkersStore();
+  const { activeWorkers, workerHours: activeWorkerHours } =
+    useActiveWorkersStore();
 
   useEffect(() => {
     // Initialize workers from the Zustand store on first load
@@ -521,6 +555,35 @@ export default function GroupedDiaryForm({
 
   return (
     <div className="space-y-4">
+      {/* Modal for Updating Work Item Quantity */}
+      <UpdateWorkItemQuantityModal
+        isOpen={showQuantityModal}
+        onClose={() => setShowQuantityModal(false)}
+        onSave={(quantity) => {
+          console.log(
+            "[Form] onSave triggered from modal with quantity:",
+            quantity
+          );
+          if (selectedWorkItemId) {
+            console.log(
+              "[Form] selectedWorkItemId is valid:",
+              selectedWorkItemId,
+              ". Calling handleUpdateQuantity."
+            );
+            handleUpdateQuantity(selectedWorkItemId, quantity);
+          } else {
+            console.error(
+              "[Form] selectedWorkItemId is null or undefined. Cannot update."
+            );
+          }
+        }}
+        initialQuantity={newQuantity}
+        workItemName={
+          selectedGroupedItems.find(
+            (item) => item.workItem.id === selectedWorkItemId
+          )?.workItem.name || ""
+        }
+      />
       {/* Loading Overlay - AI Processing */}
       {isSubmitting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
@@ -799,15 +862,24 @@ export default function GroupedDiaryForm({
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{groupedItem.workItem.name}</h3>
+                      <h3 className="font-medium">
+                        {groupedItem.workItem.name}
+                      </h3>
                       <button
+                        type="button" // PREVENTS FORM SUBMISSION
                         onClick={() => {
                           const effectiveQuantity = (() => {
                             const modifiedQty = groupedItem.modifiedQuantity;
                             const originalQty = groupedItem.workItem.quantity;
-                            if (modifiedQty !== null && modifiedQty !== undefined) {
+                            if (
+                              modifiedQty !== null &&
+                              modifiedQty !== undefined
+                            ) {
                               return modifiedQty;
-                            } else if (originalQty !== null && originalQty !== undefined) {
+                            } else if (
+                              originalQty !== null &&
+                              originalQty !== undefined
+                            ) {
                               return originalQty;
                             } else {
                               return 0;
@@ -833,15 +905,21 @@ export default function GroupedDiaryForm({
                           {(() => {
                             const modifiedQty = groupedItem.modifiedQuantity;
                             const originalQty = groupedItem.workItem.quantity;
-                            if (modifiedQty !== null && modifiedQty !== undefined) {
+                            if (
+                              modifiedQty !== null &&
+                              modifiedQty !== undefined
+                            ) {
                               return modifiedQty;
-                            } else if (originalQty !== null && originalQty !== undefined) {
+                            } else if (
+                              originalQty !== null &&
+                              originalQty !== undefined
+                            ) {
                               return originalQty;
                             } else {
                               return "?";
                             }
-                          })()} (
-                          {groupedItem.workItem.unit || "?"})
+                          })()}{" "}
+                          ({groupedItem.workItem.unit || "?"})
                         </span>
                       </div>
                       <div className="relative w-full">
@@ -855,9 +933,15 @@ export default function GroupedDiaryForm({
                             const effectiveQuantity = (() => {
                               const modifiedQty = groupedItem.modifiedQuantity;
                               const originalQty = groupedItem.workItem.quantity;
-                              if (modifiedQty !== null && modifiedQty !== undefined) {
+                              if (
+                                modifiedQty !== null &&
+                                modifiedQty !== undefined
+                              ) {
                                 return modifiedQty;
-                              } else if (originalQty !== null && originalQty !== undefined) {
+                              } else if (
+                                originalQty !== null &&
+                                originalQty !== undefined
+                              ) {
                                 return originalQty;
                               } else {
                                 return 0;
@@ -881,33 +965,59 @@ export default function GroupedDiaryForm({
                           <div
                             className="h-full bg-blue-500 rounded-lg"
                             style={{
-                              width: `${Math.min(100, ((groupedItem.workItem.completedQuantity || 0) / (() => {
-                                const modifiedQty = groupedItem.modifiedQuantity;
-                                const originalQty = groupedItem.workItem.quantity;
-                                if (modifiedQty !== null && modifiedQty !== undefined) {
-                                  return modifiedQty;
-                                } else if (originalQty !== null && originalQty !== undefined) {
-                                  return originalQty;
-                                } else {
-                                  return 1; // Avoid division by zero
-                                }
-                              })()) * 100)}%`,
+                              width: `${Math.min(
+                                100,
+                                ((groupedItem.workItem.completedQuantity || 0) /
+                                  (() => {
+                                    const modifiedQty =
+                                      groupedItem.modifiedQuantity;
+                                    const originalQty =
+                                      groupedItem.workItem.quantity;
+                                    if (
+                                      modifiedQty !== null &&
+                                      modifiedQty !== undefined
+                                    ) {
+                                      return modifiedQty;
+                                    } else if (
+                                      originalQty !== null &&
+                                      originalQty !== undefined
+                                    ) {
+                                      return originalQty;
+                                    } else {
+                                      return 1; // Avoid division by zero
+                                    }
+                                  })()) *
+                                  100
+                              )}%`,
                             }}
                           />
                           <div
                             className="absolute top-1/2 transform -translate-y-1/2"
                             style={{
-                              left: `calc(${Math.min(100, ((groupedItem.workItem.completedQuantity || 0) / (() => {
-                                const modifiedQty = groupedItem.modifiedQuantity;
-                                const originalQty = groupedItem.workItem.quantity;
-                                if (modifiedQty !== null && modifiedQty !== undefined) {
-                                  return modifiedQty;
-                                } else if (originalQty !== null && originalQty !== undefined) {
-                                  return originalQty;
-                                } else {
-                                  return 1; // Avoid division by zero
-                                }
-                              })()) * 100)}% - 20px)`,
+                              left: `calc(${Math.min(
+                                100,
+                                ((groupedItem.workItem.completedQuantity || 0) /
+                                  (() => {
+                                    const modifiedQty =
+                                      groupedItem.modifiedQuantity;
+                                    const originalQty =
+                                      groupedItem.workItem.quantity;
+                                    if (
+                                      modifiedQty !== null &&
+                                      modifiedQty !== undefined
+                                    ) {
+                                      return modifiedQty;
+                                    } else if (
+                                      originalQty !== null &&
+                                      originalQty !== undefined
+                                    ) {
+                                      return originalQty;
+                                    } else {
+                                      return 1; // Avoid division by zero
+                                    }
+                                  })()) *
+                                  100
+                              )}% - 20px)`,
                             }}
                           >
                             {/* Invisible larger touch target */}
@@ -1225,7 +1335,9 @@ export default function GroupedDiaryForm({
                 <Button
                   type="button"
                   onClick={() => {
-                    const quantity = newQuantity ? parseFloat(newQuantity) : null;
+                    const quantity = newQuantity
+                      ? parseFloat(newQuantity)
+                      : null;
                     handleQuantityChange(selectedWorkItemId, quantity);
                   }}
                   disabled={!newQuantity || isNaN(parseFloat(newQuantity))}
