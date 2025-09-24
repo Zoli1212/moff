@@ -132,27 +132,9 @@ export default function GroupedDiaryEditForm({
         showToast("error", result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
+      console.log("Error updating quantity:", error);
       showToast("error", "Hiba a mennyiség frissítése során");
     }
-  };
-
-  const handleQuantityChange = (
-    workItemId: number | null,
-    quantity: number | null
-  ) => {
-    if (workItemId === null) return;
-
-    setSelectedGroupedItems((prev) =>
-      prev.map((item) =>
-        item.workItem.id === workItemId
-          ? {
-              ...item,
-              modifiedQuantity: quantity,
-              workItem: { ...item.workItem, modifiedQuantity: quantity }, // Also update nested workItem
-            }
-          : item
-      )
-    );
   };
 
   // Get ALL workItemWorkers from the work using server action

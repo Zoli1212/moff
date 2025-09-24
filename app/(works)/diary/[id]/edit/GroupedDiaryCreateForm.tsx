@@ -75,25 +75,6 @@ export default function GroupedDiaryForm({
   );
   const [newQuantity, setNewQuantity] = useState<string>("");
 
-  const handleQuantityChange = (
-    workItemId: number | null,
-    quantity: number | null
-  ) => {
-    if (workItemId === null) return;
-
-    setSelectedGroupedItems((prev) =>
-      prev.map((item) =>
-        item.workItem.id === workItemId
-          ? {
-              ...item,
-              modifiedQuantity: quantity,
-              workItem: { ...item.workItem, modifiedQuantity: quantity }, // Also update nested workItem
-            }
-          : item
-      )
-    );
-  };
-
   // This function updates the quantity in the local state AND saves to server
   const handleUpdateQuantity = async (
     workItemId: number,
@@ -125,6 +106,7 @@ export default function GroupedDiaryForm({
         showToast("error", result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
+      console.log("Error updating quantity:", error);
       showToast("error", "Hiba a mennyiség frissítése során");
     }
   };
