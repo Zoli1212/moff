@@ -17,6 +17,7 @@ import { updateGroupApproval } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
 import { useActiveWorkersStore } from "@/stores/active-workers-store";
 import UpdateWorkItemQuantityModal from "./_components/UpdateWorkItemQuantityModal";
+import { toast } from "sonner";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type { WorkDiaryItemCreate } from "@/types/work-diary";
@@ -241,8 +242,11 @@ export default function GroupedDiaryForm({
   // No form data initialization needed in create mode - start with empty form
 
   const showToast = (type: "success" | "error", message: string) => {
-    // Toast implementation would go here
-    console.log(`${type}: ${message}`);
+    if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   };
 
   const addGroupedItem = (groupedItem: GroupedWorkItem) => {
@@ -1302,53 +1306,6 @@ export default function GroupedDiaryForm({
         {/* No delete confirmation needed in create mode */}
       </form>
 
-      {/* Quantity modification modal */}
-      {showQuantityModal && selectedWorkItemId && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-[95%] mx-auto">
-            <h3 className="text-lg font-semibold mb-4">Mennyiség módosítása</h3>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="newQuantity">Új mennyiség</Label>
-                <Input
-                  id="newQuantity"
-                  type="number"
-                  step="0.01"
-                  value={newQuantity}
-                  onChange={(e) => setNewQuantity(e.target.value)}
-                  placeholder="Adja meg az új mennyiséget"
-                  className="mt-1"
-                />
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setShowQuantityModal(false);
-                    setSelectedWorkItemId(null);
-                    setNewQuantity("");
-                  }}
-                >
-                  Mégse
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => {
-                    const quantity = newQuantity
-                      ? parseFloat(newQuantity)
-                      : null;
-                    handleQuantityChange(selectedWorkItemId, quantity);
-                  }}
-                  disabled={!newQuantity || isNaN(parseFloat(newQuantity))}
-                >
-                  Mentés
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -18,6 +18,8 @@ import {
   getGroupApprovalStatus,
 } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
+import UpdateWorkItemQuantityModal from "./_components/UpdateWorkItemQuantityModal";
+import { toast } from "sonner";
 
 import type { WorkItem, WorkItemWorker } from "@/types/work";
 import type { WorkDiaryItemCreate } from "@/types/work-diary";
@@ -99,31 +101,58 @@ export default function GroupedDiaryEditForm({
 
   console.log(setWorkHours);
 
-  // Quantity change handler
-  const handleQuantityChange = async (
+  // This function updates the quantity in the local state AND saves to server
+  const handleUpdateQuantity = async (
     workItemId: number,
-    newQuantity: number | null
+    newQuantity: number
   ) => {
+    console.log("[Form] handleUpdateQuantity function started.");
+    // Update UI immediately for better UX
+    setSelectedGroupedItems((prev) =>
+      prev.map((item) =>
+        item.workItem.id === workItemId
+          ? {
+              ...item,
+              modifiedQuantity: newQuantity,
+              workItem: { ...item.workItem, modifiedQuantity: newQuantity },
+            }
+          : item
+      )
+    );
+
+    // Close modal immediately for better UX
+    setShowQuantityModal(false);
+
+    // Save to server
     try {
       const result = await updateWorkItemQuantity(workItemId, newQuantity);
       if (result.success) {
-        // Update local state
-        setSelectedGroupedItems((prev) =>
-          prev.map((item) =>
-            item.workItem.id === workItemId
-              ? { ...item, modifiedQuantity: newQuantity }
-              : item
-          )
-        );
-        setShowQuantityModal(false);
-        setSelectedWorkItemId(null);
-        setNewQuantity("");
+        showToast("success", "Mennyiség sikeresen frissítve!");
       } else {
-        console.error("Error updating quantity:", result.error);
+        showToast("error", result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
-      console.error("Error updating quantity:", error);
+      showToast("error", "Hiba a mennyiség frissítése során");
     }
+  };
+
+  const handleQuantityChange = (
+    workItemId: number | null,
+    quantity: number | null
+  ) => {
+    if (workItemId === null) return;
+
+    setSelectedGroupedItems((prev) =>
+      prev.map((item) =>
+        item.workItem.id === workItemId
+          ? {
+              ...item,
+              modifiedQuantity: quantity,
+              workItem: { ...item.workItem, modifiedQuantity: quantity }, // Also update nested workItem
+            }
+          : item
+      )
+    );
   };
 
   // Get ALL workItemWorkers from the work using server action
@@ -324,8 +353,11 @@ export default function GroupedDiaryEditForm({
   }, [diary, workItems]);
 
   const showToast = (type: "success" | "error", message: string) => {
-    // Toast implementation would go here
-    console.log(`${type}: ${message}`);
+    if (type === "success") {
+      toast.success(message);
+    } else {
+      toast.error(message);
+    }
   };
 
   const addGroupedItem = (groupedItem: GroupedWorkItem) => {
@@ -671,6 +703,35 @@ export default function GroupedDiaryEditForm({
 
   return (
     <div className="space-y-4">
+      {/* Modal for Updating Work Item Quantity */}
+      <UpdateWorkItemQuantityModal
+        isOpen={showQuantityModal}
+        onClose={() => setShowQuantityModal(false)}
+        onSave={(quantity) => {
+          console.log(
+            "[Form] onSave triggered from modal with quantity:",
+            quantity
+          );
+          if (selectedWorkItemId) {
+            console.log(
+              "[Form] selectedWorkItemId is valid:",
+              selectedWorkItemId,
+              ". Calling handleUpdateQuantity."
+            );
+            handleUpdateQuantity(selectedWorkItemId, quantity);
+          } else {
+            console.error(
+              "[Form] selectedWorkItemId is null or undefined. Cannot update."
+            );
+          }
+        }}
+        initialQuantity={newQuantity}
+        workItemName={
+          selectedGroupedItems.find(
+            (item) => item.workItem.id === selectedWorkItemId
+          )?.workItem.name || ""
+        }
+      />
       {/* Loading Overlay - AI Processing */}
       {isSubmitting && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
@@ -759,7 +820,145 @@ export default function GroupedDiaryEditForm({
                 className="flex items-center justify-between p-3 bg-white border rounded"
               >
                 <div className="flex-1">
-                  <h3 className="font-medium">{groupedItem.workItem.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-medium">
+                      {groupedItem.workItem.name}
+                    </h3>
+                    <button
+                      type="button" // PREVENTS FORM SUBMISSION
+                      onClick={() => {
+                        const effectiveQuantity = (() => {
+                          const modifiedQty = groupedItem.modifiedQuantity;
+                          const originalQty = groupedItem.workItem.quantity;
+                          if (
+                            modifiedQty !== null &&
+                            modifiedQty !== undefined
+                          ) {
+                            return modifiedQty;
+                          } else if (
+                            originalQty !== null &&
+                            originalQty !== undefined
+                          ) {
+                            return originalQty;
+                          } else {
+                            return 0;
+                          }
+                        })();
+                        setNewQuantity(effectiveQuantity?.toString() || "");
+                        setSelectedWorkItemId(groupedItem.workItem.id);
+                        setShowQuantityModal(true);
+                      }}
+                      className="p-1 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
+                      title="Mennyiség módosítása"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
+                  <div className="mt-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm text-gray-600">
+                        Készültség
+                      </span>
+                      <span className="text-sm font-medium text-blue-600">
+                        {groupedItem.workItem.completedQuantity || 0}/
+                        {(() => {
+                          const modifiedQty = groupedItem.modifiedQuantity;
+                          const originalQty = groupedItem.workItem.quantity;
+                          if (
+                            modifiedQty !== null &&
+                            modifiedQty !== undefined
+                          ) {
+                            return modifiedQty;
+                          } else if (
+                            originalQty !== null &&
+                            originalQty !== undefined
+                          ) {
+                            return originalQty;
+                          } else {
+                            return "?";
+                          }
+                        })()}{" "}
+                        ({groupedItem.workItem.unit || "?"})
+                      </span>
+                    </div>
+                    <div className="relative w-full">
+                      <div
+                        className="w-full h-2 bg-gray-200 rounded-lg relative cursor-pointer"
+                        onClick={(e) => {
+                          const rect =
+                            e.currentTarget.getBoundingClientRect();
+                          const percent =
+                            ((e.clientX - rect.left) / rect.width) * 100;
+                          const effectiveQuantity = (() => {
+                            const modifiedQty = groupedItem.modifiedQuantity;
+                            const originalQty = groupedItem.workItem.quantity;
+                            if (
+                              modifiedQty !== null &&
+                              modifiedQty !== undefined
+                            ) {
+                              return modifiedQty;
+                            } else if (
+                              originalQty !== null &&
+                              originalQty !== undefined
+                            ) {
+                              return originalQty;
+                            } else {
+                              return 0;
+                            }
+                          })();
+                          const newCompletedQuantity = Math.round(
+                            (percent / 100) * effectiveQuantity
+                          );
+                          updateProgress(
+                            groupedItem.workItem.id,
+                            Math.max(
+                              0,
+                              Math.min(
+                                effectiveQuantity,
+                                newCompletedQuantity
+                              )
+                            )
+                          );
+                        }}
+                      >
+                        <div
+                          className="h-full bg-blue-500 rounded-lg transition-all duration-300"
+                          style={{
+                            width: `${Math.min(
+                              100,
+                              Math.max(
+                                0,
+                                (() => {
+                                  const effectiveQuantity = (() => {
+                                    const modifiedQty = groupedItem.modifiedQuantity;
+                                    const originalQty = groupedItem.workItem.quantity;
+                                    if (
+                                      modifiedQty !== null &&
+                                      modifiedQty !== undefined
+                                    ) {
+                                      return modifiedQty;
+                                    } else if (
+                                      originalQty !== null &&
+                                      originalQty !== undefined
+                                    ) {
+                                      return originalQty;
+                                    } else {
+                                      return 0;
+                                    }
+                                  })();
+                                  return effectiveQuantity > 0
+                                    ? ((groupedItem.workItem.completedQuantity || 0) /
+                                        effectiveQuantity) *
+                                        100
+                                    : 0;
+                                })()
+                              )
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <Button
                   type="button"
@@ -1519,55 +1718,6 @@ export default function GroupedDiaryEditForm({
           </div>
         )}
 
-        {/* Quantity modification modal */}
-        {showQuantityModal && selectedWorkItemId && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white rounded-xl shadow-lg p-6 max-w-md w-[95%] mx-auto">
-              <h3 className="text-lg font-semibold mb-4">
-                Mennyiség módosítása
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="newQuantity">Új mennyiség</Label>
-                  <Input
-                    id="newQuantity"
-                    type="number"
-                    step="0.01"
-                    value={newQuantity}
-                    onChange={(e) => setNewQuantity(e.target.value)}
-                    placeholder="Adja meg az új mennyiséget"
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => {
-                      setShowQuantityModal(false);
-                      setSelectedWorkItemId(null);
-                      setNewQuantity("");
-                    }}
-                  >
-                    Mégse
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      const quantity = newQuantity
-                        ? parseFloat(newQuantity)
-                        : null;
-                      handleQuantityChange(selectedWorkItemId, quantity);
-                    }}
-                    disabled={!newQuantity || isNaN(parseFloat(newQuantity))}
-                  >
-                    Mentés
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </form>
     </div>
   );
