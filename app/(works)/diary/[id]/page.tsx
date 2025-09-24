@@ -10,13 +10,13 @@ import DiaryPageClient from "./DiaryPageClient";
 import { Work } from "../../works/page";
 
 interface DiaryPageProps {
-  params: { id: string };
-  searchParams: { diaryType?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ diaryType?: string }>;
 }
 
 export default async function DiaryPage({ params, searchParams }: DiaryPageProps) {
-  const workId = Number(params.id);
-  const { diaryType } = searchParams;
+  const workId = Number((await params).id);
+  const { diaryType } = await searchParams;
   if (!workId) return notFound();
 
   let work: (Work & { workers: Worker[], expectedProfitPercent: number | null }) | null = null;

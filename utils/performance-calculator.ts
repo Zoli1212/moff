@@ -1,4 +1,5 @@
 import type { WorkItem, Worker } from '@/types/work';
+import type { WorkforceRegistryData } from '@/actions/workforce-registry-actions';
 
 // Segédfüggvény: órabér számítása napi díjból
 export const getHourlyRate = (dailyRate: number | null | undefined): number => {
@@ -19,7 +20,7 @@ export interface PerformanceCalculationInput {
   workDiaryItems: any[];
   workItems: WorkItem[];
   workers: Worker[];
-  workforceRegistry: any[];
+  workforceRegistry: WorkforceRegistryData[];
   expectedProfitPercent: number | null;
 }
 
@@ -69,10 +70,6 @@ export const calculatePerformance = ({
            
            // Ha nincs workItemWorkers, próbáljuk meg közvetlenül a workers tömbből
            let dailyRate = workerAssignment?.workforceRegistry?.dailyRate;
-           if (!dailyRate) {
-             const worker = workers.find(w => w.id === diaryItem.workerId);
-             dailyRate = worker?.dailyRate;
-           }
            
            // Ha még mindig nincs dailyRate, keressük meg a WorkforceRegistry-ben név alapján
            if (!dailyRate && diaryItem.name) {
