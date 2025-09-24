@@ -67,7 +67,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <div className="h-2 bg-gray-200 rounded overflow-hidden">
             <div
               className="h-full bg-blue-500 transition-all duration-300"
-              style={{ width: `${progress}%` }}
+              style={{ 
+                width: `${Math.min(100, (effectiveQuantity && effectiveQuantity > 0) ? (completedQuantity || 0) / effectiveQuantity * 100 : 0)}%` 
+              }}
             />
           </div>
           <div className="flex items-center justify-between mt-1">
