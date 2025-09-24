@@ -15,6 +15,8 @@ import type {
 } from "@/actions/get-workdiariesbyworkid-actions";
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
 import { Work } from "../../works/page";
+import type { WorkforceRegistryData } from "@/actions/workforce-registry-actions";
+import { useActiveWorkersStore } from "@/stores/active-workers-store";
 
 // Define the Work type locally based on its usage in page.tsx
 
@@ -29,6 +31,7 @@ interface DiaryPageClientProps {
   work: (Work & { workers: Worker[]; expectedProfitPercent: number | null }) | null;
   items: WorkItem[];
   diaries: WorkDiaryWithItem[];
+  workforceRegistry: WorkforceRegistryData[];
   error: string | null;
   type: "workers" | "contractor";
   diaryIds: number[];
@@ -38,9 +41,8 @@ export default function DiaryPageClient({
   work,
   items,
   diaries,
-  error,
-  type,
-  diaryIds,
+  workforceRegistry,
+  error
 }: DiaryPageClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -60,11 +62,62 @@ export default function DiaryPageClient({
   >(undefined);
   const [isGroupedMode, setIsGroupedMode] = useState(true); // Default to grouped mode
 
+  // Load active workers into store when diary page loads
+  const { setActiveWorkers, setWorkerHours } = useActiveWorkersStore();
+
   useEffect(() => {
     if (items || error) {
       setIsLoading(false);
     }
   }, [items, error]);
+
+  // Load active workers from workItemWorkers when diary page loads
+  useEffect(() => {
+    const loadActiveWorkers = async () => {
+      if (!work?.id) return;
+      
+      try {
+        const { getWorkItemWorkersForWork } = await import(
+          "@/actions/get-workitemworkers-for-work"
+        );
+        const assignments = await getWorkItemWorkersForWork(Number(work.id));
+        
+        if (assignments && assignments.length > 0) {
+          // Group by role and get unique workers
+          const grouped: Record<string, any[]> = {};
+          for (const assignment of assignments) {
+            const role = assignment.role || "Ismeretlen";
+            const hasData = Boolean(assignment.name) || Boolean(assignment.email);
+            if (!hasData) continue;
+            if (!grouped[role]) grouped[role] = [];
+            grouped[role].push(assignment);
+          }
+
+          const uniqueWorkers = new Map<string, any>();
+          const hoursMap = new Map<string, number>();
+
+          Object.values(grouped).forEach((workersInRole) => {
+            workersInRole.forEach((worker) => {
+              const workerName = worker.name || "";
+              if (workerName && !uniqueWorkers.has(workerName)) {
+                uniqueWorkers.set(workerName, worker);
+              }
+              // Default to 8 hours if not specified
+              hoursMap.set(workerName, 8);
+            });
+          });
+
+          const activeWorkerList = Array.from(uniqueWorkers.values());
+          setActiveWorkers(activeWorkerList);
+          setWorkerHours(hoursMap);
+        }
+      } catch (error) {
+        console.error("Error loading active workers for diary:", error);
+      }
+    };
+
+    loadActiveWorkers();
+  }, [work?.id, setActiveWorkers, setWorkerHours]);
 
   const performanceData = usePerformanceData({
     diaries,
@@ -73,6 +126,7 @@ export default function DiaryPageClient({
     expectedProfitPercent: work?.expectedProfitPercent ?? 0,
     currentDate,
     view,
+    workforceRegistry,
   });
 
   const handleDateSelect = (date: Date) => {
@@ -131,7 +185,7 @@ export default function DiaryPageClient({
         Munkanapló
       </h1>
 
-      <PerformanceSummary data={performanceData} isLoading={isLoading} />
+   
 
       {error && (
         <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>
@@ -193,6 +247,7 @@ export default function DiaryPageClient({
         }}
         onDateClick={handleDateSelect}
       />
+      
       {/* DiaryEntryDetail modal - always opens for selected day */}
       {showDiaryModal && selectedDiary && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
@@ -244,6 +299,9 @@ export default function DiaryPageClient({
           </div>
         </div>
       )}
+      <div className="mb-20 mt-4">
+         <PerformanceSummary data={performanceData} isLoading={isLoading} />
+      </div>
     </div>
   );
 }

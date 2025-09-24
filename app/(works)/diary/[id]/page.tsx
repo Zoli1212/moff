@@ -3,7 +3,7 @@ import {
   getWorkDiariesByWorkId,
   WorkDiaryWithItem,
 } from "@/actions/get-workdiariesbyworkid-actions";
-import { getAllWorkforceRegistry } from "@/actions/workforce-registry-actions";
+import { getAllWorkforceRegistry, WorkforceRegistryData } from "@/actions/workforce-registry-actions";
 import { notFound } from "next/navigation";
 import { WorkItem, Worker } from "@/types/work"; // Importáljuk a hiányzó típusokat
 import DiaryPageClient from "./DiaryPageClient";
@@ -22,7 +22,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
   let work: (Work & { workers: Worker[], expectedProfitPercent: number | null }) | null = null;
   let items: WorkItem[] = [];
   let diaries: WorkDiaryWithItem[] = [];
-  let workforceRegistry: any[] = [];
+  let workforceRegistry: WorkforceRegistryData[] = [];
   let error: string | null = null;
 
   try {
@@ -37,13 +37,13 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
       throw new Error("A munka nem található.");
     }
 
-    work = workData as any;
+    work = workData as (Work & { workers: Worker[], expectedProfitPercent: number | null });
     items = itemData;
     diaries = diaryData;
     workforceRegistry = workforceData || [];
 
-  } catch (e: any) {
-    error = e.message || "Hiba történt az adatok lekérése közben.";
+  } catch (e: unknown) {
+    error = e instanceof Error ? e.message : "Hiba történt az adatok lekérése közben.";
   }
 
   const diaryIds = Array.from(
