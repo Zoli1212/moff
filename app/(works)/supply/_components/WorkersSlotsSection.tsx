@@ -856,14 +856,47 @@ const WorkersSlotsSection: React.FC<Props> = ({
                   const assignedCount = list.length;
                   const extraSlotCount = extraSlots[role] || 0;
                   const reducedSlotCount = reducedSlots[role] || 0;
-                  // For inactive roles, we don't have required count, so just show assigned workers + extra slots
-                  const slotCount =
-                    Math.max(1, assignedCount) +
-                    extraSlotCount -
-                    reducedSlotCount;
-                  const slotArray = Array.from({
-                    length: Math.max(0, slotCount),
-                  });
+                  
+                  // For inactive roles, calculate required from ALL workItems (not just active ones)
+                  // This ensures consistency with the original requirements
+                  let required = 0;
+                  for (const wi of workItems) {
+                    const roleQuantities: Record<string, number> = {};
+
+                    // From workItemWorkers
+                    for (const wiw of wi.workItemWorkers ?? []) {
+                      const worker = workers.find((w) => w.id === wiw.workerId);
+                      if (worker && (worker.name || "Ismeretlen") === role) {
+                        const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
+                        roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
+                      }
+                    }
+
+                    // From requiredProfessionals if available
+                    const requiredProfs = getRequiredProfessionals(wi);
+                    for (const rp of requiredProfs) {
+                      if (rp.type === role) {
+                        const quantity =
+                          typeof rp.quantity === "number" && rp.quantity > 0
+                            ? rp.quantity
+                            : 1;
+                        roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
+                      }
+                    }
+
+                    // Update required with maximum values
+                    for (const [r, quantity] of Object.entries(roleQuantities)) {
+                      if (r === role) {
+                        required = Math.max(required, quantity);
+                      }
+                    }
+                  }
+                  
+                  // Ensure at least 1 slot for inactive roles
+                  required = Math.max(1, required);
+                  const effectiveRequired = Math.max(0, required - reducedSlotCount);
+                  const slotCount = Math.max(effectiveRequired, assignedCount) + extraSlotCount;
+                  const slotArray = Array.from({ length: slotCount });
 
                   return (
                     <div key={`inactive-${role}`}>
@@ -887,7 +920,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           </div>
                           <div className="flex items-center gap-2 ml-auto">
                             <div className="font-semibold text-[14px] text-[#444]">
-                              {list.length}
+                              {assignedCount} / {required}
                             </div>
                             <button
                               onClick={() => {
