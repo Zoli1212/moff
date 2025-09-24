@@ -787,5 +787,20 @@ amikor
 90% 
 
 telefonon képfeltöltés : error ? iphone?
+haladás lista fönti lista tartsa a sorrendet, naplóbejegyzések db ben legyenek
+törlés ha nincs naplóbejgyzés rá
+naplóbejegyzés sorrendje legyen a naplóban
+emberekhez és feladatokhoz tartozó teljesítmény
+lenne legyen a teljesítmény
+tovább lehessen húzni + mező többletmunka
+lehessen többletmunkát hozzáadni
+mennyi többletmunka lesz
+LENN vana  teljesítmény
++ gombbal többletmunka lesz
+ha nincs 
+a feladatoknál is legyen plussz a progressbar mellett jobbra naplónál is ott van a plussz
+anyagok egybe legyenk
+Beszerzés folyamatban levő munkafázisok nem kell
+viszont minden tabon visszaköszön
 
 ---
