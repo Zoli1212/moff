@@ -84,7 +84,7 @@ export default function DiaryPageClient({
         
         if (assignments && assignments.length > 0) {
           // Group by role and get unique workers
-          const grouped: Record<string, any[]> = {};
+          const grouped: Record<string, unknown[]> = {};
           for (const assignment of assignments) {
             const role = assignment.role || "Ismeretlen";
             const hasData = Boolean(assignment.name) || Boolean(assignment.email);
@@ -98,7 +98,8 @@ export default function DiaryPageClient({
 
           Object.values(grouped).forEach((workersInRole) => {
             workersInRole.forEach((worker) => {
-              const workerName = worker.name || "";
+              const workerObj = worker as { name?: string; email?: string };
+              const workerName = workerObj.name || "";
               if (workerName && !uniqueWorkers.has(workerName)) {
                 uniqueWorkers.set(workerName, worker);
               }

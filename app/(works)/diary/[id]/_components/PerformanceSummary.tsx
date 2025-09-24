@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useState } from 'react';
 import type { PerformanceData } from '@/hooks/usePerformanceData';
 
 interface PerformanceSummaryProps {
