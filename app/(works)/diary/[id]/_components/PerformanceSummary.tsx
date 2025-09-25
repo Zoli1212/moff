@@ -5,9 +5,10 @@ import type { PerformanceData } from '@/hooks/usePerformanceData';
 interface PerformanceSummaryProps {
   data: PerformanceData | null;
   isLoading: boolean;
+  expectedProfitPercent?: number | null;
 }
 
-const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading }) => {
+const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading, expectedProfitPercent }) => {
 
   if (isLoading) {
     return (
@@ -25,7 +26,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     );
   }
 
-  const { performancePercentage, progressByWorkItem, hoursByWorker } = data;
+  const { performancePercentage, progressByWorkItem, hoursByWorker, totalRevenue, totalCost } = data;
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
@@ -42,7 +43,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                 ? 'bg-orange-500' 
                 : 'bg-red-500'
             }`}
-            style={{ width: `${Math.min(performancePercentage, 100)}%` }}
+            style={{ width: `${Math.max(5, Math.min(performancePercentage, 100))}%` }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <span className="text-sm font-bold text-white drop-shadow-sm">
@@ -95,6 +96,53 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
           )}
         </div>
 
+      </div>
+
+      {/* Profitráta számítás */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <h3 className="font-semibold text-gray-600 mb-3">Profitráta elemzés</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <div className="text-blue-600 font-medium">Bevétel</div>
+            <div className="text-lg font-bold text-blue-800">
+              {totalRevenue.toLocaleString('hu-HU')} Ft
+            </div>
+          </div>
+          <div className="bg-red-50 p-3 rounded-lg">
+            <div className="text-red-600 font-medium">Költség</div>
+            <div className="text-lg font-bold text-red-800">
+              {totalCost.toLocaleString('hu-HU')} Ft
+            </div>
+          </div>
+          <div className={`p-3 rounded-lg ${
+            totalRevenue > totalCost ? 'bg-green-50' : 'bg-orange-50'
+          }`}>
+            <div className={`font-medium ${
+              totalRevenue > totalCost ? 'text-green-600' : 'text-orange-600'
+            }`}>
+              Profit
+            </div>
+            <div className={`text-lg font-bold ${
+              totalRevenue > totalCost ? 'text-green-800' : 'text-orange-800'
+            }`}>
+              {(totalRevenue - totalCost).toLocaleString('hu-HU')} Ft
+            </div>
+          </div>
+        </div>
+        
+        {totalCost > 0 && (
+          <div className="mt-3 text-xs text-gray-600">
+            Aktuális profitráta: {((totalRevenue / totalCost - 1) * 100).toFixed(1)}%
+            {expectedProfitPercent && (
+              <span className="ml-3 text-green-600">
+                | Cél profitráta: {expectedProfitPercent}%
+              </span>
+            )}
+            {totalRevenue <= totalCost && (
+              <span className="text-red-600 ml-2">⚠️ Veszteséges</span>
+            )}
+          </div>
+        )}
       </div>
 
     </div>

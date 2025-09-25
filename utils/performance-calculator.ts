@@ -38,6 +38,8 @@ export const calculatePerformance = ({
   const progressByWorkItemMap = new Map<number, { name: string; totalProgress: number; unit: string }>();
   const hoursByWorkerMap = new Map<string, { name: string; totalHours: number }>();
 
+         console.log(`\n🔍 DEBUG: Processing ${workDiaryItems.length} diary items`);
+         
          // Költségek és bevételek számítása a releváns workDiaryItem-ek alapján
          workDiaryItems.forEach((diaryItem: any, index: number) => {
            const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
@@ -47,6 +49,13 @@ export const calculatePerformance = ({
 
            // Bevétel számítása: a haladás arányában a workItem unitPrice alapján
            const progressMade = diaryItem.quantity || 0;
+           
+           console.log(`\n📋 DiaryItem #${index + 1}:`);
+           console.log(`  - WorkItem: ${workItem.name}`);
+           console.log(`  - Date: ${diaryItem.date}`);
+           console.log(`  - Worker: ${diaryItem.name || 'Unknown'}`);
+           console.log(`  - Quantity: ${progressMade} ${workItem.unit}`);
+           console.log(`  - WorkItem max: ${workItem.quantity} ${workItem.unit}`);
            
            if (progressMade > 0 && workItem.unitPrice && workItem.quantity > 0) {
              const revenuePerUnit = workItem.unitPrice;

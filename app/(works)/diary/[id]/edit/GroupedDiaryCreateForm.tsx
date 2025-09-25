@@ -703,9 +703,9 @@ export default function GroupedDiaryForm({
             {/* Selected Workers Display */}
             {selectedWorkers.length > 0 && (
               <div className="space-y-2">
-                {selectedWorkers.map((worker: WorkItemWorker) => (
+                {selectedWorkers.map((worker: WorkItemWorker, index: number) => (
                   <div
-                    key={worker.workerId}
+                    key={`${worker.workerId}-${worker.name}-${index}`}
                     className="flex items-center justify-between bg-white p-3 rounded border"
                   >
                     <div className="flex items-center gap-2">

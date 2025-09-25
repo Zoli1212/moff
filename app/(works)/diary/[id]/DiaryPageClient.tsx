@@ -301,7 +301,11 @@ export default function DiaryPageClient({
         </div>
       )}
       <div className="mb-20 mt-4">
-         <PerformanceSummary data={performanceData} isLoading={isLoading} />
+         <PerformanceSummary 
+           data={performanceData} 
+           isLoading={isLoading} 
+           expectedProfitPercent={work?.expectedProfitPercent}
+         />
       </div>
     </div>
   );
