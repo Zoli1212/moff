@@ -12,7 +12,6 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
-import { updateWorkItemCompletion } from "@/actions/work-actions";
 import { updateWorkItemCompletedQuantityFromLatestDiary } from "@/actions/workdiary-actions";
 import { updateGroupApproval } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
@@ -59,23 +58,25 @@ export default function GroupedDiaryForm({
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
 
+  // Track original completedQuantity values when form loads
+  const [originalCompletedQuantities, setOriginalCompletedQuantities] =
+    useState<Map<number, number>>(new Map());
+
   // Track local progress for this diary entry (progressAtDate)
-  const [localProgress, setLocalProgress] = useState<Map<number, number>>(new Map());
+  const [localProgress, setLocalProgress] = useState<Map<number, number>>(
+    new Map()
+  );
 
   // Initialize localProgress with current WorkItem completedQuantity values
   useEffect(() => {
     if (workItems && workItems.length > 0) {
       const initialProgress = new Map<number, number>();
-      workItems.forEach(item => {
+      workItems.forEach((item) => {
         initialProgress.set(item.id, item.completedQuantity || 0);
       });
       setLocalProgress(initialProgress);
     }
   }, [workItems]);
-
-  // Track original completedQuantity values when form loads
-  const [originalCompletedQuantities, setOriginalCompletedQuantities] =
-    useState<Map<number, number>>(new Map());
 
   const [pendingApprovalChange, setPendingApprovalChange] = useState<
     boolean | null
@@ -186,20 +187,6 @@ export default function GroupedDiaryForm({
     }
   }, [activeWorkItems, selectedGroupedItems.length, hasInitialized]);
 
-  // Initialize originalCompletedQuantities when selectedGroupedItems changes
-  useEffect(() => {
-    setOriginalCompletedQuantities((prev) => {
-      const newMap = new Map(prev);
-      selectedGroupedItems.forEach((item) => {
-        // Only set if not already set (preserve manually added items)
-        if (!newMap.has(item.workItem.id)) {
-          newMap.set(item.workItem.id, item.workItem.completedQuantity || 0);
-        }
-      });
-      return newMap;
-    });
-  }, [selectedGroupedItems]);
-
   // Don't initialize workers by default - start with empty selection
   const { activeWorkers, workerHours: activeWorkerHours } =
     useActiveWorkersStore();
@@ -260,7 +247,6 @@ export default function GroupedDiaryForm({
       setSelectedGroupedItems((prev) => [...prev, groupedItem]);
 
       // Store original completedQuantity value when workItem is first selected
-      // For CREATE form, we store the current completedQuantity as baseline
       setOriginalCompletedQuantities((prev) => {
         const newMap = new Map(prev);
         newMap.set(
@@ -430,29 +416,40 @@ export default function GroupedDiaryForm({
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.name || "") || 8;
 
-        // Use local progress values (progressAtDate) for each work item
-        const progressValues = selectedGroupedItems.map((item) => 
-          localProgress.get(item.workItem.id) || 0
-        );
+        // Calculate delta values (difference from current completedQuantity)
+        const deltaValues = selectedGroupedItems.map((item) => {
+          const currentProgress = localProgress.get(item.workItem.id) || 0;
+          const currentCompleted = item.workItem.completedQuantity || 0;
+          return Math.max(0, currentProgress - currentCompleted);
+        });
 
-        const totalProgress = progressValues.reduce(
-          (sum, progress) => sum + progress,
+        const totalProgress = deltaValues.reduce(
+          (sum, delta) => sum + delta,
           0
         );
 
-        // If no progress at all, skip this worker entirely
-        if (totalProgress === 0) {
-          continue;
-        }
+        // If no progress at all, still record work hours but with 0 quantity
+        const hasProgress = totalProgress > 0;
 
         for (const [index, groupedItem] of selectedGroupedItems.entries()) {
-          const itemProgress = progressValues[index] || 0;
+          const itemProgress = localProgress.get(groupedItem.workItem.id) || 0;
 
-          // Proportional distribution based on progress
-          const proportion = itemProgress / totalProgress;
-          const hoursPerWorkItem = workerTotalHours * proportion;
+          // Calculate delta (difference from current completedQuantity)
+          const currentCompleted = groupedItem.workItem.completedQuantity || 0;
+          const deltaQuantity = Math.max(0, itemProgress - currentCompleted);
 
-          const quantityForThisWorker = totalWorkerHours > 0 ? itemProgress * (workerTotalHours / totalWorkerHours) : 0;
+          // Proportional distribution
+          const proportion = hasProgress
+            ? deltaQuantity / totalProgress
+            : 1 / selectedGroupedItems.length;
+          
+          // Work hours: distribute evenly among selected items regardless of progress
+          const hoursPerWorkItem = workerTotalHours / selectedGroupedItems.length;
+
+          const quantityForThisWorker =
+            totalWorkerHours > 0
+              ? deltaQuantity * (workerTotalHours / totalWorkerHours)
+              : 0;
 
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
@@ -480,7 +477,9 @@ export default function GroupedDiaryForm({
       // Update work item progress for all selected items
       for (const groupedItem of selectedGroupedItems) {
         promises.push(
-          updateWorkItemCompletedQuantityFromLatestDiary(groupedItem.workItem.id)
+          updateWorkItemCompletedQuantityFromLatestDiary(
+            groupedItem.workItem.id
+          )
         );
       }
 
@@ -856,7 +855,8 @@ export default function GroupedDiaryForm({
                       <button
                         type="button" // PREVENTS FORM SUBMISSION
                         onClick={() => {
-                          const effectiveQuantity = groupedItem.workItem.quantity || 0;
+                          const effectiveQuantity =
+                            groupedItem.workItem.quantity || 0;
                           setNewQuantity(effectiveQuantity?.toString() || "");
                           setSelectedWorkItemId(groupedItem.workItem.id);
                           setShowQuantityModal(true);
@@ -874,8 +874,8 @@ export default function GroupedDiaryForm({
                         </span>
                         <span className="text-sm font-medium text-blue-600">
                           {localProgress.get(groupedItem.workItem.id) || 0}/
-                          {groupedItem.workItem.quantity || "?"}{" "}
-                          ({groupedItem.workItem.unit || "?"})
+                          {groupedItem.workItem.quantity || "?"} (
+                          {groupedItem.workItem.unit || "?"})
                         </span>
                       </div>
                       <div className="relative w-full">
@@ -885,14 +885,30 @@ export default function GroupedDiaryForm({
                             e.preventDefault();
                             const slider = e.currentTarget;
                             const rect = slider.getBoundingClientRect();
-                            
+
                             const updateValue = (clientX: number) => {
-                              const percent = Math.max(0, Math.min(100, 
-                                ((clientX - rect.left) / rect.width) * 100
-                              ));
-                              const effectiveQuantity = groupedItem.workItem.quantity || 0;
-                              const newCompletedQuantity = Math.round((percent / 100) * effectiveQuantity);
-                              updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(effectiveQuantity, newCompletedQuantity)));
+                              const percent = Math.max(
+                                0,
+                                Math.min(
+                                  100,
+                                  ((clientX - rect.left) / rect.width) * 100
+                                )
+                              );
+                              const effectiveQuantity =
+                                groupedItem.workItem.quantity || 0;
+                              const newCompletedQuantity = Math.round(
+                                (percent / 100) * effectiveQuantity
+                              );
+                              updateProgress(
+                                groupedItem.workItem.id,
+                                Math.max(
+                                  0,
+                                  Math.min(
+                                    effectiveQuantity,
+                                    newCompletedQuantity
+                                  )
+                                )
+                              );
                             };
 
                             const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -901,15 +917,24 @@ export default function GroupedDiaryForm({
                             };
 
                             const handleMouseUp = () => {
-                              document.removeEventListener('mousemove', handleMouseMove);
-                              document.removeEventListener('mouseup', handleMouseUp);
-                              document.body.style.userSelect = '';
+                              document.removeEventListener(
+                                "mousemove",
+                                handleMouseMove
+                              );
+                              document.removeEventListener(
+                                "mouseup",
+                                handleMouseUp
+                              );
+                              document.body.style.userSelect = "";
                             };
 
-                            document.body.style.userSelect = 'none';
-                            document.addEventListener('mousemove', handleMouseMove);
-                            document.addEventListener('mouseup', handleMouseUp);
-                            
+                            document.body.style.userSelect = "none";
+                            document.addEventListener(
+                              "mousemove",
+                              handleMouseMove
+                            );
+                            document.addEventListener("mouseup", handleMouseUp);
+
                             // Set initial value
                             updateValue(e.clientX);
                           }}
@@ -919,7 +944,8 @@ export default function GroupedDiaryForm({
                             style={{
                               width: `${Math.min(
                                 100,
-                                ((localProgress.get(groupedItem.workItem.id) || 0) /
+                                ((localProgress.get(groupedItem.workItem.id) ||
+                                  0) /
                                   (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}%`,
@@ -930,7 +956,8 @@ export default function GroupedDiaryForm({
                             style={{
                               left: `calc(${Math.min(
                                 100,
-                                ((localProgress.get(groupedItem.workItem.id) || 0) /
+                                ((localProgress.get(groupedItem.workItem.id) ||
+                                  0) /
                                   (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}% - 20px)`,
@@ -1217,7 +1244,6 @@ export default function GroupedDiaryForm({
 
         {/* No delete confirmation needed in create mode */}
       </form>
-
     </div>
   );
 }

@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, X, Plus, Users, User, BookOpen, Trash2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { updateWorkItemCompletion } from "@/actions/work-actions";
 import { updateWorkItemCompletedQuantityFromLatestDiary } from "@/actions/workdiary-actions";
 import {
   updateGroupApproval,
@@ -67,7 +66,9 @@ export default function GroupedDiaryEditForm({
     useState<Map<number, number>>(new Map());
 
   // Track local progress for this diary entry (progressAtDate)
-  const [localProgress, setLocalProgress] = useState<Map<number, number>>(new Map());
+  const [localProgress, setLocalProgress] = useState<Map<number, number>>(
+    new Map()
+  );
 
   // Group approval state
   const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
@@ -120,7 +121,7 @@ export default function GroupedDiaryEditForm({
       )
     );
 
-    console.log(setWorkHours)
+    console.log(setWorkHours);
 
     // Modal will be closed by the modal component itself after successful save
 
@@ -288,9 +289,12 @@ export default function GroupedDiaryEditForm({
               workItem,
               progress: workItem.progress || 0,
             });
-            
+
             // Set local progress from existing diary item's progressAtDate
-            if (item.progressAtDate !== undefined && item.progressAtDate !== null) {
+            if (
+              item.progressAtDate !== undefined &&
+              item.progressAtDate !== null
+            ) {
               localProgressMap.set(workItem.id, item.progressAtDate);
             }
           }
@@ -538,8 +542,8 @@ export default function GroupedDiaryEditForm({
         const workerTotalHours = workerHours.get(worker.id) || workHours;
 
         // Use local progress values (progressAtDate) for each work item
-        const progressValues = selectedGroupedItems.map((item) => 
-          localProgress.get(item.workItem.id) || 0
+        const progressValues = selectedGroupedItems.map(
+          (item) => localProgress.get(item.workItem.id) || 0
         );
 
         const totalProgress = progressValues.reduce(
@@ -552,10 +556,16 @@ export default function GroupedDiaryEditForm({
           const itemProgress = progressValues[i] || 0;
 
           // Proportional distribution based on progress
-          const proportion = totalProgress > 0 ? itemProgress / totalProgress : (1 / selectedGroupedItems.length);
+          const proportion =
+            totalProgress > 0
+              ? itemProgress / totalProgress
+              : 1 / selectedGroupedItems.length;
           const hoursPerWorkItem = workerTotalHours * proportion;
 
-          const quantityForThisWorker = totalWorkerHours > 0 ? itemProgress * (workerTotalHours / totalWorkerHours) : 0;
+          const quantityForThisWorker =
+            totalWorkerHours > 0
+              ? itemProgress * (workerTotalHours / totalWorkerHours)
+              : 0;
 
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
@@ -583,7 +593,9 @@ export default function GroupedDiaryEditForm({
       // Update work item progress for all selected items
       for (const groupedItem of selectedGroupedItems) {
         promises.push(
-          updateWorkItemCompletedQuantityFromLatestDiary(groupedItem.workItem.id)
+          updateWorkItemCompletedQuantityFromLatestDiary(
+            groupedItem.workItem.id
+          )
         );
       }
 
@@ -982,7 +994,8 @@ export default function GroupedDiaryEditForm({
                       <button
                         type="button" // PREVENTS FORM SUBMISSION
                         onClick={() => {
-                          const effectiveQuantity = groupedItem.workItem.quantity || 0;
+                          const effectiveQuantity =
+                            groupedItem.workItem.quantity || 0;
                           setNewQuantity(effectiveQuantity?.toString() || "");
                           setSelectedWorkItemId(groupedItem.workItem.id);
                           setShowQuantityModal(true);
@@ -1000,8 +1013,8 @@ export default function GroupedDiaryEditForm({
                         </span>
                         <span className="text-sm font-medium text-blue-600">
                           {localProgress.get(groupedItem.workItem.id) || 0}/
-                          {groupedItem.workItem.quantity || "?"}{" "}
-                          ({groupedItem.workItem.unit || "?"})
+                          {groupedItem.workItem.quantity || "?"} (
+                          {groupedItem.workItem.unit || "?"})
                         </span>
                       </div>
                       <div className="relative w-full">
@@ -1011,14 +1024,30 @@ export default function GroupedDiaryEditForm({
                             e.preventDefault();
                             const slider = e.currentTarget;
                             const rect = slider.getBoundingClientRect();
-                            
+
                             const updateValue = (clientX: number) => {
-                              const percent = Math.max(0, Math.min(100, 
-                                ((clientX - rect.left) / rect.width) * 100
-                              ));
-                              const effectiveQuantity = groupedItem.workItem.quantity || 0;
-                              const newCompletedQuantity = Math.round((percent / 100) * effectiveQuantity);
-                              updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(effectiveQuantity, newCompletedQuantity)));
+                              const percent = Math.max(
+                                0,
+                                Math.min(
+                                  100,
+                                  ((clientX - rect.left) / rect.width) * 100
+                                )
+                              );
+                              const effectiveQuantity =
+                                groupedItem.workItem.quantity || 0;
+                              const newCompletedQuantity = Math.round(
+                                (percent / 100) * effectiveQuantity
+                              );
+                              updateProgress(
+                                groupedItem.workItem.id,
+                                Math.max(
+                                  0,
+                                  Math.min(
+                                    effectiveQuantity,
+                                    newCompletedQuantity
+                                  )
+                                )
+                              );
                             };
 
                             const handleMouseMove = (moveEvent: MouseEvent) => {
@@ -1027,15 +1056,24 @@ export default function GroupedDiaryEditForm({
                             };
 
                             const handleMouseUp = () => {
-                              document.removeEventListener('mousemove', handleMouseMove);
-                              document.removeEventListener('mouseup', handleMouseUp);
-                              document.body.style.userSelect = '';
+                              document.removeEventListener(
+                                "mousemove",
+                                handleMouseMove
+                              );
+                              document.removeEventListener(
+                                "mouseup",
+                                handleMouseUp
+                              );
+                              document.body.style.userSelect = "";
                             };
 
-                            document.body.style.userSelect = 'none';
-                            document.addEventListener('mousemove', handleMouseMove);
-                            document.addEventListener('mouseup', handleMouseUp);
-                            
+                            document.body.style.userSelect = "none";
+                            document.addEventListener(
+                              "mousemove",
+                              handleMouseMove
+                            );
+                            document.addEventListener("mouseup", handleMouseUp);
+
                             // Set initial value
                             updateValue(e.clientX);
                           }}
@@ -1045,7 +1083,8 @@ export default function GroupedDiaryEditForm({
                             style={{
                               width: `${Math.min(
                                 100,
-                                ((localProgress.get(groupedItem.workItem.id) || 0) /
+                                ((localProgress.get(groupedItem.workItem.id) ||
+                                  0) /
                                   (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}%`,
@@ -1056,7 +1095,8 @@ export default function GroupedDiaryEditForm({
                             style={{
                               left: `calc(${Math.min(
                                 100,
-                                ((localProgress.get(groupedItem.workItem.id) || 0) /
+                                ((localProgress.get(groupedItem.workItem.id) ||
+                                  0) /
                                   (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}% - 20px)`,
@@ -1473,7 +1513,6 @@ export default function GroupedDiaryEditForm({
             </div>
           </div>
         )}
-
       </form>
     </div>
   );
