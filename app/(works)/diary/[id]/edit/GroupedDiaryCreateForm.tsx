@@ -13,6 +13,7 @@ import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletion } from "@/actions/work-actions";
+import { updateWorkItemCompletedQuantityFromLatestDiary } from "@/actions/workdiary-actions";
 import { updateGroupApproval } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
 import { useActiveWorkersStore } from "@/stores/active-workers-store";
@@ -57,6 +58,20 @@ export default function GroupedDiaryForm({
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [imageError, setImageError] = useState("");
+
+  // Track local progress for this diary entry (progressAtDate)
+  const [localProgress, setLocalProgress] = useState<Map<number, number>>(new Map());
+
+  // Initialize localProgress with current WorkItem completedQuantity values
+  useEffect(() => {
+    if (workItems && workItems.length > 0) {
+      const initialProgress = new Map<number, number>();
+      workItems.forEach(item => {
+        initialProgress.set(item.id, item.completedQuantity || 0);
+      });
+      setLocalProgress(initialProgress);
+    }
+  }, [workItems]);
 
   // Track original completedQuantity values when form loads
   const [originalCompletedQuantities, setOriginalCompletedQuantities] =
@@ -324,21 +339,9 @@ export default function GroupedDiaryForm({
     setWorkerHours((prev) => new Map(prev.set(workerName, hours)));
   };
 
-  const updateProgress = (workItemId: number, completedQuantity: number) => {
-    // Only update local state, database update happens on form submission with delta calculation
-    setSelectedGroupedItems((prev) =>
-      prev.map((item) =>
-        item.workItem.id === workItemId
-          ? {
-              ...item,
-              workItem: {
-                ...item.workItem,
-                completedQuantity: completedQuantity,
-              },
-            }
-          : item
-      )
-    );
+  const updateProgress = (workItemId: number, progressAtDate: number) => {
+    // Update local progress for this diary entry
+    setLocalProgress((prev) => new Map(prev.set(workItemId, progressAtDate)));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -427,17 +430,12 @@ export default function GroupedDiaryForm({
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.name || "") || 8;
 
-        // Calculate progress changes by comparing current values with original values
-        const progressChanges = selectedGroupedItems.map((item) => {
-          const currentCompleted = item.workItem.completedQuantity || 0;
-          const originalCompleted =
-            originalCompletedQuantities.get(item.workItem.id) || 0;
-          const delta = Math.max(0, currentCompleted - originalCompleted);
-          console.log(`[DEBUG] WorkItem ${item.workItem.id}: current=${currentCompleted}, original=${originalCompleted}, delta=${delta}`);
-          return delta;
-        });
+        // Use local progress values (progressAtDate) for each work item
+        const progressValues = selectedGroupedItems.map((item) => 
+          localProgress.get(item.workItem.id) || 0
+        );
 
-        const totalProgress = progressChanges.reduce(
+        const totalProgress = progressValues.reduce(
           (sum, progress) => sum + progress,
           0
         );
@@ -448,7 +446,7 @@ export default function GroupedDiaryForm({
         }
 
         for (const [index, groupedItem] of selectedGroupedItems.entries()) {
-          const itemProgress = progressChanges[index] || 0;
+          const itemProgress = progressValues[index] || 0;
 
           // Proportional distribution based on progress
           const proportion = itemProgress / totalProgress;
@@ -470,6 +468,7 @@ export default function GroupedDiaryForm({
             workHours: hoursPerWorkItem,
             quantity: quantityForThisWorker, // A haladás mennyisége arányositva a munkás órájával
             unit: groupedItem.workItem.unit, // A workItem unit-ja
+            progressAtDate: itemProgress, // Progress at this specific date
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
           };
@@ -481,10 +480,7 @@ export default function GroupedDiaryForm({
       // Update work item progress for all selected items
       for (const groupedItem of selectedGroupedItems) {
         promises.push(
-          updateWorkItemCompletion({
-            workItemId: groupedItem.workItem.id,
-            completedQuantity: groupedItem.workItem.completedQuantity || 0,
-          })
+          updateWorkItemCompletedQuantityFromLatestDiary(groupedItem.workItem.id)
         );
       }
 
@@ -877,7 +873,7 @@ export default function GroupedDiaryForm({
                           Készültség
                         </span>
                         <span className="text-sm font-medium text-blue-600">
-                          {groupedItem.workItem.completedQuantity || 0}/
+                          {localProgress.get(groupedItem.workItem.id) || 0}/
                           {groupedItem.workItem.quantity || "?"}{" "}
                           ({groupedItem.workItem.unit || "?"})
                         </span>
@@ -923,7 +919,7 @@ export default function GroupedDiaryForm({
                             style={{
                               width: `${Math.min(
                                 100,
-                                ((groupedItem.workItem.completedQuantity || 0) /
+                                ((localProgress.get(groupedItem.workItem.id) || 0) /
                                   (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}%`,
@@ -934,7 +930,7 @@ export default function GroupedDiaryForm({
                             style={{
                               left: `calc(${Math.min(
                                 100,
-                                ((groupedItem.workItem.completedQuantity || 0) /
+                                ((localProgress.get(groupedItem.workItem.id) || 0) /
                                   (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}% - 20px)`,

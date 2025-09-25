@@ -86,7 +86,18 @@ async function getWorkerEmailFromAssignment(
 export async function deleteWorkDiaryItem({ id }: { id: number }) {
   const { user, tenantEmail } = await getTenantSafeAuth();
 
+  // Get workItemId before deletion
+  const diaryItem = await prisma.workDiaryItem.findUnique({
+    where: { id },
+    select: { workItemId: true }
+  });
+
   await prisma.workDiaryItem.delete({ where: { id } });
+
+  // Update WorkItem completedQuantity after deletion
+  if (diaryItem?.workItemId) {
+    await updateWorkItemCompletedQuantityFromLatestDiary(diaryItem.workItemId);
+  }
 
   revalidatePath(`/works/diary`);
   return { success: true };
@@ -99,12 +110,27 @@ export async function deleteWorkDiaryItemsByGroup({
 }) {
   const { user, tenantEmail } = await getTenantSafeAuth();
 
+  // Get affected workItemIds before deletion
+  const affectedItems = await prisma.workDiaryItem.findMany({
+    where: {
+      groupNo,
+      tenantEmail,
+    },
+    select: { workItemId: true },
+    distinct: ['workItemId']
+  });
+
   await prisma.workDiaryItem.deleteMany({
     where: {
       groupNo,
       tenantEmail,
     },
   });
+
+  // Update WorkItem completedQuantity for all affected workItems
+  for (const item of affectedItems) {
+    await updateWorkItemCompletedQuantityFromLatestDiary(item.workItemId);
+  }
 
   revalidatePath(`/works/diary`);
   return { success: true };
@@ -322,6 +348,7 @@ export async function createWorkDiaryItem({
   notes,
   accepted,
   groupNo,
+  progressAtDate,
 }: {
   diaryId: number;
   workId: number;
@@ -338,6 +365,7 @@ export async function createWorkDiaryItem({
   notes?: string;
   accepted?: boolean;
   groupNo?: number;
+  progressAtDate?: number;
   // id is intentionally omitted for creation
 }) {
   const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
@@ -372,6 +400,7 @@ export async function createWorkDiaryItem({
     if (notes !== undefined) createData.notes = notes;
     if (typeof accepted === "boolean") createData.accepted = accepted;
     if (groupNo !== undefined) createData.groupNo = groupNo;
+    if (progressAtDate !== undefined) createData.progressAtDate = progressAtDate;
 
     // No same-day per workItem restriction: allow multiple entries on the same day for the same workItem
     try {
@@ -528,4 +557,53 @@ export async function getOrCreateWorkDiaryForWork({
   revalidatePath(`/works/diary/${workId}`);
   revalidatePath(`/works/tasks/${workId}`);
   return { success: true, data: diary };
+}
+
+// Update WorkItem completedQuantity based on latest diary entry progressAtDate
+export async function updateWorkItemCompletedQuantityFromLatestDiary(workItemId: number) {
+  try {
+    const { tenantEmail } = await getTenantSafeAuth();
+
+    // Find the latest diary entry for this workItem
+    const latestDiaryEntry = await prisma.workDiaryItem.findFirst({
+      where: {
+        workItemId: workItemId,
+        tenantEmail: tenantEmail,
+      },
+      orderBy: {
+        date: 'desc'
+      },
+      select: {
+        progressAtDate: true
+      }
+    });
+
+    // Get workItem quantity for progress calculation
+    const workItem = await prisma.workItem.findUnique({
+      where: { id: workItemId },
+      select: { quantity: true }
+    });
+
+    // Update WorkItem completedQuantity
+    const completedQuantity = latestDiaryEntry?.progressAtDate || 0;
+    const progress = completedQuantity > 0 && workItem?.quantity ? 
+      Math.floor((completedQuantity / workItem.quantity) * 100) : 0;
+    
+    await prisma.workItem.update({
+      where: {
+        id: workItemId,
+        tenantEmail: tenantEmail,
+      },
+      data: {
+        completedQuantity: completedQuantity,
+        progress: progress,
+      }
+    });
+
+    revalidatePath('/works/tasks');
+    return { success: true, completedQuantity };
+  } catch (error) {
+    console.error('Error updating WorkItem completedQuantity:', error);
+    return { success: false, error: 'Failed to update WorkItem completedQuantity' };
+  }
 }

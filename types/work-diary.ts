@@ -34,6 +34,7 @@ type WorkDiaryItemBase = {
   quantity?: number;
   unit?: string;
   workHours?: number;
+  progressAtDate?: number;
   images?: string[];
   notes?: string;
   accepted?: boolean;

@@ -542,6 +542,7 @@ model WorkDiaryItem {
   quantity      Float?
   unit String?
   workHours     Float?
+  progressAtDate Float?    @default(0) // Progress at this specific date
   date          DateTime   @default(now())
   images        String[]
   notes         String?

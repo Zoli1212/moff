@@ -12,6 +12,7 @@ export interface WorkDiaryItemDTO {
   quantity?: number | null;
   unit?: string | null;
   workHours?: number | null;
+  progressAtDate?: number | null;
   date: Date;
   images: string[];
   notes?: string | null;
@@ -57,6 +58,7 @@ export async function getWorkDiariesByWorkId(
           quantity: true,
           unit: true,
           workHours: true,
+          progressAtDate: true,
           date: true,
           images: true,
           notes: true,
