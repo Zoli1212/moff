@@ -208,6 +208,7 @@ export default function GroupedDiaryForm({
     if (diary.date) {
       if (typeof diary.date === "string") {
         const dateOnly = (diary.date as string).split("T")[0];
+        setDate(dateOnly);
       } else {
         // Use local date components to avoid timezone conversion
         const year = diary.date.getFullYear();
