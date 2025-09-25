@@ -817,7 +817,7 @@ export async function updateWorkItemCompletion(params: {
 
   const item = await prisma.workItem.findUnique({
     where: { id: workItemId },
-    select: { tenantEmail: true, quantity: true, modifiedQuantity: true, id: true, workId: true },
+    select: { tenantEmail: true, quantity: true, id: true, workId: true },
   });
   if (!item)
     return { success: false, message: "WorkItem nem található." } as const;
@@ -827,11 +827,10 @@ export async function updateWorkItemCompletion(params: {
       message: "Nincs jogosultság a WorkItem módosításához.",
     } as const;
 
-  // Use modifiedQuantity if available, otherwise fall back to original quantity
-  const effectiveQuantity = item.modifiedQuantity ?? item.quantity ?? 0;
-  const qty = Number(effectiveQuantity) || 0;
+  // Use quantity and ensure completedQuantity doesn't exceed it
+  const qty = Number(item.quantity) || 0;
   const input = Number.isFinite(completedQuantity)
-    ? (completedQuantity as number)
+    ? Math.min(completedQuantity as number, qty) // Ensure completedQuantity <= quantity
     : 0;
   const clampedCompleted = Math.max(0, Math.min(qty, input));
   const progress = qty > 0 ? Math.floor((clampedCompleted / qty) * 100) : 0;

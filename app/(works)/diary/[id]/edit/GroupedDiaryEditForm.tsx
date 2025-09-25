@@ -29,7 +29,6 @@ type ActionResult<T> = { success: boolean; data?: T; message?: string };
 interface GroupedWorkItem {
   workItem: WorkItem;
   progress: number;
-  modifiedQuantity?: number | null;
 }
 
 interface GroupedDiaryEditFormProps {
@@ -111,8 +110,7 @@ export default function GroupedDiaryEditForm({
         item.workItem.id === workItemId
           ? {
               ...item,
-              modifiedQuantity: newQuantity,
-              workItem: { ...item.workItem, modifiedQuantity: newQuantity },
+              workItem: { ...item.workItem, quantity: newQuantity },
             }
           : item
       )
@@ -284,7 +282,6 @@ export default function GroupedDiaryEditForm({
             groupedItemsMap.set(workItem.id, {
               workItem,
               progress: workItem.progress || 0,
-              modifiedQuantity: workItem.modifiedQuantity,
             });
           }
         }
@@ -795,82 +792,7 @@ export default function GroupedDiaryEditForm({
                 className="flex items-center justify-between p-3 bg-white border rounded"
               >
                 <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium">
-                      {groupedItem.workItem.name}
-                    </h3>
-                  </div>
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-gray-600">
-                        Készültség
-                      </span>
-                      <span className="text-sm font-medium text-blue-600">
-                        {groupedItem.workItem.completedQuantity || 0}/
-                        {(() => {
-                          // Prioritize modifiedQuantity from both locations
-                          const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                          const originalQty = groupedItem.workItem.quantity;
-                          if (
-                            modifiedQty !== null &&
-                            modifiedQty !== undefined
-                          ) {
-                            return modifiedQty;
-                          } else if (
-                            originalQty !== null &&
-                            originalQty !== undefined
-                          ) {
-                            return originalQty;
-                          } else {
-                            return "?";
-                          }
-                        })()}{" "}
-                        ({groupedItem.workItem.unit || "?"})
-                      </span>
-                    </div>
-                    <div className="relative w-full">
-                      <div
-                        className="w-full h-2 bg-gray-200 rounded-lg relative"
-                      >
-                        <div
-                          className="h-full bg-blue-500 rounded-lg transition-all duration-300"
-                          style={{
-                            width: `${Math.min(
-                              100,
-                              Math.max(
-                                0,
-                                (() => {
-                                  const effectiveQuantity = (() => {
-                                    // Prioritize modifiedQuantity from both locations
-                                    const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                    const originalQty = groupedItem.workItem.quantity;
-                                    if (
-                                      modifiedQty !== null &&
-                                      modifiedQty !== undefined
-                                    ) {
-                                      return modifiedQty;
-                                    } else if (
-                                      originalQty !== null &&
-                                      originalQty !== undefined
-                                    ) {
-                                      return originalQty;
-                                    } else {
-                                      return 0;
-                                    }
-                                  })();
-                                  return effectiveQuantity > 0
-                                    ? ((groupedItem.workItem.completedQuantity || 0) /
-                                        effectiveQuantity) *
-                                        100
-                                    : 0;
-                                })()
-                              )
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <h3 className="font-medium">{groupedItem.workItem.name}</h3>
                 </div>
                 <Button
                   type="button"
@@ -1010,7 +932,6 @@ export default function GroupedDiaryEditForm({
                               addGroupedItem({
                                 workItem,
                                 progress: workItem.progress || 0,
-                                modifiedQuantity: workItem.modifiedQuantity,
                               });
                               closeWorkItemModal();
                             }}
@@ -1067,24 +988,7 @@ export default function GroupedDiaryEditForm({
                       <button
                         type="button" // PREVENTS FORM SUBMISSION
                         onClick={() => {
-                          const effectiveQuantity = (() => {
-                            // Prioritize modifiedQuantity from both locations
-                            const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                            const originalQty = groupedItem.workItem.quantity;
-                            if (
-                              modifiedQty !== null &&
-                              modifiedQty !== undefined
-                            ) {
-                              return modifiedQty;
-                            } else if (
-                              originalQty !== null &&
-                              originalQty !== undefined
-                            ) {
-                              return originalQty;
-                            } else {
-                              return 0;
-                            }
-                          })();
+                          const effectiveQuantity = groupedItem.workItem.quantity || 0;
                           setNewQuantity(effectiveQuantity?.toString() || "");
                           setSelectedWorkItemId(groupedItem.workItem.id);
                           setShowQuantityModal(true);
@@ -1102,24 +1006,7 @@ export default function GroupedDiaryEditForm({
                         </span>
                         <span className="text-sm font-medium text-blue-600">
                           {groupedItem.workItem.completedQuantity || 0}/
-                          {(() => {
-                            // Prioritize modifiedQuantity from both locations
-                            const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                            const originalQty = groupedItem.workItem.quantity;
-                            if (
-                              modifiedQty !== null &&
-                              modifiedQty !== undefined
-                            ) {
-                              return modifiedQty;
-                            } else if (
-                              originalQty !== null &&
-                              originalQty !== undefined
-                            ) {
-                              return originalQty;
-                            } else {
-                              return "?";
-                            }
-                          })()}{" "}
+                          {groupedItem.workItem.quantity || "?"}{" "}
                           ({groupedItem.workItem.unit || "?"})
                         </span>
                       </div>
@@ -1135,17 +1022,7 @@ export default function GroupedDiaryEditForm({
                               const percent = Math.max(0, Math.min(100, 
                                 ((clientX - rect.left) / rect.width) * 100
                               ));
-                              const effectiveQuantity = (() => {
-                                const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                const originalQty = groupedItem.workItem.quantity;
-                                if (modifiedQty !== null && modifiedQty !== undefined) {
-                                  return modifiedQty;
-                                } else if (originalQty !== null && originalQty !== undefined) {
-                                  return originalQty;
-                                } else {
-                                  return 0;
-                                }
-                              })();
+                              const effectiveQuantity = groupedItem.workItem.quantity || 0;
                               const newCompletedQuantity = Math.round((percent / 100) * effectiveQuantity);
                               updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(effectiveQuantity, newCompletedQuantity)));
                             };
@@ -1175,26 +1052,7 @@ export default function GroupedDiaryEditForm({
                               width: `${Math.min(
                                 100,
                                 ((groupedItem.workItem.completedQuantity || 0) /
-                                  (() => {
-                                    // Prioritize modifiedQuantity from both locations
-                                    const modifiedQty =
-                                      groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                    const originalQty =
-                                      groupedItem.workItem.quantity;
-                                    if (
-                                      modifiedQty !== null &&
-                                      modifiedQty !== undefined
-                                    ) {
-                                      return modifiedQty;
-                                    } else if (
-                                      originalQty !== null &&
-                                      originalQty !== undefined
-                                    ) {
-                                      return originalQty;
-                                    } else {
-                                      return 1; // Avoid division by zero
-                                    }
-                                  })()) *
+                                  (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}%`,
                             }}
@@ -1205,26 +1063,7 @@ export default function GroupedDiaryEditForm({
                               left: `calc(${Math.min(
                                 100,
                                 ((groupedItem.workItem.completedQuantity || 0) /
-                                  (() => {
-                                    // Prioritize modifiedQuantity from both locations
-                                    const modifiedQty =
-                                      groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                    const originalQty =
-                                      groupedItem.workItem.quantity;
-                                    if (
-                                      modifiedQty !== null &&
-                                      modifiedQty !== undefined
-                                    ) {
-                                      return modifiedQty;
-                                    } else if (
-                                      originalQty !== null &&
-                                      originalQty !== undefined
-                                    ) {
-                                      return originalQty;
-                                    } else {
-                                      return 1; // Avoid division by zero
-                                    }
-                                  })()) *
+                                  (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}% - 20px)`,
                             }}

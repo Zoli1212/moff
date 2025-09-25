@@ -25,7 +25,6 @@ export interface WorkItem {
   completedQuantity?: number;
   unit?: string;
   inProgress?: boolean;
-  modifiedQuantity?: number | null;
   workItemWorkers?: { id: number; name?: string; role?: string }[];
   workDiaryEntries?: WorkDiary[];
 }
@@ -88,7 +87,7 @@ export default function TasksPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleQuantityChange = async (workItemId: number, newQuantity: number | null) => {
+  const handleQuantityChange = async (workItemId: number, newQuantity: number) => {
     try {
       const result = await updateWorkItemQuantity(workItemId, newQuantity);
       if (result.success) {
@@ -96,7 +95,7 @@ export default function TasksPage() {
         setWorkItems(prev => 
           prev.map(item => 
             item.id === workItemId 
-              ? { ...item, modifiedQuantity: newQuantity }
+              ? { ...item, quantity: newQuantity }
               : item
           )
         );
@@ -435,7 +434,6 @@ export default function TasksPage() {
                     quantity={item.quantity}
                     completedQuantity={item.completedQuantity}
                     unit={item.unit}
-                    modifiedQuantity={item.modifiedQuantity}
                     isLoading={assigning === item.id}
                     checked={item.inProgress === true}
                     className={

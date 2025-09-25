@@ -27,7 +27,6 @@ type ActionResult<T> = { success: boolean; data?: T; message?: string };
 interface GroupedWorkItem {
   workItem: WorkItem;
   progress: number;
-  modifiedQuantity?: number | null;
 }
 
 interface GroupedDiaryFormProps {
@@ -85,8 +84,7 @@ export default function GroupedDiaryForm({
         item.workItem.id === workItemId
           ? {
               ...item,
-              modifiedQuantity: newQuantity,
-              workItem: { ...item.workItem, modifiedQuantity: newQuantity },
+              workItem: { ...item.workItem, quantity: newQuantity },
             }
           : item
       )
@@ -166,7 +164,6 @@ export default function GroupedDiaryForm({
         (workItem) => ({
           workItem,
           progress: workItem.progress || 0,
-          modifiedQuantity: workItem.modifiedQuantity,
         })
       );
       setSelectedGroupedItems(allActiveItems);
@@ -863,24 +860,7 @@ export default function GroupedDiaryForm({
                       <button
                         type="button" // PREVENTS FORM SUBMISSION
                         onClick={() => {
-                          const effectiveQuantity = (() => {
-                            // Prioritize modifiedQuantity from both locations
-                            const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                            const originalQty = groupedItem.workItem.quantity;
-                            if (
-                              modifiedQty !== null &&
-                              modifiedQty !== undefined
-                            ) {
-                              return modifiedQty;
-                            } else if (
-                              originalQty !== null &&
-                              originalQty !== undefined
-                            ) {
-                              return originalQty;
-                            } else {
-                              return 0;
-                            }
-                          })();
+                          const effectiveQuantity = groupedItem.workItem.quantity || 0;
                           setNewQuantity(effectiveQuantity?.toString() || "");
                           setSelectedWorkItemId(groupedItem.workItem.id);
                           setShowQuantityModal(true);
@@ -898,24 +878,7 @@ export default function GroupedDiaryForm({
                         </span>
                         <span className="text-sm font-medium text-blue-600">
                           {groupedItem.workItem.completedQuantity || 0}/
-                          {(() => {
-                            // Prioritize modifiedQuantity from both locations
-                            const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                            const originalQty = groupedItem.workItem.quantity;
-                            if (
-                              modifiedQty !== null &&
-                              modifiedQty !== undefined
-                            ) {
-                              return modifiedQty;
-                            } else if (
-                              originalQty !== null &&
-                              originalQty !== undefined
-                            ) {
-                              return originalQty;
-                            } else {
-                              return "?";
-                            }
-                          })()}{" "}
+                          {groupedItem.workItem.quantity || "?"}{" "}
                           ({groupedItem.workItem.unit || "?"})
                         </span>
                       </div>
@@ -931,17 +894,7 @@ export default function GroupedDiaryForm({
                               const percent = Math.max(0, Math.min(100, 
                                 ((clientX - rect.left) / rect.width) * 100
                               ));
-                              const effectiveQuantity = (() => {
-                                const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                const originalQty = groupedItem.workItem.quantity;
-                                if (modifiedQty !== null && modifiedQty !== undefined) {
-                                  return modifiedQty;
-                                } else if (originalQty !== null && originalQty !== undefined) {
-                                  return originalQty;
-                                } else {
-                                  return 0;
-                                }
-                              })();
+                              const effectiveQuantity = groupedItem.workItem.quantity || 0;
                               const newCompletedQuantity = Math.round((percent / 100) * effectiveQuantity);
                               updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(effectiveQuantity, newCompletedQuantity)));
                             };
@@ -971,26 +924,7 @@ export default function GroupedDiaryForm({
                               width: `${Math.min(
                                 100,
                                 ((groupedItem.workItem.completedQuantity || 0) /
-                                  (() => {
-                                    // Prioritize modifiedQuantity from both locations
-                                    const modifiedQty =
-                                      groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                    const originalQty =
-                                      groupedItem.workItem.quantity;
-                                    if (
-                                      modifiedQty !== null &&
-                                      modifiedQty !== undefined
-                                    ) {
-                                      return modifiedQty;
-                                    } else if (
-                                      originalQty !== null &&
-                                      originalQty !== undefined
-                                    ) {
-                                      return originalQty;
-                                    } else {
-                                      return 1; // Avoid division by zero
-                                    }
-                                  })()) *
+                                  (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}%`,
                             }}
@@ -1001,26 +935,7 @@ export default function GroupedDiaryForm({
                               left: `calc(${Math.min(
                                 100,
                                 ((groupedItem.workItem.completedQuantity || 0) /
-                                  (() => {
-                                    // Prioritize modifiedQuantity from both locations
-                                    const modifiedQty =
-                                      groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
-                                    const originalQty =
-                                      groupedItem.workItem.quantity;
-                                    if (
-                                      modifiedQty !== null &&
-                                      modifiedQty !== undefined
-                                    ) {
-                                      return modifiedQty;
-                                    } else if (
-                                      originalQty !== null &&
-                                      originalQty !== undefined
-                                    ) {
-                                      return originalQty;
-                                    } else {
-                                      return 1; // Avoid division by zero
-                                    }
-                                  })()) *
+                                  (groupedItem.workItem.quantity || 1)) *
                                   100
                               )}% - 20px)`,
                             }}

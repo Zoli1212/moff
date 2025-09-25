@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache'
 
 export async function updateWorkItemQuantity(
   workItemId: number,
-  modifiedQuantity: number | null
+  quantity: number
 ) {
   try {
     const { user, tenantEmail } = await getTenantSafeAuth()
@@ -17,7 +17,7 @@ export async function updateWorkItemQuantity(
         tenantEmail: tenantEmail, // Ensure tenant can only update their own work items
       },
       data: {
-        modifiedQuantity: modifiedQuantity,
+        quantity: quantity,
         updatedAt: new Date(),
       },
     })

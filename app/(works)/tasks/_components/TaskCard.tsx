@@ -13,8 +13,7 @@ interface TaskCardProps {
   unit?: string;
   checked?: boolean;
   isLoading?: boolean;
-  modifiedQuantity?: number | null;
-  onQuantityChange?: (id: number, newQuantity: number | null) => void;
+  onQuantityChange?: (id: number, newQuantity: number) => void;
   onCheck?: (checked: boolean) => void;
   children?: React.ReactNode;
   className?: string;
@@ -31,7 +30,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   unit,
   checked = false,
   isLoading = false,
-  modifiedQuantity,
   onQuantityChange,
   onCheck,
   children,
@@ -42,14 +40,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const handleQuantitySubmit = () => {
     if (onQuantityChange) {
-      const quantityValue = newQuantity.trim() === "" ? null : parseFloat(newQuantity);
-      onQuantityChange(id, quantityValue);
+      const quantityValue = parseFloat(newQuantity);
+      if (!isNaN(quantityValue)) {
+        onQuantityChange(id, quantityValue);
+      }
       setShowQuantityModal(false);
       setNewQuantity("");
     }
   };
 
-  const effectiveQuantity = modifiedQuantity !== null ? modifiedQuantity : quantity;
+  const effectiveQuantity = quantity;
 
   console.log(id)
   return (
