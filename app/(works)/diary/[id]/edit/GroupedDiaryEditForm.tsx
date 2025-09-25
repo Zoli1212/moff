@@ -99,8 +99,6 @@ export default function GroupedDiaryEditForm({
     return !!a && !!b && a === b;
   }, [currentEmail, diary?.tenantEmail]);
 
-  console.log(setWorkHours);
-
   // This function updates the quantity in the local state AND saves to server
   const handleUpdateQuantity = async (
     workItemId: number,
@@ -120,8 +118,7 @@ export default function GroupedDiaryEditForm({
       )
     );
 
-    // Close modal immediately for better UX
-    setShowQuantityModal(false);
+    // Modal will be closed by the modal component itself after successful save
 
     // Save to server
     try {
@@ -430,7 +427,7 @@ export default function GroupedDiaryEditForm({
   };
 
   const updateProgress = (workItemId: number, completedQuantity: number) => {
-    // Only update local state, database update happens on form submission
+    // Only update local state, database update happens on form submission with delta calculation
     setSelectedGroupedItems((prev) =>
       prev.map((item) =>
         item.workItem.id === workItemId
@@ -534,6 +531,11 @@ export default function GroupedDiaryEditForm({
       // Create diary items for each worker and each work item combination
       const promises: Promise<unknown>[] = [];
 
+      // Calculate total hours worked by all selected workers
+      const totalWorkerHours = selectedWorkers.reduce((sum, w) => {
+        return sum + (workerHours.get(w.id) || workHours);
+      }, 0);
+
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.id) || workHours;
 
@@ -550,26 +552,15 @@ export default function GroupedDiaryEditForm({
           0
         );
 
-        // If no progress or all zero, use equal distribution
-        const useEqualDistribution = totalProgress === 0;
-
         for (let i = 0; i < selectedGroupedItems.length; i++) {
           const groupedItem = selectedGroupedItems[i];
+          const itemProgress = progressChanges[i] || 0;
 
-          let hoursPerWorkItem: number;
+          // Proportional distribution based on progress
+          const proportion = totalProgress > 0 ? itemProgress / totalProgress : (1 / selectedGroupedItems.length);
+          const hoursPerWorkItem = workerTotalHours * proportion;
 
-          if (useEqualDistribution) {
-            // Equal distribution
-            hoursPerWorkItem =
-              selectedGroupedItems.length > 0
-                ? workerTotalHours / selectedGroupedItems.length
-                : workerTotalHours;
-          } else {
-            // Proportional distribution based on progress
-            const itemProgress = progressChanges[i];
-            const proportion = itemProgress / totalProgress;
-            hoursPerWorkItem = workerTotalHours * proportion;
-          }
+          const quantityForThisWorker = totalWorkerHours > 0 ? itemProgress * (workerTotalHours / totalWorkerHours) : 0;
 
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
@@ -583,7 +574,7 @@ export default function GroupedDiaryEditForm({
             notes: description,
             images: images,
             workHours: hoursPerWorkItem,
-            quantity: progressChanges[i] || 0, // A haladás mennyisége
+            quantity: quantityForThisWorker, // A haladás mennyisége arányositva a munkás órájával
             unit: groupedItem.workItem.unit, // A workItem unit-ja
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
@@ -806,35 +797,6 @@ export default function GroupedDiaryEditForm({
                     <h3 className="font-medium">
                       {groupedItem.workItem.name}
                     </h3>
-                    <button
-                      type="button" // PREVENTS FORM SUBMISSION
-                      onClick={() => {
-                        const effectiveQuantity = (() => {
-                          const modifiedQty = groupedItem.modifiedQuantity;
-                          const originalQty = groupedItem.workItem.quantity;
-                          if (
-                            modifiedQty !== null &&
-                            modifiedQty !== undefined
-                          ) {
-                            return modifiedQty;
-                          } else if (
-                            originalQty !== null &&
-                            originalQty !== undefined
-                          ) {
-                            return originalQty;
-                          } else {
-                            return 0;
-                          }
-                        })();
-                        setNewQuantity(effectiveQuantity?.toString() || "");
-                        setSelectedWorkItemId(groupedItem.workItem.id);
-                        setShowQuantityModal(true);
-                      }}
-                      className="p-1 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
-                      title="Mennyiség módosítása"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
                   </div>
                   <div className="mt-2">
                     <div className="flex items-center justify-between mb-1">
@@ -844,7 +806,8 @@ export default function GroupedDiaryEditForm({
                       <span className="text-sm font-medium text-blue-600">
                         {groupedItem.workItem.completedQuantity || 0}/
                         {(() => {
-                          const modifiedQty = groupedItem.modifiedQuantity;
+                          // Prioritize modifiedQuantity from both locations
+                          const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
                           const originalQty = groupedItem.workItem.quantity;
                           if (
                             modifiedQty !== null &&
@@ -865,43 +828,7 @@ export default function GroupedDiaryEditForm({
                     </div>
                     <div className="relative w-full">
                       <div
-                        className="w-full h-2 bg-gray-200 rounded-lg relative cursor-pointer"
-                        onClick={(e) => {
-                          const rect =
-                            e.currentTarget.getBoundingClientRect();
-                          const percent =
-                            ((e.clientX - rect.left) / rect.width) * 100;
-                          const effectiveQuantity = (() => {
-                            const modifiedQty = groupedItem.modifiedQuantity;
-                            const originalQty = groupedItem.workItem.quantity;
-                            if (
-                              modifiedQty !== null &&
-                              modifiedQty !== undefined
-                            ) {
-                              return modifiedQty;
-                            } else if (
-                              originalQty !== null &&
-                              originalQty !== undefined
-                            ) {
-                              return originalQty;
-                            } else {
-                              return 0;
-                            }
-                          })();
-                          const newCompletedQuantity = Math.round(
-                            (percent / 100) * effectiveQuantity
-                          );
-                          updateProgress(
-                            groupedItem.workItem.id,
-                            Math.max(
-                              0,
-                              Math.min(
-                                effectiveQuantity,
-                                newCompletedQuantity
-                              )
-                            )
-                          );
-                        }}
+                        className="w-full h-2 bg-gray-200 rounded-lg relative"
                       >
                         <div
                           className="h-full bg-blue-500 rounded-lg transition-all duration-300"
@@ -912,7 +839,8 @@ export default function GroupedDiaryEditForm({
                                 0,
                                 (() => {
                                   const effectiveQuantity = (() => {
-                                    const modifiedQty = groupedItem.modifiedQuantity;
+                                    // Prioritize modifiedQuantity from both locations
+                                    const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
                                     const originalQty = groupedItem.workItem.quantity;
                                     if (
                                       modifiedQty !== null &&
@@ -1135,9 +1063,11 @@ export default function GroupedDiaryEditForm({
                         {groupedItem.workItem.name}
                       </h3>
                       <button
+                        type="button" // PREVENTS FORM SUBMISSION
                         onClick={() => {
                           const effectiveQuantity = (() => {
-                            const modifiedQty = groupedItem.modifiedQuantity;
+                            // Prioritize modifiedQuantity from both locations
+                            const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
                             const originalQty = groupedItem.workItem.quantity;
                             if (
                               modifiedQty !== null &&
@@ -1171,7 +1101,8 @@ export default function GroupedDiaryEditForm({
                         <span className="text-sm font-medium text-blue-600">
                           {groupedItem.workItem.completedQuantity || 0}/
                           {(() => {
-                            const modifiedQty = groupedItem.modifiedQuantity;
+                            // Prioritize modifiedQuantity from both locations
+                            const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
                             const originalQty = groupedItem.workItem.quantity;
                             if (
                               modifiedQty !== null &&
@@ -1192,53 +1123,60 @@ export default function GroupedDiaryEditForm({
                       </div>
                       <div className="relative w-full">
                         <div
-                          className="w-full h-2 bg-gray-200 rounded-lg relative cursor-pointer"
-                          onClick={(e) => {
-                            const rect =
-                              e.currentTarget.getBoundingClientRect();
-                            const percent =
-                              ((e.clientX - rect.left) / rect.width) * 100;
-                            const effectiveQuantity = (() => {
-                              const modifiedQty = groupedItem.modifiedQuantity;
-                              const originalQty = groupedItem.workItem.quantity;
-                              if (
-                                modifiedQty !== null &&
-                                modifiedQty !== undefined
-                              ) {
-                                return modifiedQty;
-                              } else if (
-                                originalQty !== null &&
-                                originalQty !== undefined
-                              ) {
-                                return originalQty;
-                              } else {
-                                return 0;
-                              }
-                            })();
-                            const newCompletedQuantity = Math.round(
-                              (percent / 100) * effectiveQuantity
-                            );
-                            updateProgress(
-                              groupedItem.workItem.id,
-                              Math.max(
-                                0,
-                                Math.min(
-                                  effectiveQuantity,
-                                  newCompletedQuantity
-                                )
-                              )
-                            );
+                          className="w-full h-2 bg-gray-200 rounded-lg relative cursor-pointer select-none"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            const slider = e.currentTarget;
+                            const rect = slider.getBoundingClientRect();
+                            
+                            const updateValue = (clientX: number) => {
+                              const percent = Math.max(0, Math.min(100, 
+                                ((clientX - rect.left) / rect.width) * 100
+                              ));
+                              const effectiveQuantity = (() => {
+                                const modifiedQty = groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
+                                const originalQty = groupedItem.workItem.quantity;
+                                if (modifiedQty !== null && modifiedQty !== undefined) {
+                                  return modifiedQty;
+                                } else if (originalQty !== null && originalQty !== undefined) {
+                                  return originalQty;
+                                } else {
+                                  return 0;
+                                }
+                              })();
+                              const newCompletedQuantity = Math.round((percent / 100) * effectiveQuantity);
+                              updateProgress(groupedItem.workItem.id, Math.max(0, Math.min(effectiveQuantity, newCompletedQuantity)));
+                            };
+
+                            const handleMouseMove = (moveEvent: MouseEvent) => {
+                              moveEvent.preventDefault();
+                              updateValue(moveEvent.clientX);
+                            };
+
+                            const handleMouseUp = () => {
+                              document.removeEventListener('mousemove', handleMouseMove);
+                              document.removeEventListener('mouseup', handleMouseUp);
+                              document.body.style.userSelect = '';
+                            };
+
+                            document.body.style.userSelect = 'none';
+                            document.addEventListener('mousemove', handleMouseMove);
+                            document.addEventListener('mouseup', handleMouseUp);
+                            
+                            // Set initial value
+                            updateValue(e.clientX);
                           }}
                         >
                           <div
-                            className="h-full bg-blue-500 rounded-lg"
+                            className="h-full bg-blue-500 rounded-lg pointer-events-none"
                             style={{
                               width: `${Math.min(
                                 100,
                                 ((groupedItem.workItem.completedQuantity || 0) /
                                   (() => {
+                                    // Prioritize modifiedQuantity from both locations
                                     const modifiedQty =
-                                      groupedItem.modifiedQuantity;
+                                      groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
                                     const originalQty =
                                       groupedItem.workItem.quantity;
                                     if (
@@ -1266,8 +1204,9 @@ export default function GroupedDiaryEditForm({
                                 100,
                                 ((groupedItem.workItem.completedQuantity || 0) /
                                   (() => {
+                                    // Prioritize modifiedQuantity from both locations
                                     const modifiedQty =
-                                      groupedItem.modifiedQuantity;
+                                      groupedItem.modifiedQuantity || groupedItem.workItem.modifiedQuantity;
                                     const originalQty =
                                       groupedItem.workItem.quantity;
                                     if (
