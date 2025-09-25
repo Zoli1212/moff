@@ -10,6 +10,9 @@ export interface PerformanceData {
   performancePercentage: number;
   progressByWorkItem: { name: string; totalProgress: number; unit: string }[];
   hoursByWorker: { name: string; totalHours: number }[];
+  workerPerformances: { name: string; totalHours: number; totalRevenue: number; totalCost: number; performancePercentage: number }[];
+  previousPeriodPerformance?: number;
+  performanceChange?: number;
 }
 
 interface PerformanceHookProps {
@@ -80,7 +83,10 @@ export const usePerformanceData = ({
       workItems,
       workers,
       workforceRegistry,
-      expectedProfitPercent
+      expectedProfitPercent,
+      allDiaryItems: diaries,
+      currentDate,
+      view
     });
 
   }, [diaries, workItems, workers, expectedProfitPercent, currentDate, view]);

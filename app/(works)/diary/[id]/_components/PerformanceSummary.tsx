@@ -26,7 +26,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     );
   }
 
-  const { performancePercentage, progressByWorkItem, hoursByWorker, totalRevenue, totalCost } = data;
+  const { performancePercentage, progressByWorkItem, hoursByWorker, totalRevenue, totalCost, workerPerformances, previousPeriodPerformance, performanceChange } = data;
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
@@ -51,6 +51,30 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
             </span>
           </div>
         </div>
+        
+        {/* Trend információ */}
+        {performanceChange !== undefined && previousPeriodPerformance !== undefined && (
+          <div className="mt-2 flex items-center justify-center gap-2 text-sm">
+            <span className="text-gray-600">Előző időszakhoz képest:</span>
+            <div className={`flex items-center gap-1 font-medium ${
+              performanceChange > 0 
+                ? 'text-green-600' 
+                : performanceChange < 0 
+                ? 'text-red-600' 
+                : 'text-gray-600'
+            }`}>
+              {performanceChange > 0 && <span>▲</span>}
+              {performanceChange < 0 && <span>▼</span>}
+              {performanceChange === 0 && <span>─</span>}
+              <span>
+                {performanceChange > 0 ? '+' : ''}{Math.abs(performanceChange).toFixed(1)}%
+              </span>
+              <span className="text-gray-500 text-xs">
+                ({previousPeriodPerformance}% → {performancePercentage}%)
+              </span>
+            </div>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
@@ -75,21 +99,38 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
           )}
         </div>
 
-        {/* Jobb oldali oszlop: Munkások */}
+        {/* Jobb oldali oszlop: Ledolgozott órák és teljesítmény */}
         <div className="space-y-2">
           <h3 className="font-semibold text-gray-600 border-b pb-1">Ledolgozott órák</h3>
           {hoursByWorker.length > 0 ? (
             <>
               {hoursByWorker
                 .sort((a, b) => b.totalHours - a.totalHours)
-                .map((worker, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span className="text-gray-700 truncate pr-2">{worker.name}</span>
-                    <span className="font-medium text-gray-900 whitespace-nowrap">
-                      {worker.totalHours.toLocaleString('hu-HU')} óra
-                    </span>
-                  </div>
-                ))}
+                .map((worker, index) => {
+                  // Keressük meg a munkás teljesítményét
+                  const performance = workerPerformances?.find(wp => wp.name === worker.name);
+                  return (
+                    <div key={index} className="flex justify-between items-center text-sm">
+                      <span className="text-gray-700 truncate pr-2">{worker.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-900 whitespace-nowrap">
+                          {worker.totalHours.toLocaleString('hu-HU')} óra
+                        </span>
+                        {performance && (
+                          <span className={`font-bold text-xs px-1 py-0.5 rounded ${
+                            performance.performancePercentage >= 100 
+                              ? 'text-green-600 bg-green-50' 
+                              : performance.performancePercentage > 0 
+                              ? 'text-orange-600 bg-orange-50' 
+                              : 'text-red-600 bg-red-50'
+                          }`}>
+                            {Math.round(performance.performancePercentage)}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
             </>
           ) : (
             <p className="text-sm text-gray-500">Nincsenek rögzített órák.</p>
