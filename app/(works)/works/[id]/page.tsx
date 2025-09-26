@@ -15,6 +15,7 @@ import type { GeneralWorkerFromDB } from "../_components/WorkersSummary";
 
 type Tool = BaseTool & { quantity?: number };
 import CollapsibleSection from "../_components/CollapsibleSection";
+import TechnicalButton from "./_components/TechnicalButton";
 // import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
 // import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
 import Link from "next/link";
@@ -601,6 +602,9 @@ export default async function WorkDetailPage({
           </div>
         </div>
       </CollapsibleSection>
+
+      {/* Technical Button */}
+      <TechnicalButton workId={(await params).id} />
 
       {/* Bottom Nav */}
     </div>
