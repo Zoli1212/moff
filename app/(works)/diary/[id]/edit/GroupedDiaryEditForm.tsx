@@ -122,6 +122,7 @@ export default function GroupedDiaryEditForm({
     );
 
     console.log(setWorkHours);
+    console.log(originalCompletedQuantities)
 
     // Modal will be closed by the modal component itself after successful save
 

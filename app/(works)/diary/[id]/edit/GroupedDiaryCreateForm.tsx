@@ -62,6 +62,9 @@ export default function GroupedDiaryForm({
   const [originalCompletedQuantities, setOriginalCompletedQuantities] =
     useState<Map<number, number>>(new Map());
 
+    console.log(originalCompletedQuantities)
+    
+
   // Track local progress for this diary entry (progressAtDate)
   const [localProgress, setLocalProgress] = useState<Map<number, number>>(
     new Map()
@@ -432,6 +435,7 @@ export default function GroupedDiaryForm({
         const hasProgress = totalProgress > 0;
 
         for (const [index, groupedItem] of selectedGroupedItems.entries()) {
+          console.log(index)
           const itemProgress = localProgress.get(groupedItem.workItem.id) || 0;
 
           // Calculate delta (difference from current completedQuantity)
@@ -442,6 +446,8 @@ export default function GroupedDiaryForm({
           const proportion = hasProgress
             ? deltaQuantity / totalProgress
             : 1 / selectedGroupedItems.length;
+
+            console.log(proportion)
           
           // Work hours: distribute evenly among selected items regardless of progress
           const hoursPerWorkItem = workerTotalHours / selectedGroupedItems.length;
