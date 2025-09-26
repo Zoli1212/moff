@@ -12,7 +12,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
 import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
-import { updateWorkItemCompletedQuantityFromLatestDiary } from "@/actions/workdiary-actions";
+import { updateWorkItemCompletedQuantityFromLatestDiary, getSliderInitialValue } from "@/actions/workdiary-actions";
 import { updateGroupApproval } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
 import { useActiveWorkersStore } from "@/stores/active-workers-store";
@@ -70,16 +70,81 @@ export default function GroupedDiaryForm({
     new Map()
   );
 
-  // Initialize localProgress with current WorkItem completedQuantity values
+  // Track which items have been initialized with previous progress
+  const [initializedItems, setInitializedItems] = useState<Set<number>>(
+    new Set()
+  );
+
+  // Initialize localProgress - only check selected items for previous progress
   useEffect(() => {
     if (workItems && workItems.length > 0) {
-      const initialProgress = new Map<number, number>();
-      workItems.forEach((item) => {
-        initialProgress.set(item.id, item.completedQuantity || 0);
-      });
-      setLocalProgress(initialProgress);
+      const initializeProgress = async () => {
+        console.log(`🚀 [Frontend] Starting slider initialization for ${workItems.length} workItems, date: ${date}`);
+        
+        const initialProgress = new Map<number, number>();
+        
+        // First, set all items to completedQuantity (fast)
+        workItems.forEach((item) => {
+          initialProgress.set(item.id, item.completedQuantity || 0);
+        });
+        
+        // Set initial values immediately
+        setLocalProgress(new Map(initialProgress));
+        
+        // Then, async update only selected items with previous progress (only if not already initialized)
+        const updateSelectedItems = async () => {
+          for (const groupedItem of selectedGroupedItems) {
+            const item = groupedItem.workItem;
+            
+            // Skip if already initialized
+            if (initializedItems.has(item.id)) {
+              console.log(`⏭️ [Frontend] Skipping already initialized item: ${item.name}`);
+              continue;
+            }
+            
+            console.log(`📊 [Frontend] Checking previous progress for selected item: ${item.name} (id: ${item.id})`);
+            
+            const sliderValue = await getSliderInitialValue(
+              item.id, 
+              date, 
+              item.completedQuantity || 0
+            );
+            
+            console.log(`📈 [Frontend] Updated slider value for ${item.name}: ${sliderValue}`);
+            
+            // Update only this item
+            setLocalProgress(prev => {
+              const newMap = new Map(prev);
+              newMap.set(item.id, sliderValue);
+              return newMap;
+            });
+            
+            // Also update the original value for correct delta calculation
+            setOriginalCompletedQuantities(prev => {
+              const newMap = new Map(prev);
+              newMap.set(item.id, sliderValue);
+              return newMap;
+            });
+            
+            // Mark as initialized
+            setInitializedItems(prev => new Set(prev).add(item.id));
+          }
+        };
+        
+        if (selectedGroupedItems.length > 0) {
+          updateSelectedItems();
+        }
+      };
+      
+      initializeProgress();
     }
-  }, [workItems]);
+  }, [workItems, date, selectedGroupedItems]);
+
+  // Reset initialized items when date changes
+  useEffect(() => {
+    console.log(`📅 [Frontend] Date changed to: ${date}, resetting initialized items`);
+    setInitializedItems(new Set());
+  }, [date]);
 
   const [pendingApprovalChange, setPendingApprovalChange] = useState<
     boolean | null
@@ -438,9 +503,9 @@ export default function GroupedDiaryForm({
           console.log(index)
           const itemProgress = localProgress.get(groupedItem.workItem.id) || 0;
 
-          // Calculate delta (difference from current completedQuantity)
-          const currentCompleted = groupedItem.workItem.completedQuantity || 0;
-          const deltaQuantity = Math.max(0, itemProgress - currentCompleted);
+          // Calculate delta (difference from original slider start value, not completedQuantity)
+          const originalStartValue = originalCompletedQuantities.get(groupedItem.workItem.id) || 0;
+          const deltaQuantity = Math.max(0, itemProgress - originalStartValue);
 
           // Proportional distribution
           const proportion = hasProgress

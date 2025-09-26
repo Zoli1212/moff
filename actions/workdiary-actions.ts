@@ -607,3 +607,62 @@ export async function updateWorkItemCompletedQuantityFromLatestDiary(workItemId:
     return { success: false, error: 'Failed to update WorkItem completedQuantity' };
   }
 }
+
+// Get slider initial value: check for previous diary entry up to selected date
+export async function getSliderInitialValue(workItemId: number, selectedDate: string, completedQuantity: number) {
+  console.log(`🔍 [getSliderInitialValue] START - workItemId: ${workItemId}, selectedDate: ${selectedDate}, completedQuantity: ${completedQuantity}`);
+  
+  try {
+    // If no date provided, return completedQuantity
+    if (!selectedDate || selectedDate.trim() === '') {
+      console.log(`📅 [getSliderInitialValue] No date provided, using completedQuantity: ${completedQuantity}`);
+      return completedQuantity;
+    }
+
+    const { tenantEmail } = await getTenantSafeAuth();
+    
+    // Parse date safely
+    let parsedDate: Date;
+    try {
+      parsedDate = new Date(selectedDate);
+      if (isNaN(parsedDate.getTime())) {
+        console.log(`❌ [getSliderInitialValue] Invalid date, using completedQuantity: ${completedQuantity}`);
+        return completedQuantity;
+      }
+    } catch {
+      console.log(`❌ [getSliderInitialValue] Date parse error, using completedQuantity: ${completedQuantity}`);
+      return completedQuantity;
+    }
+
+    console.log(`🔎 [getSliderInitialValue] Searching for entries up to: ${parsedDate.toISOString()}`);
+
+    // Find latest diary entry up to selected date
+    const previousEntry = await prisma.workDiaryItem.findFirst({
+      where: {
+        workItemId: workItemId,
+        tenantEmail: tenantEmail,
+        date: { lte: parsedDate }
+      },
+      orderBy: {
+        date: 'desc'
+      },
+      select: {
+        progressAtDate: true,
+        date: true
+      }
+    });
+
+    if (previousEntry) {
+      console.log(`✅ [getSliderInitialValue] Found previous entry - date: ${previousEntry.date}, progressAtDate: ${previousEntry.progressAtDate}`);
+      return previousEntry.progressAtDate ?? completedQuantity;
+    } else {
+      console.log(`❌ [getSliderInitialValue] No previous entry found, using completedQuantity: ${completedQuantity}`);
+      return completedQuantity;
+    }
+    
+  } catch (error) {
+    console.error('❌ [getSliderInitialValue] Error:', error);
+    console.log(`🔄 [getSliderInitialValue] Fallback to completedQuantity: ${completedQuantity}`);
+    return completedQuantity;
+  }
+}
