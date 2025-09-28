@@ -2,13 +2,14 @@ import { Suspense } from "react";
 import RAGSyncComponent from "./_components/RAGSyncComponent";
 
 interface OtherPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function OtherPage({ params }: OtherPageProps) {
-  const workId = parseInt(params.id);
+export default async function OtherPage({ params }: OtherPageProps) {
+  const { id } = await params;
+  const workId = parseInt(id);
 
   return (
     <div className="container mx-auto p-6">
