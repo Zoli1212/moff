@@ -28,6 +28,7 @@ export default function RAGSyncComponent({ workId }: RAGSyncComponentProps) {
       const syncResult = await syncRAGProgress(workId);
       setResult(syncResult);
     } catch (error) {
+      console.error("Error during synchronization:", error);
       setResult({
         success: false,
         message: "An error occurred during synchronization"

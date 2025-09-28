@@ -10,7 +10,8 @@ export interface PerformanceData {
   performancePercentage: number;
   progressByWorkItem: { name: string; totalProgress: number; unit: string }[];
   hoursByWorker: { name: string; totalHours: number }[];
-  workerPerformances: { name: string; totalHours: number; totalRevenue: number; totalCost: number; performancePercentage: number }[];
+  workerPerformances: { name: string; totalHours: number; totalRevenue: number; totalCost: number; performancePercentage: number; previousPeriodPerformance?: number; performanceChange?: number }[];
+  workItemPerformances: { workItemId: number; name: string; unit: string; totalProgress: number; totalHours: number; totalRevenue: number; totalCost: number; performancePercentage: number; previousPeriodPerformance?: number; performanceChange?: number }[];
   previousPeriodPerformance?: number;
   performanceChange?: number;
 }

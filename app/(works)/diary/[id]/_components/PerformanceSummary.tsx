@@ -26,7 +26,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     );
   }
 
-  const { performancePercentage, progressByWorkItem, hoursByWorker, totalRevenue, totalCost, workerPerformances, previousPeriodPerformance, performanceChange } = data;
+  const { performancePercentage, progressByWorkItem, hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances, previousPeriodPerformance, performanceChange } = data;
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
@@ -76,11 +76,11 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
           </div>
         )}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         {/* Bal oldali oszlop: Haladás */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-gray-600 border-b pb-1">Haladás</h3>
+          <h3 className="font-semibold text-gray-600 border-b pb-1"><small>Haladás</small></h3>
           {progressByWorkItem.length > 0 ? (
             <>
               {progressByWorkItem
@@ -99,9 +99,58 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
           )}
         </div>
 
+        {/* Középső oszlop: Munkafázis teljesítmények */}
+        <div className="space-y-2">
+          <h3 className="font-semibold text-gray-600 border-b pb-1"><small>Munkafázis teljesítmények</small></h3>
+          {workItemPerformances && workItemPerformances.length > 0 ? (
+            <>
+              {workItemPerformances
+                .sort((a, b) => b.performancePercentage - a.performancePercentage)
+                .slice(0, 5)
+                .map((item, index) => (
+                  <div key={index} className="flex justify-between items-center text-sm">
+                    <span className="text-gray-700 truncate pr-2">{item.name}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-gray-900 whitespace-nowrap text-xs">
+                        {item.totalProgress.toLocaleString('hu-HU')} {item.unit}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className={`font-bold text-xs px-1 py-0.5 rounded ${
+                          item.performancePercentage >= 100 
+                            ? 'text-green-600 bg-green-50' 
+                            : item.performancePercentage > 0 
+                            ? 'text-orange-600 bg-orange-50' 
+                            : 'text-red-600 bg-red-50'
+                        }`}>
+                          {Math.round(item.performancePercentage)}%
+                        </span>
+                        {item.performanceChange !== undefined && (
+                          <span className={`text-xs ${
+                            item.performanceChange > 0 
+                              ? 'text-green-600' 
+                              : item.performanceChange < 0 
+                              ? 'text-red-600' 
+                              : 'text-gray-600'
+                          }`}>
+                            {item.performanceChange > 0 && '▲'}
+                            {item.performanceChange < 0 && '▼'}
+                            {item.performanceChange === 0 && '─'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </>
+          ) : (
+            <p className="text-sm text-gray-500">Nincsenek munkafázis teljesítmények.</p>
+          )}
+        </div>
+
         {/* Jobb oldali oszlop: Ledolgozott órák és teljesítmény */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-gray-600 border-b pb-1">Ledolgozott órák</h3>
+          <h6 className="font-semibold text-gray-600 border-b pb-1">
+            <small>Ledolgozott órák és teljesítmények</small></h6>
           {hoursByWorker.length > 0 ? (
             <>
               {hoursByWorker
@@ -117,15 +166,30 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                           {worker.totalHours.toLocaleString('hu-HU')} óra
                         </span>
                         {performance && (
-                          <span className={`font-bold text-xs px-1 py-0.5 rounded ${
-                            performance.performancePercentage >= 100 
-                              ? 'text-green-600 bg-green-50' 
-                              : performance.performancePercentage > 0 
-                              ? 'text-orange-600 bg-orange-50' 
-                              : 'text-red-600 bg-red-50'
-                          }`}>
-                            {Math.round(performance.performancePercentage)}%
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className={`font-bold text-xs px-1 py-0.5 rounded ${
+                              performance.performancePercentage >= 100 
+                                ? 'text-green-600 bg-green-50' 
+                                : performance.performancePercentage > 0 
+                                ? 'text-orange-600 bg-orange-50' 
+                                : 'text-red-600 bg-red-50'
+                            }`}>
+                              {Math.round(performance.performancePercentage)}%
+                            </span>
+                            {performance.performanceChange !== undefined && (
+                              <span className={`text-xs ${
+                                performance.performanceChange > 0 
+                                  ? 'text-green-600' 
+                                  : performance.performanceChange < 0 
+                                  ? 'text-red-600' 
+                                  : 'text-gray-600'
+                              }`}>
+                                {performance.performanceChange > 0 && '▲'}
+                                {performance.performanceChange < 0 && '▼'}
+                                {performance.performanceChange === 0 && '─'}
+                              </span>
+                            )}
+                          </div>
                         )}
                       </div>
                     </div>
