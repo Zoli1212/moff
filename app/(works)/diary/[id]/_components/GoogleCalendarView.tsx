@@ -479,7 +479,8 @@ export default function GoogleCalendarView({
           onDateClick?.(info.start);
           console.log("[Calendar] select:", info);
         }}
-        height="80vh"
+        height="auto"
+        contentHeight="auto"
         locale={huLocale}
         dayMaxEvents={3}
         nowIndicator={true}
@@ -488,6 +489,21 @@ export default function GoogleCalendarView({
         fixedWeekCount={false}
       />
       <style jsx global>{`
+        /* Fix calendar height to prevent internal scrolling */
+        .fc-mobile-wrap .fc {
+          height: auto !important;
+        }
+        .fc-mobile-wrap .fc .fc-view-harness {
+          height: auto !important;
+          overflow: visible !important;
+        }
+        .fc-mobile-wrap .fc .fc-scroller {
+          overflow: visible !important;
+          height: auto !important;
+        }
+        .fc-mobile-wrap .fc .fc-scroller-liquid {
+          height: auto !important;
+        }
         /* Compact header/title on small screens */
         @media (max-width: 480px) {
           .fc-mobile-wrap .fc .fc-header-toolbar {

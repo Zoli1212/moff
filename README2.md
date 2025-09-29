@@ -804,3 +804,15 @@ Beszerzés folyamatban levő munkafázisok nem kell
 viszont minden tabon visszaköszön
 
 ---
+
+dupla csúzska
+haladás nem kell
+két soros
+szeparator
+feladatok ár mennyiség módosítása
+számolás
+nem jó
+-----
+teljesítés / Teljes az teljesítés
+számlázott 
+számlázható
