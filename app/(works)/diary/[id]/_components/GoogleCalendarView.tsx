@@ -42,8 +42,8 @@ interface GoogleCalendarViewProps {
   workItems?: Array<{ id: number; name: string }>;
   currentDate: Date;
   setCurrentDate: (date: Date) => void;
-  view: 'dayGridMonth' | 'timeGridWeek';
-  setView: (view: 'dayGridMonth' | 'timeGridWeek') => void;
+  view: "dayGridMonth" | "timeGridWeek";
+  setView: (view: "dayGridMonth" | "timeGridWeek") => void;
 }
 
 export default function GoogleCalendarView({
@@ -234,7 +234,10 @@ export default function GoogleCalendarView({
         initialView={view}
         initialDate={currentDate}
         datesSet={(arg) => {
-          if (arg.view.type === 'dayGridMonth' || arg.view.type === 'timeGridWeek') {
+          if (
+            arg.view.type === "dayGridMonth" ||
+            arg.view.type === "timeGridWeek"
+          ) {
             setView(arg.view.type);
           }
           setCurrentDate(arg.view.currentStart);
@@ -479,8 +482,8 @@ export default function GoogleCalendarView({
           onDateClick?.(info.start);
           console.log("[Calendar] select:", info);
         }}
-        height="auto"
-        contentHeight="auto"
+        height={400}
+        contentHeight={400}
         locale={huLocale}
         dayMaxEvents={3}
         nowIndicator={true}
@@ -491,7 +494,7 @@ export default function GoogleCalendarView({
       <style jsx global>{`
         /* Fix calendar height to prevent internal scrolling */
         .fc-mobile-wrap .fc {
-          height: auto !important;
+          height: 400px !important;
         }
         .fc-mobile-wrap .fc .fc-view-harness {
           height: auto !important;

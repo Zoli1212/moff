@@ -81,28 +81,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
         )}
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Bal oldali oszlop: Haladás */}
-        <div className="space-y-2">
-          <h3 className="font-semibold text-gray-600 border-b pb-1"><small>Haladás</small></h3>
-          {progressByWorkItem.length > 0 ? (
-            <>
-              {progressByWorkItem
-                .sort((a, b) => b.totalProgress - a.totalProgress)
-                .map((item, index) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span className="text-gray-700 truncate pr-2">{item.name}</span>
-                    <span className="font-medium text-gray-900 whitespace-nowrap">
-                      {item.totalProgress.toLocaleString('hu-HU')} {item.unit}
-                    </span>
-                  </div>
-                ))}
-            </>
-          ) : (
-            <p className="text-sm text-gray-500">Nincs haladás.</p>
-          )}
-        </div>
-
+      
         {/* Középső oszlop: Munkafázis teljesítmények */}
         <div className="space-y-2">
           <h3 className="font-semibold text-gray-600 border-b pb-1"><small>Munkafázis teljesítmények</small></h3>
