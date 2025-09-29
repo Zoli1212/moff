@@ -278,7 +278,7 @@ export const calculatePerformance = ({
   return {
       totalRevenue,
       totalCost,
-      performancePercentage: Math.round(Math.min(200, Math.max(0, performancePercentage))),
+      performancePercentage: Math.round(Math.min(200, Math.max(-100, performancePercentage))),
       progressByWorkItem: Array.from(progressByWorkItemMap.values()),
       hoursByWorker: Array.from(hoursByWorkerMap.values()),
       workerPerformances,
@@ -674,13 +674,21 @@ export const calculatePerformancePercentage = (
     return 0;
   }
   
+  // Ha nincs bevétel, akkor -100% teljesítmény
+  if (revenue <= 0) {
+    return -100;
+  }
+  
   const actualProfitRatio = (revenue / cost - 1);
-  const targetProfitRatio = (targetProfitPercent ?? 50) / 100; // Alapértelmezett 50% helyett 100%
+  const targetProfitRatio = (targetProfitPercent ?? 50) / 100;
   
   if (targetProfitRatio <= 0) {
     return 0; // Ha nincs cél, akkor 0%
   }
   
   const performance = (actualProfitRatio / targetProfitRatio) * 100;
-  return Math.max(0, performance);
+  
+  // Ne korlátozzuk 0%-ra a negatív teljesítményt, hanem engedjük a negatív értékeket is
+  // De korlátozzuk -100%-ra, hogy ne legyen túl extrém
+  return Math.max(-100, performance);
 };

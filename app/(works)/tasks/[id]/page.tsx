@@ -12,6 +12,8 @@ import {
 import { addWorkItemAndOfferItem } from "@/actions/add-work-item-actions";
 import { AddOfferItemModal } from "@/components/AddOfferItemModal";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
+import { WorkItemEditModal, WorkItemEditData } from "../_components/WorkItemEditModal";
+import { updateWorkItemDetails } from "@/actions/update-workitem-details";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -75,6 +77,8 @@ export default function TasksPage() {
   const [assignError, setAssignError] = useState<string | null>(null);
   const [addingNewItem, setAddingNewItem] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingWorkItem, setEditingWorkItem] = useState<WorkItemEditData | null>(null);
 
   // Toast state
   const [toast, setToast] = useState<{
@@ -293,6 +297,56 @@ export default function TasksPage() {
     }
   };
 
+  // Handle opening edit modal
+  const handleEditWorkItem = (workItemId: number) => {
+    const workItem = workItems.find(item => item.id === workItemId);
+    if (workItem) {
+      setEditingWorkItem({
+        id: workItem.id,
+        name: workItem.name,
+        description: workItem.description,
+        quantity: workItem.quantity,
+        unit: workItem.unit,
+        completedQuantity: workItem.completedQuantity,
+      });
+      setShowEditModal(true);
+    }
+  };
+
+  // Handle saving edited work item
+  const handleSaveEditedWorkItem = async (workItemId: number, updatedData: Partial<WorkItemEditData>) => {
+    try {
+      console.log("handleSaveEditedWorkItem called with:", { workItemId, updatedData });
+      const result = await updateWorkItemDetails(workItemId, updatedData);
+      console.log("updateWorkItemDetails result:", result);
+      
+      if (result.success) {
+        // Update local state
+        setWorkItems(prev => 
+          prev.map(item => 
+            item.id === workItemId 
+              ? { 
+                  ...item, 
+                  name: updatedData.name || item.name,
+                  description: updatedData.description !== undefined ? updatedData.description : item.description,
+                  quantity: updatedData.quantity !== undefined ? updatedData.quantity : item.quantity,
+                  unit: updatedData.unit || item.unit,
+                  completedQuantity: updatedData.completedQuantity !== undefined ? updatedData.completedQuantity : item.completedQuantity,
+                }
+              : item
+          )
+        );
+        setShowEditModal(false);
+        setEditingWorkItem(null);
+      } else {
+        throw new Error(result.error || "Hiba történt a mentés során");
+      }
+    } catch (error) {
+      console.error("Error updating work item:", error);
+      throw error; // Let the modal handle the error display
+    }
+  };
+
   const router = useRouter();
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: 16 }}>
@@ -443,6 +497,7 @@ export default function TasksPage() {
                     }
                     onCheck={(checked) => handleAssignDiary(item.id, checked)}
                     onQuantityChange={handleQuantityChange}
+                    onEdit={handleEditWorkItem}
                   >
                     {item.workItemWorkers &&
                       item.workItemWorkers.length > 0 && (
@@ -505,6 +560,17 @@ export default function TasksPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSave={handleSaveNewItem}
+      />
+
+      {/* Edit Work Item Modal */}
+      <WorkItemEditModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingWorkItem(null);
+        }}
+        workItem={editingWorkItem}
+        onSave={handleSaveEditedWorkItem}
       />
 
       {/* Toast Notification */}

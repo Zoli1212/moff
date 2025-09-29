@@ -15,6 +15,7 @@ interface TaskCardProps {
   isLoading?: boolean;
   onQuantityChange?: (id: number, newQuantity: number) => void;
   onCheck?: (checked: boolean) => void;
+  onEdit?: (id: number) => void;
   children?: React.ReactNode;
   className?: string;
 }
@@ -32,6 +33,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   isLoading = false,
   onQuantityChange,
   onCheck,
+  onEdit,
   children,
   className = "",
 }) => {
@@ -54,7 +56,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   console.log(id)
   return (
     <div
-      className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? 'border-2 border-blue-500 bg-blue-50' : 'border border-gray-200 bg-white'} ${className}`}
+      className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? 'border-2 border-blue-500 bg-blue-50' : 'border border-gray-200 bg-white'} ${className} ${onEdit ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      onClick={() => onEdit && onEdit(id)}
     >
       <div className="flex-1">
         <div className="font-bold text-lg">{title}</div>
@@ -81,7 +84,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
             </div>
             {onQuantityChange && (
               <button
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   setNewQuantity(effectiveQuantity?.toString() || "");
                   setShowQuantityModal(true);
                 }}
@@ -124,7 +128,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
           type="checkbox"
           checked={checked}
           disabled={isLoading}
-          onChange={async () => {
+          onChange={async (e) => {
+            e.stopPropagation();
             if (!onCheck) return;
             toast("AI frissítés folyamatban ...", {
               id: "frissites",
@@ -146,6 +151,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               toast.dismiss("frissites");
             }
           }}
+          onClick={(e) => e.stopPropagation()}
           className="ml-4 mt-2 w-5 h-5 accent-blue-500 rounded border-gray-300"
         />
       )}

@@ -46,7 +46,11 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
             style={{ width: `${Math.max(5, Math.min(performancePercentage, 100))}%` }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-sm font-bold text-white drop-shadow-sm">
+            <span className={`text-sm font-bold drop-shadow-sm ${
+              performancePercentage >= 0 
+                ? 'text-white' 
+                : 'text-red-700'
+            }`}>
               {performancePercentage}%
             </span>
           </div>
