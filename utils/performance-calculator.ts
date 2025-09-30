@@ -1,6 +1,13 @@
-import type { WorkItem, Worker } from '@/types/work';
-import type { WorkforceRegistryData } from '@/actions/workforce-registry-actions';
-import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, subWeeks, subMonths } from 'date-fns';
+import type { WorkItem, Worker } from "@/types/work";
+import type { WorkforceRegistryData } from "@/actions/workforce-registry-actions";
+import {
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  subWeeks,
+  subMonths,
+} from "date-fns";
 
 // Segédfüggvény: órabér számítása napi díjból
 export const getHourlyRate = (dailyRate: number | null | undefined): number => {
@@ -51,7 +58,7 @@ export interface PerformanceCalculationInput {
   workforceRegistry: WorkforceRegistryData[];
   allDiaryItems?: any[]; // Az összes napló elem az előző időszak számításához
   currentDate?: Date;
-  view?: 'dayGridMonth' | 'timeGridWeek';
+  view?: "dayGridMonth" | "timeGridWeek";
 }
 
 // Fő teljesítmény számítási függvény
@@ -62,108 +69,118 @@ export const calculatePerformance = ({
   workforceRegistry,
   allDiaryItems,
   currentDate,
-  view
+  view,
 }: PerformanceCalculationInput): PerformanceCalculationResult => {
-  
   let totalRevenue = 0;
   let totalCost = 0;
-  const progressByWorkItemMap = new Map<number, { name: string; totalProgress: number; unit: string }>();
-  const hoursByWorkerMap = new Map<string, { name: string; totalHours: number }>();
+  const progressByWorkItemMap = new Map<
+    number,
+    { name: string; totalProgress: number; unit: string }
+  >();
+  const hoursByWorkerMap = new Map<
+    string,
+    { name: string; totalHours: number }
+  >();
 
-         // Költségek és bevételek számítása a releváns workDiaryItem-ek alapján
-         workDiaryItems.forEach((diaryItem: any, index: number) => {
-           const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
-           if (!workItem) {
-             return;
-           }
+  // Költségek és bevételek számítása a releváns workDiaryItem-ek alapján
+  workDiaryItems.forEach((diaryItem: any, index: number) => {
+    const workItem = workItems.find((wi) => wi.id === diaryItem.workItemId);
+    if (!workItem) {
+      return;
+    }
 
-           // Bevétel számítása: a haladás arányában a workItem unitPrice alapján
-           const progressMade = diaryItem.quantity || 0;
-           
-           if (progressMade > 0 && workItem.unitPrice && workItem.quantity > 0) {
-             const revenuePerUnit = workItem.unitPrice;
-             const itemRevenue = progressMade * revenuePerUnit;
-             totalRevenue += itemRevenue;
-           }
+    // Bevétel számítása: a haladás arányában a workItem unitPrice alapján
+    const progressMade = diaryItem.quantity || 0;
 
-           // Költség számítása: a naplóban rögzített munkások órái alapján
-           const workerAssignment = workItem.workItemWorkers?.find(wiw => wiw.workerId === diaryItem.workerId);
-           
-           // Ha nincs workItemWorkers, próbáljuk meg közvetlenül a workers tömbből
-           let dailyRate = workerAssignment?.workforceRegistry?.dailyRate;
-           
-           // Ha még mindig nincs dailyRate, keressük meg a WorkforceRegistry-ben név alapján
-           if (!dailyRate && diaryItem.name) {
-             // Először próbáljuk meg pontos egyezést
-             let workforceWorker = workforceRegistry.find(wr => 
-               wr.name.toLowerCase() === diaryItem.name.toLowerCase()
-             );
-             
-             // Ha nincs pontos egyezés, próbáljuk meg részleges egyezést
-             if (!workforceWorker) {
-               workforceWorker = workforceRegistry.find(wr => 
-                 wr.name.toLowerCase().includes(diaryItem.name.toLowerCase()) ||
-                 diaryItem.name.toLowerCase().includes(wr.name.toLowerCase())
-               );
-             }
-             
-             if (workforceWorker) {
-               dailyRate = workforceWorker.dailyRate;
-             }
-           }
-           
-           // Ha még mindig nincs dailyRate, használjunk alapértelmezett értéket
-           if (!dailyRate) {
-             dailyRate = 80000; // Alapértelmezett napi díj: 80,000 Ft
-           }
-    
-           const hourlyRate = getHourlyRate(dailyRate);
-           const hoursWorked = diaryItem.workHours || 0;
-           const itemCost = hoursWorked * hourlyRate;
-           totalCost += itemCost;
-           
+    if (progressMade > 0 && workItem.unitPrice && workItem.quantity > 0) {
+      const revenuePerUnit = workItem.unitPrice;
+      const itemRevenue = progressMade * revenuePerUnit;
+      totalRevenue += itemRevenue;
+    }
+
+    // Költség számítása: a naplóban rögzített munkások órái alapján
+    const workerAssignment = workItem.workItemWorkers?.find(
+      (wiw) => wiw.workerId === diaryItem.workerId
+    );
+
+    // Ha nincs workItemWorkers, próbáljuk meg közvetlenül a workers tömbből
+    let dailyRate = workerAssignment?.workforceRegistry?.dailyRate;
+
+    // Ha még mindig nincs dailyRate, keressük meg a WorkforceRegistry-ben név alapján
+    if (!dailyRate && diaryItem.name) {
+      // Először próbáljuk meg pontos egyezést
+      let workforceWorker = workforceRegistry.find(
+        (wr) => wr.name.toLowerCase() === diaryItem.name.toLowerCase()
+      );
+
+      // Ha nincs pontos egyezés, próbáljuk meg részleges egyezést
+      if (!workforceWorker) {
+        workforceWorker = workforceRegistry.find(
+          (wr) =>
+            wr.name.toLowerCase().includes(diaryItem.name.toLowerCase()) ||
+            diaryItem.name.toLowerCase().includes(wr.name.toLowerCase())
+        );
+      }
+
+      if (workforceWorker) {
+        dailyRate = workforceWorker.dailyRate;
+      }
+    }
+
+    // Ha nincs dailyRate, akkor 0
+    if (!dailyRate) {
+      dailyRate = 0;
+    }
+
+    const hourlyRate = getHourlyRate(dailyRate);
+    const hoursWorked = diaryItem.workHours || 0;
+    const itemCost = hoursWorked * hourlyRate;
+    totalCost += itemCost;
 
     // Munkás óráinak aggregálása
     if (hoursWorked > 0) {
       // Munkás nevének meghatározása
-      let workerName = 'Ismeretlen';
-      
+      let workerName = "Ismeretlen";
+
       // 1. Ha van név közvetlenül a diaryItem-ben
       if (diaryItem.name) {
         workerName = diaryItem.name;
       }
       // 2. Ha van workerId, keressük a workers tömbben
       else if (diaryItem.workerId) {
-        const workerDetails = workers.find(w => w.id === diaryItem.workerId);
+        const workerDetails = workers.find((w) => w.id === diaryItem.workerId);
         if (workerDetails?.name) {
           workerName = workerDetails.name;
         }
       }
-      
+
       // A nevet használjuk kulcsként (nem a workerId-t), mert több munkásnak lehet ugyanaz a workerId
-      if (workerName && workerName !== 'Ismeretlen') {
+      if (workerName && workerName !== "Ismeretlen") {
         const existingWorker = hoursByWorkerMap.get(workerName);
         const newTotalHours = (existingWorker?.totalHours || 0) + hoursWorked;
         hoursByWorkerMap.set(workerName, {
-            name: workerName,
-            totalHours: newTotalHours,
+          name: workerName,
+          totalHours: newTotalHours,
         });
       }
     }
 
     // Munkafázis haladásának aggregálása - minden workItem megjelenik, ahol dolgoztak
     const existingProgress = progressByWorkItemMap.get(workItem.id);
-    const newTotalProgress = (existingProgress?.totalProgress || 0) + progressMade;
+    const newTotalProgress =
+      (existingProgress?.totalProgress || 0) + progressMade;
     progressByWorkItemMap.set(workItem.id, {
-        name: workItem.name,
-        totalProgress: newTotalProgress,
-        unit: workItem.unit,
+      name: workItem.name,
+      totalProgress: newTotalProgress,
+      unit: workItem.unit,
     });
   });
 
-         // Profitráta számítása (egyszerű profitráta %)
-         const performancePercentage = calculateProfitRatePercentage(totalCost, totalRevenue);
-
+  // Profitráta számítása (egyszerű profitráta %)
+  const performancePercentage = calculateProfitRatePercentage(
+    totalCost,
+    totalRevenue
+  );
 
   // WorkItem szintű teljesítmény számítása
   let workItemPerformances = calculateWorkItemPerformances(
@@ -198,54 +215,62 @@ export const calculatePerformance = ({
     }
 
     // WorkItem szintű előző időszak teljesítmények
-    const workItemPreviousPerformances = calculateWorkItemPreviousPeriodPerformances(
-      allDiaryItems,
-      workItems,
-      workforceRegistry,
-      currentDate,
-      view
-    );
+    const workItemPreviousPerformances =
+      calculateWorkItemPreviousPeriodPerformances(
+        allDiaryItems,
+        workItems,
+        workforceRegistry,
+        currentDate,
+        view
+      );
 
     // WorkItem teljesítményekhez trend hozzáadása
-    workItemPerformances = workItemPerformances.map(perf => {
+    workItemPerformances = workItemPerformances.map((perf) => {
       const previousPerf = workItemPreviousPerformances.get(perf.workItemId);
       return {
         ...perf,
         previousPeriodPerformance: previousPerf,
-        performanceChange: previousPerf !== undefined ? perf.performancePercentage - previousPerf : undefined
+        performanceChange:
+          previousPerf !== undefined
+            ? perf.performancePercentage - previousPerf
+            : undefined,
       };
     });
 
     // Worker szintű előző időszak teljesítmények
-    const workerPreviousPerformances = calculateWorkerPreviousPeriodPerformances(
-      allDiaryItems,
-      workItems,
-      workforceRegistry,
-      currentDate,
-      view
-    );
+    const workerPreviousPerformances =
+      calculateWorkerPreviousPeriodPerformances(
+        allDiaryItems,
+        workItems,
+        workforceRegistry,
+        currentDate,
+        view
+      );
 
     // Worker teljesítményekhez trend hozzáadása
-    workerPerformances = workerPerformances.map(perf => {
+    workerPerformances = workerPerformances.map((perf) => {
       const previousPerf = workerPreviousPerformances.get(perf.name);
       return {
         ...perf,
         previousPeriodPerformance: previousPerf,
-        performanceChange: previousPerf !== undefined ? perf.performancePercentage - previousPerf : undefined
+        performanceChange:
+          previousPerf !== undefined
+            ? perf.performancePercentage - previousPerf
+            : undefined,
       };
     });
   }
 
   return {
-      totalRevenue,
-      totalCost,
-      performancePercentage: Math.round(performancePercentage),
-      progressByWorkItem: Array.from(progressByWorkItemMap.values()),
-      hoursByWorker: Array.from(hoursByWorkerMap.values()),
-      workerPerformances,
-      workItemPerformances,
-      previousPeriodPerformance,
-      performanceChange,
+    totalRevenue,
+    totalCost,
+    performancePercentage: Math.round(performancePercentage),
+    progressByWorkItem: Array.from(progressByWorkItemMap.values()),
+    hoursByWorker: Array.from(hoursByWorkerMap.values()),
+    workerPerformances,
+    workItemPerformances,
+    previousPeriodPerformance,
+    performanceChange,
   };
 };
 
@@ -255,27 +280,29 @@ export const calculatePreviousPeriodPerformance = (
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[],
   currentDate: Date,
-  view: 'dayGridMonth' | 'timeGridWeek'
+  view: "dayGridMonth" | "timeGridWeek"
 ): number | undefined => {
-  
   // Előző időszak dátumainak meghatározása
-  const previousDate = view === 'timeGridWeek' 
-    ? subWeeks(currentDate, 1) 
-    : subMonths(currentDate, 1);
-    
-  const startDate = view === 'timeGridWeek' 
-    ? startOfWeek(previousDate, { weekStartsOn: 1 }) 
-    : startOfMonth(previousDate);
-    
-  const endDate = view === 'timeGridWeek' 
-    ? endOfWeek(previousDate, { weekStartsOn: 1 }) 
-    : endOfMonth(previousDate);
+  const previousDate =
+    view === "timeGridWeek"
+      ? subWeeks(currentDate, 1)
+      : subMonths(currentDate, 1);
+
+  const startDate =
+    view === "timeGridWeek"
+      ? startOfWeek(previousDate, { weekStartsOn: 1 })
+      : startOfMonth(previousDate);
+
+  const endDate =
+    view === "timeGridWeek"
+      ? endOfWeek(previousDate, { weekStartsOn: 1 })
+      : endOfMonth(previousDate);
 
   // Dátum string konverzió
   const toISODateString = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -284,18 +311,21 @@ export const calculatePreviousPeriodPerformance = (
 
   // Előző időszak diary item-jeinek szűrése
   const previousPeriodItems: any[] = [];
-  allDiaryItems.forEach(diary => {
+  allDiaryItems.forEach((diary) => {
     (diary.workDiaryItems || []).forEach((diaryItem: any) => {
       if (!diaryItem.date) return;
-      
+
       let itemDateString: string;
-      if (typeof diaryItem.date === 'string') {
+      if (typeof diaryItem.date === "string") {
         itemDateString = diaryItem.date.substring(0, 10);
       } else {
         itemDateString = toISODateString(diaryItem.date);
       }
-      
-      if (itemDateString >= startDateString && itemDateString <= endDateString) {
+
+      if (
+        itemDateString >= startDateString &&
+        itemDateString <= endDateString
+      ) {
         previousPeriodItems.push(diaryItem);
       }
     });
@@ -310,7 +340,7 @@ export const calculatePreviousPeriodPerformance = (
   let totalCost = 0;
 
   previousPeriodItems.forEach((diaryItem: any) => {
-    const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
+    const workItem = workItems.find((wi) => wi.id === diaryItem.workItemId);
     if (!workItem) return;
 
     const progressMade = diaryItem.quantity || 0;
@@ -322,9 +352,9 @@ export const calculatePreviousPeriodPerformance = (
     }
 
     // Költség számítása
-    let dailyRate = 80000;
-    const workforceWorker = workforceRegistry.find(wr => 
-      wr.name.toLowerCase() === (diaryItem.name || '').toLowerCase()
+    let dailyRate = 0; // Alapértelmezett 0, ha nincs munkás adat
+    const workforceWorker = workforceRegistry.find(
+      (wr) => wr.name.toLowerCase() === (diaryItem.name || "").toLowerCase()
     );
     if (workforceWorker?.dailyRate) {
       dailyRate = workforceWorker.dailyRate;
@@ -343,26 +373,29 @@ export const calculateWorkItemPreviousPeriodPerformances = (
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[],
   currentDate: Date,
-  view: 'dayGridMonth' | 'timeGridWeek'
+  view: "dayGridMonth" | "timeGridWeek"
 ): Map<number, number> => {
   // Előző időszak dátumainak meghatározása
-  const previousDate = view === 'timeGridWeek' 
-    ? subWeeks(currentDate, 1) 
-    : subMonths(currentDate, 1);
-    
-  const startDate = view === 'timeGridWeek' 
-    ? startOfWeek(previousDate, { weekStartsOn: 1 }) 
-    : startOfMonth(previousDate);
-    
-  const endDate = view === 'timeGridWeek' 
-    ? endOfWeek(previousDate, { weekStartsOn: 1 }) 
-    : endOfMonth(previousDate);
+  const previousDate =
+    view === "timeGridWeek"
+      ? subWeeks(currentDate, 1)
+      : subMonths(currentDate, 1);
+
+  const startDate =
+    view === "timeGridWeek"
+      ? startOfWeek(previousDate, { weekStartsOn: 1 })
+      : startOfMonth(previousDate);
+
+  const endDate =
+    view === "timeGridWeek"
+      ? endOfWeek(previousDate, { weekStartsOn: 1 })
+      : endOfMonth(previousDate);
 
   // Dátum string konverzió
   const toISODateString = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -371,18 +404,21 @@ export const calculateWorkItemPreviousPeriodPerformances = (
 
   // Előző időszak diary item-jeinek szűrése
   const previousPeriodItems: any[] = [];
-  allDiaryItems.forEach(diary => {
+  allDiaryItems.forEach((diary) => {
     (diary.workDiaryItems || []).forEach((diaryItem: any) => {
       if (!diaryItem.date) return;
-      
+
       let itemDateString: string;
-      if (typeof diaryItem.date === 'string') {
+      if (typeof diaryItem.date === "string") {
         itemDateString = diaryItem.date.substring(0, 10);
       } else {
         itemDateString = toISODateString(diaryItem.date);
       }
-      
-      if (itemDateString >= startDateString && itemDateString <= endDateString) {
+
+      if (
+        itemDateString >= startDateString &&
+        itemDateString <= endDateString
+      ) {
         previousPeriodItems.push(diaryItem);
       }
     });
@@ -397,7 +433,7 @@ export const calculateWorkItemPreviousPeriodPerformances = (
 
   // Map létrehozása workItemId -> performancePercentage
   const performanceMap = new Map<number, number>();
-  workItemPreviousPerformances.forEach(perf => {
+  workItemPreviousPerformances.forEach((perf) => {
     performanceMap.set(perf.workItemId, perf.performancePercentage);
   });
 
@@ -410,18 +446,21 @@ export const calculateWorkItemPerformances = (
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[]
 ): WorkItemPerformance[] => {
-  const workItemDataMap = new Map<number, {
-    name: string;
-    unit: string;
-    totalProgress: number;
-    totalHours: number;
-    totalRevenue: number;
-    totalCost: number;
-  }>();
+  const workItemDataMap = new Map<
+    number,
+    {
+      name: string;
+      unit: string;
+      totalProgress: number;
+      totalHours: number;
+      totalRevenue: number;
+      totalCost: number;
+    }
+  >();
 
   // WorkItem-enkénti adatok összegyűjtése
   workDiaryItems.forEach((diaryItem: any) => {
-    const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
+    const workItem = workItems.find((wi) => wi.id === diaryItem.workItemId);
     if (!workItem) return;
 
     const progressMade = diaryItem.quantity || 0;
@@ -434,10 +473,10 @@ export const calculateWorkItemPerformances = (
     }
 
     // Költség számítása
-    let dailyRate = 80000; // Alapértelmezett
-    const workerName = diaryItem.name || 'Ismeretlen';
-    const workforceWorker = workforceRegistry.find(wr => 
-      wr.name.toLowerCase() === workerName.toLowerCase()
+    let dailyRate = 0; // Alapértelmezett 0, ha nincs munkás adat
+    const workerName = diaryItem.name || "Ismeretlen";
+    const workforceWorker = workforceRegistry.find(
+      (wr) => wr.name.toLowerCase() === workerName.toLowerCase()
     );
     if (workforceWorker?.dailyRate) {
       dailyRate = workforceWorker.dailyRate;
@@ -453,7 +492,7 @@ export const calculateWorkItemPerformances = (
       totalProgress: 0,
       totalHours: 0,
       totalRevenue: 0,
-      totalCost: 0
+      totalCost: 0,
     };
 
     workItemDataMap.set(workItem.id, {
@@ -462,7 +501,7 @@ export const calculateWorkItemPerformances = (
       totalProgress: existing.totalProgress + progressMade,
       totalHours: existing.totalHours + hoursWorked,
       totalRevenue: existing.totalRevenue + itemRevenue,
-      totalCost: existing.totalCost + itemCost
+      totalCost: existing.totalCost + itemCost,
     });
   });
 
@@ -475,7 +514,10 @@ export const calculateWorkItemPerformances = (
     totalHours: data.totalHours,
     totalRevenue: data.totalRevenue,
     totalCost: data.totalCost,
-    performancePercentage: calculateProfitRatePercentage(data.totalCost, data.totalRevenue)
+    performancePercentage: calculateProfitRatePercentage(
+      data.totalCost,
+      data.totalRevenue
+    ),
   }));
 };
 
@@ -485,26 +527,29 @@ export const calculateWorkerPreviousPeriodPerformances = (
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[],
   currentDate: Date,
-  view: 'dayGridMonth' | 'timeGridWeek'
+  view: "dayGridMonth" | "timeGridWeek"
 ): Map<string, number> => {
   // Előző időszak dátumainak meghatározása
-  const previousDate = view === 'timeGridWeek' 
-    ? subWeeks(currentDate, 1) 
-    : subMonths(currentDate, 1);
-    
-  const startDate = view === 'timeGridWeek' 
-    ? startOfWeek(previousDate, { weekStartsOn: 1 }) 
-    : startOfMonth(previousDate);
-    
-  const endDate = view === 'timeGridWeek' 
-    ? endOfWeek(previousDate, { weekStartsOn: 1 }) 
-    : endOfMonth(previousDate);
+  const previousDate =
+    view === "timeGridWeek"
+      ? subWeeks(currentDate, 1)
+      : subMonths(currentDate, 1);
+
+  const startDate =
+    view === "timeGridWeek"
+      ? startOfWeek(previousDate, { weekStartsOn: 1 })
+      : startOfMonth(previousDate);
+
+  const endDate =
+    view === "timeGridWeek"
+      ? endOfWeek(previousDate, { weekStartsOn: 1 })
+      : endOfMonth(previousDate);
 
   // Dátum string konverzió
   const toISODateString = (date: Date) => {
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -513,18 +558,21 @@ export const calculateWorkerPreviousPeriodPerformances = (
 
   // Előző időszak diary item-jeinek szűrése
   const previousPeriodItems: any[] = [];
-  allDiaryItems.forEach(diary => {
+  allDiaryItems.forEach((diary) => {
     (diary.workDiaryItems || []).forEach((diaryItem: any) => {
       if (!diaryItem.date) return;
-      
+
       let itemDateString: string;
-      if (typeof diaryItem.date === 'string') {
+      if (typeof diaryItem.date === "string") {
         itemDateString = diaryItem.date.substring(0, 10);
       } else {
         itemDateString = toISODateString(diaryItem.date);
       }
-      
-      if (itemDateString >= startDateString && itemDateString <= endDateString) {
+
+      if (
+        itemDateString >= startDateString &&
+        itemDateString <= endDateString
+      ) {
         previousPeriodItems.push(diaryItem);
       }
     });
@@ -539,7 +587,7 @@ export const calculateWorkerPreviousPeriodPerformances = (
 
   // Map létrehozása workerName -> performancePercentage
   const performanceMap = new Map<string, number>();
-  workerPreviousPerformances.forEach(perf => {
+  workerPreviousPerformances.forEach((perf) => {
     performanceMap.set(perf.name, perf.performancePercentage);
   });
 
@@ -552,18 +600,21 @@ export const calculateWorkerPerformances = (
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[]
 ): WorkerPerformance[] => {
-  const workerDataMap = new Map<string, {
-    totalHours: number;
-    totalRevenue: number;
-    totalCost: number;
-  }>();
+  const workerDataMap = new Map<
+    string,
+    {
+      totalHours: number;
+      totalRevenue: number;
+      totalCost: number;
+    }
+  >();
 
   // Munkásonkénti adatok összegyűjtése
   workDiaryItems.forEach((diaryItem: any) => {
-    const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
+    const workItem = workItems.find((wi) => wi.id === diaryItem.workItemId);
     if (!workItem) return;
 
-    const workerName = diaryItem.name || 'Ismeretlen';
+    const workerName = diaryItem.name || "Ismeretlen";
     const progressMade = diaryItem.quantity || 0;
     const hoursWorked = diaryItem.workHours || 0;
 
@@ -574,9 +625,9 @@ export const calculateWorkerPerformances = (
     }
 
     // Költség számítása
-    let dailyRate = 80000; // Alapértelmezett
-    const workforceWorker = workforceRegistry.find(wr => 
-      wr.name.toLowerCase() === workerName.toLowerCase()
+    let dailyRate = 0; // Alapértelmezett 0, ha nincs munkás adat
+    const workforceWorker = workforceRegistry.find(
+      (wr) => wr.name.toLowerCase() === workerName.toLowerCase()
     );
     if (workforceWorker?.dailyRate) {
       dailyRate = workforceWorker.dailyRate;
@@ -589,13 +640,13 @@ export const calculateWorkerPerformances = (
     const existing = workerDataMap.get(workerName) || {
       totalHours: 0,
       totalRevenue: 0,
-      totalCost: 0
+      totalCost: 0,
     };
 
     workerDataMap.set(workerName, {
       totalHours: existing.totalHours + hoursWorked,
       totalRevenue: existing.totalRevenue + itemRevenue,
-      totalCost: existing.totalCost + itemCost
+      totalCost: existing.totalCost + itemCost,
     });
   });
 
@@ -608,56 +659,56 @@ export const calculateWorkerPerformances = (
     performancePercentage: calculateProfitRatePercentage(
       data.totalCost,
       data.totalRevenue
-    )
+    ),
   }));
 };
 
 // Egyszerű profitráta számítása (nincs elvárt profitráta)
 export const calculateProfitRatePercentage = (
-  cost: number, 
+  cost: number,
   revenue: number
 ): number => {
   // Ha nincs költség, nem lehet profitot számolni
   if (cost <= 0) {
     return 0;
   }
-  
+
   // Ha nincs bevétel, akkor -100% profitráta
   if (revenue <= 0) {
     return -100;
   }
-  
+
   // Egyszerű profitráta: (bevétel / költség - 1) * 100
   const profitRate = (revenue / cost - 1) * 100;
-  
+
   return profitRate;
 };
 
 // Régi teljesítmény százalék számítása (kompatibilitásért megtartva)
 export const calculatePerformancePercentage = (
-  cost: number, 
-  revenue: number, 
+  cost: number,
+  revenue: number,
   targetProfitPercent: number | null
 ): number => {
   // Ha nincs költség, nem lehet profitot számolni
   if (cost <= 0) {
     return 0;
   }
-  
+
   // Ha nincs bevétel, akkor -100% teljesítmény
   if (revenue <= 0) {
     return -100;
   }
-  
-  const actualProfitRatio = (revenue / cost - 1);
+
+  const actualProfitRatio = revenue / cost - 1;
   const targetProfitRatio = (targetProfitPercent ?? 50) / 100;
-  
+
   if (targetProfitRatio <= 0) {
     return 0; // Ha nincs cél, akkor 0%
   }
-  
+
   const performance = (actualProfitRatio / targetProfitRatio) * 100;
-  
+
   // Ne korlátozzuk 0%-ra a negatív teljesítményt, hanem engedjük a negatív értékeket is
   // De korlátozzuk -100%-ra, hogy ne legyen túl extrém
   return Math.max(-100, performance);

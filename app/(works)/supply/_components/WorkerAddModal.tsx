@@ -26,6 +26,7 @@ interface WorkerAddModalProps {
     profession: string;
     workItemId: number | null;
     avatarUrl?: string;
+    dailyRate?: number; // Optional, csak új munkásnál van
   }) => Promise<void> | void;
   // If provided, lock the profession to this value (per-slot add)
   lockedProfession?: string;
@@ -133,6 +134,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [profession, setProfession] = useState(lockedProfession ?? "");
+  const [dailyRate, setDailyRate] = useState<string>("");
   // workItemId is always null in current implementation
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string>("");
@@ -172,6 +174,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         return;
       }
 
+      // Meglévő munkásnál nem kérjük a napi díjat
+
       const worker = existingWorkers.find(w => w.id.toString() === selectedExistingWorker);
       if (!worker) {
         toast.error("A kiválasztott munkás nem található!");
@@ -189,6 +193,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           profession: selectedRole, // Use selected role instead of worker's original role
           workItemId: null, // Always null
           avatarUrl: worker.avatarUrl || undefined,
+          // dailyRate nincs megadva, mert meglévő munkásnak már van
         });
 
         // Reset form on success
@@ -211,6 +216,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         return;
       }
 
+      if (!dailyRate || isNaN(Number(dailyRate)) || Number(dailyRate) <= 0) {
+        toast.error("Kérjük adj meg egy érvényes napi díjat!");
+        return;
+      }
+
       setLoading(true);
       try {
         await onSubmit({
@@ -220,6 +230,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           profession: finalProfession,
           workItemId: null, // Always null
           avatarUrl: avatarUrl || undefined,
+          dailyRate: Number(dailyRate),
         });
 
         // Reset form on success
@@ -227,6 +238,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         setEmail("");
         setPhone("");
         setProfession("");
+        setDailyRate("");
         setAvatarUrl("");
         setAvatarPreview("");
         setAvatarError("");
@@ -287,6 +299,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setEmail("");
       setPhone("");
       setProfession("");
+      setDailyRate("");
       setAvatarUrl("");
       setAvatarPreview("");
       setAvatarError("");
@@ -346,6 +359,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               Általános hozzárendelés (nem konkrét munkafázishoz)
             </div>
           </div>
+
 
           {/* Existing Worker Selection */}
           {workerMode === "existing" && (
@@ -431,6 +445,27 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 onChange={(e) => setPhone(e.target.value)}
                 className="border rounded px-3 py-2"
               />
+              
+              {/* Daily Rate Input - Only for new workers */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Napi díj (Ft) *
+                </label>
+                <input
+                  type="number"
+                  placeholder="25000"
+                  value={dailyRate}
+                  onChange={(e) => setDailyRate(e.target.value)}
+                  className="border rounded px-3 py-2 w-full"
+                  required
+                  min="0"
+                  step="1000"
+                />
+                <div className="text-xs text-gray-500">
+                  8 órás munkanapra vonatkozó díj
+                </div>
+              </div>
+              
               {/* Avatar upload with preview - polished UI */}
               <div className="mt-2">
                 <label className="block text-sm font-medium mb-2">Profilkép</label>
@@ -532,6 +567,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               type="submit"
               disabled={
                 loading ||
+                (workerMode === "new" && (!dailyRate || isNaN(Number(dailyRate)) || Number(dailyRate) <= 0)) ||
                 (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
                 (workerMode === "existing" && (!selectedExistingWorker || !selectedRole))
               }

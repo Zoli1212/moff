@@ -563,9 +563,13 @@ export default function GroupedDiaryEditForm({
               : 1 / selectedGroupedItems.length;
           const hoursPerWorkItem = workerTotalHours * proportion;
 
+          // Calculate delta (difference) instead of absolute progress
+          const originalProgress = originalCompletedQuantities.get(groupedItem.workItem.id) || 0;
+          const deltaProgress = Math.max(0, itemProgress - originalProgress);
+          
           const quantityForThisWorker =
             totalWorkerHours > 0
-              ? itemProgress * (workerTotalHours / totalWorkerHours)
+              ? deltaProgress * (workerTotalHours / totalWorkerHours)
               : 0;
 
           const diaryItemData: WorkDiaryItemCreate = {

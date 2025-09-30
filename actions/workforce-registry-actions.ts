@@ -46,9 +46,22 @@ export async function createWorkforceRegistry(data: Omit<WorkforceRegistryData, 
   try {
     const { user, tenantEmail } = await getTenantSafeAuth()
 
+    // Check if a worker with the same name already exists for this tenant
+    const existingWorker = await prisma.workforceRegistry.findFirst({
+      where: {
+        name: data.name.trim(),
+        tenantEmail: tenantEmail
+      }
+    })
+
+    if (existingWorker) {
+      return { success: false, error: 'Van már ilyen nevű munkás a regiszterben!\nAdj hozzá becenevet is (pl. Nagy Péter 2, Nagy Péter ifj.)' }
+    }
+
     const newEntry = await prisma.workforceRegistry.create({
       data: {
         ...data,
+        name: data.name.trim(), // Ensure trimmed name
         tenantEmail: tenantEmail
       }
     })
@@ -78,9 +91,27 @@ export async function updateWorkforceRegistry(id: number, data: Partial<Workforc
       return { success: false, error: 'Munkás nem található vagy nincs jogosultság' }
     }
 
+    // Check if name is being updated and if it conflicts with existing names
+    if (data.name && data.name.trim() !== existingEntry.name) {
+      const nameConflict = await prisma.workforceRegistry.findFirst({
+        where: {
+          name: data.name.trim(),
+          tenantEmail: tenantEmail,
+          id: { not: id } // Exclude current entry
+        }
+      })
+
+      if (nameConflict) {
+        return { success: false, error: 'Van már ilyen nevű munkás a regiszterben!\nAdj hozzá becenevet is (pl. Nagy Péter 2, Nagy Péter ifj.)' }
+      }
+    }
+
+    // Trim name if provided
+    const updateData = data.name ? { ...data, name: data.name.trim() } : data
+
     const updatedEntry = await prisma.workforceRegistry.update({
       where: { id: id },
-      data: data
+      data: updateData
     })
 
     revalidatePath('/others')
@@ -108,6 +139,85 @@ export async function deleteWorkforceRegistry(id: number) {
       return { success: false, error: 'Munkás nem található vagy nincs jogosultság' }
     }
 
+    // Step 1: Check if workforceRegistry.id exists in workItemWorker.workforceRegistryId
+    const workItemAssignments = await prisma.workItemWorker.findMany({
+      where: {
+        workforceRegistryId: existingEntry.id,
+        tenantEmail: tenantEmail
+      },
+      include: {
+        workItem: {
+          include: {
+            work: true
+          }
+        }
+      }
+    })
+    
+    console.log('[DEBUG] Worker:', existingEntry.name, 'ID:', existingEntry.id)
+    console.log('[DEBUG] Found workItemAssignments:', workItemAssignments.length)
+    console.log('[DEBUG] WorkItemWorker IDs:', workItemAssignments.map(a => a.id))
+
+    // Step 2: Check diary entries - first by workItemWorkerId, then by name
+    let totalDiaryEntries = 0
+    let diaryEntriesByWorkItemWorker: any[] = []
+    let diaryEntriesByName: any[] = []
+    
+    // First: Check by workItemWorkerId (new entries)
+    if (workItemAssignments.length > 0) {
+      const workItemWorkerIds = workItemAssignments.map(assignment => assignment.id)
+      
+      diaryEntriesByWorkItemWorker = await prisma.workDiaryItem.findMany({
+        where: {
+          workItemWorkerId: {
+            in: workItemWorkerIds
+          },
+          tenantEmail: tenantEmail
+        }
+      })
+      
+      console.log('[DEBUG] Diary entries found by workItemWorkerId:', diaryEntriesByWorkItemWorker)
+    }
+    
+    // Second: Check by name (legacy entries)
+    diaryEntriesByName = await prisma.workDiaryItem.findMany({
+      where: {
+        name: existingEntry.name,
+        tenantEmail: tenantEmail
+      }
+    })
+    
+    console.log('[DEBUG] Diary entries found by name:', diaryEntriesByName)
+    
+    // Combine both results (avoid duplicates)
+    const allDiaryEntryIds = new Set([
+      ...diaryEntriesByWorkItemWorker.map(d => d.id),
+      ...diaryEntriesByName.map(d => d.id)
+    ])
+    
+    totalDiaryEntries = allDiaryEntryIds.size
+    
+    console.log('[DEBUG] Total diaryEntries:', totalDiaryEntries)
+
+    // Check if worker is on any pending works
+    const pendingWorks = workItemAssignments.filter(assignment => 
+      assignment.workItem?.work?.status === 'pending'
+    )
+
+    if (workItemAssignments.length > 0 || totalDiaryEntries > 0 || pendingWorks.length > 0) {
+      return { 
+        success: false, 
+        error: 'Munkafázison dolgozik! Előbb töröld ki onnan.',
+        needsCleanup: true,
+        workItemAssignments: workItemAssignments.map(a => ({
+          id: a.id,
+          workItemName: a.workItem?.name,
+          workName: a.workItem?.work?.title
+        })),
+        diaryEntriesCount: totalDiaryEntries
+      }
+    }
+
     await prisma.workforceRegistry.delete({
       where: { id: id }
     })
@@ -116,6 +226,70 @@ export async function deleteWorkforceRegistry(id: number) {
     return { success: true }
   } catch (error) {
     console.error('Error deleting workforce registry entry:', error)
+    return { success: false, error: 'Hiba a munkás törlése során' }
+  }
+}
+
+// Clean up worker assignments and then delete from registry
+export async function cleanupAndDeleteWorkforceRegistry(id: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth()
+
+    // Verify ownership
+    const existingEntry = await prisma.workforceRegistry.findFirst({
+      where: {
+        id: id,
+        tenantEmail: tenantEmail
+      }
+    })
+
+    if (!existingEntry) {
+      return { success: false, error: 'Munkás nem található vagy nincs jogosultság' }
+    }
+
+    // Delete all workItemWorker assignments for this worker
+    await prisma.workItemWorker.deleteMany({
+      where: {
+        workforceRegistry: {
+          name: existingEntry.name,
+          tenantEmail: tenantEmail
+        }
+      }
+    })
+
+    // Delete all workDiaryItems for this worker
+    await prisma.workDiaryItem.deleteMany({
+      where: {
+        name: existingEntry.name,
+        tenantEmail: tenantEmail
+      }
+    })
+
+    // Remove worker from Worker.workers JSON arrays
+    const workersWithThisName = await prisma.worker.findMany({
+      where: {
+        tenantEmail: tenantEmail
+      }
+    })
+
+    for (const worker of workersWithThisName) {
+      const updatedWorkers = (worker.workers as any[]).filter(w => w.name !== existingEntry.name)
+      await prisma.worker.update({
+        where: { id: worker.id },
+        data: { workers: updatedWorkers }
+      })
+    }
+
+    // Finally delete from workforce registry
+    await prisma.workforceRegistry.delete({
+      where: { id: id }
+    })
+
+    revalidatePath('/others')
+    revalidatePath('/works')
+    return { success: true }
+  } catch (error) {
+    console.error('Error cleaning up and deleting workforce registry entry:', error)
     return { success: false, error: 'Hiba a munkás törlése során' }
   }
 }
@@ -152,3 +326,126 @@ export async function toggleWorkforceRegistryActive(id: number) {
   }
 }
 
+// Remove single workItemWorker assignment
+export async function removeWorkItemWorkerAssignment(assignmentId: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth()
+
+    // First remove any diary entries for this workItemWorker
+    await prisma.workDiaryItem.deleteMany({
+      where: {
+        workItemWorkerId: assignmentId,
+        tenantEmail: tenantEmail
+      }
+    })
+
+    // Then remove the workItemWorker assignment
+    await prisma.workItemWorker.delete({
+      where: { id: assignmentId }
+    })
+
+    revalidatePath('/others')
+    revalidatePath('/works')
+    return { success: true }
+  } catch (error) {
+    console.error('Error removing workItemWorker assignment:', error)
+    return { success: false, error: 'Hiba a munkafázis hozzárendelés törlése során' }
+  }
+}
+
+// Remove all diary entries for a worker
+export async function removeWorkerDiaryEntries(workerId: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth()
+
+    // Step 1: Get all workItemWorker IDs for this workforce registry
+    const workItemWorkers = await prisma.workItemWorker.findMany({
+      where: {
+        workforceRegistryId: workerId,
+        tenantEmail: tenantEmail
+      },
+      select: { id: true }
+    })
+
+    if (workItemWorkers.length > 0) {
+      const workItemWorkerIds = workItemWorkers.map(w => w.id)
+      
+      // Step 2: Delete diary entries by workItemWorkerId
+      await prisma.workDiaryItem.deleteMany({
+        where: {
+          workItemWorkerId: {
+            in: workItemWorkerIds
+          },
+          tenantEmail: tenantEmail
+        }
+      })
+    }
+
+    revalidatePath('/others')
+    revalidatePath('/works')
+    return { success: true }
+  } catch (error) {
+    console.error('Error removing worker diary entries:', error)
+    return { success: false, error: 'Hiba a napló bejegyzések törlése során' }
+  }
+}
+
+// Remove worker from registry only (final step) - LOGICAL DELETE
+export async function removeWorkerFromRegistryOnly(workerId: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth()
+
+    // Check if worker still has any connections
+    const worker = await prisma.workforceRegistry.findFirst({
+      where: { id: workerId, tenantEmail: tenantEmail }
+    })
+
+    if (!worker) {
+      return { success: false, error: 'Munkás nem található' }
+    }
+
+    // Check for remaining connections
+    const workItemAssignments = await prisma.workItemWorker.findMany({
+      where: {
+        workforceRegistryId: workerId,
+        tenantEmail: tenantEmail
+      }
+    })
+
+    // Check for diary entries through workItemWorker connection
+    let diaryEntriesCount = 0
+    if (workItemAssignments.length > 0) {
+      const workItemWorkerIds = workItemAssignments.map(w => w.id)
+      
+      const diaryEntries = await prisma.workDiaryItem.findMany({
+        where: {
+          workItemWorkerId: {
+            in: workItemWorkerIds
+          },
+          tenantEmail: tenantEmail
+        }
+      })
+      
+      diaryEntriesCount = diaryEntries.length
+    }
+
+    if (workItemAssignments.length > 0 || diaryEntriesCount > 0) {
+      return { 
+        success: false, 
+        error: 'Még vannak aktív kapcsolatok! Először távolítsa el azokat.' 
+      }
+    }
+
+    // LOGICAL DELETE - set isActive to false instead of physical delete
+    await prisma.workforceRegistry.update({
+      where: { id: workerId },
+      data: { isActive: false }
+    })
+
+    revalidatePath('/others')
+    return { success: true }
+  } catch (error) {
+    console.error('Error deactivating worker in registry:', error)
+    return { success: false, error: 'Hiba a munkás deaktiválása során' }
+  }
+}

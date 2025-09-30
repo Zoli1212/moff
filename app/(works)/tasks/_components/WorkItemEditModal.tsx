@@ -30,7 +30,10 @@ interface WorkItemEditModalProps {
   isOpen: boolean;
   onClose: () => void;
   workItem: WorkItemEditData | null;
-  onSave: (workItemId: number, updatedData: Partial<WorkItemEditData>) => Promise<void>;
+  onSave: (
+    workItemId: number,
+    updatedData: Partial<WorkItemEditData>
+  ) => Promise<void>;
 }
 
 export function WorkItemEditModal({
@@ -75,15 +78,18 @@ export function WorkItemEditModal({
     const unitPrice = formData.unitPrice || 0;
     const materialUnitPrice = formData.materialUnitPrice || 0;
     const calculatedTotal = quantity * (unitPrice + materialUnitPrice);
-    
-    setFormData(prev => ({
+
+    setFormData((prev) => ({
       ...prev,
-      totalPrice: calculatedTotal
+      totalPrice: calculatedTotal,
     }));
   }, [formData.quantity, formData.unitPrice, formData.materialUnitPrice]);
 
-  const handleInputChange = (field: keyof WorkItemEditData, value: string | number | undefined) => {
-    setFormData(prev => ({
+  const handleInputChange = (
+    field: keyof WorkItemEditData,
+    value: string | number | undefined
+  ) => {
+    setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -98,23 +104,16 @@ export function WorkItemEditModal({
       return;
     }
 
-    if (formData.quantity !== undefined && (formData.quantity < 0 || isNaN(formData.quantity))) {
-      toast.error("A mennyiség csak pozitív szám lehet!");
+    if (formData.quantity !== undefined && formData.quantity < 0) {
+      toast.error("A mennyiség nem lehet negatív!");
       return;
     }
 
-    if (formData.completedQuantity !== undefined && (formData.completedQuantity < 0 || isNaN(formData.completedQuantity))) {
-      toast.error("A teljesített mennyiség csak pozitív szám lehet!");
-      return;
-    }
-
-    if (formData.unitPrice !== undefined && (formData.unitPrice < 0 || isNaN(formData.unitPrice))) {
-      toast.error("A munka egységár csak pozitív szám lehet!");
-      return;
-    }
-
-    if (formData.materialUnitPrice !== undefined && (formData.materialUnitPrice < 0 || isNaN(formData.materialUnitPrice))) {
-      toast.error("Az anyag egységár csak pozitív szám lehet!");
+    if (
+      formData.completedQuantity !== undefined &&
+      formData.completedQuantity < 0
+    ) {
+      toast.error("A teljesített mennyiség nem lehet negatív!");
       return;
     }
 
@@ -132,7 +131,7 @@ export function WorkItemEditModal({
         totalPrice: formData.totalPrice,
         completedQuantity: formData.completedQuantity,
       });
-      
+
       toast.success("A tétel sikeresen módosítva!");
       onClose();
     } catch (error) {
@@ -150,11 +149,14 @@ export function WorkItemEditModal({
   };
 
   // Format number with space as thousand separator
-  const formatNumberWithSpace = (value: string | number | null | undefined): string => {
+  const formatNumberWithSpace = (
+    value: string | number | null | undefined
+  ): string => {
     if (value === null || value === undefined) return "";
-    const num = typeof value === "string" 
-      ? parseFloat(value.replace(/\s+/g, "").replace(",", ".")) || 0 
-      : value;
+    const num =
+      typeof value === "string"
+        ? parseFloat(value.replace(/\s+/g, "").replace(",", ".")) || 0
+        : value;
     return num.toLocaleString("hu-HU", {
       useGrouping: true,
       maximumFractionDigits: 2,
@@ -169,7 +171,7 @@ export function WorkItemEditModal({
         <DialogHeader>
           <DialogTitle>Tétel szerkesztése</DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           {/* Name field */}
           <div className="grid grid-cols-4 items-center gap-4">
@@ -187,7 +189,10 @@ export function WorkItemEditModal({
 
           {/* Description field */}
           <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="description" className="text-right font-medium pt-2">
+            <Label
+              htmlFor="description"
+              className="text-right font-medium pt-2"
+            >
               Leírás
             </Label>
             <Textarea
@@ -210,21 +215,11 @@ export function WorkItemEditModal({
               value={formData.quantity || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                // Csak számok, pont és vessző engedélyezése
-                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                e.target.value = sanitizedValue;
-                
-                if (sanitizedValue === "") {
+                if (value === "") {
                   handleInputChange("quantity", undefined);
                 } else {
-                  const numValue = parseFloat(sanitizedValue);
+                  const numValue = parseFloat(value);
                   handleInputChange("quantity", isNaN(numValue) ? 0 : numValue);
-                }
-              }}
-              onKeyPress={(e) => {
-                // Csak számok, pont és vessző engedélyezése
-                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-                  e.preventDefault();
                 }
               }}
               className="col-span-1"
@@ -255,21 +250,14 @@ export function WorkItemEditModal({
               value={formData.unitPrice || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                // Csak számok, pont és vessző engedélyezése
-                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                e.target.value = sanitizedValue;
-                
-                if (sanitizedValue === "") {
+                if (value === "") {
                   handleInputChange("unitPrice", undefined);
                 } else {
-                  const numValue = parseFloat(sanitizedValue);
-                  handleInputChange("unitPrice", isNaN(numValue) ? 0 : numValue);
-                }
-              }}
-              onKeyPress={(e) => {
-                // Csak számok, pont és vessző engedélyezése
-                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-                  e.preventDefault();
+                  const numValue = parseFloat(value);
+                  handleInputChange(
+                    "unitPrice",
+                    isNaN(numValue) ? 0 : numValue
+                  );
                 }
               }}
               className="col-span-1"
@@ -277,7 +265,10 @@ export function WorkItemEditModal({
               step="0.01"
               min="0"
             />
-            <Label htmlFor="materialUnitPrice" className="text-right font-medium">
+            <Label
+              htmlFor="materialUnitPrice"
+              className="text-right font-medium"
+            >
               Anyag egységár
             </Label>
             <Input
@@ -286,21 +277,14 @@ export function WorkItemEditModal({
               value={formData.materialUnitPrice || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                // Csak számok, pont és vessző engedélyezése
-                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                e.target.value = sanitizedValue;
-                
-                if (sanitizedValue === "") {
+                if (value === "") {
                   handleInputChange("materialUnitPrice", undefined);
                 } else {
-                  const numValue = parseFloat(sanitizedValue);
-                  handleInputChange("materialUnitPrice", isNaN(numValue) ? 0 : numValue);
-                }
-              }}
-              onKeyPress={(e) => {
-                // Csak számok, pont és vessző engedélyezése
-                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-                  e.preventDefault();
+                  const numValue = parseFloat(value);
+                  handleInputChange(
+                    "materialUnitPrice",
+                    isNaN(numValue) ? 0 : numValue
+                  );
                 }
               }}
               className="col-span-1"
@@ -312,9 +296,7 @@ export function WorkItemEditModal({
 
           {/* Total Price display */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right font-medium">
-              Összár
-            </Label>
+            <Label className="text-right font-medium">Összár</Label>
             <div className="col-span-3 p-2 bg-gray-50 rounded border text-lg font-semibold">
               {formatNumberWithSpace(formData.totalPrice)} Ft
             </div>
@@ -322,7 +304,10 @@ export function WorkItemEditModal({
 
           {/* Completed Quantity field */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="completedQuantity" className="text-right font-medium">
+            <Label
+              htmlFor="completedQuantity"
+              className="text-right font-medium"
+            >
               Teljesítve
             </Label>
             <Input
@@ -331,21 +316,14 @@ export function WorkItemEditModal({
               value={formData.completedQuantity || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                // Csak számok, pont és vessző engedélyezése
-                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
-                e.target.value = sanitizedValue;
-                
-                if (sanitizedValue === "") {
+                if (value === "") {
                   handleInputChange("completedQuantity", undefined);
                 } else {
-                  const numValue = parseFloat(sanitizedValue);
-                  handleInputChange("completedQuantity", isNaN(numValue) ? 0 : numValue);
-                }
-              }}
-              onKeyPress={(e) => {
-                // Csak számok, pont és vessző engedélyezése
-                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
-                  e.preventDefault();
+                  const numValue = parseFloat(value);
+                  handleInputChange(
+                    "completedQuantity",
+                    isNaN(numValue) ? 0 : numValue
+                  );
                 }
               }}
               className="col-span-1"
@@ -356,7 +334,11 @@ export function WorkItemEditModal({
             <div className="col-span-2 text-sm text-gray-500">
               {formData.quantity && formData.completedQuantity !== undefined ? (
                 <span>
-                  Progress: {Math.round((formData.completedQuantity / formData.quantity) * 100)}%
+                  Progress:{" "}
+                  {Math.round(
+                    (formData.completedQuantity / formData.quantity) * 100
+                  )}
+                  %
                 </span>
               ) : null}
             </div>
@@ -376,7 +358,8 @@ export function WorkItemEditModal({
                   />
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {formatNumberWithSpace(formData.completedQuantity)} / {formatNumberWithSpace(formData.quantity)} {formData.unit}
+                  {formatNumberWithSpace(formData.completedQuantity)} /{" "}
+                  {formatNumberWithSpace(formData.quantity)} {formData.unit}
                 </div>
               </div>
             </div>
@@ -384,11 +367,7 @@ export function WorkItemEditModal({
         </div>
 
         <DialogFooter className="gap-3">
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            disabled={isSaving}
-          >
+          <Button variant="outline" onClick={handleClose} disabled={isSaving}>
             Mégse
           </Button>
           <Button

@@ -402,6 +402,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
     profession: string;
     workItemId: number | null;
     avatarUrl?: string;
+    dailyRate?: number;
   }) => {
     try {
       // Always set workItemId to null - workers are assigned to work, not specific workItems
@@ -416,6 +417,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         phone: data.phone,
         profession: data.profession,
         avatarUrl: data.avatarUrl,
+        dailyRate: data.dailyRate,
         quantity: 1,
       });
 
