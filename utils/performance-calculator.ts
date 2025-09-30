@@ -84,7 +84,6 @@ export const calculatePerformance = ({
              const revenuePerUnit = workItem.unitPrice;
              const itemRevenue = progressMade * revenuePerUnit;
              totalRevenue += itemRevenue;
-             
            }
 
            // Költség számítása: a naplóban rögzített munkások órái alapján
@@ -144,18 +143,20 @@ export const calculatePerformance = ({
       // A nevet használjuk kulcsként (nem a workerId-t), mert több munkásnak lehet ugyanaz a workerId
       if (workerName && workerName !== 'Ismeretlen') {
         const existingWorker = hoursByWorkerMap.get(workerName);
+        const newTotalHours = (existingWorker?.totalHours || 0) + hoursWorked;
         hoursByWorkerMap.set(workerName, {
             name: workerName,
-            totalHours: (existingWorker?.totalHours || 0) + hoursWorked,
+            totalHours: newTotalHours,
         });
       }
     }
 
     // Munkafázis haladásának aggregálása - minden workItem megjelenik, ahol dolgoztak
     const existingProgress = progressByWorkItemMap.get(workItem.id);
+    const newTotalProgress = (existingProgress?.totalProgress || 0) + progressMade;
     progressByWorkItemMap.set(workItem.id, {
         name: workItem.name,
-        totalProgress: (existingProgress?.totalProgress || 0) + progressMade,
+        totalProgress: newTotalProgress,
         unit: workItem.unit,
     });
   });

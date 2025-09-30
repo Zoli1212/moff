@@ -20,6 +20,9 @@ export interface WorkItemEditData {
   description?: string;
   quantity?: number | undefined;
   unit?: string;
+  unitPrice?: number | undefined;
+  materialUnitPrice?: number | undefined;
+  totalPrice?: number | undefined;
   completedQuantity?: number | undefined;
 }
 
@@ -42,6 +45,9 @@ export function WorkItemEditModal({
     description: "",
     quantity: 0,
     unit: "db",
+    unitPrice: 0,
+    materialUnitPrice: 0,
+    totalPrice: 0,
     completedQuantity: 0,
   });
   const [isSaving, setIsSaving] = useState(false);
@@ -55,10 +61,26 @@ export function WorkItemEditModal({
         description: workItem.description || "",
         quantity: workItem.quantity || 0,
         unit: workItem.unit || "db",
+        unitPrice: workItem.unitPrice || 0,
+        materialUnitPrice: workItem.materialUnitPrice || 0,
+        totalPrice: workItem.totalPrice || 0,
         completedQuantity: workItem.completedQuantity || 0,
       });
     }
   }, [workItem]);
+
+  // Calculate totalPrice when unitPrice, materialUnitPrice or quantity changes
+  useEffect(() => {
+    const quantity = formData.quantity || 0;
+    const unitPrice = formData.unitPrice || 0;
+    const materialUnitPrice = formData.materialUnitPrice || 0;
+    const calculatedTotal = quantity * (unitPrice + materialUnitPrice);
+    
+    setFormData(prev => ({
+      ...prev,
+      totalPrice: calculatedTotal
+    }));
+  }, [formData.quantity, formData.unitPrice, formData.materialUnitPrice]);
 
   const handleInputChange = (field: keyof WorkItemEditData, value: string | number | undefined) => {
     setFormData(prev => ({
@@ -95,6 +117,9 @@ export function WorkItemEditModal({
         description: formData.description?.trim(),
         quantity: formData.quantity,
         unit: formData.unit,
+        unitPrice: formData.unitPrice,
+        materialUnitPrice: formData.materialUnitPrice,
+        totalPrice: formData.totalPrice,
         completedQuantity: formData.completedQuantity,
       });
       
@@ -199,6 +224,62 @@ export function WorkItemEditModal({
             />
           </div>
 
+          {/* Unit Price field */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="unitPrice" className="text-right font-medium">
+              Munka egységár
+            </Label>
+            <Input
+              id="unitPrice"
+              type="number"
+              value={formData.unitPrice || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  handleInputChange("unitPrice", undefined);
+                } else {
+                  const numValue = parseFloat(value);
+                  handleInputChange("unitPrice", isNaN(numValue) ? 0 : numValue);
+                }
+              }}
+              className="col-span-1"
+              placeholder="0"
+              step="0.01"
+              min="0"
+            />
+            <Label htmlFor="materialUnitPrice" className="text-right font-medium">
+              Anyag egységár
+            </Label>
+            <Input
+              id="materialUnitPrice"
+              type="number"
+              value={formData.materialUnitPrice || ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "") {
+                  handleInputChange("materialUnitPrice", undefined);
+                } else {
+                  const numValue = parseFloat(value);
+                  handleInputChange("materialUnitPrice", isNaN(numValue) ? 0 : numValue);
+                }
+              }}
+              className="col-span-1"
+              placeholder="0"
+              step="0.01"
+              min="0"
+            />
+          </div>
+
+          {/* Total Price display */}
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right font-medium">
+              Összár
+            </Label>
+            <div className="col-span-3 p-2 bg-gray-50 rounded border text-lg font-semibold">
+              {formatNumberWithSpace(formData.totalPrice)} Ft
+            </div>
+          </div>
+
           {/* Completed Quantity field */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="completedQuantity" className="text-right font-medium">
@@ -252,7 +333,7 @@ export function WorkItemEditModal({
           )}
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-3">
           <Button
             variant="outline"
             onClick={handleClose}
@@ -263,6 +344,7 @@ export function WorkItemEditModal({
           <Button
             onClick={handleSave}
             disabled={isSaving}
+            className="bg-green-600 hover:bg-green-700 text-white"
           >
             {isSaving ? "Mentés..." : "Mentés"}
           </Button>

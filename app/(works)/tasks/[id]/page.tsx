@@ -26,6 +26,9 @@ export interface WorkItem {
   quantity?: number;
   completedQuantity?: number;
   unit?: string;
+  unitPrice?: number;
+  materialUnitPrice?: number;
+  totalPrice?: number;
   inProgress?: boolean;
   workItemWorkers?: { id: number; name?: string; role?: string }[];
   workDiaryEntries?: WorkDiary[];
@@ -307,6 +310,9 @@ export default function TasksPage() {
         description: workItem.description,
         quantity: workItem.quantity,
         unit: workItem.unit,
+        unitPrice: workItem.unitPrice,
+        materialUnitPrice: workItem.materialUnitPrice,
+        totalPrice: workItem.totalPrice,
         completedQuantity: workItem.completedQuantity,
       });
       setShowEditModal(true);
@@ -331,6 +337,9 @@ export default function TasksPage() {
                   description: updatedData.description !== undefined ? updatedData.description : item.description,
                   quantity: updatedData.quantity !== undefined ? updatedData.quantity : item.quantity,
                   unit: updatedData.unit || item.unit,
+                  unitPrice: updatedData.unitPrice !== undefined ? updatedData.unitPrice : item.unitPrice,
+                  materialUnitPrice: updatedData.materialUnitPrice !== undefined ? updatedData.materialUnitPrice : item.materialUnitPrice,
+                  totalPrice: updatedData.totalPrice !== undefined ? updatedData.totalPrice : item.totalPrice,
                   completedQuantity: updatedData.completedQuantity !== undefined ? updatedData.completedQuantity : item.completedQuantity,
                 }
               : item

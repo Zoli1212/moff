@@ -25,7 +25,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     );
   }
 
-  const { performancePercentage, progressByWorkItem, hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances, previousPeriodPerformance, performanceChange } = data;
+  const { performancePercentage, hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances, previousPeriodPerformance, performanceChange } = data;
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
@@ -51,7 +51,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                   ? 'text-white' 
                   : 'text-red-700'
               }`}>
-                {performancePercentage}%
+                {performancePercentage > 0 ? '+' : ''}{performancePercentage}%
               </span>
             </div>
           </div>
@@ -69,7 +69,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                 {performanceChange > 0 && '▲'}
                 {performanceChange < 0 && '▼'}
                 {performanceChange === 0 && '─'}
-                {performanceChange > 0 ? '+' : ''}{Math.abs(performanceChange).toFixed(1)}%
+                {performanceChange > 0 ? '+' : performanceChange < 0 ? '-' : ''}{Math.abs(performanceChange).toFixed(1)}%
               </span>
             </div>
           )}
@@ -101,7 +101,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                           ? 'text-orange-600 bg-orange-50' 
                           : 'text-red-600 bg-red-50'
                       }`}>
-                        {Math.round(item.performancePercentage)}%
+                        {item.performancePercentage > 0 ? '+' : ''}{Math.round(item.performancePercentage)}%
                       </span>
                       {item.performanceChange !== undefined && (
                         <span className={`text-xs ${
@@ -114,7 +114,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                           {item.performanceChange > 0 && '▲'}
                           {item.performanceChange < 0 && '▼'}
                           {item.performanceChange === 0 && '─'}
-                          {item.performanceChange > 0 ? '+' : ''}{Math.abs(item.performanceChange).toFixed(1)}%
+                          {item.performanceChange > 0 ? '+' : item.performanceChange < 0 ? '-' : ''}{Math.abs(item.performanceChange).toFixed(1)}%
                         </span>
                       )}
                     </div>
@@ -154,7 +154,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                               ? 'text-orange-600 bg-orange-50' 
                               : 'text-red-600 bg-red-50'
                           }`}>
-                            {Math.round(performance.performancePercentage)}%
+                            {performance.performancePercentage > 0 ? '+' : ''}{Math.round(performance.performancePercentage)}%
                           </span>
                           {performance.performanceChange !== undefined && (
                             <span className={`text-xs ${
@@ -167,7 +167,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                               {performance.performanceChange > 0 && '▲'}
                               {performance.performanceChange < 0 && '▼'}
                               {performance.performanceChange === 0 && '─'}
-                              {performance.performanceChange > 0 ? '+' : ''}{Math.abs(performance.performanceChange).toFixed(1)}%
+                              {performance.performanceChange > 0 ? '+' : performance.performanceChange < 0 ? '-' : ''}{Math.abs(performance.performanceChange).toFixed(1)}%
                             </span>
                           )}
                         </div>

@@ -8,6 +8,9 @@ export interface UpdateWorkItemData {
   description?: string;
   quantity?: number;
   unit?: string;
+  unitPrice?: number;
+  materialUnitPrice?: number;
+  totalPrice?: number;
   completedQuantity?: number;
 }
 
@@ -61,6 +64,18 @@ export async function updateWorkItemDetails(
     
     if (updateData.completedQuantity !== undefined) {
       updateFields.completedQuantity = updateData.completedQuantity;
+    }
+    
+    if (updateData.unitPrice !== undefined) {
+      updateFields.unitPrice = updateData.unitPrice;
+    }
+    
+    if (updateData.materialUnitPrice !== undefined) {
+      updateFields.materialUnitPrice = updateData.materialUnitPrice;
+    }
+    
+    if (updateData.totalPrice !== undefined) {
+      updateFields.totalPrice = updateData.totalPrice;
     }
 
     console.log("updateFields prepared:", updateFields);
