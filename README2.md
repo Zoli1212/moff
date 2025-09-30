@@ -813,6 +813,24 @@ feladatok ár mennyiség módosítása
 számolás
 nem jó
 -----
+-----
+-----
+-----
+
 teljesítés / Teljes az teljesítés
 számlázott 
 számlázható
+----
+CSAK a profitráta kell egyszerűsödik, mert nincs elvárt profitráta már!
+egyszerűbb, előjelesen
+heti teljesítmény is inline
+és az árat is át tudjam írni
+-----
+DIj és Anyag egység ár számolja ki az Összesen!
+
+Összesen kalkuláció oda vissza legyen dinamikus
+----
+FORM validáció
+----
+CÉGES adatbázis ból!
+SE lehessen kitörölni, ha munkához hozzáadtam akkor se lehessen kitörölni, ha napló van akkor sem lehessen kitörölni, előbb vegye törölje mindkét helyről

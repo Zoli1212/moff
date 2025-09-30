@@ -21,7 +21,6 @@ interface PerformanceHookProps {
   workItems: WorkItem[];
   workers: Worker[];
   workforceRegistry: any[]; // WorkforceRegistry adatok
-  expectedProfitPercent: number | null;
   currentDate: Date;
   view: 'dayGridMonth' | 'timeGridWeek';
 }
@@ -32,7 +31,6 @@ export const usePerformanceData = ({
   workItems,
   workers, // Ez a teljes 'work.workers' lista
   workforceRegistry,
-  expectedProfitPercent,
   currentDate,
   view,
 }: PerformanceHookProps): PerformanceData | null => {
@@ -84,13 +82,12 @@ export const usePerformanceData = ({
       workItems,
       workers,
       workforceRegistry,
-      expectedProfitPercent,
       allDiaryItems: diaries,
       currentDate,
       view
     });
 
-  }, [diaries, workItems, workers, expectedProfitPercent, currentDate, view]);
+  }, [diaries, workItems, workers, currentDate, view]);
 
   return performanceData;
 };

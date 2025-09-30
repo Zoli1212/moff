@@ -25,7 +25,6 @@ import { AssignedTool } from "@/types/tools.types";
 import Tasks from "../_components/Tasks";
 import ToolsSummary from "../_components/ToolsSummary";
 import WorkersSummary from "../_components/WorkersSummary";
-import ProfitPercentageSection from "../_components/ProfitPercentageSection";
 
 export default async function WorkDetailPage({
   params,
@@ -367,9 +366,6 @@ export default async function WorkDetailPage({
           </span>
         </div>
       </div>
-      <CollapsibleSection title="Teljesítmény" defaultOpen={false}>
-        <ProfitPercentageSection workId={work.id} />
-      </CollapsibleSection>
       {/* Munkások (lenyíló) */}
       <CollapsibleSection title="Munkára felvett munkások" defaultOpen={false}>
         <WorkersSummary

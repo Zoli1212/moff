@@ -49,7 +49,6 @@ export interface PerformanceCalculationInput {
   workItems: WorkItem[];
   workers: Worker[];
   workforceRegistry: WorkforceRegistryData[];
-  expectedProfitPercent: number | null;
   allDiaryItems?: any[]; // Az összes napló elem az előző időszak számításához
   currentDate?: Date;
   view?: 'dayGridMonth' | 'timeGridWeek';
@@ -61,7 +60,6 @@ export const calculatePerformance = ({
   workItems,
   workers,
   workforceRegistry,
-  expectedProfitPercent,
   allDiaryItems,
   currentDate,
   view
@@ -72,8 +70,6 @@ export const calculatePerformance = ({
   const progressByWorkItemMap = new Map<number, { name: string; totalProgress: number; unit: string }>();
   const hoursByWorkerMap = new Map<string, { name: string; totalHours: number }>();
 
-         console.log(`\n🔍 DEBUG: Processing ${workDiaryItems.length} diary items`);
-         
          // Költségek és bevételek számítása a releváns workDiaryItem-ek alapján
          workDiaryItems.forEach((diaryItem: any, index: number) => {
            const workItem = workItems.find(wi => wi.id === diaryItem.workItemId);
@@ -84,28 +80,11 @@ export const calculatePerformance = ({
            // Bevétel számítása: a haladás arányában a workItem unitPrice alapján
            const progressMade = diaryItem.quantity || 0;
            
-           console.log(`\n📋 DiaryItem #${index + 1}:`);
-           console.log(`  - WorkItem: ${workItem.name}`);
-           console.log(`  - Date: ${diaryItem.date}`);
-           console.log(`  - Worker: ${diaryItem.name || 'Unknown'}`);
-           console.log(`  - Quantity: ${progressMade} ${workItem.unit}`);
-           console.log(`  - WorkItem max: ${workItem.quantity} ${workItem.unit}`);
-           
            if (progressMade > 0 && workItem.unitPrice && workItem.quantity > 0) {
              const revenuePerUnit = workItem.unitPrice;
              const itemRevenue = progressMade * revenuePerUnit;
              totalRevenue += itemRevenue;
              
-             console.log(`💰 Revenue calculation for ${workItem.name}:`);
-             console.log(`  - Progress made: ${progressMade} ${workItem.unit}`);
-             console.log(`  - Unit price: ${revenuePerUnit} Ft/${workItem.unit}`);
-             console.log(`  - Item revenue: ${progressMade} × ${revenuePerUnit} = ${itemRevenue} Ft`);
-             console.log(`  - Total revenue so far: ${totalRevenue} Ft`);
-           } else {
-             console.log(`❌ No revenue for ${workItem.name}:`);
-             console.log(`  - Progress made: ${progressMade}`);
-             console.log(`  - Unit price: ${workItem.unitPrice}`);
-             console.log(`  - WorkItem quantity: ${workItem.quantity}`);
            }
 
            // Költség számítása: a naplóban rögzített munkások órái alapján
@@ -144,13 +123,6 @@ export const calculatePerformance = ({
            const itemCost = hoursWorked * hourlyRate;
            totalCost += itemCost;
            
-           console.log('💸 Cost calculation:', {
-             dailyRate,
-             hourlyRate,
-             hoursWorked,
-             itemCost,
-             totalCost
-           });
 
     // Munkás óráinak aggregálása
     if (hoursWorked > 0) {
@@ -188,31 +160,22 @@ export const calculatePerformance = ({
     });
   });
 
-         // Teljesítmény százalék számítása
-         const performancePercentage = calculatePerformancePercentage(totalCost, totalRevenue, expectedProfitPercent);
+         // Profitráta számítása (egyszerű profitráta %)
+         const performancePercentage = calculateProfitRatePercentage(totalCost, totalRevenue);
 
-         console.log('\n=== FINAL RESULTS ===');
-         console.log('totalRevenue:', totalRevenue);
-         console.log('totalCost:', totalCost);
-         console.log('expectedProfitPercent:', expectedProfitPercent);
-         console.log('performancePercentage:', performancePercentage);
-         console.log('progressByWorkItem count:', progressByWorkItemMap.size);
-         console.log('hoursByWorker count:', hoursByWorkerMap.size);
 
   // WorkItem szintű teljesítmény számítása
   let workItemPerformances = calculateWorkItemPerformances(
     workDiaryItems,
     workItems,
-    workforceRegistry,
-    expectedProfitPercent
+    workforceRegistry
   );
 
   // Munkás szintű teljesítmény számítása
   let workerPerformances = calculateWorkerPerformances(
     workDiaryItems,
     workItems,
-    workforceRegistry,
-    expectedProfitPercent
+    workforceRegistry
   );
 
   // Előző időszak teljesítményének számítása
@@ -225,7 +188,6 @@ export const calculatePerformance = ({
       allDiaryItems,
       workItems,
       workforceRegistry,
-      expectedProfitPercent,
       currentDate,
       view
     );
@@ -239,7 +201,6 @@ export const calculatePerformance = ({
       allDiaryItems,
       workItems,
       workforceRegistry,
-      expectedProfitPercent,
       currentDate,
       view
     );
@@ -259,7 +220,6 @@ export const calculatePerformance = ({
       allDiaryItems,
       workItems,
       workforceRegistry,
-      expectedProfitPercent,
       currentDate,
       view
     );
@@ -278,7 +238,7 @@ export const calculatePerformance = ({
   return {
       totalRevenue,
       totalCost,
-      performancePercentage: Math.round(Math.min(200, Math.max(-100, performancePercentage))),
+      performancePercentage: Math.round(performancePercentage),
       progressByWorkItem: Array.from(progressByWorkItemMap.values()),
       hoursByWorker: Array.from(hoursByWorkerMap.values()),
       workerPerformances,
@@ -293,7 +253,6 @@ export const calculatePreviousPeriodPerformance = (
   allDiaryItems: any[],
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[],
-  expectedProfitPercent: number | null,
   currentDate: Date,
   view: 'dayGridMonth' | 'timeGridWeek'
 ): number | undefined => {
@@ -374,7 +333,7 @@ export const calculatePreviousPeriodPerformance = (
     totalCost += hoursWorked * hourlyRate;
   });
 
-  return Math.round(calculatePerformancePercentage(totalCost, totalRevenue, expectedProfitPercent));
+  return Math.round(calculateProfitRatePercentage(totalCost, totalRevenue));
 };
 
 // WorkItem szintű előző időszak teljesítmény számítása
@@ -382,7 +341,6 @@ export const calculateWorkItemPreviousPeriodPerformances = (
   allDiaryItems: any[],
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[],
-  expectedProfitPercent: number | null,
   currentDate: Date,
   view: 'dayGridMonth' | 'timeGridWeek'
 ): Map<number, number> => {
@@ -433,8 +391,7 @@ export const calculateWorkItemPreviousPeriodPerformances = (
   const workItemPreviousPerformances = calculateWorkItemPerformances(
     previousPeriodItems,
     workItems,
-    workforceRegistry,
-    expectedProfitPercent
+    workforceRegistry
   );
 
   // Map létrehozása workItemId -> performancePercentage
@@ -450,8 +407,7 @@ export const calculateWorkItemPreviousPeriodPerformances = (
 export const calculateWorkItemPerformances = (
   workDiaryItems: any[],
   workItems: WorkItem[],
-  workforceRegistry: WorkforceRegistryData[],
-  expectedProfitPercent: number | null
+  workforceRegistry: WorkforceRegistryData[]
 ): WorkItemPerformance[] => {
   const workItemDataMap = new Map<number, {
     name: string;
@@ -518,11 +474,7 @@ export const calculateWorkItemPerformances = (
     totalHours: data.totalHours,
     totalRevenue: data.totalRevenue,
     totalCost: data.totalCost,
-    performancePercentage: calculatePerformancePercentage(
-      data.totalCost,
-      data.totalRevenue,
-      expectedProfitPercent
-    )
+    performancePercentage: calculateProfitRatePercentage(data.totalCost, data.totalRevenue)
   }));
 };
 
@@ -531,7 +483,6 @@ export const calculateWorkerPreviousPeriodPerformances = (
   allDiaryItems: any[],
   workItems: WorkItem[],
   workforceRegistry: WorkforceRegistryData[],
-  expectedProfitPercent: number | null,
   currentDate: Date,
   view: 'dayGridMonth' | 'timeGridWeek'
 ): Map<string, number> => {
@@ -582,8 +533,7 @@ export const calculateWorkerPreviousPeriodPerformances = (
   const workerPreviousPerformances = calculateWorkerPerformances(
     previousPeriodItems,
     workItems,
-    workforceRegistry,
-    expectedProfitPercent
+    workforceRegistry
   );
 
   // Map létrehozása workerName -> performancePercentage
@@ -599,8 +549,7 @@ export const calculateWorkerPreviousPeriodPerformances = (
 export const calculateWorkerPerformances = (
   workDiaryItems: any[],
   workItems: WorkItem[],
-  workforceRegistry: WorkforceRegistryData[],
-  expectedProfitPercent: number | null
+  workforceRegistry: WorkforceRegistryData[]
 ): WorkerPerformance[] => {
   const workerDataMap = new Map<string, {
     totalHours: number;
@@ -655,15 +604,35 @@ export const calculateWorkerPerformances = (
     totalHours: data.totalHours,
     totalRevenue: data.totalRevenue,
     totalCost: data.totalCost,
-    performancePercentage: calculatePerformancePercentage(
+    performancePercentage: calculateProfitRatePercentage(
       data.totalCost,
-      data.totalRevenue,
-      expectedProfitPercent
+      data.totalRevenue
     )
   }));
 };
 
-// Teljesítmény százalék számítása
+// Egyszerű profitráta számítása (nincs elvárt profitráta)
+export const calculateProfitRatePercentage = (
+  cost: number, 
+  revenue: number
+): number => {
+  // Ha nincs költség, nem lehet profitot számolni
+  if (cost <= 0) {
+    return 0;
+  }
+  
+  // Ha nincs bevétel, akkor -100% profitráta
+  if (revenue <= 0) {
+    return -100;
+  }
+  
+  // Egyszerű profitráta: (bevétel / költség - 1) * 100
+  const profitRate = (revenue / cost - 1) * 100;
+  
+  return profitRate;
+};
+
+// Régi teljesítmény százalék számítása (kompatibilitásért megtartva)
 export const calculatePerformancePercentage = (
   cost: number, 
   revenue: number, 

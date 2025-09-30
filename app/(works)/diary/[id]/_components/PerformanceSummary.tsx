@@ -5,10 +5,9 @@ import type { PerformanceData } from '@/hooks/usePerformanceData';
 interface PerformanceSummaryProps {
   data: PerformanceData | null;
   isLoading: boolean;
-  expectedProfitPercent?: number | null;
 }
 
-const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading, expectedProfitPercent }) => {
+const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading }) => {
 
   if (isLoading) {
     return (
@@ -33,52 +32,48 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
       <div className="mb-4">
         <h2 className="text-xl font-bold text-gray-800 mb-3">Heti teljesítmény</h2>
         
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-6 relative">
-          <div
-            className={`h-6 rounded-full transition-all duration-300 ${
-              performancePercentage >= 100 
-                ? 'bg-green-500' 
-                : performancePercentage > 0 
-                ? 'bg-orange-500' 
-                : 'bg-red-500'
-            }`}
-            style={{ width: `${Math.max(5, Math.min(performancePercentage, 100))}%` }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-sm font-bold drop-shadow-sm ${
-              performancePercentage >= 0 
-                ? 'text-white' 
-                : 'text-red-700'
-            }`}>
-              {performancePercentage}%
-            </span>
-          </div>
-        </div>
-        
-        {/* Trend információ */}
-        {performanceChange !== undefined && previousPeriodPerformance !== undefined && (
-          <div className="mt-2 flex items-center justify-center gap-2 text-sm">
-            <span className="text-gray-600">Előző időszakhoz képest:</span>
-            <div className={`flex items-center gap-1 font-medium ${
-              performanceChange > 0 
-                ? 'text-green-600' 
-                : performanceChange < 0 
-                ? 'text-red-600' 
-                : 'text-gray-600'
-            }`}>
-              {performanceChange > 0 && <span>▲</span>}
-              {performanceChange < 0 && <span>▼</span>}
-              {performanceChange === 0 && <span>─</span>}
-              <span>
-                {performanceChange > 0 ? '+' : ''}{Math.abs(performanceChange).toFixed(1)}%
-              </span>
-              <span className="text-gray-500 text-xs">
-                ({previousPeriodPerformance}% → {performancePercentage}%)
+        {/* Progress Bar és Trend információ egy sorban */}
+        <div className="flex items-center gap-4">
+          <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
+            <div
+              className={`h-6 rounded-full transition-all duration-300 ${
+                performancePercentage >= 100 
+                  ? 'bg-green-500' 
+                  : performancePercentage > 0 
+                  ? 'bg-orange-500' 
+                  : 'bg-red-500'
+              }`}
+              style={{ width: `${Math.max(5, Math.min(performancePercentage, 100))}%` }}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className={`text-sm font-bold drop-shadow-sm ${
+                performancePercentage >= 0 
+                  ? 'text-white' 
+                  : 'text-red-700'
+              }`}>
+                {performancePercentage}%
               </span>
             </div>
           </div>
-        )}
+          
+          {/* Trend információ */}
+          {performanceChange !== undefined && previousPeriodPerformance !== undefined && (
+            <div className="flex-shrink-0">
+              <span className={`text-sm font-medium ${
+                performanceChange > 0 
+                  ? 'text-green-600' 
+                  : performanceChange < 0 
+                  ? 'text-red-600' 
+                  : 'text-gray-600'
+              }`}>
+                {performanceChange > 0 && '▲'}
+                {performanceChange < 0 && '▼'}
+                {performanceChange === 0 && '─'}
+                {performanceChange > 0 ? '+' : ''}{Math.abs(performanceChange).toFixed(1)}%
+              </span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       
@@ -91,36 +86,37 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                 .sort((a, b) => b.performancePercentage - a.performancePercentage)
                 .slice(0, 5)
                 .map((item, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm">
-                    <span className="text-gray-700 truncate pr-2">{item.name}</span>
-                    <div className="flex items-center gap-2">
+                  <div key={index} className="text-sm space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-700 truncate pr-2">{item.name}</span>
                       <span className="font-medium text-gray-900 whitespace-nowrap text-xs">
                         {item.totalProgress.toLocaleString('hu-HU')} {item.unit}
                       </span>
-                      <div className="flex items-center gap-1">
-                        <span className={`font-bold text-xs px-1 py-0.5 rounded ${
-                          item.performancePercentage >= 100 
-                            ? 'text-green-600 bg-green-50' 
-                            : item.performancePercentage > 0 
-                            ? 'text-orange-600 bg-orange-50' 
-                            : 'text-red-600 bg-red-50'
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className={`font-bold text-xs px-1 py-0.5 rounded ${
+                        item.performancePercentage >= 100 
+                          ? 'text-green-600 bg-green-50' 
+                          : item.performancePercentage > 0 
+                          ? 'text-orange-600 bg-orange-50' 
+                          : 'text-red-600 bg-red-50'
+                      }`}>
+                        {Math.round(item.performancePercentage)}%
+                      </span>
+                      {item.performanceChange !== undefined && (
+                        <span className={`text-xs ${
+                          item.performanceChange > 0 
+                            ? 'text-green-600' 
+                            : item.performanceChange < 0 
+                            ? 'text-red-600' 
+                            : 'text-gray-600'
                         }`}>
-                          {Math.round(item.performancePercentage)}%
+                          {item.performanceChange > 0 && '▲'}
+                          {item.performanceChange < 0 && '▼'}
+                          {item.performanceChange === 0 && '─'}
+                          {item.performanceChange > 0 ? '+' : ''}{Math.abs(item.performanceChange).toFixed(1)}%
                         </span>
-                        {item.performanceChange !== undefined && (
-                          <span className={`text-xs ${
-                            item.performanceChange > 0 
-                              ? 'text-green-600' 
-                              : item.performanceChange < 0 
-                              ? 'text-red-600' 
-                              : 'text-gray-600'
-                          }`}>
-                            {item.performanceChange > 0 && '▲'}
-                            {item.performanceChange < 0 && '▼'}
-                            {item.performanceChange === 0 && '─'}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -142,39 +138,40 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                   // Keressük meg a munkás teljesítményét
                   const performance = workerPerformances?.find(wp => wp.name === worker.name);
                   return (
-                    <div key={index} className="flex justify-between items-center text-sm">
-                      <span className="text-gray-700 truncate pr-2">{worker.name}</span>
-                      <div className="flex items-center gap-2">
+                    <div key={index} className="text-sm space-y-1">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-700 truncate pr-2">{worker.name}</span>
                         <span className="font-medium text-gray-900 whitespace-nowrap">
                           {worker.totalHours.toLocaleString('hu-HU')} óra
                         </span>
-                        {performance && (
-                          <div className="flex items-center gap-1">
-                            <span className={`font-bold text-xs px-1 py-0.5 rounded ${
-                              performance.performancePercentage >= 100 
-                                ? 'text-green-600 bg-green-50' 
-                                : performance.performancePercentage > 0 
-                                ? 'text-orange-600 bg-orange-50' 
-                                : 'text-red-600 bg-red-50'
-                            }`}>
-                              {Math.round(performance.performancePercentage)}%
-                            </span>
-                            {performance.performanceChange !== undefined && (
-                              <span className={`text-xs ${
-                                performance.performanceChange > 0 
-                                  ? 'text-green-600' 
-                                  : performance.performanceChange < 0 
-                                  ? 'text-red-600' 
-                                  : 'text-gray-600'
-                              }`}>
-                                {performance.performanceChange > 0 && '▲'}
-                                {performance.performanceChange < 0 && '▼'}
-                                {performance.performanceChange === 0 && '─'}
-                              </span>
-                            )}
-                          </div>
-                        )}
                       </div>
+                      {performance && (
+                        <div className="flex items-center gap-1">
+                          <span className={`font-bold text-xs px-1 py-0.5 rounded ${
+                            performance.performancePercentage >= 100 
+                              ? 'text-green-600 bg-green-50' 
+                              : performance.performancePercentage > 0 
+                              ? 'text-orange-600 bg-orange-50' 
+                              : 'text-red-600 bg-red-50'
+                          }`}>
+                            {Math.round(performance.performancePercentage)}%
+                          </span>
+                          {performance.performanceChange !== undefined && (
+                            <span className={`text-xs ${
+                              performance.performanceChange > 0 
+                                ? 'text-green-600' 
+                                : performance.performanceChange < 0 
+                                ? 'text-red-600' 
+                                : 'text-gray-600'
+                            }`}>
+                              {performance.performanceChange > 0 && '▲'}
+                              {performance.performanceChange < 0 && '▼'}
+                              {performance.performanceChange === 0 && '─'}
+                              {performance.performanceChange > 0 ? '+' : ''}{Math.abs(performance.performanceChange).toFixed(1)}%
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -220,12 +217,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
         
         {totalCost > 0 && (
           <div className="mt-3 text-xs text-gray-600">
-            Aktuális profitráta: {((totalRevenue / totalCost - 1) * 100).toFixed(1)}%
-            {expectedProfitPercent && (
-              <span className="ml-3 text-green-600">
-                | Cél profitráta: {expectedProfitPercent}%
-              </span>
-            )}
+            Profitráta: {((totalRevenue / totalCost - 1) * 100).toFixed(1)}%
             {totalRevenue <= totalCost && (
               <span className="text-red-600 ml-2">⚠️ Veszteséges</span>
             )}

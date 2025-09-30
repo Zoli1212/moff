@@ -124,7 +124,6 @@ export default function DiaryPageClient({
     diaries,
     workItems: items,
     workers: work?.workers ?? [],
-    expectedProfitPercent: work?.expectedProfitPercent ?? 0,
     currentDate,
     view,
     workforceRegistry,
@@ -304,7 +303,6 @@ export default function DiaryPageClient({
          <PerformanceSummary 
            data={performanceData} 
            isLoading={isLoading} 
-           expectedProfitPercent={work?.expectedProfitPercent}
          />
       </div>
     </div>
