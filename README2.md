@@ -834,3 +834,5 @@ FORM validáció
 ----
 CÉGES adatbázis ból!
 SE lehessen kitörölni, ha munkához hozzáadtam akkor se lehessen kitörölni, ha napló van akkor sem lehessen kitörölni, előbb vegye törölje mindkét helyről
+----
+FORM

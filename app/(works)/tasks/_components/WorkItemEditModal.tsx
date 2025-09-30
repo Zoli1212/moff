@@ -98,13 +98,23 @@ export function WorkItemEditModal({
       return;
     }
 
-    if (formData.quantity !== undefined && formData.quantity < 0) {
-      toast.error("A mennyiség nem lehet negatív!");
+    if (formData.quantity !== undefined && (formData.quantity < 0 || isNaN(formData.quantity))) {
+      toast.error("A mennyiség csak pozitív szám lehet!");
       return;
     }
 
-    if (formData.completedQuantity !== undefined && formData.completedQuantity < 0) {
-      toast.error("A teljesített mennyiség nem lehet negatív!");
+    if (formData.completedQuantity !== undefined && (formData.completedQuantity < 0 || isNaN(formData.completedQuantity))) {
+      toast.error("A teljesített mennyiség csak pozitív szám lehet!");
+      return;
+    }
+
+    if (formData.unitPrice !== undefined && (formData.unitPrice < 0 || isNaN(formData.unitPrice))) {
+      toast.error("A munka egységár csak pozitív szám lehet!");
+      return;
+    }
+
+    if (formData.materialUnitPrice !== undefined && (formData.materialUnitPrice < 0 || isNaN(formData.materialUnitPrice))) {
+      toast.error("Az anyag egységár csak pozitív szám lehet!");
       return;
     }
 
@@ -200,11 +210,21 @@ export function WorkItemEditModal({
               value={formData.quantity || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "") {
+                // Csak számok, pont és vessző engedélyezése
+                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                e.target.value = sanitizedValue;
+                
+                if (sanitizedValue === "") {
                   handleInputChange("quantity", undefined);
                 } else {
-                  const numValue = parseFloat(value);
+                  const numValue = parseFloat(sanitizedValue);
                   handleInputChange("quantity", isNaN(numValue) ? 0 : numValue);
+                }
+              }}
+              onKeyPress={(e) => {
+                // Csak számok, pont és vessző engedélyezése
+                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                  e.preventDefault();
                 }
               }}
               className="col-span-1"
@@ -235,11 +255,21 @@ export function WorkItemEditModal({
               value={formData.unitPrice || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "") {
+                // Csak számok, pont és vessző engedélyezése
+                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                e.target.value = sanitizedValue;
+                
+                if (sanitizedValue === "") {
                   handleInputChange("unitPrice", undefined);
                 } else {
-                  const numValue = parseFloat(value);
+                  const numValue = parseFloat(sanitizedValue);
                   handleInputChange("unitPrice", isNaN(numValue) ? 0 : numValue);
+                }
+              }}
+              onKeyPress={(e) => {
+                // Csak számok, pont és vessző engedélyezése
+                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                  e.preventDefault();
                 }
               }}
               className="col-span-1"
@@ -256,11 +286,21 @@ export function WorkItemEditModal({
               value={formData.materialUnitPrice || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "") {
+                // Csak számok, pont és vessző engedélyezése
+                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                e.target.value = sanitizedValue;
+                
+                if (sanitizedValue === "") {
                   handleInputChange("materialUnitPrice", undefined);
                 } else {
-                  const numValue = parseFloat(value);
+                  const numValue = parseFloat(sanitizedValue);
                   handleInputChange("materialUnitPrice", isNaN(numValue) ? 0 : numValue);
+                }
+              }}
+              onKeyPress={(e) => {
+                // Csak számok, pont és vessző engedélyezése
+                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                  e.preventDefault();
                 }
               }}
               className="col-span-1"
@@ -291,11 +331,21 @@ export function WorkItemEditModal({
               value={formData.completedQuantity || ""}
               onChange={(e) => {
                 const value = e.target.value;
-                if (value === "") {
+                // Csak számok, pont és vessző engedélyezése
+                const sanitizedValue = value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                e.target.value = sanitizedValue;
+                
+                if (sanitizedValue === "") {
                   handleInputChange("completedQuantity", undefined);
                 } else {
-                  const numValue = parseFloat(value);
+                  const numValue = parseFloat(sanitizedValue);
                   handleInputChange("completedQuantity", isNaN(numValue) ? 0 : numValue);
+                }
+              }}
+              onKeyPress={(e) => {
+                // Csak számok, pont és vessző engedélyezése
+                if (!/[0-9.,]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') {
+                  e.preventDefault();
                 }
               }}
               className="col-span-1"
