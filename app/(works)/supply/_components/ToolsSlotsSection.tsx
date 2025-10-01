@@ -5,13 +5,20 @@ import ToolRegisterModal from "./ToolRegisterModal";
 // import { checkToolExists } from "../../../../actions/tool-exists.server";
 import {
   addToolToRegistry,
-  createWorkToolsRegistry,
   getAssignedToolsForWork,
   decrementWorkToolQuantity,
+  createWorkToolsRegistry,
 } from "../../../../actions/tools-registry-actions";
 import { toast } from "sonner";
 
-// ToolDetailsModal for viewing tool details
+// Segédfüggvény a nagy kezdőbetűs formázáshoz
+const capitalizeWords = (str: string): string => {
+  return str
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
 const ToolDetailsModal = ({
   open,
   onClose,
@@ -62,7 +69,7 @@ const ToolDetailsModal = ({
           ×
         </button>
         <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
-          {tool.name}
+          {capitalizeWords(tool.name || '')}
         </h2>
         <div style={{ fontSize: 16, marginBottom: 8 }}>
           Mennyiség: <b>{tool.quantity}</b> db
@@ -317,7 +324,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                     onClick={e => e.stopPropagation()}
                   />
                   <div className="flex-2 font-semibold flex items-center gap-2">
-                    <span>{name}</span>
+                    <span>{capitalizeWords(name)}</span>
                     {!hasRegistry && (
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
                         nincs regisztrálva
