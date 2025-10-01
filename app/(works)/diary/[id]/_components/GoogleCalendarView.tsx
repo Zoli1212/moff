@@ -279,7 +279,8 @@ export default function GoogleCalendarView({
             // Create worker list with individual hours
             const workersWithHours = groupData.workers.map((worker) => {
               const hours = groupData.workerHours?.get?.(worker) || 0;
-              return `${worker} (${hours}h)`;
+              const roundedHours = Math.round(hours);
+              return `${worker} (${roundedHours}h)`;
             });
 
             if (viewType === "dayGridMonth") {
@@ -482,7 +483,7 @@ export default function GoogleCalendarView({
           onDateClick?.(info.start);
           console.log("[Calendar] select:", info);
         }}
-        height={600}
+        height={view === "dayGridMonth" ? 600 : 400}
         locale={huLocale}
         dayMaxEvents={3}
         nowIndicator={true}
@@ -493,7 +494,7 @@ export default function GoogleCalendarView({
       <style jsx global>{`
         /* Fix calendar height to prevent internal scrolling */
         .fc-mobile-wrap .fc {
-          height: 600px !important;
+          height: ${view === "dayGridMonth" ? "600px" : "400px"} !important;
         }
         .fc-mobile-wrap .fc .fc-view-harness {
           height: auto !important;
