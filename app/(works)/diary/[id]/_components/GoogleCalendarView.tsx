@@ -482,8 +482,7 @@ export default function GoogleCalendarView({
           onDateClick?.(info.start);
           console.log("[Calendar] select:", info);
         }}
-        height={400}
-        contentHeight={400}
+        height={600}
         locale={huLocale}
         dayMaxEvents={3}
         nowIndicator={true}
@@ -494,7 +493,7 @@ export default function GoogleCalendarView({
       <style jsx global>{`
         /* Fix calendar height to prevent internal scrolling */
         .fc-mobile-wrap .fc {
-          height: 400px !important;
+          height: 600px !important;
         }
         .fc-mobile-wrap .fc .fc-view-harness {
           height: auto !important;

@@ -63,7 +63,15 @@ export async function addWorkerToRegistryAndAssign(
       if (existingWorkerInRegistry) {
         // Ha meglévő munkás és nincs dailyRate megadva, használjuk a meglévőt
         if (dailyRate === undefined) {
-          newWorker = existingWorkerInRegistry;
+          // Ha van új avatarUrl, frissítsük a workforceRegistry-ben is
+          if (avatarUrl && avatarUrl !== existingWorkerInRegistry.avatarUrl) {
+            newWorker = await tx.workforceRegistry.update({
+              where: { id: existingWorkerInRegistry.id },
+              data: { avatarUrl },
+            });
+          } else {
+            newWorker = existingWorkerInRegistry;
+          }
         } else {
           // Ha dailyRate meg van adva, akkor új munkás próbál létrejönni ugyanazzal a névvel
           throw new Error(`${name} nevű munkás már regisztrálva van a rendszerben!`);
@@ -146,10 +154,10 @@ export async function addWorkerToRegistryAndAssign(
         workersArray = [];
       }
       
-      // Check if this worker entry already exists to avoid duplicates
-      const workerExists = workersArray.some(w => w.workforceRegistryId === newWorker.id);
+      // Check if this worker entry already exists
+      const existingWorkerIndex = workersArray.findIndex(w => w.workforceRegistryId === newWorker.id);
       
-      if (!workerExists) {
+      if (existingWorkerIndex === -1) {
         // Add new worker entry to the array
         workersArray.push({
           workforceRegistryId: newWorker.id,
@@ -159,17 +167,27 @@ export async function addWorkerToRegistryAndAssign(
           profession,
           avatarUrl,
         });
-
-        // Update Worker.workers JSON array
-        await tx.worker.update({
-          where: {
-            id: worker.id,
-          },
-          data: {
-            workers: JSON.stringify(workersArray),
-          },
-        });
+      } else {
+        // Update existing worker entry (especially avatarUrl)
+        workersArray[existingWorkerIndex] = {
+          ...workersArray[existingWorkerIndex],
+          name,
+          email,
+          phone,
+          profession,
+          avatarUrl,
+        };
       }
+
+      // Always update Worker.workers JSON array
+      await tx.worker.update({
+        where: {
+          id: worker.id,
+        },
+        data: {
+          workers: JSON.stringify(workersArray),
+        },
+      });
 
       return { worker: newWorker, workItemWorker };
     });

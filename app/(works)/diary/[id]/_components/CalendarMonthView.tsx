@@ -65,7 +65,7 @@ export default function CalendarMonthView({ selectedDate, onDateSelect, diaryDat
         day = addDays(day, 1);
       }
       rows.push(
-        <div className="grid grid-cols-7" key={day.toISOString()}>
+        <div className="grid grid-cols-7" key={`week-${rows.length}`}>
           {days}
         </div>
       );
