@@ -8,6 +8,21 @@ import { toast } from 'sonner'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 
+interface WorkItemAssignment {
+  id: number
+  workItemName?: string
+  workName?: string
+}
+
+interface CleanupData {
+  success: false
+  error: string
+  needsCleanup: true
+  workItemAssignments?: WorkItemAssignment[]
+  diaryEntriesCount: number
+}
+
+
 interface WorkforceDeleteModalProps {
   isOpen: boolean
   onClose: () => void
@@ -17,7 +32,7 @@ interface WorkforceDeleteModalProps {
 
 export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorkerDeleted }: WorkforceDeleteModalProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [cleanupData, setCleanupData] = useState<any>(null)
+  const [cleanupData, setCleanupData] = useState<CleanupData | null>(null)
   const [checkingConnections, setCheckingConnections] = useState(false)
   
   // Check if registry deletion is allowed (no remaining connections)
@@ -38,9 +53,9 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
     try {
       const result = await deleteWorkforceRegistry(worker.id!)
       
-      if (result.needsCleanup) {
+      if ('needsCleanup' in result && result.needsCleanup) {
         // Has connections - show cleanup interface
-        setCleanupData(result)
+        setCleanupData(result as CleanupData)
       }
       // If no connections, cleanupData stays null - show simple modal
     } catch (error) {
@@ -101,7 +116,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
   const handleRemoveAllAssignments = async () => {
     try {
       // Remove all workItemWorker assignments for this workforce registry
-      if (cleanupData?.workItemAssignments?.length > 0) {
+      if (cleanupData?.workItemAssignments && cleanupData.workItemAssignments.length > 0) {
         for (const assignment of cleanupData.workItemAssignments) {
           await removeWorkItemWorkerAssignment(assignment.id)
         }
@@ -109,13 +124,15 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
         
         // Refresh cleanup data
         const refreshResult = await deleteWorkforceRegistry(worker.id!)
-        if (refreshResult.needsCleanup) {
-          setCleanupData(refreshResult)
+        if ('needsCleanup' in refreshResult && refreshResult.needsCleanup) {
+          setCleanupData(refreshResult as CleanupData)
         } else {
           setCleanupData(null)
         }
       }
     } catch (error) {
+
+      console.log(error)
       toast.error('Hiba történt a hozzárendelések törlése során')
     }
   }
@@ -127,8 +144,8 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
         toast.success('Napló bejegyzések törölve')
         // Refresh cleanup data
         const refreshResult = await deleteWorkforceRegistry(worker.id!)
-        if (refreshResult.needsCleanup) {
-          setCleanupData(refreshResult)
+        if ('needsCleanup' in refreshResult && refreshResult.needsCleanup) {
+          setCleanupData(refreshResult as CleanupData)
         } else {
           setCleanupData(null)
         }
@@ -136,6 +153,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
         toast.error(result.error || 'Hiba történt')
       }
     } catch (error) {
+      console.log(error)
       toast.error('Hiba történt a napló bejegyzések törlése során')
     }
   }
@@ -151,6 +169,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
         toast.error(result.error || 'Hiba történt')
       }
     } catch (error) {
+      console.log(error)
       toast.error('Hiba történt a munkás deaktiválása során')
     }
   }
@@ -182,11 +201,11 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
               </Alert>
 
               {/* Work Item Assignments */}
-              {cleanupData?.workItemAssignments?.length > 0 && (
+              {(cleanupData?.workItemAssignments?.length ?? 0) > 0 && (
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                      {cleanupData.workItemAssignments.length}
+                      {cleanupData.workItemAssignments?.length ?? 0}
                     </span>
                     Munkafázis hozzárendelés
                   </h4>

@@ -70,6 +70,16 @@ export default function GroupedDiaryEditForm({
     new Map()
   );
 
+  // Track which sliders have been interacted with
+  const [sliderInteracted, setSliderInteracted] = useState<Map<number, boolean>>(
+    new Map()
+  );
+
+  // Track original progressAtDate values from existing diary items
+  const [originalProgressAtDate, setOriginalProgressAtDate] = useState<Map<number, number>>(
+    new Map()
+  );
+
   // Group approval state
   const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
     allApproved: boolean;
@@ -297,6 +307,12 @@ export default function GroupedDiaryEditForm({
               item.progressAtDate !== null
             ) {
               localProgressMap.set(workItem.id, item.progressAtDate);
+              // Also store as original progressAtDate for delta calculation
+              setOriginalProgressAtDate(prev => {
+                const newMap = new Map(prev);
+                newMap.set(workItem.id, item.progressAtDate || 0);
+                return newMap;
+              });
             }
           }
         }
@@ -442,6 +458,8 @@ export default function GroupedDiaryEditForm({
   };
 
   const updateProgress = (workItemId: number, progressAtDate: number) => {
+    // Mark this slider as interacted with
+    setSliderInteracted((prev) => new Map(prev.set(workItemId, true)));
     // Update local progress for this diary entry
     setLocalProgress((prev) => new Map(prev.set(workItemId, progressAtDate)));
   };
@@ -563,14 +581,31 @@ export default function GroupedDiaryEditForm({
               : 1 / selectedGroupedItems.length;
           const hoursPerWorkItem = workerTotalHours * proportion;
 
-          // Calculate delta (difference) instead of absolute progress
-          const originalProgress = originalCompletedQuantities.get(groupedItem.workItem.id) || 0;
-          const deltaProgress = Math.max(0, itemProgress - originalProgress);
+          // Check if slider was interacted with for this workItem
+          const wasSliderInteracted = sliderInteracted.get(groupedItem.workItem.id) || false;
           
-          const quantityForThisWorker =
-            totalWorkerHours > 0
+          let quantityForThisWorker = 0;
+          // progressAtDate should ALWAYS reflect current slider position
+          const progressAtDateForThisItem = itemProgress;
+          
+          if (wasSliderInteracted) {
+            // Calculate delta only if slider was moved
+            const originalStartValue = originalProgressAtDate.get(groupedItem.workItem.id) || 0;
+            const deltaProgress = Math.max(0, itemProgress - originalStartValue);
+            quantityForThisWorker = totalWorkerHours > 0
               ? deltaProgress * (workerTotalHours / totalWorkerHours)
               : 0;
+          } else {
+            // If no slider interaction, preserve original quantity from existing diary item
+            // Find the original quantity for this worker and workItem from existing diary
+            const existingDiaryItem = diary.workDiaryItems?.find(
+              item => item.workItemId === groupedItem.workItem.id && 
+                     item.name === worker.name && 
+                     item.email === worker.email
+            );
+            quantityForThisWorker = existingDiaryItem?.quantity || 0;
+            // Note: progressAtDate still uses current slider position (itemProgress)
+          }
 
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
@@ -586,7 +621,7 @@ export default function GroupedDiaryEditForm({
             workHours: hoursPerWorkItem,
             quantity: quantityForThisWorker, // A haladás mennyisége arányositva a munkás órájával
             unit: groupedItem.workItem.unit, // A workItem unit-ja
-            progressAtDate: itemProgress, // Progress at this specific date
+            progressAtDate: progressAtDateForThisItem, // Progress at this specific date
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
           };

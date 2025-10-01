@@ -836,3 +836,15 @@ CÉGES adatbázis ból!
 SE lehessen kitörölni, ha munkához hozzáadtam akkor se lehessen kitörölni, ha napló van akkor sem lehessen kitörölni, előbb vegye törölje mindkét helyről
 ----
 FORM
+----
+Szerszámok mind nagybetűsen jelenjen meg!
+Mentés kép
+----
+kép workForceRegistry
+-----
+progress bar
+-----
+progress bar
+-----
+jóvahgyás maradjon
+-----
