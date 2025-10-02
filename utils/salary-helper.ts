@@ -14,7 +14,7 @@ export async function getCurrentSalary(workforceRegistryId: number, date: Date =
     const { tenantEmail } = await getTenantSafeAuth()
 
     // Keressük meg a legutolsó fizetési rekordot, ami <= a megadott dátumnál
-    const salaryRecord = await prisma.workforceRegistrySalaryHistory.findFirst({
+    const salaryRecord = await prisma.WorkforceRegistrySalaryHistory.findFirst({
       where: {
         workforceRegistryId,
         tenantEmail,
@@ -95,10 +95,98 @@ export async function addSalaryChange(
       data: { dailyRate: newDailyRate }
     })
 
+    // AUTOMATIKUS SNAPSHOT FRISSÍTÉS: Frissítsük az összes érintett napló bejegyzés snapshot-ját
+    await updateAffectedSalarySnapshots(workforceRegistryId, validFrom, tenantEmail)
+
     return { success: true }
   } catch (error) {
     console.error('Error adding salary change:', error)
     return { success: false, error: 'Hiba a fizetés mentése során' }
+  }
+}
+
+/**
+ * Automatikus snapshot frissítés - frissíti az érintett napló bejegyzések snapshot-jait
+ * @param workforceRegistryId - Munkás ID
+ * @param validFrom - Mikortól érvényes a fizetésváltozás
+ * @param tenantEmail - Tenant email
+ */
+async function updateAffectedSalarySnapshots(
+  workforceRegistryId: number, 
+  validFrom: Date, 
+  tenantEmail: string
+): Promise<void> {
+  try {
+    console.log(`🔄 [AUTO-SYNC] Starting automatic snapshot update for worker ${workforceRegistryId} from ${validFrom.toISOString().split('T')[0]}`)
+
+    // 1. Lekérjük a munkás nevét
+    const worker = await prisma.workforceRegistry.findFirst({
+      where: { id: workforceRegistryId, tenantEmail }
+    })
+
+    if (!worker) {
+      console.warn(`⚠️ [AUTO-SYNC] Worker ${workforceRegistryId} not found`)
+      return
+    }
+
+    // 2. Lekérjük az összes érintett napló bejegyzést (validFrom dátumtól kezdve)
+    const diaryItemsByName = await prisma.workDiaryItem.findMany({
+      where: { 
+        name: { equals: worker.name, mode: 'insensitive' },
+        tenantEmail,
+        date: { gte: validFrom }
+      }
+    })
+
+    const workItemWorkerIds = await prisma.workItemWorker.findMany({
+      where: { workforceRegistryId, tenantEmail },
+      select: { id: true }
+    })
+
+    const diaryItemsByWorkItemWorker = workItemWorkerIds.length > 0 
+      ? await prisma.workDiaryItem.findMany({
+          where: { 
+            workItemWorkerId: { in: workItemWorkerIds.map(w => w.id) },
+            tenantEmail,
+            date: { gte: validFrom }
+          }
+        })
+      : []
+
+    // 3. Egyesítjük és deduplikáljuk a bejegyzéseket
+    const allDiaryItems = new Map()
+    diaryItemsByName.forEach(item => allDiaryItems.set(item.id, item))
+    diaryItemsByWorkItemWorker.forEach(item => allDiaryItems.set(item.id, item))
+    
+    const uniqueDiaryItems = Array.from(allDiaryItems.values())
+
+    console.log(`📊 [AUTO-SYNC] Found ${uniqueDiaryItems.length} diary items to update for ${worker.name}`)
+
+    // 4. Frissítjük minden érintett bejegyzés snapshot-ját
+    let updatedCount = 0
+
+    for (const item of uniqueDiaryItems) {
+      const itemDate = item.date || new Date()
+      
+      // Lekérjük az adott napra érvényes új fizetést
+      const correctSalary = await getCurrentSalary(workforceRegistryId, itemDate)
+      
+      if (item.dailyRateSnapshot !== correctSalary) {
+        await prisma.workDiaryItem.update({
+          where: { id: item.id },
+          data: { dailyRateSnapshot: correctSalary }
+        })
+        
+        console.log(`✅ [AUTO-SYNC] Updated item ${item.id}: ${item.dailyRateSnapshot} → ${correctSalary} Ft (${itemDate.toISOString().split('T')[0]})`)
+        updatedCount++
+      }
+    }
+
+    console.log(`🎉 [AUTO-SYNC] Completed for ${worker.name}: ${updatedCount} snapshots updated automatically`)
+
+  } catch (error) {
+    console.error('❌ [AUTO-SYNC] Error updating salary snapshots:', error)
+    // Ne dobjunk hibát, csak loggoljuk - ne blokkoljuk a fizetés mentést
   }
 }
 

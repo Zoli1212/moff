@@ -20,6 +20,7 @@ export interface PerformanceData {
   totalSalary: number;
   totalProfit: number;
   profitPercentage: number;
+  performancePercentage: number;
   progressByWorkItem: { name: string; totalProgress: number; unit: string }[];
   hoursByWorker: { name: string; totalHours: number }[];
   workerPerformances: {

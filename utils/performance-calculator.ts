@@ -45,6 +45,9 @@ export interface WorkItemPerformance {
 export interface PerformanceCalculationResult {
   totalRevenue: number;
   totalCost: number;
+  totalSalary: number;
+  totalProfit: number;
+  profitPercentage: number;
   performancePercentage: number;
   progressByWorkItem: { name: string; totalProgress: number; unit: string }[];
   hoursByWorker: { name: string; totalHours: number }[];
@@ -236,6 +239,9 @@ export const calculatePerformance = ({
   return {
     totalRevenue,
     totalCost,
+    totalSalary: totalCost, // Salary is part of total cost
+    totalProfit: totalRevenue - totalCost,
+    profitPercentage: Math.round(performancePercentage),
     performancePercentage: Math.round(performancePercentage),
     progressByWorkItem: Array.from(progressByWorkItemMap.values()),
     hoursByWorker: Array.from(hoursByWorkerMap.values()),
