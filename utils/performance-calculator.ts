@@ -10,6 +10,7 @@ import {
   parseISO,
 } from "date-fns";
 import { getDailyRateForDiaryItem } from '@/lib/salary-utils';
+import { getCurrentSalary } from '@/utils/salary-helper';
 
 // Segédfüggvény: órabér számítása napi díjból
 export const getHourlyRate = (dailyRate: number | null | undefined): number => {

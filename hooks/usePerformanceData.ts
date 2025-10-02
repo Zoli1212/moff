@@ -1,5 +1,6 @@
 import { useMemo } from "react";
-import { WorkItem, Worker } from "@/types/work";
+import type { WorkItem, Worker } from "@/types/work";
+import type { WorkforceRegistryData } from "@/actions/workforce-registry-actions";
 import {
   startOfWeek,
   endOfWeek,
@@ -16,7 +17,9 @@ import {
 export interface PerformanceData {
   totalRevenue: number;
   totalCost: number;
-  performancePercentage: number;
+  totalSalary: number;
+  totalProfit: number;
+  profitPercentage: number;
   progressByWorkItem: { name: string; totalProgress: number; unit: string }[];
   hoursByWorker: { name: string; totalHours: number }[];
   workerPerformances: {

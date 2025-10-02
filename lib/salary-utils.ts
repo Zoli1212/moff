@@ -9,18 +9,23 @@
  * @returns Napi fizetés
  */
 export function getDailyRateForDiaryItem(
-  diaryItem: any, 
+  diaryItem: any,
   workforceRegistry: any[]
 ): number {
-  // 1. Új módszer: snapshot használata
+  // 1. Első prioritás: snapshot használata (ha van)
   if (diaryItem.dailyRateSnapshot && diaryItem.dailyRateSnapshot > 0) {
-    return diaryItem.dailyRateSnapshot
+    console.log(`💰 [SALARY] Using snapshot for "${diaryItem.name}": ${diaryItem.dailyRateSnapshot} Ft`);
+    return diaryItem.dailyRateSnapshot;
   }
+
+  // 2. Második prioritás: fallback a workforceRegistry.dailyRate-re
+  // (Ez most már az új fizetési rendszer által frissített értéket tartalmazza)
+  const workforceWorker = workforceRegistry.find(
+    (wr) => wr.name.toLowerCase() === (diaryItem.name || "").toLowerCase()
+  );
+
+  const fallbackRate = workforceWorker?.dailyRate || 0;
+  console.log(`📊 [SALARY] Registry dailyRate for "${diaryItem.name}": ${fallbackRate} Ft`);
   
-  // 2. Fallback: régi módszer - workforceRegistry-ből név alapján
-  const workforceWorker = workforceRegistry.find(wr => 
-    wr.name.toLowerCase() === (diaryItem.name || "").toLowerCase()
-  )
-  
-  return workforceWorker?.dailyRate || 0
+  return fallbackRate;
 }
