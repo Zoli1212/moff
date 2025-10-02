@@ -1,94 +1,113 @@
-'use client'
+"use client";
 
-import React, { useState, useEffect } from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Switch } from '@/components/ui/switch'
-import { updateWorkforceRegistry, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
-import { toast } from 'sonner'
-import { Loader2 } from 'lucide-react'
-import WorkforceSalarySection from './WorkforceSalarySection'
+import React, { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import {
+  updateWorkforceRegistry,
+  WorkforceRegistryData,
+} from "@/actions/workforce-registry-actions";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import WorkforceSalarySection from "./WorkforceSalarySection";
 
 interface WorkforceEditModalProps {
-  isOpen: boolean
-  onClose: () => void
-  worker: WorkforceRegistryData
-  onWorkerUpdated: (worker: WorkforceRegistryData) => void
+  isOpen: boolean;
+  onClose: () => void;
+  worker: WorkforceRegistryData;
+  onWorkerUpdated: (worker: WorkforceRegistryData) => void;
 }
 
-export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUpdated }: WorkforceEditModalProps) {
-  const [isLoading, setIsLoading] = useState(false)
+export default function WorkforceEditModal({
+  isOpen,
+  onClose,
+  worker,
+  onWorkerUpdated,
+}: WorkforceEditModalProps) {
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    role: '',
-    email: '',
-    phone: '',
-    contactInfo: '',
-    hiredDate: '',
-    leftDate: '',
+    name: "",
+    role: "",
+    email: "",
+    phone: "",
+    contactInfo: "",
+    hiredDate: "",
+    leftDate: "",
     isActive: true,
-    notes: '',
-    avatarUrl: ''
-  })
+    notes: "",
+    avatarUrl: "",
+  });
 
   useEffect(() => {
     if (worker) {
       setFormData({
-        name: worker.name || '',
-        role: worker.role || '',
-        email: worker.email || '',
-        phone: worker.phone || '',
-        contactInfo: worker.contactInfo || '',
-        hiredDate: worker.hiredDate ? new Date(worker.hiredDate).toISOString().split('T')[0] : '',
-        leftDate: worker.leftDate ? new Date(worker.leftDate).toISOString().split('T')[0] : '',
+        name: worker.name || "",
+        role: worker.role || "",
+        email: worker.email || "",
+        phone: worker.phone || "",
+        contactInfo: worker.contactInfo || "",
+        hiredDate: worker.hiredDate
+          ? new Date(worker.hiredDate).toISOString().split("T")[0]
+          : "",
+        leftDate: worker.leftDate
+          ? new Date(worker.leftDate).toISOString().split("T")[0]
+          : "",
         isActive: worker.isActive,
-        notes: worker.notes || '',
-        avatarUrl: worker.avatarUrl || ''
-      })
+        notes: worker.notes || "",
+        avatarUrl: worker.avatarUrl || "",
+      });
     }
-  }, [worker])
+  }, [worker]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
 
     try {
       const dataToSubmit = {
         ...formData,
-        hiredDate: formData.hiredDate ? new Date(formData.hiredDate) : undefined,
+        hiredDate: formData.hiredDate
+          ? new Date(formData.hiredDate)
+          : undefined,
         leftDate: formData.leftDate ? new Date(formData.leftDate) : undefined,
         email: formData.email || undefined,
         phone: formData.phone || undefined,
         contactInfo: formData.contactInfo || undefined,
         notes: formData.notes || undefined,
-        avatarUrl: formData.avatarUrl || undefined
-      }
+        avatarUrl: formData.avatarUrl || undefined,
+      };
 
-      const result = await updateWorkforceRegistry(worker.id!, dataToSubmit)
-      
+      const result = await updateWorkforceRegistry(worker.id!, dataToSubmit);
+
       if (result.success && result.data) {
-        toast.success('Munkás sikeresen frissítve')
-        onWorkerUpdated(result.data)
+        toast.success("Munkás sikeresen frissítve");
+        onWorkerUpdated(result.data);
       } else {
-        toast.error(result.error || 'Hiba történt a munkás frissítése során')
+        toast.error(result.error || "Hiba történt a munkás frissítése során");
       }
     } catch (error) {
-        console.log((error as Error).message)
-      toast.error('Hiba történt a munkás frissítése során')
+      console.log((error as Error).message);
+      toast.error("Hiba történt a munkás frissítése során");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }))
-  }
+      [field]: value,
+    }));
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -96,7 +115,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
         <DialogHeader>
           <DialogTitle>Munkás szerkesztése</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name - Required */}
@@ -105,7 +124,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange('name', e.target.value)}
+                onChange={(e) => handleInputChange("name", e.target.value)}
                 placeholder="Teljes név"
                 required
                 className="mt-1"
@@ -118,7 +137,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
               <Input
                 id="role"
                 value={formData.role}
-                onChange={(e) => handleInputChange('role', e.target.value)}
+                onChange={(e) => handleInputChange("role", e.target.value)}
                 placeholder="pl. festő, burkoló, villanyszerelő"
                 required
                 className="mt-1"
@@ -132,7 +151,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
+                onChange={(e) => handleInputChange("email", e.target.value)}
                 placeholder="email@example.com"
                 className="mt-1"
               />
@@ -144,12 +163,11 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
               <Input
                 id="phone"
                 value={formData.phone}
-                onChange={(e) => handleInputChange('phone', e.target.value)}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
                 placeholder="+36 30 123 4567"
                 className="mt-1"
               />
             </div>
-
 
             {/* Hired Date */}
             <div>
@@ -158,7 +176,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
                 id="hiredDate"
                 type="date"
                 value={formData.hiredDate}
-                onChange={(e) => handleInputChange('hiredDate', e.target.value)}
+                onChange={(e) => handleInputChange("hiredDate", e.target.value)}
                 className="mt-1"
               />
             </div>
@@ -170,10 +188,21 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
                 id="leftDate"
                 type="date"
                 value={formData.leftDate}
-                onChange={(e) => handleInputChange('leftDate', e.target.value)}
+                onChange={(e) => handleInputChange("leftDate", e.target.value)}
                 className="mt-1"
               />
             </div>
+          </div>
+
+          {/* Fizetés kezelő szekció */}
+          <div className="mt-4">
+            <WorkforceSalarySection
+              worker={worker}
+              onSalaryUpdated={() => {
+                // Ne hívjunk semmit - a WorkforceSalarySection saját maga kezeli a fizetés adatokat
+                // és saját toast üzeneteket jelenít meg
+              }}
+            />
           </div>
 
           {/* Contact Info */}
@@ -182,7 +211,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
             <Input
               id="contactInfo"
               value={formData.contactInfo}
-              onChange={(e) => handleInputChange('contactInfo', e.target.value)}
+              onChange={(e) => handleInputChange("contactInfo", e.target.value)}
               placeholder="Cím, további telefonszám, stb."
               className="mt-1"
             />
@@ -195,7 +224,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
               id="avatarUrl"
               type="url"
               value={formData.avatarUrl}
-              onChange={(e) => handleInputChange('avatarUrl', e.target.value)}
+              onChange={(e) => handleInputChange("avatarUrl", e.target.value)}
               placeholder="https://example.com/avatar.jpg"
               className="mt-1"
             />
@@ -207,7 +236,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
             <Textarea
               id="notes"
               value={formData.notes}
-              onChange={(e) => handleInputChange('notes', e.target.value)}
+              onChange={(e) => handleInputChange("notes", e.target.value)}
               placeholder="További információk, megjegyzések..."
               rows={3}
               className="mt-1"
@@ -219,7 +248,9 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
             <Switch
               id="isActive"
               checked={formData.isActive}
-              onCheckedChange={(checked) => handleInputChange('isActive', checked)}
+              onCheckedChange={(checked) =>
+                handleInputChange("isActive", checked)
+              }
             />
             <Label htmlFor="isActive" className="text-sm font-medium">
               Aktív munkás
@@ -238,25 +269,16 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || !formData.name.trim() || !formData.role.trim()}
+              disabled={
+                isLoading || !formData.name.trim() || !formData.role.trim()
+              }
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Mentés
             </Button>
           </div>
         </form>
-
-        {/* Fizetés kezelő szekció */}
-        <div className="mt-6">
-          <WorkforceSalarySection 
-            worker={worker} 
-            onSalaryUpdated={() => {
-              // Opcionálisan frissíthetjük a worker adatokat
-              // A WorkforceSalarySection saját maga kezeli a fizetés adatokat
-            }} 
-          />
-        </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

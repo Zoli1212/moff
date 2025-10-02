@@ -94,6 +94,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
               </div>
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="outline"
                   size="sm"
                   onClick={() => setShowEditModal(true)}
@@ -104,6 +105,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                 </Button>
                 {hasMultipleSalaries && (
                   <Button
+                    type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => setShowHistoryModal(true)}
