@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { updateWorkforceRegistry, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
+import WorkforceSalarySection from './WorkforceSalarySection'
 
 interface WorkforceEditModalProps {
   isOpen: boolean
@@ -30,8 +31,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
     leftDate: '',
     isActive: true,
     notes: '',
-    avatarUrl: '',
-    dailyRate: ''
+    avatarUrl: ''
   })
 
   useEffect(() => {
@@ -46,8 +46,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
         leftDate: worker.leftDate ? new Date(worker.leftDate).toISOString().split('T')[0] : '',
         isActive: worker.isActive,
         notes: worker.notes || '',
-        avatarUrl: worker.avatarUrl || '',
-        dailyRate: worker.dailyRate?.toString() || ''
+        avatarUrl: worker.avatarUrl || ''
       })
     }
   }, [worker])
@@ -65,8 +64,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
         phone: formData.phone || undefined,
         contactInfo: formData.contactInfo || undefined,
         notes: formData.notes || undefined,
-        avatarUrl: formData.avatarUrl || undefined,
-        dailyRate: formData.dailyRate ? parseFloat(formData.dailyRate) : undefined
+        avatarUrl: formData.avatarUrl || undefined
       }
 
       const result = await updateWorkforceRegistry(worker.id!, dataToSubmit)
@@ -152,20 +150,6 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
               />
             </div>
 
-            {/* Daily Rate */}
-            <div>
-              <Label htmlFor="dailyRate">Napi díj (Ft)</Label>
-              <Input
-                id="dailyRate"
-                type="number"
-                value={formData.dailyRate}
-                onChange={(e) => handleInputChange('dailyRate', e.target.value)}
-                placeholder="25000"
-                min="0"
-                step="1000"
-                className="mt-1"
-              />
-            </div>
 
             {/* Hired Date */}
             <div>
@@ -243,7 +227,7 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-2 pt-4 border-t">
             <Button
               type="button"
               variant="outline"
@@ -261,6 +245,17 @@ export default function WorkforceEditModal({ isOpen, onClose, worker, onWorkerUp
             </Button>
           </div>
         </form>
+
+        {/* Fizetés kezelő szekció */}
+        <div className="mt-6">
+          <WorkforceSalarySection 
+            worker={worker} 
+            onSalaryUpdated={() => {
+              // Opcionálisan frissíthetjük a worker adatokat
+              // A WorkforceSalarySection saját maga kezeli a fizetés adatokat
+            }} 
+          />
+        </div>
       </DialogContent>
     </Dialog>
   )

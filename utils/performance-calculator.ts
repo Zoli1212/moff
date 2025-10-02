@@ -7,7 +7,9 @@ import {
   endOfMonth,
   subWeeks,
   subMonths,
+  parseISO,
 } from "date-fns";
+import { getDailyRateForDiaryItem } from '@/lib/salary-utils';
 
 // Segédfüggvény: órabér számítása napi díjból
 export const getHourlyRate = (dailyRate: number | null | undefined): number => {
@@ -98,39 +100,8 @@ export const calculatePerformance = ({
       totalRevenue += itemRevenue;
     }
 
-    // Költség számítása: a naplóban rögzített munkások órái alapján
-    const workerAssignment = workItem.workItemWorkers?.find(
-      (wiw) => wiw.workerId === diaryItem.workerId
-    );
-
-    // Ha nincs workItemWorkers, próbáljuk meg közvetlenül a workers tömbből
-    let dailyRate = workerAssignment?.workforceRegistry?.dailyRate;
-
-    // Ha még mindig nincs dailyRate, keressük meg a WorkforceRegistry-ben név alapján
-    if (!dailyRate && diaryItem.name) {
-      // Először próbáljuk meg pontos egyezést
-      let workforceWorker = workforceRegistry.find(
-        (wr) => wr.name.toLowerCase() === diaryItem.name.toLowerCase()
-      );
-
-      // Ha nincs pontos egyezés, próbáljuk meg részleges egyezést
-      if (!workforceWorker) {
-        workforceWorker = workforceRegistry.find(
-          (wr) =>
-            wr.name.toLowerCase().includes(diaryItem.name.toLowerCase()) ||
-            diaryItem.name.toLowerCase().includes(wr.name.toLowerCase())
-        );
-      }
-
-      if (workforceWorker) {
-        dailyRate = workforceWorker.dailyRate;
-      }
-    }
-
-    // Ha nincs dailyRate, akkor 0
-    if (!dailyRate) {
-      dailyRate = 0;
-    }
+    // Költség számítása: új salary helper használatával (backward compatible)
+    const dailyRate = getDailyRateForDiaryItem(diaryItem, workforceRegistry);
 
     const hourlyRate = getHourlyRate(dailyRate);
     const hoursWorked = diaryItem.workHours || 0;
@@ -351,19 +322,11 @@ export const calculatePreviousPeriodPerformance = (
       totalRevenue += progressMade * workItem.unitPrice;
     }
 
-    // Költség számítása
-    let dailyRate = 0; // Alapértelmezett 0, ha nincs munkás adat
-    const workforceWorker = workforceRegistry.find(
-      (wr) => wr.name.toLowerCase() === (diaryItem.name || "").toLowerCase()
-    );
-    if (workforceWorker?.dailyRate) {
-      dailyRate = workforceWorker.dailyRate;
-    }
-
+    // Költség számítása: új salary helper használatával (backward compatible)
+    const dailyRate = getDailyRateForDiaryItem(diaryItem, workforceRegistry);
     const hourlyRate = getHourlyRate(dailyRate);
     totalCost += hoursWorked * hourlyRate;
   });
-
   return Math.round(calculateProfitRatePercentage(totalCost, totalRevenue));
 };
 
@@ -472,15 +435,8 @@ export const calculateWorkItemPerformances = (
       itemRevenue = progressMade * workItem.unitPrice;
     }
 
-    // Költség számítása
-    let dailyRate = 0; // Alapértelmezett 0, ha nincs munkás adat
-    const workerName = diaryItem.name || "Ismeretlen";
-    const workforceWorker = workforceRegistry.find(
-      (wr) => wr.name.toLowerCase() === workerName.toLowerCase()
-    );
-    if (workforceWorker?.dailyRate) {
-      dailyRate = workforceWorker.dailyRate;
-    }
+    // Költség számítása: új salary helper használatával (backward compatible)
+    const dailyRate = getDailyRateForDiaryItem(diaryItem, workforceRegistry);
 
     const hourlyRate = getHourlyRate(dailyRate);
     const itemCost = hoursWorked * hourlyRate;
@@ -624,15 +580,8 @@ export const calculateWorkerPerformances = (
       itemRevenue = progressMade * workItem.unitPrice;
     }
 
-    // Költség számítása
-    let dailyRate = 0; // Alapértelmezett 0, ha nincs munkás adat
-    const workforceWorker = workforceRegistry.find(
-      (wr) => wr.name.toLowerCase() === workerName.toLowerCase()
-    );
-    if (workforceWorker?.dailyRate) {
-      dailyRate = workforceWorker.dailyRate;
-    }
-
+    // Költség számítása: új salary helper használatával (backward compatible)
+    const dailyRate = getDailyRateForDiaryItem(diaryItem, workforceRegistry);
     const hourlyRate = getHourlyRate(dailyRate);
     const itemCost = hoursWorked * hourlyRate;
 

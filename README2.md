@@ -848,3 +848,34 @@ progress bar
 -----
 jóvahgyás maradjon
 -----
+Elvan fogadva valami rámegyek és nem az nem működik csak az elfogadás
+
+képeket
+napi dij változhat
+----
+idő mikortól
+----
+jövőben és aktuális munka
+----
+napló ban a napidíjat tároljuk
+----
+árat tudsz változtatni
+---
+módosít Ft
+---
+modal napi dij mikortól 
+mától
+---
+progress
+---
+normaidő mikortól
+---
+okt 1 bejegyzések
+---
+---
+számla
+----
+főoldal
+----
+teljesített számlázott számlázható 
+----

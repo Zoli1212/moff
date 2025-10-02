@@ -14,6 +14,7 @@ export interface WorkforceRegistryData {
   hiredDate: Date | null
   leftDate: Date | null
   isActive: boolean
+  isDeleted: boolean
   notes: string | null
   avatarUrl: string | null
   dailyRate: number | null
@@ -26,7 +27,8 @@ export async function getAllWorkforceRegistry() {
 
     const workforceEntries = await prisma.workforceRegistry.findMany({
       where: {
-        tenantEmail: tenantEmail
+        tenantEmail: tenantEmail,
+        isDeleted: false  // Ne jelenítse meg a törölt munkásokat
       },
       orderBy: [
         { isActive: 'desc' },
@@ -247,20 +249,42 @@ export async function cleanupAndDeleteWorkforceRegistry(id: number) {
       return { success: false, error: 'Munkás nem található vagy nincs jogosultság' }
     }
 
-    // Delete all workItemWorker assignments for this worker
-    await prisma.workItemWorker.deleteMany({
+    // Delete all workDiaryItems for this worker - both by workItemWorker connection and by name
+    // First: Get all workItemWorker IDs for this workforce registry BEFORE deleting them
+    const workItemWorkers = await prisma.workItemWorker.findMany({
       where: {
-        workforceRegistry: {
-          name: existingEntry.name,
-          tenantEmail: tenantEmail
-        }
-      }
+        workforceRegistryId: existingEntry.id,
+        tenantEmail: tenantEmail
+      },
+      select: { id: true }
     })
 
-    // Delete all workDiaryItems for this worker
+    // Delete diary entries by workItemWorkerId (new entries)
+    if (workItemWorkers.length > 0) {
+      const workItemWorkerIds = workItemWorkers.map(w => w.id)
+      
+      await prisma.workDiaryItem.deleteMany({
+        where: {
+          workItemWorkerId: {
+            in: workItemWorkerIds
+          },
+          tenantEmail: tenantEmail
+        }
+      })
+    }
+
+    // Delete diary entries by name (legacy entries)
     await prisma.workDiaryItem.deleteMany({
       where: {
         name: existingEntry.name,
+        tenantEmail: tenantEmail
+      }
+    })
+
+    // NOW delete all workItemWorker assignments for this worker
+    await prisma.workItemWorker.deleteMany({
+      where: {
+        workforceRegistryId: existingEntry.id,
         tenantEmail: tenantEmail
       }
     })
@@ -358,6 +382,15 @@ export async function removeWorkerDiaryEntries(workerId: number) {
   try {
     const { user, tenantEmail } = await getTenantSafeAuth()
 
+    // Get the worker name for legacy diary entries
+    const worker = await prisma.workforceRegistry.findFirst({
+      where: { id: workerId, tenantEmail: tenantEmail }
+    })
+
+    if (!worker) {
+      return { success: false, error: 'Munkás nem található' }
+    }
+
     // Step 1: Get all workItemWorker IDs for this workforce registry
     const workItemWorkers = await prisma.workItemWorker.findMany({
       where: {
@@ -367,10 +400,10 @@ export async function removeWorkerDiaryEntries(workerId: number) {
       select: { id: true }
     })
 
+    // Step 2: Delete diary entries by workItemWorkerId (new entries)
     if (workItemWorkers.length > 0) {
       const workItemWorkerIds = workItemWorkers.map(w => w.id)
       
-      // Step 2: Delete diary entries by workItemWorkerId
       await prisma.workDiaryItem.deleteMany({
         where: {
           workItemWorkerId: {
@@ -380,6 +413,14 @@ export async function removeWorkerDiaryEntries(workerId: number) {
         }
       })
     }
+
+    // Step 3: Delete diary entries by name (legacy entries)
+    await prisma.workDiaryItem.deleteMany({
+      where: {
+        name: worker.name,
+        tenantEmail: tenantEmail
+      }
+    })
 
     revalidatePath('/others')
     revalidatePath('/works')
@@ -412,12 +453,16 @@ export async function removeWorkerFromRegistryOnly(workerId: number) {
       }
     })
 
-    // Check for diary entries through workItemWorker connection
+    // Check for diary entries - both by workItemWorker connection and by name (legacy)
     let diaryEntriesCount = 0
+    let diaryEntriesByWorkItemWorker: any[] = []
+    let diaryEntriesByName: any[] = []
+    
+    // First: Check by workItemWorkerId (new entries)
     if (workItemAssignments.length > 0) {
       const workItemWorkerIds = workItemAssignments.map(w => w.id)
       
-      const diaryEntries = await prisma.workDiaryItem.findMany({
+      diaryEntriesByWorkItemWorker = await prisma.workDiaryItem.findMany({
         where: {
           workItemWorkerId: {
             in: workItemWorkerIds
@@ -425,9 +470,23 @@ export async function removeWorkerFromRegistryOnly(workerId: number) {
           tenantEmail: tenantEmail
         }
       })
-      
-      diaryEntriesCount = diaryEntries.length
     }
+    
+    // Second: Check by name (legacy entries)
+    diaryEntriesByName = await prisma.workDiaryItem.findMany({
+      where: {
+        name: worker.name,
+        tenantEmail: tenantEmail
+      }
+    })
+    
+    // Combine both results (avoid duplicates)
+    const allDiaryEntryIds = new Set([
+      ...diaryEntriesByWorkItemWorker.map(d => d.id),
+      ...diaryEntriesByName.map(d => d.id)
+    ])
+    
+    diaryEntriesCount = allDiaryEntryIds.size
 
     if (workItemAssignments.length > 0 || diaryEntriesCount > 0) {
       return { 
@@ -436,10 +495,10 @@ export async function removeWorkerFromRegistryOnly(workerId: number) {
       }
     }
 
-    // LOGICAL DELETE - set isActive to false instead of physical delete
+    // LOGICAL DELETE - set isDeleted to true instead of physical delete
     await prisma.workforceRegistry.update({
       where: { id: workerId },
-      data: { isActive: false }
+      data: { isDeleted: true }
     })
 
     revalidatePath('/others')

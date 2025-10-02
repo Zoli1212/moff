@@ -456,6 +456,7 @@ model WorkforceRegistry {
   hiredDate          DateTime?
   leftDate           DateTime?
   isActive           Boolean  @default(true)
+  isDeleted          Boolean  @default(false)
   notes              String?
   dailyRate          Float?   @default(0)
   createdAt          DateTime @default(now())
@@ -464,6 +465,21 @@ model WorkforceRegistry {
   workItemWorkers    WorkItemWorker[]
   avatarUrl          String?
   performances       WorkforceRegistryPerformance[]
+  salaryHistory      WorkforceRegistrySalaryHistory[]
+}
+
+model WorkforceRegistrySalaryHistory {
+  id                  Int      @id @default(autoincrement())
+  workforceRegistryId Int
+  dailyRate           Float
+  validFrom           DateTime  // Mikortól érvényes (nincs validTo!)
+  createdAt           DateTime @default(now())
+  tenantEmail         String   @default("")
+  
+  workforceRegistry WorkforceRegistry @relation(fields: [workforceRegistryId], references: [id], onDelete: Cascade)
+  
+  @@index([workforceRegistryId, validFrom])
+  @@index([tenantEmail])
 }
 
 model EquipmentRegistry {
@@ -543,6 +559,7 @@ model WorkDiaryItem {
   unit String?
   workHours     Float?
   progressAtDate Float?    @default(0) // Progress at this specific date
+  dailyRateSnapshot Float?  // Snapshot of the daily rate at the time of logging
   date          DateTime   @default(now())
   images        String[]
   notes         String?

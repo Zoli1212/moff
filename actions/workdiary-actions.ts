@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
+import { getCurrentSalary } from "@/utils/salary-helper";
 
 // Resolve the effective tenant email. If the current user is a worker,
 // look up their tenant in WorkforceRegistry by the worker's email.
@@ -296,6 +297,52 @@ export async function updateWorkDiaryItem({
     updateData.tenantEmail = resolvedTenant;
   }
 
+  // Automatikus dailyRateSnapshot frissítés ha a név vagy dátum változott
+  if ((name !== undefined || date !== undefined) && !updateData.dailyRateSnapshot) {
+    try {
+      // Lekérjük a jelenlegi bejegyzést
+      const currentItem = await prisma.workDiaryItem.findUnique({
+        where: { id },
+        select: { name: true, date: true, tenantEmail: true }
+      });
+      
+      if (currentItem) {
+        const workerName = name !== undefined ? name : currentItem.name;
+        const itemDate = date !== undefined ? date : currentItem.date;
+        const tenantEmail = updateData.tenantEmail || currentItem.tenantEmail;
+        
+        if (workerName) {
+          // Keressük meg a munkást a WorkforceRegistry-ben
+          const workforceWorker = await prisma.workforceRegistry.findFirst({
+            where: {
+              name: { equals: workerName, mode: 'insensitive' },
+              tenantEmail
+            }
+          });
+          
+          if (workforceWorker) {
+            // Lekérjük az aktuális fizetést a napló dátumára
+            const currentSalary = await getCurrentSalary(workforceWorker.id, itemDate);
+            updateData.dailyRateSnapshot = currentSalary;
+            
+            try {
+              console.log("[workdiary-actions] dailyRateSnapshot updated", {
+                itemId: id,
+                workerName,
+                workforceWorkerId: workforceWorker.id,
+                itemDate,
+                dailyRateSnapshot: currentSalary
+              });
+            } catch {}
+          }
+        }
+      }
+    } catch (error) {
+      // Ha hiba van a fizetés lekérésnél, nem blokkoljuk a napló frissítést
+      console.error("[workdiary-actions] Error updating salary snapshot:", error);
+    }
+  }
+
   try {
     try {
       console.log("[workdiary-actions] updateWorkDiaryItem input", {
@@ -401,6 +448,38 @@ export async function createWorkDiaryItem({
     if (typeof accepted === "boolean") createData.accepted = accepted;
     if (groupNo !== undefined) createData.groupNo = groupNo;
     if (progressAtDate !== undefined) createData.progressAtDate = progressAtDate;
+
+    // Automatikus dailyRateSnapshot mentés
+    if (name && !createData.dailyRateSnapshot) {
+      try {
+        // Keressük meg a munkást a WorkforceRegistry-ben név alapján
+        const workforceWorker = await prisma.workforceRegistry.findFirst({
+          where: {
+            name: { equals: name, mode: 'insensitive' },
+            tenantEmail
+          }
+        });
+        
+        if (workforceWorker) {
+          // Lekérjük az aktuális fizetést a napló dátumára
+          const diaryDate = date || new Date();
+          const currentSalary = await getCurrentSalary(workforceWorker.id, diaryDate);
+          createData.dailyRateSnapshot = currentSalary;
+          
+          try {
+            console.log("[workdiary-actions] dailyRateSnapshot added", {
+              workerName: name,
+              workforceWorkerId: workforceWorker.id,
+              diaryDate,
+              dailyRateSnapshot: currentSalary
+            });
+          } catch {}
+        }
+      } catch (error) {
+        // Ha hiba van a fizetés lekérésnél, nem blokkoljuk a napló mentést
+        console.error("[workdiary-actions] Error getting salary snapshot:", error);
+      }
+    }
 
     // No same-day per workItem restriction: allow multiple entries on the same day for the same workItem
     try {
