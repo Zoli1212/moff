@@ -22,6 +22,7 @@ export interface WorkDiaryItemDTO {
   updatedAt: Date;
   groupNo?: number | null;
   dailyRateSnapshot?: number | null;
+  workforceRegistryId?: number | null;
 }
 
 export interface WorkDiaryWithItem extends WorkDiary {
@@ -69,6 +70,7 @@ export async function getWorkDiariesByWorkId(
           updatedAt: true,
           groupNo: true,
           dailyRateSnapshot: true,
+          workforceRegistryId: true,
         },
         orderBy: { date: "asc" },
       },

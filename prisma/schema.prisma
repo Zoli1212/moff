@@ -466,6 +466,7 @@ model WorkforceRegistry {
   avatarUrl          String?
   performances       WorkforceRegistryPerformance[]
   salaryHistory      WorkforceRegistrySalaryHistory[]
+  workDiaryItems     WorkDiaryItem[]
 }
 
 model WorkforceRegistrySalaryHistory {
@@ -555,6 +556,9 @@ model WorkDiaryItem {
   /// Optional: reference to the WorkItemWorker assignment used
   workItemWorker   WorkItemWorker? @relation(fields: [workItemWorkerId], references: [id])
   workItemWorkerId Int?
+  /// Optional: reference to the WorkforceRegistry entry used
+  workforceRegistry   WorkforceRegistry? @relation(fields: [workforceRegistryId], references: [id])
+  workforceRegistryId Int?
   quantity      Float?
   unit String?
   workHours     Float?

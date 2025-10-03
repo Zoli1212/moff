@@ -297,13 +297,13 @@ export async function updateWorkDiaryItem({
     updateData.tenantEmail = resolvedTenant;
   }
 
-  // Automatikus dailyRateSnapshot frissítés ha a név vagy dátum változott
-  if ((name !== undefined || date !== undefined) && !updateData.dailyRateSnapshot) {
+  // Automatikus workforceRegistryId és dailyRateSnapshot frissítés ha a név vagy dátum változott
+  if ((name !== undefined || date !== undefined) && (!updateData.dailyRateSnapshot || !updateData.workforceRegistryId)) {
     try {
       // Lekérjük a jelenlegi bejegyzést
       const currentItem = await prisma.workDiaryItem.findUnique({
         where: { id },
-        select: { name: true, date: true, tenantEmail: true }
+        select: { name: true, date: true, tenantEmail: true, workforceRegistryId: true }
       });
       
       if (currentItem) {
@@ -321,25 +321,32 @@ export async function updateWorkDiaryItem({
           });
           
           if (workforceWorker) {
-            // Lekérjük az aktuális fizetést a napló dátumára
-            const currentSalary = await getCurrentSalary(workforceWorker.id, itemDate);
-            updateData.dailyRateSnapshot = currentSalary;
+            // Mentjük a workforceRegistryId-t (ha még nincs vagy változott a név)
+            if (!currentItem.workforceRegistryId || name !== undefined) {
+              updateData.workforceRegistryId = workforceWorker.id;
+            }
+            
+            // Lekérjük az aktuális fizetést a napló dátumára (ha még nincs vagy változott)
+            if (!updateData.dailyRateSnapshot) {
+              const currentSalary = await getCurrentSalary(workforceWorker.id, itemDate);
+              updateData.dailyRateSnapshot = currentSalary;
+            }
             
             try {
-              console.log("[workdiary-actions] dailyRateSnapshot updated", {
+              console.log("[workdiary-actions] WorkforceRegistry data updated", {
                 itemId: id,
                 workerName,
-                workforceWorkerId: workforceWorker.id,
+                workforceRegistryId: workforceWorker.id,
                 itemDate,
-                dailyRateSnapshot: currentSalary
+                dailyRateSnapshot: updateData.dailyRateSnapshot
               });
             } catch {}
           }
         }
       }
     } catch (error) {
-      // Ha hiba van a fizetés lekérésnél, nem blokkoljuk a napló frissítést
-      console.error("[workdiary-actions] Error updating salary snapshot:", error);
+      // Ha hiba van a lekérésnél, nem blokkoljuk a napló frissítést
+      console.error("[workdiary-actions] Error updating workforce registry data:", error);
     }
   }
 
@@ -449,8 +456,8 @@ export async function createWorkDiaryItem({
     if (groupNo !== undefined) createData.groupNo = groupNo;
     if (progressAtDate !== undefined) createData.progressAtDate = progressAtDate;
 
-    // Automatikus dailyRateSnapshot mentés
-    if (name && !createData.dailyRateSnapshot) {
+    // Automatikus workforceRegistryId és dailyRateSnapshot mentés
+    if (name && (!createData.dailyRateSnapshot || !createData.workforceRegistryId)) {
       try {
         // Keressük meg a munkást a WorkforceRegistry-ben név alapján
         const workforceWorker = await prisma.workforceRegistry.findFirst({
@@ -461,23 +468,28 @@ export async function createWorkDiaryItem({
         });
         
         if (workforceWorker) {
-          // Lekérjük az aktuális fizetést a napló dátumára
-          const diaryDate = date || new Date();
-          const currentSalary = await getCurrentSalary(workforceWorker.id, diaryDate);
-          createData.dailyRateSnapshot = currentSalary;
+          // Mentjük a workforceRegistryId-t
+          createData.workforceRegistryId = workforceWorker.id;
+          
+          // Lekérjük az aktuális fizetést a napló dátumára (ha még nincs)
+          if (!createData.dailyRateSnapshot) {
+            const diaryDate = date || new Date();
+            const currentSalary = await getCurrentSalary(workforceWorker.id, diaryDate);
+            createData.dailyRateSnapshot = currentSalary;
+          }
           
           try {
-            console.log("[workdiary-actions] dailyRateSnapshot added", {
+            console.log("[workdiary-actions] WorkforceRegistry data added", {
               workerName: name,
-              workforceWorkerId: workforceWorker.id,
-              diaryDate,
-              dailyRateSnapshot: currentSalary
+              workforceRegistryId: workforceWorker.id,
+              diaryDate: date || new Date(),
+              dailyRateSnapshot: createData.dailyRateSnapshot
             });
           } catch {}
         }
       } catch (error) {
-        // Ha hiba van a fizetés lekérésnél, nem blokkoljuk a napló mentést
-        console.error("[workdiary-actions] Error getting salary snapshot:", error);
+        // Ha hiba van a lekérésnél, nem blokkoljuk a napló mentést
+        console.error("[workdiary-actions] Error getting workforce registry data:", error);
       }
     }
 

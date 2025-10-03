@@ -112,6 +112,7 @@ export const calculatePerformance = ({
     const itemCost = hoursWorked * hourlyRate;
     totalCost += itemCost;
 
+
     // Munkás óráinak aggregálása
     if (hoursWorked > 0) {
       // Munkás nevének meghatározása

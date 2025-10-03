@@ -87,13 +87,25 @@ export const usePerformanceData = ({
     const startDateString = toISODateString(startDate);
     const endDateString = toISODateString(endDate);
 
-    // 1. Összes workDiaryItem összegyűjtése minden diary-ból
+    // 1. Összes workDiaryItem összegyűjtése minden diary-ból (deduplikálva)
     const allWorkDiaryItems: any[] = [];
+    const seenIds = new Set<number>();
+    let duplicateCount = 0;
+    
     diaries.forEach((diary) => {
       (diary.workDiaryItems || []).forEach((diaryItem: any) => {
-        allWorkDiaryItems.push(diaryItem);
+        if (!seenIds.has(diaryItem.id)) {
+          seenIds.add(diaryItem.id);
+          allWorkDiaryItems.push(diaryItem);
+        } else {
+          duplicateCount++;
+          if (diaryItem.name?.toLowerCase().includes('lacika')) {
+            console.log(`🔄 [DEDUP] Lacika duplicate found: ${diaryItem.id}`);
+          }
+        }
       });
     });
+    
 
     // 2. WorkDiaryItem-ek szűrése a saját dátumuk alapján
     const relevantWorkDiaryItems = allWorkDiaryItems.filter((diaryItem) => {
@@ -125,7 +137,7 @@ export const usePerformanceData = ({
       currentDate,
       view,
     });
-  }, [diaries, workItems, workers, currentDate, view]);
+  }, [diaries, workItems, workers, workforceRegistry, currentDate, view]);
 
   return performanceData;
 };

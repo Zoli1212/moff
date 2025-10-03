@@ -129,7 +129,30 @@ export async function updateWorkforceRegistry(
       data: updateData,
     });
 
+    // Ha bármilyen releváns adat változott, frissítsük a kapcsolódó WorkItemWorker rekordokat is
+    if (data.name || data.email !== undefined || data.phone !== undefined || data.avatarUrl !== undefined || data.role) {
+      await prisma.workItemWorker.updateMany({
+        where: {
+          workforceRegistryId: id,
+          tenantEmail: tenantEmail,
+        },
+        data: {
+          // Frissítsük a nevet, ha változott
+          ...(data.name && { name: data.name.trim() }),
+          // Frissítsük az email-t, ha változott
+          ...(data.email !== undefined && { email: data.email }),
+          // Frissítsük a telefont, ha változott
+          ...(data.phone !== undefined && { phone: data.phone }),
+          // Frissítsük az avatarUrl-t, ha változott
+          ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl }),
+          // Frissítsük a szerepkört, ha változott
+          ...(data.role && { role: data.role }),
+        },
+      });
+    }
+
     revalidatePath("/others");
+    revalidatePath("/works"); // Frissítsük a munkák oldalt is, mert ott jelennek meg a WorkItemWorker adatok
     return { success: true, data: updatedEntry };
   } catch (error) {
     console.error("Error updating workforce registry entry:", error);
