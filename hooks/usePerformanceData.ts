@@ -90,18 +90,12 @@ export const usePerformanceData = ({
     // 1. Összes workDiaryItem összegyűjtése minden diary-ból (deduplikálva)
     const allWorkDiaryItems: any[] = [];
     const seenIds = new Set<number>();
-    let duplicateCount = 0;
     
     diaries.forEach((diary) => {
       (diary.workDiaryItems || []).forEach((diaryItem: any) => {
         if (!seenIds.has(diaryItem.id)) {
           seenIds.add(diaryItem.id);
           allWorkDiaryItems.push(diaryItem);
-        } else {
-          duplicateCount++;
-          if (diaryItem.name?.toLowerCase().includes('lacika')) {
-            console.log(`🔄 [DEDUP] Lacika duplicate found: ${diaryItem.id}`);
-          }
         }
       });
     });

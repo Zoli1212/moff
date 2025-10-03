@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
 import PerformanceSummary from "./_components/PerformanceSummary";
@@ -120,13 +120,17 @@ export default function DiaryPageClient({
     loadActiveWorkers();
   }, [work?.id, setActiveWorkers, setWorkerHours]);
 
+  // Stabilizáljuk a referenciákat a useMemo számára
+  const stableWorkers = useMemo(() => work?.workers ?? [], [work?.workers]);
+  const stableWorkforceRegistry = useMemo(() => workforceRegistry, [workforceRegistry]);
+
   const performanceData = usePerformanceData({
     diaries,
     workItems: items,
-    workers: work?.workers ?? [],
+    workers: stableWorkers,
     currentDate,
     view,
-    workforceRegistry,
+    workforceRegistry: stableWorkforceRegistry,
   });
 
   const handleDateSelect = (date: Date) => {
