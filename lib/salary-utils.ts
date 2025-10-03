@@ -1,3 +1,6 @@
+import type { WorkforceRegistryData } from "@/actions/workforce-registry-actions";
+import type { WorkDiaryItemDTO } from "@/actions/get-workdiariesbyworkid-actions";
+
 /**
  * Utility függvények fizetés számításokhoz (nem server actions)
  */
@@ -9,8 +12,8 @@
  * @returns Napi fizetés
  */
 export function getDailyRateForDiaryItem(
-  diaryItem: any,
-  workforceRegistry: any[]
+  diaryItem: WorkDiaryItemDTO | { name?: string | null; dailyRateSnapshot?: number | null },
+  workforceRegistry: WorkforceRegistryData[]
 ): number {
   // 1. Első prioritás: snapshot használata (ha van)
   if (diaryItem.dailyRateSnapshot && diaryItem.dailyRateSnapshot > 0) {

@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CalendarIcon, Save, X } from "lucide-react";
 import { format } from "date-fns";
-import { hu } from "date-fns/locale";
 import { addSalaryChange } from "@/utils/salary-helper";
 import { WorkforceRegistryData } from "@/actions/workforce-registry-actions";
 import { toast } from "sonner";
