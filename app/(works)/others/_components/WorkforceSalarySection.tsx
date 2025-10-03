@@ -26,6 +26,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [salaryHistory, setSalaryHistory] = useState<SalaryHistoryItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedSalaryEntry, setSelectedSalaryEntry] = useState<SalaryHistoryItem | null>(null)
 
   const loadSalaryHistory = async () => {
     if (!worker.id) return
@@ -50,6 +51,16 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
     onSalaryUpdated?.()
   }
 
+  const handleEditNewSalary = () => {
+    setSelectedSalaryEntry(null)
+    setShowEditModal(true)
+  }
+
+  const handleEditExistingSalary = (salaryEntry: SalaryHistoryItem) => {
+    setSelectedSalaryEntry(salaryEntry)
+    setShowEditModal(true)
+  }
+
   const formatCurrency = (amount: number | null) => {
     if (!amount) return '0 Ft'
     return new Intl.NumberFormat('hu-HU', {
@@ -62,8 +73,25 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
 
   const getCurrentSalary = () => {
     if (salaryHistory.length > 0) {
-      // A legfrissebb fizetés (első elem, mert desc rendezés)
-      return salaryHistory[0].dailyRate
+      // Keressük meg azt a fizetést, ami ma érvényes (validFrom <= mai dátum)
+      const today = new Date()
+      
+      // Szűrjük ki azokat a fizetéseket, amik már érvényesek (validFrom <= ma)
+      const validSalaries = salaryHistory.filter(salary => {
+        const validFromDate = new Date(salary.validFrom)
+        return validFromDate <= today
+      })
+      
+      if (validSalaries.length > 0) {
+        // A legkésőbbi érvényes fizetést keressük (legnagyobb validFrom dátummal)
+        const currentSalary = validSalaries.reduce((latest, current) => {
+          const latestDate = new Date(latest.validFrom)
+          const currentDate = new Date(current.validFrom)
+          return currentDate > latestDate ? current : latest
+        })
+        
+        return currentSalary.dailyRate
+      }
     }
     return worker.dailyRate || 0
   }
@@ -97,7 +125,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setShowEditModal(true)}
+                  onClick={handleEditNewSalary}
                   className="flex items-center gap-1"
                 >
                   <Edit className="h-4 w-4" />
@@ -124,7 +152,12 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                 <p className="text-sm text-gray-600 mb-2">Fizetéstörténet</p>
                 <div className="space-y-1">
                   {salaryHistory.slice(0, 3).map((item, index) => (
-                    <div key={item.id} className="flex justify-between text-xs">
+                    <div 
+                      key={item.id} 
+                      className="flex justify-between text-xs cursor-pointer hover:bg-gray-100 p-1 rounded transition-colors"
+                      onClick={() => handleEditExistingSalary(item)}
+                      title="Kattints a szerkesztéshez"
+                    >
                       <span className={index === 0 ? 'font-medium text-green-600' : 'text-gray-500'}>
                         {new Date(item.validFrom).toLocaleDateString('hu-HU')} -től
                       </span>
@@ -134,9 +167,13 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                     </div>
                   ))}
                   {salaryHistory.length > 3 && (
-                    <p className="text-xs text-gray-400 mt-1">
-                      +{salaryHistory.length - 3} további bejegyzés
-                    </p>
+                    <div 
+                      className="text-xs text-gray-700 mt-1 cursor-pointer hover:text-black hover:underline transition-colors font-medium"
+                      onClick={() => setShowHistoryModal(true)}
+                      title="Kattints a teljes történet megtekintéséhez"
+                    >
+                      +{salaryHistory.length - 3} további bejegyzés megtekintése →
+                    </div>
                   )}
                 </div>
               </div>
@@ -149,9 +186,13 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
       {/* Modálok */}
       <SalaryEditModal
         isOpen={showEditModal}
-        onClose={() => setShowEditModal(false)}
+        onClose={() => {
+          setShowEditModal(false)
+          setSelectedSalaryEntry(null)
+        }}
         worker={worker}
         currentSalary={getCurrentSalary()}
+        existingSalaryEntry={selectedSalaryEntry}
         onSalaryUpdated={handleSalaryUpdated}
       />
 

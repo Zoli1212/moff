@@ -158,7 +158,24 @@ export default function SalaryHistoryModal({
               <div className="space-y-3">
                 {salaryHistory.map((item, index) => {
                   const previousItem = salaryHistory[index + 1]
-                  const isCurrentSalary = index === 0
+                  
+                  // Meghatározzuk, hogy ez a jelenlegi fizetés-e
+                  const today = new Date()
+                  const validSalaries = salaryHistory.filter(salary => {
+                    const validFromDate = new Date(salary.validFrom)
+                    return validFromDate <= today
+                  })
+                  
+                  let currentSalaryItem = null
+                  if (validSalaries.length > 0) {
+                    currentSalaryItem = validSalaries.reduce((latest, current) => {
+                      const latestDate = new Date(latest.validFrom)
+                      const currentDate = new Date(current.validFrom)
+                      return currentDate > latestDate ? current : latest
+                    })
+                  }
+                  
+                  const isCurrentSalary = currentSalaryItem && item.id === currentSalaryItem.id
                   
                   return (
                     <div

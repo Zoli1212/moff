@@ -879,3 +879,9 @@ főoldal
 ----
 teljesített számlázott számlázható 
 ----
+Pista átnevezte Ferinekhttps://trello.com/b/H1p0quSi/qshare360
+számlázás 
+ajánlatba lévő anyagárakat veszi figyelembe -
+munkából kell jöjjön a számlázás
+lehetnek uj tételek
+----
