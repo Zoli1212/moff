@@ -149,10 +149,23 @@ export async function updateWorkforceRegistry(
           ...(data.role && { role: data.role }),
         },
       });
+
+      // Frissítsük a kapcsolódó WorkDiaryItem rekordokat is workforceRegistryId alapján
+      await prisma.workDiaryItem.updateMany({
+        where: {
+          workforceRegistryId: id,
+          tenantEmail: tenantEmail,
+        },
+        data: {
+          // Frissítsük a nevet, ha változott
+          ...(data.name && { name: data.name.trim() }),
+        },
+      });
     }
 
     revalidatePath("/others");
     revalidatePath("/works"); // Frissítsük a munkák oldalt is, mert ott jelennek meg a WorkItemWorker adatok
+    revalidatePath("/diary"); // Frissítsük a napló oldalakat is, mert ott jelennek meg a WorkDiaryItem adatok
     return { success: true, data: updatedEntry };
   } catch (error) {
     console.error("Error updating workforce registry entry:", error);
