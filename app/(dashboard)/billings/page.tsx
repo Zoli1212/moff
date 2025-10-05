@@ -1,63 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getUserOffers } from "@/actions/offer-actions";
+import { getUserWorks } from "@/actions/work-actions";
 import Link from "next/link";
 import { ArrowLeft } from 'lucide-react';
 
 
-interface OfferItem {
-  id?: number;
-  name: string;
-  quantity: number;
-  unit: string;
-  unitPrice: number;
-  totalPrice: number;
-  description?: string;
-}
-
-interface Offer {
+interface Work {
   id: number;
   title: string;
   status: string;
   updatedAt: Date | string;
-  requirementId: number;
-  items?: OfferItem[];
   tenantEmail?: string;
   createdAt?: Date | string;
   totalPrice?: number;
-  createdBy?: string | null;
   description?: string;
 }
 
 export default function BillingsPage() {
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadOffers = async () => {
+    const loadWorks = async () => {
       try {
-        const data = await getUserOffers();
+        const data = await getUserWorks();
         const transformedData = data
-          .map((offer) => ({
-            ...offer,
-            description: offer.description || undefined,
-            createdAt: offer.createdAt ? new Date(offer.createdAt) : new Date(0),
+          .map((work) => ({
+            ...work,
+            description: work.offerDescription || undefined,
+            createdAt: work.createdAt ? new Date(work.createdAt) : new Date(0),
           }))
           .sort((a, b) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             return dateB - dateA;
           });
-        setOffers(transformedData);
+        setWorks(transformedData);
       } catch (error) {
-        console.error("Error loading offers:", error);
+        console.error("Error loading works:", error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadOffers();
+    loadWorks();
   }, []);
 
   const getStatusDisplay = (status: string) => {
@@ -93,48 +80,48 @@ export default function BillingsPage() {
             <div className="mt-6 space-y-4">
               {isLoading ? (
                 <div className="text-center py-8">
-                  <p>Ajánlatok betöltése...</p>
+                  <p>Munkák betöltése...</p>
                 </div>
-              ) : offers.length === 0 ? (
+              ) : works.length === 0 ? (
                 <div className="bg-white rounded-lg p-6 text-center">
-                  <p className="text-gray-500">Nincsenek ajánlatok, amikből számlát lehetne készíteni.</p>
+                  <p className="text-gray-500">Nincsenek munkák, amikből számlát lehetne készíteni.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {offers.map((offer: Offer) => (
+                  {works.map((work: Work) => (
                     <Link
-                      key={offer.id}
-                      href={`/billings/${offer.id}`}
+                      key={work.id}
+                      href={`/billings/${work.id}`}
                       className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
                     >
                       <div className="p-4">
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="font-medium text-gray-900">
-                              {offer.title || "Névtelen ajánlat"}
+                              {work.title || "Névtelen munka"}
                             </h3>
-                            {offer.description && (
+                            {work.description && (
                               <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                                {offer.description}
+                                {work.description}
                               </p>
                             )}
                           </div>
                           <div className="text-right">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === 'work' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                              {getStatusDisplay(offer.status)}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${work.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                              {getStatusDisplay(work.status)}
                             </span>
                           </div>
                         </div>
 
                         <div className="mt-2 flex justify-between items-center">
                           <div className="text-sm text-gray-500">
-                            {offer.totalPrice ? (
+                            {work.totalPrice ? (
                               <span className="font-medium text-gray-900">
                                 {new Intl.NumberFormat("hu-HU", {
                                   style: "currency",
                                   currency: "HUF",
                                   maximumFractionDigits: 0,
-                                }).format(offer.totalPrice)}
+                                }).format(work.totalPrice)}
                               </span>
                             ) : (
                               <span>Ár nincs megadva</span>

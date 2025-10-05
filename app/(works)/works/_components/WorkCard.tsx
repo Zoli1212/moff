@@ -52,19 +52,23 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     if (offerItems && Array.isArray(offerItems) && offerItems.length > 0) {
       const itemsText = offerItems
         .slice(0, 2)
-        .map(item => item.name || item.description || '')
+        .map((item) => item.name || item.description || "")
         .filter(Boolean)
-        .join(', ');
+        .join(", ");
       if (itemsText) {
-        return itemsText.length > 80 ? itemsText.substring(0, 80) + '...' : itemsText;
+        return itemsText.length > 80
+          ? itemsText.substring(0, 80) + "..."
+          : itemsText;
       }
     }
-    
+
     // Second priority: offerDescription
-    if (offerDescription && typeof offerDescription === 'string') {
-      return offerDescription.length > 80 ? offerDescription.substring(0, 80) + '...' : offerDescription;
+    if (offerDescription && typeof offerDescription === "string") {
+      return offerDescription.length > 80
+        ? offerDescription.substring(0, 80) + "..."
+        : offerDescription;
     }
-    
+
     // Fallback: hardcoded text
     return "Munka összefoglaló";
   };

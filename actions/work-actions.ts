@@ -20,7 +20,15 @@ export async function getUserWorks() {
     },
   });
 
-  return works;
+  // Calculate totalPrice for each work based on cost fields
+  const worksWithTotalPrice = works.map(work => ({
+    ...work,
+    totalPrice: (work.totalLaborCost || 0) + 
+                (work.totalToolCost || 0) + 
+                (work.totalMaterialCost || 0)
+  }));
+
+  return worksWithTotalPrice;
 }
 
 export async function deleteWork(id: number) {
@@ -687,37 +695,6 @@ export async function getWorkById(id: number) {
     },
   });
 
-  // Debug: Log all workers to see if general workers (workItemId = null) are included
-  console.log(
-    `[getWorkById] Total workers found for work ${id}:`,
-    work?.workers?.length
-  );
-  console.log(
-    `[getWorkById] Workers with workItemId = null:`,
-    work?.workers?.filter((w) => w.workItemId === null).length
-  );
-  console.log(
-    `[getWorkById] All workers:`,
-    work?.workers?.map((w) => ({
-      id: w.id,
-      name: w.name,
-      workItemId: w.workItemId,
-    }))
-  );
-
-  // Debug: Check database directly for general workers
-  const allWorkersForThisWork = await prisma.worker.findMany({
-    where: { workId: id },
-    select: { id: true, name: true, workItemId: true, tenantEmail: true },
-  });
-  console.log(
-    `[getWorkById] Direct DB query - all workers for work ${id}:`,
-    allWorkersForThisWork
-  );
-  console.log(
-    `[getWorkById] Direct DB query - general workers (workItemId=null):`,
-    allWorkersForThisWork.filter((w) => w.workItemId === null)
-  );
 
   // Verify the work belongs to the user
   if (!work || work.tenantEmail !== tenantEmail) {

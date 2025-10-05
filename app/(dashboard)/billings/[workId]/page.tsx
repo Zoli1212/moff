@@ -2,103 +2,137 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { getOfferById } from "@/actions/offer-actions";
+import { getWorkById } from "@/actions/work-actions";
 import { createBilling } from "@/actions/billing-actions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 import { BillingItems } from "./_components/BillingItems";
-import { OfferItem } from "@/types/offer.types";
+import { WorkItem } from "@/types/work";
 
-interface Offer {
+// Extended WorkItem for billing with additional properties
+interface BillingWorkItem extends WorkItem {
+  isSelected?: boolean;
+  billableQuantity?: number;
+  totalQuantity?: number;
+  billedQuantity?: number;
+}
+
+interface Work {
   id: number;
   title: string;
   status: string;
-  items?: OfferItem[];
+  workItems?: WorkItem[];
   totalPrice?: number;
   description?: string | null;
 }
 
 export default function BillingsDetailPage() {
   const params = useParams();
-  const offerId = params.offerId as string;
+  const workId = params.workId as string;
   const router = useRouter();
-  const [offer, setOffer] = useState<Offer | null>(null);
+  const [work, setWork] = useState<Work | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [billingItems, setBillingItems] = useState<OfferItem[]>([]);
+  const [billingItems, setBillingItems] = useState<BillingWorkItem[]>([]);
 
   const hasSelectedItems = useMemo(() => {
     return billingItems.some((item) => item.isSelected);
   }, [billingItems]);
 
   useEffect(() => {
-    const fetchOffer = async () => {
+    const fetchWork = async () => {
       try {
         setLoading(true);
-        if (!offerId) return;
-        const data = await getOfferById(Number(offerId));
+        if (!workId) return;
+        const data = await getWorkById(Number(workId));
         if (data) {
           const itemsWithIds =
-            data.items?.map((item: OfferItem, index: number) => ({
+            data.workItems?.map((item: any, index: number) => ({
               ...item,
               id: item.id ?? index,
+              isSelected: false,
+              billableQuantity: item.completedQuantity || 0,
+              totalQuantity: item.quantity || 0,
+              billedQuantity: 0,
+              tools: item.tools || [],
+              materials: item.materials || [],
+              workers: item.workers || [],
+              workItemWorkers: item.workItemWorkers || [],
             })) ?? [];
-          setOffer({ ...data, items: itemsWithIds });
+          setWork({ ...data, workItems: itemsWithIds });
         } else {
-          setError("Ajánlat nem található.");
+          setError("Munka nem található.");
         }
       } catch (err) {
-        setError("Hiba történt az ajánlat betöltésekor.");
+        setError("Hiba történt a munka betöltésekor.");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOffer();
-  }, [offerId]);
+    fetchWork();
+  }, [workId]);
 
   useEffect(() => {
-    if (offer) {
+    if (work) {
       setBillingItems(
-        (offer.items || []).map((item) => ({ ...item, isSelected: false }))
+        (work.workItems || []).map((item: any) => ({
+          ...item,
+          isSelected: false,
+          billableQuantity: item.completedQuantity || 0,
+          totalQuantity: item.quantity || 0,
+          billedQuantity: 0,
+          tools: item.tools || [],
+          materials: item.materials || [],
+          workers: item.workers || [],
+          workItemWorkers: item.workItemWorkers || [],
+        }))
       );
     }
-  }, [offer]);
+  }, [work]);
 
   // Refresh offer data when returning to this page
   useEffect(() => {
     const handleFocus = () => {
-      if (offer) {
-        // Refetch offer data to get updated billedQuantity values
-        const fetchUpdatedOffer = async () => {
+      if (work) {
+        // Refetch work data to get updated billedQuantity values
+        const fetchUpdatedWork = async () => {
           try {
-            const data = await getOfferById(Number(offerId));
+            const data = await getWorkById(Number(workId));
             if (data) {
               const itemsWithIds =
-                data.items?.map((item: OfferItem, index: number) => ({
+                data.workItems?.map((item: any, index: number) => ({
                   ...item,
                   id: item.id ?? index,
+                  isSelected: false,
+                  billableQuantity: item.completedQuantity || 0,
+                  totalQuantity: item.quantity || 0,
+                  billedQuantity: 0,
+                  tools: item.tools || [],
+                  materials: item.materials || [],
+                  workers: item.workers || [],
+                  workItemWorkers: item.workItemWorkers || [],
                 })) ?? [];
-              setOffer({ ...data, items: itemsWithIds });
+              setWork({ ...data, workItems: itemsWithIds });
             }
           } catch (err) {
-            console.error('Error refreshing offer:', err);
+            console.error('Error refreshing work:', err);
           }
         };
-        fetchUpdatedOffer();
+        fetchUpdatedWork();
       }
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [offerId, offer]);
+  }, [workId, work]);
 
   const handleCreateBilling = async () => {
-    if (!offer || billingItems.length === 0) return;
+    if (!work || billingItems.length === 0) return;
 
     const parseCurrency = (value: string | undefined): number => {
       if (!value) return 0;
@@ -111,23 +145,25 @@ export default function BillingsDetailPage() {
     const itemsForBilling = billingItems
       .filter((item) => item.isSelected)
       .map((item) => {
-        const materialTotal = parseCurrency(item.materialTotal);
-        const workTotal = parseCurrency(item.workTotal);
+        const materialTotal = item.materialTotal || 0;
+        const workTotal = item.workTotal || 0;
         return {
-          ...item,
-          quantity: parseFloat(String(item.quantity).replace(",", ".")) || 0,
-          unitPrice: parseCurrency(item.unitPrice),
-          materialUnitPrice: parseCurrency(item.materialUnitPrice),
+          name: item.name,
+          quantity: item.quantity || 0,
+          unit: item.unit,
+          unitPrice: item.unitPrice || 0,
+          materialUnitPrice: item.materialUnitPrice || 0,
           workTotal: workTotal,
           materialTotal: materialTotal,
-          totalPrice: materialTotal + workTotal,
+          totalPrice: item.totalPrice || (materialTotal + workTotal),
+          description: item.description || undefined,
         };
       });
 
     try {
       const result = await createBilling({
-        title: offer.title,
-        offerId: offer.id,
+        title: work.title,
+        workId: work.id,
         items: itemsForBilling,
       });
       if (result.success) {
@@ -149,14 +185,14 @@ export default function BillingsDetailPage() {
             <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
           <h1 className="text-xl font-bold text-gray-800 truncate">
-            {offer?.title || "Számla létrehozása"}
+            {work?.title || "Számla létrehozása"}
           </h1>
           <div className="w-8"></div>
         </div>
 
         {loading && <p>Betöltés...</p>}
         {error && <p className="text-red-500">{error}</p>}
-        {offer && (
+        {work && (
           <BillingItems items={billingItems} onItemsChange={setBillingItems} />
         )}
 

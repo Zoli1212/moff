@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 
 interface TaskCardProps {
   id: number;
@@ -18,6 +19,9 @@ interface TaskCardProps {
   onEdit?: (id: number) => void;
   children?: React.ReactNode;
   className?: string;
+  // New billing-related props
+  billableQuantity?: number;
+  billedQuantity?: number;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -36,6 +40,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onEdit,
   children,
   className = "",
+  billableQuantity,
+  billedQuantity,
 }) => {
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [newQuantity, setNewQuantity] = useState<string>("");
@@ -53,10 +59,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const effectiveQuantity = quantity;
 
-  console.log(id)
+  console.log(id);
   return (
     <div
-      className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? 'border-2 border-blue-500 bg-blue-50' : 'border border-gray-200 bg-white'} ${className} ${onEdit ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+      className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? "border-2 border-blue-500 bg-blue-50" : "border border-gray-200 bg-white"} ${className} ${onEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
       onClick={() => onEdit && onEdit(id)}
     >
       <div className="flex-1">
@@ -65,37 +71,44 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <div className="text-xs text-gray-500">Határidő: {deadline}</div>
         )}
         {summary && <div className="text-sm mt-1">{summary}</div>}
-        {/* Progress bar below */}
-        <div className="mt-3">
-          <div className="h-2 bg-gray-200 rounded overflow-hidden">
-            <div
-              className="h-full bg-blue-500 transition-all duration-300"
-              style={{ 
-                width: `${Math.min(100, (effectiveQuantity && effectiveQuantity > 0) ? (completedQuantity || 0) / effectiveQuantity * 100 : 0)}%` 
-              }}
-            />
-          </div>
-          <div className="flex items-center justify-between mt-1">
-            <div className="text-xs text-blue-500">
-              {completedQuantity !== undefined && effectiveQuantity !== undefined && unit ? 
-                `${completedQuantity}/${effectiveQuantity} ${unit}` : 
-                `${progress}% kész`
-              }
-            </div>
-            {onQuantityChange && (
+        {/* Progress bars below */}
+        <div className="mt-3 space-y-2">
+          <ProgressBar
+            label="Teljesített"
+            value={completedQuantity || 0}
+            max={effectiveQuantity || 100}
+            unit={unit || "db"}
+            color="bg-blue-500"
+          />
+          <ProgressBar
+            label="Számlázott"
+            value={billedQuantity || 0}
+            max={billableQuantity || 0}
+            unit={unit || "db"}
+            color="bg-green-500"
+          />
+          <ProgressBar
+            label="Számlázható"
+            value={Math.max(0, (completedQuantity || 0) - (billedQuantity || 0))}
+            max={effectiveQuantity || 0}
+            unit={unit || "db"}
+            color="bg-yellow-500"
+          />
+          {onQuantityChange && (
+            <div className="flex justify-end">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   setNewQuantity(effectiveQuantity?.toString() || "");
                   setShowQuantityModal(true);
                 }}
-                className="ml-2 p-1 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
+                className="p-1 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
                 title="Mennyiség módosítása"
               >
                 <Plus className="h-3 w-3" />
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         {/* Render children below progress bar */}
         {children}
@@ -175,7 +188,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 min="0"
               />
               {unit && (
-                <p className="text-xs text-gray-500 mt-1">Mértékegység: {unit}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Mértékegység: {unit}
+                </p>
               )}
             </div>
             <div className="flex gap-3">

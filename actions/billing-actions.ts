@@ -5,20 +5,24 @@ import { Client, Currency, Language, PaymentMethod } from "@/lib/szamlazz";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 
-interface OfferItem {
+interface BillingItem {
   id?: number;
   name: string;
   quantity: number;
   unit: string;
   unitPrice: number;
+  materialUnitPrice?: number;
+  materialTotal?: number;
+  workTotal?: number;
   totalPrice: number;
   description?: string;
 }
 
 interface CreateBillingData {
   title: string;
-  offerId: number;
-  items: OfferItem[];
+  workId?: number;
+  offerId?: number;
+  items: BillingItem[];
 }
 
 export async function getBillings() {
@@ -324,7 +328,7 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
 
 export async function updateBilling(
   billingId: number,
-  data: { title: string; items: OfferItem[] }
+  data: { title: string; items: BillingItem[] }
 ) {
   const { items, title } = data;
 
@@ -383,7 +387,7 @@ export async function updateBilling(
 }
 
 export async function createBilling(data: CreateBillingData) {
-  const { offerId, items, title } = data;
+  const { offerId, workId, items, title } = data;
 
   try {
     const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
@@ -397,7 +401,7 @@ export async function createBilling(data: CreateBillingData) {
     const billing = await prisma.billing.create({
       data: {
         title,
-        offerId,
+        offerId: offerId || 1, // Temporary fallback - need to create proper work-to-offer relationship
         items: JSON.stringify(items),
         totalPrice,
         status: "draft",
