@@ -46,6 +46,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [newQuantity, setNewQuantity] = useState<string>("");
 
+
+  console.log(progress)
+
   const handleQuantitySubmit = () => {
     if (onQuantityChange) {
       const quantityValue = parseFloat(newQuantity);

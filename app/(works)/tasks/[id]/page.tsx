@@ -32,6 +32,8 @@ export interface WorkItem {
   inProgress?: boolean;
   workItemWorkers?: { id: number; name?: string; role?: string }[];
   workDiaryEntries?: WorkDiary[];
+  billableQuantity?: number;
+  billedQuantity?: number;
 }
 
 interface Work {
@@ -508,8 +510,8 @@ export default function TasksPage() {
                     onQuantityChange={handleQuantityChange}
                     onEdit={handleEditWorkItem}
                     // Add billing-related props with default values
-                    billableQuantity={(item as any).billableQuantity || 0}
-                    billedQuantity={(item as any).billedQuantity || 0}
+                    billableQuantity={item.billableQuantity || 0}
+                    billedQuantity={item.billedQuantity || 0}
                   >
                     {item.workItemWorkers &&
                       item.workItemWorkers.length > 0 && (

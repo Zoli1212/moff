@@ -9,7 +9,15 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 import { BillingItems } from "./_components/BillingItems";
-import { WorkItem } from "@/types/work";
+import { WorkItem, Tool, Material, Worker, WorkItemWorker } from "@/types/work";
+
+// Database WorkItem type (without nested relations)
+type WorkItemFromDb = Omit<WorkItem, 'tools' | 'materials' | 'workers' | 'workItemWorkers'> & {
+  tools?: Tool[] | null;
+  materials?: Material[] | null;
+  workers?: Worker[] | null;
+  workItemWorkers?: WorkItemWorker[] | null;
+};
 
 // Extended WorkItem for billing with additional properties
 interface BillingWorkItem extends WorkItem {
@@ -23,7 +31,7 @@ interface Work {
   id: number;
   title: string;
   status: string;
-  workItems?: WorkItem[];
+  workItems?: WorkItemFromDb[];
   totalPrice?: number;
   description?: string | null;
 }
@@ -49,19 +57,18 @@ export default function BillingsDetailPage() {
         if (!workId) return;
         const data = await getWorkById(Number(workId));
         if (data) {
-          const itemsWithIds =
-            data.workItems?.map((item: any, index: number) => ({
-              ...item,
-              id: item.id ?? index,
-              isSelected: false,
-              billableQuantity: item.completedQuantity || 0,
-              totalQuantity: item.quantity || 0,
-              billedQuantity: 0,
-              tools: item.tools || [],
-              materials: item.materials || [],
-              workers: item.workers || [],
-              workItemWorkers: item.workItemWorkers || [],
-            })) ?? [];
+          const itemsWithIds = data.workItems?.map((item: WorkItemFromDb, index: number) => ({
+            ...item,
+            id: item.id ?? index,
+            isSelected: false,
+            billableQuantity: item.completedQuantity || 0,
+            totalQuantity: item.quantity || 0,
+            billedQuantity: 0,
+            tools: item.tools || [],
+            materials: item.materials || [],
+            workers: item.workers || [],
+            workItemWorkers: item.workItemWorkers || [],
+          })) ?? [];
           setWork({ ...data, workItems: itemsWithIds });
         } else {
           setError("Munka nem található.");
@@ -80,7 +87,7 @@ export default function BillingsDetailPage() {
   useEffect(() => {
     if (work) {
       setBillingItems(
-        (work.workItems || []).map((item: any) => ({
+        (work.workItems || []).map((item: WorkItemFromDb) => ({
           ...item,
           isSelected: false,
           billableQuantity: item.completedQuantity || 0,
@@ -105,7 +112,7 @@ export default function BillingsDetailPage() {
             const data = await getWorkById(Number(workId));
             if (data) {
               const itemsWithIds =
-                data.workItems?.map((item: any, index: number) => ({
+                data.workItems?.map((item: WorkItemFromDb, index: number) => ({
                   ...item,
                   id: item.id ?? index,
                   isSelected: false,
@@ -120,27 +127,19 @@ export default function BillingsDetailPage() {
               setWork({ ...data, workItems: itemsWithIds });
             }
           } catch (err) {
-            console.error('Error refreshing work:', err);
+            console.error("Error refreshing work:", err);
           }
         };
         fetchUpdatedWork();
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [workId, work]);
 
   const handleCreateBilling = async () => {
     if (!work || billingItems.length === 0) return;
-
-    const parseCurrency = (value: string | undefined): number => {
-      if (!value) return 0;
-      const numericValue = String(value)
-        .replace(/[^0-9,-]+/g, "")
-        .replace(",", ".");
-      return parseFloat(numericValue) || 0;
-    };
 
     const itemsForBilling = billingItems
       .filter((item) => item.isSelected)
@@ -155,7 +154,7 @@ export default function BillingsDetailPage() {
           materialUnitPrice: item.materialUnitPrice || 0,
           workTotal: workTotal,
           materialTotal: materialTotal,
-          totalPrice: item.totalPrice || (materialTotal + workTotal),
+          totalPrice: item.totalPrice || materialTotal + workTotal,
           description: item.description || undefined,
         };
       });
@@ -206,11 +205,11 @@ export default function BillingsDetailPage() {
                 </Button>
               </div>
             </div>
-            
+
             {/* Mobile view - floating bottom center button */}
             <div className="sm:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 pointer-events-auto z-50">
-              <Button 
-                onClick={handleCreateBilling} 
+              <Button
+                onClick={handleCreateBilling}
                 size="lg"
                 className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8 py-4 text-lg font-semibold rounded-full"
               >
