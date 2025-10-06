@@ -32,7 +32,7 @@ export function getRAGConfig(): RAGConfig {
 }
 
 // RAG debug logging
-export function ragLog(message: string, data?: any) {
+export function ragLog(message: string, data?: unknown) {
   const config = getRAGConfig();
   if (config.debugMode) {
     console.log(`🤖 [RAG] ${message}`, data ? JSON.stringify(data, null, 2) : '');
@@ -40,7 +40,7 @@ export function ragLog(message: string, data?: any) {
 }
 
 // RAG hiba logging
-export function ragError(message: string, error?: any) {
+export function ragError(message: string, error?: unknown) {
   const config = getRAGConfig();
   if (config.debugMode) {
     console.error(`❌ [RAG ERROR] ${message}`, error);

@@ -1,10 +1,10 @@
 # RAG (Retrieval-Augmented Generation) Rendszer Dokumentáció
 
-## 🤖 Mi az a RAG?
+## Mi az a RAG?
 
 A RAG (Retrieval-Augmented Generation) egy AI technológia, amely **korábbi projektadatok alapján** javítja az AI agensek válaszait. A rendszer "emlékezik" a korábbi munkákra, ajánlatokra és automatikusan felhasználja ezt a tudást új ajánlatok készítésekor.
 
-## 🏗️ Architektúra
+## Architektúra
 
 ### 1. **Adattárolás**
 ```sql
