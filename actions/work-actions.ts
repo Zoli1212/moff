@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 import util from "node:util";
+import { autoSyncWorkToRAG } from "./auto-rag-sync";
 
 export async function getUserWorks() {
   const { user, tenantEmail } = await getTenantSafeAuth();
@@ -654,6 +655,16 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
     where: { id: workId },
     include: { workItems: true },
   });
+
+  // Automatikus RAG szinkronizáció (háttérben, nem blokkolja a választ)
+  try {
+    await autoSyncWorkToRAG(workId);
+    console.log(`✅ RAG automatikusan szinkronizálva munkához: ${workId}`);
+  } catch (ragError) {
+    console.error(`❌ RAG szinkronizáció hiba munkához ${workId}:`, ragError);
+    // Ne blokkoljuk a fő műveletet RAG hiba miatt
+  }
+
   return { success: true, data: result };
 }
 

@@ -5,6 +5,7 @@ import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 import { Prisma, Offer } from "@prisma/client";
 import { parseOfferText, formatOfferForSave } from "@/lib/offer-parser";
+import { autoSyncOfferToRAG } from "./auto-rag-sync";
 import {
   OfferItem,
   OfferItemQuestion,
@@ -458,6 +459,15 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
       revalidatePath("/jobs");
       revalidatePath("/offers");
+
+      // Automatikus RAG szinkronizáció (háttérben)
+      try {
+        await autoSyncOfferToRAG(offer.id);
+        console.log(`✅ RAG automatikusan szinkronizálva ajánlathoz: ${offer.id}`);
+      } catch (ragError) {
+        console.error(`❌ RAG szinkronizáció hiba ajánlathoz ${offer.id}:`, ragError);
+        // Ne blokkoljuk a fő műveletet RAG hiba miatt
+      }
 
       return {
         success: true,

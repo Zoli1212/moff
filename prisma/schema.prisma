@@ -726,3 +726,16 @@ model WorkforceRegistryPerformance {
   @@index([tenantEmail])
 }
 
+model KnowledgeBase {
+  id          String   @id @default(cuid())
+  content     String   // RAG kontextus szöveg
+  category    String   // 'pricing', 'materials', 'processes', 'regulations'
+  metadata    Json?    // További adatok (source, keywords, stb.)
+  tenantEmail String   // Tenant izolálás
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([tenantEmail])
+  @@index([category])
+  @@map("knowledge_base")
+}

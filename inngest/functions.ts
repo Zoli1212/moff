@@ -2,6 +2,7 @@ import { inngest } from "./client";
 import { createAgent, gemini, openai } from "@inngest/agent-kit";
 import { PrismaClient } from "@prisma/client";
 import ImageKit from "imagekit";
+import { enhancePromptWithRAG } from "@/actions/rag-context-actions";
 
 const prisma = new PrismaClient();
 
@@ -4195,7 +4196,7 @@ export const AiOfferAgent = inngest.createFunction(
       });
       
       // Átadjuk a meglévő tételeket az AI-nak a felhasználói bemenettel együtt
-      const aiInput = existingItems.length > 0 
+      const baseInput = existingItems.length > 0 
         ? `${userInput}\n\nMeglévő tételek (ne vegyél fel ismétlődést):\n${JSON.stringify(existingItems, null, 2)}`
         : userInput;
 
@@ -4203,7 +4204,26 @@ export const AiOfferAgent = inngest.createFunction(
         throw new Error("Missing userInput in event data");
       }
 
-      const result = await AiOfferChatAgent.run(aiInput);
+      // RAG integráció - TELJES BIZTONSÁG
+      let finalInput = baseInput; // Alapértelmezett: eredeti input
+      
+      // CSAK akkor módosítunk, ha RAG_ENABLED=true
+      if (process.env.RAG_ENABLED === 'true') {
+        try {
+          console.log("🤖 RAG engedélyezve, kontextus bővítés...");
+          const ragEnhancedInput = await enhancePromptWithRAG(baseInput, userInput, true);
+          finalInput = ragEnhancedInput; // Csak sikeres RAG esetén
+          console.log("✅ RAG kontextus sikeresen hozzáadva");
+        } catch (ragError) {
+          console.error("❌ RAG hiba, eredeti input használata:", ragError);
+          finalInput = baseInput; // Hiba esetén eredeti input
+        }
+      } else {
+        console.log("🔒 RAG kikapcsolva, eredeti input használata");
+        // finalInput már baseInput, nem kell változtatni
+      }
+
+      const result = await AiOfferChatAgent.run(finalInput);
       console.log("AiOfferChatAgent result!!!:", JSON.stringify(result, null, 2));
 
       // Save the result to the database using Prisma
