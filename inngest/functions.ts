@@ -4192,13 +4192,14 @@ export const AiOfferAgent = inngest.createFunction(
         userInput,
         recordId,
         userEmail,
-        hasExistingItems: existingItems.length > 0
+        hasExistingItems: existingItems.length > 0,
       });
-      
+
       // Átadjuk a meglévő tételeket az AI-nak a felhasználói bemenettel együtt
-      const baseInput = existingItems.length > 0 
-        ? `${userInput}\n\nMeglévő tételek (ne vegyél fel ismétlődést):\n${JSON.stringify(existingItems, null, 2)}`
-        : userInput;
+      const baseInput =
+        existingItems.length > 0
+          ? `${userInput}\n\nMeglévő tételek (ne vegyél fel ismétlődést):\n${JSON.stringify(existingItems, null, 2)}`
+          : userInput;
 
       if (!userInput) {
         throw new Error("Missing userInput in event data");
@@ -4206,12 +4207,16 @@ export const AiOfferAgent = inngest.createFunction(
 
       // RAG integráció - TELJES BIZTONSÁG
       let finalInput = baseInput; // Alapértelmezett: eredeti input
-      
+
       // CSAK akkor módosítunk, ha RAG_ENABLED=true
-      if (process.env.RAG_ENABLED === 'true') {
+      if (process.env.RAG_ENABLED === "true") {
         try {
           console.log("🤖 RAG engedélyezve, kontextus bővítés...");
-          const ragEnhancedInput = await enhancePromptWithRAG(baseInput, userInput, true);
+          const ragEnhancedInput = await enhancePromptWithRAG(
+            baseInput,
+            userInput,
+            true
+          );
           finalInput = ragEnhancedInput; // Csak sikeres RAG esetén
           console.log("✅ RAG kontextus sikeresen hozzáadva");
         } catch (ragError) {
@@ -4224,7 +4229,10 @@ export const AiOfferAgent = inngest.createFunction(
       }
 
       const result = await AiOfferChatAgent.run(finalInput);
-      console.log("AiOfferChatAgent result!!!:", JSON.stringify(result, null, 2));
+      console.log(
+        "AiOfferChatAgent result!!!:",
+        JSON.stringify(result, null, 2)
+      );
 
       // Save the result to the database using Prisma
       if (recordId) {
@@ -4237,7 +4245,8 @@ export const AiOfferAgent = inngest.createFunction(
             metaData: {
               title: "Ajánlat generálás",
               description: userInput.substring(0, 100) + "...",
-              existingItems: existingItems.length > 0 ? existingItems : undefined,
+              existingItems:
+                existingItems.length > 0 ? existingItems : undefined,
             },
             createdAt: new Date().toISOString(),
           };

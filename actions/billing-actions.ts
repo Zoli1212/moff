@@ -266,6 +266,40 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       },
     });
 
+    // Update work items with billed quantities - DIRECTLY by workItemId
+    console.log('🔍 [finalizeAndGenerateInvoice] Updating WorkItems directly by workItemId');
+    console.log('🔍 [finalizeAndGenerateInvoice] BillingItems:', billingItems);
+    
+    for (const billingItem of billingItems) {
+      if (billingItem.workItemId) {
+        const newBilledQuantity = parseFloat(billingItem.quantity || "0");
+        
+        // Get current billedQuantity
+        const currentWorkItem = await prisma.workItem.findUnique({
+          where: { id: billingItem.workItemId },
+          select: { billedQuantity: true, name: true }
+        });
+        
+        if (currentWorkItem) {
+          const currentBilledQuantity = currentWorkItem.billedQuantity || 0;
+          const updatedBilledQuantity = currentBilledQuantity + newBilledQuantity;
+          
+          console.log(`✅ [finalizeAndGenerateInvoice] Updating WorkItem ${billingItem.workItemId} (${currentWorkItem.name}): ${currentBilledQuantity} + ${newBilledQuantity} = ${updatedBilledQuantity}`);
+          
+          await prisma.workItem.update({
+            where: { id: billingItem.workItemId },
+            data: {
+              billedQuantity: updatedBilledQuantity,
+            },
+          });
+        } else {
+          console.log(`❌ [finalizeAndGenerateInvoice] WorkItem not found: ${billingItem.workItemId}`);
+        }
+      } else {
+        console.log(`⚠️ [finalizeAndGenerateInvoice] No workItemId in billingItem:`, billingItem);
+      }
+    }
+
     // Update offer items with billed quantities
     const offer = await prisma.offer.findUnique({
       where: { id: billing.offerId },
@@ -398,10 +432,21 @@ export async function createBilling(data: CreateBillingData) {
 
     const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
+    // Get the correct offerId from the work
+    let correctOfferId = offerId;
+    if (!correctOfferId && workId) {
+      const work = await prisma.work.findUnique({
+        where: { id: workId },
+        select: { offerId: true }
+      });
+      correctOfferId = work?.offerId || 1;
+    }
+
     const billing = await prisma.billing.create({
       data: {
         title,
-        offerId: offerId || 1, // Temporary fallback - need to create proper work-to-offer relationship
+        offerId: correctOfferId || 1,
+        workId: workId || null, // Kapcsolat a munkához
         items: JSON.stringify(items),
         totalPrice,
         status: "draft",

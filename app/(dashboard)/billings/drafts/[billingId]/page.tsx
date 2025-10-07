@@ -98,7 +98,7 @@ export default function BillingDraftPage() {
 
   const handleUpdateBilling = async () => {
     if (!billing) return;
-    
+
     // Update the title if it was edited
     if (editedTitle !== billing.title) {
       const updatedBilling = { ...billing, title: editedTitle };
@@ -158,7 +158,7 @@ export default function BillingDraftPage() {
         toast.error(result.error || "Hiba történt a mentés során.");
       }
     } catch (err) {
-      console.log(err)
+      console.log(err);
       toast.error("Váratlan hiba történt a mentés során.");
     } finally {
       setIsSaving(false);
@@ -220,7 +220,7 @@ export default function BillingDraftPage() {
       }
     } catch (err) {
       setError("Hiba történt a számla véglegesítésekor.");
-      console.log(err)
+      console.log(err);
       toast.error("Hiba történt a számla véglegesítésekor.");
     } finally {
       setIsFinalizing(false);
@@ -247,7 +247,7 @@ export default function BillingDraftPage() {
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onBlur={() => setIsEditingTitle(false)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     setIsEditingTitle(false);
                   }
                 }}
@@ -255,7 +255,7 @@ export default function BillingDraftPage() {
                 autoFocus
               />
             ) : (
-              <h1 
+              <h1
                 className="text-center sm:text-left text-xl font-bold text-gray-800 truncate cursor-pointer hover:text-blue-600"
                 onClick={() => setIsEditingTitle(true)}
               >
@@ -272,22 +272,24 @@ export default function BillingDraftPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
               <div className="flex-shrink-0">
                 <span className="text-sm text-gray-500">
-                  Státusz: 
-                  <span className={`font-semibold ml-1 ${billing.status === "draft" ? "text-orange-500" : "text-green-600"}`}>
+                  Státusz:
+                  <span
+                    className={`font-semibold ml-1 ${billing.status === "draft" ? "text-orange-500" : "text-green-600"}`}
+                  >
                     {billing.status === "draft"
                       ? "Piszkozat"
                       : `Számlázva (${billing.invoiceNumber})`}
                   </span>
                 </span>
               </div>
-              
+
               {billing.status === "draft" && hasSelectedItems && (
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <Button
                     onClick={handleUpdateBilling}
                     disabled={isSaving}
                     size="sm"
-                    className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
+                    className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
                     <Save className="h-4 w-4 mr-2" />
                     {isSaving ? "Mentés..." : "Piszkozat mentése"}
@@ -296,7 +298,7 @@ export default function BillingDraftPage() {
                     onClick={handleFinalize}
                     disabled={isFinalizing}
                     size="sm"
-                    className="bg-black hover:bg-gray-800 text-white w-full sm:w-auto"
+                    className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
                     {isFinalizing
                       ? "Véglegesítés..."
@@ -305,7 +307,7 @@ export default function BillingDraftPage() {
                 </div>
               )}
             </div>
-            
+
             {billing.invoicePdfUrl && (
               <div className="flex justify-center mt-3">
                 <a
@@ -321,7 +323,10 @@ export default function BillingDraftPage() {
           </div>
 
           {billing.status === "draft" ? (
-            <InvoiceItemsTable items={editableItems} onItemsChange={setEditableItems} />
+            <InvoiceItemsTable
+              items={editableItems}
+              onItemsChange={setEditableItems}
+            />
           ) : (
             <FinalizedInvoiceItems items={editableItems} />
           )}

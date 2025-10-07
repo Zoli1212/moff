@@ -187,6 +187,7 @@ model Work {
   updatedByAI   Boolean   @default(false)
   performances  Performance[] // Kapcsolat a Performance táblához
   workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez
+  billings      Billing[] // Kapcsolat a számlákhoz
 }
 
 model WorkItem {
@@ -209,6 +210,7 @@ model WorkItem {
   workItemWorkers WorkItemWorker[]
   workDiaryItems WorkDiaryItem[]
   completedQuantity Float?   @default(0)
+  billedQuantity    Float?   @default(0)  // Már kiszámlázott mennyiség
   progress       Int?      @default(0)
   inProgress     Boolean   @default(false)
   modifiedQuantity Float?  // Tenant által módosított mennyiség
@@ -595,6 +597,8 @@ model Billing {
   status         String      @default("draft") // Lehetséges állapotok: draft, sent, paid, overdue
   offerId        Int         // Kapcsolat az eredeti ajánlathoz
   offer          Offer       @relation(fields: [offerId], references: [id])
+  workId         Int?        // Kapcsolat a munkához (opcionális)
+  work           Work?       @relation(fields: [workId], references: [id])
   items          Json?       // Ugyanaz a struktúra, mint az Offer.items
   notes          String?
   createdAt      DateTime    @default(now())
@@ -737,5 +741,5 @@ model KnowledgeBase {
   
   @@index([tenantEmail])
   @@index([category])
-  @@map("knowledge_base")
+
 }

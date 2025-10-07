@@ -86,7 +86,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           <ProgressBar
             label="Számlázott"
             value={billedQuantity || 0}
-            max={billableQuantity || 0}
+            max={effectiveQuantity || 0}
             unit={unit || "db"}
             color="bg-green-500"
           />

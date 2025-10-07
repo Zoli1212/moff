@@ -8,6 +8,67 @@ import { revalidatePath } from "next/cache";
 import util from "node:util";
 import { autoSyncWorkToRAG } from "./auto-rag-sync";
 
+// Auto-refresh completedQuantity values for a specific work's WorkItems
+async function refreshCompletedQuantitiesForWork(workId: number, tenantEmail: string) {
+  try {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    
+    // Get WorkItems for this specific work
+    const workItems = await prisma.workItem.findMany({
+      where: {
+        workId: workId,
+        tenantEmail: tenantEmail,
+      },
+      select: {
+        id: true,
+        quantity: true,
+        completedQuantity: true,
+      }
+    });
+
+    for (const workItem of workItems) {
+      // Find the latest diary entry for this workItem (only up to today)
+      const latestDiaryEntry = await prisma.workDiaryItem.findFirst({
+        where: {
+          workItemId: workItem.id,
+          tenantEmail: tenantEmail,
+          date: { lte: today }, // Only entries up to today
+        },
+        orderBy: {
+          date: 'desc'
+        },
+        select: {
+          progressAtDate: true,
+        }
+      });
+
+      const newCompletedQuantity = latestDiaryEntry?.progressAtDate || 0;
+      const currentCompletedQuantity = workItem.completedQuantity || 0;
+
+      // Only update if there's a difference
+      if (Math.abs(newCompletedQuantity - currentCompletedQuantity) > 0.01) {
+        const progress = newCompletedQuantity > 0 && workItem.quantity ? 
+          Math.floor((newCompletedQuantity / workItem.quantity) * 100) : 0;
+        
+        await prisma.workItem.update({
+          where: {
+            id: workItem.id,
+            tenantEmail: tenantEmail,
+          },
+          data: {
+            completedQuantity: newCompletedQuantity,
+            progress: progress,
+          }
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error refreshing completed quantities for work:', error);
+    // Don't throw - let the main function continue
+  }
+}
+
 export async function getUserWorks() {
   const { user, tenantEmail } = await getTenantSafeAuth();
 
@@ -73,8 +134,14 @@ export async function fetchWorkAndItems(workId: number) {
     const normWork = await normalizeWork(rawWork);
     const workItems = await getWorkItemsWithWorkers(workId);
 
-    // Ellenőrizzük van-e workDiaryItem az adott munkához
+    // Auto-refresh completedQuantity values for this work's items (only up to today)
     const { user, tenantEmail } = await getTenantSafeAuth();
+    await refreshCompletedQuantitiesForWork(workId, tenantEmail);
+
+    // Re-fetch workItems to get updated completedQuantity values
+    const updatedWorkItems = await getWorkItemsWithWorkers(workId);
+
+    // Ellenőrizzük van-e workDiaryItem az adott munkához
     const workDiaryItems = await prisma.workDiaryItem.findMany({
       where: {
         workId: workId,
@@ -85,7 +152,7 @@ export async function fetchWorkAndItems(workId: number) {
     // Ha nincs workDiaryItem, akkor minden workItem completedQuantity-ját 0-ra állítjuk
     const hasWorkDiaryItems = workDiaryItems.length > 0;
 
-    const items = workItems.map((item: any) => ({
+    const items = updatedWorkItems.map((item: any) => ({
       ...item,
       description: item.description ?? undefined,
       // Ha nincs workDiaryItem, akkor completedQuantity = 0

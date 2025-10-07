@@ -9,21 +9,21 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 export interface WorkItemEditData {
   id: number;
   name: string;
-  description?: string;
+  description?: string | undefined;
   quantity?: number | undefined;
-  unit?: string;
+  unit?: string | undefined;
   unitPrice?: number | undefined;
   materialUnitPrice?: number | undefined;
   totalPrice?: number | undefined;
-  completedQuantity?: number | undefined;
+  // completedQuantity removed - read-only, only from diary entries
 }
 
 interface WorkItemEditModalProps {
@@ -51,7 +51,6 @@ export function WorkItemEditModal({
     unitPrice: 0,
     materialUnitPrice: 0,
     totalPrice: 0,
-    completedQuantity: 0,
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -67,7 +66,6 @@ export function WorkItemEditModal({
         unitPrice: workItem.unitPrice || 0,
         materialUnitPrice: workItem.materialUnitPrice || 0,
         totalPrice: workItem.totalPrice || 0,
-        completedQuantity: workItem.completedQuantity || 0,
       });
     }
   }, [workItem]);
@@ -109,13 +107,6 @@ export function WorkItemEditModal({
       return;
     }
 
-    if (
-      formData.completedQuantity !== undefined &&
-      formData.completedQuantity < 0
-    ) {
-      toast.error("A teljesített mennyiség nem lehet negatív!");
-      return;
-    }
 
     console.log("Saving work item with data:", formData);
 
@@ -129,7 +120,7 @@ export function WorkItemEditModal({
         unitPrice: formData.unitPrice,
         materialUnitPrice: formData.materialUnitPrice,
         totalPrice: formData.totalPrice,
-        completedQuantity: formData.completedQuantity,
+        // completedQuantity removed - only diary entries can modify this
       });
 
       toast.success("A tétel sikeresen módosítva!");
@@ -302,7 +293,7 @@ export function WorkItemEditModal({
             </div>
           </div>
 
-          {/* Completed Quantity field */}
+          {/* Completed Quantity field - READ ONLY */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label
               htmlFor="completedQuantity"
@@ -310,42 +301,26 @@ export function WorkItemEditModal({
             >
               Teljesítve
             </Label>
-            <Input
-              id="completedQuantity"
-              type="number"
-              value={formData.completedQuantity || ""}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value === "") {
-                  handleInputChange("completedQuantity", undefined);
-                } else {
-                  const numValue = parseFloat(value);
-                  handleInputChange(
-                    "completedQuantity",
-                    isNaN(numValue) ? 0 : numValue
-                  );
-                }
-              }}
-              className="col-span-1"
-              placeholder="0"
-              step="0.01"
-              min="0"
-            />
+            <div className="col-span-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
+              {(workItem as any)?.completedQuantity || 0}
+            </div>
             <div className="col-span-2 text-sm text-gray-500">
-              {formData.quantity && formData.completedQuantity !== undefined ? (
+              {formData.quantity && (workItem as any)?.completedQuantity !== undefined ? (
                 <span>
                   Progress:{" "}
                   {Math.round(
-                    (formData.completedQuantity / formData.quantity) * 100
+                    (((workItem as any)?.completedQuantity || 0) / formData.quantity) * 100
                   )}
-                  %
+                  % (csak napló alapján módosítható)
                 </span>
-              ) : null}
+              ) : (
+                <span className="text-gray-400">Csak napló alapján módosítható</span>
+              )}
             </div>
           </div>
 
           {/* Progress display */}
-          {formData.quantity && formData.completedQuantity !== undefined && (
+          {formData.quantity && (workItem as any)?.completedQuantity !== undefined && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right font-medium">Haladás</Label>
               <div className="col-span-3">
@@ -353,12 +328,12 @@ export function WorkItemEditModal({
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${Math.min(100, Math.max(0, (formData.completedQuantity / formData.quantity) * 100))}%`,
+                      width: `${Math.min(100, Math.max(0, (((workItem as any)?.completedQuantity || 0) / formData.quantity) * 100))}%`,
                     }}
                   />
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {formatNumberWithSpace(formData.completedQuantity)} /{" "}
+                  {formatNumberWithSpace((workItem as any)?.completedQuantity || 0)} /{" "}
                   {formatNumberWithSpace(formData.quantity)} {formData.unit}
                 </div>
               </div>

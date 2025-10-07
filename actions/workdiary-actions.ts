@@ -655,11 +655,15 @@ export async function updateWorkItemCompletedQuantityFromLatestDiary(workItemId:
   try {
     const { tenantEmail } = await getTenantSafeAuth();
 
-    // Find the latest diary entry for this workItem
+    // Find the latest diary entry for this workItem (only up to today)
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    
     const latestDiaryEntry = await prisma.workDiaryItem.findFirst({
       where: {
         workItemId: workItemId,
         tenantEmail: tenantEmail,
+        date: { lte: today }, // Only entries up to today
       },
       orderBy: {
         date: 'desc'

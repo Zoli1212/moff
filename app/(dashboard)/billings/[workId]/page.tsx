@@ -63,7 +63,7 @@ export default function BillingsDetailPage() {
             isSelected: false,
             billableQuantity: item.completedQuantity || 0,
             totalQuantity: item.quantity || 0,
-            billedQuantity: 0,
+            billedQuantity: item.billedQuantity || 0,
             tools: item.tools || [],
             materials: item.materials || [],
             workers: item.workers || [],
@@ -92,7 +92,7 @@ export default function BillingsDetailPage() {
           isSelected: false,
           billableQuantity: item.completedQuantity || 0,
           totalQuantity: item.quantity || 0,
-          billedQuantity: 0,
+          billedQuantity: item.billedQuantity || 0,
           tools: item.tools || [],
           materials: item.materials || [],
           workers: item.workers || [],
@@ -118,7 +118,7 @@ export default function BillingsDetailPage() {
                   isSelected: false,
                   billableQuantity: item.completedQuantity || 0,
                   totalQuantity: item.quantity || 0,
-                  billedQuantity: 0,
+                  billedQuantity: item.billedQuantity || 0,
                   tools: item.tools || [],
                   materials: item.materials || [],
                   workers: item.workers || [],
@@ -144,18 +144,26 @@ export default function BillingsDetailPage() {
     const itemsForBilling = billingItems
       .filter((item) => item.isSelected)
       .map((item) => {
-        const materialTotal = item.materialTotal || 0;
-        const workTotal = item.workTotal || 0;
+        // Calculate billable quantity (completed - already billed)
+        const billableQuantity = Math.max(0, (item.completedQuantity || 0) - (item.billedQuantity || 0));
+        
+        // Recalculate totals based on billable quantity
+        const materialUnitPrice = item.materialUnitPrice || 0;
+        const workUnitPrice = item.unitPrice || 0;
+        const materialTotal = billableQuantity * materialUnitPrice;
+        const workTotal = billableQuantity * workUnitPrice;
+        
         return {
           name: item.name,
-          quantity: item.quantity || 0,
+          quantity: billableQuantity,
           unit: item.unit,
-          unitPrice: item.unitPrice || 0,
-          materialUnitPrice: item.materialUnitPrice || 0,
+          unitPrice: workUnitPrice,
+          materialUnitPrice: materialUnitPrice,
           workTotal: workTotal,
           materialTotal: materialTotal,
-          totalPrice: item.totalPrice || materialTotal + workTotal,
+          totalPrice: materialTotal + workTotal,
           description: item.description || undefined,
+          workItemId: item.id, // ← KULCS: WorkItem ID hozzáadása
         };
       });
 

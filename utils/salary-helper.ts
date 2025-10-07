@@ -1,12 +1,15 @@
 "use server";
 
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@prisma/client";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
+import { revalidatePath } from "next/cache";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Aktuális fizetés lekérése egy adott dátumra
- * @param workforceRegistryId - Munkás ID
- * @param date - Dátum, amire a fizetést keressük
+ * @param {number} workforceRegistryId - Munkás ID
+ * @param {Date} date - Dátum, amire a fizetést keressük
+{{ ... }}
  * @returns A dátumra érvényes napi fizetés
  */
 export async function getCurrentSalary(
@@ -109,6 +112,10 @@ export async function addSalaryChange(
       validFrom,
       tenantEmail
     );
+
+    // Revalidáljuk a diary oldalakat, hogy frissüljenek a költségek
+    revalidatePath("/diary");
+    revalidatePath("/diary/[id]", "page");
 
     return { success: true };
   } catch (error) {

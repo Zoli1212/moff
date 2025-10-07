@@ -33,6 +33,7 @@
     "@radix-ui/react-separator": "^1.1.1",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.1.7",
+    "@vitest/ui": "^3.2.4",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -64,6 +65,7 @@
     "tailwind-merge": "^3.0.1",
     "tailwindcss-animate": "^1.0.7",
     "uuid": "^11.1.0",
+    "vitest": "^3.2.4",
     "xlsx": "^0.18.5",
     "zod": "^3.25.56",
     "zustand": "^5.0.5"

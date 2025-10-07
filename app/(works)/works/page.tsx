@@ -150,7 +150,7 @@ const WorkListPage = () => {
   }
 
   return (
-    <div style={{ padding: 32, background: "#f8f9fa", minHeight: "100vh" }}>
+    <div style={{ padding: 32, background: "#f8f9fa", minHeight: "100vh", overflowY: "auto" }}>
       <div
         style={{
           display: "flex",
@@ -191,7 +191,7 @@ const WorkListPage = () => {
         works={activeWorks}
         onWorkStateChange={handleWorkStateChange}
       />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 32 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "100px" }}>
         {activeWorks.length === 0 ? (
           <div>Nincs aktív munka.</div>
         ) : (

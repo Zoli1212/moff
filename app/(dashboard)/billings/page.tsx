@@ -5,7 +5,6 @@ import { getUserWorks } from "@/actions/work-actions";
 import Link from "next/link";
 import { ArrowLeft } from 'lucide-react';
 
-
 interface Work {
   id: number;
   title: string;

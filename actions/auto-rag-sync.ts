@@ -14,9 +14,8 @@ export async function autoSyncWorkToRAG(workId: number) {
       where: { id: workId, tenantEmail },
       include: {
         workItems: true,
-        materials: true,
-        tools: true,
-        workers: true
+        workDiaries: true,
+        workTools: true
       }
     });
 
@@ -39,19 +38,26 @@ export async function autoSyncWorkToRAG(workId: number) {
 
     // Munka alapadatok szinkronizálása
     const workContent = `
-Munka: ${work.name}
-Leírás: ${work.description || 'Nincs leírás'}
+Munka: ${work.title || 'Nincs cím'}
+Leírás: ${work.offerDescription || 'Nincs leírás'}
 Helyszín: ${work.location || 'Nincs megadva'}
-Státusz: ${work.status}
-Kezdés: ${work.startDate?.toLocaleDateString() || 'Nincs megadva'}
-Befejezés: ${work.endDate?.toLocaleDateString() || 'Nincs megadva'}
-Költségvetés: ${work.budget || 'Nincs megadva'} Ft
+Munkások: ${work.totalWorkers || 0} fő
+Munkaköltség: ${work.totalLaborCost || 0} Ft
+Anyagköltség: ${work.totalMaterialCost || 0} Ft
+Eszközök: ${work.totalTools || 0} db
+Eszközköltség: ${work.totalToolCost || 0} Ft
+Anyagok: ${work.totalMaterials || 0} db
+Státusz: ${work.status || 'Nincs megadva'}
+Haladás: ${work.progress || 0}%
     `.trim();
 
     await addRAGContext(workContent, 'work_basic', {
       source: 'work',
       workId: work.id,
-      workName: work.name,
+      title: work.title,
+      status: work.status,
+      totalWorkers: work.totalWorkers,
+      totalLaborCost: work.totalLaborCost,
       lastSync: new Date().toISOString()
     });
     syncedItems++;
@@ -64,14 +70,14 @@ Mennyiség: ${item.quantity} ${item.unit}
 Elvégzett: ${item.completedQuantity || 0} ${item.unit}
 Progress: ${item.progress || 0}%
 Státusz: ${item.inProgress ? 'Folyamatban' : 'Nem aktív'}
-Projekt: ${work.name}
+Projekt: ${work.title}
       `.trim();
 
       await addRAGContext(itemContent, 'work_items', {
         source: 'workItem',
         workId: work.id,
         workItemId: item.id,
-        workName: work.name,
+        workTitle: work.title,
         itemName: item.name,
         lastSync: new Date().toISOString()
       });
@@ -101,7 +107,7 @@ export async function autoSyncOfferToRAG(offerId: number) {
     const { tenantEmail } = await getTenantSafeAuth();
     
     // Ajánlat lekérése
-    const offer = await prisma.myWork.findUnique({
+    const offer = await prisma.offer.findUnique({
       where: { id: offerId, tenantEmail }
     });
 
@@ -124,20 +130,25 @@ export async function autoSyncOfferToRAG(offerId: number) {
 
     // Ajánlat alapadatok szinkronizálása
     const offerContent = `
-Ügyfél: ${offer.customerName || 'Nincs megadva'}
-Email: ${offer.customerEmail || 'Nincs megadva'}
-Projekt típus: ${offer.projectType || 'Nincs megadva'}
-Helyszín: ${offer.location || 'Nincs megadva'}
-Költségvetés: ${offer.budget || 'Nincs megadva'}
-Határidő: ${offer.timeline || 'Nincs megadva'}
-Követelmények: ${offer.requirements || 'Nincs megadva'}
+Cím: ${offer.title || 'Nincs megadva'}
+Leírás: ${offer.description || 'Nincs megadva'}
+Összár: ${offer.totalPrice} Ft
+Munka összege: ${offer.workTotal || 0} Ft
+Anyag összege: ${offer.materialTotal || 0} Ft
+Státusz: ${offer.status}
+Megjegyzések: ${offer.notes || 'Nincs megadva'}
     `.trim();
 
     await addRAGContext(offerContent, 'offers', {
       source: 'offer',
       offerId: offer.id,
-      customerName: offer.customerName,
-      projectType: offer.projectType,
+      title: offer.title,
+      description: offer.description,
+      total: offer.totalPrice,
+      workTotal: offer.workTotal,
+      materialTotal: offer.materialTotal,
+      status: offer.status,
+      notes: offer.notes,
       lastSync: new Date().toISOString()
     });
     syncedItems++;
@@ -150,13 +161,13 @@ Tétel: ${item.name || 'Névtelen tétel'}
 Mennyiség: ${item.quantity || 0} ${item.unit || 'db'}
 Egységár: ${item.unitPrice || 0} Ft
 Összeg: ${item.totalPrice || 0} Ft
-Ügyfél projekt: ${offer.customerName} - ${offer.projectType}
+Ajánlat: ${offer.title || 'Nincs cím'}
         `.trim();
 
         await addRAGContext(itemContent, 'offer_items', {
           source: 'offerItem',
           offerId: offer.id,
-          customerName: offer.customerName,
+          offerTitle: offer.title,
           itemName: item.name,
           lastSync: new Date().toISOString()
         });
@@ -196,7 +207,7 @@ export async function backgroundRAGSync() {
           gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Utolsó 24 óra
         }
       },
-      select: { id: true, name: true, updatedAt: true }
+      select: { id: true, title: true, updatedAt: true }
     });
 
     const recentOffers = await prisma.myWork.findMany({

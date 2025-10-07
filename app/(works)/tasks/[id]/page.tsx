@@ -315,7 +315,6 @@ export default function TasksPage() {
         unitPrice: workItem.unitPrice,
         materialUnitPrice: workItem.materialUnitPrice,
         totalPrice: workItem.totalPrice,
-        completedQuantity: workItem.completedQuantity,
       });
       setShowEditModal(true);
     }
@@ -342,7 +341,6 @@ export default function TasksPage() {
                   unitPrice: updatedData.unitPrice !== undefined ? updatedData.unitPrice : item.unitPrice,
                   materialUnitPrice: updatedData.materialUnitPrice !== undefined ? updatedData.materialUnitPrice : item.materialUnitPrice,
                   totalPrice: updatedData.totalPrice !== undefined ? updatedData.totalPrice : item.totalPrice,
-                  completedQuantity: updatedData.completedQuantity !== undefined ? updatedData.completedQuantity : item.completedQuantity,
                 }
               : item
           )
