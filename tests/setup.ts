@@ -139,7 +139,7 @@ export async function createTestWorker() {
   return await testPrisma.workforceRegistry.create({
     data: {
       name: 'Test Worker',
-      profession: 'Tester',
+      role: 'Tester',
       dailyRate: 25000,
       tenantEmail: TEST_TENANT_EMAIL
     }
