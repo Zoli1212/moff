@@ -42,11 +42,11 @@ export async function generateOfferWithRAG(
   existingItems: any[] = [],
   useRAG: boolean = true
 ) {
-  try {
-    const baseInput = existingItems.length > 0 
-      ? `${userInput}\n\nMeglévő tételek:\n${JSON.stringify(existingItems, null, 2)}`
-      : userInput;
+  const baseInput = existingItems.length > 0 
+    ? `${userInput}\n\nMeglévő tételek:\n${JSON.stringify(existingItems, null, 2)}`
+    : userInput;
 
+  try {
     const enhancedInput = await enhancePromptWithRAG(
       `Készíts ajánlatot az alábbi igény alapján: ${baseInput}`,
       userInput,
