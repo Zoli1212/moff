@@ -27,19 +27,19 @@ export async function populateRAGFromWorks() {
     for (const work of works) {
       // Munka alapadatok
       const workContent = `
-Munka: ${work.name}
-Leírás: ${work.description || 'Nincs leírás'}
+Munka: ${work.title}
+Leírás: ${work.offerDescription || 'Nincs leírás'}
 Helyszín: ${work.location || 'Nincs megadva'}
 Státusz: ${work.status}
 Kezdés: ${work.startDate?.toLocaleDateString() || 'Nincs megadva'}
 Befejezés: ${work.endDate?.toLocaleDateString() || 'Nincs megadva'}
-Költségvetés: ${work.budget || 'Nincs megadva'} Ft
+Költségvetés: 'Nincs megadva' Ft
       `.trim();
 
       await addRAGContext(workContent, 'work_basic', {
         source: 'work',
         workId: work.id,
-        workName: work.name
+        workName: work.title
       });
       addedCount++;
 
@@ -51,14 +51,14 @@ Mennyiség: ${item.quantity} ${item.unit}
 Elvégzett: ${item.completedQuantity || 0} ${item.unit}
 Progress: ${item.progress || 0}%
 Státusz: ${item.inProgress ? 'Folyamatban' : 'Nem aktív'}
-Projekt: ${work.name}
+Projekt: ${work.title}
         `.trim();
 
         await addRAGContext(itemContent, 'work_items', {
           source: 'workItem',
           workId: work.id,
           workItemId: item.id,
-          workName: work.name,
+          workName: work.title,
           itemName: item.name
         });
         addedCount++;
@@ -70,14 +70,14 @@ Projekt: ${work.name}
 Anyag: ${material.name}
 Szükséges mennyiség: ${material.quantity} ${material.unit}
 Elérhető: ${material.availableQuantity || 0} ${material.unit}
-Projekt: ${work.name}
+Projekt: ${work.title}
         `.trim();
 
         await addRAGContext(materialContent, 'materials', {
           source: 'material',
           workId: work.id,
           materialId: material.id,
-          workName: work.name
+          workName: work.title
         });
         addedCount++;
       }
@@ -87,15 +87,15 @@ Projekt: ${work.name}
         const toolContent = `
 Eszköz: ${tool.name}
 Szükséges: ${tool.quantity} db
-Elérhető: ${tool.availableQuantity || 0} db
-Projekt: ${work.name}
+Használt napok: ${tool.daysUsed || 0} nap
+Projekt: ${work.title}
         `.trim();
 
         await addRAGContext(toolContent, 'tools', {
           source: 'tool',
           workId: work.id,
           toolId: tool.id,
-          workName: work.name
+          workName: work.title
         });
         addedCount++;
       }
@@ -133,12 +133,7 @@ export async function populateRAGFromOffers() {
         id: true,
         customerName: true,
         customerEmail: true,
-        projectType: true,
         location: true,
-        budget: true,
-        timeline: true,
-        requirements: true,
-        items: true,
         createdAt: true
       }
     });
@@ -150,11 +145,11 @@ export async function populateRAGFromOffers() {
       const offerContent = `
 Ügyfél: ${offer.customerName || 'Nincs megadva'}
 Email: ${offer.customerEmail || 'Nincs megadva'}
-Projekt típus: ${offer.projectType || 'Nincs megadva'}
+Projekt típus: 'Nincs megadva'
 Helyszín: ${offer.location || 'Nincs megadva'}
-Költségvetés: ${offer.budget || 'Nincs megadva'}
-Határidő: ${offer.timeline || 'Nincs megadva'}
-Követelmények: ${offer.requirements || 'Nincs megadva'}
+Költségvetés: 'Nincs megadva'
+Határidő: 'Nincs megadva'
+Követelmények: 'Nincs megadva'
 Létrehozva: ${offer.createdAt.toLocaleDateString()}
       `.trim();
 
@@ -162,30 +157,11 @@ Létrehozva: ${offer.createdAt.toLocaleDateString()}
         source: 'offer',
         offerId: offer.id,
         customerName: offer.customerName,
-        projectType: offer.projectType
+        projectType: 'Nincs megadva'
       });
       addedCount++;
 
-      // Ajánlat tételek
-      if (offer.items && Array.isArray(offer.items)) {
-        for (const item of offer.items as any[]) {
-          const itemContent = `
-Tétel: ${item.name || 'Névtelen tétel'}
-Mennyiség: ${item.quantity || 0} ${item.unit || 'db'}
-Egységár: ${item.unitPrice || 0} Ft
-Összeg: ${item.totalPrice || 0} Ft
-Ügyfél projekt: ${offer.customerName} - ${offer.projectType}
-          `.trim();
-
-          await addRAGContext(itemContent, 'offer_items', {
-            source: 'offerItem',
-            offerId: offer.id,
-            customerName: offer.customerName,
-            itemName: item.name
-          });
-          addedCount++;
-        }
-      }
+      // Ajánlat tételek - jelenleg nem elérhető
     }
 
     console.log(`✅ RAG feltöltés kész: ${addedCount} elem hozzáadva`);
