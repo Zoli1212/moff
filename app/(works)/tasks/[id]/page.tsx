@@ -315,6 +315,7 @@ export default function TasksPage() {
         unitPrice: workItem.unitPrice,
         materialUnitPrice: workItem.materialUnitPrice,
         totalPrice: workItem.totalPrice,
+        completedQuantity: workItem.completedQuantity,
       });
       setShowEditModal(true);
     }
@@ -508,7 +509,6 @@ export default function TasksPage() {
                     onQuantityChange={handleQuantityChange}
                     onEdit={handleEditWorkItem}
                     // Add billing-related props with default values
-                    billableQuantity={item.billableQuantity || 0}
                     billedQuantity={item.billedQuantity || 0}
                   >
                     {item.workItemWorkers &&

@@ -23,7 +23,7 @@ export interface WorkItemEditData {
   unitPrice?: number | undefined;
   materialUnitPrice?: number | undefined;
   totalPrice?: number | undefined;
-  // completedQuantity removed - read-only, only from diary entries
+  completedQuantity?: number | undefined; // read-only, only from diary entries
 }
 
 interface WorkItemEditModalProps {
@@ -302,14 +302,14 @@ export function WorkItemEditModal({
               Teljesítve
             </Label>
             <div className="col-span-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
-              {(workItem as any)?.completedQuantity || 0}
+              {workItem?.completedQuantity || 0}
             </div>
             <div className="col-span-2 text-sm text-gray-500">
-              {formData.quantity && (workItem as any)?.completedQuantity !== undefined ? (
+              {formData.quantity && workItem?.completedQuantity !== undefined ? (
                 <span>
                   Progress:{" "}
                   {Math.round(
-                    (((workItem as any)?.completedQuantity || 0) / formData.quantity) * 100
+                    ((workItem?.completedQuantity || 0) / formData.quantity) * 100
                   )}
                   % (csak napló alapján módosítható)
                 </span>
@@ -320,7 +320,7 @@ export function WorkItemEditModal({
           </div>
 
           {/* Progress display */}
-          {formData.quantity && (workItem as any)?.completedQuantity !== undefined && (
+          {formData.quantity && workItem?.completedQuantity !== undefined && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label className="text-right font-medium">Haladás</Label>
               <div className="col-span-3">
@@ -328,12 +328,12 @@ export function WorkItemEditModal({
                   <div
                     className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                     style={{
-                      width: `${Math.min(100, Math.max(0, (((workItem as any)?.completedQuantity || 0) / formData.quantity) * 100))}%`,
+                      width: `${Math.min(100, Math.max(0, ((workItem?.completedQuantity || 0) / formData.quantity) * 100))}%`,
                     }}
                   />
                 </div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {formatNumberWithSpace((workItem as any)?.completedQuantity || 0)} /{" "}
+                  {formatNumberWithSpace(workItem?.completedQuantity || 0)} /{" "}
                   {formatNumberWithSpace(formData.quantity)} {formData.unit}
                 </div>
               </div>

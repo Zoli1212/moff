@@ -20,7 +20,6 @@ interface TaskCardProps {
   children?: React.ReactNode;
   className?: string;
   // New billing-related props
-  billableQuantity?: number;
   billedQuantity?: number;
 }
 
@@ -40,7 +39,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   onEdit,
   children,
   className = "",
-  billableQuantity,
   billedQuantity,
 }) => {
   const [showQuantityModal, setShowQuantityModal] = useState(false);
