@@ -78,10 +78,13 @@ export default function GroupedDiaryEditForm({
     Map<number, boolean>
   >(new Map());
 
+  
   // Track original progressAtDate values from existing diary items
   const [originalProgressAtDate, setOriginalProgressAtDate] = useState<
-    Map<number, number>
+  Map<number, number>
   >(new Map());
+  
+  console.log(sliderInteracted, originalProgressAtDate)
 
   // Group approval state
   const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
