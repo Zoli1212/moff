@@ -56,6 +56,9 @@ export default function GroupedDiaryEditForm({
   const [workerHours, setWorkerHours] = useState<Map<number, number>>(
     new Map()
   ); // Individual worker hours
+  const [manuallyModifiedWorkers, setManuallyModifiedWorkers] = useState<Set<number>>(
+    new Set()
+  ); // Track which workers were manually modified
   const [showWorkerModal, setShowWorkerModal] = useState(false);
   const [showWorkItemModal, setShowWorkItemModal] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
@@ -71,14 +74,14 @@ export default function GroupedDiaryEditForm({
   );
 
   // Track which sliders have been interacted with
-  const [sliderInteracted, setSliderInteracted] = useState<Map<number, boolean>>(
-    new Map()
-  );
+  const [sliderInteracted, setSliderInteracted] = useState<
+    Map<number, boolean>
+  >(new Map());
 
   // Track original progressAtDate values from existing diary items
-  const [originalProgressAtDate, setOriginalProgressAtDate] = useState<Map<number, number>>(
-    new Map()
-  );
+  const [originalProgressAtDate, setOriginalProgressAtDate] = useState<
+    Map<number, number>
+  >(new Map());
 
   // Group approval state
   const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
@@ -132,7 +135,7 @@ export default function GroupedDiaryEditForm({
     );
 
     console.log(setWorkHours);
-    console.log(originalCompletedQuantities)
+    console.log(originalCompletedQuantities);
 
     // Modal will be closed by the modal component itself after successful save
 
@@ -308,7 +311,7 @@ export default function GroupedDiaryEditForm({
             ) {
               localProgressMap.set(workItem.id, item.progressAtDate);
               // Also store as original progressAtDate for delta calculation
-              setOriginalProgressAtDate(prev => {
+              setOriginalProgressAtDate((prev) => {
                 const newMap = new Map(prev);
                 newMap.set(workItem.id, item.progressAtDate || 0);
                 return newMap;
@@ -346,13 +349,16 @@ export default function GroupedDiaryEditForm({
         }
       });
 
-      // Set worker hours by uniqueKey
+      // Set worker hours by uniqueKey (only if not manually modified)
       workerHoursMap.forEach((totalHours, uniqueKey) => {
         const worker = workersMap.get(uniqueKey);
-        if (worker) {
+        if (worker && !manuallyModifiedWorkers.has(worker.id)) {
+          console.log(`🔄 [AUTO_SET_WORKER_HOURS] Worker: ${worker.name} (ID: ${worker.id}), Calculated Hours: ${Math.round(totalHours)}`);
           setWorkerHours(
             (prev) => new Map(prev.set(worker.id, Math.round(totalHours)))
           );
+        } else if (worker && manuallyModifiedWorkers.has(worker.id)) {
+          console.log(`⚠️ [SKIP_AUTO_SET] Worker: ${worker.name} (ID: ${worker.id}) was manually modified, keeping current value`);
         }
       });
 
@@ -360,7 +366,7 @@ export default function GroupedDiaryEditForm({
       setSelectedWorkers(Array.from(workersMap.values()));
       setLocalProgress(localProgressMap);
     }
-  }, [diary, workItems]);
+  }, [diary, workItems]); // Remove manuallyModifiedWorkers from dependencies to prevent re-calculation
 
   const showToast = (type: "success" | "error", message: string) => {
     if (type === "success") {
@@ -454,7 +460,9 @@ export default function GroupedDiaryEditForm({
   };
 
   const updateWorkerHours = (uniqueId: number, hours: number) => {
+    console.log(`🕐 [UPDATE_WORKER_HOURS] Worker ID: ${uniqueId}, New Hours: ${hours}`);
     setWorkerHours((prev) => new Map(prev.set(uniqueId, hours)));
+    setManuallyModifiedWorkers((prev) => new Set(prev.add(uniqueId)));
   };
 
   const updateProgress = (workItemId: number, progressAtDate: number) => {
@@ -529,6 +537,7 @@ export default function GroupedDiaryEditForm({
 
         // Delete existing diary items for this group
         await deleteWorkDiaryItemsByGroup({ groupNo });
+        console.log(`🗑️ DEBUG - Deleted diary items for group: ${groupNo}`);
       } else {
         // Fallback groupNo if no existing items
         groupNo = Math.floor(Date.now() / 1000);
@@ -559,6 +568,7 @@ export default function GroupedDiaryEditForm({
 
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.id) || workHours;
+        console.log(`🔍 DEBUG - Worker ${worker.name} total hours: ${workerTotalHours}, from workerHours.get: ${workerHours.get(worker.id)}, default workHours: ${workHours}`);
 
         // Use local progress values (progressAtDate) for each work item
         const progressValues = selectedGroupedItems.map(
@@ -570,6 +580,8 @@ export default function GroupedDiaryEditForm({
           0
         );
 
+        console.log(`🔍 DEBUG - Worker: ${worker.name}, progressValues:`, progressValues, `totalProgress: ${totalProgress}`);
+
         for (let i = 0; i < selectedGroupedItems.length; i++) {
           const groupedItem = selectedGroupedItems[i];
           const itemProgress = progressValues[i] || 0;
@@ -580,28 +592,36 @@ export default function GroupedDiaryEditForm({
               ? itemProgress / totalProgress
               : 1 / selectedGroupedItems.length;
           const hoursPerWorkItem = workerTotalHours * proportion;
+          console.log(`🔍 DEBUG - Worker: ${worker.name}, WorkItem: ${groupedItem.workItem.name}, Proportion: ${proportion}, Hours per item: ${hoursPerWorkItem}`);
 
           // Check if slider was interacted with for this workItem
-          const wasSliderInteracted = sliderInteracted.get(groupedItem.workItem.id) || false;
-          
+          const wasSliderInteracted =
+            sliderInteracted.get(groupedItem.workItem.id) || false;
+
           let quantityForThisWorker = 0;
           // progressAtDate should ALWAYS reflect current slider position
           const progressAtDateForThisItem = itemProgress;
-          
+
           if (wasSliderInteracted) {
             // Calculate delta only if slider was moved
-            const originalStartValue = originalProgressAtDate.get(groupedItem.workItem.id) || 0;
-            const deltaProgress = Math.max(0, itemProgress - originalStartValue);
-            quantityForThisWorker = totalWorkerHours > 0
-              ? deltaProgress * (workerTotalHours / totalWorkerHours)
-              : 0;
+            const originalStartValue =
+              originalProgressAtDate.get(groupedItem.workItem.id) || 0;
+            const deltaProgress = Math.max(
+              0,
+              itemProgress - originalStartValue
+            );
+            quantityForThisWorker =
+              totalWorkerHours > 0
+                ? deltaProgress * (workerTotalHours / totalWorkerHours)
+                : 0;
           } else {
             // If no slider interaction, preserve original quantity from existing diary item
             // Find the original quantity for this worker and workItem from existing diary
             const existingDiaryItem = diary.workDiaryItems?.find(
-              item => item.workItemId === groupedItem.workItem.id && 
-                     item.name === worker.name && 
-                     item.email === worker.email
+              (item) =>
+                item.workItemId === groupedItem.workItem.id &&
+                item.name === worker.name &&
+                item.email === worker.email
             );
             quantityForThisWorker = existingDiaryItem?.quantity || 0;
             // Note: progressAtDate still uses current slider position (itemProgress)
@@ -623,7 +643,6 @@ export default function GroupedDiaryEditForm({
             unit: groupedItem.workItem.unit, // A workItem unit-ja
             progressAtDate: progressAtDateForThisItem, // Progress at this specific date
             groupNo: groupNo,
-            tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
           };
 
           promises.push(createWorkDiaryItem(diaryItemData));
@@ -897,7 +916,6 @@ export default function GroupedDiaryEditForm({
                           type="number"
                           min="0"
                           max="24"
-                          step="0.5"
                           value={workerHours.get(worker.id) || ""}
                           onChange={(e) =>
                             updateWorkerHours(

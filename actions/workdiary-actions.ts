@@ -90,7 +90,7 @@ export async function deleteWorkDiaryItem({ id }: { id: number }) {
   // Get workItemId before deletion
   const diaryItem = await prisma.workDiaryItem.findUnique({
     where: { id },
-    select: { workItemId: true }
+    select: { workItemId: true },
   });
 
   await prisma.workDiaryItem.delete({ where: { id } });
@@ -118,15 +118,23 @@ export async function deleteWorkDiaryItemsByGroup({
       tenantEmail,
     },
     select: { workItemId: true },
-    distinct: ['workItemId']
+    distinct: ["workItemId"],
   });
 
-  await prisma.workDiaryItem.deleteMany({
+  console.log(
+    `🗑️ [DELETE] Attempting to delete groupNo: ${groupNo}, tenantEmail: ${tenantEmail}, found ${affectedItems.length} affected items`
+  );
+
+  const deleteResult = await prisma.workDiaryItem.deleteMany({
     where: {
       groupNo,
       tenantEmail,
     },
   });
+
+  console.log(
+    `🗑️ [DELETE] Deleted ${deleteResult.count} diary items for groupNo: ${groupNo}`
+  );
 
   // Update WorkItem completedQuantity for all affected workItems
   for (const item of affectedItems) {
@@ -298,55 +306,72 @@ export async function updateWorkDiaryItem({
   }
 
   // Automatikus workforceRegistryId és dailyRateSnapshot frissítés ha a név vagy dátum változott
-  if ((name !== undefined || date !== undefined) && (!updateData.dailyRateSnapshot || !updateData.workforceRegistryId)) {
+  if (
+    (name !== undefined || date !== undefined) &&
+    (!updateData.dailyRateSnapshot || !updateData.workforceRegistryId)
+  ) {
     try {
       // Lekérjük a jelenlegi bejegyzést
       const currentItem = await prisma.workDiaryItem.findUnique({
         where: { id },
-        select: { name: true, date: true, tenantEmail: true, workforceRegistryId: true }
+        select: {
+          name: true,
+          date: true,
+          tenantEmail: true,
+          workforceRegistryId: true,
+        },
       });
-      
+
       if (currentItem) {
         const workerName = name !== undefined ? name : currentItem.name;
         const itemDate = date !== undefined ? date : currentItem.date;
         const tenantEmail = updateData.tenantEmail || currentItem.tenantEmail;
-        
+
         if (workerName) {
           // Keressük meg a munkást a WorkforceRegistry-ben
           const workforceWorker = await prisma.workforceRegistry.findFirst({
             where: {
-              name: { equals: workerName, mode: 'insensitive' },
-              tenantEmail
-            }
+              name: { equals: workerName, mode: "insensitive" },
+              tenantEmail,
+            },
           });
-          
+
           if (workforceWorker) {
             // Mentjük a workforceRegistryId-t (ha még nincs vagy változott a név)
             if (!currentItem.workforceRegistryId || name !== undefined) {
               updateData.workforceRegistryId = workforceWorker.id;
             }
-            
+
             // Lekérjük az aktuális fizetést a napló dátumára (ha még nincs vagy változott)
             if (!updateData.dailyRateSnapshot) {
-              const currentSalary = await getCurrentSalary(workforceWorker.id, itemDate);
+              const currentSalary = await getCurrentSalary(
+                workforceWorker.id,
+                itemDate
+              );
               updateData.dailyRateSnapshot = currentSalary;
             }
-            
+
             try {
-              console.log("[workdiary-actions] WorkforceRegistry data updated", {
-                itemId: id,
-                workerName,
-                workforceRegistryId: workforceWorker.id,
-                itemDate,
-                dailyRateSnapshot: updateData.dailyRateSnapshot
-              });
+              console.log(
+                "[workdiary-actions] WorkforceRegistry data updated",
+                {
+                  itemId: id,
+                  workerName,
+                  workforceRegistryId: workforceWorker.id,
+                  itemDate,
+                  dailyRateSnapshot: updateData.dailyRateSnapshot,
+                }
+              );
             } catch {}
           }
         }
       }
     } catch (error) {
       // Ha hiba van a lekérésnél, nem blokkoljuk a napló frissítést
-      console.error("[workdiary-actions] Error updating workforce registry data:", error);
+      console.error(
+        "[workdiary-actions] Error updating workforce registry data:",
+        error
+      );
     }
   }
 
@@ -422,7 +447,7 @@ export async function createWorkDiaryItem({
   progressAtDate?: number;
   // id is intentionally omitted for creation
 }) {
-  const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
+  const { user, tenantEmail } = await getTenantSafeAuth();
 
   try {
     // Determine worker email either from explicit email or from workItemWorker assignment
@@ -431,15 +456,12 @@ export async function createWorkDiaryItem({
       effectiveWorkerEmail =
         await getWorkerEmailFromAssignment(workItemWorkerId);
     }
-    const tenantEmail = await resolveTenantEmail(
-      userEmail,
-      effectiveWorkerEmail
-    );
+    // Use tenantEmail from getTenantSafeAuth (selected-tenant cookie or own email)
     const createData: any = {
       diaryId,
       workId,
       workItemId,
-      tenantEmail,
+      tenantEmail, // This respects super user tenant selection (Martin)
     };
     if (workerId !== undefined) createData.workerId = workerId;
     if (email !== undefined) createData.email = email;
@@ -454,42 +476,52 @@ export async function createWorkDiaryItem({
     if (notes !== undefined) createData.notes = notes;
     if (typeof accepted === "boolean") createData.accepted = accepted;
     if (groupNo !== undefined) createData.groupNo = groupNo;
-    if (progressAtDate !== undefined) createData.progressAtDate = progressAtDate;
+    if (progressAtDate !== undefined)
+      createData.progressAtDate = progressAtDate;
 
     // Automatikus workforceRegistryId és dailyRateSnapshot mentés
-    if (name && (!createData.dailyRateSnapshot || !createData.workforceRegistryId)) {
+    if (
+      name &&
+      (!createData.dailyRateSnapshot || !createData.workforceRegistryId)
+    ) {
       try {
         // Keressük meg a munkást a WorkforceRegistry-ben név alapján
         const workforceWorker = await prisma.workforceRegistry.findFirst({
           where: {
-            name: { equals: name, mode: 'insensitive' },
-            tenantEmail
-          }
+            name: { equals: name, mode: "insensitive" },
+            tenantEmail,
+          },
         });
-        
+
         if (workforceWorker) {
           // Mentjük a workforceRegistryId-t
           createData.workforceRegistryId = workforceWorker.id;
-          
+
           // Lekérjük az aktuális fizetést a napló dátumára (ha még nincs)
           if (!createData.dailyRateSnapshot) {
             const diaryDate = date || new Date();
-            const currentSalary = await getCurrentSalary(workforceWorker.id, diaryDate);
+            const currentSalary = await getCurrentSalary(
+              workforceWorker.id,
+              diaryDate
+            );
             createData.dailyRateSnapshot = currentSalary;
           }
-          
+
           try {
             console.log("[workdiary-actions] WorkforceRegistry data added", {
               workerName: name,
               workforceRegistryId: workforceWorker.id,
               diaryDate: date || new Date(),
-              dailyRateSnapshot: createData.dailyRateSnapshot
+              dailyRateSnapshot: createData.dailyRateSnapshot,
             });
           } catch {}
         }
       } catch (error) {
         // Ha hiba van a lekérésnél, nem blokkoljuk a napló mentést
-        console.error("[workdiary-actions] Error getting workforce registry data:", error);
+        console.error(
+          "[workdiary-actions] Error getting workforce registry data:",
+          error
+        );
       }
     }
 
@@ -651,14 +683,16 @@ export async function getOrCreateWorkDiaryForWork({
 }
 
 // Update WorkItem completedQuantity based on latest diary entry progressAtDate
-export async function updateWorkItemCompletedQuantityFromLatestDiary(workItemId: number) {
+export async function updateWorkItemCompletedQuantityFromLatestDiary(
+  workItemId: number
+) {
   try {
     const { tenantEmail } = await getTenantSafeAuth();
 
     // Find the latest diary entry for this workItem (only up to today)
     const today = new Date();
     today.setHours(23, 59, 59, 999); // End of today
-    
+
     const latestDiaryEntry = await prisma.workDiaryItem.findFirst({
       where: {
         workItemId: workItemId,
@@ -666,24 +700,26 @@ export async function updateWorkItemCompletedQuantityFromLatestDiary(workItemId:
         date: { lte: today }, // Only entries up to today
       },
       orderBy: {
-        date: 'desc'
+        date: "desc",
       },
       select: {
-        progressAtDate: true
-      }
+        progressAtDate: true,
+      },
     });
 
     // Get workItem quantity for progress calculation
     const workItem = await prisma.workItem.findUnique({
       where: { id: workItemId },
-      select: { quantity: true }
+      select: { quantity: true },
     });
 
     // Update WorkItem completedQuantity
     const completedQuantity = latestDiaryEntry?.progressAtDate || 0;
-    const progress = completedQuantity > 0 && workItem?.quantity ? 
-      Math.floor((completedQuantity / workItem.quantity) * 100) : 0;
-    
+    const progress =
+      completedQuantity > 0 && workItem?.quantity
+        ? Math.floor((completedQuantity / workItem.quantity) * 100)
+        : 0;
+
     await prisma.workItem.update({
       where: {
         id: workItemId,
@@ -692,72 +728,94 @@ export async function updateWorkItemCompletedQuantityFromLatestDiary(workItemId:
       data: {
         completedQuantity: completedQuantity,
         progress: progress,
-      }
+      },
     });
 
-    revalidatePath('/works/tasks');
+    revalidatePath("/works/tasks");
     return { success: true, completedQuantity };
   } catch (error) {
-    console.error('Error updating WorkItem completedQuantity:', error);
-    return { success: false, error: 'Failed to update WorkItem completedQuantity' };
+    console.error("Error updating WorkItem completedQuantity:", error);
+    return {
+      success: false,
+      error: "Failed to update WorkItem completedQuantity",
+    };
   }
 }
 
 // Get slider initial value: check for previous diary entry up to selected date
-export async function getSliderInitialValue(workItemId: number, selectedDate: string, completedQuantity: number) {
-  console.log(`🔍 [getSliderInitialValue] START - workItemId: ${workItemId}, selectedDate: ${selectedDate}, completedQuantity: ${completedQuantity}`);
-  
+export async function getSliderInitialValue(
+  workItemId: number,
+  selectedDate: string,
+  completedQuantity: number
+) {
+  console.log(
+    `🔍 [getSliderInitialValue] START - workItemId: ${workItemId}, selectedDate: ${selectedDate}, completedQuantity: ${completedQuantity}`
+  );
+
   try {
     // If no date provided, return completedQuantity
-    if (!selectedDate || selectedDate.trim() === '') {
-      console.log(`📅 [getSliderInitialValue] No date provided, using completedQuantity: ${completedQuantity}`);
+    if (!selectedDate || selectedDate.trim() === "") {
+      console.log(
+        `📅 [getSliderInitialValue] No date provided, using completedQuantity: ${completedQuantity}`
+      );
       return completedQuantity;
     }
 
     const { tenantEmail } = await getTenantSafeAuth();
-    
+
     // Parse date safely
     let parsedDate: Date;
     try {
       parsedDate = new Date(selectedDate);
       if (isNaN(parsedDate.getTime())) {
-        console.log(`❌ [getSliderInitialValue] Invalid date, using completedQuantity: ${completedQuantity}`);
+        console.log(
+          `❌ [getSliderInitialValue] Invalid date, using completedQuantity: ${completedQuantity}`
+        );
         return completedQuantity;
       }
     } catch {
-      console.log(`❌ [getSliderInitialValue] Date parse error, using completedQuantity: ${completedQuantity}`);
+      console.log(
+        `❌ [getSliderInitialValue] Date parse error, using completedQuantity: ${completedQuantity}`
+      );
       return completedQuantity;
     }
 
-    console.log(`🔎 [getSliderInitialValue] Searching for entries up to: ${parsedDate.toISOString()}`);
+    console.log(
+      `🔎 [getSliderInitialValue] Searching for entries up to: ${parsedDate.toISOString()}`
+    );
 
     // Find latest diary entry up to selected date
     const previousEntry = await prisma.workDiaryItem.findFirst({
       where: {
         workItemId: workItemId,
         tenantEmail: tenantEmail,
-        date: { lte: parsedDate }
+        date: { lte: parsedDate },
       },
       orderBy: {
-        date: 'desc'
+        date: "desc",
       },
       select: {
         progressAtDate: true,
-        date: true
-      }
+        date: true,
+      },
     });
 
     if (previousEntry) {
-      console.log(`✅ [getSliderInitialValue] Found previous entry - date: ${previousEntry.date}, progressAtDate: ${previousEntry.progressAtDate}`);
+      console.log(
+        `✅ [getSliderInitialValue] Found previous entry - date: ${previousEntry.date}, progressAtDate: ${previousEntry.progressAtDate}`
+      );
       return previousEntry.progressAtDate ?? completedQuantity;
     } else {
-      console.log(`❌ [getSliderInitialValue] No previous entry found, using completedQuantity: ${completedQuantity}`);
+      console.log(
+        `❌ [getSliderInitialValue] No previous entry found, using completedQuantity: ${completedQuantity}`
+      );
       return completedQuantity;
     }
-    
   } catch (error) {
-    console.error('❌ [getSliderInitialValue] Error:', error);
-    console.log(`🔄 [getSliderInitialValue] Fallback to completedQuantity: ${completedQuantity}`);
+    console.error("❌ [getSliderInitialValue] Error:", error);
+    console.log(
+      `🔄 [getSliderInitialValue] Fallback to completedQuantity: ${completedQuantity}`
+    );
     return completedQuantity;
   }
 }

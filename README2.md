@@ -885,3 +885,11 @@ ajánlatba lévő anyagárakat veszi figyelembe -
 munkából kell jöjjön a számlázás
 lehetnek uj tételek
 ----
+BACK főoldalra vezet mindig visszamész a nyitóoldalra
+Ajánlatoknál is látni kell alul letekerhető
+Munkákra 
+Mindig hozzáadja az órákot 
+Minden munkánál összesítve legyen % legyen teljesítés
+Ne váltsa vissza az állapotot
+----
+Ha vállalkozó megy be rögtön jóvá tudom hagyn
