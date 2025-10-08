@@ -465,6 +465,7 @@ export default function GroupedDiaryEditForm({
     setManuallyModifiedWorkers((prev) => new Set(prev.add(uniqueId)));
   };
 
+
   const updateProgress = (workItemId: number, progressAtDate: number) => {
     // Mark this slider as interacted with
     setSliderInteracted((prev) => new Map(prev.set(workItemId, true)));
@@ -594,38 +595,28 @@ export default function GroupedDiaryEditForm({
           const hoursPerWorkItem = workerTotalHours * proportion;
           console.log(`🔍 DEBUG - Worker: ${worker.name}, WorkItem: ${groupedItem.workItem.name}, Proportion: ${proportion}, Hours per item: ${hoursPerWorkItem}`);
 
-          // Check if slider was interacted with for this workItem
-          const wasSliderInteracted =
-            sliderInteracted.get(groupedItem.workItem.id) || false;
+          // Get previous progressAtDate for delta calculation
+          const { getPreviousProgressAtDate } = await import(
+            "@/actions/get-previous-progress-actions"
+          );
+          const previousProgressAtDate = await getPreviousProgressAtDate(
+            diary.workId,
+            groupedItem.workItem.id, 
+            date // current diary date
+          );
+          
+          // Calculate delta: current slider position - previous progressAtDate
+          const deltaProgress = Math.max(0, itemProgress - previousProgressAtDate);
+          
+          console.log(`🔍 DEBUG - WorkItem: ${groupedItem.workItem.name}, Current: ${itemProgress}, Previous: ${previousProgressAtDate}, Delta: ${deltaProgress}`);
 
-          let quantityForThisWorker = 0;
+          // Distribute delta proportionally based on worker hours
+          const quantityForThisWorker = totalWorkerHours > 0
+            ? deltaProgress * (workerTotalHours / totalWorkerHours)
+            : 0;
+
           // progressAtDate should ALWAYS reflect current slider position
           const progressAtDateForThisItem = itemProgress;
-
-          if (wasSliderInteracted) {
-            // Calculate delta only if slider was moved
-            const originalStartValue =
-              originalProgressAtDate.get(groupedItem.workItem.id) || 0;
-            const deltaProgress = Math.max(
-              0,
-              itemProgress - originalStartValue
-            );
-            quantityForThisWorker =
-              totalWorkerHours > 0
-                ? deltaProgress * (workerTotalHours / totalWorkerHours)
-                : 0;
-          } else {
-            // If no slider interaction, preserve original quantity from existing diary item
-            // Find the original quantity for this worker and workItem from existing diary
-            const existingDiaryItem = diary.workDiaryItems?.find(
-              (item) =>
-                item.workItemId === groupedItem.workItem.id &&
-                item.name === worker.name &&
-                item.email === worker.email
-            );
-            quantityForThisWorker = existingDiaryItem?.quantity || 0;
-            // Note: progressAtDate still uses current slider position (itemProgress)
-          }
 
           const diaryItemData: WorkDiaryItemCreate = {
             diaryId: diaryIdToUse,
