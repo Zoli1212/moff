@@ -155,6 +155,7 @@ export default function GroupedDiaryEditForm({
 
   // Get ALL workItemWorkers from the work using server action
   const [allWorkWorkers, setAllWorkWorkers] = useState<WorkItemWorker[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Load all workItemWorkers for this work
   useEffect(() => {
@@ -262,8 +263,9 @@ export default function GroupedDiaryEditForm({
     );
   };
 
-  // Initialize form data from existing diary
+  // Initialize form data from existing diary (only once)
   useEffect(() => {
+    if (isInitialized) return; // Skip if already initialized
     // Check if diary has groupNo property (from GoogleCalendarView grouping)
     const diaryGroupNo = (diary as WorkDiaryWithItem & { groupNo?: number })
       .groupNo;
@@ -365,8 +367,9 @@ export default function GroupedDiaryEditForm({
       setSelectedGroupedItems(Array.from(groupedItemsMap.values()));
       setSelectedWorkers(Array.from(workersMap.values()));
       setLocalProgress(localProgressMap);
+      setIsInitialized(true); // Mark as initialized
     }
-  }, [diary, workItems]); // Remove manuallyModifiedWorkers from dependencies to prevent re-calculation
+  }, [diary, workItems, isInitialized]); // Add isInitialized to dependencies
 
   const showToast = (type: "success" | "error", message: string) => {
     if (type === "success") {
