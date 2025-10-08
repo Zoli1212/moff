@@ -1,6 +1,5 @@
 "use client";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary } from "@/actions/workdiary-actions";
@@ -358,7 +357,6 @@ export default function TasksPage() {
     }
   };
 
-  const router = useRouter();
   return (
     <div style={{ maxWidth: 420, margin: "0 auto" }}>
       <WorkHeader title={work?.title || "Feladatok"} />

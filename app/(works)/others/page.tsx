@@ -1,7 +1,6 @@
 import React from 'react'
 import { getAllWorkforceRegistry } from '@/actions/workforce-registry-actions'
 import WorkforceRegistryClient from './_components/WorkforceRegistryClient'
-import BackButton from './_components/BackButton'
 import WorkHeader from "@/components/WorkHeader"
 
 
