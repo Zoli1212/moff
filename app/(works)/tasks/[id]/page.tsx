@@ -14,6 +14,7 @@ import { AddOfferItemModal } from "@/components/AddOfferItemModal";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
 import { WorkItemEditModal, WorkItemEditData } from "../_components/WorkItemEditModal";
 import { updateWorkItemDetails } from "@/actions/update-workitem-details";
+import WorkHeader from "@/components/WorkHeader";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -359,52 +360,19 @@ export default function TasksPage() {
 
   const router = useRouter();
   return (
-    <div style={{ maxWidth: 420, margin: "0 auto", padding: 16 }}>
-      <h2
+    <div style={{ maxWidth: 420, margin: "0 auto" }}>
+      <WorkHeader title={work?.title || "Feladatok"} />
+      <div style={{ padding: "0px 16px 16px 16px" }}>
+      <div
         style={{
           fontSize: 22,
           fontWeight: 700,
-          marginBottom: 24,
+          marginBottom: 8,
           display: "flex",
           alignItems: "center",
+          justifyContent: "flex-end",
         }}
       >
-        <span
-          onClick={() => router.back()}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            cursor: "pointer",
-            marginRight: 12,
-            width: 28,
-            height: 28,
-            justifyContent: "center",
-            borderRadius: 6,
-            transition: "background 0.15s",
-          }}
-          tabIndex={0}
-          aria-label="Vissza"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") router.back();
-          }}
-        >
-          <svg
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <polyline
-              points="12,3 6,9 12,15"
-              fill="none"
-              stroke="#1b263b"
-              strokeWidth="2.2"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </span>
-        {work?.title}
         <button
           onClick={handleAddNewItem}
           disabled={addingNewItem}
@@ -439,7 +407,7 @@ export default function TasksPage() {
         >
           {addingNewItem ? "..." : "+"}
         </button>
-      </h2>
+      </div>
       {loading ? (
         <div className="flex items-center justify-center p-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mr-3"></div>
@@ -595,6 +563,7 @@ export default function TasksPage() {
           {toast.message}
         </div>
       )}
+      </div>
     </div>
   );
 }

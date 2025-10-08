@@ -225,7 +225,7 @@ export default async function WorkDetailPage({
             <polyline points="18,4 7,13 18,22" fill="none" />
           </svg>
         </Link>
-        <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: 1 }}>
+        <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: 1 }}>
           {work.title || "Munka neve"}
         </div>
       </div>

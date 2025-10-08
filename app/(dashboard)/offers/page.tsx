@@ -131,7 +131,7 @@ export default function OffersPage() {
 
   return (
     <div className="min-h-screen w-full bg-gray-50 pt-4">
-      <main className="flex-grow w-full mx-auto px-4 max-w-7xl">
+      <main className="flex-grow w-full mx-auto px-4 max-w-7xl pb-24">
         <div className="w-full mx-auto px-4 max-w-7xl">
           <div className="mb-6">
             <div className="flex items-center justify-between">

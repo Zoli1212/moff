@@ -8,6 +8,7 @@ import WorkerDiaryEditForm from "./edit/WorkerDiaryEditForm";
 import GroupedDiaryCreateForm from "./edit/GroupedDiaryCreateForm";
 import GroupedDiaryEditForm from "./edit/GroupedDiaryEditForm";
 import { WorkItem, Worker, WorkItemWorker } from "@/types/work";
+import WorkHeader from "@/components/WorkHeader";
 
 import type {
   WorkDiaryWithItem,
@@ -184,10 +185,12 @@ export default function DiaryPageClient({
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-6 md:py-8">
-      <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 md:mb-6">
-        Munkanapló
-      </h1>
+    <div className="max-w-3xl mx-auto">
+      <WorkHeader title={work?.title || "Munkanapló"} />
+      <div className="py-6 md:py-8 px-3 sm:px-4 md:px-0">
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 md:mb-6">
+          Munkanapló
+        </h1>
 
    
 
@@ -308,6 +311,7 @@ export default function DiaryPageClient({
            data={performanceData} 
            isLoading={isLoading} 
          />
+      </div>
       </div>
     </div>
   );

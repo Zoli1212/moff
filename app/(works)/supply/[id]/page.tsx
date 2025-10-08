@@ -6,6 +6,7 @@ import type { WorkItem, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
 import { getToolsRegistryByTenant, getAssignedToolsForWork } from "@/actions/tools-registry-actions";
+import WorkHeader from "@/components/WorkHeader";
 
 export default async function SupplyPage({
   params,
@@ -48,59 +49,9 @@ export default async function SupplyPage({
   }
 
   return (
-    <div style={{ maxWidth: 450, margin: "0 auto", padding: "0 8px", paddingBottom: 120 }}>
-      {/* Header with back arrow and work name */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          padding: "18px 0 6px 0",
-          gap: 10,
-        }}
-      >
-        <a
-          href={`/works/${workId}`}
-          style={{
-            textDecoration: "none",
-            color: "#222",
-            fontSize: 22,
-            lineHeight: 1,
-            padding: 0,
-            marginRight: 2,
-          }}
-        >
-          <svg
-            width="28"
-            height="28"
-            viewBox="0 0 24 24"
-            fill="none"
-            style={{ verticalAlign: "middle" }}
-          >
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="#222"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </a>
-        <span
-          style={{
-            fontWeight: 700,
-            fontSize: 22,
-            flex: 1,
-            letterSpacing: 0.5,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {workName}
-        </span>
-        {/* Optionally add a plus or other icon here if needed */}
-      </div>
-      {/* Subtitle */}
+    <div style={{ maxWidth: 450, margin: "0 auto", paddingBottom: 120 }}>
+      <WorkHeader title={workName || "Beszerzés"} />
+      <div style={{ padding: "0 8px" }}>
 
       {/* Info badge */}
       <div
@@ -232,6 +183,7 @@ export default async function SupplyPage({
           workItems={workItems}
         />
       )}
+      </div>
     </div>
   );
 }
