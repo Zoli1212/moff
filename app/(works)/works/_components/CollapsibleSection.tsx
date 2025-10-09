@@ -17,57 +17,35 @@ export default function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState<boolean>(defaultOpen);
   return (
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: 14,
-        boxShadow: "0 1px 5px #eee",
-        padding: "10px 12px",
-        marginBottom: 12,
-      }}
-    >
+    <div className="bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl shadow-xl border border-orange-500/20 p-4 mb-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          background: "transparent",
-          border: "none",
-          padding: "6px 6px",
-          cursor: "pointer",
-        }}
+        className="flex items-center justify-between w-full bg-transparent border-none p-2 cursor-pointer hover:bg-gray-600/30 rounded-xl transition-colors duration-200"
       >
-        <div style={{ fontWeight: 700, fontSize: 16, letterSpacing: 0.3 }}>
+        <div className="font-bold text-lg text-white flex items-center gap-3">
+          <div className="w-3 h-3 bg-orange-500 rounded-full shadow-lg"></div>
           {title}
           {typeof count !== "undefined" && (
-            <span style={{ fontWeight: 600 }}> ({count})</span>
+            <span className="font-semibold text-orange-400"> ({count})</span>
           )}
         </div>
         <span
           aria-hidden
-          style={{
-            display: "inline-block",
-            transition: "transform 0.2s",
-            transform: open ? "rotate(90deg)" : "rotate(0deg)",
-            color: "#888",
-          }}
+          className={`inline-block transition-transform duration-200 text-orange-500 text-lg ${
+            open ? "rotate-90" : "rotate-0"
+          }`}
         >
           ▶
         </span>
       </button>
       <div
-        style={{
-          height: open ? "auto" : 0,
-          overflow: "hidden",
-          transition: "height 0.2s ease",
-          padding: open ? "8px 6px 2px" : "0 6px",
-        }}
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          open ? "max-h-screen opacity-100 pt-4" : "max-h-0 opacity-0"
+        }`}
       >
-        {open && children}
+        {open && <div className="text-white">{children}</div>}
       </div>
     </div>
   );
