@@ -695,9 +695,9 @@ const WorkersSlotsSection: React.FC<Props> = ({
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <span className="text-[#666] font-medium">R.A.G. frissítés</span>
+            <span className="text-[#666] font-medium">Frissítés</span>
             <span className="text-[#888] text-sm">
-              Augmented context update
+              Adatok betöltése
             </span>
           </div>
         ) : (

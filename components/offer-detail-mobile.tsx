@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { updateOfferItems, updateOfferStatus } from "@/actions/offer-actions";
+import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
 import { RequirementDetail } from "./requirement-detail";
 import { format } from "date-fns";
@@ -11,6 +12,7 @@ import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import dynamic from "next/dynamic";
 import ConfirmationDialog from "./ConfirmationDialog";
+import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
 
 // Dynamically import the email sender component to avoid SSR issues
 const OfferLetterEmailSender = dynamic(
@@ -43,6 +45,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,9 +102,10 @@ interface OfferDetailViewProps {
   offer: OfferWithItems;
   onBack: () => void;
   onStatusChange?: (newStatus: string) => void;
+  onOfferDeleted?: (offerId: number) => void;
 }
 
-export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailViewProps) {
+export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItem, setEditingItem] = useState<{
@@ -118,6 +122,8 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showOfferDeleteModal, setShowOfferDeleteModal] = useState(false);
+  const [isOfferDeleting, setIsOfferDeleting] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -367,6 +373,43 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
   // Cancel editing in modal
   const cancelEditing = () => {
     setIsModalOpen(false);
+  };
+
+  // Handle offer deletion
+  const handleOfferDeleteClick = () => {
+    setShowOfferDeleteModal(true);
+  };
+
+  const handleOfferDeleteConfirm = async () => {
+    setIsOfferDeleting(true);
+    try {
+      const result = await deleteOffer(offer.id);
+      
+      if (result.success) {
+        toast.success("Ajánlat sikeresen törölve");
+        
+        // Notify parent component about deletion
+        if (onOfferDeleted) {
+          onOfferDeleted(offer.id);
+        }
+        
+        // Navigate back to offers list
+        if (onBack) {
+          onBack();
+        }
+      } else {
+        toast.error(result.error || "Hiba történt a törlés során");
+      }
+    } catch (error) {
+      toast.error("Hiba történt a törlés során");
+    } finally {
+      setIsOfferDeleting(false);
+      setShowOfferDeleteModal(false);
+    }
+  };
+
+  const handleOfferDeleteCancel = () => {
+    setShowOfferDeleteModal(false);
   };
 
   // Calculate totals
@@ -832,8 +875,18 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
               <h1 className="text-2xl font-bold text-gray-900">
                 {offer.title || "Ajánlat részletei"}
               </h1>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+              <div className="flex items-center gap-2">
+                {offer.status === 'draft' && (
+                  <button
+                    onClick={handleOfferDeleteClick}
+                    className="p-2 rounded-full hover:bg-red-50 transition-colors text-red-500 hover:text-red-600"
+                    title="Ajánlat törlése"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                  </button>
+                )}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                   <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -901,6 +954,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-6 mt-4">
@@ -1262,7 +1316,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
                       </div>
                     </div>
                     {/* Email Sender Section */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
+                    {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
                       <button
                         onClick={() => setIsEmailExpanded(!isEmailExpanded)}
                         className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -1300,6 +1354,59 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
                           />
                         </div>
                       )}
+                    </div> */}
+                    
+                    {/* Bottom Share Menu - Same as top */}
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-medium text-gray-900">Megosztás és export</h3>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-5 w-5 text-gray-600"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                                <polyline points="16 6 12 2 8 6" />
+                                <line x1="12" y1="2" x2="12" y2="15" />
+                              </svg>
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-55" align="end">
+                            <div className="px-2 py-1.5">
+                              <SocialShareButtonsExcel
+                                offer={{
+                                  title: offer.title,
+                                  description: offer.description,
+                                  items: offer.items?.map((item) => ({
+                                    id: item.id,
+                                    name: item.name,
+                                    quantity: item.quantity,
+                                    unit: item.unit,
+                                    materialUnitPrice: item.materialUnitPrice,
+                                    unitPrice: item.unitPrice,
+                                    materialTotal: item.materialTotal,
+                                    workTotal: item.workTotal,
+                                    totalPrice: item.workTotal,
+                                  })),
+                                  totalPrice: offer.totalPrice,
+                                  createdAt: offer.createdAt,
+                                  validUntil: offer.validUntil,
+                                  status: offer.status,
+                                  notes: offer.notes,
+                                }}
+                              />
+                            </div>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1352,6 +1459,18 @@ export function OfferDetailView({ offer, onBack, onStatusChange }: OfferDetailVi
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSave={handleSaveNewItem}
+      />
+
+      {/* Delete Offer Modal */}
+      <DeleteConfirmModal
+        isOpen={showOfferDeleteModal}
+        onClose={handleOfferDeleteCancel}
+        onConfirm={handleOfferDeleteConfirm}
+        title="Ajánlat törlése"
+        message={`Biztosan törölni szeretnéd a(z) "${offer.title || 'Névtelen ajánlat'}" ajánlatot? Ez a művelet nem vonható vissza.`}
+        confirmText="Törlés"
+        cancelText="Mégse"
+        isLoading={isOfferDeleting}
       />
     </>
   );

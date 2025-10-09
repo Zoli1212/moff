@@ -17,7 +17,6 @@ export function getDailyRateForDiaryItem(
 ): number {
   // 1. Első prioritás: snapshot használata (ha van)
   if (diaryItem.dailyRateSnapshot && diaryItem.dailyRateSnapshot > 0) {
-    console.log(`💰 [SALARY] Using snapshot for "${diaryItem.name}": ${diaryItem.dailyRateSnapshot} Ft`);
     return diaryItem.dailyRateSnapshot;
   }
 
@@ -28,7 +27,6 @@ export function getDailyRateForDiaryItem(
   );
 
   const fallbackRate = workforceWorker?.dailyRate || 0;
-  console.log(`📊 [SALARY] Registry dailyRate for "${diaryItem.name}": ${fallbackRate} Ft`);
   
   return fallbackRate;
 }

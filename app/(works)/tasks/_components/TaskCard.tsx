@@ -156,7 +156,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onChange={async (e) => {
             e.stopPropagation();
             if (!onCheck) return;
-            toast("AI frissítés folyamatban ...", {
+            toast("Frissítés folyamatban ...", {
               id: "frissites",
               duration: 50000,
               style: {

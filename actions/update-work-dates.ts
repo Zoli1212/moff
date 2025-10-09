@@ -1,7 +1,7 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
-import { currentUser } from '@clerk/nextjs/server';
+import { getTenantSafeAuth } from '@/lib/tenant-auth';
 
 const prisma = new PrismaClient();
 
@@ -14,9 +14,8 @@ export async function updateWorkDates(
   endDate: string | null
 ) {
   try {
-    // Get current user for tenant filtering
-    const user = await currentUser();
-    const tenantEmail = user?.emailAddresses?.[0]?.emailAddress;
+    // Get tenant-safe auth (handles tenant selector properly)
+    const { user, tenantEmail } = await getTenantSafeAuth();
 
     if (!tenantEmail) {
       throw new Error('No tenant email found');

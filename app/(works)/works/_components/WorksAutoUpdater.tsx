@@ -204,7 +204,7 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
               strokeLinejoin="round"
             />
           </svg>
-          <span style={{ fontWeight: 600 }}>Minden munka AI-frissítve!</span>
+          <span style={{ fontWeight: 600 }}>Minden munka frissítve!</span>
           <button
             onClick={() => setHideNoUpdateMsg(true)}
             style={{

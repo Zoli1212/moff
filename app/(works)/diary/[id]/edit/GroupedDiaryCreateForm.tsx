@@ -648,7 +648,7 @@ export default function GroupedDiaryForm({
           <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
             <div className="text-lg font-medium text-gray-800">
-              AI frissítés
+              Frissítés
             </div>
             <div className="text-sm text-gray-600">
               Napló bejegyzések feldolgozása...
@@ -1305,7 +1305,7 @@ export default function GroupedDiaryForm({
             {isSubmitting ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                AI frissítés...
+                Frissítés...
               </div>
             ) : (
               "Bejegyzés mentése"

@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { getUserOffers } from "@/actions/offer-actions";
+import { deleteOffer } from "@/actions/delete-offer";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
+import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useRequirementIdStore } from "@/store/requirement-id-store";
 import { useOfferTitleStore } from "@/store/offer-title-store";
+import { toast } from "sonner";
 
 interface OfferItem {
   id?: number;
@@ -52,6 +55,9 @@ export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [offerToDelete, setOfferToDelete] = useState<Offer | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { clearDemandText, clearStoredItems } = useDemandStore();
   const { clearRequirementId } = useRequirementIdStore();
   const { clearOfferTitle } = useOfferTitleStore();
@@ -115,7 +121,7 @@ export default function OffersPage() {
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case "draft":
-        return "Piszkozat";
+        return "";
       case "sent":
         return "Elküldve";
       case "accepted":
@@ -127,6 +133,41 @@ export default function OffersPage() {
       default:
         return status;
     }
+  };
+
+  const handleDeleteClick = (offer: Offer, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOfferToDelete(offer);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!offerToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteOffer(offerToDelete.id);
+      
+      if (result.success) {
+        toast.success("Ajánlat sikeresen törölve");
+        // Remove from local state
+        setOffers(prev => prev.filter(o => o.id !== offerToDelete.id));
+        setDeleteModalOpen(false);
+        setOfferToDelete(null);
+      } else {
+        toast.error(result.error || "Hiba történt a törlés során");
+      }
+    } catch (error) {
+      toast.error("Hiba történt a törlés során");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setOfferToDelete(null);
   };
 
   return (
@@ -207,10 +248,21 @@ export default function OffersPage() {
                               </p>
                             )}
                           </div>
-                          <div className="text-right">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === 'work' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
-                              {getStatusDisplay(offer.status)}
-                            </span>
+                          <div className="flex items-center gap-2">
+                            {offer.status === 'draft' && (
+                              <button
+                                onClick={(e) => handleDeleteClick(offer, e)}
+                                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                                title="Ajánlat törlése"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            )}
+                            {getStatusDisplay(offer.status) && (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === 'work' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                                {getStatusDisplay(offer.status)}
+                              </span>
+                            )}
                           </div>
                         </div>
 
@@ -254,6 +306,17 @@ export default function OffersPage() {
         open={isDialogOpen}
         setOpen={setIsDialogOpen}
         toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
+      />
+
+      <DeleteConfirmModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        title="Ajánlat törlése"
+        message={`Biztosan törölni szeretnéd a(z) "${offerToDelete?.title || 'Névtelen ajánlat'}" ajánlatot? Ez a művelet nem vonható vissza.`}
+        confirmText="Törlés"
+        cancelText="Mégse"
+        isLoading={isDeleting}
       />
     </div>
   );

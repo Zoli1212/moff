@@ -77,7 +77,7 @@ export async function populateRAGFromProject(workId: number) {
     
     return {
       success: true,
-      message: "RAG tudásbázis frissítve projekt adatokkal"
+      message: "Tudásbázis frissítve projekt adatokkal"
     };
   } catch (error) {
     console.error('RAG population error:', error);

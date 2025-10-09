@@ -54,24 +54,11 @@ export async function calculateWorkProfit({
       },
     });
 
-    console.log('=== WORK PROFIT CALCULATION ===');
-    console.log('workId:', workId);
-    console.log('workDiaryItems count:', workDiaryItems.length);
-    console.log('workItems count:', workItems.length);
-    console.log('workforceRegistry count:', workforceRegistry.length);
 
     // Számítás minden workDiaryItem-re (ugyanaz a logika mint a performance-calculator-ban)
     workDiaryItems.forEach((diaryItem, index) => {
       const workItem = workItems.find((wi) => wi.id === diaryItem.workItemId);
       
-      console.log(`DiaryItem ${index}:`, {
-        id: diaryItem.id,
-        workItemId: diaryItem.workItemId,
-        quantity: diaryItem.quantity,
-        workHours: diaryItem.workHours,
-        workItemFound: !!workItem,
-        workItemUnitPrice: workItem?.unitPrice,
-      });
       
       if (!workItem) return;
 
@@ -81,7 +68,6 @@ export async function calculateWorkProfit({
         const revenuePerUnit = workItem.unitPrice;
         const itemRevenue = progressMade * revenuePerUnit;
         totalRevenue += itemRevenue;
-        console.log(`Revenue added: ${itemRevenue} (${progressMade} * ${revenuePerUnit})`);
       }
 
       // Költség számítása: pontos órabér a workforce registry alapján (ugyanaz mint performance-calculator-ban)
@@ -92,14 +78,11 @@ export async function calculateWorkProfit({
       if (hoursWorked > 0) {
         const itemCost = hoursWorked * hourlyRate;
         totalCost += itemCost;
-        console.log(`Cost added: ${itemCost} (${hoursWorked} * ${hourlyRate}, dailyRate: ${dailyRate})`);
       }
     });
 
     await prisma.$disconnect();
 
-    console.log('Final totals:', { totalRevenue, totalCost, profit: totalRevenue - totalCost });
-    console.log('=== END WORK PROFIT CALCULATION ===');
 
   } catch (error) {
     console.error('Error calculating work profit:', error);

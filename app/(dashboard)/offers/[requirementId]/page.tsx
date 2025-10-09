@@ -315,6 +315,17 @@ export default function RequirementOffersPage() {
     }
   };
 
+  // Handle offer deletion
+  const handleOfferDeleted = (offerId: number) => {
+    // Remove from offers list
+    setOffers(prevOffers => prevOffers.filter(offer => offer.id !== offerId));
+    
+    // If the deleted offer was selected, go back to list
+    if (selectedOffer && selectedOffer.id === offerId) {
+      handleBackToList();
+    }
+  };
+
   // Render detail view if an offer is selected
   if (isDetailView && selectedOffer) {
     return (
@@ -324,6 +335,7 @@ export default function RequirementOffersPage() {
             offer={selectedOffer} 
             onBack={handleBackToList} 
             onStatusChange={(newStatus) => handleStatusChange(selectedOffer.id, newStatus)}
+            onOfferDeleted={handleOfferDeleted}
           />
         </div>
       </div>

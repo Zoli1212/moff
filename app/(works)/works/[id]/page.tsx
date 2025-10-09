@@ -112,15 +112,10 @@ export default function WorkDetailPage({
                 workItemWorkers: item.workItemWorkers ?? [],
               }));
               
-              console.log('🔍 [PROFIT] Starting profit calculation for workId:', workData.id);
-              console.log('🔍 [PROFIT] WorkItems count:', workItems.length);
-              
               const profitResult = await calculateWorkProfitAction(
                 workData.id,
                 workItems
               );
-              
-              console.log('🔍 [PROFIT] Calculation result:', profitResult);
               setDynamicProfit(profitResult);
             } catch (profitError) {
               console.error('❌ [PROFIT] Error calculating profit:', profitError);
@@ -838,7 +833,7 @@ export default function WorkDetailPage({
             marginBottom: 0,
           }}
         >
-          <span style={{ fontWeight: 600 }}>Profit margin:</span>
+          <span style={{ fontWeight: 600 }}>Profit ráta:</span>
           <span
             style={{
               fontWeight: 400,
