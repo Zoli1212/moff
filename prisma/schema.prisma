@@ -185,6 +185,7 @@ model Work {
   workDiaryItems WorkDiaryItem[]
   offerItems    Json?  
   updatedByAI   Boolean   @default(false)
+  workImageUrl  String?   // Kép URL a munkához
   performances  Performance[] // Kapcsolat a Performance táblához
   workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez
   billings      Billing[] // Kapcsolat a számlákhoz
