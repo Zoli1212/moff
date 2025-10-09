@@ -795,6 +795,23 @@ export async function getWorkById(id: number) {
   };
 }
 
+// Get all workDiaryItems for a specific work
+export async function getWorkDiaryItemsByWorkId(workId: number) {
+  const { user, tenantEmail } = await getTenantSafeAuth();
+
+  const workDiaryItems = await prisma.workDiaryItem.findMany({
+    where: {
+      workId: workId,
+      tenantEmail: tenantEmail,
+    },
+    orderBy: {
+      date: 'desc',
+    },
+  });
+
+  return workDiaryItems;
+}
+
 // Update WorkItem inProgress status
 export async function updateWorkItemInProgress(params: {
   workItemId: number;

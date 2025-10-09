@@ -45,7 +45,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -401,6 +400,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
         toast.error(result.error || "Hiba történt a törlés során");
       }
     } catch (error) {
+      console.log(error)
       toast.error("Hiba történt a törlés során");
     } finally {
       setIsOfferDeleting(false);
@@ -1316,7 +1316,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                       </div>
                     </div>
                     {/* Email Sender Section */}
-                    {/* <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
                       <button
                         onClick={() => setIsEmailExpanded(!isEmailExpanded)}
                         className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -1354,7 +1354,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                           />
                         </div>
                       )}
-                    </div> */}
+                    </div>
                     
                     {/* Bottom Share Menu - Same as top */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">

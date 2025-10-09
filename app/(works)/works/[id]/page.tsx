@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 
-import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
+import { getWorkById, getWorkItemsWithWorkers, getWorkDiaryItemsByWorkId } from "@/actions/work-actions";
 import { getGeneralWorkersForWork } from "@/actions/workitemworker-actions";
 import { calculateWorkProfitAction } from "@/actions/work-profit-actions";
 import { updateWorkImageUrl } from "@/actions/update-work-image";
@@ -14,17 +14,15 @@ import type {
   Worker,
 } from "@/types/work";
 import type { WorkDiary } from "@/types/work-diary";
-import type { GeneralWorkerFromDB } from "../_components/WorkersSummary";
-// Tool típust bővítjük quantity-vel
+
 
 type Tool = BaseTool & { quantity?: number };
 import CollapsibleSection from "../_components/CollapsibleSection";
 import TechnicalButton from "./_components/TechnicalButton";
-import ToolsSlotsSection from "../_components/ToolsSlotsSection"; // ÚJ: tools slot szekció
-// import WorkersSlotsSection from "../../supply/_components/WorkersSlotsSection";
+
 import Link from "next/link";
 import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
-import { AssignedTool } from "@/types/tools.types";
+
 
 import Tasks from "../_components/Tasks";
 import ToolsSummary from "../_components/ToolsSummary";
@@ -39,7 +37,7 @@ export default function WorkDetailPage({
   const [work, setWork] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  
+
   // State for image upload
   const [workImage, setWorkImage] = useState<string | null>(null);
   const [imageUploading, setImageUploading] = useState(false);
@@ -49,12 +47,13 @@ export default function WorkDetailPage({
   const [workItemsWithWorkers, setWorkItemsWithWorkers] = useState<any[]>([]);
   const [assignedTools, setAssignedTools] = useState<any[]>([]);
   const [generalWorkersFromDB, setGeneralWorkersFromDB] = useState<any[]>([]);
-  
+  const [workDiaryItems, setWorkDiaryItems] = useState<any[]>([]);
+
   // State for dates
   const [showDateModal, setShowDateModal] = useState(false);
   const [editStartDate, setEditStartDate] = useState<string>("");
   const [editEndDate, setEditEndDate] = useState<string>("");
-  
+
   const [dynamicProfit, setDynamicProfit] = useState({
     totalRevenue: 0,
     totalCost: 0,
@@ -79,24 +78,37 @@ export default function WorkDetailPage({
         const workData = await getWorkById(Number(resolvedParams.id));
         setWork(workData);
         setWorkImage(workData.workImageUrl || null);
-        
+
         // Initialize date states
-        setEditStartDate(workData.startDate ? new Date(workData.startDate).toISOString().split('T')[0] : "");
-        setEditEndDate(workData.endDate ? new Date(workData.endDate).toISOString().split('T')[0] : "");
+        setEditStartDate(
+          workData.startDate
+            ? new Date(workData.startDate).toISOString().split("T")[0]
+            : ""
+        );
+        setEditEndDate(
+          workData.endDate
+            ? new Date(workData.endDate).toISOString().split("T")[0]
+            : ""
+        );
 
         if (workData && workData.id) {
           try {
             const workItemsData = await getWorkItemsWithWorkers(workData.id);
-            const assignedToolsData = await getAssignedToolsForWork(workData.id);
-            const generalWorkersData = await getGeneralWorkersForWork(workData.id);
-            
+            const assignedToolsData = await getAssignedToolsForWork(
+              workData.id
+            );
+            const generalWorkersData = await getGeneralWorkersForWork(
+              workData.id
+            );
+            const workDiaryItemsData = await getWorkDiaryItemsByWorkId(
+              workData.id
+            );
+
             setWorkItemsWithWorkers(workItemsData);
             setAssignedTools(assignedToolsData);
             setGeneralWorkersFromDB(generalWorkersData);
-            
-            console.log(workItemsData, "WORKITEMSWITHWORKERS");
-            console.log(assignedToolsData, "ASSIGNEDTOOLS");
-            console.log(generalWorkersData, "GENERAL_WORKERS_FROM_WORKITEMWORKERS");
+            setWorkDiaryItems(workDiaryItemsData);
+
 
             // Load profit calculation
             try {
@@ -111,14 +123,17 @@ export default function WorkDetailPage({
                 workers: item.workers ?? [],
                 workItemWorkers: item.workItemWorkers ?? [],
               }));
-              
+
               const profitResult = await calculateWorkProfitAction(
                 workData.id,
                 workItems
               );
               setDynamicProfit(profitResult);
             } catch (profitError) {
-              console.error('❌ [PROFIT] Error calculating profit:', profitError);
+              console.error(
+                "❌ [PROFIT] Error calculating profit:",
+                profitError
+              );
               // Keep default values if calculation fails
               setDynamicProfit({
                 totalRevenue: 0,
@@ -154,20 +169,20 @@ export default function WorkDetailPage({
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     setImageError("");
     setImageUploading(true);
-    
+
     const formData = new FormData();
     formData.append("file", file);
-    
+
     try {
       const res = await fetch("/api/upload-avatar", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
-      
+
       if (data.url) {
         setWorkImage(data.url);
         // Save to database
@@ -203,11 +218,11 @@ export default function WorkDetailPage({
   const handleDateSave = async () => {
     try {
       const updateResult = await updateWorkDates(
-        work.id, 
-        editStartDate || null, 
+        work.id,
+        editStartDate || null,
         editEndDate || null
       );
-      
+
       if (updateResult.success) {
         // Update the work object with new dates
         setWork((prev: any) => ({
@@ -217,20 +232,18 @@ export default function WorkDetailPage({
         }));
         setShowDateModal(false);
       } else {
-        console.error('Failed to update dates:', updateResult.error);
+        console.error("Failed to update dates:", updateResult.error);
       }
     } catch (error) {
-      console.error('Error updating dates:', error);
+      console.error("Error updating dates:", error);
     }
   };
 
   if (loading) return <div style={{ padding: 40 }}>Betöltés...</div>;
-  if (error) return <div style={{ padding: 40, color: "red" }}>Hiba: {error}</div>;
+  if (error)
+    return <div style={{ padding: 40, color: "red" }}>Hiba: {error}</div>;
   if (!work) return <div style={{ padding: 40 }}>Nincs adat a munkához.</div>;
 
-  // Progress calculations
-  const progress = typeof work.progress === "number" ? work.progress : 0;
-  const percent = Math.min(100, Math.round(progress));
 
   // Dates
   const startDate = work.startDate
@@ -373,7 +386,8 @@ export default function WorkDetailPage({
 
   // ToolsSlotsSection importálása
 
-  const workDiaries: WorkDiary[] = work.workDiaries || [];
+  // Use the fetched workDiaryItems instead of work.workDiaries
+  const workDiaries: any[] = workDiaryItems;
 
   return (
     <div
@@ -506,7 +520,7 @@ export default function WorkDetailPage({
                 )}
               </div>
             </label>
-            
+
             {/* Red X button to remove image */}
             {workImage && (
               <button
@@ -533,16 +547,18 @@ export default function WorkDetailPage({
                 ×
               </button>
             )}
-            
+
             {imageError && (
-              <div style={{ 
-                fontSize: 10, 
-                color: "red", 
-                marginTop: 4,
-                position: "absolute",
-                width: "100px",
-                textAlign: "center"
-              }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  color: "red",
+                  marginTop: 4,
+                  position: "absolute",
+                  width: "100px",
+                  textAlign: "center",
+                }}
+              >
                 {imageError}
               </div>
             )}
@@ -774,7 +790,7 @@ export default function WorkDetailPage({
             Szerkesztés
           </button>
         </div>
-        
+
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <span style={{ fontWeight: 600, color: "#666" }}>Kezdés:</span>
@@ -1085,7 +1101,7 @@ export default function WorkDetailPage({
       </CollapsibleSection>
 
       {/* Technical Button */}
-      <TechnicalButton workId={work?.id || ''} />
+      <TechnicalButton workId={work?.id || ""} />
 
       {/* Date Edit Modal */}
       {showDateModal && (
@@ -1119,9 +1135,16 @@ export default function WorkDetailPage({
             <h3 style={{ margin: "0 0 20px 0", fontSize: 18, fontWeight: 600 }}>
               Időtartam szerkesztése
             </h3>
-            
+
             <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#666" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  color: "#666",
+                }}
+              >
                 Kezdés dátuma:
               </label>
               <input
@@ -1137,9 +1160,16 @@ export default function WorkDetailPage({
                 }}
               />
             </div>
-            
+
             <div style={{ marginBottom: 24 }}>
-              <label style={{ display: "block", marginBottom: 8, fontWeight: 600, color: "#666" }}>
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: 8,
+                  fontWeight: 600,
+                  color: "#666",
+                }}
+              >
                 Befejezés dátuma:
               </label>
               <input
@@ -1155,8 +1185,10 @@ export default function WorkDetailPage({
                 }}
               />
             </div>
-            
-            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
+
+            <div
+              style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}
+            >
               <button
                 onClick={() => setShowDateModal(false)}
                 style={{
