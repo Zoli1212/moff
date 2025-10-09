@@ -267,25 +267,30 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     });
 
     // Update work items with billed quantities - DIRECTLY by workItemId
-    console.log('🔍 [finalizeAndGenerateInvoice] Updating WorkItems directly by workItemId');
-    console.log('🔍 [finalizeAndGenerateInvoice] BillingItems:', billingItems);
-    
+    console.log(
+      "🔍 [finalizeAndGenerateInvoice] Updating WorkItems directly by workItemId"
+    );
+    console.log("🔍 [finalizeAndGenerateInvoice] BillingItems:", billingItems);
+
     for (const billingItem of billingItems) {
       if (billingItem.workItemId) {
         const newBilledQuantity = parseFloat(billingItem.quantity || "0");
-        
+
         // Get current billedQuantity
         const currentWorkItem = await prisma.workItem.findUnique({
           where: { id: billingItem.workItemId },
-          select: { billedQuantity: true, name: true }
+          select: { billedQuantity: true, name: true },
         });
-        
+
         if (currentWorkItem) {
           const currentBilledQuantity = currentWorkItem.billedQuantity || 0;
-          const updatedBilledQuantity = currentBilledQuantity + newBilledQuantity;
-          
-          console.log(`✅ [finalizeAndGenerateInvoice] Updating WorkItem ${billingItem.workItemId} (${currentWorkItem.name}): ${currentBilledQuantity} + ${newBilledQuantity} = ${updatedBilledQuantity}`);
-          
+          const updatedBilledQuantity =
+            currentBilledQuantity + newBilledQuantity;
+
+          console.log(
+            `✅ [finalizeAndGenerateInvoice] Updating WorkItem ${billingItem.workItemId} (${currentWorkItem.name}): ${currentBilledQuantity} + ${newBilledQuantity} = ${updatedBilledQuantity}`
+          );
+
           await prisma.workItem.update({
             where: { id: billingItem.workItemId },
             data: {
@@ -293,10 +298,15 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
             },
           });
         } else {
-          console.log(`❌ [finalizeAndGenerateInvoice] WorkItem not found: ${billingItem.workItemId}`);
+          console.log(
+            `❌ [finalizeAndGenerateInvoice] WorkItem not found: ${billingItem.workItemId}`
+          );
         }
       } else {
-        console.log(`⚠️ [finalizeAndGenerateInvoice] No workItemId in billingItem:`, billingItem);
+        console.log(
+          `⚠️ [finalizeAndGenerateInvoice] No workItemId in billingItem:`,
+          billingItem
+        );
       }
     }
 
@@ -420,6 +430,100 @@ export async function updateBilling(
   }
 }
 
+export async function markAsPaidCash(billingId: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    const billing = await prisma.billing.findFirst({
+      where: {
+        id: billingId,
+        tenantEmail: tenantEmail,
+      },
+    });
+
+    if (!billing) {
+      throw new Error("Számla nem található.");
+    }
+
+    if (billing.status !== "draft") {
+      throw new Error("Csak piszkozat állapotú számlák jelölhetők pénzügyileg teljesítettnek.");
+    }
+
+    const billingItems = JSON.parse(billing.items as string);
+
+    // Update work items with paid quantities - DIRECTLY by workItemId
+    console.log(
+      "🔍 [markAsPaidCash] Updating WorkItems paidQuantity by workItemId"
+    );
+    console.log("🔍 [markAsPaidCash] BillingItems:", billingItems);
+
+    for (const billingItem of billingItems) {
+      if (billingItem.workItemId) {
+        const newPaidQuantity = parseFloat(billingItem.quantity || "0");
+
+        // Get current paidQuantity
+        const currentWorkItem = await prisma.workItem.findUnique({
+          where: { id: billingItem.workItemId },
+          select: { paidQuantity: true, name: true },
+        });
+
+        if (currentWorkItem) {
+          const currentPaidQuantity = currentWorkItem.paidQuantity || 0;
+          const updatedPaidQuantity = currentPaidQuantity + newPaidQuantity;
+
+          console.log(
+            `✅ [markAsPaidCash] Updating WorkItem ${billingItem.workItemId} (${currentWorkItem.name}): ${currentPaidQuantity} + ${newPaidQuantity} = ${updatedPaidQuantity}`
+          );
+
+          await prisma.workItem.update({
+            where: { id: billingItem.workItemId },
+            data: {
+              paidQuantity: updatedPaidQuantity,
+            },
+          });
+        } else {
+          console.log(
+            `❌ [markAsPaidCash] WorkItem not found: ${billingItem.workItemId}`
+          );
+        }
+      } else {
+        console.log(
+          `⚠️ [markAsPaidCash] No workItemId in billingItem:`,
+          billingItem
+        );
+      }
+    }
+
+    // Update billing status to indicate cash payment
+    const updatedBilling = await prisma.billing.update({
+      where: { id: billingId },
+      data: {
+        status: "paid_cash",
+        notes: (billing.notes || "") + " [Készpénzben fizetve]",
+      },
+    });
+
+    return {
+      success: true,
+      updatedBilling: {
+        ...updatedBilling,
+        items: updatedBilling.items
+          ? JSON.parse(updatedBilling.items as string)
+          : [],
+      },
+    };
+  } catch (error) {
+    console.error("Error marking as paid cash:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a készpénzes fizetés jelölésekor.",
+    };
+  }
+}
+
 export async function createBilling(data: CreateBillingData) {
   const { offerId, workId, items, title } = data;
 
@@ -437,7 +541,7 @@ export async function createBilling(data: CreateBillingData) {
     if (!correctOfferId && workId) {
       const work = await prisma.work.findUnique({
         where: { id: workId },
-        select: { offerId: true }
+        select: { offerId: true },
       });
       correctOfferId = work?.offerId || 1;
     }

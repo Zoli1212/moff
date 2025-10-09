@@ -9,11 +9,14 @@ import util from "node:util";
 import { autoSyncWorkToRAG } from "./auto-rag-sync";
 
 // Auto-refresh completedQuantity values for a specific work's WorkItems
-async function refreshCompletedQuantitiesForWork(workId: number, tenantEmail: string) {
+async function refreshCompletedQuantitiesForWork(
+  workId: number,
+  tenantEmail: string
+) {
   try {
     const today = new Date();
     today.setHours(23, 59, 59, 999); // End of today
-    
+
     // Get WorkItems for this specific work
     const workItems = await prisma.workItem.findMany({
       where: {
@@ -24,7 +27,7 @@ async function refreshCompletedQuantitiesForWork(workId: number, tenantEmail: st
         id: true,
         quantity: true,
         completedQuantity: true,
-      }
+      },
     });
 
     for (const workItem of workItems) {
@@ -36,11 +39,11 @@ async function refreshCompletedQuantitiesForWork(workId: number, tenantEmail: st
           date: { lte: today }, // Only entries up to today
         },
         orderBy: {
-          date: 'desc'
+          date: "desc",
         },
         select: {
           progressAtDate: true,
-        }
+        },
       });
 
       const newCompletedQuantity = latestDiaryEntry?.progressAtDate || 0;
@@ -48,9 +51,11 @@ async function refreshCompletedQuantitiesForWork(workId: number, tenantEmail: st
 
       // Only update if there's a difference
       if (Math.abs(newCompletedQuantity - currentCompletedQuantity) > 0.01) {
-        const progress = newCompletedQuantity > 0 && workItem.quantity ? 
-          Math.floor((newCompletedQuantity / workItem.quantity) * 100) : 0;
-        
+        const progress =
+          newCompletedQuantity > 0 && workItem.quantity
+            ? Math.floor((newCompletedQuantity / workItem.quantity) * 100)
+            : 0;
+
         await prisma.workItem.update({
           where: {
             id: workItem.id,
@@ -59,12 +64,12 @@ async function refreshCompletedQuantitiesForWork(workId: number, tenantEmail: st
           data: {
             completedQuantity: newCompletedQuantity,
             progress: progress,
-          }
+          },
         });
       }
     }
   } catch (error) {
-    console.error('Error refreshing completed quantities for work:', error);
+    console.error("Error refreshing completed quantities for work:", error);
     // Don't throw - let the main function continue
   }
 }
@@ -83,11 +88,12 @@ export async function getUserWorks() {
   });
 
   // Calculate totalPrice for each work based on cost fields
-  const worksWithTotalPrice = works.map(work => ({
+  const worksWithTotalPrice = works.map((work) => ({
     ...work,
-    totalPrice: (work.totalLaborCost || 0) + 
-                (work.totalToolCost || 0) + 
-                (work.totalMaterialCost || 0)
+    totalPrice:
+      (work.totalLaborCost || 0) +
+      (work.totalToolCost || 0) +
+      (work.totalMaterialCost || 0),
   }));
 
   return worksWithTotalPrice;
@@ -773,14 +779,14 @@ export async function getWorkById(id: number) {
     },
   });
 
-
   // Verify the work belongs to the user
   if (!work || work.tenantEmail !== tenantEmail) {
     throw new Error("Unauthorized");
   }
 
   // Get expectedProfitPercent from the first performance record
-  const expectedProfitPercent = work?.performances?.[0]?.expectedProfitPercent || null;
+  const expectedProfitPercent =
+    work?.performances?.[0]?.expectedProfitPercent || null;
 
   return {
     ...work,

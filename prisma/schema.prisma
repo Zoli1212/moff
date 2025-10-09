@@ -211,6 +211,7 @@ model WorkItem {
   workDiaryItems WorkDiaryItem[]
   completedQuantity Float?   @default(0)
   billedQuantity    Float?   @default(0)  // Már kiszámlázott mennyiség
+  paidQuantity      Float?   @default(0)  // Pénzügyileg teljesített mennyiség (készpénzes fizetés)
   progress       Int?      @default(0)
   inProgress     Boolean   @default(false)
   modifiedQuantity Float?  // Tenant által módosított mennyiség

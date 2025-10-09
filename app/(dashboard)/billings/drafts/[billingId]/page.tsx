@@ -6,6 +6,7 @@ import {
   getBillingById,
   updateBilling,
   finalizeAndGenerateInvoice,
+  markAsPaidCash,
 } from "@/actions/billing-actions";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function BillingDraftPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
 
@@ -227,6 +229,68 @@ export default function BillingDraftPage() {
     }
   };
 
+  const handleMarkAsPaidCash = async () => {
+    if (!billing) return;
+
+    setIsMarkingPaid(true);
+    try {
+      // First, save the current state of selected items to ensure consistency
+      const parseCurrency = (value: string | undefined): number => {
+        if (!value) return 0;
+        const numericValue = String(value)
+          .replace(/[^0-9,-]+/g, "")
+          .replace(",", ".");
+        return parseFloat(numericValue) || 0;
+      };
+
+      const itemsToSave = editableItems
+        .filter((item) => item.isSelected)
+        .map((item) => {
+          const materialTotal = parseCurrency(item.materialTotal);
+          const workTotal = parseCurrency(item.workTotal);
+          return {
+            ...item,
+            quantity: parseFloat(String(item.quantity).replace(",", ".")) || 0,
+            unitPrice: parseCurrency(item.unitPrice),
+            materialUnitPrice: parseCurrency(item.materialUnitPrice),
+            workTotal: workTotal,
+            materialTotal: materialTotal,
+            totalPrice: materialTotal + workTotal,
+          };
+        });
+
+      const updateResult = await updateBilling(billing.id, {
+        title: editedTitle,
+        items: itemsToSave,
+      });
+
+      if (!updateResult.success) {
+        toast.error(
+          updateResult.error ||
+            "Hiba történt a piszkozat mentésekor a pénzügyi teljesítés előtt."
+        );
+        setIsMarkingPaid(false);
+        return;
+      }
+
+      // If save was successful, proceed to mark as paid cash
+      const result = await markAsPaidCash(billing.id);
+      if (result.success && result.updatedBilling) {
+        setBilling(result.updatedBilling as Billing);
+        toast.success("Pénzügyileg teljesítve!");
+      } else {
+        setError(result.error || "A pénzügyi teljesítés jelölése sikertelen.");
+        toast.error(result.error || "A pénzügyi teljesítés jelölése sikertelen.");
+      }
+    } catch (err) {
+      setError("Hiba történt a pénzügyi teljesítés jelölésekor.");
+      console.log(err);
+      toast.error("Hiba történt a pénzügyi teljesítés jelölésekor.");
+    } finally {
+      setIsMarkingPaid(false);
+    }
+  };
+
   if (loading) return <p>Betöltés...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   if (!billing) return <p>Nincs megjeleníthető adat.</p>;
@@ -236,7 +300,7 @@ export default function BillingDraftPage() {
       <main className="flex-grow w-full mx-auto px-4 max-w-4xl">
         {/* Back button and title */}
         <div className="flex items-center justify-between mb-6">
-          <Link href={`/billings/${billing?.offerId}`} className="p-2">
+          <Link href="/billings" className="p-2">
             <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
           <div className="flex-1 px-2">
@@ -274,10 +338,18 @@ export default function BillingDraftPage() {
                 <span className="text-sm text-gray-500">
                   Státusz:
                   <span
-                    className={`font-semibold ml-1 ${billing.status === "draft" ? "text-orange-500" : "text-green-600"}`}
+                    className={`font-semibold ml-1 ${
+                      billing.status === "draft" 
+                        ? "text-orange-500" 
+                        : billing.status === "paid_cash"
+                        ? "text-green-600"
+                        : "text-blue-600"
+                    }`}
                   >
                     {billing.status === "draft"
                       ? "Piszkozat"
+                      : billing.status === "paid_cash"
+                      ? "Pénzügyileg teljesítve"
                       : `Számlázva (${billing.invoiceNumber})`}
                   </span>
                 </span>
@@ -303,6 +375,16 @@ export default function BillingDraftPage() {
                     {isFinalizing
                       ? "Véglegesítés..."
                       : "Jóváhagyás és Számla Kiállítása"}
+                  </Button>
+                  <Button
+                    onClick={handleMarkAsPaidCash}
+                    disabled={isMarkingPaid}
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
+                  >
+                    {isMarkingPaid
+                      ? "Jelölés..."
+                      : "Pénzügyileg teljesítve"}
                   </Button>
                 </div>
               )}

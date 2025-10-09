@@ -12,7 +12,10 @@ import { BillingItems } from "./_components/BillingItems";
 import { WorkItem, Tool, Material, Worker, WorkItemWorker } from "@/types/work";
 
 // Database WorkItem type (without nested relations)
-type WorkItemFromDb = Omit<WorkItem, 'tools' | 'materials' | 'workers' | 'workItemWorkers'> & {
+type WorkItemFromDb = Omit<
+  WorkItem,
+  "tools" | "materials" | "workers" | "workItemWorkers"
+> & {
   tools?: Tool[] | null;
   materials?: Material[] | null;
   workers?: Worker[] | null;
@@ -25,6 +28,7 @@ interface BillingWorkItem extends WorkItem {
   billableQuantity?: number;
   totalQuantity?: number;
   billedQuantity?: number;
+  paidQuantity?: number;
 }
 
 interface Work {
@@ -57,18 +61,20 @@ export default function BillingsDetailPage() {
         if (!workId) return;
         const data = await getWorkById(Number(workId));
         if (data) {
-          const itemsWithIds = data.workItems?.map((item: WorkItemFromDb, index: number) => ({
-            ...item,
-            id: item.id ?? index,
-            isSelected: false,
-            billableQuantity: item.completedQuantity || 0,
-            totalQuantity: item.quantity || 0,
-            billedQuantity: item.billedQuantity || 0,
-            tools: item.tools || [],
-            materials: item.materials || [],
-            workers: item.workers || [],
-            workItemWorkers: item.workItemWorkers || [],
-          })) ?? [];
+          const itemsWithIds =
+            data.workItems?.map((item: WorkItemFromDb, index: number) => ({
+              ...item,
+              id: item.id ?? index,
+              isSelected: false,
+              billableQuantity: item.completedQuantity || 0,
+              totalQuantity: item.quantity || 0,
+              billedQuantity: item.billedQuantity || 0,
+              paidQuantity: item.paidQuantity || 0,
+              tools: item.tools || [],
+              materials: item.materials || [],
+              workers: item.workers || [],
+              workItemWorkers: item.workItemWorkers || [],
+            })) ?? [];
           setWork({ ...data, workItems: itemsWithIds });
         } else {
           setError("Munka nem található.");
@@ -93,6 +99,7 @@ export default function BillingsDetailPage() {
           billableQuantity: item.completedQuantity || 0,
           totalQuantity: item.quantity || 0,
           billedQuantity: item.billedQuantity || 0,
+          paidQuantity: item.paidQuantity || 0,
           tools: item.tools || [],
           materials: item.materials || [],
           workers: item.workers || [],
@@ -144,15 +151,18 @@ export default function BillingsDetailPage() {
     const itemsForBilling = billingItems
       .filter((item) => item.isSelected)
       .map((item) => {
-        // Calculate billable quantity (completed - already billed)
-        const billableQuantity = Math.max(0, (item.completedQuantity || 0) - (item.billedQuantity || 0));
-        
+        // Calculate billable quantity (completed - already billed - already paid)
+        const billableQuantity = Math.max(
+          0,
+          (item.completedQuantity || 0) - (item.billedQuantity || 0) - (item.paidQuantity || 0)
+        );
+
         // Recalculate totals based on billable quantity
         const materialUnitPrice = item.materialUnitPrice || 0;
         const workUnitPrice = item.unitPrice || 0;
         const materialTotal = billableQuantity * materialUnitPrice;
         const workTotal = billableQuantity * workUnitPrice;
-        
+
         return {
           name: item.name,
           quantity: billableQuantity,

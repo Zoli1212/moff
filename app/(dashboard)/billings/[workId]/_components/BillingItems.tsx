@@ -10,6 +10,7 @@ interface BillingWorkItem extends WorkItem {
   billableQuantity?: number;
   totalQuantity?: number;
   billedQuantity?: number;
+  paidQuantity?: number;
 }
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -103,13 +104,23 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     const updatedItem = { ...editingItem.item, [field]: value };
 
     if (["quantity", "materialUnitPrice", "unitPrice"].includes(field)) {
-      const quantity = typeof updatedItem.quantity === 'number' ? updatedItem.quantity : parseFloat(String(updatedItem.quantity)) || 0;
-      const materialUnitPrice = typeof updatedItem.materialUnitPrice === 'number' ? updatedItem.materialUnitPrice : parseCurrency(String(updatedItem.materialUnitPrice || 0));
-      const workUnitPrice = typeof updatedItem.unitPrice === 'number' ? updatedItem.unitPrice : parseCurrency(String(updatedItem.unitPrice || 0));
+      const quantity =
+        typeof updatedItem.quantity === "number"
+          ? updatedItem.quantity
+          : parseFloat(String(updatedItem.quantity)) || 0;
+      const materialUnitPrice =
+        typeof updatedItem.materialUnitPrice === "number"
+          ? updatedItem.materialUnitPrice
+          : parseCurrency(String(updatedItem.materialUnitPrice || 0));
+      const workUnitPrice =
+        typeof updatedItem.unitPrice === "number"
+          ? updatedItem.unitPrice
+          : parseCurrency(String(updatedItem.unitPrice || 0));
 
       updatedItem.materialTotal = quantity * materialUnitPrice;
       updatedItem.workTotal = quantity * workUnitPrice;
-      updatedItem.totalPrice = updatedItem.materialTotal + updatedItem.workTotal;
+      updatedItem.totalPrice =
+        updatedItem.materialTotal + updatedItem.workTotal;
     }
 
     setEditingItem({ ...editingItem, item: updatedItem });
@@ -149,8 +160,14 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
       .filter((item) => item.isSelected)
       .reduce(
         (totals, item) => {
-          const materialTotal = typeof item.materialTotal === 'number' ? item.materialTotal : parseCurrency(String(item.materialTotal || 0));
-          const workTotal = typeof item.workTotal === 'number' ? item.workTotal : parseCurrency(String(item.workTotal || 0));
+          const materialTotal =
+            typeof item.materialTotal === "number"
+              ? item.materialTotal
+              : parseCurrency(String(item.materialTotal || 0));
+          const workTotal =
+            typeof item.workTotal === "number"
+              ? item.workTotal
+              : parseCurrency(String(item.workTotal || 0));
           return {
             material: totals.material + materialTotal,
             work: totals.work + workTotal,
@@ -215,9 +232,11 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 <Input
                   id="materialUnitPrice"
                   value={formatNumberWithSpace(
-                    typeof editingItem?.item.materialUnitPrice === 'number' 
-                      ? editingItem.item.materialUnitPrice 
-                      : String(editingItem?.item.materialUnitPrice ?? "").replace(/\s*Ft$/, "")
+                    typeof editingItem?.item.materialUnitPrice === "number"
+                      ? editingItem.item.materialUnitPrice
+                      : String(
+                          editingItem?.item.materialUnitPrice ?? ""
+                        ).replace(/\s*Ft$/, "")
                   )}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleModalChange(
@@ -238,9 +257,12 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 <Input
                   id="workUnitPrice"
                   value={formatNumberWithSpace(
-                    typeof editingItem?.item.unitPrice === 'number' 
-                      ? editingItem.item.unitPrice 
-                      : String(editingItem?.item.unitPrice ?? "").replace(/\s*Ft$/, "")
+                    typeof editingItem?.item.unitPrice === "number"
+                      ? editingItem.item.unitPrice
+                      : String(editingItem?.item.unitPrice ?? "").replace(
+                          /\s*Ft$/,
+                          ""
+                        )
                   )}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                     handleModalChange(
@@ -257,9 +279,12 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               <Label className="text-right font-medium">Anyag összesen</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(
-                  typeof editingItem?.item.materialTotal === 'number' 
-                    ? editingItem.item.materialTotal 
-                    : String(editingItem?.item.materialTotal ?? "").replace(/\s*Ft$/, "")
+                  typeof editingItem?.item.materialTotal === "number"
+                    ? editingItem.item.materialTotal
+                    : String(editingItem?.item.materialTotal ?? "").replace(
+                        /\s*Ft$/,
+                        ""
+                      )
                 )}{" "}
                 Ft
               </div>
@@ -268,9 +293,12 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               <Label className="text-right font-medium">Díj összesen</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(
-                  typeof editingItem?.item.workTotal === 'number' 
-                    ? editingItem.item.workTotal 
-                    : String(editingItem?.item.workTotal ?? "").replace(/\s*Ft$/, "")
+                  typeof editingItem?.item.workTotal === "number"
+                    ? editingItem.item.workTotal
+                    : String(editingItem?.item.workTotal ?? "").replace(
+                        /\s*Ft$/,
+                        ""
+                      )
                 )}{" "}
                 Ft
               </div>
@@ -367,20 +395,36 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
 
                 <div></div>
                 <div className="text-right">
-                  {formatCurrency(typeof item.materialUnitPrice === 'number' ? item.materialUnitPrice : parseCurrency(String(item.materialUnitPrice || 0)))}
+                  {formatCurrency(
+                    typeof item.materialUnitPrice === "number"
+                      ? item.materialUnitPrice
+                      : parseCurrency(String(item.materialUnitPrice || 0))
+                  )}
                 </div>
                 <div className="text-right">
-                  {formatCurrency(typeof item.unitPrice === 'number' ? item.unitPrice : parseCurrency(String(item.unitPrice || 0)))}
+                  {formatCurrency(
+                    typeof item.unitPrice === "number"
+                      ? item.unitPrice
+                      : parseCurrency(String(item.unitPrice || 0))
+                  )}
                 </div>
 
                 <div className="col-span-1 font-medium text-gray-500">
                   {item.quantity} {item.unit}
                 </div>
                 <div className="col-span-1 text-right font-semibold text-gray-900">
-                  {formatCurrency(typeof item.materialTotal === 'number' ? item.materialTotal : parseCurrency(String(item.materialTotal || 0)))}
+                  {formatCurrency(
+                    typeof item.materialTotal === "number"
+                      ? item.materialTotal
+                      : parseCurrency(String(item.materialTotal || 0))
+                  )}
                 </div>
                 <div className="col-span-1 text-right font-semibold text-gray-900">
-                  {formatCurrency(typeof item.workTotal === 'number' ? item.workTotal : parseCurrency(String(item.workTotal || 0)))}
+                  {formatCurrency(
+                    typeof item.workTotal === "number"
+                      ? item.workTotal
+                      : parseCurrency(String(item.workTotal || 0))
+                  )}
                 </div>
               </div>
 
@@ -397,21 +441,36 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                     <div className="text-gray-500 text-xs mb-1">ANYAG</div>
                     <div className="text-sm">
                       {formatCurrency(
-                        typeof item.materialUnitPrice === 'number' ? item.materialUnitPrice : parseCurrency(String(item.materialUnitPrice || 0))
+                        typeof item.materialUnitPrice === "number"
+                          ? item.materialUnitPrice
+                          : parseCurrency(String(item.materialUnitPrice || 0))
                       )}
                       /db
                     </div>
                     <div className="font-semibold text-gray-900">
-                      {formatCurrency(typeof item.materialTotal === 'number' ? item.materialTotal : parseCurrency(String(item.materialTotal || 0)))}
+                      {formatCurrency(
+                        typeof item.materialTotal === "number"
+                          ? item.materialTotal
+                          : parseCurrency(String(item.materialTotal || 0))
+                      )}
                     </div>
                   </div>
                   <div>
                     <div className="text-gray-500 text-xs mb-1">MUNKADÍJ</div>
                     <div className="text-sm">
-                      {formatCurrency(typeof item.unitPrice === 'number' ? item.unitPrice : parseCurrency(String(item.unitPrice || 0)))}/db
+                      {formatCurrency(
+                        typeof item.unitPrice === "number"
+                          ? item.unitPrice
+                          : parseCurrency(String(item.unitPrice || 0))
+                      )}
+                      /db
                     </div>
                     <div className="font-semibold text-gray-900">
-                      {formatCurrency(typeof item.workTotal === 'number' ? item.workTotal : parseCurrency(String(item.workTotal || 0)))}
+                      {formatCurrency(
+                        typeof item.workTotal === "number"
+                          ? item.workTotal
+                          : parseCurrency(String(item.workTotal || 0))
+                      )}
                     </div>
                   </div>
                 </div>
@@ -421,23 +480,49 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 <ProgressBar
                   label="Teljesített"
                   value={item.completedQuantity || 0}
-                  max={typeof item.quantity === 'number' ? item.quantity : Number(item.quantity) || 0}
+                  max={
+                    typeof item.quantity === "number"
+                      ? item.quantity
+                      : Number(item.quantity) || 0
+                  }
                   unit={item.unit}
                   color="bg-blue-500"
                 />
                 <ProgressBar
                   label="Számlázott"
                   value={item.billedQuantity || 0}
-                  max={typeof item.quantity === 'number' ? item.quantity : Number(item.quantity) || 0}
+                  max={
+                    typeof item.quantity === "number"
+                      ? item.quantity
+                      : Number(item.quantity) || 0
+                  }
                   unit={item.unit}
                   color="bg-green-500"
                 />
                 <ProgressBar
                   label="Számlázható"
-                  value={Math.max(0, (item.completedQuantity || 0) - (item.billedQuantity || 0))}
-                  max={typeof item.quantity === 'number' ? item.quantity : Number(item.quantity) || 0}
+                  value={Math.max(
+                    0,
+                    (item.completedQuantity || 0) - (item.billedQuantity || 0) - (item.paidQuantity || 0)
+                  )}
+                  max={
+                    typeof item.quantity === "number"
+                      ? item.quantity
+                      : Number(item.quantity) || 0
+                  }
                   unit={item.unit}
                   color="bg-yellow-500"
+                />
+                <ProgressBar
+                  label="Pénzügyileg teljesített"
+                  value={item.paidQuantity || 0}
+                  max={
+                    typeof item.quantity === "number"
+                      ? item.quantity
+                      : Number(item.quantity) || 0
+                  }
+                  unit={item.unit}
+                  color="bg-purple-500"
                 />
               </div>
             </div>

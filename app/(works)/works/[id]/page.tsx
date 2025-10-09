@@ -166,6 +166,47 @@ export default async function WorkDetailPage({
 
   // --- END TOOL AGGREGÁCIÓ ---
 
+  // Aggregate calculations for all WorkItems
+  const aggregateStats = workItems.reduce(
+    (acc, item) => {
+      const totalQuantity = item.quantity || 0;
+      const completedQuantity = item.completedQuantity || 0;
+      const billedQuantity = item.billedQuantity || 0;
+      const paidQuantity = item.paidQuantity || 0;
+      
+      acc.totalQuantity += totalQuantity;
+      acc.completedQuantity += completedQuantity;
+      acc.billedQuantity += billedQuantity;
+      acc.paidQuantity += paidQuantity;
+      
+      return acc;
+    },
+    {
+      totalQuantity: 0,
+      completedQuantity: 0,
+      billedQuantity: 0,
+      paidQuantity: 0,
+    }
+  );
+
+  // Calculate percentages
+  const completedPercent = aggregateStats.totalQuantity > 0 
+    ? Math.round((aggregateStats.completedQuantity / aggregateStats.totalQuantity) * 100)
+    : 0;
+  
+  const billedPercent = aggregateStats.totalQuantity > 0 
+    ? Math.round((aggregateStats.billedQuantity / aggregateStats.totalQuantity) * 100)
+    : 0;
+  
+  const billableQuantity = Math.max(0, aggregateStats.completedQuantity - aggregateStats.billedQuantity - aggregateStats.paidQuantity);
+  const billablePercent = aggregateStats.totalQuantity > 0 
+    ? Math.round((billableQuantity / aggregateStats.totalQuantity) * 100)
+    : 0;
+  
+  const paidPercent = aggregateStats.totalQuantity > 0 
+    ? Math.round((aggregateStats.paidQuantity / aggregateStats.totalQuantity) * 100)
+    : 0;
+
   // ToolsSlotsSection importálása
   // import ToolsSlotsSection from "../_components/ToolsSlotsSection"; (ha nincs, a file tetejére kell)
 
@@ -331,7 +372,7 @@ export default async function WorkDetailPage({
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 14, fontWeight: 600 }}>Teljesített</span>
-              <span style={{ fontSize: 14, color: "#666" }}>65%</span>
+              <span style={{ fontSize: 14, color: "#666" }}>{completedPercent}%</span>
             </div>
             <div style={{ 
               width: "100%", 
@@ -341,7 +382,7 @@ export default async function WorkDetailPage({
               overflow: "hidden"
             }}>
               <div style={{
-                width: "65%",
+                width: `${completedPercent}%`,
                 height: "100%",
                 backgroundColor: "#4CAF50",
                 borderRadius: 4,
@@ -354,7 +395,7 @@ export default async function WorkDetailPage({
           <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 14, fontWeight: 600 }}>Számlázott</span>
-              <span style={{ fontSize: 14, color: "#666" }}>45%</span>
+              <span style={{ fontSize: 14, color: "#666" }}>{billedPercent}%</span>
             </div>
             <div style={{ 
               width: "100%", 
@@ -364,7 +405,7 @@ export default async function WorkDetailPage({
               overflow: "hidden"
             }}>
               <div style={{
-                width: "45%",
+                width: `${billedPercent}%`,
                 height: "100%",
                 backgroundColor: "#2196F3",
                 borderRadius: 4,
@@ -374,10 +415,10 @@ export default async function WorkDetailPage({
           </div>
 
           {/* Számlázható */}
-          <div style={{ marginBottom: 0 }}>
+          <div style={{ marginBottom: 12 }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
               <span style={{ fontSize: 14, fontWeight: 600 }}>Számlázható</span>
-              <span style={{ fontSize: 14, color: "#666" }}>80%</span>
+              <span style={{ fontSize: 14, color: "#666" }}>{billablePercent}%</span>
             </div>
             <div style={{ 
               width: "100%", 
@@ -387,9 +428,32 @@ export default async function WorkDetailPage({
               overflow: "hidden"
             }}>
               <div style={{
-                width: "80%",
+                width: `${billablePercent}%`,
                 height: "100%",
                 backgroundColor: "#FF9800",
+                borderRadius: 4,
+                transition: "width 0.3s ease"
+              }} />
+            </div>
+          </div>
+
+          {/* Pénzügyileg teljesített */}
+          <div style={{ marginBottom: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Pénzügyileg teljesített</span>
+              <span style={{ fontSize: 14, color: "#666" }}>{paidPercent}%</span>
+            </div>
+            <div style={{ 
+              width: "100%", 
+              height: 8, 
+              backgroundColor: "#f0f0f0", 
+              borderRadius: 4,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                width: `${paidPercent}%`,
+                height: "100%",
+                backgroundColor: "#9C27B0",
                 borderRadius: 4,
                 transition: "width 0.3s ease"
               }} />

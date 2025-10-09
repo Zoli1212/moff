@@ -35,6 +35,7 @@ export interface WorkItem {
   progress?: number | null;
   completedQuantity?: number | null;
   billedQuantity?: number | null;
+  paidQuantity?: number | null;
   inProgress?: boolean;
   tools: Tool[];
   materials: Material[];
