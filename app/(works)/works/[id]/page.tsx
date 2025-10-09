@@ -241,39 +241,49 @@ export default async function WorkDetailPage({
           marginBottom: 24,
         }}
       >
-        <div style={{ fontWeight: 600 }}>
-          Azonosító: <span style={{ fontWeight: 400 }}>{work.id}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Státusz:{" "}
-          <span style={{ fontWeight: 400 }}>
-            {work.status === "pending" ? "folyamatban" : "áll"}
-          </span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Ajánlat ID: <span style={{ fontWeight: 400 }}>{work.offerId}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Ajánlat leírás:{" "}
-          <span style={{ fontWeight: 400 }}>
-            {work.offerDescription || "-"}
-          </span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Helyszín:{" "}
-          <span style={{ fontWeight: 400 }}>{work.location || "-"}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Kezdés: <span style={{ fontWeight: 400 }}>{startDate}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Befejezés: <span style={{ fontWeight: 400 }}>{endDate}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Becsült időtartam:{" "}
-          <span style={{ fontWeight: 400 }}>
-            {work.estimatedDuration || "-"}
-          </span>
+        <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+          {/* Left side - Info */}
+          <div style={{ flex: 1 }}>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>
+              Helyszín:{" "}
+              <span style={{ fontWeight: 400 }}>{work.location || "-"}</span>
+            </div>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>
+              Kezdés: <span style={{ fontWeight: 400 }}>{startDate}</span>
+            </div>
+            <div style={{ fontWeight: 600, marginBottom: 8 }}>
+              Befejezés: <span style={{ fontWeight: 400 }}>{endDate}</span>
+            </div>
+            <div style={{ fontWeight: 600 }}>
+              Becsült időtartam:{" "}
+              <span style={{ fontWeight: 400 }}>
+                {work.estimatedDuration || "-"}
+              </span>
+            </div>
+          </div>
+
+          {/* Right side - Image upload */}
+          <div style={{ position: "relative" }}>
+            <div
+              style={{
+                width: 80,
+                height: 80,
+                borderRadius: 8,
+                border: "2px dashed #ddd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                backgroundColor: "#f9f9f9",
+                overflow: "hidden",
+              }}
+            >
+              <div style={{ textAlign: "center", color: "#999" }}>
+                <div style={{ fontSize: 24 }}>📷</div>
+                <div style={{ fontSize: 10 }}>Kép</div>
+              </div>
+            </div>
+          </div>
         </div>
         <div style={{ fontWeight: 600 }}>
           Aktív:{" "}
@@ -286,57 +296,6 @@ export default async function WorkDetailPage({
         </div>
         <div style={{ fontWeight: 600 }}>
           Módosítva: <span style={{ fontWeight: 400 }}>{updatedAt}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>
-          Tenant email:{" "}
-          <span style={{ fontWeight: 400 }}>{work.tenantEmail}</span>
-        </div>
-        <div style={{ fontWeight: 600 }}>Előrehaladás:</div>
-        <div
-          style={{
-            width: 92,
-            height: 92,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "8px 0",
-          }}
-        >
-          <svg width="92" height="92">
-            <circle
-              cx="46"
-              cy="46"
-              r="40"
-              stroke="#eee"
-              strokeWidth="8"
-              fill="none"
-            />
-            <circle
-              cx="46"
-              cy="46"
-              r="40"
-              stroke="#3498db"
-              strokeWidth="8"
-              fill="none"
-              strokeDasharray={2 * Math.PI * 40}
-              strokeDashoffset={2 * Math.PI * 40 * (1 - percent / 100)}
-              style={{
-                transition: "stroke-dashoffset 0.5s",
-                transform: "rotate(-90deg)",
-                transformOrigin: "center",
-              }}
-            />
-            <text
-              x="46"
-              y="54"
-              textAnchor="middle"
-              fontSize="22"
-              fontWeight="bold"
-              fill="#333"
-            >
-              {percent}%
-            </text>
-          </svg>
         </div>
         <div style={{ fontWeight: 600 }}>
           Szakmunkás
@@ -365,9 +324,122 @@ export default async function WorkDetailPage({
             {(work.totalMaterialCost ?? 0) + (work.totalLaborCost ?? 0)} Ft Ft
           </span>
         </div>
+
+        {/* Progress bars */}
+        <div style={{ marginTop: 20 }}>
+          {/* Teljesített */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Teljesített</span>
+              <span style={{ fontSize: 14, color: "#666" }}>65%</span>
+            </div>
+            <div style={{ 
+              width: "100%", 
+              height: 8, 
+              backgroundColor: "#f0f0f0", 
+              borderRadius: 4,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                width: "65%",
+                height: "100%",
+                backgroundColor: "#4CAF50",
+                borderRadius: 4,
+                transition: "width 0.3s ease"
+              }} />
+            </div>
+          </div>
+
+          {/* Számlázott */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Számlázott</span>
+              <span style={{ fontSize: 14, color: "#666" }}>45%</span>
+            </div>
+            <div style={{ 
+              width: "100%", 
+              height: 8, 
+              backgroundColor: "#f0f0f0", 
+              borderRadius: 4,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                width: "45%",
+                height: "100%",
+                backgroundColor: "#2196F3",
+                borderRadius: 4,
+                transition: "width 0.3s ease"
+              }} />
+            </div>
+          </div>
+
+          {/* Számlázható */}
+          <div style={{ marginBottom: 0 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 600 }}>Számlázható</span>
+              <span style={{ fontSize: 14, color: "#666" }}>80%</span>
+            </div>
+            <div style={{ 
+              width: "100%", 
+              height: 8, 
+              backgroundColor: "#f0f0f0", 
+              borderRadius: 4,
+              overflow: "hidden"
+            }}>
+              <div style={{
+                width: "80%",
+                height: "100%",
+                backgroundColor: "#FF9800",
+                borderRadius: 4,
+                transition: "width 0.3s ease"
+              }} />
+            </div>
+          </div>
+        </div>
       </div>
-      {/* Munkások (lenyíló) */}
-      <CollapsibleSection title="Munkára felvett munkások" defaultOpen={false}>
+
+      {/* Profit box */}
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 18,
+          boxShadow: "0 2px 10px #eee",
+          padding: 22,
+          marginBottom: 24,
+        }}
+      >
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          marginBottom: 16
+        }}>
+          <span style={{ 
+            fontSize: 18, 
+            fontWeight: 700, 
+            color: "#333"
+          }}>
+            Profit
+          </span>
+          <span style={{ 
+            fontSize: 18, 
+            fontWeight: 700, 
+            color: "#4CAF50" 
+          }}>
+            +450 000 Ft
+          </span>
+        </div>
+        
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 0 }}>
+          <span style={{ fontWeight: 600 }}>Profit margin:</span>
+          <span style={{ fontWeight: 400 }}>15.2%</span>
+        </div>
+      </div>
+      
+      {/* További részletek wrapper */}
+      <CollapsibleSection title="További részletek" defaultOpen={false}>
+        {/* Munkások (lenyíló) */}
+        <CollapsibleSection title="Munkára felvett munkások" defaultOpen={false}>
         <WorkersSummary
           workId={work.id}
           workItems={workItemsWithWorkers.map((item) => ({
@@ -597,6 +669,8 @@ export default async function WorkDetailPage({
             ))}
           </div>
         </div>
+      </CollapsibleSection>
+      
       </CollapsibleSection>
 
       {/* Technical Button */}

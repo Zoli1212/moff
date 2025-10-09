@@ -892,4 +892,31 @@ Mindig hozzáadja az órákot
 Minden munkánál összesítve legyen % legyen teljesítés
 Ne váltsa vissza az állapotot
 ----
-Ha vállalkozó megy be rögtön jóvá tudom hagyn
+Minen feleslges üzenet leszedése:
+“Minden munka AI-fissítve”
+Ajánlatok
+Lehessen törölni ajánlatot (akkor, ha nincs hozzá munka, kérdezzünk rá)
+A listában a kártyákon a következők legyenek:
+Cím alatt:
+4 soros AI által készített összefoglaló, arról, hogy mit kéne csinálni
+Kivitelezési idő: x nap
+összesen: Anyag + Munkadíj: y ft it tkétszer van a ft
+Az állapot jelzésnél a Piszkozat szűnjön meg csak a Munka maradjon
+Rendezés a létrehozás dátuma alapján legyen, legfelül a legutóbb létrehozott
+Ajánlat adatlap
+Lehessen innen is törölni az ajánlatot
+Státusz: Ajánlatadás (amíg nem lett munkába állítva), Munka
+Létrehozva: Érvényes (ez változtatható, és ez a dátum kerül bele a pdf, be excelbe)
+Becsült kivitelezési idő:
+Rövid 4-6 soros AI összefoglaló leírás a munkáról
+Összesen: Anyag + Munkadíj: y ft tkétszer van a ft
+Követelmények - kattintható ugyan az mint ami most van csak feljebb kerül
+Leírás - megszűnik (mert fönt van az összefoglaló és ugyan az mint a Megjegyzés jelenleg)
+Megjegyzés: az ami most van
+Tételek: ugyan az mint eddig az összesítéssel az alján, de legyenek az összesítő oszlopok felcserélve: első: “Anyagköltség összesen:”,  második “Munkadíj összesen:”
+Legvégén megosztás gomb, ugyan az mint fent (nem kell az email-es…majd ezt beszéljük át)
+Martin Retai
+CEO
+
+Vevő adatai ki tudja tölteni és szerkeszteni
+Pénzügyileg teljesítve
