@@ -58,6 +58,7 @@ function toCardProps(
         : "Hiányzik a pénzügyi jelentés!"),
     urgentLevel:
       work.urgentLevel || (Math.random() > 0.5 ? "warning" : "danger"),
+    workSummary: (work.workSummary as string) || "",
     isUpdating,
     isDisabled,
   };
@@ -103,14 +104,14 @@ const WorkListPage = () => {
       <div
         style={{
           padding: 32,
-          background: "#f8f9fa",
+          background: "linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%)",
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <div>Munkák betöltése...</div>
+        <div style={{ color: "#ffffff" }}>Munkák betöltése...</div>
       </div>
     );
   }
@@ -150,7 +151,7 @@ const WorkListPage = () => {
   }
 
   return (
-    <div style={{ padding: 32, background: "#f8f9fa", minHeight: "100vh", overflowY: "auto" }}>
+    <div style={{ padding: 32, background: "linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%)", minHeight: "100vh", overflowY: "auto" }}>
       <div
         style={{
           display: "flex",
@@ -165,7 +166,7 @@ const WorkListPage = () => {
             display: "inline-flex",
             alignItems: "center",
             textDecoration: "none",
-            color: "#222",
+            color: "#f97316",
           }}
         >
           <svg
@@ -177,14 +178,14 @@ const WorkListPage = () => {
           >
             <path
               d="M16.5 9L12 14L16.5 19"
-              stroke="#222"
+              stroke="#f97316"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </a>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500 }}>Munkák</h2>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#ffffff" }}>Munkák</h2>
       </div>
       {/* Automatically update all works that have not been AI-updated */}
       <WorksAutoUpdater
@@ -193,7 +194,7 @@ const WorkListPage = () => {
       />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "100px" }}>
         {activeWorks.length === 0 ? (
-          <div>Nincs aktív munka.</div>
+          <div style={{ color: "#ffffff" }}>Nincs aktív munka.</div>
         ) : (
           activeWorks.map((work) => {
             const cardProps = toCardProps(work, workStates);

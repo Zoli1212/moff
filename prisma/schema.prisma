@@ -171,6 +171,7 @@ model Work {
   
   estimatedDuration String?  
   progress         Float?    @default(0) 
+  workSummary      String?   // AI által generált 4 mondatos összefoglaló
 
   isActive        Boolean    @default(true)
 

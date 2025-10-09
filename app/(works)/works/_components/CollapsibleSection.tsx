@@ -41,8 +41,8 @@ export default function CollapsibleSection({
         </span>
       </button>
       <div
-        className={`overflow-hidden transition-all duration-300 ease-in-out ${
-          open ? "max-h-screen opacity-100 pt-4" : "max-h-0 opacity-0"
+        className={`transition-all duration-300 ease-in-out ${
+          open ? "opacity-100 pt-4" : "max-h-0 opacity-0 overflow-hidden"
         }`}
       >
         {open && <div className="text-white">{children}</div>}

@@ -18,6 +18,7 @@ export interface WorkCardProps {
   location?: string;
   offerDescription?: string;
   estimatedDuration?: string;
+  workSummary?: string;
   isUpdating?: boolean;
   isDisabled?: boolean;
 }
@@ -44,11 +45,19 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     isDisabled = false,
     offerItems = [],
     offerDescription = "",
+    workSummary = "",
   } = props;
 
-  // Generate display text: offerItems first, then offerDescription, then fallback
+  // Generate display text: workSummary first, then offerItems, then offerDescription, then fallback
   const getDisplayText = () => {
-    // First priority: offerItems
+    // First priority: workSummary (AI generated summary)
+    if (workSummary && typeof workSummary === "string" && workSummary.trim()) {
+      return workSummary.length > 80
+        ? workSummary.substring(0, 80) + "..."
+        : workSummary;
+    }
+
+    // Second priority: offerItems
     if (offerItems && Array.isArray(offerItems) && offerItems.length > 0) {
       const itemsText = offerItems
         .slice(0, 2)
@@ -62,7 +71,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       }
     }
 
-    // Second priority: offerDescription
+    // Third priority: offerDescription
     if (offerDescription && typeof offerDescription === "string") {
       return offerDescription.length > 80
         ? offerDescription.substring(0, 80) + "..."
@@ -76,12 +85,12 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
   return (
     <div
       style={{
-        border: "1px solid #ccc",
+        border: "2px solid #f97316",
         borderRadius: 12,
         marginBottom: 24,
         padding: 20,
         background: isUpdating ? "#f8f9fa" : "#fff",
-        boxShadow: "0 2px 8px #eee",
+        boxShadow: "0 2px 8px rgba(249, 115, 22, 0.2)",
         maxWidth: 420,
         minHeight: 260,
         opacity: isDisabled ? 0.6 : 1,

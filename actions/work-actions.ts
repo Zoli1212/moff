@@ -263,6 +263,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
           : Number(aiResult.totalMaterials) || 0,
         totalMaterialCost: aiResult.totalMaterialCost,
         estimatedDuration: aiResult.estimatedDuration,
+        workSummary: aiResult.workSummary || null, // AI által generált 4 mondatos összefoglaló
         updatedByAI: true,
         // bármi egyéb mező, amit az AI visszaad
       },

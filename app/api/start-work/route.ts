@@ -22,11 +22,14 @@ export async function POST(req: NextRequest) {
     - Minden szám mező pozitív; minden "type" és "unit" nem üres string.
     - Ha bármelyik kötelező mező üres lenne, NE add vissza a választ – addig állítsd össze, míg MIND megfelel.
     
+    FONTOS: Adj hozzá egy "workSummary" mezőt is, ami PONTOSAN 4 mondatból áll és összefoglalja a teljes munkát!
+    
     OfferItem átvétel:
     - A következő mezőket VÁLTOZTATÁS NÉLKÜL MÁSOLD át az offerItem-ből a workItem-be:
       name, quantity, unit, unitPrice, materialUnitPrice, workTotal, materialTotal, totalPrice
     
     Csak az alábbi mezőket generáld:
+    - workSummary: PONTOSAN 4 mondat a teljes munka összefoglalása
     - description: rövid szakmai leírás (1–3 mondat)
     - requiredProfessionals: objektumok tömbje, MIND: { "type": string!=üres, "quantity": number>0 }
     - A requiredProfessionals mező egy objektumokból álló tömb, amelynek minden eleme KÉT KULCSOT tartalmaz: "type" és "quantity".
@@ -50,6 +53,7 @@ export async function POST(req: NextRequest) {
       "location": "helyszín",
       "description": "leírás",
       "estimatedDuration": "időtartam",
+      "workSummary": "PONTOSAN 4 mondat a teljes munka összefoglalása. Első mondat a projekt célja. Második mondat a főbb munkafázisok. Harmadik mondat az időtartam és szakemberek. Negyedik mondat a várható eredmény.",
       "workItems": [
         {
           "name": "Tétel neve",
