@@ -104,14 +104,14 @@ const WorkListPage = () => {
       <div
         style={{
           padding: 32,
-          background: "linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%)",
+          background: "#ffffff",
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
         }}
       >
-        <div style={{ color: "#ffffff" }}>Munkák betöltése...</div>
+        <div style={{ color: "#000000" }}>Munkák betöltése...</div>
       </div>
     );
   }
@@ -151,7 +151,7 @@ const WorkListPage = () => {
   }
 
   return (
-    <div style={{ padding: 32, background: "linear-gradient(135deg, #1f2937 0%, #111827 50%, #000000 100%)", minHeight: "100vh", overflowY: "auto" }}>
+    <div style={{ padding: 32, background: "#ffffff", minHeight: "100vh", overflowY: "auto" }}>
       <div
         style={{
           display: "flex",
@@ -166,7 +166,7 @@ const WorkListPage = () => {
             display: "inline-flex",
             alignItems: "center",
             textDecoration: "none",
-            color: "#f97316",
+            color: "#000000",
           }}
         >
           <svg
@@ -178,14 +178,14 @@ const WorkListPage = () => {
           >
             <path
               d="M16.5 9L12 14L16.5 19"
-              stroke="#f97316"
+              stroke="#000000"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
         </a>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#ffffff" }}>Munkák</h2>
+        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#000000" }}>Munkák</h2>
       </div>
       {/* Automatically update all works that have not been AI-updated */}
       <WorksAutoUpdater

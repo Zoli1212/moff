@@ -424,9 +424,9 @@ export default function WorkDetailPage({
   const workDiaries: Record<string, unknown>[] = workDiaryItems;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-orange-500/20">
+      <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-300">
         <div className="flex items-center gap-4 px-4 py-4 max-w-md mx-auto">
           <Link
             href="/works"
@@ -451,19 +451,19 @@ export default function WorkDetailPage({
             </svg>
           </Link>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-white truncate">
+            <h1 className="text-xl font-bold text-black truncate">
               {((work as Record<string, unknown>).title as string) || "Munka neve"}
             </h1>
-            <p className="text-sm text-orange-400">Projekt részletek</p>
+            <p className="text-sm text-orange-500">Projekt részletek</p>
           </div>
         </div>
       </div>
 
       <div className="px-4 py-6 max-w-md mx-auto space-y-6 pb-32">
         {/* Hero Card - Helyszín és Összes Költség Elől */}
-        <div className="bg-gradient-to-br from-gray-800 to-black rounded-3xl shadow-2xl border border-orange-500/20 overflow-hidden">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 overflow-hidden">
           {/* Top Section - Helyszín és Összes Költség */}
-          <div className="bg-gradient-to-br from-gray-800 to-black p-6 border-b border-orange-500/20">
+          <div className="bg-white p-6 border-b border-gray-300">
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-3">
@@ -473,17 +473,17 @@ export default function WorkDetailPage({
                   </svg>
                   <span className="text-lg font-bold text-orange-500">Helyszín</span>
                 </div>
-                <p className="text-xl font-bold text-white mb-4">
+                <p className="text-xl font-bold text-black mb-4">
                   {((work as Record<string, unknown>).location as string) || "Helyszín nincs megadva"}
                 </p>
                 
-                <div className="bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-2xl p-4 border border-orange-500/30">
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-bold text-orange-400">Összes költség</span>
-                    <span className="text-2xl font-bold text-orange-500">
-                      {(((work as Record<string, unknown>).totalMaterialCost as number) ?? 0) +
-                       (((work as Record<string, unknown>).totalLaborCost as number) ?? 0)} Ft
-                    </span>
+                <div className="bg-orange-50 rounded-2xl p-4 border border-gray-300">
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-orange-600 mb-2">Összes költség</div>
+                    <div className="text-2xl font-bold text-orange-500">
+                      {((((work as Record<string, unknown>).totalMaterialCost as number) ?? 0) +
+                       (((work as Record<string, unknown>).totalLaborCost as number) ?? 0)).toLocaleString('hu-HU')} Ft
+                    </div>
                   </div>
                 </div>
               </div>
@@ -498,14 +498,14 @@ export default function WorkDetailPage({
                     onChange={handleImageUpload}
                     disabled={imageUploading}
                   />
-                  <div className={`w-24 h-24 rounded-2xl border-2 border-dashed border-orange-500/30 flex items-center justify-center transition-all duration-200 hover:border-orange-500/50 ${workImage ? 'border-solid border-orange-500/20' : ''}`}
+                  <div className={`w-24 h-24 rounded-2xl border-2 border-dashed border-gray-400 flex items-center justify-center transition-all duration-200 hover:border-orange-500 ${workImage ? 'border-solid border-gray-300' : ''}`}
                        style={{
                          backgroundImage: workImage ? `url(${workImage})` : "none",
                          backgroundSize: "cover",
                          backgroundPosition: "center",
                        }}>
                     {!workImage && !imageUploading && (
-                      <div className="text-center text-white/70">
+                      <div className="text-center text-gray-500">
                         <svg className="w-8 h-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
@@ -514,7 +514,7 @@ export default function WorkDetailPage({
                       </div>
                     )}
                     {imageUploading && (
-                      <div className="text-white/70">
+                      <div className="text-gray-500">
                         <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -543,27 +543,27 @@ export default function WorkDetailPage({
           </div>
 
           {/* Details Section */}
-          <div className="p-6 bg-gray-800 text-white space-y-4">
+          <div className="p-6 bg-white text-black space-y-4">
             {/* Status and dates */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gradient-to-br from-gray-700 to-gray-800 p-4 rounded-2xl border border-orange-500/20">
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-300">
                 <div className="flex items-center gap-2 mb-2">
                   <div className={`w-3 h-3 rounded-full ${work.isActive ? 'bg-orange-500' : 'bg-gray-500'} shadow-lg`}></div>
-                  <span className="text-sm font-medium text-orange-400">Státusz</span>
+                  <span className="text-sm font-medium text-orange-600">Státusz</span>
                 </div>
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-black">
                   {work.isActive ? "Aktív" : "Inaktív"}
                 </span>
               </div>
 
-              <div className="bg-gradient-to-br from-gray-700 to-gray-800 p-4 rounded-2xl border border-orange-500/20">
+              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-300">
                 <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                   </svg>
-                  <span className="text-sm font-medium text-orange-400">Időtartam</span>
+                  <span className="text-sm font-medium text-orange-600">Időtartam</span>
                 </div>
-                <span className="text-lg font-bold text-white">
+                <span className="text-lg font-bold text-black">
                   {((work as Record<string, unknown>).estimatedDuration as string) || "Nincs megadva"}
                 </span>
               </div>
@@ -571,65 +571,65 @@ export default function WorkDetailPage({
 
             {/* Cost breakdown */}
             <div className="space-y-3">
-              <div className="flex justify-between items-center py-3 px-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                <span className="text-gray-300 font-medium">Munkaerő költség</span>
-                <span className="font-bold text-orange-400">{((work as Record<string, unknown>).totalLaborCost as number) ?? 0} Ft</span>
+              <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-xl border border-gray-300">
+                <span className="text-gray-700 font-medium">Munkaerő költség</span>
+                <span className="font-bold text-orange-600">{((work as Record<string, unknown>).totalLaborCost as number) ?? 0} Ft</span>
               </div>
-              <div className="flex justify-between items-center py-3 px-4 bg-gray-700/50 rounded-xl border border-gray-600">
-                <span className="text-gray-300 font-medium">Anyag költség</span>
-                <span className="font-bold text-orange-400">{((work as Record<string, unknown>).totalMaterialCost as number) ?? 0} Ft</span>
+              <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-xl border border-gray-300">
+                <span className="text-gray-700 font-medium">Anyag költség</span>
+                <span className="font-bold text-orange-600">{((work as Record<string, unknown>).totalMaterialCost as number) ?? 0} Ft</span>
               </div>
             </div>
 
             {/* Additional info */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-700">
+            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-300">
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-500">{((work as Record<string, unknown>).totalWorkers as number) || 0}</div>
-                <div className="text-sm text-gray-400">Munkás</div>
+                <div className="text-sm text-gray-600">Munkás</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-orange-500">{((work as Record<string, unknown>).totalTools as number) || 0}</div>
-                <div className="text-sm text-gray-400">Eszköz</div>
+                <div className="text-sm text-gray-600">Eszköz</div>
               </div>
             </div>
 
             {/* Dates */}
-            <div className="bg-gray-700/30 rounded-2xl p-4 space-y-2">
+            <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Kezdés:</span>
-                <span className="font-medium text-white">{startDate}</span>
+                <span className="text-gray-600">Kezdés:</span>
+                <span className="font-medium text-black">{startDate}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Befejezés:</span>
-                <span className="font-medium text-white">{endDate}</span>
+                <span className="text-gray-600">Befejezés:</span>
+                <span className="font-medium text-black">{endDate}</span>
               </div>
             </div>
 
             {/* Workers list if any */}
             {workers.length > 0 && (
-              <div className="bg-gray-700/30 rounded-2xl p-4">
-                <div className="text-sm text-gray-400 mb-2">Szakmunkások:</div>
-                <div className="text-white font-medium">{workers.map((w) => w.name).join(", ")}</div>
+              <div className="bg-gray-50 rounded-2xl p-4">
+                <div className="text-sm text-gray-600 mb-2">Szakmunkások:</div>
+                <div className="text-black font-medium">{workers.map((w) => w.name).join(", ")}</div>
               </div>
             )}
 
             {/* Összefoglaló */}
             {((work as Record<string, unknown>).workSummary as string) && (
-              <div className="bg-gradient-to-r from-orange-500/10 to-orange-600/10 rounded-2xl p-4 border border-orange-500/20">
+              <div className="bg-orange-50 rounded-2xl p-4 border border-gray-300">
                 <div className="flex items-center gap-2 mb-3">
                   <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                   </svg>
-                  <span className="text-sm font-bold text-orange-500">Összefoglaló</span>
+                  <span className="text-sm font-bold text-orange-600">Összefoglaló</span>
                 </div>
-                <p className="text-sm text-white leading-relaxed">
+                <p className="text-sm text-black leading-relaxed">
                   {((work as Record<string, unknown>).workSummary as string)}
                 </p>
               </div>
             )}
 
             {/* Timestamps */}
-            <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-700">
+            <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-300">
               <div>Létrehozva: {createdAt}</div>
               <div>Módosítva: {updatedAt}</div>
             </div>
@@ -637,7 +637,7 @@ export default function WorkDetailPage({
         </div>
 
         {/* Progress Section */}
-        <div className="bg-gradient-to-br from-gray-800 to-black rounded-3xl shadow-2xl border border-orange-500/20 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,8 +645,8 @@ export default function WorkDetailPage({
               </svg>
             </div>
             <div>
-              <h3 className="text-xl font-bold text-white">Projekt előrehaladás</h3>
-              <p className="text-sm text-orange-400">Teljesítmény áttekintés</p>
+              <h3 className="text-xl font-bold text-black">Projekt előrehaladás</h3>
+              <p className="text-sm text-orange-600">Teljesítmény áttekintés</p>
             </div>
           </div>
 
@@ -657,11 +657,11 @@ export default function WorkDetailPage({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-orange-500 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-white text-lg">Teljesített</span>
+                  <span className="font-bold text-black text-lg">Teljesített</span>
                 </div>
                 <span className="text-2xl font-bold text-orange-500">{completedPercent}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                 <div 
                   className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
                   style={{ width: `${completedPercent}%` }}
@@ -674,11 +674,11 @@ export default function WorkDetailPage({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-orange-400 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-white text-lg">Számlázott</span>
+                  <span className="font-bold text-black text-lg">Számlázott</span>
                 </div>
                 <span className="text-2xl font-bold text-orange-400">{billedPercent}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                 <div 
                   className="h-full bg-gradient-to-r from-orange-300 to-orange-500 rounded-full transition-all duration-700 ease-out shadow-lg"
                   style={{ width: `${billedPercent}%` }}
@@ -691,11 +691,11 @@ export default function WorkDetailPage({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-yellow-500 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-white text-lg">Számlázható</span>
+                  <span className="font-bold text-black text-lg">Számlázható</span>
                 </div>
                 <span className="text-2xl font-bold text-yellow-500">{billablePercent}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                 <div 
                   className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full transition-all duration-700 ease-out shadow-lg"
                   style={{ width: `${billablePercent}%` }}
@@ -708,11 +708,11 @@ export default function WorkDetailPage({
               <div className="flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-4 h-4 bg-gray-400 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-white text-lg">Pénzügyileg teljesített</span>
+                  <span className="font-bold text-black text-lg">Pénzügyileg teljesített</span>
                 </div>
                 <span className="text-2xl font-bold text-gray-400">{paidPercent}%</span>
               </div>
-              <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden shadow-inner">
+              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
                 <div 
                   className="h-full bg-gradient-to-r from-gray-400 to-gray-600 rounded-full transition-all duration-700 ease-out shadow-lg"
                   style={{ width: `${paidPercent}%` }}
@@ -723,7 +723,7 @@ export default function WorkDetailPage({
         </div>
 
         {/* Dates section */}
-        <div className="bg-gradient-to-br from-gray-800 to-black rounded-3xl shadow-2xl border border-orange-500/20 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 p-6">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
@@ -732,8 +732,8 @@ export default function WorkDetailPage({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Időtartam</h3>
-                <p className="text-sm text-orange-400">Projekt ütemezés</p>
+                <h3 className="text-xl font-bold text-black">Időtartam</h3>
+                <p className="text-sm text-orange-600">Projekt ütemezés</p>
               </div>
             </div>
             <button
@@ -745,25 +745,25 @@ export default function WorkDetailPage({
           </div>
 
           <div className="space-y-4">
-            <div className="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-700 to-gray-800 rounded-2xl border border-orange-500/20">
+            <div className="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-300">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-orange-500 rounded-full shadow-lg"></div>
-                <span className="font-bold text-white text-lg">Kezdés:</span>
+                <span className="font-bold text-black text-lg">Kezdés:</span>
               </div>
-              <span className="font-bold text-orange-400 text-lg">{startDate}</span>
+              <span className="font-bold text-orange-600 text-lg">{startDate}</span>
             </div>
-            <div className="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-gray-700 to-gray-800 rounded-2xl border border-orange-500/20">
+            <div className="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-300">
               <div className="flex items-center gap-3">
                 <div className="w-3 h-3 bg-orange-400 rounded-full shadow-lg"></div>
-                <span className="font-bold text-white text-lg">Befejezés:</span>
+                <span className="font-bold text-black text-lg">Befejezés:</span>
               </div>
-              <span className="font-bold text-orange-400 text-lg">{endDate}</span>
+              <span className="font-bold text-orange-600 text-lg">{endDate}</span>
             </div>
           </div>
         </div>
 
         {/* Profit box */}
-        <div className="bg-gradient-to-br from-gray-800 to-black rounded-3xl shadow-2xl border border-orange-500/20 p-6">
+        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 p-6">
           <div className="flex items-center gap-3 mb-6">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${dynamicProfit.totalProfit >= 0 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 'bg-gradient-to-r from-red-500 to-red-600'}`}>
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
