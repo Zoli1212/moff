@@ -42,6 +42,7 @@ interface ParsedOfferContent {
     totalPrice: string;
   }>;
   notes?: string[];
+  offerSummary?: string;
 }
 
 export async function saveOfferWithRequirements(data: SaveOfferData) {
@@ -377,10 +378,20 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     // 4. Create the Offer with the parsed content
     console.log("Preparing to create offer with recordId:", recordId);
 
-    // Format notes for description if they exist
+    // Format notes for description if they exist, but exclude offerSummary
+    let filteredNotes = parsedContent.notes || [];
+    if (filteredNotes.length > 0) {
+      console.log("Original notes:", filteredNotes);
+      // Remove offerSummary lines from notes
+      filteredNotes = filteredNotes.filter(note => 
+        !note.toLowerCase().startsWith('offersummary:')
+      );
+      console.log("Filtered notes (without offerSummary):", filteredNotes);
+    }
+    
     const formattedNotes =
-      parsedContent.notes && parsedContent.notes.length > 0
-        ? parsedContent.notes.join("\n\n")
+      filteredNotes.length > 0
+        ? filteredNotes.join("\n\n")
         : "Nincsenek megjegyzések";
 
     const offerData: any = {
@@ -394,6 +405,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       createdBy: emailToUse,
       tenantEmail: emailToUse, // Add tenantEmail to ensure it's saved with the offer
+      offerSummary: parsedContent.offerSummary || null, // Save the AI-generated summary
     };
 
     // Add recordId if it exists
@@ -413,6 +425,8 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       hasNotes: !!(parsedContent.notes && parsedContent.notes.length > 0),
       noteCount: parsedContent.notes?.length || 0,
       descriptionPreview: formattedNotes.substring(0, 100) + "...",
+      hasOfferSummary: !!parsedContent.offerSummary,
+      offerSummaryPreview: parsedContent.offerSummary ? parsedContent.offerSummary.substring(0, 100) + "..." : "N/A",
     });
 
     // Add items if they exist
@@ -445,6 +459,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
           createdAt: true,
           items: true,
           notes: true,
+          offerSummary: true,
         },
       });
 
@@ -455,6 +470,8 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         createdAt: offer.createdAt,
         hasItems: !!offer.items,
         hasNotes: !!offer.notes,
+        hasOfferSummary: !!offer.offerSummary,
+        offerSummary: offer.offerSummary || "N/A",
       });
 
       revalidatePath("/jobs");

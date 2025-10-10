@@ -104,7 +104,12 @@ interface OfferDetailViewProps {
   onOfferDeleted?: (offerId: number) => void;
 }
 
-export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted }: OfferDetailViewProps) {
+export function OfferDetailView({
+  offer,
+  onBack,
+  onStatusChange,
+  onOfferDeleted,
+}: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItem, setEditingItem] = useState<{
@@ -227,13 +232,16 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
       unit: newItemData.unit,
       materialUnitPrice: newItemData.materialUnitPrice,
       unitPrice: newItemData.unitPrice,
-      materialTotal: calculateTotal(newItemData.quantity, newItemData.materialUnitPrice),
+      materialTotal: calculateTotal(
+        newItemData.quantity,
+        newItemData.materialUnitPrice
+      ),
       workTotal: calculateTotal(newItemData.quantity, newItemData.unitPrice),
     };
 
     // Add the new item at the FIRST position
     const updatedItems = [newItem, ...editableItems];
-    
+
     setIsSaving(true);
     try {
       const result = await updateOfferItems(
@@ -259,9 +267,9 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
   // Helper function to calculate totals
   const calculateTotal = (quantity: string, unitPrice: string) => {
     const qty = parseFloat(quantity) || 0;
-    const price = parseFloat(unitPrice.replace(/[^\d.-]/g, '')) || 0;
+    const price = parseFloat(unitPrice.replace(/[^\d.-]/g, "")) || 0;
     const total = qty * price;
-    return `${total.toLocaleString('hu-HU')} Ft`;
+    return `${total.toLocaleString("hu-HU")} Ft`;
   };
 
   // Show delete confirmation
@@ -273,10 +281,10 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
   // Remove item
   const handleRemoveItem = async () => {
     if (itemToDelete === null) return;
-    
+
     const newItems = [...editableItems];
     newItems.splice(itemToDelete, 1);
-    
+
     setIsSaving(true);
     try {
       const result = await updateOfferItems(
@@ -383,15 +391,15 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
     setIsOfferDeleting(true);
     try {
       const result = await deleteOffer(offer.id);
-      
+
       if (result.success) {
         toast.success("Ajánlat sikeresen törölve");
-        
+
         // Notify parent component about deletion
         if (onOfferDeleted) {
           onOfferDeleted(offer.id);
         }
-        
+
         // Navigate back to offers list
         if (onBack) {
           onBack();
@@ -400,7 +408,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
         toast.error(result.error || "Hiba történt a törlés során");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("Hiba történt a törlés során");
     } finally {
       setIsOfferDeleting(false);
@@ -489,11 +497,13 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
   const handleStatusUpdate = async () => {
     try {
       setIsUpdatingStatus(true);
-      const newStatus = offer.status === 'draft' ? 'work' : 'draft';
+      const newStatus = offer.status === "draft" ? "work" : "draft";
       const result = await updateOfferStatus(offer.id, newStatus);
-      
+
       if (result.success) {
-        toast.success(`Az ajánlat sikeresen áthelyezve a ${newStatus === 'work' ? 'munkálatok' : 'piszkozatok'} közé!`);
+        toast.success(
+          `Az ajánlat sikeresen áthelyezve a ${newStatus === "work" ? "munkálatok" : "piszkozatok"} közé!`
+        );
         // Notify parent component about the status change
         if (onStatusChange) {
           onStatusChange(newStatus);
@@ -501,11 +511,11 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
         // Close the dialog after successful update
         setIsStatusDialogOpen(false);
       } else {
-        toast.error(result.message || 'Hiba történt az állapot frissítésekor');
+        toast.error(result.message || "Hiba történt az állapot frissítésekor");
       }
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Hiba történt az állapot frissítésekor');
+      console.error("Error updating status:", error);
+      toast.error("Hiba történt az állapot frissítésekor");
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -514,7 +524,8 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
   // Get status display text
   function getStatusDisplay(status: string) {
     const statusMap: Record<string, string> = {
-      draft: "Piszkozat",
+      draft: "Ajánlattevés",
+      work: "Munka",
       sent: "Elküldve",
       accepted: "Elfogadva",
       rejected: "Elutasítva",
@@ -856,16 +867,19 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-  
             </button>
             <Button
               onClick={() => setIsStatusDialogOpen(true)}
               variant="outline"
-              className={`${offer.status === 'draft' 
-                ? 'bg-green-100 text-green-700 hover:bg-green-200 border-green-300' 
-                : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300'}`}
+              className={`${
+                offer.status === "draft"
+                  ? "bg-green-100 text-green-700 hover:bg-green-200 border-green-300"
+                  : "bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300"
+              }`}
             >
-              {offer.status === 'draft' ? 'Munkába állítás' : 'Visszaállítás piszkozatba'}
+              {offer.status === "draft"
+                ? "Munkába állítás"
+                : "Kivétel munkából"}
             </Button>
           </div>
 
@@ -876,7 +890,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                 {offer.title || "Ajánlat részletei"}
               </h1>
               <div className="flex items-center gap-2">
-                {offer.status === 'draft' && (
+                {offer.status === "draft" && (
                   <button
                     onClick={handleOfferDeleteClick}
                     className="p-2 rounded-full hover:bg-red-50 transition-colors text-red-500 hover:text-red-600"
@@ -887,25 +901,25 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                  <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-600"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
-                      <polyline points="16 6 12 2 8 6" />
-                      <line x1="12" y1="2" x2="12" y2="15" />
-                    </svg>
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-55" align="end">
-                  {/* <DropdownMenuItem
+                    <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-600"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                        <polyline points="16 6 12 2 8 6" />
+                        <line x1="12" y1="2" x2="12" y2="15" />
+                      </svg>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-55" align="end">
+                    {/* <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onSelect={(e: Event) => {
                       e.preventDefault();
@@ -926,59 +940,56 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                     <Copy className="mr-2 h-4 w-4" />
                     <span>Link másolása</span>
                   </DropdownMenuItem> */}
-                  <DropdownMenuSeparator />
-                  <div className="px-2 py-1.5">
-                    <SocialShareButtonsExcel
-                      offer={{
-                        title: offer.title,
-                        description: offer.description,
-                        items: offer.items?.map((item) => ({
-                          id: item.id,
-                          name: item.name,
-                          quantity: item.quantity,
-                          unit: item.unit,
-                          materialUnitPrice: item.materialUnitPrice,
-                          materialTotal: item.materialTotal,
-                          workTotal: item.workTotal,
-                          // Backward compatibility
-                          unitPrice: item.unitPrice,
-                          totalPrice: item.workTotal,
-                        })),
-                        totalPrice: offer.totalPrice,
-                        createdAt: offer.createdAt,
-                        validUntil: offer.validUntil,
-                        status: offer.status,
-                        notes: offer.notes,
-                      }}
-                    />
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuSeparator />
+                    <div className="px-2 py-1.5">
+                      <SocialShareButtonsExcel
+                        offer={{
+                          title: offer.title,
+                          description: offer.description,
+                          items: offer.items?.map((item) => ({
+                            id: item.id,
+                            name: item.name,
+                            quantity: item.quantity,
+                            unit: item.unit,
+                            materialUnitPrice: item.materialUnitPrice,
+                            materialTotal: item.materialTotal,
+                            workTotal: item.workTotal,
+                            // Backward compatibility
+                            unitPrice: item.unitPrice,
+                            totalPrice: item.workTotal,
+                          })),
+                          totalPrice: offer.totalPrice,
+                          createdAt: offer.createdAt,
+                          validUntil: offer.validUntil,
+                          status: offer.status,
+                          notes: offer.notes,
+                        }}
+                      />
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-6 mt-4">
               <div className="flex items-center">
-                <div 
+                <div
                   className="flex items-center text-gray-600 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
                   onClick={() => handleStatusUpdate()}
                 >
                   <Tag className="h-4 w-4 mr-2 text-gray-400" />
                   <span>Státusz: </span>
-                  <span className={`ml-1 font-medium ${
-                    offer.status === 'work' ? 'text-blue-600' : 'text-gray-700'
-                  }`}>
+                  <span
+                    className={`ml-1 font-medium ${
+                      offer.status === "work"
+                        ? "text-green-600"
+                        : offer.status === "draft"
+                        ? "text-blue-600"
+                        : "text-gray-700"
+                    }`}
+                  >
                     {getStatusDisplay(offer.status || "draft")}
                   </span>
-                  <div className="text-sm text-gray-500 ml-2">
-                    <span className="mt-1 text-sm text-gray-500">
-                      {offer.updatedAt
-                        ? format(new Date(offer.updatedAt), "PPP", {
-                            locale: hu,
-                          })
-                        : ""}
-                    </span>
-                  </div>
                 </div>
               </div>
 
@@ -1001,13 +1012,13 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
               )}
             </div>
 
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-100">
               <div className="flex items-start">
                 <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-blue-400" />
+                  <AlertCircle className="h-5 w-5 text-orange-400" />
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-orange-700">
                     <span className="font-medium">Összeg: </span>
                     <span className="font-medium">
                       {formatPrice(calculateTotals().total)} Ft
@@ -1019,12 +1030,27 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
           </div>
 
           {/* Description Section */}
+          {offer.offerSummary && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                  <FileText className="h-5 w-5 mr-2 text-gray-500" />
+                  Összefoglalás
+                </h2>
+              </div>
+              <div className="p-6">
+                <p className="text-gray-700 whitespace-pre-line">
+                  {offer.offerSummary}
+                </p>
+              </div>
+            </div>
+          )}
           {offer.description && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center">
                   <FileText className="h-5 w-5 mr-2 text-gray-500" />
-                  Leírás
+                  További információk
                 </h2>
               </div>
               <div className="p-6">
@@ -1035,16 +1061,16 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
             </div>
           )}
         </div>
-        
+
         {/* Add bottom padding when questions button is visible */}
         {(() => {
           const questions = extractQuestions(offer.description || "");
           if (!isDialogOpen && questions.length > 0) {
-            return <div className="h-24"></div>;
+            return <div className="h-4"></div>;
           }
           return null;
         })()}
-        
+
         <div>
           {/* --- ÚJ LOGIKA: Ha nincs kérdés, plusz gomb és szabad szövegdoboz --- */}
           {(() => {
@@ -1092,7 +1118,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
             }))}
           />
         </div>
-        
+
         {/* Custom Confirmation Dialog */}
         <ConfirmationDialog
           isOpen={showDeleteConfirm}
@@ -1104,9 +1130,9 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
           title="Tétel törlése"
           description="Biztosan törölni szeretnéd ezt a tételt? Ez a művelet nem vonható vissza."
         />
-        
+
         {/* Notes Section */}
-        {notes.length > 0 && (
+        {/* {!offer.description && notes.length > 0 &&  (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -1125,7 +1151,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
               </ul>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Requirements Section */}
         {offer.requirement && (
@@ -1149,7 +1175,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
           <div className="mt-auto">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-8">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-6">
               <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -1316,7 +1342,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                       </div>
                     </div>
                     {/* Email Sender Section */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4 hidden">
                       <button
                         onClick={() => setIsEmailExpanded(!isEmailExpanded)}
                         className="w-full px-6 py-4 flex justify-between items-center hover:bg-gray-50 transition-colors"
@@ -1355,65 +1381,94 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
                         </div>
                       )}
                     </div>
-                    
-                    {/* Bottom Share Menu - Same as top */}
-                    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
-                      <div className="flex justify-between items-center">
-                        <h3 className="text-lg font-medium text-gray-900">Megosztás és export</h3>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="h-5 w-5 text-gray-600"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
-                                <polyline points="16 6 12 2 8 6" />
-                                <line x1="12" y1="2" x2="12" y2="15" />
-                              </svg>
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="w-55" align="end">
-                            <div className="px-2 py-1.5">
-                              <SocialShareButtonsExcel
-                                offer={{
-                                  title: offer.title,
-                                  description: offer.description,
-                                  items: offer.items?.map((item) => ({
-                                    id: item.id,
-                                    name: item.name,
-                                    quantity: item.quantity,
-                                    unit: item.unit,
-                                    materialUnitPrice: item.materialUnitPrice,
-                                    unitPrice: item.unitPrice,
-                                    materialTotal: item.materialTotal,
-                                    workTotal: item.workTotal,
-                                    totalPrice: item.workTotal,
-                                  })),
-                                  totalPrice: offer.totalPrice,
-                                  createdAt: offer.createdAt,
-                                  validUntil: offer.validUntil,
-                                  status: offer.status,
-                                  notes: offer.notes,
-                                }}
-                              />
-                            </div>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               </div>
             </div>
           </div>
         )}
+
+        {/* Bottom Share Menu - Same as top */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-medium text-gray-900">
+              Megosztás és export
+            </h3>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-gray-600"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-55" align="end">
+                {/* <DropdownMenuItem
+                className="flex items-center cursor-pointer"
+                onSelect={(e: Event) => {
+                  e.preventDefault();
+                  handlePrint();
+                }}
+              >
+                <Printer className="mr-2 h-4 w-4" />
+                <span>Nyomtatás</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="flex items-center cursor-pointer"
+                onSelect={(e: Event) => {
+                  e.preventDefault();
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("Link a vágólapra másolva");
+                }}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                <span>Link másolása</span>
+              </DropdownMenuItem> */}
+                <DropdownMenuSeparator />
+                <div className="px-2 py-1.5">
+                  <SocialShareButtonsExcel
+                    offer={{
+                      title: offer.title,
+                      description: offer.description,
+                      items: offer.items?.map((item) => ({
+                        id: item.id,
+                        name: item.name,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        materialUnitPrice: item.materialUnitPrice,
+                        materialTotal: item.materialTotal,
+                        workTotal: item.workTotal,
+                        // Backward compatibility
+                        unitPrice: item.unitPrice,
+                        totalPrice: item.workTotal,
+                      })),
+                      totalPrice: offer.totalPrice,
+                      createdAt: offer.createdAt,
+                      validUntil: offer.validUntil,
+                      status: offer.status,
+                      notes: offer.notes,
+                    }}
+                  />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Bottom padding to prevent fixed button from covering content */}
+        <div className="h-24"></div>
       </div>
 
       {/* Status Update Dialog */}
@@ -1421,10 +1476,12 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {offer.status === 'draft' ? 'Munkába állítás' : 'Visszaállítás piszkozatra'}
+              {offer.status === "draft"
+                ? "Munkába állítás"
+                : "Kivétel a munkából"}
             </DialogTitle>
             <DialogDescription className="pt-4">
-              {offer.status === 'draft' 
+              {offer.status === "draft"
                 ? 'Biztosan át szeretnéd állítani az ajánlatot "Munkában" állapotba?'
                 : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
             </DialogDescription>
@@ -1440,15 +1497,17 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
             <Button
               onClick={handleStatusUpdate}
               disabled={isUpdatingStatus}
-              className={offer.status === 'draft' 
-                ? 'bg-green-600 hover:bg-green-700' 
-                : 'bg-blue-600 hover:bg-blue-700'}
+              className={
+                offer.status === "draft"
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }
             >
-              {isUpdatingStatus 
-                ? 'Feldolgozás...' 
-                : offer.status === 'draft' 
-                  ? 'Igen, munkába állítom' 
-                  : 'Igen, piszkozatba teszem'}
+              {isUpdatingStatus
+                ? "Feldolgozás..."
+                : offer.status === "draft"
+                  ? "Igen, munkába állítom"
+                  : "Igen, piszkozatba teszem"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1467,7 +1526,7 @@ export function OfferDetailView({ offer, onBack, onStatusChange, onOfferDeleted 
         onClose={handleOfferDeleteCancel}
         onConfirm={handleOfferDeleteConfirm}
         title="Ajánlat törlése"
-        message={`Biztosan törölni szeretnéd a(z) "${offer.title || 'Névtelen ajánlat'}" ajánlatot? Ez a művelet nem vonható vissza.`}
+        message={`Biztosan törölni szeretnéd a(z) "${offer.title || "Névtelen ajánlat"}" ajánlatot? Ez a művelet nem vonható vissza.`}
         confirmText="Törlés"
         cancelText="Mégse"
         isLoading={isOfferDeleting}

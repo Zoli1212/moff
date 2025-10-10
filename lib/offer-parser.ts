@@ -15,6 +15,7 @@ export interface ParsedOffer {
   items: OfferItem[];
   totalPrice: number;
   notes?: string[];
+  offerSummary?: string;
 }
 
 export function parseOfferText(text: string): ParsedOffer {
@@ -23,6 +24,14 @@ export function parseOfferText(text: string): ParsedOffer {
   const lines = text.split('\n').filter(line => line.trim() !== '');
   const items: OfferItem[] = [];
   const notes: string[] = [];
+
+  // Extract offerSummary from text
+  let offerSummary: string | undefined;
+  const offerSummaryMatch = text.match(/offerSummary:\s*(.+?)(?:\n|$)/i);
+  if (offerSummaryMatch) {
+    offerSummary = offerSummaryMatch[1].trim();
+    console.log("🎯 Parsed offerSummary:", offerSummary);
+  }
 
   // Extract title from the first line containing 'kerület' or fallback
   const titleLine = lines.find(line => line.includes('kerület')) || 'Ismeretlen cím';
@@ -85,7 +94,8 @@ export function parseOfferText(text: string): ParsedOffer {
     location,
     items,
     totalPrice,
-    notes: notes.length > 0 ? notes : undefined
+    notes: notes.length > 0 ? notes : undefined,
+    offerSummary
   };
 }
 
@@ -103,6 +113,7 @@ export function formatOfferForSave(parsed: ParsedOffer) {
       materialTotal: item.materialTotal,
       totalPrice: item.totalPrice
     })),
-    notes: parsed.notes
+    notes: parsed.notes,
+    offerSummary: parsed.offerSummary
   };
 }

@@ -45,6 +45,7 @@ interface Offer {
   totalPrice?: number;
   createdBy?: string | null;
   description?: string;
+  offerSummary?: string | null;
   requirement?: {
     id: number;
     title: string;
@@ -236,9 +237,17 @@ export default function OffersPage() {
                       <div className="p-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium text-gray-900">
+                            <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
                               {offer.title || "Névtelen ajánlat"}
                             </h3>
+                            {offer.offerSummary && (
+                              <p className="mt-1 text-sm text-gray-700">
+                                <span className="font-medium text-black">Összefoglaló: </span>
+                                {offer.offerSummary.length > 100 
+                                  ? `${offer.offerSummary.substring(0, 100)}...`
+                                  : offer.offerSummary}
+                              </p>
+                            )}
                             {offer.description && (
                               <p className="mt-1 text-sm text-gray-600 line-clamp-2">
                                 {offer.description.includes("Becsült kivitelezési idő")
@@ -270,13 +279,16 @@ export default function OffersPage() {
                         <div className="mt-2 flex justify-between items-center">
                           <div className="text-sm text-gray-500">
                             {offer.totalPrice ? (
-                              <span className="font-medium text-gray-900">
-                                {new Intl.NumberFormat("hu-HU", {
-                                  style: "currency",
-                                  currency: "HUF",
-                                  maximumFractionDigits: 0,
-                                }).format(offer.totalPrice)}
-                              </span>
+                              <>
+                                <span className="font-medium text-black">Összeg: </span>
+                                <span className="font-medium text-gray-900">
+                                  {new Intl.NumberFormat("hu-HU", {
+                                    style: "currency",
+                                    currency: "HUF",
+                                    maximumFractionDigits: 0,
+                                  }).format(offer.totalPrice)}
+                                </span>
+                              </>
                             ) : (
                               <span>Ár nincs megadva</span>
                             )}

@@ -4040,6 +4040,14 @@ This format is essential for automated parsing and table rendering. Please ensur
 
 REMINDER: You must always include every mentioned task as a properly formatted item line, even if the task is not found in the catalog.
 Do not skip, remove or omit any task — estimate a cost and add a proper line using the same format. This is MANDATORY.
+
+**OFFERSUMMARY KÖVETELMÉNY:**
+Az ajánlat végén MINDIG adj hozzá egy "offerSummary:" részt, amely pontosan 2 magyar mondatból áll:
+1. Első mondat: Milyen elemek vannak az ajánlatban (főbb munkafázisok és anyagok felsorolása)
+2. Második mondat: Mit kell csinálni és mennyi az összköltség
+
+Példa:
+offerSummary: Az ajánlat tartalmazza a teljes lakásfelújítást: falak festését, parketta lerakását, fürdőszoba csempézését és elektromos munkákat. A projekt során 85 m² lakás teljes megújítására kerül sor 4,2 millió forint összköltséggel.
 `,
   model: gemini({
     model: "gemini-2.0-flash",
@@ -4233,6 +4241,40 @@ export const AiOfferAgent = inngest.createFunction(
         "AiOfferChatAgent result!!!:",
         JSON.stringify(result, null, 2)
       );
+      
+      // Részletes logolás az AI válaszról
+      console.log("=== AI RESPONSE DETAILED LOG ===");
+      console.log("Result type:", typeof result);
+      console.log("Result keys:", Object.keys(result || {}));
+      
+      if (result && result.output && Array.isArray(result.output)) {
+        console.log("Output array length:", result.output.length);
+        result.output.forEach((item, index) => {
+          console.log(`Output[${index}]:`, {
+            type: typeof item,
+            keys: Object.keys(item || {}),
+            hasContent: 'content' in item
+          });
+          
+          // Keressük az offerSummary-t a válaszban
+          if ('content' in item && item.content && typeof item.content === 'string') {
+            console.log("Content preview:", item.content.substring(0, 500) + "...");
+            
+            const offerSummaryMatch = item.content.match(/offerSummary:\s*([^\n]+(?:\n[^\n]+)?)/i);
+            if (offerSummaryMatch) {
+              console.log("🎯 FOUND offerSummary:", offerSummaryMatch[1]);
+            } else {
+              console.log("❌ offerSummary NOT FOUND in content");
+              console.log("Full content preview:", item.content.substring(0, 1000));
+            }
+          } else {
+            console.log("❌ No content property in message");
+          }
+        });
+      } else {
+        console.log("❌ No output array found in result");
+      }
+      console.log("=== END AI RESPONSE LOG ===");
 
       // Save the result to the database using Prisma
       if (recordId) {

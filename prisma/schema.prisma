@@ -135,6 +135,7 @@ model Offer {
   recordId       String?     @unique(map: "unique_offer_record_id")
   validUntil     DateTime?
   notes          String?
+  offerSummary   String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   createdBy      String?
