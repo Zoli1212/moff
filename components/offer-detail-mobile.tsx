@@ -26,7 +26,6 @@ import {
   ArrowLeft,
   FileText,
   List,
-  MessageSquare,
   Clock,
   Tag,
   Calendar,
@@ -465,9 +464,6 @@ export function OfferDetailView({
     console.log("Requirement object:", offer.requirement);
     console.log("Requirement description:", offer.requirement?.description);
   }, [offer.requirement]);
-
-  // Ensure notes is always an array of strings
-  const notes = Array.isArray(offer.notes) ? offer.notes : [];
 
   // Always use editableItems
   const items = editableItems;
