@@ -76,7 +76,7 @@ export default async function SupplyPage({
             letterSpacing: "0.3px",
           }}
         >
-          📋 Beszerzés folyamatban lévő munkafázisokhoz
+          📋 Erőforrásmenedzsment
         </div>
       </div>
 

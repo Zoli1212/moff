@@ -84,7 +84,9 @@ function WorkersSlotsSectionWithoutRoles({
   maxRequiredWorkers,
 }: Props) {
   // Local state for dynamic slot count updates
-  const [localMaxRequiredWorkers, setLocalMaxRequiredWorkers] = useState<number | null>(maxRequiredWorkers || null);
+  const [localMaxRequiredWorkers, setLocalMaxRequiredWorkers] = useState<
+    number | null
+  >(maxRequiredWorkers || null);
 
   // Update local state when prop changes
   useEffect(() => {
@@ -143,11 +145,11 @@ function WorkersSlotsSectionWithoutRoles({
   // Calculate total required workers - take MAXIMUM per role, then sum all roles
   const totalRequiredWorkers: number = useMemo(() => {
     const roleMaximums: Record<string, number> = {};
-    
+
     // For each workItem, calculate role requirements
     for (const wi of workItems) {
       const roleQuantities: Record<string, number> = {};
-      
+
       // From workItemWorkers
       for (const wiw of wi.workItemWorkers ?? []) {
         const worker = workers.find((w) => w.id === wiw.workerId);
@@ -169,7 +171,7 @@ function WorkersSlotsSectionWithoutRoles({
           roleQuantities[rp.type] = (roleQuantities[rp.type] || 0) + quantity;
         }
       }
-      
+
       // Update role maximums - take max per role across workItems
       for (const [role, quantity] of Object.entries(roleQuantities)) {
         roleMaximums[role] = Math.max(roleMaximums[role] || 0, quantity);
@@ -189,12 +191,18 @@ function WorkersSlotsSectionWithoutRoles({
   }, [localMaxRequiredWorkers, totalRequiredWorkers]);
 
   // Track and save maxRequiredWorkers to Work table when it changes (only save calculated value)
-  const [lastSavedMaxRequired, setLastSavedMaxRequired] = useState<number | null>(null);
-  
+  const [lastSavedMaxRequired, setLastSavedMaxRequired] = useState<
+    number | null
+  >(null);
+
   useEffect(() => {
     const saveMaxRequiredWorkers = async () => {
-      // Only save calculated value if maxRequiredWorkers is exactly 0 and value changed
-      if (maxRequiredWorkers === 0 && totalRequiredWorkers !== lastSavedMaxRequired && totalRequiredWorkers > 0) {
+      // Only save calculated value if maxRequiredWorkers is null or 0 and value changed
+      if (
+        (maxRequiredWorkers === null || maxRequiredWorkers === 0) &&
+        totalRequiredWorkers !== lastSavedMaxRequired &&
+        totalRequiredWorkers > 0
+      ) {
         try {
           await updateWorkMaxRequiredWorkers(workId, totalRequiredWorkers);
           setLastSavedMaxRequired(totalRequiredWorkers);
@@ -225,10 +233,10 @@ function WorkersSlotsSectionWithoutRoles({
   const handleIncreaseSlots = async () => {
     const currentCount = localMaxRequiredWorkers || 0;
     const newCount = currentCount + 1;
-    
+
     // Update local state immediately for instant UI feedback
     setLocalMaxRequiredWorkers(newCount);
-    
+
     try {
       await updateWorkMaxRequiredWorkers(workId, newCount);
       toast.success(`Munkások száma bővítve: ${newCount}`);
@@ -243,22 +251,24 @@ function WorkersSlotsSectionWithoutRoles({
   const handleDecreaseSlots = async () => {
     const currentCount = localMaxRequiredWorkers || 0;
     const assignedCount = allAssignments.length;
-    
+
     if (currentCount <= assignedCount) {
-      toast.error("Nem lehet kevesebb hely, mint a hozzárendelt munkások száma");
+      toast.error(
+        "Nem lehet kevesebb hely, mint a hozzárendelt munkások száma"
+      );
       return;
     }
-    
+
     if (currentCount <= 1) {
       toast.error("Legalább 1 munkás hely szükséges");
       return;
     }
 
     const newCount = currentCount - 1;
-    
+
     // Update local state immediately for instant UI feedback
     setLocalMaxRequiredWorkers(newCount);
-    
+
     try {
       await updateWorkMaxRequiredWorkers(workId, newCount);
       toast.success(`Munkások száma csökkentve: ${newCount}`);
@@ -458,10 +468,9 @@ function WorkersSlotsSectionWithoutRoles({
     }
   };
 
-
   // Get all assignments for this work (no role grouping)
   const allAssignments = useMemo(() => {
-    return assignments.filter(a => Boolean(a.name) || Boolean(a.email));
+    return assignments.filter((a) => Boolean(a.name) || Boolean(a.email));
   }, [assignments]);
 
   useEffect(() => {
@@ -559,18 +568,14 @@ function WorkersSlotsSectionWithoutRoles({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
             <span className="text-[#666] font-medium">Frissítés</span>
-            <span className="text-[#888] text-sm">
-              Adatok betöltése
-            </span>
+            <span className="text-[#888] text-sm">Adatok betöltése</span>
           </div>
         ) : (
           <>
             {/* Simple unified worker list - no role grouping */}
             <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
               <div className="flex items-center gap-2.5">
-                <div className="flex-1 font-semibold">
-                  Összes munkás
-                </div>
+                <div className="flex-1 font-semibold">Összes munkás</div>
                 <div className="flex items-center gap-2 ml-auto">
                   <div className="font-semibold text-[14px] text-[#222]">
                     {allAssignments.length} / {effectiveSlotCount}
@@ -629,9 +634,14 @@ function WorkersSlotsSectionWithoutRoles({
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Show empty slots for remaining required workers */}
-                {Array.from({ length: Math.max(0, effectiveSlotCount - allAssignments.length) }).map((_, idx) => (
+                {Array.from({
+                  length: Math.max(
+                    0,
+                    effectiveSlotCount - allAssignments.length
+                  ),
+                }).map((_, idx) => (
                   <div
                     key={`empty-slot-${idx}`}
                     className="flex items-center w-full gap-2"
@@ -662,6 +672,6 @@ function WorkersSlotsSectionWithoutRoles({
       </div>
     </div>
   );
-};
+}
 
 export default WorkersSlotsSectionWithoutRoles;
