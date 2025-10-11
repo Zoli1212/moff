@@ -7,8 +7,8 @@ import type {
   WorkItemWorker,
   Professional,
 } from "@/types/work";
-import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Minus } from "lucide-react";
+
+import { Plus, Trash2} from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
@@ -142,6 +142,8 @@ function WorkersSlotsSectionWithoutRoles({
     null
   );
 
+  console.log(addLock)
+
   // Calculate total required workers - take MAXIMUM per role, then sum all roles
   const totalRequiredWorkers: number = useMemo(() => {
     const roleMaximums: Record<string, number> = {};
@@ -219,10 +221,7 @@ function WorkersSlotsSectionWithoutRoles({
   const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
     useState<string>("");
 
-  const handleRemoveRole = (role: string) => {
-    setSelectedRoleForRemoval(role);
-    setRemoveModalOpen(true);
-  };
+console.log(setSelectedRoleForRemoval)
 
   const handleRemoveFromWorkItem = async (workItemId: number) => {
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);

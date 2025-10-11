@@ -5,8 +5,38 @@ import WorkersSlotsSectionWithoutRoles from "../_components/WorkersSlotsSectionW
 import type { WorkItem, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
-import { getToolsRegistryByTenant, getAssignedToolsForWork } from "@/actions/tools-registry-actions";
+import {
+  getToolsRegistryByTenant,
+  getAssignedToolsForWork,
+} from "@/actions/tools-registry-actions";
 import WorkHeader from "@/components/WorkHeader";
+
+// Work interface with maxRequiredWorkers
+interface Work {
+  id: number;
+  title: string;
+  offerId: number;
+  offerDescription?: string | null;
+  status: string;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  location?: string | null;
+  totalWorkers: number;
+  totalLaborCost?: number | null;
+  totalTools: number;
+  totalToolCost?: number | null;
+  totalMaterials: number;
+  totalMaterialCost?: number | null;
+  estimatedDuration?: string | null;
+  progress?: number | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  tenantEmail: string;
+  maxRequiredWorkers?: number | null;
+  materials?: Material[];
+  workers?: Worker[];
+}
 
 export default async function SupplyPage({
   params,
@@ -29,9 +59,9 @@ export default async function SupplyPage({
   let assignedTools: AssignedTool[] = [];
   let maxRequiredWorkers: number | null = null;
   try {
-    const work = await getWorkById(workId);
+    const work = await getWorkById(workId) as Work;
     materials = work.materials || [];
-    maxRequiredWorkers = (work as any).maxRequiredWorkers || null;
+    maxRequiredWorkers = work.maxRequiredWorkers || null;
     const richItems = await getWorkItemsWithWorkers(workId);
     workItems = (richItems || []).map((item: WorkItem) => ({
       ...item,
@@ -42,9 +72,8 @@ export default async function SupplyPage({
     }));
     workName = work.title || "";
     tools = await getToolsRegistryByTenant();
-    assignedTools = await getAssignedToolsForWork(workId) as AssignedTool[];
+    assignedTools = (await getAssignedToolsForWork(workId)) as AssignedTool[];
     workers = work.workers || [];
-    
   } catch (e) {
     console.error(e);
     return <div>Nem sikerült betölteni az anyagokat vagy szerszámokat.</div>;
@@ -54,138 +83,137 @@ export default async function SupplyPage({
     <div style={{ maxWidth: 450, margin: "0 auto", paddingBottom: 120 }}>
       <WorkHeader title={workName || "Beszerzés"} />
       <div style={{ padding: "0 8px" }}>
-
-      {/* Info badge */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginBottom: "16px",
-        }}
-      >
+        {/* Info badge */}
         <div
           style={{
-            background: "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
-            border: "1px solid #ffcc02",
-            borderRadius: "20px",
-            padding: "8px 16px",
-            fontSize: "13px",
-            fontWeight: 500,
-            color: "#e65100",
-            boxShadow: "0 2px 4px rgba(255, 153, 0, 0.15)",
-            letterSpacing: "0.3px",
+            display: "flex",
+            justifyContent: "center",
+            marginBottom: "16px",
           }}
         >
-          📋 Erőforrásmenedzsment
+          <div
+            style={{
+              background: "linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%)",
+              border: "1px solid #ffcc02",
+              borderRadius: "20px",
+              padding: "8px 16px",
+              fontSize: "13px",
+              fontWeight: 500,
+              color: "#e65100",
+              boxShadow: "0 2px 4px rgba(255, 153, 0, 0.15)",
+              letterSpacing: "0.3px",
+            }}
+          >
+            📋 Erőforrásmenedzsment
+          </div>
         </div>
-      </div>
 
-      {/* Toggle button for Anyagok/Szerszámok */}
-      <div
-        style={{
-          display: "flex",
-          gap: 0,
-          width: "100%",
-          margin: "0 0 12px 0",
-          alignItems: "stretch",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Tab links */}
-        <a
-          href={`?tab=workers`}
+        {/* Toggle button for Anyagok/Szerszámok */}
+        <div
           style={{
-            flex: 1,
-            padding: "10px 0",
-            borderRadius: "22px 0 0 22px",
-            border: "none",
-            background: !tab || tab === "workers" ? "#ddd" : "#f7f7f7",
-            color: !tab || tab === "workers" ? "#222" : "#888",
-            fontWeight: 600,
-            fontSize: 15,
-            boxShadow: "0 1px 2px #eee",
-            outline: "none",
-            cursor: "pointer",
-            transition: "background .2s",
-            textDecoration: "none",
-            textAlign: "center",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
+            display: "flex",
+            gap: 0,
+            width: "100%",
+            margin: "0 0 12px 0",
+            alignItems: "stretch",
+            justifyContent: "space-between",
           }}
         >
-          Munkaerő
-        </a>
-        <a
-          href={`?tab=tools`}
-          style={{
-            flex: 1,
-            padding: "10px 0",
-            borderRadius: 0,
-            border: "none",
-            background: tab === "tools" ? "#ddd" : "#f7f7f7",
-            color: tab === "tools" ? "#222" : "#888",
-            fontWeight: 600,
-            fontSize: 15,
-            boxShadow: "0 1px 2px #eee",
-            outline: "none",
-            cursor: "pointer",
-            textDecoration: "none",
-            textAlign: "center",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          Szerszámok
-        </a>
-        <a
-          href={`?tab=materials`}
-          style={{
-            flex: 1,
-            padding: "10px 0",
-            borderRadius: "0 22px 22px 0",
-            border: "none",
-            background: tab === "materials" ? "#ddd" : "#f7f7f7",
-            color: tab === "materials" ? "#222" : "#888",
-            fontWeight: 600,
-            fontSize: 15,
-            boxShadow: "0 1px 2px #eee",
-            outline: "none",
-            cursor: "pointer",
-            textDecoration: "none",
-            textAlign: "center",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          Anyagok
-        </a>
-      </div>
-      
-      {/* Tab content */}
-      {(!tab || tab === "workers") ? (
-        <WorkersSlotsSectionWithoutRoles
-          workId={workId}
-          workItems={workItems}
-          workers={workers}
-          maxRequiredWorkers={maxRequiredWorkers}
-        />
-      ) : tab === "tools" ? (
-        <ToolsSlotsSection
-          tools={tools}
-          workId={workId}
-          assignedTools={assignedTools}
-          workItems={workItems}
-        />
-      ) : (
-        <MaterialSlotsSection
-          materials={materials}
-          workId={workId}
-          workItems={workItems}
-        />
-      )}
+          {/* Tab links */}
+          <a
+            href={`?tab=workers`}
+            style={{
+              flex: 1,
+              padding: "10px 0",
+              borderRadius: "22px 0 0 22px",
+              border: "none",
+              background: !tab || tab === "workers" ? "#ddd" : "#f7f7f7",
+              color: !tab || tab === "workers" ? "#222" : "#888",
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: "0 1px 2px #eee",
+              outline: "none",
+              cursor: "pointer",
+              transition: "background .2s",
+              textDecoration: "none",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            Munkaerő
+          </a>
+          <a
+            href={`?tab=tools`}
+            style={{
+              flex: 1,
+              padding: "10px 0",
+              borderRadius: 0,
+              border: "none",
+              background: tab === "tools" ? "#ddd" : "#f7f7f7",
+              color: tab === "tools" ? "#222" : "#888",
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: "0 1px 2px #eee",
+              outline: "none",
+              cursor: "pointer",
+              textDecoration: "none",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            Szerszámok
+          </a>
+          <a
+            href={`?tab=materials`}
+            style={{
+              flex: 1,
+              padding: "10px 0",
+              borderRadius: "0 22px 22px 0",
+              border: "none",
+              background: tab === "materials" ? "#ddd" : "#f7f7f7",
+              color: tab === "materials" ? "#222" : "#888",
+              fontWeight: 600,
+              fontSize: 15,
+              boxShadow: "0 1px 2px #eee",
+              outline: "none",
+              cursor: "pointer",
+              textDecoration: "none",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            Anyagok
+          </a>
+        </div>
+
+        {/* Tab content */}
+        {!tab || tab === "workers" ? (
+          <WorkersSlotsSectionWithoutRoles
+            workId={workId}
+            workItems={workItems}
+            workers={workers}
+            maxRequiredWorkers={maxRequiredWorkers}
+          />
+        ) : tab === "tools" ? (
+          <ToolsSlotsSection
+            tools={tools}
+            workId={workId}
+            assignedTools={assignedTools}
+            workItems={workItems}
+          />
+        ) : (
+          <MaterialSlotsSection
+            materials={materials}
+            workId={workId}
+            workItems={workItems}
+          />
+        )}
       </div>
     </div>
   );
