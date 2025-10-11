@@ -544,18 +544,23 @@ export default function WorkDetailPage({
 
           {/* Details Section */}
           <div className="p-6 bg-white text-black space-y-4">
-            {/* Status and dates */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className={`w-3 h-3 rounded-full ${work.isActive ? 'bg-orange-500' : 'bg-gray-500'} shadow-lg`}></div>
-                  <span className="text-sm font-medium text-orange-600">Státusz</span>
+            {/* Összefoglaló */}
+            {((work as Record<string, unknown>).workSummary as string) && (
+              <div className="bg-orange-50 rounded-2xl p-4 border border-gray-300">
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <span className="text-sm font-bold text-orange-600">Összefoglaló</span>
                 </div>
-                <span className="text-lg font-bold text-black">
-                  {work.isActive ? "Aktív" : "Inaktív"}
-                </span>
+                <p className="text-sm text-black leading-relaxed">
+                  {((work as Record<string, unknown>).workSummary as string)}
+                </p>
               </div>
+            )}
 
+            {/* Duration */}
+            <div className="grid grid-cols-1 gap-4">
               <div className="bg-gray-50 p-4 rounded-2xl border border-gray-300">
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -610,21 +615,6 @@ export default function WorkDetailPage({
               <div className="bg-gray-50 rounded-2xl p-4">
                 <div className="text-sm text-gray-600 mb-2">Szakmunkások:</div>
                 <div className="text-black font-medium">{workers.map((w) => w.name).join(", ")}</div>
-              </div>
-            )}
-
-            {/* Összefoglaló */}
-            {((work as Record<string, unknown>).workSummary as string) && (
-              <div className="bg-orange-50 rounded-2xl p-4 border border-gray-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                  <span className="text-sm font-bold text-orange-600">Összefoglaló</span>
-                </div>
-                <p className="text-sm text-black leading-relaxed">
-                  {((work as Record<string, unknown>).workSummary as string)}
-                </p>
               </div>
             )}
 
