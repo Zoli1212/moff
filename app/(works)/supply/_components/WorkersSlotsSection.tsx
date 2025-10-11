@@ -696,9 +696,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
             <span className="text-[#666] font-medium">Frissítés</span>
-            <span className="text-[#888] text-sm">
-              Adatok betöltése
-            </span>
+            <span className="text-[#888] text-sm">Adatok betöltése</span>
           </div>
         ) : (
           <>
@@ -858,7 +856,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                   const assignedCount = list.length;
                   const extraSlotCount = extraSlots[role] || 0;
                   const reducedSlotCount = reducedSlots[role] || 0;
-                  
+
                   // For inactive roles, calculate required from ALL workItems (not just active ones)
                   // This ensures consistency with the original requirements
                   let required = 0;
@@ -869,8 +867,10 @@ const WorkersSlotsSection: React.FC<Props> = ({
                     for (const wiw of wi.workItemWorkers ?? []) {
                       const worker = workers.find((w) => w.id === wiw.workerId);
                       if (worker && (worker.name || "Ismeretlen") === role) {
-                        const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
-                        roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
+                        const quantity =
+                          typeof wiw.quantity === "number" ? wiw.quantity : 1;
+                        roleQuantities[role] =
+                          (roleQuantities[role] || 0) + quantity;
                       }
                     }
 
@@ -882,22 +882,29 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           typeof rp.quantity === "number" && rp.quantity > 0
                             ? rp.quantity
                             : 1;
-                        roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
+                        roleQuantities[role] =
+                          (roleQuantities[role] || 0) + quantity;
                       }
                     }
 
                     // Update required with maximum values
-                    for (const [r, quantity] of Object.entries(roleQuantities)) {
+                    for (const [r, quantity] of Object.entries(
+                      roleQuantities
+                    )) {
                       if (r === role) {
                         required = Math.max(required, quantity);
                       }
                     }
                   }
-                  
+
                   // Ensure at least 1 slot for inactive roles
                   required = Math.max(1, required);
-                  const effectiveRequired = Math.max(0, required - reducedSlotCount);
-                  const slotCount = Math.max(effectiveRequired, assignedCount) + extraSlotCount;
+                  const effectiveRequired = Math.max(
+                    0,
+                    required - reducedSlotCount
+                  );
+                  const slotCount =
+                    Math.max(effectiveRequired, assignedCount) + extraSlotCount;
                   const slotArray = Array.from({ length: slotCount });
 
                   return (

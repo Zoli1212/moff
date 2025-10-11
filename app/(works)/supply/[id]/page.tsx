@@ -1,7 +1,7 @@
 import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection";
-import WorkersSlotsSection from "../_components/WorkersSlotsSection";
+import WorkersSlotsSectionWithoutRoles from "../_components/WorkersSlotsSectionWithoutRoles";
 import type { WorkItem, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
 import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
@@ -27,9 +27,11 @@ export default async function SupplyPage({
   let workName = "";
   let tools: Tool[] = [];
   let assignedTools: AssignedTool[] = [];
+  let maxRequiredWorkers: number | null = null;
   try {
     const work = await getWorkById(workId);
     materials = work.materials || [];
+    maxRequiredWorkers = (work as any).maxRequiredWorkers || null;
     const richItems = await getWorkItemsWithWorkers(workId);
     workItems = (richItems || []).map((item: WorkItem) => ({
       ...item,
@@ -164,10 +166,11 @@ export default async function SupplyPage({
       
       {/* Tab content */}
       {(!tab || tab === "workers") ? (
-        <WorkersSlotsSection
+        <WorkersSlotsSectionWithoutRoles
           workId={workId}
           workItems={workItems}
           workers={workers}
+          maxRequiredWorkers={maxRequiredWorkers}
         />
       ) : tab === "tools" ? (
         <ToolsSlotsSection

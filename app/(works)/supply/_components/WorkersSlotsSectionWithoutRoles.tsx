@@ -8,7 +8,7 @@ import type {
   Professional,
 } from "@/types/work";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Minus } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
@@ -18,16 +18,17 @@ import {
   deleteWorkItemWorker,
 } from "@/actions/update-workitemworker";
 import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-and-assign";
-import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
 import { useActiveWorkersStore } from "@/stores/active-workers-store";
+import { updateWorkMaxRequiredWorkers } from "@/actions/update-work-maxrequired";
 
 interface Props {
   workId: number;
   workItems: WorkItem[];
   workers: Worker[]; // Worker rows for this work (professions)
   showAllWorkItems?: boolean; // If true, treat all workItems as active (for works/[id] page)
+  maxRequiredWorkers?: number | null; // Manual override for slot count
 }
 
 // Extend WorkItemWorker with optional fields that can be present from the API/DB
@@ -72,17 +73,24 @@ function getRequiredProfessionals(item: WorkItem): Professional[] {
 //   const okName = o.name === undefined || typeof o.name === "string";
 //   const okEmail = o.email === undefined || typeof o.email === "string";
 //   const okPhone = o.phone === undefined || typeof o.phone === "string";
-//   const okProfession = o.profession === undefined || typeof o.profession === "string";
-//   const okAvatarUrl = o.avatarUrl === undefined || typeof o.avatarUrl === "string";
-//   return okId && okWorkItemId && okName && okEmail && okPhone && okProfession && okAvatarUrl;
+//   return okId && okWorkItemId && okName && okEmail && okPhone;
 // }
 
-const WorkersSlotsSection: React.FC<Props> = ({
+function WorkersSlotsSectionWithoutRoles({
   workId,
   workItems,
   workers,
   showAllWorkItems = false,
-}) => {
+  maxRequiredWorkers,
+}: Props) {
+  // Local state for dynamic slot count updates
+  const [localMaxRequiredWorkers, setLocalMaxRequiredWorkers] = useState<number | null>(maxRequiredWorkers || null);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setLocalMaxRequiredWorkers(maxRequiredWorkers || null);
+  }, [maxRequiredWorkers]);
+
   // Filter work items based on showAllWorkItems flag
   const activeWorkItemIds = useMemo(
     () =>
@@ -132,18 +140,14 @@ const WorkersSlotsSection: React.FC<Props> = ({
     null
   );
 
-  // Build required slots per profession from active workItems
-  // Take maximum requirement per role across all active workItems
-  const requiredPerProfession: Record<string, number> = useMemo(() => {
-    const byRole: Record<string, number> = {};
-    const activeItems = workItems.filter(
-      (wi) => showAllWorkItems || wi.inProgress
-    );
-
-    // Find maximum requirement per role across all active workItems
-    for (const wi of activeItems) {
+  // Calculate total required workers - take MAXIMUM per role, then sum all roles
+  const totalRequiredWorkers: number = useMemo(() => {
+    const roleMaximums: Record<string, number> = {};
+    
+    // For each workItem, calculate role requirements
+    for (const wi of workItems) {
       const roleQuantities: Record<string, number> = {};
-
+      
       // From workItemWorkers
       for (const wiw of wi.workItemWorkers ?? []) {
         const worker = workers.find((w) => w.id === wiw.workerId);
@@ -165,15 +169,43 @@ const WorkersSlotsSection: React.FC<Props> = ({
           roleQuantities[rp.type] = (roleQuantities[rp.type] || 0) + quantity;
         }
       }
-
-      // Update byRole with maximum values
+      
+      // Update role maximums - take max per role across workItems
       for (const [role, quantity] of Object.entries(roleQuantities)) {
-        byRole[role] = Math.max(byRole[role] || 0, quantity);
+        roleMaximums[role] = Math.max(roleMaximums[role] || 0, quantity);
       }
     }
 
-    return byRole;
-  }, [workItems, workers, showAllWorkItems]);
+    // Sum all role maximums to get total required workers
+    return Object.values(roleMaximums).reduce((sum, max) => sum + max, 0);
+  }, [workItems, workers]);
+
+  // Determine effective slot count: use localMaxRequiredWorkers if set, otherwise calculated value
+  const effectiveSlotCount = useMemo(() => {
+    if (localMaxRequiredWorkers && localMaxRequiredWorkers > 0) {
+      return localMaxRequiredWorkers;
+    }
+    return totalRequiredWorkers;
+  }, [localMaxRequiredWorkers, totalRequiredWorkers]);
+
+  // Track and save maxRequiredWorkers to Work table when it changes (only save calculated value)
+  const [lastSavedMaxRequired, setLastSavedMaxRequired] = useState<number | null>(null);
+  
+  useEffect(() => {
+    const saveMaxRequiredWorkers = async () => {
+      // Only save calculated value if maxRequiredWorkers is exactly 0 and value changed
+      if (maxRequiredWorkers === 0 && totalRequiredWorkers !== lastSavedMaxRequired && totalRequiredWorkers > 0) {
+        try {
+          await updateWorkMaxRequiredWorkers(workId, totalRequiredWorkers);
+          setLastSavedMaxRequired(totalRequiredWorkers);
+        } catch (error) {
+          console.error("Failed to save maxRequiredWorkers:", error);
+        }
+      }
+    };
+
+    saveMaxRequiredWorkers();
+  }, [workId, totalRequiredWorkers, lastSavedMaxRequired, maxRequiredWorkers]);
 
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
   const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
@@ -189,158 +221,56 @@ const WorkersSlotsSection: React.FC<Props> = ({
     await refreshAssignments();
   };
 
-  // Compute per-Worker maximum required quantity across active workItems (mirror of ParticipantsSection)
-  const workerIdToMaxNeeded: Record<number, number> = useMemo(() => {
-    const map: Record<number, number> = {};
-    for (const w of workers) {
-      const workerId = w.id;
-      let max = 0;
-      for (const wi of workItems.filter(
-        (wi) => showAllWorkItems || wi.inProgress
-      )) {
-        const sum = (wi.workItemWorkers ?? [])
-          .filter((wiw) => wiw.workerId === workerId)
-          .reduce(
-            (acc, wiw) =>
-              acc + (typeof wiw.quantity === "number" ? wiw.quantity : 1),
-            0
-          );
-        if (sum > max) max = sum;
-      }
-      map[workerId] = max;
+  // Handle slot count changes
+  const handleIncreaseSlots = async () => {
+    const currentCount = localMaxRequiredWorkers || 0;
+    const newCount = currentCount + 1;
+    
+    // Update local state immediately for instant UI feedback
+    setLocalMaxRequiredWorkers(newCount);
+    
+    try {
+      await updateWorkMaxRequiredWorkers(workId, newCount);
+      toast.success(`Munkások száma bővítve: ${newCount}`);
+    } catch (error) {
+      console.error("Failed to increase slots:", error);
+      toast.error("Hiba történt a munkások számának bővítése közben");
+      // Revert local state on error
+      setLocalMaxRequiredWorkers(currentCount);
     }
-    return map;
-  }, [workItems, workers, showAllWorkItems]);
+  };
 
-  // Persist latest maxima to the server whenever they change
-  React.useEffect(() => {
-    updateWorkersMaxRequiredAction(workId, workerIdToMaxNeeded);
-    // eslint-disable-next-line
-  }, [workId, JSON.stringify(workerIdToMaxNeeded)]);
-
-  // Decide which single workItem's assignments should fill the slots for each role
-  // Prefer an in-progress item with the max requirement; if none, fall back to any item with the max
-  const roleBestWorkItemId: Record<string, number | undefined> = useMemo(() => {
-    const bestAny: Record<string, { count: number; id: number } | undefined> =
-      {};
-    const bestInProg: Record<
-      string,
-      { count: number; id: number } | undefined
-    > = {};
-    const activeIds = new Set(activeWorkItemIds);
-    for (const item of workItems) {
-      const withinItem: Record<string, number> = {};
-      const req = getRequiredProfessionals(item);
-      if (req.length > 0) {
-        for (const rp of req) {
-          const role: string | undefined = rp.type ?? undefined;
-          if (!role) continue;
-          const qty =
-            typeof rp.quantity === "number" && rp.quantity > 0
-              ? rp.quantity
-              : 1;
-          withinItem[role] = (withinItem[role] || 0) + qty;
-        }
-      } else {
-        // Fallback: count by workerId quantities in this item and map to role via workers list
-        const byWorkerId: Record<number, number> = {};
-        for (const wiw of item.workItemWorkers ?? []) {
-          const q = typeof wiw.quantity === "number" ? wiw.quantity : 1;
-          const id = wiw.workerId;
-          byWorkerId[id] = (byWorkerId[id] || 0) + q;
-        }
-        for (const w of workers) {
-          const role = w.name || "Ismeretlen";
-          const cnt = byWorkerId[w.id] || 0;
-          if (cnt > 0) withinItem[role] = (withinItem[role] || 0) + cnt;
-        }
-      }
-      for (const role of Object.keys(withinItem)) {
-        const count = withinItem[role];
-        const currAny = bestAny[role];
-        const currIn = bestInProg[role];
-        if (!currAny || count > currAny.count)
-          bestAny[role] = { count, id: item.id };
-        if (activeIds.has(item.id)) {
-          if (!currIn || count > currIn.count)
-            bestInProg[role] = { count, id: item.id };
-        }
-      }
+  const handleDecreaseSlots = async () => {
+    const currentCount = localMaxRequiredWorkers || 0;
+    const assignedCount = allAssignments.length;
+    
+    if (currentCount <= assignedCount) {
+      toast.error("Nem lehet kevesebb hely, mint a hozzárendelt munkások száma");
+      return;
     }
-    const out: Record<string, number | undefined> = {};
-    const roles = new Set<string>([
-      ...Object.keys(bestAny),
-      ...Object.keys(bestInProg),
-    ]);
-    for (const role of roles)
-      out[role] = (bestInProg[role] ?? bestAny[role])?.id;
-    return out;
-  }, [workItems, activeWorkItemIds, workers]);
-
-  // Denominator for the header: from the BEST work item per role only.
-  // Sum quantities of null-email WorkItemWorkers that belong to that role.
-  const denominatorRequiredPerProfession: Record<string, number> =
-    useMemo(() => {
-      const byRole: Record<string, number> = {};
-      // Map workerId -> role name
-      const workerIdToRole = new Map<number, string>();
-      for (const w of workers) {
-        workerIdToRole.set(w.id, w.name || "Ismeretlen");
-      }
-      // role -> allowed workerIds
-      const roleToWorkerIds = new Map<string, Set<number>>();
-      for (const [wid, role] of workerIdToRole.entries()) {
-        if (!roleToWorkerIds.has(role))
-          roleToWorkerIds.set(role, new Set<number>());
-        roleToWorkerIds.get(role)!.add(wid);
-      }
-      const roles = new Set<string>([
-        ...Object.keys(requiredPerProfession),
-        ...Object.keys(roleBestWorkItemId),
-      ]);
-      for (const role of roles) {
-        const bestId = roleBestWorkItemId[role];
-        if (!bestId) {
-          byRole[role] = 0;
-          continue;
-        }
-        const item = workItems.find((it) => it.id === bestId);
-        if (!item) {
-          byRole[role] = 0;
-          continue;
-        }
-        const allowedIds = roleToWorkerIds.get(role) || new Set<number>();
-        let sum = 0;
-        for (const wiw of item.workItemWorkers ?? []) {
-          if (
-            (wiw as AssignmentEx).email == null &&
-            allowedIds.has(wiw.workerId)
-          ) {
-            sum += typeof wiw.quantity === "number" ? wiw.quantity : 1;
-          }
-        }
-        byRole[role] = sum;
-      }
-      return byRole;
-    }, [workItems, workers, roleBestWorkItemId, requiredPerProfession]);
-
-  // Show all professions required (source of truth = requiredPerProfession)
-  const professions = useMemo(() => {
-    const keys = Object.keys(requiredPerProfession);
-    if (keys.length > 0) return keys.sort((a, b) => a.localeCompare(b, "hu"));
-    // If showAllWorkItems is true (main page), fallback to workers list
-    // If showAllWorkItems is false (supply page), show empty if no active workItems
-    if (showAllWorkItems) {
-      const names = Array.from(
-        new Set(workers.map((w) => w.name || "Ismeretlen").filter(Boolean))
-      );
-      return names.sort((a, b) => a.localeCompare(b, "hu"));
+    
+    if (currentCount <= 1) {
+      toast.error("Legalább 1 munkás hely szükséges");
+      return;
     }
-    // Supply page with no active workItems - show empty
-    return [];
-  }, [requiredPerProfession, workers, showAllWorkItems]);
 
-  // ALL worker types from the entire work (including inactive ones)
+    const newCount = currentCount - 1;
+    
+    // Update local state immediately for instant UI feedback
+    setLocalMaxRequiredWorkers(newCount);
+    
+    try {
+      await updateWorkMaxRequiredWorkers(workId, newCount);
+      toast.success(`Munkások száma csökkentve: ${newCount}`);
+    } catch (error) {
+      console.error("Failed to decrease slots:", error);
+      toast.error("Hiba történt a munkások számának csökkentése közben");
+      // Revert local state on error
+      setLocalMaxRequiredWorkers(currentCount);
+    }
+  };
+
+  // ALL worker types from the entire work (for WorkerAddModal)
   const allProfessionsFromWork = useMemo(() => {
     const allRoles = new Set<string>();
 
@@ -372,14 +302,6 @@ const WorkersSlotsSection: React.FC<Props> = ({
 
     return Array.from(allRoles).sort((a, b) => a.localeCompare(b, "hu"));
   }, [workItems, workers]);
-
-  // Inactive professions (not in active professions)
-  const inactiveProfessions = useMemo(() => {
-    const activeProfessionsSet = new Set(professions);
-    return allProfessionsFromWork.filter(
-      (role) => !activeProfessionsSet.has(role)
-    );
-  }, [allProfessionsFromWork, professions]);
 
   const refreshAssignments = async () => {
     try {
@@ -536,73 +458,29 @@ const WorkersSlotsSection: React.FC<Props> = ({
     }
   };
 
-  // State to manage dynamic slot counts per role
-  const [extraSlots, setExtraSlots] = useState<Record<string, number>>({});
-  const [reducedSlots, setReducedSlots] = useState<Record<string, number>>({});
 
-  // Handle adding extra slots for a role
-  const handleAddSlot = (role: string) => {
-    setExtraSlots((prev) => ({
-      ...prev,
-      [role]: (prev[role] || 0) + 1,
-    }));
-  };
-
-  // Handle removing empty slots dynamically
-  const handleRemoveEmptySlot = (role: string) => {
-    const currentExtra = extraSlots[role] || 0;
-    const currentReduced = reducedSlots[role] || 0;
-
-    if (currentExtra > 0) {
-      // First remove extra slots
-      setExtraSlots((prev) => ({
-        ...prev,
-        [role]: Math.max(0, currentExtra - 1),
-      }));
-    } else {
-      // Then allow reducing original required slots (temporarily)
-      setReducedSlots((prev) => ({
-        ...prev,
-        [role]: currentReduced + 1,
-      }));
-    }
-  };
-
-  // Group all assignments by role (profession) for this work
-  const grouped = useMemo(() => {
-    const allByRole: Record<string, AssignmentEx[]> = {};
-    for (const a of assignments) {
-      const key = a.role || "Ismeretlen";
-      const hasData = Boolean(a.name) || Boolean(a.email);
-      if (!hasData) continue;
-      if (!allByRole[key]) allByRole[key] = [];
-      allByRole[key].push(a);
-    }
-
-    // Return all assignments grouped by role - no workItem filtering
-    return allByRole;
+  // Get all assignments for this work (no role grouping)
+  const allAssignments = useMemo(() => {
+    return assignments.filter(a => Boolean(a.name) || Boolean(a.email));
   }, [assignments]);
 
   useEffect(() => {
     const uniqueWorkers = new Map<string, WorkItemWorker>();
     const hoursMap = new Map<string, number>();
 
-    professions.forEach((role) => {
-      const workersInRole = grouped[role] || [];
-      workersInRole.forEach((worker) => {
-        const workerName = worker.name || "";
-        if (workerName && !uniqueWorkers.has(workerName)) {
-          uniqueWorkers.set(workerName, worker);
-        }
-        // Default to 8 hours if not specified
-        hoursMap.set(workerName, 8);
-      });
+    allAssignments.forEach((worker) => {
+      const workerName = worker.name || "";
+      if (workerName && !uniqueWorkers.has(workerName)) {
+        uniqueWorkers.set(workerName, worker);
+      }
+      // Default to 8 hours if not specified
+      hoursMap.set(workerName, 8);
     });
 
     const activeWorkerList = Array.from(uniqueWorkers.values());
     setActiveWorkers(activeWorkerList);
     setWorkerHours(hoursMap);
-  }, [grouped, professions, setActiveWorkers, setWorkerHours]);
+  }, [allAssignments, setActiveWorkers, setWorkerHours]);
 
   // Fallback list built from Worker.workers registry (ParticipantsSection parity)
   // const registryByRole: Record<string, AssignmentEx[]> = useMemo(() => {
@@ -639,39 +517,24 @@ const WorkersSlotsSection: React.FC<Props> = ({
         workId={workId}
         onSubmit={handleAdd}
         workItems={workItems}
-        professions={addLock?.role ? professions : allProfessionsFromWork} // Use all professions when not locked to specific role
+        professions={allProfessionsFromWork} // Always use all professions from work
         workers={workers}
-        lockedProfession={addLock?.role}
-        lockedWorkItemId={addLock?.workItemId}
+        lockedProfession={undefined} // No profession lock
+        lockedWorkItemId={undefined} // No workItem lock
         showAllWorkItems={showAllWorkItems}
       />
-      <Button
-        onClick={() => {
-          setAddLock(null);
-          setIsAddOpen(true);
-        }}
-        variant="outline"
-        aria-label="Új munkás hozzáadása"
-        className="absolute top-[14px] right-[18px] rounded-full border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] w-9 h-9 p-0 flex items-center justify-center"
-      >
-        <Plus className="h-5 w-5" />
-      </Button>
       <div className="h-8" />
-      <h3 className="text-md font-semibold text-gray-600 mb-3">
-        Az aktív feladatokhoz rendelt munkások
-      </h3>
-      <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">
-        Munkások (
-        {professions.reduce((sum, role) => {
-          const list = grouped[role] || [];
-          return sum + list.length;
-        }, 0)}
-        {" / "}
-        {professions.reduce(
-          (s, role) => s + (denominatorRequiredPerProfession[role] || 0),
-          0
-        )}
-        )
+      <div className="flex items-center justify-between mb-2">
+        <div className="font-bold text-[17px] tracking-[0.5px]">
+          Munkások ({allAssignments.length} / {effectiveSlotCount})
+        </div>
+        <button
+          onClick={handleIncreaseSlots}
+          className="flex items-center justify-center w-6 h-6 rounded-full border border-[#FF9900] text-[#FF9900] bg-white hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
+          title="Slot hozzáadása"
+        >
+          <Plus className="w-3 h-3" />
+        </button>
       </div>
 
       <WorkerEditModal
@@ -702,328 +565,98 @@ const WorkersSlotsSection: React.FC<Props> = ({
           </div>
         ) : (
           <>
-            {professions.length === 0 && (
-              <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
-            )}
-            {professions.map((role) => {
-              const required = requiredPerProfession[role] || 0;
-              const list = grouped[role] || []; // Only show workItemWorker connections
-              // Use per-role denominator from best work item; fallback to required if missing/zero
-              // const rawDenom = denominatorRequiredPerProfession[role] as
-              //   | number
-              //   | undefined;
-              // const displayDenom =
-              //   typeof rawDenom === "number" && rawDenom > 0 ? rawDenom : required;
-              // Use the maximum of required workers and actually assigned workers to ensure all assigned workers are visible
-              const assignedCount = list.length;
-              const extraSlotCount = extraSlots[role] || 0;
-              const reducedSlotCount = reducedSlots[role] || 0;
-              const effectiveRequired = Math.max(
-                0,
-                required - reducedSlotCount
-              );
-              const slotCount =
-                Math.max(effectiveRequired, assignedCount) + extraSlotCount;
-              const slotArray = Array.from({ length: slotCount });
-              return (
-                <div key={role}>
-                  <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex-1 font-semibold flex items-center gap-2">
-                        {role}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveRole(role);
-                          }}
-                          className="text-red-500 hover:text-red-700"
-                          title={`${role} eltávolítása munkafázisból`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-2 ml-auto">
-                        <div className="font-semibold text-[14px] text-[#222]">
-                          {list.length} / {required}
-                        </div>
-                        <button
-                          onClick={() => {
-                            handleAddSlot(role);
-                          }}
-                          className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
-                          title="Slot hozzáadása"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    <div className="flex flex-col gap-2 mt-2">
-                      {slotArray.map((_, idx) => {
-                        const w = list[idx] as AssignmentEx | undefined;
-                        const hasData = !!(w && (w.name || w.email));
-                        if (hasData) {
-                          return (
-                            <div
-                              key={`${role}-filled-${w.id}`}
-                              className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
-                            >
-                              <div
-                                className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
-                                onClick={() =>
-                                  setEditAssignment({
-                                    id: w.id,
-                                    name: w.name ?? undefined,
-                                    email: w.email ?? undefined,
-                                    phone: w.phone ?? undefined,
-                                    role: w.role ?? undefined,
-                                    quantity: w.quantity ?? undefined,
-                                    avatarUrl: w.avatarUrl ?? null,
-                                  })
-                                }
-                              >
-                                <Image
-                                  src={w.avatarUrl || "/worker.jpg"}
-                                  alt={w.name ?? ""}
-                                  width={28}
-                                  height={28}
-                                  className="rounded-full object-cover border border-[#eee]"
-                                />
-                                <div className="text-[14px] text-[#333] font-medium">
-                                  {w.name}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="text-[13px] text-[#555] truncate max-w-[120px]">
-                                  {w.email || ""}
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteWorkItemWorkerOnly(w.id);
-                                  }}
-                                  className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                                  title="Munkás eltávolítása"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return (
-                          <div
-                            key={`${role}-empty-${idx}`}
-                            className="flex items-center w-full"
-                          >
-                            <button
-                              className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
-                              onClick={() => {
-                                setAddLock({ role, workItemId: undefined }); // Always undefined workItemId
-                                setIsAddOpen(true);
-                              }}
-                              title={role}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Remove this empty slot from view
-                                handleRemoveEmptySlot(role);
-                              }}
-                              className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
-                              title="Üres slot eltávolítása"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
+            {/* Simple unified worker list - no role grouping */}
+            <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
+              <div className="flex items-center gap-2.5">
+                <div className="flex-1 font-semibold">
+                  Összes munkás
+                </div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <div className="font-semibold text-[14px] text-[#222]">
+                    {allAssignments.length} / {effectiveSlotCount}
                   </div>
                 </div>
-              );
-            })}
-
-            {/* Separator and inactive worker types section */}
-            {inactiveProfessions.length > 0 && (
-              <>
-                <div className="my-6 border-t border-gray-300 relative">
-                  <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-gray-500 font-medium">
-                    További feladatokhoz szükséges munkások
-                  </div>
-                </div>
-                {inactiveProfessions.map((role) => {
-                  const list = grouped[role] || []; // Show all assignments for this role
-                  const assignedCount = list.length;
-                  const extraSlotCount = extraSlots[role] || 0;
-                  const reducedSlotCount = reducedSlots[role] || 0;
-                  
-                  // For inactive roles, calculate required from ALL workItems (not just active ones)
-                  // This ensures consistency with the original requirements
-                  let required = 0;
-                  for (const wi of workItems) {
-                    const roleQuantities: Record<string, number> = {};
-
-                    // From workItemWorkers
-                    for (const wiw of wi.workItemWorkers ?? []) {
-                      const worker = workers.find((w) => w.id === wiw.workerId);
-                      if (worker && (worker.name || "Ismeretlen") === role) {
-                        const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
-                        roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
+              </div>
+              <div className="flex flex-col gap-2 mt-2">
+                {/* Show all assigned workers */}
+                {allAssignments.map((w) => (
+                  <div
+                    key={`worker-${w.id}`}
+                    className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
+                  >
+                    <div
+                      className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
+                      onClick={() =>
+                        setEditAssignment({
+                          id: w.id,
+                          name: w.name ?? undefined,
+                          email: w.email ?? undefined,
+                          phone: w.phone ?? undefined,
+                          role: w.role ?? undefined,
+                          quantity: w.quantity ?? undefined,
+                          avatarUrl: w.avatarUrl ?? null,
+                        })
                       }
-                    }
-
-                    // From requiredProfessionals if available
-                    const requiredProfs = getRequiredProfessionals(wi);
-                    for (const rp of requiredProfs) {
-                      if (rp.type === role) {
-                        const quantity =
-                          typeof rp.quantity === "number" && rp.quantity > 0
-                            ? rp.quantity
-                            : 1;
-                        roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
-                      }
-                    }
-
-                    // Update required with maximum values
-                    for (const [r, quantity] of Object.entries(roleQuantities)) {
-                      if (r === role) {
-                        required = Math.max(required, quantity);
-                      }
-                    }
-                  }
-                  
-                  // Ensure at least 1 slot for inactive roles
-                  required = Math.max(1, required);
-                  const effectiveRequired = Math.max(0, required - reducedSlotCount);
-                  const slotCount = Math.max(effectiveRequired, assignedCount) + extraSlotCount;
-                  const slotArray = Array.from({ length: slotCount });
-
-                  return (
-                    <div key={`inactive-${role}`}>
-                      <div className="bg-[#f0f0f0] rounded-lg font-medium text-[15px] text-[#666] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 opacity-75">
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex-1 font-semibold flex items-center gap-2">
-                            {role}
-                            <span className="text-xs text-gray-400">
-                              (nem aktív)
-                            </span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveRole(role);
-                              }}
-                              className="text-red-500 hover:text-red-700"
-                              title={`${role} eltávolítása munkafázisból`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </div>
-                          <div className="flex items-center gap-2 ml-auto">
-                            <div className="font-semibold text-[14px] text-[#444]">
-                              {assignedCount} / {required}
-                            </div>
-                            <button
-                              onClick={() => {
-                                handleAddSlot(role);
-                              }}
-                              className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
-                              title="Slot hozzáadása"
-                            >
-                              <Plus className="h-4 w-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex flex-col gap-2 mt-2">
-                          {slotArray.map((_, idx) => {
-                            const w = list[idx] as AssignmentEx | undefined;
-                            const hasData = !!(w && (w.name || w.email));
-                            if (hasData) {
-                              return (
-                                <div
-                                  key={`${role}-inactive-filled-${w.id}`}
-                                  className="flex items-center bg-white rounded border border-[#ddd] px-3 py-2 w-full opacity-90"
-                                >
-                                  <div
-                                    className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
-                                    onClick={() =>
-                                      setEditAssignment({
-                                        id: w.id,
-                                        name: w.name ?? undefined,
-                                        email: w.email ?? undefined,
-                                        phone: w.phone ?? undefined,
-                                        role: w.role ?? undefined,
-                                        quantity: w.quantity ?? undefined,
-                                        avatarUrl: w.avatarUrl ?? null,
-                                      })
-                                    }
-                                  >
-                                    <Image
-                                      src={w.avatarUrl || "/worker.jpg"}
-                                      alt={w.name ?? ""}
-                                      width={28}
-                                      height={28}
-                                      className="rounded-full object-cover border border-[#ddd]"
-                                    />
-                                    <div className="text-[14px] text-[#444] font-medium">
-                                      {w.name}
-                                    </div>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <div className="text-[13px] text-[#666] truncate max-w-[120px]">
-                                      {w.email || ""}
-                                    </div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDeleteWorkItemWorkerOnly(w.id);
-                                      }}
-                                      className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                                      title="Munkás eltávolítása"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                </div>
-                              );
-                            }
-                            return (
-                              <div
-                                key={`${role}-inactive-empty-${idx}`}
-                                className="flex items-center w-full"
-                              >
-                                <button
-                                  className="flex-grow flex items-center justify-center rounded-l border border-dashed border-[#bbb] text-[#444] bg-[#f8f8f8] hover:bg-[#f0f0f0] px-3 py-2"
-                                  onClick={() => {
-                                    setAddLock({ role, workItemId: undefined }); // Always undefined workItemId
-                                    setIsAddOpen(true);
-                                  }}
-                                  title={role}
-                                >
-                                  <Plus className="w-4 h-4" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    // Remove this empty slot from view
-                                    handleRemoveEmptySlot(role);
-                                  }}
-                                  className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#bbb] bg-[#f8f8f8] hover:bg-red-50"
-                                  title="Üres slot eltávolítása"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
+                    >
+                      <Image
+                        src={w.avatarUrl || "/worker.jpg"}
+                        alt={w.name ?? ""}
+                        width={28}
+                        height={28}
+                        className="rounded-full object-cover border border-[#eee]"
+                      />
+                      <div className="text-[14px] text-[#333] font-medium">
+                        {w.name}
+                      </div>
+                      <div className="text-[12px] text-[#666] ml-2">
+                        ({w.role || "Általános"})
                       </div>
                     </div>
-                  );
-                })}
-              </>
-            )}
+                    <div className="flex items-center gap-2">
+                      <div className="text-[13px] text-[#555] truncate max-w-[120px]">
+                        {w.email || ""}
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteWorkItemWorkerOnly(w.id);
+                        }}
+                        className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                        title="Munkás eltávolítása"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Show empty slots for remaining required workers */}
+                {Array.from({ length: Math.max(0, effectiveSlotCount - allAssignments.length) }).map((_, idx) => (
+                  <div
+                    key={`empty-slot-${idx}`}
+                    className="flex items-center w-full gap-2"
+                  >
+                    <button
+                      className="flex-grow flex items-center justify-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
+                      onClick={() => {
+                        setAddLock(null); // No role lock - general assignment
+                        setIsAddOpen(true);
+                      }}
+                      title="Új munkás hozzáadása"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={handleDecreaseSlots}
+                      className="flex items-center justify-center w-8 h-8 rounded border border-red-300 text-red-500 bg-white hover:bg-red-50 hover:border-red-400 hover:text-red-600"
+                      title="Slot eltávolítása"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
           </>
         )}
       </div>
@@ -1031,4 +664,4 @@ const WorkersSlotsSection: React.FC<Props> = ({
   );
 };
 
-export default WorkersSlotsSection;
+export default WorkersSlotsSectionWithoutRoles;

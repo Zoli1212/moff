@@ -162,6 +162,7 @@ model Work {
   workTools         WorkToolsRegistry[]
   
   totalWorkers   Int         @default(0)
+  maxRequiredWorkers Int?    @default(0)
   totalLaborCost Float?      @default(0)
   
   totalTools     Int         @default(0)

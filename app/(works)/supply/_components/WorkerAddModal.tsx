@@ -312,7 +312,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Új munkás regisztrálása és hozzárendelése munkához
