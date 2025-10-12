@@ -1015,9 +1015,9 @@ export function OfferDetailView({
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-orange-700">
-                    <span className="font-medium">Összeg: </span>
+                    <span className="font-medium">Összesen (Anyag + Munkadíj): </span>
                     <span className="font-medium">
-                      {formatPrice(calculateTotals().total)} Ft
+                      {formatPrice(calculateTotals().total)}
                     </span>
                   </p>
                 </div>
@@ -1041,6 +1041,26 @@ export function OfferDetailView({
               </div>
             </div>
           )}
+
+        {/* Requirements Section */}
+        {offer.requirement && (
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <button
+              onClick={() => setShowRequirementDetail(true)}
+              className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                <List className="h-5 w-5 mr-2 text-gray-500" />
+                Követelmény
+                <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                  {offer?.requirement?.updateCount || "1"}
+                </span>
+              </h2>
+              <ChevronRight className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+        )}
+
           {offer.description && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1148,25 +1168,6 @@ export function OfferDetailView({
             </div>
           </div>
         )} */}
-
-        {/* Requirements Section */}
-        {offer.requirement && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <button
-              onClick={() => setShowRequirementDetail(true)}
-              className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
-            >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <List className="h-5 w-5 mr-2 text-gray-500" />
-                Követelmény
-                <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {offer?.requirement?.updateCount || "1"}
-                </span>
-              </h2>
-              <ChevronRight className="h-5 w-5 text-gray-500" />
-            </button>
-          </div>
-        )}
 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
@@ -1311,6 +1312,14 @@ export function OfferDetailView({
                 {/* Summary Section */}
                 <div className="border-t-2 border-gray-200 bg-gray-50 p-4">
                   <div className="grid grid-cols-2 gap-4">
+                     <div className="text-right">
+                      <div className="text-sm font-medium text-gray-700">
+                        Anyagköltség összesen:
+                      </div>
+                      <div className="text-sm font-bold text-gray-900">
+                        {materialTotal.toLocaleString("hu-HU")} Ft
+                      </div>
+                    </div>
                     <div className="text-right">
                       <div className="text-sm font-medium text-gray-700">
                         Munkadíj összesen:
@@ -1319,14 +1328,7 @@ export function OfferDetailView({
                         {workTotal.toLocaleString("hu-HU")} Ft
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm font-medium text-gray-700">
-                        Anyagköltség összesen:
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">
-                        {materialTotal.toLocaleString("hu-HU")} Ft
-                      </div>
-                    </div>
+                   
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
