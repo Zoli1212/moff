@@ -24,7 +24,7 @@ import TechnicalButton from "./_components/TechnicalButton";
 import CollapsibleSection from "../_components/CollapsibleSection";
 
 import Link from "next/link";
-import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
+// import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 import { checkWorkHasDiaries, deleteWorkWithRelatedData } from "@/actions/delete-work-actions";
 import { useRouter } from "next/navigation";
 
