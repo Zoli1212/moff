@@ -439,12 +439,12 @@ export default function WorkDetailPage({
         )
       : 0;
 
-  const billedPercent =
-    aggregateStats.totalQuantity > 0
-      ? Math.round(
-          (aggregateStats.billedQuantity / aggregateStats.totalQuantity) * 100
-        )
-      : 0;
+  // const billedPercent =
+  //   aggregateStats.totalQuantity > 0
+  //     ? Math.round(
+  //         (aggregateStats.billedQuantity / aggregateStats.totalQuantity) * 100
+  //       )
+  //     : 0;
 
   // Számlázható = Teljesített - (Számlázott + Pénzügyileg teljesített)
   const totalBilledAndPaid = aggregateStats.billedQuantity + aggregateStats.paidQuantity;
