@@ -17,7 +17,7 @@ import type {
   Material,
   Worker,
 } from "@/types/work";
-import type { AssignedTool } from "@/types/tools.types";
+// import type { AssignedTool } from "@/types/tools.types";
 
 type Tool = BaseTool & { quantity?: number };
 import TechnicalButton from "./_components/TechnicalButton";
@@ -56,7 +56,7 @@ export default function WorkDetailPage({
   const [workItemsWithWorkers, setWorkItemsWithWorkers] = useState<WorkItem[]>(
     []
   );
-  const [assignedTools, setAssignedTools] = useState<Tool[]>([]);
+  // const [assignedTools, setAssignedTools] = useState<Tool[]>([]);
   const [generalWorkersFromDB, setGeneralWorkersFromDB] = useState<Worker[]>(
     []
   );
@@ -120,7 +120,7 @@ export default function WorkDetailPage({
             );
 
             setWorkItemsWithWorkers(workItemsData as unknown as WorkItem[]);
-            setAssignedTools(assignedToolsData as unknown as Tool[]);
+            // setAssignedTools(assignedToolsData as unknown as Tool[]);
             setGeneralWorkersFromDB(generalWorkersData as unknown as Worker[]);
             setWorkDiaryItems(workDiaryItemsData);
 
@@ -163,7 +163,7 @@ export default function WorkDetailPage({
             setWorkItemsWithWorkers(
               (workData.workItems as unknown as WorkItem[]) || []
             );
-            setAssignedTools([]);
+            // setAssignedTools([]);
             setGeneralWorkersFromDB([]);
           }
         }
@@ -321,16 +321,16 @@ export default function WorkDetailPage({
         (work as Record<string, unknown>).endDate as string
       ).toLocaleDateString()
     : "-";
-  const createdAt = (work as Record<string, unknown>).createdAt
-    ? new Date(
-        (work as Record<string, unknown>).createdAt as string
-      ).toLocaleString()
-    : "-";
-  const updatedAt = (work as Record<string, unknown>).updatedAt
-    ? new Date(
-        (work as Record<string, unknown>).updatedAt as string
-      ).toLocaleString()
-    : "-";
+  // const createdAt = (work as Record<string, unknown>).createdAt
+  //   ? new Date(
+  //       (work as Record<string, unknown>).createdAt as string
+  //     ).toLocaleString()
+  //   : "-";
+  // const updatedAt = (work as Record<string, unknown>).updatedAt
+  //   ? new Date(
+  //       (work as Record<string, unknown>).updatedAt as string
+  //     ).toLocaleString()
+  //   : "-";
 
   // Related entities
   const workers: Worker[] =
@@ -798,12 +798,16 @@ export default function WorkDetailPage({
                 <p className="text-sm text-gray-500">Nincsenek eszközök</p>
               ) : (
                 <div className="space-y-2">
-                  {tools.map((tool, idx) => (
-                    <div key={tool.id || idx} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium text-gray-900">{tool.name || tool.id}</span>
-                      <span className="text-xs text-gray-500">Eszköz</span>
-                    </div>
-                  ))}
+                  {tools.map((tool, idx) => {
+                    const toolName = String(tool.name || tool.id || '');
+                    const capitalizedName = toolName.charAt(0).toUpperCase() + toolName.slice(1);
+                    return (
+                      <div key={tool.id || idx} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-900">{capitalizedName}</span>
+                        <span className="text-xs text-gray-500">Eszköz</span>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

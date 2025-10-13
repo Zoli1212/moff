@@ -31,14 +31,16 @@ export default function CollapsibleSection({
             <span className="font-semibold text-gray-600"> ({count})</span>
           )}
         </div>
-        <span
-          aria-hidden
-          className={`inline-block transition-transform duration-200 text-gray-600 text-lg ${
+        <svg 
+          className={`w-4 h-4 transition-transform duration-200 text-gray-600 ${
             open ? "rotate-90" : "rotate-0"
           }`}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
         >
-          ▶
-        </span>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+        </svg>
       </button>
       <div
         className={`transition-all duration-300 ease-in-out ${

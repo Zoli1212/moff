@@ -923,7 +923,6 @@ Erőfforásmenedzsment
 Rendezés utolsó munkábaállított legyen felül legyen az a első
 Vevő adatai ki tudja tölteni és szerkeszteni
 Pénzügyileg teljesítve nem vezetjük be az is számlázott lesz
-Bejegyzsés törlése helyettcsak törlés
 Jóváhagyás már az első alkalommal aktív legyen
 teljes képernyőben egy 
-progress ben nem lehet látni a profitráta
+
