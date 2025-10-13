@@ -1480,7 +1480,7 @@ export default function GroupedDiaryEditForm({
                 ) : (
                   <div className="flex items-center gap-2">
                     <Trash2 className="h-4 w-4" />
-                    Bejegyzés törlése
+                    Törlés
                   </div>
                 )}
               </Button>
@@ -1509,7 +1509,7 @@ export default function GroupedDiaryEditForm({
                   Frissítés...
                 </div>
               ) : (
-                "Módosítások mentése"
+                "Mentés"
               )}
             </Button>
           </div>
@@ -1525,7 +1525,7 @@ export default function GroupedDiaryEditForm({
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
-                    Bejegyzés törlése
+                    Törlés
                   </h3>
                   <p className="text-sm text-gray-500">
                     Biztosan törölni szeretné ezt a napló bejegyzést?

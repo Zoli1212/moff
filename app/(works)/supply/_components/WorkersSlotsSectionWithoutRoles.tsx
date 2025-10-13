@@ -586,7 +586,7 @@ console.log(setSelectedRoleForRemoval)
                 {allAssignments.map((w) => (
                   <div
                     key={`worker-${w.id}`}
-                    className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full"
+                    className="flex items-center bg-white rounded border border-[#eee] px-3 py-2 w-full h-12"
                   >
                     <div
                       className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-[#fafafa] rounded px-1 py-1"
@@ -617,9 +617,6 @@ console.log(setSelectedRoleForRemoval)
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-[13px] text-[#555] truncate max-w-[120px]">
-                        {w.email || ""}
-                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -643,10 +640,10 @@ console.log(setSelectedRoleForRemoval)
                 }).map((_, idx) => (
                   <div
                     key={`empty-slot-${idx}`}
-                    className="flex items-center w-full gap-2"
+                    className="flex items-center w-full gap-2 h-12"
                   >
                     <button
-                      className="flex-grow flex items-center justify-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2"
+                      className="flex-grow flex items-center justify-center rounded border border-dashed border-[#aaa] text-[#222] bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2 h-full"
                       onClick={() => {
                         setAddLock(null); // No role lock - general assignment
                         setIsAddOpen(true);
@@ -657,7 +654,7 @@ console.log(setSelectedRoleForRemoval)
                     </button>
                     <button
                       onClick={handleDecreaseSlots}
-                      className="flex items-center justify-center w-8 h-8 rounded border border-red-300 text-red-500 bg-white hover:bg-red-50 hover:border-red-400 hover:text-red-600"
+                      className="flex items-center justify-center w-12 h-12 rounded border border-red-300 text-red-500 bg-white hover:bg-red-50 hover:border-red-400 hover:text-red-600"
                       title="Slot eltávolítása"
                     >
                       <Trash2 className="w-4 h-4" />

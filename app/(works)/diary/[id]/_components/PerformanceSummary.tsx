@@ -30,7 +30,18 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
       <div className="mb-4">
-        <h2 className="text-xl font-bold text-gray-800 mb-3">Heti teljesítmény</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xl font-bold text-gray-800">Heti teljesítmény</h2>
+          {totalCost > 0 && (
+            <div className={`text-sm font-medium px-3 py-1 rounded-full ${
+              totalRevenue > totalCost 
+                ? 'bg-green-100 text-green-700' 
+                : 'bg-red-100 text-red-700'
+            }`}>
+              Profitráta: {((totalRevenue / totalCost - 1) * 100).toFixed(1)}%
+            </div>
+          )}
+        </div>
         
         {/* Progress Bar és Trend információ egy sorban */}
         <div className="flex items-center gap-4">
@@ -48,7 +59,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
             <div className="absolute inset-0 flex items-center justify-center">
               <span className={`text-sm font-bold drop-shadow-sm ${
                 performancePercentage >= 0 
-                  ? 'text-white' 
+                  ? 'text-gray-700' 
                   : 'text-red-700'
               }`}>
                 {performancePercentage > 0 ? '+' : ''}{performancePercentage}%
@@ -214,15 +225,6 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
             </div>
           </div>
         </div>
-        
-        {totalCost > 0 && (
-          <div className="mt-3 text-xs text-gray-600">
-            Profitráta: {((totalRevenue / totalCost - 1) * 100).toFixed(1)}%
-            {totalRevenue <= totalCost && (
-              <span className="text-red-600 ml-2">⚠️ Veszteséges</span>
-            )}
-          </div>
-        )}
       </div>
 
     </div>

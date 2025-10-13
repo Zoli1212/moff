@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       "location": "helyszín",
       "description": "leírás",
       "estimatedDuration": "időtartam",
-      "workSummary": "PONTOSAN 4 mondat a teljes munka összefoglalása. Első mondat a projekt célja. Második mondat a főbb munkafázisok. Harmadik mondat az időtartam és szakemberek. Negyedik mondat a várható eredmény.",
+      "workSummary": "PONTOSAN 2 mondat a teljes munka összefoglalása. Első mondat a projekt célja. Második mondat a főbb munkafázisok. Harmadik mondat az időtartam és szakemberek. Negyedik mondat a várható eredmény.",
       "workItems": [
         {
           "name": "Tétel neve",

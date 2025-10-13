@@ -242,9 +242,9 @@ export default function OffersPage() {
                             </h3>
                             {offer.offerSummary && (
                               <p className="mt-1 text-sm text-gray-700">
-                                <span className="font-medium text-black">Összefoglaló: </span>
+                               
                                 {offer.offerSummary.length > 100 
-                                  ? `${offer.offerSummary.substring(0, 100)}...`
+                                  ? `${offer.offerSummary.substring(0, 150)}...`
                                   : offer.offerSummary}
                               </p>
                             )}
@@ -280,7 +280,7 @@ export default function OffersPage() {
                           <div className="text-sm text-gray-500">
                             {offer.totalPrice ? (
                               <>
-                                <span className="font-medium text-black">Összeg: </span>
+                                <span className="font-medium text-black">Összesen: </span>
                                 <span className="font-medium text-gray-900">
                                   {new Intl.NumberFormat("hu-HU", {
                                     style: "currency",
