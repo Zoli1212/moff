@@ -10,7 +10,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
-import Image from "next/image";
 import { useUser } from "@clerk/nextjs";
 import { updateWorkItemCompletedQuantityFromLatestDiary, getSliderInitialValue } from "@/actions/workdiary-actions";
 import { updateGroupApproval } from "@/actions/group-approval-actions";
