@@ -457,12 +457,12 @@ export default function WorkDetailPage({
       ? Math.round((billableQuantity / aggregateStats.totalQuantity) * 100)
       : 0;
 
-  const paidPercent =
-    aggregateStats.totalQuantity > 0
-      ? Math.round(
-          (aggregateStats.paidQuantity / aggregateStats.totalQuantity) * 100
-        )
-      : 0;
+  // const paidPercent =
+  //   aggregateStats.totalQuantity > 0
+  //     ? Math.round(
+  //         (aggregateStats.paidQuantity / aggregateStats.totalQuantity) * 100
+  //       )
+  //     : 0;
 
   // ToolsSlotsSection importálása
 
