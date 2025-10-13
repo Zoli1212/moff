@@ -20,27 +20,32 @@ import type {
 import type { AssignedTool } from "@/types/tools.types";
 
 type Tool = BaseTool & { quantity?: number };
-import CollapsibleSection from "../_components/CollapsibleSection";
 import TechnicalButton from "./_components/TechnicalButton";
+import CollapsibleSection from "../_components/CollapsibleSection";
 
 import Link from "next/link";
 import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
-
-import Tasks from "../_components/Tasks";
-import ToolsSummary from "../_components/ToolsSummary";
-import WorkersSummary, {
-  GeneralWorkerFromDB,
-} from "../_components/WorkersSummary";
+import { checkWorkHasDiaries, deleteWorkWithRelatedData } from "@/actions/delete-work-actions";
+import { useRouter } from "next/navigation";
 
 export default function WorkDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  // Router
+  const router = useRouter();
+  
   // State for data
   const [work, setWork] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // State for delete modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [hasDiaries, setHasDiaries] = useState(false);
+  const [diaryCount, setDiaryCount] = useState(0);
 
   // State for image upload
   const [workImage, setWorkImage] = useState<string | null>(null);
@@ -259,6 +264,47 @@ export default function WorkDetailPage({
     }
   };
 
+  // Handle delete work
+  const handleDeleteClick = async () => {
+    if (!work || !work.id) return;
+    
+    const workId = (work as Record<string, unknown>).id as number;
+    
+    // Check if work has diaries
+    const diaryCheck = await checkWorkHasDiaries(workId);
+    if (diaryCheck.success) {
+      setHasDiaries(diaryCheck.hasDiaries || false);
+      setDiaryCount(diaryCheck.diaryCount || 0);
+    }
+    
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!work || !work.id) return;
+    
+    setDeleteLoading(true);
+    const workId = (work as Record<string, unknown>).id as number;
+    
+    try {
+      const result = await deleteWorkWithRelatedData(workId);
+      
+      if (result.success) {
+        // Redirect to works list
+        router.push('/works');
+      } else {
+        console.error('Delete failed:', result.error);
+        alert('Hiba történt a törlés során: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Delete error:', error);
+      alert('Hiba történt a törlés során');
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   if (loading) return <div style={{ padding: 40 }}>Betöltés...</div>;
   if (error)
     return <div style={{ padding: 40, color: "red" }}>Hiba: {error}</div>;
@@ -424,72 +470,89 @@ export default function WorkDetailPage({
   const workDiaries: Record<string, unknown>[] = workDiaryItems;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-gray-300">
-        <div className="flex items-center gap-4 px-4 py-4 max-w-md mx-auto">
-          <Link
-            href="/works"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              textDecoration: "none",
-              color: "#f97316",
-            }}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+    <div className="flex flex-col h-full">
+      <div className="space-y-6 flex-grow p-4">
+        {/* Header with back button, title and delete button */}
+        <div className="flex items-center justify-between mb-6 pt-2">
+          <div className="flex items-center gap-3">
+            <Link
+              href="/works"
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <polyline points="15,18 9,12 15,6" />
-            </svg>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-xl font-bold text-black truncate">
-              {((work as Record<string, unknown>).title as string) || "Munka neve"}
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              </svg>
+            </Link>
+            <h1 className="text-xl font-bold text-gray-900 truncate">
+              {((work as Record<string, unknown>).title as string) || "Munka részletei"}
             </h1>
-            <p className="text-sm text-orange-500">Projekt részletek</p>
           </div>
+          
+          {/* Delete button */}
+          <button
+            onClick={handleDeleteClick}
+            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+            title="Munka törlése"
+          >
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
-      </div>
 
-      <div className="px-4 py-6 max-w-md mx-auto space-y-6 pb-32">
-        {/* Hero Card - Helyszín és Összes Költség Elől */}
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 overflow-hidden">
-          {/* Top Section - Helyszín és Összes Költség */}
-          <div className="bg-white p-6 border-b border-gray-300">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                  </svg>
-                  <span className="text-lg font-bold text-orange-500">Helyszín</span>
+        {/* Work Header */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="flex justify-between items-start mb-4">
+            {/* Left side - Location and dates in 2 rows */}
+            <div className="flex-1 space-y-4">
+              {/* First row: Helyszín and Kezdés */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-gray-500">Helyszín:</span>
+                  <div className="text-sm text-gray-900 break-words">
+                    {((work as Record<string, unknown>).location as string) || "Nincs megadva"}
+                  </div>
                 </div>
-                <p className="text-xl font-bold text-black mb-4">
-                  {((work as Record<string, unknown>).location as string) || "Helyszín nincs megadva"}
-                </p>
-                
-                <div className="bg-orange-50 rounded-2xl p-4 border border-gray-300">
-                  <div className="text-center">
-                    <div className="text-lg font-bold text-orange-600 mb-2">Összes költség</div>
-                    <div className="text-2xl font-bold text-orange-500">
-                      {((((work as Record<string, unknown>).totalMaterialCost as number) ?? 0) +
-                       (((work as Record<string, unknown>).totalLaborCost as number) ?? 0)).toLocaleString('hu-HU')} Ft
-                    </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-gray-500">Kezdés:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-900">{startDate}</span>
+                    <button
+                      onClick={() => setShowDateModal(true)}
+                      className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                    >
+                      ✏️
+                    </button>
                   </div>
                 </div>
               </div>
               
-              {/* Image upload section */}
-              <div className="relative ml-4">
+              {/* Second row: Befejezés and Becsült időtartam */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-gray-500">Befejezés:</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-gray-900">{endDate}</span>
+                    <button
+                      onClick={() => setShowDateModal(true)}
+                      className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                    >
+                      ✏️
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium text-gray-500">Becsült időtartam:</span>
+                  <div className="text-sm text-gray-900">
+                    {((work as Record<string, unknown>).estimatedDuration as string) || "Nincs megadva"}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Right side - Image upload */}
+            <div className="ml-4">
+              <div className="relative">
                 <label className="cursor-pointer block">
                   <input
                     type="file"
@@ -498,24 +561,23 @@ export default function WorkDetailPage({
                     onChange={handleImageUpload}
                     disabled={imageUploading}
                   />
-                  <div className={`w-24 h-24 rounded-2xl border-2 border-dashed border-gray-400 flex items-center justify-center transition-all duration-200 hover:border-orange-500 ${workImage ? 'border-solid border-gray-300' : ''}`}
+                  <div className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center transition-all duration-200 hover:border-gray-400 ${workImage ? 'border-solid border-gray-300' : ''}`}
                        style={{
                          backgroundImage: workImage ? `url(${workImage})` : "none",
                          backgroundSize: "cover",
                          backgroundPosition: "center",
                        }}>
                     {!workImage && !imageUploading && (
-                      <div className="text-center text-gray-500">
-                        <svg className="w-8 h-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="text-center text-gray-400">
+                        <svg className="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
                         </svg>
-                        <div className="text-xs font-medium">Kép</div>
                       </div>
                     )}
                     {imageUploading && (
-                      <div className="text-gray-500">
-                        <svg className="w-8 h-8 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <div className="text-gray-400">
+                        <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
@@ -527,14 +589,14 @@ export default function WorkDetailPage({
                 {workImage && (
                   <button
                     onClick={handleImageRemove}
-                    className="absolute -top-2 -right-2 w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-200 shadow-lg"
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold transition-colors duration-200"
                   >
                     ×
                   </button>
                 )}
 
                 {imageError && (
-                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-xs text-red-200 bg-red-500/20 px-2 py-1 rounded backdrop-blur-sm">
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
                     {imageError}
                   </div>
                 )}
@@ -542,503 +604,277 @@ export default function WorkDetailPage({
             </div>
           </div>
 
-          {/* Details Section */}
-          <div className="p-6 bg-white text-black space-y-4">
-            {/* Összefoglaló */}
-            {((work as Record<string, unknown>).workSummary as string) && (
-              <div className="bg-orange-50 rounded-2xl p-4 border border-gray-300">
-                <div className="flex items-center gap-2 mb-3">
-                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                  </svg>
-                  <span className="text-sm font-bold text-orange-600">Összefoglaló</span>
-                </div>
-                <p className="text-sm text-black leading-relaxed">
-                  {((work as Record<string, unknown>).workSummary as string)}
-                </p>
-              </div>
-            )}
+          {/* AI Summary */}
+          {((work as Record<string, unknown>).workSummary as string) && (
+            <div className="bg-orange-50 rounded-lg p-4 border border-orange-200 mb-4">
+              <p className="text-sm text-gray-800 leading-relaxed">
+                {((work as Record<string, unknown>).workSummary as string)}
+              </p>
+            </div>
+          )}
 
-            {/* Duration */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="bg-gray-50 p-4 rounded-2xl border border-gray-300">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                  <span className="text-sm font-medium text-orange-600">Időtartam</span>
-                </div>
-                <span className="text-lg font-bold text-black">
-                  {((work as Record<string, unknown>).estimatedDuration as string) || "Nincs megadva"}
+
+          {/* Cost Summary */}
+          <div className="border-t border-gray-200 pt-4">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-500">Munkadíj összesen:</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {(((work as Record<string, unknown>).totalLaborCost as number) ?? 0).toLocaleString('hu-HU')} Ft
                 </span>
               </div>
-            </div>
-
-            {/* Cost breakdown */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-xl border border-gray-300">
-                <span className="text-gray-700 font-medium">Munkaerő költség</span>
-                <span className="font-bold text-orange-600">{((work as Record<string, unknown>).totalLaborCost as number) ?? 0} Ft</span>
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-gray-500">Anyagköltség összesen:</span>
+                <span className="text-sm font-bold text-gray-900">
+                  {(((work as Record<string, unknown>).totalMaterialCost as number) ?? 0).toLocaleString('hu-HU')} Ft
+                </span>
               </div>
-              <div className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-xl border border-gray-300">
-                <span className="text-gray-700 font-medium">Anyag költség</span>
-                <span className="font-bold text-orange-600">{((work as Record<string, unknown>).totalMaterialCost as number) ?? 0} Ft</span>
+              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                <span className="text-base font-bold text-gray-900">Összesen:</span>
+                <span className="text-base font-bold text-gray-900">
+                  {((((work as Record<string, unknown>).totalMaterialCost as number) ?? 0) +
+                   (((work as Record<string, unknown>).totalLaborCost as number) ?? 0)).toLocaleString('hu-HU')} Ft
+                </span>
               </div>
-            </div>
-
-            {/* Additional info */}
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-300">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">{((work as Record<string, unknown>).totalWorkers as number) || 0}</div>
-                <div className="text-sm text-gray-600">Munkás</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-orange-500">{((work as Record<string, unknown>).totalTools as number) || 0}</div>
-                <div className="text-sm text-gray-600">Eszköz</div>
-              </div>
-            </div>
-
-            {/* Dates */}
-            <div className="bg-gray-50 rounded-2xl p-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Kezdés:</span>
-                <span className="font-medium text-black">{startDate}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Befejezés:</span>
-                <span className="font-medium text-black">{endDate}</span>
-              </div>
-            </div>
-
-            {/* Workers list if any */}
-            {workers.length > 0 && (
-              <div className="bg-gray-50 rounded-2xl p-4">
-                <div className="text-sm text-gray-600 mb-2">Szakmunkások:</div>
-                <div className="text-black font-medium">{workers.map((w) => w.name).join(", ")}</div>
-              </div>
-            )}
-
-            {/* Timestamps */}
-            <div className="text-xs text-gray-500 space-y-1 pt-2 border-t border-gray-300">
-              <div>Létrehozva: {createdAt}</div>
-              <div>Módosítva: {updatedAt}</div>
             </div>
           </div>
         </div>
 
-        {/* Progress Section */}
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-black">Projekt előrehaladás</h3>
-              <p className="text-sm text-orange-600">Teljesítmény áttekintés</p>
-            </div>
-          </div>
 
-          {/* Progress items */}
-          <div className="space-y-6">
+        {/* Progress Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+
+          <div className="space-y-4">
             {/* Teljesített */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-orange-500 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-black text-lg">Teljesített</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Teljesített:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 bg-green-500 rounded-full transition-all duration-300"
+                    style={{ width: `${completedPercent}%` }}
+                  />
                 </div>
-                <span className="text-2xl font-bold text-orange-500">{completedPercent}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-                <div 
-                  className="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-700 ease-out shadow-lg"
-                  style={{ width: `${completedPercent}%` }}
-                />
+                <span className="text-sm font-bold text-gray-900 w-10 text-right">{completedPercent}%</span>
               </div>
             </div>
 
             {/* Számlázott */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-orange-400 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-black text-lg">Számlázott</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Számlázott:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 bg-blue-500 rounded-full transition-all duration-300"
+                    style={{ width: `${billedPercent}%` }}
+                  />
                 </div>
-                <span className="text-2xl font-bold text-orange-400">{billedPercent}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-                <div 
-                  className="h-full bg-gradient-to-r from-orange-300 to-orange-500 rounded-full transition-all duration-700 ease-out shadow-lg"
-                  style={{ width: `${billedPercent}%` }}
-                />
+                <span className="text-sm font-bold text-gray-900 w-10 text-right">{billedPercent}%</span>
               </div>
             </div>
 
             {/* Számlázható */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-yellow-500 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-black text-lg">Számlázható</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Számlázható:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 bg-yellow-500 rounded-full transition-all duration-300"
+                    style={{ width: `${billablePercent}%` }}
+                  />
                 </div>
-                <span className="text-2xl font-bold text-yellow-500">{billablePercent}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-                <div 
-                  className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-full transition-all duration-700 ease-out shadow-lg"
-                  style={{ width: `${billablePercent}%` }}
-                />
+                <span className="text-sm font-bold text-gray-900 w-10 text-right">{billablePercent}%</span>
               </div>
             </div>
 
             {/* Pénzügyileg teljesített */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                  <div className="w-4 h-4 bg-gray-400 rounded-full shadow-lg"></div>
-                  <span className="font-bold text-black text-lg">Pénzügyileg teljesített</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Pénzügyileg teljesített:</span>
+              <div className="flex items-center gap-2">
+                <div className="w-20 bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="h-2 bg-gray-500 rounded-full transition-all duration-300"
+                    style={{ width: `${paidPercent}%` }}
+                  />
                 </div>
-                <span className="text-2xl font-bold text-gray-400">{paidPercent}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden shadow-inner">
-                <div 
-                  className="h-full bg-gradient-to-r from-gray-400 to-gray-600 rounded-full transition-all duration-700 ease-out shadow-lg"
-                  style={{ width: `${paidPercent}%` }}
-                />
+                <span className="text-sm font-bold text-gray-900 w-10 text-right">{paidPercent}%</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Dates section */}
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-black">Időtartam</h3>
-                <p className="text-sm text-orange-600">Projekt ütemezés</p>
-              </div>
+        {/* Profit Section */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Bevétel:</span>
+              <span className="text-sm font-bold text-gray-900">
+                {dynamicProfit.totalRevenue.toLocaleString('hu-HU')} Ft
+              </span>
             </div>
-            <button
-              onClick={() => setShowDateModal(true)}
-              className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-            >
-              Szerkesztés
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-300">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-orange-500 rounded-full shadow-lg"></div>
-                <span className="font-bold text-black text-lg">Kezdés:</span>
-              </div>
-              <span className="font-bold text-orange-600 text-lg">{startDate}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Költség:</span>
+              <span className="text-sm font-bold text-gray-900">
+                {dynamicProfit.totalCost.toLocaleString('hu-HU')} Ft
+              </span>
             </div>
-            <div className="flex justify-between items-center py-4 px-6 bg-gray-50 rounded-2xl border border-gray-300">
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 bg-orange-400 rounded-full shadow-lg"></div>
-                <span className="font-bold text-black text-lg">Befejezés:</span>
-              </div>
-              <span className="font-bold text-orange-600 text-lg">{endDate}</span>
+            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+              <span className="text-base font-bold text-gray-900">Profit:</span>
+              <span className={`text-base font-bold ${
+                dynamicProfit.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {dynamicProfit.totalProfit >= 0 ? '+' : ''}
+                {dynamicProfit.totalProfit.toLocaleString('hu-HU')} Ft
+              </span>
             </div>
-          </div>
-        </div>
-
-        {/* Profit box */}
-        <div className="bg-white rounded-3xl shadow-lg border border-gray-300 p-6">
-          <div className="flex items-center gap-3 mb-6">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${dynamicProfit.totalProfit >= 0 ? 'bg-gradient-to-r from-orange-500 to-orange-600' : 'bg-gradient-to-r from-red-500 to-red-600'}`}>
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {dynamicProfit.totalProfit >= 0 ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/>
-                )}
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Profit</h3>
-              <p className="text-sm text-orange-400">Pénzügyi áttekintés</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className={`p-6 rounded-2xl border ${dynamicProfit.totalProfit >= 0 ? 'bg-gradient-to-r from-gray-700 to-gray-800 border-orange-500/20' : 'bg-gradient-to-r from-red-900/20 to-red-800/20 border-red-500/20'}`}>
-              <div className="flex justify-between items-center">
-                <span className={`font-bold text-xl ${dynamicProfit.totalProfit >= 0 ? 'text-white' : 'text-red-400'}`}>
-                  Összprofit
-                </span>
-                <span className={`text-3xl font-bold ${dynamicProfit.totalProfit >= 0 ? 'text-orange-500' : 'text-red-500'}`}>
-                  {dynamicProfit.totalProfit >= 0 ? "+" : ""}
-                  {dynamicProfit.totalProfit.toLocaleString("hu-HU")} Ft
-                </span>
-              </div>
-            </div>
-
-            <div className="flex justify-between items-center py-4 px-6 bg-gray-700/50 rounded-xl border border-gray-600">
-              <span className="font-bold text-white text-lg">Profit ráta:</span>
-              <span className={`text-xl font-bold ${dynamicProfit.profitMargin >= 0 ? 'text-orange-500' : 'text-red-500'}`}>
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-gray-500">Profit ráta:</span>
+              <span className={`text-sm font-bold ${
+                dynamicProfit.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
                 {dynamicProfit.profitMargin.toFixed(1)}%
               </span>
             </div>
           </div>
         </div>
 
-        {/* További részletek wrapper */}
-        <div className="bg-gradient-to-br from-gray-800 to-black rounded-3xl shadow-2xl border border-orange-500/20 overflow-hidden">
-          <CollapsibleSection title="További részletek" defaultOpen={false}>
-        {/* Munkások (lenyíló) */}
-        <CollapsibleSection
-          title="Munkára felvett munkások"
-          defaultOpen={false}
-        >
-          <WorkersSummary
-            workId={(work as Record<string, unknown>).id as number}
-            workItems={workItemsWithWorkers.map((item) => ({
-              ...item,
-              tools: item.tools ?? [],
-              materials: item.materials ?? [],
-              workers: item.workers ?? [],
-              workItemWorkers: item.workItemWorkers ?? [],
-            }))}
-            workers={workers as unknown as Worker[]}
-            generalWorkersFromDB={
-              generalWorkersFromDB as unknown as GeneralWorkerFromDB[]
-            }
-            showAllWorkItems={true}
-          />
-        </CollapsibleSection>
+        {/* Workers and Tools Summary */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{((work as Record<string, unknown>).totalWorkers as number) || 0}</div>
+              <div className="text-sm text-gray-500">Munkások</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{((work as Record<string, unknown>).totalTools as number) || 0}</div>
+              <div className="text-sm text-gray-500">Eszközök</div>
+            </div>
+          </div>
+        </div>
 
-        {/* Eszköz slotok (lenyíló) */}
-        <CollapsibleSection title="Hozzárendelt eszközök" defaultOpen={false}>
-          <ToolsSummary
-            workId={(work as Record<string, unknown>).id as number}
-            workItems={workItemsWithWorkers.map((item) => ({
-              ...item,
-              tools: item.tools ?? [],
-              materials: item.materials ?? [],
-              workers: item.workers ?? [],
-              workItemWorkers: item.workItemWorkers ?? [],
-            }))}
-            assignedTools={assignedTools as unknown as AssignedTool[]}
-          />
-          {/* {(() => {
-          const assignedToolObjects = assignedTools
-            .map((at: AssignedTool) => at.tool)
-            .filter(Boolean);
-          const allToolsMap = new Map<number, Tool>();
-          [...(tools || []), ...assignedToolObjects].forEach((tool) => {
-            if (tool && !allToolsMap.has(tool.id)) {
-              allToolsMap.set(tool.id, tool);
-            }
-          });
-          const allTools = Array.from(allToolsMap.values());
-          return (
-            <ToolsSlotsSection
-              tools={allTools}
-              workId={work.id}
-              assignedTools={assignedTools}
-              workItems={workItemsWithWorkers.map((item) => ({
-                ...item,
-                tools: item.tools ?? [],
-                materials: item.materials ?? [],
-                workers: item.workers ?? [],
-                workItemWorkers: item.workItemWorkers ?? [],
-              }))}
-            />
-          );
-        })()} */}
-        </CollapsibleSection>
 
-        {/* Szegmensek (workItems) - lenyíló */}
-        <CollapsibleSection
-          title="Feladatok"
-          count={workItems.length}
-          defaultOpen={false}
-        >
-          <Tasks workItems={workItems} />
-        </CollapsibleSection>
-        {/* Eszközök - lenyíló */}
-        <CollapsibleSection
-          title="Eszközök"
-          count={tools.length}
-          defaultOpen={false}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 14,
-              boxShadow: "0 1px 5px #eee",
-              padding: "14px 18px",
-              marginBottom: 18,
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 17,
-                marginBottom: 8,
-                letterSpacing: 0.5,
-              }}
-            >
-              Eszközök ({tools.length})
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                minHeight: 36,
-                flexWrap: "wrap",
-              }}
-            >
-              {tools.length === 0 && (
-                <span style={{ color: "#bbb" }}>Nincs eszköz</span>
-              )}
-              {tools.map((tool: Tool, idx: number) => (
-                <div
-                  key={tool.id || idx}
-                  style={{
-                    padding: "4px 11px",
-                    background: "#f1f8fe",
-                    borderRadius: 8,
-                    fontWeight: 500,
-                    fontSize: 15,
-                    color: "#3498db",
-                    marginBottom: 4,
-                  }}
-                >
-                  {tool.name || tool.id}
+        {/* Detailed Information Collapsible */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <CollapsibleSection title="Részletes információk" defaultOpen={false}>
+            {/* Workers Section */}
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Munkások ({workers.length})</h3>
+              {workers.length === 0 ? (
+                <p className="text-sm text-gray-500">Nincsenek munkások</p>
+              ) : (
+                <div className="space-y-2">
+                  {(() => {
+                    // Group workers by name
+                    const workerGroups = workers.reduce((acc, worker) => {
+                      const name = worker.name || 'Névtelen munkás';
+                      if (acc[name]) {
+                        acc[name].count += 1;
+                      } else {
+                        acc[name] = {
+                          worker,
+                          count: 1
+                        };
+                      }
+                      return acc;
+                    }, {} as Record<string, { worker: Worker; count: number }>);
+                    
+                    return Object.entries(workerGroups).map(([name, group]) => (
+                      <div key={name} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-900">
+                          {name}{group.count > 1 ? ` (${group.count})` : ''}
+                        </span>
+                        <span className="text-xs text-gray-500">{group.worker.profession || 'Munkás'}</span>
+                      </div>
+                    ));
+                  })()} 
                 </div>
-              ))}
-            </div>
-          </div>
-        </CollapsibleSection>
-        {/* Anyagok - lenyíló */}
-        <CollapsibleSection
-          title="Anyagok"
-          count={materials.length}
-          defaultOpen={false}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 14,
-              boxShadow: "0 1px 5px #eee",
-              padding: "14px 18px",
-              marginBottom: 18,
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 17,
-                marginBottom: 8,
-                letterSpacing: 0.5,
-              }}
-            >
-              Anyagok ({materials.length})
-            </div>
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "center",
-                minHeight: 36,
-                flexWrap: "wrap",
-              }}
-            >
-              {materials.length === 0 && (
-                <span style={{ color: "#bbb" }}>Nincs anyag</span>
               )}
-              {materials.map((material: Material, idx: number) => (
-                <div
-                  key={material.id || idx}
-                  style={{
-                    padding: "4px 11px",
-                    background: "#fef7e0",
-                    borderRadius: 8,
-                    fontWeight: 500,
-                    fontSize: 15,
-                    color: "#e67e22",
-                    marginBottom: 4,
-                  }}
-                >
-                  {material.name || material.id}
+            </div>
+
+            {/* Tools Section */}
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Eszközök ({tools.length})</h3>
+              {tools.length === 0 ? (
+                <p className="text-sm text-gray-500">Nincsenek eszközök</p>
+              ) : (
+                <div className="space-y-2">
+                  {tools.map((tool, idx) => (
+                    <div key={tool.id || idx} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-900">{tool.name || tool.id}</span>
+                      <span className="text-xs text-gray-500">Eszköz</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        </CollapsibleSection>
-        {/* Naplók - lenyíló */}
-        <CollapsibleSection
-          title="Naplóelemek"
-          count={workDiaries.length}
-          defaultOpen={false}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 14,
-              boxShadow: "0 1px 5px #eee",
-              padding: "14px 18px",
-              marginBottom: 18,
-            }}
-          >
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 17,
-                marginBottom: 8,
-                letterSpacing: 0.5,
-              }}
-            >
-              Naplók ({workDiaries.length})
-            </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: 6,
-                minHeight: 24,
-              }}
-            >
-              {workDiaries.length === 0 && (
-                <span style={{ color: "#bbb" }}>Nincs napló</span>
-              )}
-              {workDiaries.map(
-                (diary: Record<string, unknown>, idx: number) => (
-                  <div
-                    key={(diary.id as string) || idx}
-                    style={{
-                      padding: "4px 11px",
-                      background: "#f4f4fa",
-                      borderRadius: 8,
-                      fontWeight: 500,
-                      fontSize: 15,
-                      color: "#6363a2",
-                    }}
-                  >
-                    {(diary.description as string) || (diary.id as string)}
-                  </div>
-                )
               )}
             </div>
-          </div>
-        </CollapsibleSection>
+
+            {/* Tasks Section */}
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Feladatok ({workItems.length})</h3>
+              {workItems.length === 0 ? (
+                <p className="text-sm text-gray-500">Nincsenek feladatok</p>
+              ) : (
+                <div className="space-y-3">
+                  {workItems.map((item, idx) => (
+                    <div key={item.id || idx} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <h4 className="text-sm font-medium text-gray-900">{item.name}</h4>
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          item.inProgress ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {item.inProgress ? 'Folyamatban' : 'Várakozás'}
+                        </span>
+                      </div>
+                      {item.description && (
+                        <p className="text-xs text-gray-600 mb-2">{item.description}</p>
+                      )}
+                      <div className="flex justify-between items-center text-xs text-gray-500">
+                        <span>Mennyiség: {item.quantity} {item.unit}</span>
+                        <span>Teljesítve: {item.completedQuantity || 0} {item.unit}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Materials Section */}
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Anyagok ({materials.length})</h3>
+              {materials.length === 0 ? (
+                <p className="text-sm text-gray-500">Nincsenek anyagok</p>
+              ) : (
+                <div className="space-y-2">
+                  {materials.map((material, idx) => (
+                    <div key={material.id || idx} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium text-gray-900">{material.name || material.id}</span>
+                      <span className="text-xs text-gray-500">Anyag</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Diary Section */}
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Naplók ({workDiaries.length})</h3>
+              {workDiaries.length === 0 ? (
+                <p className="text-sm text-gray-500">Nincsenek naplóbejegyzések</p>
+              ) : (
+                <div className="space-y-2">
+                  {workDiaries.map((diary, idx) => (
+                    <div key={(diary.id as string) || idx} className="py-2 px-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm text-gray-900">
+                        {(diary.description as string) || (diary.id as string) || `Napló #${idx + 1}`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </CollapsibleSection>
         </div>
 
         {/* Technical Button */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-6">
           <TechnicalButton
             workId={((work as Record<string, unknown>)?.id as string) || ""}
           />
@@ -1047,41 +883,34 @@ export default function WorkDetailPage({
 
       {/* Date Edit Modal */}
       {showDateModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
              onClick={() => setShowDateModal(false)}>
-          <div className="bg-gradient-to-br from-gray-800 to-black rounded-3xl shadow-2xl border border-orange-500/20 p-6 max-w-md w-full"
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
                onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <h3 className="text-xl font-bold text-white">Időtartam szerkesztése</h3>
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Dátumok szerkesztése</h3>
 
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-sm font-bold text-orange-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Kezdés dátuma:
                 </label>
                 <input
                   type="date"
                   value={editStartDate}
                   onChange={(e) => setEditStartDate(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-orange-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Befejezés dátuma:
                 </label>
                 <input
                   type="date"
                   value={editEndDate}
                   onChange={(e) => setEditEndDate(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -1089,15 +918,76 @@ export default function WorkDetailPage({
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDateModal(false)}
-                className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-xl font-medium transition-colors duration-200"
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
               >
                 Mégse
               </button>
               <button
                 onClick={handleDateSave}
-                className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
               >
                 Mentés
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirm Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+             onClick={() => setShowDeleteModal(false)}>
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+               onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Munka törlése</h3>
+            </div>
+
+            <div className="mb-6">
+              {hasDiaries ? (
+                <p className="text-sm text-gray-700">
+                  A munkához <strong>{diaryCount} naplóbejegyzés</strong> tartozik, így is szeretné törölni?
+                  <br /><br />
+                  <span className="text-red-600 font-medium">
+                    Ez a művelet véglegesen törli a munkát és minden kapcsolódó adatot (naplók, munkások, eszközök, anyagok).
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-gray-700">
+                  Biztosan törölni szeretné ezt a munkát?
+                  <br /><br />
+                  <span className="text-red-600 font-medium">
+                    Ez a művelet véglegesen törli a munkát és minden kapcsolódó adatot.
+                  </span>
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteLoading}
+                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+              >
+                Mégse
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleteLoading}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {deleteLoading && (
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                )}
+                {deleteLoading ? 'Törlés...' : 'Törlés'}
               </button>
             </div>
           </div>

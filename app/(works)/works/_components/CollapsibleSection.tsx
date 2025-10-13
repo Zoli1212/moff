@@ -17,23 +17,23 @@ export default function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const [open, setOpen] = useState<boolean>(defaultOpen);
   return (
-    <div className="bg-gradient-to-br from-gray-700 to-gray-800 rounded-2xl shadow-xl border border-orange-500/20 p-4 mb-4">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex items-center justify-between w-full bg-transparent border-none p-2 cursor-pointer hover:bg-gray-600/30 rounded-xl transition-colors duration-200"
+        className="flex items-center justify-between w-full bg-transparent border-none p-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors duration-200"
       >
-        <div className="font-bold text-lg text-white flex items-center gap-3">
-          <div className="w-3 h-3 bg-orange-500 rounded-full shadow-lg"></div>
+        <div className="font-bold text-lg text-gray-900 flex items-center gap-3">
+          <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
           {title}
           {typeof count !== "undefined" && (
-            <span className="font-semibold text-orange-400"> ({count})</span>
+            <span className="font-semibold text-gray-600"> ({count})</span>
           )}
         </div>
         <span
           aria-hidden
-          className={`inline-block transition-transform duration-200 text-orange-500 text-lg ${
+          className={`inline-block transition-transform duration-200 text-gray-600 text-lg ${
             open ? "rotate-90" : "rotate-0"
           }`}
         >
@@ -45,7 +45,7 @@ export default function CollapsibleSection({
           open ? "opacity-100 pt-4" : "max-h-0 opacity-0 overflow-hidden"
         }`}
       >
-        {open && <div className="text-white">{children}</div>}
+        {open && <div className="text-gray-900">{children}</div>}
       </div>
     </div>
   );
