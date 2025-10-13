@@ -51,13 +51,8 @@ function toCardProps(
       work.financialPlanned !== null
         ? work.financialPlanned
         : 100,
-    urgentTask:
-      work.urgentTask ||
-      (Math.random() > 0.5
-        ? "Szerződés aláírása szükséges!"
-        : "Hiányzik a pénzügyi jelentés!"),
-    urgentLevel:
-      work.urgentLevel || (Math.random() > 0.5 ? "warning" : "danger"),
+    urgentTask: work.urgentTask || "",
+    urgentLevel: work.urgentLevel || "warning",
     workSummary: (work.workSummary as string) || "",
     isUpdating,
     isDisabled,

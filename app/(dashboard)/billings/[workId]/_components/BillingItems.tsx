@@ -490,7 +490,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 />
                 <ProgressBar
                   label="Számlázott"
-                  value={item.billedQuantity || 0}
+                  value={(item.billedQuantity || 0) + (item.paidQuantity || 0)}
                   max={
                     typeof item.quantity === "number"
                       ? item.quantity
@@ -503,7 +503,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                   label="Számlázható"
                   value={Math.max(
                     0,
-                    (item.completedQuantity || 0) - (item.billedQuantity || 0) - (item.paidQuantity || 0)
+                    (item.completedQuantity || 0) - ((item.billedQuantity || 0) + (item.paidQuantity || 0))
                   )}
                   max={
                     typeof item.quantity === "number"
@@ -512,17 +512,6 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                   }
                   unit={item.unit}
                   color="bg-yellow-500"
-                />
-                <ProgressBar
-                  label="Pénzügyileg teljesített"
-                  value={item.paidQuantity || 0}
-                  max={
-                    typeof item.quantity === "number"
-                      ? item.quantity
-                      : Number(item.quantity) || 0
-                  }
-                  unit={item.unit}
-                  color="bg-purple-500"
                 />
               </div>
             </div>

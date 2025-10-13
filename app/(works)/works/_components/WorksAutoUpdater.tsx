@@ -147,89 +147,14 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
     console.log("WorksAutoUpdater: notUpdated count:", total, notUpdated);
   }
 
-  // Mobile-friendly bottom sheet style
-  const [hideNoUpdateMsg, setHideNoUpdateMsg] = useState(false);
-  const isMobile = typeof window !== "undefined" && window.innerWidth <= 600;
-  const fontSize = isMobile ? 17 : 15;
-  const iconSize = isMobile ? 28 : 22;
-
   console.log(errorMsg);
 
-  if (total === 0 && !hideNoUpdateMsg) {
-    return (
-      <div
-        style={{
-          position: "fixed",
-          bottom: 18,
-          left: 0,
-          width: "100vw",
-          zIndex: 9999,
-          display: "flex",
-          justifyContent: "center",
-          pointerEvents: "none",
-          transition: "opacity 0.6s cubic-bezier(.4,0,.2,1)",
-        }}
-      >
-        <div
-          style={{
-            background: "rgba(255,255,255,0.85)",
-            color: "#222",
-            borderRadius: 20,
-            boxShadow: "0 2px 16px #0002",
-            backdropFilter: "blur(8px)",
-            padding: isMobile ? "14px 18px 14px 16px" : "12px 30px 12px 22px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            minWidth: 220,
-            maxWidth: 420,
-            fontSize,
-            pointerEvents: "auto",
-            opacity: 0.95,
-          }}
-        >
-          <svg
-            width={iconSize}
-            height={iconSize}
-            viewBox="0 0 24 24"
-            fill="none"
-            style={{ flexShrink: 0 }}
-          >
-            <circle cx="12" cy="12" r="12" fill="#27ae60" />
-            <path
-              d="M8 12.5l2.2 2L16 9.5"
-              stroke="#fff"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          <span style={{ fontWeight: 600 }}>Minden munka frissítve!</span>
-          <button
-            onClick={() => setHideNoUpdateMsg(true)}
-            style={{
-              marginLeft: 8,
-              background: "none",
-              border: "none",
-              color: "#888",
-              fontSize: iconSize - 4,
-              cursor: "pointer",
-              borderRadius: 8,
-              padding: 2,
-              transition: "background 0.15s",
-            }}
-            aria-label="Bezárás"
-          >
-            ×
-          </button>
-        </div>
-      </div>
-    );
+  // Ha minden munka frissítve van, ne jelenítsünk semmit
+  if (total === 0) {
+    return null;
   }
 
   // Fade out when done
-
-  if (total === 0) return null;
   if (hideBar) return null;
 
   // Don't render the progress bar - only use spinner on individual cards

@@ -446,11 +446,11 @@ export default function WorkDetailPage({
         )
       : 0;
 
+  // Számlázható = Teljesített - (Számlázott + Pénzügyileg teljesített)
+  const totalBilledAndPaid = aggregateStats.billedQuantity + aggregateStats.paidQuantity;
   const billableQuantity = Math.max(
     0,
-    aggregateStats.completedQuantity -
-      aggregateStats.billedQuantity -
-      aggregateStats.paidQuantity
+    aggregateStats.completedQuantity - totalBilledAndPaid
   );
   const billablePercent =
     aggregateStats.totalQuantity > 0
@@ -659,17 +659,17 @@ export default function WorkDetailPage({
               </div>
             </div>
 
-            {/* Számlázott */}
+            {/* Számlázott (billed + paid combined) */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-gray-500">Számlázott:</span>
               <div className="flex items-center gap-2">
                 <div className="w-20 bg-gray-200 rounded-full h-2">
                   <div 
                     className="h-2 bg-blue-500 rounded-full transition-all duration-300"
-                    style={{ width: `${billedPercent}%` }}
+                    style={{ width: `${Math.round(totalBilledAndPaid / aggregateStats.totalQuantity * 100) || 0}%` }}
                   />
                 </div>
-                <span className="text-sm font-bold text-gray-900 w-10 text-right">{billedPercent}%</span>
+                <span className="text-sm font-bold text-gray-900 w-10 text-right">{Math.round(totalBilledAndPaid / aggregateStats.totalQuantity * 100) || 0}%</span>
               </div>
             </div>
 
@@ -687,19 +687,6 @@ export default function WorkDetailPage({
               </div>
             </div>
 
-            {/* Pénzügyileg teljesített */}
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-500">Pénzügyileg teljesített:</span>
-              <div className="flex items-center gap-2">
-                <div className="w-20 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="h-2 bg-gray-500 rounded-full transition-all duration-300"
-                    style={{ width: `${paidPercent}%` }}
-                  />
-                </div>
-                <span className="text-sm font-bold text-gray-900 w-10 text-right">{paidPercent}%</span>
-              </div>
-            </div>
           </div>
         </div>
 

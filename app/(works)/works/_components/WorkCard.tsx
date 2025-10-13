@@ -225,31 +225,33 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           {financial} / {financialPlanned}
         </div>
       </div>
-      <div style={{ display: "flex", alignItems: "center", marginTop: 14 }}>
-        <span style={{ display: "flex", alignItems: "center", marginRight: 8 }}>
-          <svg
-            width="22"
-            height="22"
-            viewBox="0 0 24 24"
-            fill={urgentLevel === "danger" ? "#e74c3c" : "#f1c40f"}
-            xmlns="http://www.w3.org/2000/svg"
-            style={{ display: "inline", verticalAlign: "middle" }}
+      {urgentTask && (
+        <div style={{ display: "flex", alignItems: "center", marginTop: 14 }}>
+          <span style={{ display: "flex", alignItems: "center", marginRight: 8 }}>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill={urgentLevel === "danger" ? "#e74c3c" : "#f1c40f"}
+              xmlns="http://www.w3.org/2000/svg"
+              style={{ display: "inline", verticalAlign: "middle" }}
+            >
+              <path d="M12 3L2 21h20L12 3z" />
+              <circle cx="12" cy="16" r="1.2" fill="#fff" />
+              <rect x="11.2" y="9" width="1.6" height="5" rx="0.8" fill="#fff" />
+            </svg>
+          </span>
+          <span
+            style={{
+              fontSize: 14,
+              color: getUrgentColor(urgentLevel),
+              fontWeight: 500,
+            }}
           >
-            <path d="M12 3L2 21h20L12 3z" />
-            <circle cx="12" cy="16" r="1.2" fill="#fff" />
-            <rect x="11.2" y="9" width="1.6" height="5" rx="0.8" fill="#fff" />
-          </svg>
-        </span>
-        <span
-          style={{
-            fontSize: 14,
-            color: getUrgentColor(urgentLevel),
-            fontWeight: 500,
-          }}
-        >
-          {urgentTask}
-        </span>
-      </div>
+            {urgentTask}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
