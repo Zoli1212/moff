@@ -109,9 +109,9 @@ export default function WorkDetailPage({
         if (workData && workData.id) {
           try {
             const workItemsData = await getWorkItemsWithWorkers(workData.id);
-            const assignedToolsData = await getAssignedToolsForWork(
-              workData.id
-            );
+            // const assignedToolsData = await getAssignedToolsForWork(
+            //   workData.id
+            // );
             const generalWorkersData = await getGeneralWorkersForWork(
               workData.id
             );
