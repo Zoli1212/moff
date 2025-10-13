@@ -1,16 +1,11 @@
 "use server";
 
-import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 export async function updateGroupApproval(groupNo: number, approved: boolean) {
   try {
-    const user = await currentUser();
-    if (!user?.emailAddresses?.[0]?.emailAddress) {
-      return { success: false, message: "Nincs bejelentkezve" };
-    }
-
-    const tenantEmail = user.emailAddresses[0].emailAddress;
+    const { user, tenantEmail } = await getTenantSafeAuth();
 
     // Update all workDiaryItems with the same groupNo
     const result = await prisma.workDiaryItem.updateMany({
@@ -40,12 +35,7 @@ export async function updateGroupApproval(groupNo: number, approved: boolean) {
 
 export async function getGroupApprovalStatus(groupNo: number) {
   try {
-    const user = await currentUser();
-    if (!user?.emailAddresses?.[0]?.emailAddress) {
-      return { success: false, message: "Nincs bejelentkezve" };
-    }
-
-    const tenantEmail = user.emailAddresses[0].emailAddress;
+    const { user, tenantEmail } = await getTenantSafeAuth();
 
     // Get all workDiaryItems with the same groupNo
     const items = await prisma.workDiaryItem.findMany({

@@ -18,6 +18,7 @@ import {
   getGroupApprovalStatus,
 } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
+import { checkIsSuperUser } from "@/actions/user-management-actions";
 import UpdateWorkItemQuantityModal from "./_components/UpdateWorkItemQuantityModal";
 import { toast } from "sonner";
 
@@ -48,6 +49,8 @@ export default function GroupedDiaryEditForm({
   const [date, setDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [selectedGroupedItems, setSelectedGroupedItems] = useState<
     GroupedWorkItem[]
   >([]);
@@ -100,6 +103,7 @@ export default function GroupedDiaryEditForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSuperUser, setIsSuperUser] = useState(false);
 
   // Quantity modification modal state
   const [showQuantityModal, setShowQuantityModal] = useState(false);
@@ -160,6 +164,21 @@ export default function GroupedDiaryEditForm({
   const [allWorkWorkers, setAllWorkWorkers] = useState<WorkItemWorker[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Check if user is super user
+  useEffect(() => {
+    const checkSuperUser = async () => {
+      try {
+        const result = await checkIsSuperUser();
+        setIsSuperUser(result.success && result.isSuperUser);
+      } catch (error) {
+        console.error('Error checking super user status:', error);
+        setIsSuperUser(false);
+      }
+    };
+
+    checkSuperUser();
+  }, []);
+
   // Load all workItemWorkers for this work
   useEffect(() => {
     const loadWorkItemWorkers = async () => {
@@ -217,7 +236,7 @@ export default function GroupedDiaryEditForm({
     }
   }, [diary.date]);
 
-  // Load group approval status
+  // Load group approval status when diary items are available
   useEffect(() => {
     if (diary.workDiaryItems && diary.workDiaryItems.length > 0) {
       const firstItem = diary.workDiaryItems[0];
@@ -231,6 +250,7 @@ export default function GroupedDiaryEditForm({
     try {
       setGroupApprovalLoading(true);
       const result = await getGroupApprovalStatus(groupNo);
+      
       if (result.success) {
         setGroupApprovalStatus({
           allApproved: result.allApproved || false,
@@ -1376,7 +1396,11 @@ export default function GroupedDiaryEditForm({
                 <img
                   src={img}
                   alt={`napló kép ${idx + 1}`}
-                  className="w-20 h-20 object-cover rounded shadow"
+                  className="w-32 h-32 object-cover rounded-lg shadow cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    setCurrentImageIndex(idx);
+                    setSelectedImage(img);
+                  }}
                 />
                 <button
                   type="button"
@@ -1388,7 +1412,7 @@ export default function GroupedDiaryEditForm({
                 </button>
               </div>
             ))}
-            <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed rounded cursor-pointer hover:bg-gray-50 transition">
+            <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded cursor-pointer hover:bg-gray-50 transition">
               <span className="text-xs text-gray-500">Kép hozzáadása</span>
               <Input
                 type="file"
@@ -1405,8 +1429,8 @@ export default function GroupedDiaryEditForm({
           )}
         </div>
 
-        {/* Group Approval Checkbox */}
-        {groupApprovalStatus &&
+        {/* Group Approval Checkbox - Only for Super Users and Tenants */}
+        {(isSuperUser || isTenant) &&
           diary.workDiaryItems &&
           diary.workDiaryItems.length > 0 && (
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -1415,7 +1439,7 @@ export default function GroupedDiaryEditForm({
                   <input
                     type="checkbox"
                     id="groupApproval"
-                    checked={groupApprovalStatus.allApproved}
+                    checked={groupApprovalStatus?.allApproved || false}
                     onChange={handleGroupApprovalToggle}
                     disabled={groupApprovalLoading}
                     className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
@@ -1426,45 +1450,31 @@ export default function GroupedDiaryEditForm({
                   >
                     Jóváhagyás
                   </label>
+                  <span className="text-xs text-gray-500">
+                    ({groupApprovalStatus?.approvedItems || 0}/
+                    {groupApprovalStatus?.totalItems || 0} jóváhagyva)
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-sm text-gray-500">
-                    {groupApprovalStatus.approvedItems} /{" "}
-                    {groupApprovalStatus.totalItems} jóváhagyva
-                  </div>
-                  {/* Status indicator */}
-                  <div
-                    className={`w-3 h-3 rounded-full ${
-                      groupApprovalStatus.allApproved
-                        ? "bg-green-500"
-                        : groupApprovalStatus.someApproved
-                          ? "bg-yellow-500"
-                          : "bg-red-500"
-                    }`}
-                    title={
-                      groupApprovalStatus.allApproved
-                        ? "Teljesen jóváhagyva"
-                        : groupApprovalStatus.someApproved
-                          ? "Részben jóváhagyva"
-                          : "Nincs jóváhagyva"
-                    }
-                  />
-                </div>
-              </div>
-              {groupApprovalStatus.someApproved &&
-                !groupApprovalStatus.allApproved && (
+                {groupApprovalStatus?.someApproved &&
+                  !groupApprovalStatus?.allApproved && (
                   <p className="text-xs text-amber-600 mt-2">
                     Részben jóváhagyva - kattintson a teljes jóváhagyáshoz
                   </p>
                 )}
+                {groupApprovalStatus?.allApproved && (
+                  <p className="text-xs text-green-600 mt-2">
+                    Minden elem jóváhagyva
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
         {/* Action Buttons */}
         <div className="flex gap-2 justify-between">
           <div>
-            {/* Delete Button - Only for tenant */}
-            {isTenant && (
+            {/* Delete Button - Only for Super Users and Tenants */}
+            {(isSuperUser || isTenant) && (
               <Button
                 type="button"
                 variant="outline"
@@ -1569,6 +1579,96 @@ export default function GroupedDiaryEditForm({
           </div>
         )}
       </form>
+
+      {/* Image Gallery Modal */}
+      {selectedImage && images.length > 0 && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImage(null);
+              }}
+              className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300 z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+            >
+              ×
+            </button>
+
+            {/* Previous Button */}
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : images.length - 1;
+                  setCurrentImageIndex(newIndex);
+                  setSelectedImage(images[newIndex]);
+                }}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+              >
+                ‹
+              </button>
+            )}
+
+            {/* Next Button */}
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newIndex = currentImageIndex < images.length - 1 ? currentImageIndex + 1 : 0;
+                  setCurrentImageIndex(newIndex);
+                  setSelectedImage(images[newIndex]);
+                }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+              >
+                ›
+              </button>
+            )}
+
+            {/* Main Image */}
+            <img
+              src={images[currentImageIndex]}
+              alt={`Kép ${currentImageIndex + 1} / ${images.length}`}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Image Counter */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            )}
+
+            {/* Thumbnail Strip */}
+            {images.length > 1 && (
+              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-[90vw] overflow-x-auto">
+                {images.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className={`w-16 h-16 object-cover rounded cursor-pointer transition-opacity ${
+                      idx === currentImageIndex ? 'opacity-100 ring-2 ring-white' : 'opacity-50 hover:opacity-80'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(idx);
+                      setSelectedImage(img);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

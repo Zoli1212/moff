@@ -46,6 +46,12 @@ export default function GroupedDiaryForm({
   const [date, setDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
+
+  // Check if current user is tenant
+  const currentEmail = user?.emailAddresses?.[0]?.emailAddress || "";
+  const isTenant = currentEmail.toLowerCase() === (diary?.tenantEmail || "").toLowerCase();
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [selectedGroupedItems, setSelectedGroupedItems] = useState<
     GroupedWorkItem[]
   >([]);
@@ -539,6 +545,7 @@ export default function GroupedDiaryForm({
             progressAtDate: itemProgress, // Progress at this specific date
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
+            accepted: isTenant, // If tenant creates diary items, they are auto-accepted
           };
 
           promises.push(createWorkDiaryItem(diaryItemData));
@@ -1250,12 +1257,14 @@ export default function GroupedDiaryForm({
           <div className="flex flex-wrap gap-3 items-center">
             {images.map((img, index) => (
               <div key={img} className="relative group">
-                <Image
+                <img
                   src={img}
                   alt={`Kép ${index + 1}`}
-                  width={80}
-                  height={80}
-                  className="object-cover rounded-lg border"
+                  className="w-32 h-32 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    setCurrentImageIndex(index);
+                    setSelectedImage(img);
+                  }}
                 />
                 <button
                   type="button"
@@ -1267,7 +1276,7 @@ export default function GroupedDiaryForm({
                 </button>
               </div>
             ))}
-            <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed rounded cursor-pointer hover:bg-gray-50 transition">
+            <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded cursor-pointer hover:bg-gray-50 transition">
               <span className="text-xs text-gray-500">Kép hozzáadása</span>
               <Input
                 type="file"
@@ -1315,6 +1324,96 @@ export default function GroupedDiaryForm({
 
         {/* No delete confirmation needed in create mode */}
       </form>
+
+      {/* Image Gallery Modal */}
+      {selectedImage && images.length > 0 && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div className="relative w-full h-full flex items-center justify-center">
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setSelectedImage(null);
+              }}
+              className="absolute top-4 right-4 text-white text-3xl hover:text-gray-300 z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+            >
+              ×
+            </button>
+
+            {/* Previous Button */}
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : images.length - 1;
+                  setCurrentImageIndex(newIndex);
+                  setSelectedImage(images[newIndex]);
+                }}
+                className="absolute left-4 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+              >
+                ‹
+              </button>
+            )}
+
+            {/* Next Button */}
+            {images.length > 1 && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const newIndex = currentImageIndex < images.length - 1 ? currentImageIndex + 1 : 0;
+                  setCurrentImageIndex(newIndex);
+                  setSelectedImage(images[newIndex]);
+                }}
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-20 bg-black bg-opacity-50 rounded-full w-12 h-12 flex items-center justify-center"
+              >
+                ›
+              </button>
+            )}
+
+            {/* Main Image */}
+            <img
+              src={images[currentImageIndex]}
+              alt={`Kép ${currentImageIndex + 1} / ${images.length}`}
+              className="max-w-[90vw] max-h-[90vh] object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+
+            {/* Image Counter */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white bg-black bg-opacity-50 px-3 py-1 rounded-full text-sm">
+                {currentImageIndex + 1} / {images.length}
+              </div>
+            )}
+
+            {/* Thumbnail Strip */}
+            {images.length > 1 && (
+              <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 flex gap-2 max-w-[90vw] overflow-x-auto">
+                {images.map((img, idx) => (
+                  <img
+                    key={idx}
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className={`w-16 h-16 object-cover rounded cursor-pointer transition-opacity ${
+                      idx === currentImageIndex ? 'opacity-100 ring-2 ring-white' : 'opacity-50 hover:opacity-80'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentImageIndex(idx);
+                      setSelectedImage(img);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
