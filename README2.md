@@ -917,12 +917,13 @@ Tételek: ugyan az mint eddig az összesítéssel az alján, de legyenek az öss
 Legvégén megosztás gomb, ugyan az mint fent (nem kell az email-es…majd ezt beszéljük át)
 Martin Retai
 CEO
- + a Goldmarkkal egy vonalban
+ + a Goldmarkkal egy vonalban legyen
 A feladatok alatt kell a magyarázat
-Erőfforásmenedzsment
 Rendezés utolsó munkábaállított legyen felül legyen az a első
 Vevő adatai ki tudja tölteni és szerkeszteni
-Pénzügyileg teljesítve nem vezetjük be az is számlázott lesz
 Jóváhagyás már az első alkalommal aktív legyen
 teljes képernyőben egy 
+munkások átalakítása
+képgaléria
+-----
 
