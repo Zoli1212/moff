@@ -15,15 +15,15 @@ export default function AidClient() {
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="beszerzesi" className="flex items-center gap-2">
             <ShoppingCart className="w-4 h-4" />
-            Beszerzesi seged
+            Beszerzési segéd
           </TabsTrigger>
           <TabsTrigger value="munkaterv" className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
-            Munkaterv seged
+            Munkaterv segéd
           </TabsTrigger>
           <TabsTrigger value="raktarkeszlet" className="flex items-center gap-2">
             <Package className="w-4 h-4" />
-            Raktarkeszlet
+            Raktárkeszlét
           </TabsTrigger>
         </TabsList>
 
@@ -32,14 +32,14 @@ export default function AidClient() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
-                Beszerzesi seged
+                Beszerzési segéd
               </CardTitle>
               <CardDescription>
                 Anyagok es eszkozok beszerzesnek tervezese es nyomon kovetese
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PlaceholderForm title="Beszerzesi seged" />
+              <PlaceholderForm title="Beszerzési segéd" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -49,14 +49,14 @@ export default function AidClient() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5" />
-                Munkaterv seged
+                Munkaterv segéd
               </CardTitle>
               <CardDescription>
                 Munkak utemezese es tervezese segedeszkozokkel
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PlaceholderForm title="Munkaterv seged" />
+              <PlaceholderForm title="Munkaterv segéd" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -66,14 +66,14 @@ export default function AidClient() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Package className="w-5 h-5" />
-                Raktarkeszlet
+                Raktárkészlet
               </CardTitle>
               <CardDescription>
                 Raktaron levo anyagok es eszkozok nyilvantartasa
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <PlaceholderForm title="Raktarkeszlet" />
+              <PlaceholderForm title="Raktárkészlet" />
             </CardContent>
           </Card>
         </TabsContent>

@@ -1,6 +1,7 @@
 import React from 'react'
-import AidClient from './_components/AidClient'
+import PlaceholderForm from './_components/PlaceholderForm'
 import WorkHeader from "@/components/WorkHeader"
+import AidClient from './_components/AidClient'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
@@ -15,8 +16,9 @@ export default async function SegedPage() {
             Segedeszkozok es kiegeszito funkciok a munkak kezelesehez
           </p>
         </div>
-        
         <AidClient />
+        
+     
       </div>
     </div>
   )
