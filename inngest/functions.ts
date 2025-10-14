@@ -4044,10 +4044,10 @@ Do not skip, remove or omit any task — estimate a cost and add a proper line u
 **OFFERSUMMARY KÖVETELMÉNY:**
 Az ajánlat végén MINDIG adj hozzá egy "offerSummary:" részt, amely pontosan 2 magyar mondatból áll:
 1. Első mondat: Milyen elemek vannak az ajánlatban (főbb munkafázisok és anyagok felsorolása)
-2. Második mondat: Mit kell csinálni és mennyi az összköltség
+2. Második mondat: Mit kell csinálni összefoglalóan
 
 Példa:
-offerSummary: Az ajánlat tartalmazza a teljes lakásfelújítást: falak festését, parketta lerakását, fürdőszoba csempézését és elektromos munkákat. A projekt során 85 m² lakás teljes megújítására kerül sor 4,2 millió forint összköltséggel.
+offerSummary: Az ajánlat tartalmazza a teljes lakásfelújítást: falak festését, parketta lerakását, fürdőszoba csempézését és elektromos munkákat. A projekt során 85 m² lakás teljes megújítására kerül sor.
 `,
   model: gemini({
     model: "gemini-2.0-flash",

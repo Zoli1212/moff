@@ -152,21 +152,30 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
         onSubmit={handleAddMaterial}
         workItems={workItems}
       />
-      <div className="relative bg-white rounded-xl shadow-sm px-5 py-3 mb-5">
-        {/* Plusz gomb jobb felső sarokban */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 18, marginTop: 8 }}>
         <Button
           onClick={() => setIsAddModalOpen(true)}
           variant="outline"
           aria-label="Új anyag hozzáadása"
-          className="absolute top-[14px] right-[18px] p-2 rounded-full border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
+          className="border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
+          style={{ 
+            width: 32, 
+            height: 32, 
+            minWidth: 32, 
+            minHeight: 32, 
+            borderRadius: '50%', 
+            padding: 0, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: 18,
+            lineHeight: 1
+          }}
         >
-          <Plus className="h-5 w-5" />
+          +
         </Button>
-        {/* Hézag a plusz gomb alatt */}
-        <div className="h-8" />
-        <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">
-          Anyagok ({materials.length})
-        </div>
+      </div>
+      <div className="bg-white rounded-xl shadow-sm px-5 py-3 mb-5">
         <div className="flex flex-col gap-3 max-h-[calc(100vh-250px)] overflow-y-auto pb-20">
           {materials.length === 0 && (
             <span className="text-[#bbb]">Nincs anyag</span>

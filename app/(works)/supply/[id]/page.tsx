@@ -141,7 +141,7 @@ export default async function SupplyPage({
               textOverflow: "ellipsis",
             }}
           >
-            Szerszámok
+            Eszközök
           </a>
           <a
             href={`?tab=materials`}
@@ -167,6 +167,69 @@ export default async function SupplyPage({
             Anyagok
           </a>
         </div>
+
+        {/* Description text for workers tab */}
+        {(!tab || tab === "workers") && (
+          <div style={{
+            padding: "12px 16px",
+            marginBottom: "0px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            border: "1px solid #e9ecef"
+          }}>
+            <p style={{
+              margin: 0,
+              fontSize: "14px",
+              color: "#6c757d",
+              fontWeight: 500,
+              textAlign: "center"
+            }}>
+              Folyamatban lévő feladatokhoz rendelt munkaerő
+            </p>
+          </div>
+        )}
+
+        {/* Description text for tools tab */}
+        {tab === "tools" && (
+          <div style={{
+            padding: "12px 16px",
+            marginBottom: "0px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            border: "1px solid #e9ecef"
+          }}>
+            <p style={{
+              margin: 0,
+              fontSize: "14px",
+              color: "#6c757d",
+              fontWeight: 500,
+              textAlign: "center"
+            }}>
+              Folyamatban lévő feladatokhoz szükséges eszközök
+            </p>
+          </div>
+        )}
+
+        {/* Description text for materials tab */}
+        {tab === "materials" && (
+          <div style={{
+            padding: "12px 16px",
+            marginBottom: "0px",
+            backgroundColor: "#f8f9fa",
+            borderRadius: "8px",
+            border: "1px solid #e9ecef"
+          }}>
+            <p style={{
+              margin: 0,
+              fontSize: "14px",
+              color: "#6c757d",
+              fontWeight: 500,
+              textAlign: "center"
+            }}>
+              Folyamatban lévő feladatokhoz szükséges anyagok
+            </p>
+          </div>
+        )}
 
         {/* Tab content */}
         {!tab || tab === "workers" ? (

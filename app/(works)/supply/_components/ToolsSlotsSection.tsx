@@ -284,15 +284,25 @@ const ToolsSlotsSection: React.FC<Props> = ({
         workItems={workItems}
       />
     
-      <div style={{ display: 'flex', alignItems: 'center', marginBottom: 18, gap: 16 }}>
-        <span style={{ fontSize: 20, fontWeight: 600, whiteSpace: 'nowrap' }}>Szükséges eszközök</span>
-        <div style={{ flex: 1, height: 1 }} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 18, marginTop: 8 }}>
         <Button
           onClick={() => setShowAddToolModal(true)}
           variant="outline"
           aria-label="Új eszköz hozzáadása"
           className="border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
-          style={{ marginLeft: 8, width: 40, height: 40, minWidth: 40, minHeight: 40, borderRadius: '50%', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24 }}
+          style={{ 
+            width: 32, 
+            height: 32, 
+            minWidth: 32, 
+            minHeight: 32, 
+            borderRadius: '50%', 
+            padding: 0, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: 18,
+            lineHeight: 1
+          }}
         >
           +
         </Button>
