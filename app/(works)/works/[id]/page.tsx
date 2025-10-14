@@ -502,50 +502,46 @@ export default function WorkDetailPage({
 
         {/* Work Header */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-start mb-4">
-            {/* Left side - Location and dates in 2 rows */}
-            <div className="flex-1 space-y-4">
-              {/* First row: Helyszín and Kezdés */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-gray-500">Helyszín:</span>
-                  <div className="text-sm text-gray-900 break-words">
-                    {((work as Record<string, unknown>).location as string) || "Nincs megadva"}
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-gray-500">Kezdés:</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm text-gray-900">{startDate}</span>
-                    <button
-                      onClick={() => setShowDateModal(true)}
-                      className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
-                    >
-                      ✏️
-                    </button>
-                  </div>
+          <div className="flex justify-between items-center mb-4">
+            {/* Left side - Location and dates in single column */}
+            <div className="flex-1 space-y-3">
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-gray-500">Helyszín:</span>
+                <div className="text-sm text-gray-900 break-words">
+                  {((work as Record<string, unknown>).location as string) || "Nincs megadva"}
                 </div>
               </div>
               
-              {/* Second row: Befejezés and Becsült időtartam */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-gray-500">Befejezés:</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm text-gray-900">{endDate}</span>
-                    <button
-                      onClick={() => setShowDateModal(true)}
-                      className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
-                    >
-                      ✏️
-                    </button>
-                  </div>
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-gray-500">Kezdés:</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-900">{startDate}</span>
+                  <button
+                    onClick={() => setShowDateModal(true)}
+                    className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                  >
+                    ✏️
+                  </button>
                 </div>
-                <div className="space-y-1">
-                  <span className="text-xs font-medium text-gray-500">Becsült időtartam:</span>
-                  <div className="text-sm text-gray-900">
-                    {((work as Record<string, unknown>).estimatedDuration as string) || "Nincs megadva"}
-                  </div>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-gray-500">Befejezés:</span>
+                <div className="flex items-center gap-1">
+                  <span className="text-sm text-gray-900">{endDate}</span>
+                  <button
+                    onClick={() => setShowDateModal(true)}
+                    className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                  >
+                    ✏️
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <span className="text-xs font-medium text-gray-500">Becsült időtartam:</span>
+                <div className="text-sm text-gray-900">
+                  {((work as Record<string, unknown>).estimatedDuration as string) || "Nincs megadva"}
                 </div>
               </div>
             </div>

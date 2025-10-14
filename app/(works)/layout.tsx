@@ -23,10 +23,11 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
         <svg
           width="24" height="24" viewBox="0 0 24 24" fill="none"
           xmlns="http://www.w3.org/2000/svg" aria-label="fooldal"
+          style={{ opacity: 0.6 }}
         >
           <path
             d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4h-4v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10.5z"
-            stroke="#111" strokeWidth="2" strokeLinejoin="round"
+            stroke="#111" strokeWidth="1.2" strokeLinejoin="round"
           />
         </svg>
       ),
@@ -38,11 +39,12 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
         <svg
           width="24" height="24" viewBox="0 0 24 24" fill="none"
           xmlns="http://www.w3.org/2000/svg" aria-label="feladatok"
+          style={{ opacity: 0.6 }}
         >
-          <rect x="3" y="3" width="18" height="18" rx="3" stroke="#111" strokeWidth="2" />
+          <rect x="3" y="3" width="18" height="18" rx="3" stroke="#111" strokeWidth="1.2" />
           <path
             d="M7 12l3 3 7-7"
-            stroke="#111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+            stroke="#111" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"
           />
         </svg>
       ),
@@ -51,17 +53,18 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
       href: `/supply/${workId}`,
       label: "Erőforrás",
       icon: (
-        <svg
-          width="24" height="24" viewBox="0 0 24 24" fill="none"
-          xmlns="http://www.w3.org/2000/svg" aria-label="beszerzés"
-        >
-          {/* User icon */}
-          <circle cx="9" cy="7" r="4" fill="#111" />
-          <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" stroke="#111" strokeWidth="2" fill="none" />
-          {/* Settings gear icon */}
-          <circle cx="19" cy="8" r="3" fill="none" stroke="#111" strokeWidth="1.5" />
-          <path d="M19 1v6M22.5 3.5l-7 7M1.5 3.5l7 7" stroke="#111" strokeWidth="1" />
-        </svg>
+          <img 
+      src="/munka.png" 
+      alt="Erőforrás" 
+      width="24" 
+      height="24"
+      style={{
+  display: 'block',
+  opacity: 1,
+  filter: 'contrast(1.9)',
+  WebkitFilter: 'none',
+}}
+    />
       ),
     },
     {
@@ -71,11 +74,12 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
         <svg
           width="24" height="24" viewBox="0 0 24 24" fill="none"
           xmlns="http://www.w3.org/2000/svg" aria-label="naptar"
+          style={{ opacity: 0.6 }}
         >
-          <rect x="3" y="5" width="18" height="16" rx="2" stroke="#111" strokeWidth="2" />
+          <rect x="3" y="5" width="18" height="16" rx="2" stroke="#111" strokeWidth="1.2" />
           <path
             d="M16 3v4M8 3v4M3 9h18"
-            stroke="#111" strokeWidth="2" strokeLinecap="round"
+            stroke="#111" strokeWidth="1.2" strokeLinecap="round"
           />
         </svg>
       ),
@@ -88,6 +92,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
         <svg
           width="24" height="24" viewBox="0 0 24 24" fill="none"
           xmlns="http://www.w3.org/2000/svg" aria-label="egyeb"
+          style={{ opacity: 0.6 }}
         >
           <circle cx="6" cy="12" r="2" fill="#111" />
           <circle cx="12" cy="12" r="2" fill="#111" />
@@ -122,6 +127,8 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
               borderRadius: 18,
               boxShadow: '0 1px 6px #eee',
               padding: '12px 0 8px 0',
+               
+  opacity: 1,
             }}
           >
             {menu.map(({ href, label, icon }) => {
@@ -142,7 +149,8 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
                       background: 'transparent',
                       borderRadius: 10,
                       padding: '2px 8px',
-                      color: isActive ? '#222' : '#111',
+                      color: '#000',
+                      fontWeight: '600',
                       transition: 'background 0.2s',
                       position: 'relative',
                     }}
