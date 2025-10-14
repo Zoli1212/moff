@@ -925,5 +925,16 @@ Jóváhagyás már az első alkalommal aktív legyen
 teljes képernyőben egy 
 munkások átalakítása
 képgaléria
+jóvahagyás 6/6
+progress kikerül
+erőforrás
+részletes információk
+napló val legyen egységes
+ajánlat kerüljön vissza pending statuszba
+billinget is törölje ki meg mindent
+150 Euro / hó
+300 Euro / hó
+Free meghivásos legyen ...
+
 -----
 

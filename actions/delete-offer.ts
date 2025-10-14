@@ -42,7 +42,15 @@ export async function deleteOffer(offerId: number) {
       return { success: false, error: 'Csak piszkozat státuszú ajánlatok törölhetők' };
     }
 
-    // Delete the offer
+    // First delete all related billing records
+    await prisma.billing.deleteMany({
+      where: {
+        offerId: offerId,
+        tenantEmail: tenantEmail,
+      },
+    });
+
+    // Then delete the offer
     await prisma.offer.delete({
       where: {
         id: offerId,
