@@ -1,7 +1,7 @@
 "use client"
 
 import React from 'react'
-import { Card, CardContent } from "@/components/ui/card"
+
 import { Construction } from "lucide-react"
 
 interface PlaceholderFormProps {
