@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
 
 export async function checkWorkHasDiaries(workId: number) {
   try {
@@ -25,8 +26,27 @@ export async function checkWorkHasDiaries(workId: number) {
 
 export async function deleteWorkWithRelatedData(workId: number) {
   try {
+    // First, get the offerId from the work before starting the transaction
+    const work = await prisma.work.findUnique({
+      where: { id: workId },
+      select: { offerId: true }
+    });
+
+    if (!work) {
+      throw new Error("Munka nem található");
+    }
+
     // Start a transaction to ensure all deletions succeed or none do
     await prisma.$transaction(async (tx) => {
+      // 0.1. Reset the associated offer status to "draft"
+      await tx.offer.update({
+        where: { id: work.offerId },
+        data: { 
+          status: "draft",
+          updatedAt: new Date()
+        }
+      });
+
       // 1. Delete WorkDiaryItems
       await tx.workDiaryItem.deleteMany({
         where: { workId }
@@ -67,9 +87,14 @@ export async function deleteWorkWithRelatedData(workId: number) {
       });
     });
 
+    // Revalidate relevant paths to update the UI
+    revalidatePath("/works");
+    revalidatePath("/offers");
+    revalidatePath(`/offers/${work.offerId}`);
+
     return {
       success: true,
-      message: "A munka és minden kapcsolódó adat sikeresen törölve"
+      message: "A munka és minden kapcsolódó adat sikeresen törölve, az ajánlat státusza visszaállítva draft-ra"
     };
   } catch (error) {
     console.error("Error deleting work:", error);

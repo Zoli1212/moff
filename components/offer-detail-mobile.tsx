@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { updateOfferItems, updateOfferStatus } from "@/actions/offer-actions";
+import { updateOfferItems, updateOfferStatus, updateOfferValidUntil } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
 import { RequirementDetail } from "./requirement-detail";
@@ -101,6 +101,7 @@ interface OfferDetailViewProps {
   onBack: () => void;
   onStatusChange?: (newStatus: string) => void;
   onOfferDeleted?: (offerId: number) => void;
+  onOfferUpdated?: (updatedOffer: Partial<OfferWithItems>) => void;
 }
 
 export function OfferDetailView({
@@ -108,6 +109,7 @@ export function OfferDetailView({
   onBack,
   onStatusChange,
   onOfferDeleted,
+  onOfferUpdated,
 }: OfferDetailViewProps) {
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
@@ -127,6 +129,9 @@ export function OfferDetailView({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showOfferDeleteModal, setShowOfferDeleteModal] = useState(false);
   const [isOfferDeleting, setIsOfferDeleting] = useState(false);
+  const [isEditingValidUntil, setIsEditingValidUntil] = useState(false);
+  const [validUntilValue, setValidUntilValue] = useState("");
+  const [isUpdatingValidUntil, setIsUpdatingValidUntil] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -386,6 +391,64 @@ export function OfferDetailView({
     setShowOfferDeleteModal(true);
   };
 
+  // Handle validUntil editing
+  const handleValidUntilEdit = () => {
+    if (offer.validUntil) {
+      const date = new Date(offer.validUntil);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      setValidUntilValue(`${year}-${month}-${day}`);
+    } else {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      setValidUntilValue(`${year}-${month}-${day}`);
+    }
+    setIsEditingValidUntil(true);
+  };
+
+  const handleValidUntilSave = async () => {
+    if (!validUntilValue) {
+      toast.error("Kérem adjon meg egy érvényes dátumot");
+      return;
+    }
+
+    const selectedDate = new Date(validUntilValue);
+    if (isNaN(selectedDate.getTime())) {
+      toast.error("Kérem adjon meg egy érvényes dátumot");
+      return;
+    }
+
+    setIsUpdatingValidUntil(true);
+    try {
+      const result = await updateOfferValidUntil(offer.id, selectedDate);
+      
+      if (result.success) {
+        toast.success("Az érvényességi dátum sikeresen frissítve");
+        setIsEditingValidUntil(false);
+        setValidUntilValue("");
+        // Update the offer object in the parent component
+        if (onOfferUpdated && result.offer) {
+          onOfferUpdated({ validUntil: result.offer.validUntil });
+        }
+      } else {
+        toast.error(result.error || "Hiba történt a dátum frissítésekor");
+      }
+    } catch (error) {
+      console.error("Error updating validUntil:", error);
+      toast.error("Hiba történt a dátum frissítésekor");
+    } finally {
+      setIsUpdatingValidUntil(false);
+    }
+  };
+
+  const handleValidUntilCancel = () => {
+    setIsEditingValidUntil(false);
+    setValidUntilValue("");
+  };
+
   const handleOfferDeleteConfirm = async () => {
     setIsOfferDeleting(true);
     try {
@@ -514,6 +577,60 @@ export function OfferDetailView({
       toast.error("Hiba történt az állapot frissítésekor");
     } finally {
       setIsUpdatingStatus(false);
+    }
+  };
+
+  // Handle validUntil editing
+  const startEditingValidUntil = () => {
+    if (offer.validUntil) {
+      const date = new Date(offer.validUntil);
+      setValidUntilValue(date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
+    } else {
+      // Default to 30 days from now if no validUntil is set
+      const defaultDate = new Date();
+      defaultDate.setDate(defaultDate.getDate() + 30);
+      setValidUntilValue(defaultDate.toISOString().split('T')[0]);
+    }
+    setIsEditingValidUntil(true);
+  };
+
+  const cancelEditingValidUntil = () => {
+    setIsEditingValidUntil(false);
+    setValidUntilValue("");
+  };
+
+  const saveValidUntil = async () => {
+    if (!validUntilValue) {
+      toast.error("Kérem válasszon egy dátumot");
+      return;
+    }
+
+    const selectedDate = new Date(validUntilValue);
+    if (isNaN(selectedDate.getTime())) {
+      toast.error("Érvénytelen dátum formátum");
+      return;
+    }
+
+    setIsUpdatingValidUntil(true);
+    try {
+      const result = await updateOfferValidUntil(offer.id, selectedDate);
+
+      if (result.success) {
+        toast.success("Az érvényességi dátum sikeresen frissítve");
+        setIsEditingValidUntil(false);
+        setValidUntilValue("");
+        // Update the offer object in the parent component
+        if (onOfferUpdated && result.offer) {
+          onOfferUpdated({ validUntil: result.offer.validUntil });
+        }
+      } else {
+        toast.error(result.error || "Hiba történt a dátum frissítésekor");
+      }
+    } catch (error) {
+      console.error("Error updating validUntil:", error);
+      toast.error("Hiba történt a dátum frissítésekor");
+    } finally {
+      setIsUpdatingValidUntil(false);
     }
   };
 
@@ -997,15 +1114,50 @@ export function OfferDetailView({
                 </span>
               </div>
 
-              {offer.validUntil && (
-                <div className="flex items-center text-gray-600">
-                  <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>Érvényes: </span>
-                  <span className="ml-1 font-medium">
-                    {formatDate(offer.validUntil)}
-                  </span>
-                </div>
-              )}
+              <div className="flex items-center text-gray-600">
+                <Clock className="h-4 w-4 mr-2 text-gray-400" />
+                <span>Érvényes: </span>
+                {isEditingValidUntil ? (
+                  <div className="ml-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+                    <input
+                      type="date"
+                      value={validUntilValue}
+                      onChange={(e) => setValidUntilValue(e.target.value)}
+                      className="px-2 py-1 border border-gray-300 rounded text-sm flex-1 min-w-0"
+                      disabled={isUpdatingValidUntil}
+                    />
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={handleValidUntilSave}
+                        disabled={isUpdatingValidUntil}
+                        className="px-3 py-1 border border-green-600 text-green-600 text-xs rounded hover:bg-green-50 disabled:opacity-50 flex-1 sm:flex-none"
+                      >
+                        {isUpdatingValidUntil ? "Mentés..." : "Mentés"}
+                      </button>
+                      <button
+                        onClick={handleValidUntilCancel}
+                        disabled={isUpdatingValidUntil}
+                        className="px-3 py-1 border border-gray-500 text-gray-500 text-xs rounded hover:bg-gray-50 disabled:opacity-50 flex-1 sm:flex-none"
+                      >
+                        Mégse
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="ml-1 flex items-center gap-2">
+                    <span className="font-medium">
+                      {offer.validUntil ? formatDate(offer.validUntil) : "Nincs megadva"}
+                    </span>
+                    <button
+                      onClick={handleValidUntilEdit}
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Érvényességi dátum szerkesztése"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-100">

@@ -1006,16 +1006,9 @@ Heti teljesítménynél, a sávban lévő profit ráta számnak a színe legyen 
 ----
 Küldöm az elő adagot ahhoz, hogy milyen változtatások kellenek ahhoz, hogy ki tudjunk menni release-ban.
 (Ebből már párat megcsinált a Zoli).
-
-Ha valami nem érthető hívjatok!
-Fontos, hogy fókuszáltan haladjunk és előszőr ezek legyenek meg, hogy minél hamarabb ki tudjuk adni. 
-Az új feature-ket, dark mode megjelenés szerű dolgok most nem kellenek.   
-
-
-Minen feleslges üzenet leszedése:
-“Minden munka AI-fissítve”
+   
 Ajánlatok
-Lehessen törölni ajánlatot (akkor, ha nincs hozzá munka, kérdezzünk rá)
+
 A listában a kártyákon a következők legyenek:
 Cím alatt:
 4 soros AI által készített összefoglaló, arról, hogy mit kéne csinálni

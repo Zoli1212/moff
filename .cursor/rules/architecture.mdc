@@ -1,0 +1,29 @@
+---
+description: Senior+ fejlesztési szabályok – új funkciók, meglévők felhasználása, módosítás tilos
+globs: ["**/*"]
+---
+
+# 🎯 Fejlesztési elvek
+- Dolgozz **senior feletti (staff/principal)** szinten: következetes architektúra, átgondolt komponens-határok, dokumentált döntések.
+- Gondolkodj **SOA (Service-Oriented Architecture)** módon: világos szolgáltatás-határok, interfészek, laza csatolás.
+- Használd a meglévő modulokat, API-kat, utilokat és komponenseket **új funkciókhoz**, de **soha ne módosítsd őket**.
+
+# 🚫 Tiltások
+- Ne módosíts meglévő feature-öket, viselkedést, adatstruktúrát, interfészt vagy API-kontraktust.
+- Ne írd felül meglévő fájlok tartalmát — csak **új fájlokat vagy kiegészítéseket** hozz létre.
+- Ne törölj kódot, ne refaktorálj meglévőt, hacsak külön utasítás nincs rá.
+
+# ✅ Megengedett műveletek
+- Új funkciók létrehozása, amelyek **komponálják vagy újrahasznosítják** a meglévőket.
+- Új modul, route, service, hook, class, vagy util létrehozása külön mappában.
+- A meglévő függvények hívása, kimenetük felhasználása új funkciókban.
+- Extension pattern (pl. `MyExistingServiceExtended`) használata a meglévő logika kiterjesztésére.
+
+# 🧱 Architektúra ajánlások
+- Új funkció = külön fájl vagy mappa (`/features/new-feature/` vagy `/services/new-service/`).
+- Dokumentáld röviden, hogy mely meglévő komponenseket használja fel.
+- Ha lehetséges, exportáld az új logikát új entry pointból (pl. `index.ts` vagy `api/new-feature/route.ts`).
+
+# 📘 Kimenet elvárás
+- A kód legyen olvasható, tesztelhető, és integrálódjon a meglévő rendszerbe anélkül, hogy bármit megváltoztatna.
+- Új logika hívhatja a régi funkciókat, de soha nem módosíthatja őket.

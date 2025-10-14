@@ -821,6 +821,71 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
   }
 }
 
+export async function updateOfferValidUntil(offerId: number, validUntil: Date) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Verify the offer belongs to the current user
+    const existingOffer = await prisma.offer.findFirst({
+      where: {
+        id: offerId,
+        tenantEmail: tenantEmail,
+      },
+      select: { id: true, title: true },
+    });
+
+    if (!existingOffer) {
+      return {
+        success: false,
+        error: "Az ajánlat nem található vagy nincs jogosultságod a módosításához!",
+      };
+    }
+
+    // Update the validUntil field
+    const updatedOffer = await prisma.offer.update({
+      where: {
+        id: offerId,
+        tenantEmail: tenantEmail,
+      },
+      data: {
+        validUntil: validUntil,
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        title: true,
+        validUntil: true,
+        updatedAt: true,
+      },
+    });
+
+    console.log("✅ Offer validUntil updated successfully:", {
+      id: updatedOffer.id,
+      title: updatedOffer.title,
+      validUntil: updatedOffer.validUntil,
+      updatedAt: updatedOffer.updatedAt,
+    });
+
+    // Revalidate the offers page to show updated data
+    revalidatePath("/offers");
+    revalidatePath(`/offers/${offerId}`);
+    revalidatePath(`/(dashboard)/offers`);
+    revalidatePath(`/(dashboard)/offers/${offerId}`);
+    revalidatePath(`/(dashboard)/offers/[requirementId]`);
+
+    return {
+      success: true,
+      offer: updatedOffer,
+    };
+  } catch (error) {
+    console.error("Error updating offer validUntil:", error);
+    return {
+      success: false,
+      error: "Hiba történt az érvényességi dátum frissítésekor",
+    };
+  }
+}
+
 export async function updateOfferStatus(offerId: number, status: string) {
   console.log(offerId, "OFFERID");
   try {
@@ -922,3 +987,4 @@ export async function updateOfferStatus(offerId: number, status: string) {
     };
   }
 }
+

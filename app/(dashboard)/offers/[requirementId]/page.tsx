@@ -326,6 +326,21 @@ export default function RequirementOffersPage() {
     }
   };
 
+  // Handle offer updates (like validUntil changes)
+  const handleOfferUpdated = (updatedData: Partial<OfferWithItems>) => {
+    // Update the selected offer if it matches
+    if (selectedOffer) {
+      setSelectedOffer({ ...selectedOffer, ...updatedData });
+    }
+    
+    // Update the offers list
+    setOffers(prevOffers => 
+      prevOffers.map(offer => 
+        offer.id === selectedOffer?.id ? { ...offer, ...updatedData } : offer
+      )
+    );
+  };
+
   // Render detail view if an offer is selected
   if (isDetailView && selectedOffer) {
     return (
@@ -336,6 +351,7 @@ export default function RequirementOffersPage() {
             onBack={handleBackToList} 
             onStatusChange={(newStatus) => handleStatusChange(selectedOffer.id, newStatus)}
             onOfferDeleted={handleOfferDeleted}
+            onOfferUpdated={handleOfferUpdated}
           />
         </div>
       </div>
