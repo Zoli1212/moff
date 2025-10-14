@@ -42,49 +42,6 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
             </div>
           )}
         </div>
-        
-        {/* Progress Bar és Trend információ egy sorban */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 bg-gray-200 rounded-full h-6 relative">
-            <div
-              className={`h-6 rounded-full transition-all duration-300 ${
-                performancePercentage >= 100 
-                  ? 'bg-green-500' 
-                  : performancePercentage > 0 
-                  ? 'bg-orange-500' 
-                  : 'bg-red-500'
-              }`}
-              style={{ width: `${Math.max(5, Math.min(performancePercentage, 100))}%` }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`text-sm font-bold drop-shadow-sm ${
-                performancePercentage >= 0 
-                  ? 'text-gray-700' 
-                  : 'text-red-700'
-              }`}>
-                {performancePercentage > 0 ? '+' : ''}{performancePercentage}%
-              </span>
-            </div>
-          </div>
-          
-          {/* Trend információ */}
-          {performanceChange !== undefined && previousPeriodPerformance !== undefined && (
-            <div className="flex-shrink-0">
-              <span className={`text-sm font-medium ${
-                performanceChange > 0 
-                  ? 'text-green-600' 
-                  : performanceChange < 0 
-                  ? 'text-red-600' 
-                  : 'text-gray-600'
-              }`}>
-                {performanceChange > 0 && '▲'}
-                {performanceChange < 0 && '▼'}
-                {performanceChange === 0 && '─'}
-                {performanceChange > 0 ? '+' : performanceChange < 0 ? '-' : ''}{Math.abs(performanceChange).toFixed(1)}%
-              </span>
-            </div>
-          )}
-        </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       

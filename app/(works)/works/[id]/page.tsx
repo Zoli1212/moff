@@ -688,31 +688,42 @@ export default function WorkDetailPage({
 
         {/* Profit Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-500">Bevétel:</span>
-              <span className="text-sm font-bold text-gray-900">
+          <h3 className="font-semibold text-gray-600 mb-3">Profitráta elemzés</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="text-blue-600 font-medium">Bevétel</div>
+              <div className="text-lg font-bold text-blue-800">
                 {dynamicProfit.totalRevenue.toLocaleString('hu-HU')} Ft
-              </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-500">Költség:</span>
-              <span className="text-sm font-bold text-gray-900">
+            <div className="bg-red-50 p-3 rounded-lg">
+              <div className="text-red-600 font-medium">Költség</div>
+              <div className="text-lg font-bold text-red-800">
                 {dynamicProfit.totalCost.toLocaleString('hu-HU')} Ft
-              </span>
+              </div>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-              <span className="text-base font-bold text-gray-900">Profit:</span>
-              <span className={`text-base font-bold ${
-                dynamicProfit.totalProfit >= 0 ? 'text-green-600' : 'text-red-600'
+            <div className={`p-3 rounded-lg ${
+              dynamicProfit.totalProfit >= 0 ? 'bg-green-50' : 'bg-orange-50'
+            }`}>
+              <div className={`font-medium ${
+                dynamicProfit.totalProfit >= 0 ? 'text-green-600' : 'text-orange-600'
+              }`}>
+                Profit
+              </div>
+              <div className={`text-lg font-bold ${
+                dynamicProfit.totalProfit >= 0 ? 'text-green-800' : 'text-orange-800'
               }`}>
                 {dynamicProfit.totalProfit >= 0 ? '+' : ''}
                 {dynamicProfit.totalProfit.toLocaleString('hu-HU')} Ft
-              </span>
+              </div>
             </div>
+          </div>
+          
+          {/* Profit ráta külön sorban */}
+          <div className="mt-4 pt-3 border-t border-gray-200">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-500">Profit ráta:</span>
-              <span className={`text-sm font-bold ${
+              <span className="text-sm font-medium text-gray-600">Profit ráta:</span>
+              <span className={`text-lg font-bold ${
                 dynamicProfit.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'
               }`}>
                 {dynamicProfit.profitMargin.toFixed(1)}%
@@ -722,7 +733,7 @@ export default function WorkDetailPage({
         </div>
 
         {/* Workers and Tools Summary */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hidden">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-gray-900">{((work as Record<string, unknown>).totalWorkers as number) || 0}</div>
@@ -737,7 +748,7 @@ export default function WorkDetailPage({
 
 
         {/* Detailed Information Collapsible */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hidden">
           <CollapsibleSection title="Részletes információk" defaultOpen={false}>
             {/* Workers Section */}
             <div className="p-6 border-b border-gray-200">
