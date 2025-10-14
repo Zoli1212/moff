@@ -25,13 +25,28 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     );
   }
 
-  const {hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances } = data;
+  const {hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances, previousPeriodPerformance, performanceChange } = data;
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           <h2 className="text-xl font-bold text-gray-800">Heti teljesítmény</h2>
+          {/* Trend információ */}
+          {performanceChange !== undefined && previousPeriodPerformance !== undefined && (
+            <span className={`text-sm font-medium ${
+              performanceChange > 0 
+                ? 'text-green-600' 
+                : performanceChange < 0 
+                ? 'text-red-600' 
+                : 'text-gray-600'
+            }`}>
+              {performanceChange > 0 && '▲'}
+              {performanceChange < 0 && '▼'}
+              {performanceChange === 0 && '─'}
+              {performanceChange > 0 ? '+' : performanceChange < 0 ? '-' : ''}{Math.abs(performanceChange).toFixed(1)}%
+            </span>
+          )}
           {totalCost > 0 && (
             <div className={`text-sm font-medium px-3 py-1 rounded-full ${
               totalRevenue > totalCost 

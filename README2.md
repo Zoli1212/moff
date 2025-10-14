@@ -938,3 +938,134 @@ Free meghivásos legyen ...
 
 -----
 
+Küldöm az elő adagot ahhoz, hogy milyen változtatások kellenek ahhoz, hogy ki tudjunk menni release-ban.
+(Ebből már párat megcsinált a Zoli).
+
+Ha valami nem érthető hívjatok!
+Fontos, hogy fókuszáltan haladjunk és előszőr ezek legyenek meg, hogy minél hamarabb ki tudjuk adni. 
+Az új feature-ket, dark mode megjelenés szerű dolgok most nem kellenek.   
+
+
+Minen feleslges üzenet leszedése:
+“Minden munka AI-fissítve”
+Ajánlatok
+Lehessen törölni ajánlatot (akkor, ha nincs hozzá munka, kérdezzünk rá)
+A listában a kártyákon a következők legyenek:
+Cím alatt:
+4 soros AI által készített összefoglaló, arról, hogy mit kéne csinálni
+Kivitelezési idő: x nap
+Anyag + Munkadíj: y ft
+Az állapot jelzésnél a Piszkozat szűnjön meg csak a Munka maradjon
+Rendezés a létrehozás dátuma alapján legyen, legfelül a legutóbb létrehozott
+Ajánlat adatlap
+Lehessen innen is törölni az ajánlatot
+Státusz: Ajánlatadás (amíg nem lett munkába állítva), Munka
+Létrehozva: Érvényes (ez változtatható, és ez a dátum kerül bele a pdf, be excelbe)
+Becsült kivitelezési idő:
+Rövid 4-6 soros AI összefoglaló leírás a munkáról
+Összen:
+Követelmények - kattintható ugyan az mint ami most van csak feljebb kerül
+Leírás - megszűnik (mert fönt van az összefoglaló és ugyan az mint a Megjegyzés jelenleg)
+Megjegyzés: az ami most van
+Tételek: ugyan az mint eddig az összesítéssel az alján, de legyenek az összesítő oszlopok felcserélve: első: “Anyagköltség összesen:”,  második “Munkadíj összesen:”
+Legvégén megosztás gomb, ugyan az mint fent (nem kell az email-es…majd ezt beszéljük át)
+Megosztásnál 
+Munkák
+Munka lista
+Minden Munka AI frissítve üzenet ne jelenen meg a lista alján
+Lehessen munkát törölni, figyelmeztessen, hogy minden napló és egyéb adat is törlődni fog és ez nem állítható vissza
+Mindent töröljön ki ami hozzá tartozik (napló, anyagok….stb) 
+Legyen a címnél egy magyarázat: Pipáld ki folyamatban lévő a feladatokat! Ezekre fogom kiszámolni a szükséges erőforrás és eszköz igényt! 
+Munka form 
+Beszerzés helyett, Erőforrás másik ikon
+
+“Beszerzés folyamatban lévő munkafázishoz”, minden tab-ról leszed
+Munkaerő tab
+Felirat módosít: “Folyamatban lévő feladatokhoz rendelt munkaerő”
+Ne legyen szakmákra szétbontva, és azt sem kell, hogy hány ember szükséges
+Amikor hozzáadnék új munkást az aktív feladatokhoz, akkor előszőr egy listából tudjam kiválasztani a meglévő aktív munkások közül azt akit hozzáadnék, a listában szerepeljen a képe és a neve.
+Ennek a listának a tetején legyen valahol egy + ami azt jelenti, hogy új munkás hozzáadása
+Az új munkásnál a szakmát ne kelljen hozzáadni
+A hozzáadott munkás listánál, ha rákattintok egy munkásra, akkor jöjjön fel egy kis dialógus, hogy hívás, email küldés (ha ezek meg vannak adva, a lényeg, hogy innen rögtön és könnyen el lehessen érni az adott embert)
+Szerszámok tab átnevez Eszközök-re
+“Szükséges eszközök”, Folyamatban lévő feleadatokhoz szükséges eszközök”
+“Anyagok” átnevez: “Folyamatban lévő feladatokhoz szükséges anyagok”
+Itt legyen kijavítva, hogy egy tétel többször szerepel (lásd Goldmark 1 siteszsák)
+Minden anyag tétel nagy betűvel kezdődjön 
+  Egyéb menü
+Beszérzési segéd (Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
+Munkaterv segéd (Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
+Raktárkészlet Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
+Napló
+Form
+Bejegyzés Törlés felirat át ír “Törlésre”,
+A gombok mindig férjenek ki egymás mellett vagy alatt és sose kelljen görgetni (mint most)
+Ha vállalkozó vagyok, akkor a Jóváhagyás már az első alkalommal aktív legyen
+Ha a képekre kattintok akkor jelenjen meg egy kép galéria amiben nagyobban látom az összes képet, és ha itt rákattintok egy képre akkor az jelenjen meg teljes képernyőben (a cél, hogy a rögzített képeket jobban meg lehessen nézni, és ha szükséges egy részletet megnézni akkor egy képen belül is be tudjak zoom-olni maxra)
+Heti teljesítménynél, a sávban lévő profit ráta számnak a színe legyen fekete (most vannak olyan állapotok aminél nem lehet rendesen kiolvasni mert belesimul a háttérszínbe a felirat)  
+----
+Küldöm az elő adagot ahhoz, hogy milyen változtatások kellenek ahhoz, hogy ki tudjunk menni release-ban.
+(Ebből már párat megcsinált a Zoli).
+
+Ha valami nem érthető hívjatok!
+Fontos, hogy fókuszáltan haladjunk és előszőr ezek legyenek meg, hogy minél hamarabb ki tudjuk adni. 
+Az új feature-ket, dark mode megjelenés szerű dolgok most nem kellenek.   
+
+
+Minen feleslges üzenet leszedése:
+“Minden munka AI-fissítve”
+Ajánlatok
+Lehessen törölni ajánlatot (akkor, ha nincs hozzá munka, kérdezzünk rá)
+A listában a kártyákon a következők legyenek:
+Cím alatt:
+4 soros AI által készített összefoglaló, arról, hogy mit kéne csinálni
+Kivitelezési idő: x nap
+Anyag + Munkadíj: y ft
+Az állapot jelzésnél a Piszkozat szűnjön meg csak a Munka maradjon
+Rendezés a létrehozás dátuma alapján legyen, legfelül a legutóbb létrehozott
+Ajánlat adatlap
+Lehessen innen is törölni az ajánlatot
+Státusz: Ajánlatadás (amíg nem lett munkába állítva), Munka
+Létrehozva: Érvényes (ez változtatható, és ez a dátum kerül bele a pdf, be excelbe)
+Becsült kivitelezési idő:
+Rövid 4-6 soros AI összefoglaló leírás a munkáról
+Összen:
+Követelmények - kattintható ugyan az mint ami most van csak feljebb kerül
+Leírás - megszűnik (mert fönt van az összefoglaló és ugyan az mint a Megjegyzés jelenleg)
+Megjegyzés: az ami most van
+Tételek: ugyan az mint eddig az összesítéssel az alján, de legyenek az összesítő oszlopok felcserélve: első: “Anyagköltség összesen:”,  második “Munkadíj összesen:”
+Legvégén megosztás gomb, ugyan az mint fent (nem kell az email-es…majd ezt beszéljük át)
+Megosztásnál 
+Munkák
+Munka lista
+Minden Munka AI frissítve üzenet ne jelenen meg a lista alján
+Lehessen munkát törölni, figyelmeztessen, hogy minden napló és egyéb adat is törlődni fog és ez nem állítható vissza
+Mindent töröljön ki ami hozzá tartozik (napló, anyagok….stb) 
+Legyen a címnél egy magyarázat: Pipáld ki folyamatban lévő a feladatokat! Ezekre fogom kiszámolni a szükséges erőforrás és eszköz igényt! 
+Munka form 
+Beszerzés helyett, Erőforrás másik ikon
+
+“Beszerzés folyamatban lévő munkafázishoz”, minden tab-ról leszed
+Munkaerő tab
+Felirat módosít: “Folyamatban lévő feladatokhoz rendelt munkaerő”
+Ne legyen szakmákra szétbontva, és azt sem kell, hogy hány ember szükséges
+Amikor hozzáadnék új munkást az aktív feladatokhoz, akkor előszőr egy listából tudjam kiválasztani a meglévő aktív munkások közül azt akit hozzáadnék, a listában szerepeljen a képe és a neve.
+Ennek a listának a tetején legyen valahol egy + ami azt jelenti, hogy új munkás hozzáadása
+Az új munkásnál a szakmát ne kelljen hozzáadni
+A hozzáadott munkás listánál, ha rákattintok egy munkásra, akkor jöjjön fel egy kis dialógus, hogy hívás, email küldés (ha ezek meg vannak adva, a lényeg, hogy innen rögtön és könnyen el lehessen érni az adott embert)
+Szerszámok tab átnevez Eszközök-re
+“Szükséges eszközök”, Folyamatban lévő feleadatokhoz szükséges eszközök”
+“Anyagok” átnevez: “Folyamatban lévő feladatokhoz szükséges anyagok”
+Itt legyen kijavítva, hogy egy tétel többször szerepel (lásd Goldmark 1 siteszsák)
+Minden anyag tétel nagy betűvel kezdődjön 
+  Egyéb menü
+Beszérzési segéd (Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
+Munkaterv segéd (Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
+Raktárkészlet Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
+Napló
+Form
+Bejegyzés Törlés felirat át ír “Törlésre”,
+A gombok mindig férjenek ki egymás mellett vagy alatt és sose kelljen görgetni (mint most)
+Ha vállalkozó vagyok, akkor a Jóváhagyás már az első alkalommal aktív legyen
+Ha a képekre kattintok akkor jelenjen meg egy kép galéria amiben nagyobban látom az összes képet, és ha itt rákattintok egy képre akkor az jelenjen meg teljes képernyőben (a cél, hogy a rögzített képeket jobban meg lehessen nézni, és ha szükséges egy részletet megnézni akkor egy képen belül is be tudjak zoom-olni maxra)
+Heti teljesítménynél, a sávban lévő profit ráta számnak a színe legyen fekete (most vannak olyan állapotok aminél nem lehet rendesen kiolvasni mert belesimul a háttérszínbe a felirat) 
