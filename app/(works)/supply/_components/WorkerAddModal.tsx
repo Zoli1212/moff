@@ -119,7 +119,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   onSubmit,
   lockedProfession
 }) => {
-  const [workerMode, setWorkerMode] = useState<"new" | "existing">("new");
+  const [workerMode, setWorkerMode] = useState<"existing" | "new">("existing");
   const [existingWorkers, setExistingWorkers] = useState<Array<{
     id: number;
     name?: string | null;
@@ -294,7 +294,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setSelectedExistingWorker("");
     } else {
       // clear fields on close
-      setWorkerMode("new");
+      setWorkerMode("existing"); // Megtartjuk az alapértelmezett "existing" módot
       setName("");
       setEmail("");
       setPhone("");
@@ -324,18 +324,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             <label className="text-sm font-medium leading-none">
               Munkás típusa
             </label>
-            <div className="flex gap-2 mt-2">
-              <button
-                type="button"
-                onClick={() => setWorkerMode("new")}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  workerMode === "new"
-                    ? "bg-gray-600 text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                Új munkás
-              </button>
+            <div className="flex gap-4 mt-2">
               <button
                 type="button"
                 onClick={() => setWorkerMode("existing")}
@@ -346,6 +335,17 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 }`}
               >
                 Meglévő munkás
+              </button>
+              <button
+                type="button"
+                onClick={() => setWorkerMode("new")}
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                  workerMode === "new"
+                    ? "bg-[#FF9900] text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Új munkás
               </button>
             </div>
           </div>
@@ -361,7 +361,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           </div>
 
 
-          {/* Existing Worker Selection */}
+          {/* Existing Worker Selection - megjelenik először */}
           {workerMode === "existing" && (
             <>
               <div className="space-y-2">
@@ -373,10 +373,52 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   value={selectedRole}
                   onChange={setSelectedRole}
                   placeholder="Válassz szerepkört..."
-                  options={availableRoles.map((role) => ({
-                    value: role,
-                    label: role,
+                  options={[
+                    { value: "általános", label: "általános" },
+                    ...availableRoles.map((role) => ({
+                      value: role,
+                      label: role,
+                    }))
+                  ]}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Válassz munkást
+                </label>
+                <CustomSelect
+                  className="mt-2"
+                  value={selectedExistingWorker}
+                  onChange={setSelectedExistingWorker}
+                  placeholder="Válassz munkást..."
+                  options={existingWorkers.map((worker) => ({
+                    value: worker.id.toString(),
+                    label: `${worker.name || "Névtelen"} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
                   }))}
+                />
+              </div>
+            </>
+          )}
+
+          {/* New Worker Form Fields */}
+          {workerMode === "new" && (
+            <>
+              <div className="space-y-2">
+                <label className="text-sm font-medium leading-none">
+                  Szerepkör
+                </label>
+                <CustomSelect
+                  className="mt-2"
+                  value={selectedRole}
+                  onChange={setSelectedRole}
+                  placeholder="Válassz szerepkört..."
+                  options={[
+                    { value: "általános", label: "általános" },
+                    ...availableRoles.map((role) => ({
+                      value: role,
+                      label: role,
+                    }))
+                  ]}
                 />
               </div>
               <div className="space-y-2">
@@ -414,6 +456,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                     placeholder="Válassz szakmát..."
                     options={[
                       { value: "", label: "Válassz szakmát..." },
+                      { value: "általános", label: "általános" },
                       ...professionsForSelected.map((p) => ({
                         value: p,
                         label: p,
@@ -555,26 +598,29 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           )}
 
           <DialogFooter className="mt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              Mégse
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                loading ||
-                (workerMode === "new" && (!dailyRate || isNaN(Number(dailyRate)) || Number(dailyRate) <= 0)) ||
-                (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
-                (workerMode === "existing" && (!selectedExistingWorker || !selectedRole))
-              }
-              className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
-            >
-              {loading ? "Mentés..." : "Mentés"}
-            </Button>
+            <div className="flex gap-4 w-full">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="flex-1"
+              >
+                Mégse
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  loading ||
+                  (workerMode === "new" && (!dailyRate || isNaN(Number(dailyRate)) || Number(dailyRate) <= 0)) ||
+                  (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
+                  (workerMode === "existing" && (!selectedExistingWorker || !selectedRole))
+                }
+                className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1"
+              >
+                {loading ? "Mentés..." : "Mentés"}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
       </DialogContent>
