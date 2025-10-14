@@ -99,7 +99,7 @@ const WorkListPage = () => {
       <div
         style={{
           padding: 32,
-          background: "#ffffff",
+          background: "#f9fafb",
           minHeight: "100vh",
           display: "flex",
           alignItems: "center",
@@ -146,7 +146,7 @@ const WorkListPage = () => {
   }
 
   return (
-    <div style={{ padding: 32, background: "#ffffff", minHeight: "100vh", overflowY: "auto" }}>
+    <div style={{ padding: 32, background: "#f9fafb", minHeight: "100vh", overflowY: "auto" }}>
       <div
         style={{
           display: "flex",

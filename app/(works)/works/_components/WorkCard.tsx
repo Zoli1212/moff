@@ -85,21 +85,31 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
   return (
     <div
       style={{
-        border: "2px solid #f97316",
-        borderRadius: 12,
-        marginBottom: 24,
-        padding: 20,
+        border: "1px solid #e5e7eb",
+        borderRadius: 8,
+        marginBottom: 16,
+        padding: 16,
         background: isUpdating ? "#f8f9fa" : "#fff",
-        boxShadow: "0 2px 8px rgba(249, 115, 22, 0.2)",
+        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
         maxWidth: 420,
         minHeight: 260,
         opacity: isDisabled ? 0.6 : 1,
         position: "relative",
         overflow: "hidden",
         cursor: isDisabled ? "not-allowed" : "pointer",
-        transition: "all 0.3s ease",
+        transition: "box-shadow 0.15s ease-in-out",
         display: "flex",
         flexDirection: "column",
+      }}
+      onMouseEnter={(e) => {
+        if (!isDisabled) {
+          e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!isDisabled) {
+          e.currentTarget.style.boxShadow = "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+        }
       }}
     >
       {isUpdating && (
