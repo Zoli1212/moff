@@ -580,59 +580,7 @@ export function OfferDetailView({
     }
   };
 
-  // Handle validUntil editing
-  const startEditingValidUntil = () => {
-    if (offer.validUntil) {
-      const date = new Date(offer.validUntil);
-      setValidUntilValue(date.toISOString().split('T')[0]); // Format as YYYY-MM-DD
-    } else {
-      // Default to 30 days from now if no validUntil is set
-      const defaultDate = new Date();
-      defaultDate.setDate(defaultDate.getDate() + 30);
-      setValidUntilValue(defaultDate.toISOString().split('T')[0]);
-    }
-    setIsEditingValidUntil(true);
-  };
 
-  const cancelEditingValidUntil = () => {
-    setIsEditingValidUntil(false);
-    setValidUntilValue("");
-  };
-
-  const saveValidUntil = async () => {
-    if (!validUntilValue) {
-      toast.error("Kérem válasszon egy dátumot");
-      return;
-    }
-
-    const selectedDate = new Date(validUntilValue);
-    if (isNaN(selectedDate.getTime())) {
-      toast.error("Érvénytelen dátum formátum");
-      return;
-    }
-
-    setIsUpdatingValidUntil(true);
-    try {
-      const result = await updateOfferValidUntil(offer.id, selectedDate);
-
-      if (result.success) {
-        toast.success("Az érvényességi dátum sikeresen frissítve");
-        setIsEditingValidUntil(false);
-        setValidUntilValue("");
-        // Update the offer object in the parent component
-        if (onOfferUpdated && result.offer) {
-          onOfferUpdated({ validUntil: result.offer.validUntil });
-        }
-      } else {
-        toast.error(result.error || "Hiba történt a dátum frissítésekor");
-      }
-    } catch (error) {
-      console.error("Error updating validUntil:", error);
-      toast.error("Hiba történt a dátum frissítésekor");
-    } finally {
-      setIsUpdatingValidUntil(false);
-    }
-  };
 
   // Get status display text
   function getStatusDisplay(status: string) {
