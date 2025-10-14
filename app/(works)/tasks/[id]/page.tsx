@@ -390,49 +390,63 @@ export default function TasksPage() {
       <div style={{ padding: "0px 16px 16px 16px" }}>
         <div
           style={{
-            fontSize: 22,
-            fontWeight: 700,
-            marginBottom: 8,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
+            marginBottom: 16,
+            background: "#fff9e6",
+            padding: "12px 16px",
+            borderRadius: 8,
+            borderLeft: "4px solid #ffcc00",
           }}
         >
-          <button
-            onClick={handleAddNewItem}
-            disabled={addingNewItem}
-            style={{
-              marginLeft: "auto",
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              backgroundColor: "transparent",
-              border: addingNewItem ? "2px solid #ccc" : "2px solid #f97316",
-              color: addingNewItem ? "#ccc" : "#f97316",
-              fontSize: 20,
-              fontWeight: "bold",
-              cursor: addingNewItem ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "border-color 0.2s, color 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              if (!addingNewItem) {
-                e.currentTarget.style.borderColor = "#ea580c";
-                e.currentTarget.style.color = "#ea580c";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!addingNewItem) {
-                e.currentTarget.style.borderColor = "#f97316";
-                e.currentTarget.style.color = "#f97316";
-              }
-            }}
-          >
-            {addingNewItem ? "..." : "+"}
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div
+              style={{
+                flex: 1,
+                fontSize: 14,
+                color: "#5c3d09",
+              }}
+            >
+              <strong>Pipáld ki a folyamatban lévő feladatokat!</strong> Ezekre
+              fogom kiszámolni a szükséges erőforrás és eszköz igényt!
+            </div>
+            <button
+              onClick={handleAddNewItem}
+              disabled={addingNewItem}
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: "50%",
+                backgroundColor: "transparent",
+                border: addingNewItem
+                  ? "2px solid #ccc"
+                  : "2px solid #f97316",
+                color: addingNewItem ? "#ccc" : "#f97316",
+                fontSize: 20,
+                fontWeight: "bold",
+                cursor: addingNewItem ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                transition: "border-color 0.2s, color 0.2s",
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                if (!addingNewItem) {
+                  e.currentTarget.style.borderColor = "#ea580c";
+                  e.currentTarget.style.color = "#ea580c";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!addingNewItem) {
+                  e.currentTarget.style.borderColor = "#f97316";
+                  e.currentTarget.style.color = "#f97316";
+                }
+              }}
+            >
+              {addingNewItem ? "..." : "+"}
+            </button>
+          </div>
         </div>
+        <div style={{ marginBottom: 8 }}></div>
         {loading ? (
           <div className="flex items-center justify-center p-4">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mr-3"></div>
@@ -454,16 +468,6 @@ export default function TasksPage() {
               marginRight: "auto",
             }}
           >
-            {work.endDate && (
-              <div style={{ fontSize: 13, color: "#888", marginBottom: 4 }}>
-                Határidő: {work.endDate.toString()}
-              </div>
-            )}
-            {work.startDate && (
-              <div style={{ fontSize: 13, color: "#888", marginBottom: 4 }}>
-                Kezdődő: {work.startDate.toString()}
-              </div>
-            )}
 
             {workItems.length === 0 ? (
               <div style={{ color: "#aaa", fontSize: 14, marginBottom: 16 }}>
