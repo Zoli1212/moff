@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import type { Material } from "@/types/work";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
 import MaterialAddModal from "./MaterialAddModal";
 import MaterialEditModal from "./MaterialEditModal";
 import {
