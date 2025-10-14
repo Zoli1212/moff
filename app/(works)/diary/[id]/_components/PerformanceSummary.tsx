@@ -25,7 +25,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     );
   }
 
-  const { performancePercentage, hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances, previousPeriodPerformance, performanceChange } = data;
+  const {hoursByWorker, totalRevenue, totalCost, workerPerformances, workItemPerformances } = data;
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
