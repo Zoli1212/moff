@@ -1053,19 +1053,9 @@ Amikor hozzáadnék új munkást az aktív feladatokhoz, akkor előszőr egy lis
 Ennek a listának a tetején legyen valahol egy + ami azt jelenti, hogy új munkás hozzáadása
 Az új munkásnál a szakmát ne kelljen hozzáadni
 A hozzáadott munkás listánál, ha rákattintok egy munkásra, akkor jöjjön fel egy kis dialógus, hogy hívás, email küldés (ha ezek meg vannak adva, a lényeg, hogy innen rögtön és könnyen el lehessen érni az adott embert)
-Szerszámok tab átnevez Eszközök-re
-“Szükséges eszközök”, Folyamatban lévő feleadatokhoz szükséges eszközök”
-“Anyagok” átnevez: “Folyamatban lévő feladatokhoz szükséges anyagok”
-Itt legyen kijavítva, hogy egy tétel többször szerepel (lásd Goldmark 1 siteszsák)
-Minden anyag tétel nagy betűvel kezdődjön 
-  Egyéb menü
-Beszérzési segéd (Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
-Munkaterv segéd (Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
-Raktárkészlet Rákattint, feljön egy üres form “Hamarosan elérhető lesz”)
-Napló
-Form
-Bejegyzés Törlés felirat át ír “Törlésre”,
-A gombok mindig férjenek ki egymás mellett vagy alatt és sose kelljen görgetni (mint most)
-Ha vállalkozó vagyok, akkor a Jóváhagyás már az első alkalommal aktív legyen
-Ha a képekre kattintok akkor jelenjen meg egy kép galéria amiben nagyobban látom az összes képet, és ha itt rákattintok egy képre akkor az jelenjen meg teljes képernyőben (a cél, hogy a rögzített képeket jobban meg lehessen nézni, és ha szükséges egy részletet megnézni akkor egy képen belül is be tudjak zoom-olni maxra)
-Heti teljesítménynél, a sávban lévő profit ráta számnak a színe legyen fekete (most vannak olyan állapotok aminél nem lehet rendesen kiolvasni mert belesimul a háttérszínbe a felirat) 
+
+
+
+
+
+ 

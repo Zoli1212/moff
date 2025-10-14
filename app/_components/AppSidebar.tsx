@@ -18,6 +18,7 @@ import {
   X,
   UserCircle,
   Wallet,
+  Users,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -30,6 +31,7 @@ const mainItems = [
   { title: "Áraim", url: "/dashboard", icon: Layers },
   { title: "Ügyfelek", url: "/dashboard", icon: Layers },
   { title: "Ajánlataim", url: "/dashboard", icon: Layers },
+  { title: "Munkások", url: "/others", icon: Users },
   { title: "Asszisztens", url: "/dashboard/tools/assistant", icon: Inbox },
   { title: "Csevegés", url: "/ai-tools", icon: Inbox },
   { title: "Előzményeim", url: "/my-history", icon: Calendar },
@@ -81,7 +83,8 @@ export function AppSidebar() {
                   (item.url === "/my-history" &&
                     path.startsWith("/my-history")) ||
                   (item.url === "/my-billing" &&
-                    path.startsWith("/my-billing"));
+                    path.startsWith("/my-billing")) ||
+                  (item.url === "/others" && path.startsWith("/others"));
 
                 return (
                   <a

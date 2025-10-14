@@ -86,7 +86,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
     },
     {
       // href: `/others/${workId}`,
-      href: `/others`,
+      href: `/seged`,
       label: "Egyéb",
       icon: (
         <svg

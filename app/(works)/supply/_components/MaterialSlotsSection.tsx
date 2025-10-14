@@ -27,7 +27,34 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
   // Szűrés: csak azok az anyagok jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
   const inProgressWorkItemIds = workItems.filter(wi => wi.inProgress).map(wi => wi.id);
   const filteredMaterials = initialMaterials.filter(mat => inProgressWorkItemIds.includes(mat.workItemId));
-  const [materials, setMaterials] = useState<Material[]>(filteredMaterials); // csak in-progress workItem-hez tartozó anyagok
+  
+  // Összesítés név szerint - azonos nevű anyagok összevonása
+  const aggregatedMaterials = filteredMaterials.reduce((acc, mat) => {
+    const existingIndex = acc.findIndex(item => item.name.toLowerCase() === mat.name.toLowerCase());
+    
+    if (existingIndex >= 0) {
+      // Ha már létezik ilyen nevű anyag, összesítjük a mennyiségeket
+      acc[existingIndex] = {
+        ...acc[existingIndex],
+        quantity: acc[existingIndex].quantity + mat.quantity,
+        availableQuantity: (acc[existingIndex].availableQuantity ?? 0) + (mat.availableQuantity ?? 0),
+        // Több workItem ID-t tárolunk egy tömbben
+        workItemIds: [...(acc[existingIndex].workItemIds || [acc[existingIndex].workItemId]), mat.workItemId],
+        // Az availableFull akkor true, ha az összesített mennyiség teljes
+        availableFull: ((acc[existingIndex].availableQuantity ?? 0) + (mat.availableQuantity ?? 0)) >= (acc[existingIndex].quantity + mat.quantity)
+      };
+    } else {
+      // Új anyag hozzáadása
+      acc.push({
+        ...mat,
+        workItemIds: [mat.workItemId] // Tömb formában tároljuk a workItem ID-kat
+      });
+    }
+    
+    return acc;
+  }, [] as (Material & { workItemIds?: number[] })[]);
+  
+  const [materials, setMaterials] = useState<(Material & { workItemIds?: number[] })[]>(aggregatedMaterials);
   const [selected, setSelected] = useState<number[]>(() =>
     initialMaterials
       .filter(
@@ -48,23 +75,72 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
     setLoadingIds((prev) => [...prev, id]);
     try {
       if (willBeChecked) {
-        // Set availableQuantity to quantity and availableFull to true
-        const updated = await setMaterialAvailableFull(id);
-        setMaterials((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, ...updated } : m))
-        );
+        // Összesített anyag esetén az összes kapcsolódó workItem anyagát frissítjük
+        if (mat.workItemIds && mat.workItemIds.length > 1) {
+          // Több workItem-hez tartozó anyag - az összes eredeti anyagot frissítjük
+          const originalMaterials = initialMaterials.filter(original => 
+            mat.workItemIds!.includes(original.workItemId) && 
+            original.name.toLowerCase() === mat.name.toLowerCase()
+          );
+          
+          // Az összes eredeti anyagot teljesre állítjuk
+          for (const originalMat of originalMaterials) {
+            await setMaterialAvailableFull(originalMat.id);
+          }
+          
+          // Helyi state frissítése
+          setMaterials((prev) =>
+            prev.map((m) => (m.id === id ? { 
+              ...m, 
+              availableQuantity: m.quantity,
+              availableFull: true 
+            } : m))
+          );
+        } else {
+          // Egyszerű eset - egy workItem-hez tartozó anyag
+          const updated = await setMaterialAvailableFull(id);
+          setMaterials((prev) =>
+            prev.map((m) => (m.id === id ? { ...m, ...updated } : m))
+          );
+        }
         setSelected((prev) => [...prev, id]);
         toast.success("Anyag elérhetőként beállítva!");
       } else {
-        // Unchecking logic: reset availableQuantity and availableFull
-        const updated = await updateMaterial({
-          id,
-          availableQuantity: 0,
-          availableFull: false,
-        });
-        setMaterials((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, ...updated } : m))
-        );
+        // Unchecking logic - összesített anyag esetén az összes kapcsolódó anyagot nullázzuk
+        if (mat.workItemIds && mat.workItemIds.length > 1) {
+          const originalMaterials = initialMaterials.filter(original => 
+            mat.workItemIds!.includes(original.workItemId) && 
+            original.name.toLowerCase() === mat.name.toLowerCase()
+          );
+          
+          // Az összes eredeti anyagot nullázzuk
+          for (const originalMat of originalMaterials) {
+            await updateMaterial({
+              id: originalMat.id,
+              availableQuantity: 0,
+              availableFull: false,
+            });
+          }
+          
+          // Helyi state frissítése
+          setMaterials((prev) =>
+            prev.map((m) => (m.id === id ? { 
+              ...m, 
+              availableQuantity: 0,
+              availableFull: false 
+            } : m))
+          );
+        } else {
+          // Egyszerű eset
+          const updated = await updateMaterial({
+            id,
+            availableQuantity: 0,
+            availableFull: false,
+          });
+          setMaterials((prev) =>
+            prev.map((m) => (m.id === id ? { ...m, ...updated } : m))
+          );
+        }
         setSelected((prev) => prev.filter((mid) => mid !== id));
         toast.success("Anyag elérhetőség visszaállítva!");
       }
@@ -205,7 +281,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                     className="mr-2.5 w-[18px] h-[18px]"
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <div className="flex-2 font-semibold">{mat.name}</div>
+                  <div className="flex-2 font-semibold">{mat.name.charAt(0).toUpperCase() + mat.name.slice(1)}</div>
                   <div className="ml-auto font-bold text-[16px] text-[#222] flex flex-col items-end">
                     {typeof mat.quantity !== "undefined" &&
                     mat.quantity !== null ? (
@@ -227,7 +303,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                           : "bg-yellow-400")
                       }
                       style={{
-                        width: `${getProgress(mat.availableQuantity ?? 0, mat.quantity)}%`,
+                        width: `${getProgress(mat.availableQuantity ?? 0, mat.quantity ?? 0)}%`,
                       }}
                     />
                   </div>
