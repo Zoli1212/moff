@@ -1450,10 +1450,6 @@ export default function GroupedDiaryEditForm({
                   >
                     Jóváhagyás
                   </label>
-                  <span className="text-xs text-gray-500">
-                    ({groupApprovalStatus?.approvedItems || 0}/
-                    {groupApprovalStatus?.totalItems || 0} jóváhagyva)
-                  </span>
                 </div>
                 {groupApprovalStatus?.someApproved &&
                   !groupApprovalStatus?.allApproved && (

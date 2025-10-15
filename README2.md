@@ -1011,8 +1011,7 @@ Ajánlatok
 
 A listában a kártyákon a következők legyenek:
 Cím alatt:
-4 soros AI által készített összefoglaló, arról, hogy mit kéne csinálni
-Kivitelezési idő: x nap
+
 Ajánlat adatlap
 Létrehozva: Érvényes (ez változtatható, és ez a dátum kerül bele a pdf, be excelbe)
 Becsült kivitelezési idő:
