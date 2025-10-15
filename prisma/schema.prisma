@@ -616,6 +616,11 @@ model Billing {
   invoicePdfUrl  String?     // Számla PDF linkje
   taxNumber      String?     // Adószám (opcionális)
   euTaxNumber    String?     // EU adószám (opcionális)
+  customerTitle  String?     // Vevő neve/címe (opcionális) - DEPRECATED, use separate fields below
+  customerName   String?     // Vevő neve
+  customerCity   String?     // Vevő városa
+  customerAddress String?    // Vevő utca/házszám
+  customerZip    String?     // Vevő irányítószám
 }
 
 model Performance {

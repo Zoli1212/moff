@@ -141,29 +141,12 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
 
     const customer = billing.offer.requirement.myWork;
 
-    // More robust address parsing
-    const location = customer.location || "";
-    const zipMatch = location.match(/^\d{4}/);
-    const zip = zipMatch ? zipMatch[0] : "";
-    // Get everything after the zip code
-    const addressWithoutZip = zip ? location.substring(4).trim() : location;
-    // Find the first word that is likely a street suffix or contains a number (house number)
-    const cityEndIndex = addressWithoutZip.search(
-      /\s(utca|út|tér|krt\.|u\.|I|V|X|\d+\.)/
-    );
-
-    let city = addressWithoutZip;
-    let street = "";
-
-    if (cityEndIndex > 0) {
-      city = addressWithoutZip.substring(0, cityEndIndex).trim();
-      street = addressWithoutZip.substring(cityEndIndex).trim();
-    } else {
-      // Fallback if a clear street part is not found, assume first word is city
-      const parts = addressWithoutZip.split(" ");
-      city = parts[0] || "";
-      street = parts.slice(1).join(" ");
-    }
+    // Type-safe access to new customer fields (may not exist yet in Prisma types)
+    const billingAny = billing as any;
+    const customerName = billingAny.customerName || customer.customerName;
+    const city = billingAny.customerCity || "Budapest";
+    const street = billingAny.customerAddress || "";
+    const zip = billingAny.customerZip || "";
     const billingItems = JSON.parse(billing.items as string);
 
     const client = new Client({
@@ -234,7 +217,7 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       comment: billing.notes || "",
       sendEmail: false, // Do not send email via szamlazz.hu
       customer: {
-        name: customer.customerName,
+        name: customerName,
         email: customer.customerEmail || "",
         address: street,
         city: city,
@@ -249,13 +232,23 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       },
     };
 
+    console.log("📤 [szamlazz.hu] Sending invoice data:", JSON.stringify({
+      invoiceData,
+      items,
+      customerName,
+      city,
+      street,
+      zip
+    }, null, 2));
+
     let result;
     try {
       result = await client.generateInvoice(invoiceData, items);
-      console.log("Invoice generated successfully:", result);
+      console.log("✅ [szamlazz.hu] Invoice generated successfully:", JSON.stringify(result, null, 2));
     } catch (error) {
-      console.error("Error generating invoice:", error);
-      return { success: false, error: "Failed to generate invoice." };
+      console.error("❌ [szamlazz.hu] Error generating invoice:", error);
+      console.error("❌ [szamlazz.hu] Error details:", JSON.stringify(error, null, 2));
+      return { success: false, error: `Failed to generate invoice: ${error}` };
     }
 
     const updatedBilling = await prisma.billing.update({
@@ -373,9 +366,18 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
 
 export async function updateBilling(
   billingId: number,
-  data: { title: string; items: BillingItem[]; taxNumber?: string | null; euTaxNumber?: string | null }
+  data: { 
+    title: string; 
+    items: BillingItem[]; 
+    taxNumber?: string | null; 
+    euTaxNumber?: string | null; 
+    customerName?: string | null;
+    customerCity?: string | null;
+    customerAddress?: string | null;
+    customerZip?: string | null;
+  }
 ) {
-  const { items, title, taxNumber, euTaxNumber } = data;
+  const { items, title, taxNumber, euTaxNumber, customerName, customerCity, customerAddress, customerZip } = data;
 
   try {
     const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
@@ -411,6 +413,10 @@ export async function updateBilling(
         totalPrice,
         taxNumber,
         euTaxNumber,
+        customerName: customerName as any,
+        customerCity: customerCity as any,
+        customerAddress: customerAddress as any,
+        customerZip: customerZip as any,
       },
     });
 

@@ -41,8 +41,11 @@ export default function BillingDraftPage() {
   const [error, setError] = useState<string | null>(null);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
-  const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerCity, setCustomerCity] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerZip, setCustomerZip] = useState("");
   const [taxNumber, setTaxNumber] = useState("");
   const [euTaxNumber, setEuTaxNumber] = useState("");
 
@@ -54,7 +57,11 @@ export default function BillingDraftPage() {
         const data = await getBillingById(billingId);
         if (data) {
           setBilling(data as Billing);
-          setEditedTitle(data.title);
+          setEditedTitle(data.title || "");
+          setCustomerName("");
+          setCustomerCity("");
+          setCustomerAddress("");
+          setCustomerZip("");
           setTaxNumber(data.taxNumber || "");
           setEuTaxNumber(data.euTaxNumber || "");
           setEditableItems(
@@ -144,6 +151,10 @@ export default function BillingDraftPage() {
         items: itemsToSave,
         taxNumber: taxNumber || null,
         euTaxNumber: euTaxNumber || null,
+        customerName: customerName || null,
+        customerCity: customerCity || null,
+        customerAddress: customerAddress || null,
+        customerZip: customerZip || null,
       });
       if (result.success) {
         toast.success("Számlatervezet sikeresen frissítve!");
@@ -210,6 +221,10 @@ export default function BillingDraftPage() {
         items: itemsToSave,
         taxNumber: taxNumber || null,
         euTaxNumber: euTaxNumber || null,
+        customerName: customerName || null,
+        customerCity: customerCity || null,
+        customerAddress: customerAddress || null,
+        customerZip: customerZip || null,
       });
 
       if (!updateResult.success) {
@@ -272,6 +287,10 @@ export default function BillingDraftPage() {
       const updateResult = await updateBilling(billing.id, {
         title: editedTitle,
         items: itemsToSave,
+        customerName: customerName || null,
+        customerCity: customerCity || null,
+        customerAddress: customerAddress || null,
+        customerZip: customerZip || null,
       });
 
       if (!updateResult.success) {
@@ -290,7 +309,9 @@ export default function BillingDraftPage() {
         toast.success("Pénzügyileg teljesítve!");
       } else {
         setError(result.error || "A pénzügyi teljesítés jelölése sikertelen.");
-        toast.error(result.error || "A pénzügyi teljesítés jelölése sikertelen.");
+        toast.error(
+          result.error || "A pénzügyi teljesítés jelölése sikertelen."
+        );
       }
     } catch (err) {
       setError("Hiba történt a pénzügyi teljesítés jelölésekor.");
@@ -314,28 +335,13 @@ export default function BillingDraftPage() {
             <ArrowLeft className="h-6 w-6 text-gray-600" />
           </Link>
           <div className="flex-1 px-2">
-            {isEditingTitle ? (
-              <input
-                type="text"
-                value={editedTitle}
-                onChange={(e) => setEditedTitle(e.target.value)}
-                onBlur={() => setIsEditingTitle(false)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setIsEditingTitle(false);
-                  }
-                }}
-                className="w-full text-center sm:text-left text-xl font-bold text-gray-800 bg-transparent border-b-2 border-blue-500 outline-none px-1"
-                autoFocus
-              />
-            ) : (
-              <h1
-                className="text-center sm:text-left text-xl font-bold text-gray-800 truncate cursor-pointer hover:text-blue-600"
-                onClick={() => setIsEditingTitle(true)}
-              >
-                {billing.title}
-              </h1>
-            )}
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="w-full text-center sm:text-left text-xl font-bold text-gray-800 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Számla címe"
+            />
           </div>
           <div className="w-8"></div>
         </div>
@@ -349,51 +355,141 @@ export default function BillingDraftPage() {
                   Státusz:
                   <span
                     className={`font-semibold ml-1 ${
-                      billing.status === "draft" 
-                        ? "text-orange-500" 
+                      billing.status === "draft"
+                        ? "text-orange-500"
                         : billing.status === "paid_cash"
-                        ? "text-green-600"
-                        : "text-blue-600"
+                          ? "text-green-600"
+                          : "text-blue-600"
                     }`}
                   >
                     {billing.status === "draft"
                       ? "Piszkozat"
                       : billing.status === "paid_cash"
-                      ? "Pénzügyileg teljesítve"
-                      : `Számlázva (${billing.invoiceNumber})`}
+                        ? "Pénzügyileg teljesítve"
+                        : `Számlázva (${billing.invoiceNumber})`}
                   </span>
                 </span>
               </div>
 
-              {/* Tax Number Fields */}
-              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="taxNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                    Adószám (opcionális)
-                  </label>
-                  <input
-                    type="text"
-                    id="taxNumber"
-                    value={taxNumber}
-                    onChange={(e) => setTaxNumber(e.target.value)}
-                    placeholder="12345678-1-23"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+              {/* Customer Fields - Collapsible */}
+              <details className="mt-4 border border-gray-300 rounded-md">
+                <summary className="px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium text-gray-700 flex items-center justify-between">
+                  <span>Vevő adatai (számlázáshoz)</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="customerName"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Vevő neve *
+                    </label>
+                    <input
+                      type="text"
+                      id="customerName"
+                      value={customerName}
+                      onChange={(e) => setCustomerName(e.target.value)}
+                      placeholder="Kovács János"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="customerCity"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Város *
+                    </label>
+                    <input
+                      type="text"
+                      id="customerCity"
+                      value={customerCity}
+                      onChange={(e) => setCustomerCity(e.target.value)}
+                      placeholder="Budapest"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="customerAddress"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Utca, házszám
+                    </label>
+                    <input
+                      type="text"
+                      id="customerAddress"
+                      value={customerAddress}
+                      onChange={(e) => setCustomerAddress(e.target.value)}
+                      placeholder="Fő utca 1."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="customerZip"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Irányítószám
+                    </label>
+                    <input
+                      type="text"
+                      id="customerZip"
+                      value={customerZip}
+                      onChange={(e) => setCustomerZip(e.target.value)}
+                      placeholder="1011"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="euTaxNumber" className="block text-sm font-medium text-gray-700 mb-1">
-                    EU adószám (opcionális)
-                  </label>
-                  <input
-                    type="text"
-                    id="euTaxNumber"
-                    value={euTaxNumber}
-                    onChange={(e) => setEuTaxNumber(e.target.value)}
-                    placeholder="HU12345678"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
+              </details>
+
+              {/* Tax Number Fields - Collapsible */}
+              <details className="mt-4 border border-gray-300 rounded-md">
+                <summary className="px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium text-gray-700 flex items-center justify-between">
+                  <span>Vevői adatszámok</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="taxNumber"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Adószám (opcionális)
+                    </label>
+                    <input
+                      type="text"
+                      id="taxNumber"
+                      value={taxNumber}
+                      onChange={(e) => setTaxNumber(e.target.value)}
+                      placeholder="12345678-1-23"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="euTaxNumber"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      EU adószám (opcionális)
+                    </label>
+                    <input
+                      type="text"
+                      id="euTaxNumber"
+                      value={euTaxNumber}
+                      onChange={(e) => setEuTaxNumber(e.target.value)}
+                      placeholder="HU12345678"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
                 </div>
-              </div>
+              </details>
 
               {billing.status === "draft" && hasSelectedItems && (
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -422,9 +518,7 @@ export default function BillingDraftPage() {
                     size="sm"
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
-                    {isMarkingPaid
-                      ? "Jelölés..."
-                      : "Pénzügyileg teljesítve"}
+                    {isMarkingPaid ? "Jelölés..." : "Pénzügyileg teljesítve"}
                   </Button>
                 </div>
               )}

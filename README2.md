@@ -1025,6 +1025,8 @@ Ennek a listának a tetején legyen valahol egy + ami azt jelenti, hogy új munk
 Az új munkásnál a szakmát ne kelljen hozzáadni
 A hozzáadott munkás listánál, ha rákattintok egy munkásra, akkor jöjjön fel egy kis dialógus, hogy hívás, email küldés (ha ezek meg vannak adva, a lényeg, hogy innen rögtön és könnyen el lehessen érni az adott embert)
 cimet adoszamot eu adoszamot meg lehessen adni
+profitráta csere!!
+
 
 
 
