@@ -688,7 +688,18 @@ export default function WorkDetailPage({
 
         {/* Profit Section */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h3 className="font-semibold text-gray-600 mb-3">Profitráta elemzés</h3>
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <h3 className="font-semibold text-gray-600">Profitráta elemzés</h3>
+            {dynamicProfit.totalCost > 0 && (
+              <div className={`text-sm font-medium px-3 py-1 rounded-full ${
+                dynamicProfit.totalRevenue > dynamicProfit.totalCost 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-red-100 text-red-700'
+              }`}>
+                Profitráta: {((dynamicProfit.totalRevenue / dynamicProfit.totalCost - 1) * 100).toFixed(1)}%
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div className="bg-blue-50 p-3 rounded-lg">
               <div className="text-blue-600 font-medium">Bevétel</div>
@@ -716,18 +727,6 @@ export default function WorkDetailPage({
                 {dynamicProfit.totalProfit >= 0 ? '+' : ''}
                 {dynamicProfit.totalProfit.toLocaleString('hu-HU')} Ft
               </div>
-            </div>
-          </div>
-          
-          {/* Profit ráta külön sorban */}
-          <div className="mt-4 pt-3 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-600">Profit ráta:</span>
-              <span className={`text-lg font-bold ${
-                dynamicProfit.profitMargin >= 0 ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {dynamicProfit.profitMargin.toFixed(1)}%
-              </span>
             </div>
           </div>
         </div>
