@@ -551,14 +551,33 @@ export default function GroupedDiaryForm({
         }
       }
 
-      // Update work item progress for all selected items
-      for (const groupedItem of selectedGroupedItems) {
-        promises.push(
-          updateWorkItemCompletedQuantityFromLatestDiary(
-            groupedItem.workItem.id
-          )
-        );
+      // Wait for all diary items to be created first
+      const results = await Promise.allSettled(promises);
+
+      // Check results
+      const failed = results.filter((r) => r.status === "rejected");
+      if (failed.length > 0) {
+        showToast("error", `${failed.length} művelet sikertelen volt.`);
       }
+
+      // Wait a bit to ensure database transaction is committed
+      console.log(`⏳ [UPDATE_PROGRESS] Waiting for database commit...`);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // NOW update work item progress for all selected items (AFTER diary items are created)
+      console.log(`🔄 [UPDATE_PROGRESS] Starting to update ${selectedGroupedItems.length} workItems...`);
+      for (const groupedItem of selectedGroupedItems) {
+        console.log(`🔄 [UPDATE_PROGRESS] Updating workItem ${groupedItem.workItem.id} (${groupedItem.workItem.name})...`);
+        try {
+          const result = await updateWorkItemCompletedQuantityFromLatestDiary(
+            groupedItem.workItem.id
+          );
+          console.log(`✅ [UPDATE_PROGRESS] WorkItem ${groupedItem.workItem.id} updated successfully:`, result);
+        } catch (error) {
+          console.error(`❌ [UPDATE_PROGRESS] Failed to update workItem ${groupedItem.workItem.id}:`, error);
+        }
+      }
+      console.log(`✅ [UPDATE_PROGRESS] All workItems updated!`);
 
       // Handle pending group approval change if exists
       if (
@@ -592,16 +611,8 @@ export default function GroupedDiaryForm({
         setPendingApprovalChange(null);
       }
 
-      const results = await Promise.allSettled(promises);
-
-      // Check results
-      const failed = results.filter((r) => r.status === "rejected");
-      if (failed.length > 0) {
-        showToast("error", `${failed.length} művelet sikertelen volt.`);
-      } else {
-        showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
-      }
-
+      // Success message
+      showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
       onSave({});
     } catch (error) {
       console.log((error as Error).message);

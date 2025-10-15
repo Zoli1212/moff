@@ -26,6 +26,8 @@ interface Billing {
   totalPrice: number;
   invoiceNumber?: string | null;
   invoicePdfUrl?: string | null;
+  taxNumber?: string | null;
+  euTaxNumber?: string | null;
   offerId: number;
 }
 
@@ -41,6 +43,8 @@ export default function BillingDraftPage() {
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
+  const [euTaxNumber, setEuTaxNumber] = useState("");
 
   useEffect(() => {
     const fetchBilling = async () => {
@@ -51,6 +55,8 @@ export default function BillingDraftPage() {
         if (data) {
           setBilling(data as Billing);
           setEditedTitle(data.title);
+          setTaxNumber(data.taxNumber || "");
+          setEuTaxNumber(data.euTaxNumber || "");
           setEditableItems(
             (data.items || []).map((item: OfferItem) => ({
               ...item,
@@ -136,6 +142,8 @@ export default function BillingDraftPage() {
       const result = await updateBilling(billing.id, {
         title: editedTitle,
         items: itemsToSave,
+        taxNumber: taxNumber || null,
+        euTaxNumber: euTaxNumber || null,
       });
       if (result.success) {
         toast.success("Számlatervezet sikeresen frissítve!");
@@ -200,6 +208,8 @@ export default function BillingDraftPage() {
       const updateResult = await updateBilling(billing.id, {
         title: editedTitle,
         items: itemsToSave,
+        taxNumber: taxNumber || null,
+        euTaxNumber: euTaxNumber || null,
       });
 
       if (!updateResult.success) {
@@ -353,6 +363,36 @@ export default function BillingDraftPage() {
                       : `Számlázva (${billing.invoiceNumber})`}
                   </span>
                 </span>
+              </div>
+
+              {/* Tax Number Fields */}
+              <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="taxNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                    Adószám (opcionális)
+                  </label>
+                  <input
+                    type="text"
+                    id="taxNumber"
+                    value={taxNumber}
+                    onChange={(e) => setTaxNumber(e.target.value)}
+                    placeholder="12345678-1-23"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="euTaxNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                    EU adószám (opcionális)
+                  </label>
+                  <input
+                    type="text"
+                    id="euTaxNumber"
+                    value={euTaxNumber}
+                    onChange={(e) => setEuTaxNumber(e.target.value)}
+                    placeholder="HU12345678"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
 
               {billing.status === "draft" && hasSelectedItems && (

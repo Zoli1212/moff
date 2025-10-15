@@ -31,16 +31,16 @@ async function refreshCompletedQuantitiesForWork(
     });
 
     for (const workItem of workItems) {
-      // Find the latest diary entry for this workItem (only up to today)
+      // Find the latest diary entry for this workItem (NO date filter - get the absolute latest)
       const latestDiaryEntry = await prisma.workDiaryItem.findFirst({
         where: {
           workItemId: workItem.id,
           tenantEmail: tenantEmail,
-          date: { lte: today }, // Only entries up to today
         },
-        orderBy: {
-          date: "desc",
-        },
+        orderBy: [
+          { date: "desc" },
+          { id: "desc" }, // If same date, get the latest by ID
+        ],
         select: {
           progressAtDate: true,
         },
@@ -767,6 +767,9 @@ export async function getWorkItemsWithWorkers(workId: number) {
 
 export async function getWorkById(id: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
+
+  // First refresh completed quantities from diary entries
+  await refreshCompletedQuantitiesForWork(id, tenantEmail);
 
   const work = await prisma.work.findUnique({
     where: { id },

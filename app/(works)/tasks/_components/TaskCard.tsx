@@ -84,7 +84,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           />
           <ProgressBar
             label="Számlázott"
-            value={billedQuantity || 0}
+            value={(billedQuantity || 0) + (paidQuantity || 0)}
             max={effectiveQuantity || 0}
             unit={unit || "db"}
             color="bg-green-500"
@@ -98,13 +98,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
             max={effectiveQuantity || 0}
             unit={unit || "db"}
             color="bg-yellow-500"
-          />
-          <ProgressBar
-            label="Pénzügyileg teljesített"
-            value={paidQuantity || 0}
-            max={effectiveQuantity || 0}
-            unit={unit || "db"}
-            color="bg-purple-500"
           />
           {onQuantityChange && (
             <div className="flex justify-end">

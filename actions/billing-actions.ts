@@ -240,7 +240,8 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
         city: city,
         zip: zip,
         country: "HU",
-        taxNumber: "", // Tax number is not in MyWork
+        taxNumber: billing.taxNumber || "", // Use tax number from billing
+        euTaxNumber: billing.euTaxNumber || "", // Use EU tax number from billing
       },
       seller: {
         bank: "Magnet Bank",
@@ -372,9 +373,9 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
 
 export async function updateBilling(
   billingId: number,
-  data: { title: string; items: BillingItem[] }
+  data: { title: string; items: BillingItem[]; taxNumber?: string | null; euTaxNumber?: string | null }
 ) {
-  const { items, title } = data;
+  const { items, title, taxNumber, euTaxNumber } = data;
 
   try {
     const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
@@ -408,6 +409,8 @@ export async function updateBilling(
         title,
         items: JSON.stringify(items),
         totalPrice,
+        taxNumber,
+        euTaxNumber,
       },
     });
 

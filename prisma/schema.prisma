@@ -614,6 +614,8 @@ model Billing {
   issuedDate     DateTime?   // Kiállítás dátuma
   dueDate        DateTime?   // Fizetési határidő
   invoicePdfUrl  String?     // Számla PDF linkje
+  taxNumber      String?     // Adószám (opcionális)
+  euTaxNumber    String?     // EU adószám (opcionális)
 }
 
 model Performance {
