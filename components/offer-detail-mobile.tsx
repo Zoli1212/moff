@@ -1171,7 +1171,17 @@ export function OfferDetailView({
               </div>
               <div className="p-6">
                 <p className="text-gray-700 whitespace-pre-line">
-                  {offer.description}
+                  {offer.description
+                    .split('\n')
+                    .filter(line => {
+                      const trimmed = line.trim();
+                      // Ha nem csillaggal kezdődik, megtartjuk
+                      if (!trimmed.startsWith('*')) return true;
+                      // Ha csillaggal kezdődik, csak akkor tartjuk meg, ha kérdőjelet tartalmaz
+                      return trimmed.includes('?');
+                    })
+                    .join('\n')
+                    .trim()}
                 </p>
               </div>
             </div>

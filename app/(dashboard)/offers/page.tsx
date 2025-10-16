@@ -260,7 +260,16 @@ export default function OffersPage() {
                             {offer.description && (
                               <p className="mt-1 text-sm text-gray-600 line-clamp-2">
                                 {offer.description.includes("Becsült kivitelezési idő")
-                                  ? offer.description.substring(offer.description.indexOf("Becsült kivitelezési idő"))
+                                  ? (() => {
+                                      const text = offer.description.substring(offer.description.indexOf("Becsült kivitelezési idő"));
+                                      const parts = text.split("Becsült kivitelezési idő:");
+                                      return (
+                                        <>
+                                          <span className="font-bold">Becsült kivitelezési idő:</span>
+                                          {parts[1] || ""}
+                                        </>
+                                      );
+                                    })()
                                   : offer.description.length > 100
                                     ? `${offer.description.substring(0, 250)}...`
                                     : offer.description}
