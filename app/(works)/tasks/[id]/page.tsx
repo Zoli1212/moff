@@ -386,7 +386,11 @@ export default function TasksPage() {
 
   return (
     <div style={{ maxWidth: 420, margin: "0 auto" }}>
-      <WorkHeader title={work?.title || "Feladatok"} />
+      <WorkHeader 
+        title={work?.title || "Feladatok"} 
+        onAddClick={handleAddNewItem}
+        addButtonDisabled={addingNewItem}
+      />
       <div style={{ padding: "0px 16px 16px 16px" }}>
         <div
           style={{
@@ -397,53 +401,14 @@ export default function TasksPage() {
             borderLeft: "4px solid #ffcc00",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div
-              style={{
-                flex: 1,
-                fontSize: 14,
-                color: "#5c3d09",
-              }}
-            >
-              <strong>Pipáld ki a folyamatban lévő feladatokat!</strong> Ezekre
-              fogom kiszámolni a szükséges erőforrás és eszköz igényt!
-            </div>
-            <button
-              onClick={handleAddNewItem}
-              disabled={addingNewItem}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                backgroundColor: "transparent",
-                border: addingNewItem
-                  ? "2px solid #ccc"
-                  : "2px solid #f97316",
-                color: addingNewItem ? "#ccc" : "#f97316",
-                fontSize: 20,
-                fontWeight: "bold",
-                cursor: addingNewItem ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "border-color 0.2s, color 0.2s",
-                flexShrink: 0,
-              }}
-              onMouseEnter={(e) => {
-                if (!addingNewItem) {
-                  e.currentTarget.style.borderColor = "#ea580c";
-                  e.currentTarget.style.color = "#ea580c";
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!addingNewItem) {
-                  e.currentTarget.style.borderColor = "#f97316";
-                  e.currentTarget.style.color = "#f97316";
-                }
-              }}
-            >
-              {addingNewItem ? "..." : "+"}
-            </button>
+          <div
+            style={{
+              fontSize: 14,
+              color: "#5c3d09",
+            }}
+          >
+            <strong>Pipáld ki a folyamatban lévő feladatokat!</strong> Ezekre
+            fogom kiszámolni a szükséges erőforrás és eszköz igényt!
           </div>
         </div>
         <div style={{ marginBottom: 8 }}></div>
