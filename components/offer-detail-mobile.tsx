@@ -1115,7 +1115,7 @@ export function OfferDetailView({
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-orange-700">
-                    <span className="font-medium">Összesen (Anyag + Munkadíj): </span>
+                    <span className="font-medium">Összesen: </span>
                     <span className="font-medium">
                       {formatPrice(calculateTotals().total)}
                     </span>
