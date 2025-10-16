@@ -91,7 +91,16 @@ export default function BillingsPage() {
                     <Link
                       key={work.id}
                       href={`/billings/${work.id}`}
-                      className="block bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow"
+                      className="block bg-white border border-gray-200 rounded-lg transition-shadow"
+                      style={{
+                        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.boxShadow = "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+                      }}
                     >
                       <div className="p-4">
                         <div className="flex justify-between items-start">
