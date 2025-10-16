@@ -169,10 +169,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         return;
       }
 
-      if (!selectedRole) {
-        toast.error("Kérjük válassz egy szerepkört!");
-        return;
-      }
+      // Role is always "általános" now
+      const finalRole = "általános";
 
       // Meglévő munkásnál nem kérjük a napi díjat
 
@@ -190,7 +188,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           name: worker.name || "",
           email: worker.email || "",
           phone: worker.phone || "",
-          profession: selectedRole, // Use selected role instead of worker's original role
+          profession: "általános", // Always "általános"
           workItemId: null, // Always null
           avatarUrl: worker.avatarUrl || undefined,
           // dailyRate nincs megadva, mert meglévő munkásnak már van
@@ -208,7 +206,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       }
     } else {
       // Handle new worker creation
-      const finalProfession = lockedProfession || profession;
+      const finalProfession = "általános"; // Always "általános"
       // Always use null for workItemId
 
       if (!name || !finalProfession) {
@@ -289,8 +287,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   useEffect(() => {
     if (open) {
       // Only set default mode when first opening, don't override user selection
-      setProfession(lockedProfession ?? "");
-      setSelectedRole(lockedProfession ?? ""); // Set default role for existing worker mode when opened from slot
+      setProfession(lockedProfession ?? "általános");
+      setSelectedRole("általános"); // Always default to "általános"
       setSelectedExistingWorker("");
     } else {
       // clear fields on close
@@ -364,7 +362,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           {/* Existing Worker Selection - megjelenik először */}
           {workerMode === "existing" && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">
                   Szerepkör
                 </label>
@@ -400,10 +398,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             </>
           )}
 
-          {/* New Worker Form Fields */}
+          {/* New Worker Form Fields - Hidden duplicate section */}
           {workerMode === "new" && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">
                   Szerepkör
                 </label>
@@ -421,7 +419,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   ]}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">
                   Válassz munkást
                 </label>
@@ -442,7 +440,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           {/* New Worker Form Fields */}
           {workerMode === "new" && (
             <>
-              <div className="space-y-2">
+              <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">Szakma</label>
                 {lockedProfession ? (
                   <div className="p-2 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-700">
@@ -613,8 +611,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 disabled={
                   loading ||
                   (workerMode === "new" && (!dailyRate || isNaN(Number(dailyRate)) || Number(dailyRate) <= 0)) ||
-                  (workerMode === "new" && (!name || !(lockedProfession || profession))) ||
-                  (workerMode === "existing" && (!selectedExistingWorker || !selectedRole))
+                  (workerMode === "new" && !name) ||
+                  (workerMode === "existing" && !selectedExistingWorker)
                 }
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1"
               >
