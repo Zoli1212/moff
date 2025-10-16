@@ -85,18 +85,34 @@ export async function getUserWorks() {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      workItems: {
+        select: {
+          quantity: true,
+        },
+      },
+    },
   });
 
-  // Calculate totalPrice for each work based on cost fields
-  const worksWithTotalPrice = works.map((work) => ({
-    ...work,
-    totalPrice:
-      (work.totalLaborCost || 0) +
-      (work.totalToolCost || 0) +
-      (work.totalMaterialCost || 0),
-  }));
+  // Calculate totalPrice and totalQuantity for each work
+  const worksWithCalculatedFields = works.map((work) => {
+    // Összes tervezett mennyiség (csak nem-nulla quantity-s workItem-ek)
+    const totalQuantity = work.workItems
+      .filter((item) => (item.quantity || 0) > 0)
+      .reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  return worksWithTotalPrice;
+    return {
+      ...work,
+      totalPrice:
+        (work.totalLaborCost || 0) +
+        (work.totalToolCost || 0) +
+        (work.totalMaterialCost || 0),
+      totalQuantity: totalQuantity,
+      // Az aggregált értékek már a Work táblában vannak (totalCompleted, totalBilled, totalBillable)
+    };
+  });
+
+  return worksWithCalculatedFields;
 }
 
 export async function deleteWork(id: number) {
@@ -921,6 +937,10 @@ export async function updateWorkItemCompletion(params: {
     where: { id: workItemId },
     data: { completedQuantity: clampedCompleted, progress },
   });
+  
+  // Frissítjük a Work aggregált értékeit
+  await recalculateWorkTotals(item.workId, email);
+  
   // Revalidate the Tasks page so progress bars update immediately
   try {
     if (item?.workId) revalidatePath(`/works/tasks/${item.workId}`);
@@ -928,4 +948,122 @@ export async function updateWorkItemCompletion(params: {
     console.error("revalidatePath failed for /works/tasks/", item?.workId, err);
   }
   return { success: true, data: updated } as const;
+}
+
+/**
+ * Inicializálja az összes munka aggregált értékeit
+ * Minden aktív munkára lefuttatja a recalculateWorkTotals függvényt
+ */
+export async function initializeAllWorkTotals() {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Lekérjük az összes aktív munkát
+    const works = await prisma.work.findMany({
+      where: {
+        tenantEmail: tenantEmail,
+        isActive: true,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    console.log(`🔄 [initializeAllWorkTotals] Initializing ${works.length} works...`);
+
+    // Minden munkára lefuttatjuk a recalculateWorkTotals függvényt
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const work of works) {
+      try {
+        await recalculateWorkTotals(work.id, tenantEmail);
+        successCount++;
+      } catch (error) {
+        console.error(`❌ [initializeAllWorkTotals] Error for work ${work.id}:`, error);
+        errorCount++;
+      }
+    }
+
+    console.log(`✅ [initializeAllWorkTotals] Success: ${successCount}, Errors: ${errorCount}`);
+
+    revalidatePath("/works");
+    return {
+      success: true,
+      message: `${successCount} munka frissítve, ${errorCount} hiba`,
+      successCount,
+      errorCount,
+    };
+  } catch (error) {
+    console.error("❌ [initializeAllWorkTotals] Fatal error:", error);
+    return {
+      success: false,
+      message: "Hiba történt a frissítés során",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * Újraszámolja és frissíti a Work aggregált értékeit (totalCompleted, totalBilled, totalBillable)
+ * a workItem-ek alapján. Automatikusan hívódik amikor workItem értékek változnak.
+ */
+export async function recalculateWorkTotals(
+  workId: number,
+  tenantEmail: string
+): Promise<void> {
+  try {
+    // Lekérjük az összes workItem-et ehhez a munkához
+    const workItems = await prisma.workItem.findMany({
+      where: {
+        workId: workId,
+        tenantEmail: tenantEmail,
+      },
+      select: {
+        completedQuantity: true,
+        billedQuantity: true,
+        paidQuantity: true,
+        quantity: true,
+      },
+    });
+
+    // Összegezzük az értékeket
+    let totalCompleted = 0;
+    let totalBilled = 0;
+    let totalBillable = 0;
+
+    for (const item of workItems) {
+      totalCompleted += item.completedQuantity || 0;
+      
+      // totalBilled = billedQuantity + paidQuantity (egyszerűség kedvéért)
+      const itemBilled = (item.billedQuantity || 0) + (item.paidQuantity || 0);
+      totalBilled += itemBilled;
+      
+      // Számlázható = teljesített - már számlázott (billed + paid)
+      const itemBillable = Math.max(0, (item.completedQuantity || 0) - itemBilled);
+      totalBillable += itemBillable;
+    }
+
+    // Frissítjük a Work rekordot
+    await prisma.work.update({
+      where: {
+        id: workId,
+        tenantEmail: tenantEmail,
+      },
+      data: {
+        totalCompleted: totalCompleted,
+        totalBilled: totalBilled,
+        totalBillable: totalBillable,
+      },
+    });
+
+    console.log(`✅ Work #${workId} totals recalculated:`, {
+      totalCompleted,
+      totalBilled,
+      totalBillable,
+    });
+  } catch (error) {
+    console.error(`❌ Error recalculating work totals for work #${workId}:`, error);
+    // Ne dobjunk hibát - ne blokkoljuk a fő műveletet
+  }
 }

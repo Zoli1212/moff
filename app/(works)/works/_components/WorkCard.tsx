@@ -21,6 +21,11 @@ export interface WorkCardProps {
   workSummary?: string;
   isUpdating?: boolean;
   isDisabled?: boolean;
+  // Új aggregált értékek
+  totalCompleted?: number;
+  totalBilled?: number;
+  totalBillable?: number;
+  totalQuantity?: number; // Összes tervezett mennyiség
 }
 
 const getUrgentColor = (level: "warning" | "danger") => {
@@ -46,6 +51,10 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     offerItems = [],
     offerDescription = "",
     workSummary = "",
+    totalCompleted = 0,
+    totalBilled = 0,
+    totalBillable = 0,
+    totalQuantity = 0,
   } = props;
 
   // Generate display text: workSummary first, then offerItems, then offerDescription, then fallback
@@ -185,10 +194,9 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       >
         {getDisplayText()}
       </div>
+      {/* Teljesített */}
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 13, color: "#666" }}>
-          Elvégzett / Tervezett munka
-        </div>
+        <div style={{ fontSize: 13, color: "#666" }}>Teljesített</div>
         <div
           style={{
             background: "#eee",
@@ -200,31 +208,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         >
           <div
             style={{
-              width: `${progressPlanned > 0 ? (progress / progressPlanned) * 100 : 0}%`,
-              background: "#3498db",
-              height: "100%",
-              borderRadius: 6,
-            }}
-          />
-        </div>
-        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-          {progress} / {progressPlanned}
-        </div>
-      </div>
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 13, color: "#666" }}>Pénzügyi teljesítés</div>
-        <div
-          style={{
-            background: "#eee",
-            borderRadius: 6,
-            height: 10,
-            width: "100%",
-            marginTop: 2,
-          }}
-        >
-          <div
-            style={{
-              width: `${financialPlanned > 0 ? (financial / financialPlanned) * 100 : 0}%`,
+              width: `${totalQuantity > 0 ? (totalCompleted / totalQuantity) * 100 : 0}%`,
               background: "#2ecc71",
               height: "100%",
               borderRadius: 6,
@@ -232,7 +216,57 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           />
         </div>
         <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
-          {financial} / {financialPlanned}
+          {totalQuantity > 0 ? `${((totalCompleted / totalQuantity) * 100).toFixed(0)}%` : "0%"}
+        </div>
+      </div>
+      {/* Számlázott */}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 13, color: "#666" }}>Számlázott</div>
+        <div
+          style={{
+            background: "#eee",
+            borderRadius: 6,
+            height: 10,
+            width: "100%",
+            marginTop: 2,
+          }}
+        >
+          <div
+            style={{
+              width: `${totalQuantity > 0 ? (totalBilled / totalQuantity) * 100 : 0}%`,
+              background: "#3498db",
+              height: "100%",
+              borderRadius: 6,
+            }}
+          />
+        </div>
+        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          {totalQuantity > 0 ? `${((totalBilled / totalQuantity) * 100).toFixed(0)}%` : "0%"}
+        </div>
+      </div>
+      {/* Számlázható */}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 13, color: "#666" }}>Számlázható</div>
+        <div
+          style={{
+            background: "#eee",
+            borderRadius: 6,
+            height: 10,
+            width: "100%",
+            marginTop: 2,
+          }}
+        >
+          <div
+            style={{
+              width: `${totalQuantity > 0 ? (totalBillable / totalQuantity) * 100 : 0}%`,
+              background: "#f39c12",
+              height: "100%",
+              borderRadius: 6,
+            }}
+          />
+        </div>
+        <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+          {totalQuantity > 0 ? `${((totalBillable / totalQuantity) * 100).toFixed(0)}%` : "0%"}
         </div>
       </div>
       {urgentTask && (

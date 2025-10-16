@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Client, Currency, Language, PaymentMethod } from "@/lib/szamlazz";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
+import { recalculateWorkTotals } from "./work-actions";
 
 interface BillingItem {
   id?: number;
@@ -266,14 +267,16 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     );
     console.log("🔍 [finalizeAndGenerateInvoice] BillingItems:", billingItems);
 
+    let workIdToRecalculate: number | null = null;
+
     for (const billingItem of billingItems) {
       if (billingItem.workItemId) {
         const newBilledQuantity = parseFloat(billingItem.quantity || "0");
 
-        // Get current billedQuantity
+        // Get current billedQuantity and workId
         const currentWorkItem = await prisma.workItem.findUnique({
           where: { id: billingItem.workItemId },
-          select: { billedQuantity: true, name: true },
+          select: { billedQuantity: true, name: true, workId: true },
         });
 
         if (currentWorkItem) {
@@ -291,6 +294,11 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
               billedQuantity: updatedBilledQuantity,
             },
           });
+
+          // Megjegyezzük a workId-t a későbbi újraszámításhoz
+          if (!workIdToRecalculate) {
+            workIdToRecalculate = currentWorkItem.workId;
+          }
         } else {
           console.log(
             `❌ [finalizeAndGenerateInvoice] WorkItem not found: ${billingItem.workItemId}`
@@ -302,6 +310,12 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
           billingItem
         );
       }
+    }
+
+    // Frissítjük a Work aggregált értékeit, ha volt workItem frissítés
+    if (workIdToRecalculate) {
+      await recalculateWorkTotals(workIdToRecalculate, tenantEmail);
+      console.log(`✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totals recalculated`);
     }
 
     // Update offer items with billed quantities

@@ -171,6 +171,11 @@ model Work {
   totalMaterials Int        @default(0)
   totalMaterialCost Float?   @default(0)
   
+  // Aggregált teljesítési értékek (gyors lekéréshez)
+  totalCompleted Float?      @default(0) // Összes teljesített mennyiség
+  totalBilled    Float?      @default(0) // Összes számlázott mennyiség
+  totalBillable  Float?      @default(0) // Összes számlázható mennyiség
+  
   estimatedDuration String?  
   progress         Float?    @default(0) 
   workSummary      String?   // AI által generált 4 mondatos összefoglaló

@@ -1004,26 +1004,17 @@ Ha vállalkozó vagyok, akkor a Jóváhagyás már az első alkalommal aktív le
 Ha a képekre kattintok akkor jelenjen meg egy kép galéria amiben nagyobban látom az összes képet, és ha itt rákattintok egy képre akkor az jelenjen meg teljes képernyőben (a cél, hogy a rögzített képeket jobban meg lehessen nézni, és ha szükséges egy részletet megnézni akkor egy képen belül is be tudjak zoom-olni maxra)
 Heti teljesítménynél, a sávban lévő profit ráta számnak a színe legyen fekete (most vannak olyan állapotok aminél nem lehet rendesen kiolvasni mert belesimul a háttérszínbe a felirat)  
 ----
-Küldöm az elő adagot ahhoz, hogy milyen változtatások kellenek ahhoz, hogy ki tudjunk menni release-ban.
-(Ebből már párat megcsinált a Zoli).
-   
+
 Ajánlatok
 
 A listában a kártyákon a következők legyenek:
 Cím alatt:
-
 Ajánlat adatlap
 Létrehozva: Érvényes (ez változtatható, és ez a dátum kerül bele a pdf, be excelbe)
 Becsült kivitelezési idő:
 Rövid 4-6 soros AI összefoglaló leírás a munkáról
-Összen:
-Követelmények - kattintható ugyan az mint ami most van csak feljebb kerül
+
 ---
-
-
-
-
-Becsült kiv. idő bolddal
 
 
  

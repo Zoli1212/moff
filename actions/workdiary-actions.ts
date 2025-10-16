@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 import { getCurrentSalary } from "@/utils/salary-helper";
+import { recalculateWorkTotals } from "./work-actions";
 
 // Resolve the effective tenant email. If the current user is a worker,
 // look up their tenant in WorkforceRegistry by the worker's email.
@@ -708,10 +709,10 @@ export async function updateWorkItemCompletedQuantityFromLatestDiary(
 
     console.log(`🔍 [UPDATE_WORKITEM] WorkItem ${workItemId}: Found latest diary entry:`, latestDiaryEntry);
 
-    // Get workItem quantity for progress calculation
+    // Get workItem quantity and workId for progress calculation
     const workItem = await prisma.workItem.findUnique({
       where: { id: workItemId },
-      select: { quantity: true },
+      select: { quantity: true, workId: true },
     });
 
     // Update WorkItem completedQuantity
@@ -731,6 +732,12 @@ export async function updateWorkItemCompletedQuantityFromLatestDiary(
         progress: progress,
       },
     });
+
+    // Frissítjük a Work aggregált értékeit
+    if (workItem?.workId) {
+      await recalculateWorkTotals(workItem.workId, tenantEmail);
+      console.log(`✅ [UPDATE_WORKITEM] Work #${workItem.workId} totals recalculated after diary update`);
+    }
 
     revalidatePath("/works/tasks");
     return { success: true, completedQuantity };

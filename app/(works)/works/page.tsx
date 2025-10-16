@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useCallback } from "react";
-import { getUserWorks } from "@/actions/work-actions";
+import { getUserWorks, initializeAllWorkTotals } from "@/actions/work-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
 import WorksAutoUpdater from "./_components/WorksAutoUpdater";
@@ -54,6 +54,11 @@ function toCardProps(
     urgentTask: work.urgentTask || "",
     urgentLevel: work.urgentLevel || "warning",
     workSummary: (work.workSummary as string) || "",
+    // Új aggregált értékek
+    totalCompleted: (work.totalCompleted as number) || 0,
+    totalBilled: (work.totalBilled as number) || 0,
+    totalBillable: (work.totalBillable as number) || 0,
+    totalQuantity: (work.totalQuantity as number) || 0,
     isUpdating,
     isDisabled,
   };
@@ -65,6 +70,7 @@ const WorkListPage = () => {
     {}
   );
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   React.useEffect(() => {
     const fetchWorks = async () => {
@@ -93,6 +99,26 @@ const WorkListPage = () => {
     },
     []
   );
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const result = await initializeAllWorkTotals();
+      if (result.success) {
+        // Újratöltjük a munkákat
+        const fetchedWorks = await getUserWorks();
+        setWorks(fetchedWorks);
+        alert(result.message);
+      } else {
+        alert("Hiba: " + result.message);
+      }
+    } catch (error) {
+      alert("Hiba történt a frissítés során");
+      console.error(error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -187,7 +213,7 @@ const WorkListPage = () => {
         works={activeWorks}
         onWorkStateChange={handleWorkStateChange}
       />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "100px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "20px" }}>
         {activeWorks.length === 0 ? (
           <div style={{ color: "#ffffff" }}>Nincs aktív munka.</div>
         ) : (
@@ -218,6 +244,88 @@ const WorkListPage = () => {
           })
         )}
       </div>
+      {/* Frissítés gomb az oldal alján */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginTop: 20,
+          paddingBottom: 120,
+        }}
+      >
+        <button
+          onClick={handleRefresh}
+          disabled={refreshing}
+          style={{
+            background: "transparent",
+            color: refreshing ? "#999" : "#FFC107",
+            border: refreshing ? "2px solid #999" : "2px solid #FFC107",
+            borderRadius: 6,
+            padding: "10px 20px",
+            fontSize: 14,
+            fontWeight: 500,
+            cursor: refreshing ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={(e) => {
+            if (!refreshing) {
+              e.currentTarget.style.background = "#FFC107";
+              e.currentTarget.style.color = "#000";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!refreshing) {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#FFC107";
+            }
+          }}
+        >
+          {refreshing ? (
+            <>
+              <div
+                style={{
+                  width: 14,
+                  height: 14,
+                  border: "2px solid #999",
+                  borderTop: "2px solid transparent",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+              Frissítés...
+            </>
+          ) : (
+            <>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+              </svg>
+              Frissítés
+            </>
+          )}
+        </button>
+      </div>
+      <style jsx>{`
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      `}</style>
     </div>
   );
 };
