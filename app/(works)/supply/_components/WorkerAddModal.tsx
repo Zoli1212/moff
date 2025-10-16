@@ -169,8 +169,6 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         return;
       }
 
-      // Role is always "általános" now
-      const finalRole = "általános";
 
       // Meglévő munkásnál nem kérjük a napi díjat
 
