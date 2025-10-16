@@ -1278,8 +1278,9 @@ Számlázz.hu integráció: Közvetlen számla kiállítás a rendszerből Szám
 Mobil-optimalizált UI: Reszponzív, érintésre optimalizált felület építőipari terepmunkához, offline képességekkel.
 Multi-tenant architektúra: Biztonságos adatkezelés email-alapú tenant izolációval, minden felhasználó csak a saját adatait látja.
 
+Becsült kiv. idő bolddal
 
-
-
+Csak Összesen kell, nem kell anyag + munkadíj
+* nem kell duplikáció a tételekben
 
  
