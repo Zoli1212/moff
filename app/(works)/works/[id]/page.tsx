@@ -506,32 +506,48 @@ export default function WorkDetailPage({
             {/* Left side - Location and dates in single column */}
             <div className="flex-1 space-y-3">
               <div className="space-y-1">
-                <span className="text-xs font-medium text-gray-500">Helyszín:</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500">Helyszín:</span>
+                  {((work as Record<string, unknown>).location as string) && (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent((work as Record<string, unknown>).location as string)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-600 transition-colors"
+                      title="Megnyitás Google Maps-ben"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                        <circle cx="12" cy="10" r="3"/>
+                      </svg>
+                    </a>
+                  )}
+                </div>
                 <div className="text-sm text-gray-900 break-words">
                   {((work as Record<string, unknown>).location as string) || "Nincs megadva"}
                 </div>
               </div>
               
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-gray-500">Kezdés:</span>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-medium text-gray-500">Kezdés:</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-gray-900">{startDate}</span>
+                  <span className="text-xs text-gray-900">{startDate}</span>
                   <button
                     onClick={() => setShowDateModal(true)}
-                    className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                    className="px-1 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
                   >
                     ✏️
                   </button>
                 </div>
               </div>
               
-              <div className="space-y-1">
-                <span className="text-xs font-medium text-gray-500">Befejezés:</span>
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-medium text-gray-500">Befejezés:</span>
                 <div className="flex items-center gap-1">
-                  <span className="text-sm text-gray-900">{endDate}</span>
+                  <span className="text-xs text-gray-900">{endDate}</span>
                   <button
                     onClick={() => setShowDateModal(true)}
-                    className="px-1 py-0.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                    className="px-1 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
                   >
                     ✏️
                   </button>
@@ -557,7 +573,7 @@ export default function WorkDetailPage({
                     onChange={handleImageUpload}
                     disabled={imageUploading}
                   />
-                  <div className={`w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center transition-all duration-200 hover:border-gray-400 ${workImage ? 'border-solid border-gray-300' : ''}`}
+                  <div className={`w-32 h-32 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center transition-all duration-200 hover:border-gray-400 ${workImage ? 'border-solid border-gray-300' : ''}`}
                        style={{
                          backgroundImage: workImage ? `url(${workImage})` : "none",
                          backgroundSize: "cover",
