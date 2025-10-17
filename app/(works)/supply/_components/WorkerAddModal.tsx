@@ -130,8 +130,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       avatarUrl?: string | null;
     }>
   >([]);
-  const [selectedExistingWorker, setSelectedExistingWorker] =
-    useState<string>("");
+  const [selectedExistingWorkers, setSelectedExistingWorkers] =
+    useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>(""); // New state for role selection
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -167,42 +167,45 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
     if (workerMode === "existing") {
       // Handle existing worker assignment
-      if (!selectedExistingWorker) {
-        toast.error("Kérjük válassz egy munkást!");
+      if (selectedExistingWorkers.length === 0) {
+        toast.error("Kérjük válassz legalább egy munkást!");
         return;
       }
 
       // Meglévő munkásnál nem kérjük a napi díjat
 
-      const worker = existingWorkers.find(
-        (w) => w.id.toString() === selectedExistingWorker
-      );
-      if (!worker) {
-        toast.error("A kiválasztott munkás nem található!");
-        return;
-      }
-
-      // Always use null for workItemId
-
       setLoading(true);
       try {
-        await onSubmit({
-          name: worker.name || "",
-          email: worker.email || "",
-          phone: worker.phone || "",
-          profession: "általános", // Always "általános"
-          workItemId: null, // Always null
-          avatarUrl: worker.avatarUrl || undefined,
-          // dailyRate nincs megadva, mert meglévő munkásnak már van
-        });
+        // Process all selected workers
+        for (const workerId of selectedExistingWorkers) {
+          const worker = existingWorkers.find(
+            (w) => w.id.toString() === workerId
+          );
+          if (!worker) {
+            console.error(`Worker ${workerId} not found`);
+            continue;
+          }
+
+          await onSubmit({
+            name: worker.name || "",
+            email: worker.email || "",
+            phone: worker.phone || "",
+            profession: "általános", // Always "általános"
+            workItemId: null, // Always null
+            avatarUrl: worker.avatarUrl || undefined,
+            // dailyRate nincs megadva, mert meglévő munkásnak már van
+          });
+        }
+
+        toast.success(`${selectedExistingWorkers.length} munkás sikeresen hozzáadva!`);
 
         // Reset form on success
-        setSelectedExistingWorker("");
+        setSelectedExistingWorkers([]);
         setSelectedRole("");
         onOpenChange(false);
       } catch (error) {
-        console.error("Error assigning existing worker:", error);
-        toast.error("Hiba történt a munkás hozzárendelése során.");
+        console.error("Error assigning existing workers:", error);
+        toast.error("Hiba történt a munkások hozzárendelése során.");
       } finally {
         setLoading(false);
       }
@@ -291,7 +294,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       // Only set default mode when first opening, don't override user selection
       setProfession(lockedProfession ?? "általános");
       setSelectedRole("általános"); // Always default to "általános"
-      setSelectedExistingWorker("");
+      setSelectedExistingWorkers([]);
     } else {
       // clear fields on close
       setWorkerMode("existing"); // Megtartjuk az alapértelmezett "existing" módot
@@ -304,7 +307,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       setAvatarPreview("");
       setAvatarError("");
       setAvatarUploading(false);
-      setSelectedExistingWorker("");
+      setSelectedExistingWorkers([]);
       setSelectedRole("");
       setExistingWorkers([]);
     }
@@ -377,18 +380,49 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">
-                  Válassz munkást
+                  Válassz munkásokat ({selectedExistingWorkers.length} kiválasztva)
                 </label>
-                <CustomSelect
-                  className="mt-2"
-                  value={selectedExistingWorker}
-                  onChange={setSelectedExistingWorker}
-                  placeholder="Válassz munkást..."
-                  options={existingWorkers.map((worker) => ({
-                    value: worker.id.toString(),
-                    label: `${worker.name || "Névtelen"} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
-                  }))}
-                />
+                <div className="mt-2 border rounded-md max-h-64 overflow-y-auto">
+                  {existingWorkers.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500">
+                      Nincsenek elérhető munkások
+                    </div>
+                  ) : (
+                    existingWorkers.map((worker) => {
+                      const workerId = worker.id.toString();
+                      const isSelected = selectedExistingWorkers.includes(workerId);
+                      return (
+                        <label
+                          key={worker.id}
+                          className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${
+                            isSelected ? "bg-orange-50" : ""
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedExistingWorkers((prev) => [...prev, workerId]);
+                              } else {
+                                setSelectedExistingWorkers((prev) =>
+                                  prev.filter((id) => id !== workerId)
+                                );
+                              }
+                            }}
+                            className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <div className="flex-1 text-sm">
+                            <div className="font-medium">{worker.name || "Névtelen"}</div>
+                            <div className="text-gray-600">
+                              {worker.role || "Ismeretlen szakma"} • {worker.email || "Nincs email"} • {worker.phone || "Nincs telefon"}
+                            </div>
+                          </div>
+                        </label>
+                      );
+                    })
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -420,8 +454,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 </label>
                 <CustomSelect
                   className="mt-2"
-                  value={selectedExistingWorker}
-                  onChange={setSelectedExistingWorker}
+                  value=""
+                  onChange={() => {}}
                   placeholder="Válassz munkást..."
                   options={existingWorkers.map((worker) => ({
                     value: worker.id.toString(),
@@ -618,7 +652,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                       isNaN(Number(dailyRate)) ||
                       Number(dailyRate) <= 0)) ||
                   (workerMode === "new" && !name) ||
-                  (workerMode === "existing" && !selectedExistingWorker)
+                  (workerMode === "existing" && selectedExistingWorkers.length === 0)
                 }
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1"
               >

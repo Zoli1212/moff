@@ -388,19 +388,37 @@ console.log(setSelectedRoleForRemoval)
 
   // Simple delete function that only removes workItemWorker record
   const handleDeleteWorkItemWorkerOnly = async (id: number) => {
+    // Store current assignments for rollback if needed
+    const previousAssignments = [...assignments];
+    
     try {
+      // Optimistic UI update - remove from local state immediately
+      setAssignments((prev) => prev.filter((a) => a.id !== id));
+      
+      // Delete from server
       await deleteWorkItemWorker(id);
-      toast.success("Munkás eltávolítva!");
-
-      // Reload assignments from server
+      
+      // Reload assignments from server to ensure consistency
       const { getWorkItemWorkersForWork } = await import(
         "@/actions/get-workitemworkers-for-work"
       );
       const data = await getWorkItemWorkersForWork(workId);
-      setAssignments(data || []);
+      
+      // Only update if we got valid data back
+      if (data) {
+        setAssignments(data);
+        toast.success("Munkás eltávolítva!");
+      } else {
+        // Rollback to previous state if no data returned
+        setAssignments(previousAssignments.filter((a) => a.id !== id));
+        toast.success("Munkás eltávolítva!");
+      }
     } catch (err) {
       console.error(err);
       toast.error("Hiba történt törlés közben.");
+      
+      // Rollback to previous state on error
+      setAssignments(previousAssignments);
     }
   };
 
@@ -489,7 +507,10 @@ console.log(setSelectedRoleForRemoval)
         }}
         worker={editAssignment}
         onSubmit={handleEdit}
-        onDelete={async (args) => handleDelete(args)}
+        onDelete={async (args) => {
+          await handleDeleteWorkItemWorkerOnly(args.id);
+          setEditAssignment(null);
+        }}
       />
 
       <WorkerRemoveModal
