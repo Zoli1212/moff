@@ -325,66 +325,7 @@ console.log(setSelectedRoleForRemoval)
     }
   };
 
-  const handleDelete = async ({
-    id,
-    name,
-    email,
-    role,
-  }: {
-    id: number;
-    name?: string | null;
-    email?: string | null;
-    role?: string | null;
-  }) => {
-    try {
-      // 1) Remove from Worker.workers registry by locating parent Worker row
-      const assignment = assignments.find((a) => a.id === id);
-      const effectiveEmail = (email || assignment?.email || "").trim();
-      const effectiveName = (name || assignment?.name || "").trim();
-      const effectiveRole = role || assignment?.role || null;
-      if (effectiveEmail) {
-        try {
-          const workerIdFromAssignment = assignment?.workerId as
-            | number
-            | undefined;
-          let parentWorkerId: number | undefined = workerIdFromAssignment;
-          if (typeof parentWorkerId !== "number" && effectiveRole) {
-            const workerRow = workers.find(
-              (w) => (w.name || "") === effectiveRole
-            );
-            if (workerRow) parentWorkerId = workerRow.id;
-          }
-          if (typeof parentWorkerId === "number") {
-            const { removeWorkerFromJsonArray } = await import(
-              "@/actions/works.action"
-            );
-            await removeWorkerFromJsonArray({
-              workerId: parentWorkerId,
-              workId,
-              name: effectiveName,
-              email: effectiveEmail,
-            });
-          }
-        } catch (innerErr) {
-          console.warn(
-            "Registry removal failed (continuing with assignment delete)",
-            innerErr
-          );
-        }
-      }
-
-      // 2) Delete the WorkItemWorker assignment (only if it exists locally)
-      if (assignment) {
-        await deleteWorkItemWorker(id);
-      }
-      toast.success("Hozzárendelés törölve!");
-      setEditAssignment(null);
-      await refreshAssignments();
-    } catch (err) {
-      console.error(err);
-      toast.error("Hiba történt törlés közben.");
-    }
-  };
+ 
 
   // Simple delete function that only removes workItemWorker record
   const handleDeleteWorkItemWorkerOnly = async (id: number) => {
