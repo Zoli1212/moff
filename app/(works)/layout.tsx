@@ -115,6 +115,10 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
             maxWidth: 420,
             margin: '0 auto',
             zIndex: 10,
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            transform: 'translateZ(0)',
+            WebkitTransform: 'translateZ(0)',
+            willChange: 'transform',
           }}
         >
           <div style={{ height: 1, background: '#eee', width: '100%', marginBottom: 6 }} />
@@ -127,8 +131,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
               borderRadius: 18,
               boxShadow: '0 1px 6px #eee',
               padding: '12px 0 8px 0',
-               
-  opacity: 1,
+              opacity: 1,
             }}
           >
             {menu.map(({ href, label, icon }) => {

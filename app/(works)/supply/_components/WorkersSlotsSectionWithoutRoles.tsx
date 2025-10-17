@@ -83,14 +83,14 @@ function WorkersSlotsSectionWithoutRoles({
   showAllWorkItems = false,
   maxRequiredWorkers,
 }: Props) {
-  // Local state for dynamic slot count updates
+  // Local state for dynamic slot count updates - default to 1
   const [localMaxRequiredWorkers, setLocalMaxRequiredWorkers] = useState<
     number | null
-  >(maxRequiredWorkers || null);
+  >(maxRequiredWorkers ?? 1);
 
   // Update local state when prop changes
   useEffect(() => {
-    setLocalMaxRequiredWorkers(maxRequiredWorkers || null);
+    setLocalMaxRequiredWorkers(maxRequiredWorkers ?? 1);
   }, [maxRequiredWorkers]);
 
   // Filter work items based on showAllWorkItems flag
@@ -144,78 +144,15 @@ function WorkersSlotsSectionWithoutRoles({
 
   console.log(addLock)
 
-  // Calculate total required workers - take MAXIMUM per role, then sum all roles
-  const totalRequiredWorkers: number = useMemo(() => {
-    const roleMaximums: Record<string, number> = {};
+  // No automatic calculation - slots are manually managed
+  // totalRequiredWorkers is always 0 (not calculated from workItems)
 
-    // For each workItem, calculate role requirements
-    for (const wi of workItems) {
-      const roleQuantities: Record<string, number> = {};
-
-      // From workItemWorkers
-      for (const wiw of wi.workItemWorkers ?? []) {
-        const worker = workers.find((w) => w.id === wiw.workerId);
-        if (worker) {
-          const role = worker.name || "Ismeretlen";
-          const quantity = typeof wiw.quantity === "number" ? wiw.quantity : 1;
-          roleQuantities[role] = (roleQuantities[role] || 0) + quantity;
-        }
-      }
-
-      // From requiredProfessionals if available
-      const requiredProfs = getRequiredProfessionals(wi);
-      for (const rp of requiredProfs) {
-        if (rp.type) {
-          const quantity =
-            typeof rp.quantity === "number" && rp.quantity > 0
-              ? rp.quantity
-              : 1;
-          roleQuantities[rp.type] = (roleQuantities[rp.type] || 0) + quantity;
-        }
-      }
-
-      // Update role maximums - take max per role across workItems
-      for (const [role, quantity] of Object.entries(roleQuantities)) {
-        roleMaximums[role] = Math.max(roleMaximums[role] || 0, quantity);
-      }
-    }
-
-    // Sum all role maximums to get total required workers
-    return Object.values(roleMaximums).reduce((sum, max) => sum + max, 0);
-  }, [workItems, workers]);
-
-  // Determine effective slot count: use localMaxRequiredWorkers if set, otherwise calculated value
+  // Determine effective slot count: use localMaxRequiredWorkers (default 1)
   const effectiveSlotCount = useMemo(() => {
-    if (localMaxRequiredWorkers && localMaxRequiredWorkers > 0) {
-      return localMaxRequiredWorkers;
-    }
-    return totalRequiredWorkers;
-  }, [localMaxRequiredWorkers, totalRequiredWorkers]);
+    return localMaxRequiredWorkers ?? 1;
+  }, [localMaxRequiredWorkers]);
 
-  // Track and save maxRequiredWorkers to Work table when it changes (only save calculated value)
-  const [lastSavedMaxRequired, setLastSavedMaxRequired] = useState<
-    number | null
-  >(null);
-
-  useEffect(() => {
-    const saveMaxRequiredWorkers = async () => {
-      // Only save calculated value if maxRequiredWorkers is null or 0 and value changed
-      if (
-        (maxRequiredWorkers === null || maxRequiredWorkers === 0) &&
-        totalRequiredWorkers !== lastSavedMaxRequired &&
-        totalRequiredWorkers > 0
-      ) {
-        try {
-          await updateWorkMaxRequiredWorkers(workId, totalRequiredWorkers);
-          setLastSavedMaxRequired(totalRequiredWorkers);
-        } catch (error) {
-          console.error("Failed to save maxRequiredWorkers:", error);
-        }
-      }
-    };
-
-    saveMaxRequiredWorkers();
-  }, [workId, totalRequiredWorkers, lastSavedMaxRequired, maxRequiredWorkers]);
+  // No automatic saving of calculated values - slots are manually managed
 
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
   const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
@@ -248,7 +185,7 @@ console.log(setSelectedRoleForRemoval)
   };
 
   const handleDecreaseSlots = async () => {
-    const currentCount = localMaxRequiredWorkers || 0;
+    const currentCount = localMaxRequiredWorkers ?? 0;
     const assignedCount = allAssignments.length;
 
     if (currentCount <= assignedCount) {
@@ -258,8 +195,8 @@ console.log(setSelectedRoleForRemoval)
       return;
     }
 
-    if (currentCount <= 1) {
-      toast.error("Legalább 1 munkás hely szükséges");
+    if (currentCount <= 0) {
+      toast.error("Nem lehet negatív slot szám");
       return;
     }
 
