@@ -263,10 +263,16 @@ export default function OffersPage() {
                                   ? (() => {
                                       const text = offer.description.substring(offer.description.indexOf("Becsült kivitelezési idő"));
                                       const parts = text.split("Becsült kivitelezési idő:");
+                                      const afterColon = parts[1] || "";
+                                      // Extract only the time duration (e.g., "10-14 nap")
+                                      const timeMatch = afterColon.match(/^\s*(\d+-?\d*\s*nap)/);
+                                      const timePart = timeMatch ? timeMatch[1] : "";
+                                      const restPart = timeMatch ? afterColon.substring(timeMatch[0].length) : afterColon;
                                       return (
                                         <>
                                           <span className="font-bold">Becsült kivitelezési idő:</span>
-                                          {parts[1] || ""}
+                                          <span className="font-bold"> {timePart}</span>
+                                          {restPart}
                                         </>
                                       );
                                     })()

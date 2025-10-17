@@ -142,6 +142,9 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
       key={href}
       href={href}
       style={{ textDecoration: 'none', color: 'inherit' }}
+      onClick={() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }}
     >
                   <div
                     style={{

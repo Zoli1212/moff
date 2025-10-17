@@ -1022,9 +1022,9 @@ Határidő lejjebb / Bold
 PRO 29.000
 PREMIUM 59.000
 30 napos free trial PREMIUM
-tesztek
+
 Ahonnan scrolloznak onnan 
-a scrollbar alulra tapadjon és mindig felülre kerüljön
+
 ---
 
 
