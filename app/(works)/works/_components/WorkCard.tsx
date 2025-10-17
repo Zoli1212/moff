@@ -40,10 +40,6 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
   const {
     title,
     deadline,
-    progress,
-    progressPlanned,
-    financial,
-    financialPlanned,
     urgentTask,
     urgentLevel,
     isUpdating = false,
