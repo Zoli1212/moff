@@ -145,31 +145,20 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           }
         }
       `}</style>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontWeight: 600, fontSize: 18 }}>{title}</span>
-          {isUpdating && (
-            <div
-              style={{
-                width: 16,
-                height: 16,
-                border: "2px solid #3498db",
-                borderTop: "2px solid transparent",
-                borderRadius: "50%",
-                animation: "spin 1s linear infinite",
-              }}
-            />
-          )}
-        </div>
-        <span style={{ color: "#888", fontSize: 14 }}>
-          Határidő: {deadline}
-        </span>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontWeight: 600, fontSize: 18 }}>{title}</span>
+        {isUpdating && (
+          <div
+            style={{
+              width: 16,
+              height: 16,
+              border: "2px solid #3498db",
+              borderTop: "2px solid transparent",
+              borderRadius: "50%",
+              animation: "spin 1s linear infinite",
+            }}
+          />
+        )}
       </div>
       <style jsx>{`
         @keyframes spin {
@@ -193,6 +182,11 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         }}
       >
         {getDisplayText()}
+      </div>
+      <div style={{ marginTop: 8, marginBottom: 8 }}>
+        <span style={{ fontWeight: 700, fontSize: 14, color: "#333" }}>
+          Határidő: {deadline}
+        </span>
       </div>
       {/* Teljesített */}
       <div style={{ marginBottom: 8 }}>

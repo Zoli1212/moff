@@ -1014,6 +1014,17 @@ Létrehozva: Érvényes (ez változtatható, és ez a dátum kerül bele a pdf, 
 Becsült kivitelezési idő:
 Rövid 4-6 soros AI összefoglaló leírás a munkáról
 
+
+a 7-10 nap is bold
+felkiáltójel kivétele
+Határidő lejjebb / Bold
+Összefoglaló alá jöjjön a határidő
+PRO 29.000
+PREMIUM 59.000
+30 napos free trial PREMIUM
+tesztek
+Ahonnan scrolloznak onnan 
+a scrollbar alulra tapadjon és mindig felülre kerüljön
 ---
 
 
