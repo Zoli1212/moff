@@ -21,14 +21,12 @@ import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-a
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
 import { useActiveWorkersStore } from "@/stores/active-workers-store";
-import { updateWorkMaxRequiredWorkers } from "@/actions/update-work-maxrequired";
 
 interface Props {
   workId: number;
   workItems: WorkItem[];
   workers: Worker[]; // Worker rows for this work (professions)
   showAllWorkItems?: boolean; // If true, treat all workItems as active (for works/[id] page)
-  maxRequiredWorkers?: number | null; // Manual override for slot count
 }
 
 // Extend WorkItemWorker with optional fields that can be present from the API/DB
@@ -81,7 +79,6 @@ function WorkersSlotsSectionWithoutRoles({
   workItems,
   workers,
   showAllWorkItems = false,
-  maxRequiredWorkers,
 }: Props) {
   // State to control if empty slot is visible
   const [showEmptySlot, setShowEmptySlot] = useState(true);
@@ -309,9 +306,6 @@ console.log(setSelectedRoleForRemoval)
   const allAssignments = useMemo(() => {
     return assignments.filter((a) => Boolean(a.name) || Boolean(a.email));
   }, [assignments]);
-
-  // Slot count is always: number of workers + 1 empty slot (if visible)
-  const effectiveSlotCount = allAssignments.length + (showEmptySlot ? 1 : 0);
 
   useEffect(() => {
     const uniqueWorkers = new Map<string, WorkItemWorker>();

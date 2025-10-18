@@ -1110,9 +1110,6 @@ export function OfferDetailView({
 
             <div className="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-100">
               <div className="flex items-start">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-orange-400" />
-                </div>
                 <div className="ml-3">
                   <p className="text-sm text-orange-700">
                     <span className="font-medium">Összesen: </span>
