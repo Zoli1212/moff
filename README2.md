@@ -1023,7 +1023,16 @@ PRO 29.000
 PREMIUM 59.000
 30 napos free trial PREMIUM
 
-Ahonnan scrolloznak onnan 
+README.md ki legyenek pipálva illetve a plussz megnyissa, 
+
+
+Csak azokat látja amikhez hozzá van rendelve, egy listát lát,
+nem tud szerkeszteni
+nem látja a profitot,
+feladatot kijelölölheti, be tudja X ni
+mindenhol számlázott profit 
+---
+
 
 ---
 

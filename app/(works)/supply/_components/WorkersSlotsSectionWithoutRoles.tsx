@@ -83,15 +83,8 @@ function WorkersSlotsSectionWithoutRoles({
   showAllWorkItems = false,
   maxRequiredWorkers,
 }: Props) {
-  // Local state for dynamic slot count updates - default to 1
-  const [localMaxRequiredWorkers, setLocalMaxRequiredWorkers] = useState<
-    number | null
-  >(maxRequiredWorkers ?? 1);
-
-  // Update local state when prop changes
-  useEffect(() => {
-    setLocalMaxRequiredWorkers(maxRequiredWorkers ?? 1);
-  }, [maxRequiredWorkers]);
+  // State to control if empty slot is visible
+  const [showEmptySlot, setShowEmptySlot] = useState(true);
 
   // Filter work items based on showAllWorkItems flag
   const activeWorkItemIds = useMemo(
@@ -147,11 +140,6 @@ function WorkersSlotsSectionWithoutRoles({
   // No automatic calculation - slots are manually managed
   // totalRequiredWorkers is always 0 (not calculated from workItems)
 
-  // Determine effective slot count: use localMaxRequiredWorkers (default 1)
-  const effectiveSlotCount = useMemo(() => {
-    return localMaxRequiredWorkers ?? 1;
-  }, [localMaxRequiredWorkers]);
-
   // No automatic saving of calculated values - slots are manually managed
 
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
@@ -166,55 +154,6 @@ console.log(setSelectedRoleForRemoval)
   };
 
   // Handle slot count changes
-  const handleIncreaseSlots = async () => {
-    const currentCount = localMaxRequiredWorkers || 0;
-    const newCount = currentCount + 1;
-
-    // Update local state immediately for instant UI feedback
-    setLocalMaxRequiredWorkers(newCount);
-
-    try {
-      await updateWorkMaxRequiredWorkers(workId, newCount);
-      toast.success(`Munkások száma bővítve: ${newCount}`);
-    } catch (error) {
-      console.error("Failed to increase slots:", error);
-      toast.error("Hiba történt a munkások számának bővítése közben");
-      // Revert local state on error
-      setLocalMaxRequiredWorkers(currentCount);
-    }
-  };
-
-  const handleDecreaseSlots = async () => {
-    const currentCount = localMaxRequiredWorkers ?? 0;
-    const assignedCount = allAssignments.length;
-
-    if (currentCount <= assignedCount) {
-      toast.error(
-        "Nem lehet kevesebb hely, mint a hozzárendelt munkások száma"
-      );
-      return;
-    }
-
-    if (currentCount <= 0) {
-      toast.error("Nem lehet negatív slot szám");
-      return;
-    }
-
-    const newCount = currentCount - 1;
-
-    // Update local state immediately for instant UI feedback
-    setLocalMaxRequiredWorkers(newCount);
-
-    try {
-      await updateWorkMaxRequiredWorkers(workId, newCount);
-      toast.success(`Munkások száma csökkentve: ${newCount}`);
-    } catch (error) {
-      console.error("Failed to decrease slots:", error);
-      toast.error("Hiba történt a munkások számának csökkentése közben");
-      // Revert local state on error
-      setLocalMaxRequiredWorkers(currentCount);
-    }
-  };
 
   // ALL worker types from the entire work (for WorkerAddModal)
   const allProfessionsFromWork = useMemo(() => {
@@ -290,6 +229,9 @@ console.log(setSelectedRoleForRemoval)
       });
 
       toast.success("Munkás regisztrálva és hozzárendelve!");
+
+      // Show empty slot again when adding new worker
+      setShowEmptySlot(true);
 
       // Reload assignments from server using the new server action
       const { getWorkItemWorkersForWork } = await import(
@@ -368,6 +310,9 @@ console.log(setSelectedRoleForRemoval)
     return assignments.filter((a) => Boolean(a.name) || Boolean(a.email));
   }, [assignments]);
 
+  // Slot count is always: number of workers + 1 empty slot (if visible)
+  const effectiveSlotCount = allAssignments.length + (showEmptySlot ? 1 : 0);
+
   useEffect(() => {
     const uniqueWorkers = new Map<string, WorkItemWorker>();
     const hoursMap = new Map<string, number>();
@@ -426,16 +371,20 @@ console.log(setSelectedRoleForRemoval)
         lockedProfession={undefined} // No profession lock
         lockedWorkItemId={undefined} // No workItem lock
         showAllWorkItems={showAllWorkItems}
+        currentAssignments={assignments} // Pass current assignments to pre-select workers
       />
       <div className="h-8" />
       <div className="flex items-center justify-between mb-2">
         <div className="font-bold text-[17px] tracking-[0.5px]">
-          Munkások ({allAssignments.length} / {effectiveSlotCount})
+          Munkások ({allAssignments.length})
         </div>
         <button
-          onClick={handleIncreaseSlots}
+          onClick={() => {
+            setAddLock(null); // No role lock - general assignment
+            setIsAddOpen(true);
+          }}
           className="flex items-center justify-center w-6 h-6 rounded-full border border-[#FF9900] text-[#FF9900] bg-white hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
-          title="Slot hozzáadása"
+          title="Új munkás hozzáadása"
         >
           <Plus className="w-3 h-3" />
         </button>
@@ -476,7 +425,7 @@ console.log(setSelectedRoleForRemoval)
                 <div className="flex-1 font-semibold">Összes munkás</div>
                 <div className="flex items-center gap-2 ml-auto">
                   <div className="font-semibold text-[14px] text-[#222]">
-                    {allAssignments.length} / {effectiveSlotCount}
+                    {allAssignments.length} fő
                   </div>
                 </div>
               </div>
@@ -530,15 +479,10 @@ console.log(setSelectedRoleForRemoval)
                   </div>
                 ))}
 
-                {/* Show empty slots for remaining required workers */}
-                {Array.from({
-                  length: Math.max(
-                    0,
-                    effectiveSlotCount - allAssignments.length
-                  ),
-                }).map((_, idx) => (
+                {/* Show one empty slot if visible */}
+                {showEmptySlot && (
                   <div
-                    key={`empty-slot-${idx}`}
+                    key="empty-slot"
                     className="flex items-center w-full gap-2 h-12"
                   >
                     <button
@@ -552,14 +496,14 @@ console.log(setSelectedRoleForRemoval)
                       <Plus className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={handleDecreaseSlots}
+                      onClick={() => setShowEmptySlot(false)}
                       className="flex items-center justify-center w-12 h-12 rounded border border-red-300 text-red-500 bg-white hover:bg-red-50 hover:border-red-400 hover:text-red-600"
-                      title="Slot eltávolítása"
+                      title="Üres slot elrejtése"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </>

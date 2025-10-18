@@ -341,3 +341,5 @@ Ha problémába ütközöl a tesztek futtatásakor:
 4. **Ellenőrizd** a mock-okat
 
 **A database testing rendszer teljes mértékben működőképes és production-ready!** 🎉
+
+

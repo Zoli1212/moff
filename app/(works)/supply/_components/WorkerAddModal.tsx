@@ -34,6 +34,8 @@ interface WorkerAddModalProps {
   lockedWorkItemId?: number;
   // If true, show all workItems instead of only in-progress ones
   showAllWorkItems?: boolean;
+  // Current assignments to pre-select in the list
+  currentAssignments?: Array<{ id: number; name?: string | null; email?: string | null; workerId?: number }>;
 }
 
 // Lightweight custom dropdown (no external deps)
@@ -118,6 +120,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   workers = [],
   onSubmit,
   lockedProfession,
+  currentAssignments = [],
 }) => {
   const [workerMode, setWorkerMode] = useState<"existing" | "new">("existing");
   const [existingWorkers, setExistingWorkers] = useState<
@@ -132,6 +135,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   >([]);
   const [selectedExistingWorkers, setSelectedExistingWorkers] =
     useState<string[]>([]);
+  const [initiallySelectedWorkers, setInitiallySelectedWorkers] =
+    useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState<string>(""); // New state for role selection
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -145,22 +150,41 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   const [avatarError, setAvatarError] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingWorkers, setLoadingWorkers] = useState(false);
 
   // Load existing workers when modal opens
   useEffect(() => {
-    if (open && workerMode === "existing") {
+    if (open) {
       const loadExistingWorkers = async () => {
+        setLoadingWorkers(true);
         try {
-          const workers = await getActiveWorkforce();
-          setExistingWorkers(workers);
+          // Load ALL workers from WorkforceRegistry (munkástár)
+          const allWorkers = await getActiveWorkforce();
+          setExistingWorkers(allWorkers);
+          
+          // Pre-select workers that are already assigned to this work
+          // Match by email OR name (csak az egyik kell hogy egyezzen)
+          const assignedWorkerIds = allWorkers
+            .filter(worker => {
+              return currentAssignments.some(assignment => 
+                (assignment.email && worker.email && assignment.email === worker.email) ||
+                (assignment.name && worker.name && assignment.name === worker.name)
+              );
+            })
+            .map(w => w.id.toString());
+          
+          setSelectedExistingWorkers(assignedWorkerIds);
+          setInitiallySelectedWorkers(assignedWorkerIds); // Save initial selection
         } catch (error) {
           console.error("Error loading existing workers:", error);
           toast.error("Hiba a munkások betöltése során");
+        } finally {
+          setLoadingWorkers(false);
         }
       };
       loadExistingWorkers();
     }
-  }, [open, workerMode, workId]);
+  }, [open, workId, currentAssignments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,8 +200,19 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
       setLoading(true);
       try {
-        // Process all selected workers
-        for (const workerId of selectedExistingWorkers) {
+        // Only add workers that are newly selected (not in initial selection)
+        const newlySelectedWorkers = selectedExistingWorkers.filter(
+          workerId => !initiallySelectedWorkers.includes(workerId)
+        );
+
+        if (newlySelectedWorkers.length === 0) {
+          toast.info("Nincs új munkás kiválasztva.");
+          onOpenChange(false);
+          return;
+        }
+
+        // Process only newly selected workers
+        for (const workerId of newlySelectedWorkers) {
           const worker = existingWorkers.find(
             (w) => w.id.toString() === workerId
           );
@@ -197,10 +232,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           });
         }
 
-        toast.success(`${selectedExistingWorkers.length} munkás sikeresen hozzáadva!`);
+        toast.success(`${newlySelectedWorkers.length} munkás sikeresen hozzáadva!`);
 
         // Reset form on success
         setSelectedExistingWorkers([]);
+        setInitiallySelectedWorkers([]);
         setSelectedRole("");
         onOpenChange(false);
       } catch (error) {
@@ -383,7 +419,12 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   Válassz munkásokat ({selectedExistingWorkers.length} kiválasztva)
                 </label>
                 <div className="mt-2 border rounded-md max-h-64 overflow-y-auto">
-                  {existingWorkers.length === 0 ? (
+                  {loadingWorkers ? (
+                    <div className="p-8 text-center text-gray-500">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
+                      <div>Betöltés...</div>
+                    </div>
+                  ) : existingWorkers.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
                       Nincsenek elérhető munkások
                     </div>
