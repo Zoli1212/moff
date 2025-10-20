@@ -29,7 +29,6 @@ import {
   Clock,
   Tag,
   Calendar,
-  AlertCircle,
   ChevronRight,
   Pencil,
   Plus,
@@ -172,8 +171,10 @@ export function OfferDetailView({
   }, [offer.items]);
 
   // Parse currency values
-  const parseCurrency = (value: string): number => {
-    const numericValue = value.replace(/[^0-9,-]+/g, "").replace(",", ".");
+  const parseCurrency = (value: string | null | undefined): number => {
+    if (!value) return 0;
+    const stringValue = String(value);
+    const numericValue = stringValue.replace(/[^0-9,-]+/g, "").replace(",", ".");
     return parseFloat(numericValue) || 0;
   };
 
@@ -852,7 +853,7 @@ export function OfferDetailView({
                   <Input
                     id="materialUnitPrice"
                     value={formatNumberWithSpace(
-                      editingItem?.item.materialUnitPrice?.replace(/\s*Ft$/, "")
+                      editingItem?.item.materialUnitPrice
                     )}
                     onChange={(e) =>
                       handleModalChange(
@@ -873,7 +874,7 @@ export function OfferDetailView({
                   <Input
                     id="workUnitPrice"
                     value={formatNumberWithSpace(
-                      editingItem?.item.unitPrice?.replace(/\s*Ft$/, "")
+                      editingItem?.item.unitPrice
                     )}
                     onChange={(e) =>
                       handleModalChange(
@@ -890,7 +891,7 @@ export function OfferDetailView({
                 <Label className="text-right font-medium">Anyag összesen</Label>
                 <div className="col-span-3 font-medium">
                   {formatNumberWithSpace(
-                    editingItem?.item.materialTotal?.replace(/\s*Ft$/, "")
+                    editingItem?.item.materialTotal
                   )}{" "}
                   Ft
                 </div>
@@ -899,7 +900,7 @@ export function OfferDetailView({
                 <Label className="text-right font-medium">Díj összesen</Label>
                 <div className="col-span-3 font-medium">
                   {formatNumberWithSpace(
-                    editingItem?.item.workTotal?.replace(/\s*Ft$/, "")
+                    editingItem?.item.workTotal
                   )}{" "}
                   Ft
                 </div>
@@ -1362,10 +1363,7 @@ export function OfferDetailView({
                                 >
                                   {item.materialUnitPrice
                                     ? formatNumberWithSpace(
-                                        item.materialUnitPrice.replace(
-                                          /\s*Ft$/,
-                                          ""
-                                        )
+                                        item.materialUnitPrice
                                       ) + " Ft"
                                     : "0 Ft"}
                                 </div>
@@ -1377,7 +1375,7 @@ export function OfferDetailView({
                                 >
                                   {item.unitPrice
                                     ? formatNumberWithSpace(
-                                        item.unitPrice.replace(/\s*Ft$/, "")
+                                        item.unitPrice
                                       ) + " Ft"
                                     : "0 Ft"}
                                 </div>
@@ -1397,14 +1395,14 @@ export function OfferDetailView({
                               <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
                                 {item.materialTotal
                                   ? formatNumberWithSpace(
-                                      item.materialTotal.replace(/\s*Ft$/, "")
+                                      item.materialTotal
                                     ) + " Ft"
                                   : "0 Ft"}
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
                                 {item.workTotal
                                   ? formatNumberWithSpace(
-                                      item.workTotal.replace(/\s*Ft$/, "")
+                                      item.workTotal
                                     ) + " Ft"
                                   : "0 Ft"}
                               </td>
