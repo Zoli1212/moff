@@ -48,12 +48,25 @@ export function AppSidebar() {
   const { user } = useUser();
   const { theme: currentTheme, setTheme } = useThemeStore();
   const [showThemeSelector, setShowThemeSelector] = useState(false);
+  const [isTenant, setIsTenant] = useState<boolean>(true);
 
   useEffect(() => {
     if (user?.id) {
       useThemeStore.getState().syncThemeWithDb(user.id);
     }
   }, [user]);
+
+  useEffect(() => {
+    // Fetch user data to check if tenant
+    fetch('/api/user', { method: 'POST' })
+      .then(res => res.json())
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+      })
+      .catch(() => {
+        setIsTenant(true); // Default to tenant on error
+      });
+  }, []);
 
   return (
     <Sidebar className="bg-[#121212] text-[#ffeb3b] border-r border-[#333]">
@@ -76,32 +89,41 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent className="bg-[#121212]">
             <SidebarMenu className="mt-2 space-y-1">
-              {mainItems.map((item, index) => {
-                const isActive =
-                  path === item.url ||
-                  (item.url === "/ai-tools" && path.startsWith("/ai-tools")) ||
-                  (item.url === "/my-history" &&
-                    path.startsWith("/my-history")) ||
-                  (item.url === "/my-billing" &&
-                    path.startsWith("/my-billing")) ||
-                  (item.url === "/others" && path.startsWith("/others"));
+              {mainItems
+                .filter((item) => {
+                  // Hide tenant-only items for non-tenant users (workers)
+                  if (!isTenant) {
+                    const tenantOnlyItems = ["Munkások", "Ajánlataim", "Számláim"];
+                    return !tenantOnlyItems.includes(item.title);
+                  }
+                  return true;
+                })
+                .map((item, index) => {
+                  const isActive =
+                    path === item.url ||
+                    (item.url === "/ai-tools" && path.startsWith("/ai-tools")) ||
+                    (item.url === "/my-history" &&
+                      path.startsWith("/my-history")) ||
+                    (item.url === "/my-billing" &&
+                      path.startsWith("/my-billing")) ||
+                    (item.url === "/others" && path.startsWith("/others"));
 
-                return (
-                  <a
-                    key={index}
-                    href={item.url}
-                    className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors text-[#ffeb3b]
-                      ${
-                        isActive
-                          ? "bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 text-black font-semibold"
-                          : "hover:bg-[#333333] hover:text-yellow-400"
-                      }`}
-                  >
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </a>
-                );
-              })}
+                  return (
+                    <a
+                      key={index}
+                      href={item.url}
+                      className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors text-[#ffeb3b]
+                        ${
+                          isActive
+                            ? "bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 text-black font-semibold"
+                            : "hover:bg-[#333333] hover:text-yellow-400"
+                        }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.title}</span>
+                    </a>
+                  );
+                })}
 
               <div className="my-4 border-t border-[#444]"></div>
 
