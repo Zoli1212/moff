@@ -6,6 +6,7 @@ import { useThemeStore } from "@/store/theme-store";
 import { usePositionStore } from "@/store/position-store";
 import DraggableIcon from "@/components/DraggableIcon";
 import { useEffect, useState } from "react";
+import { getCurrentUserData } from "@/actions/user-actions";
 
 export default function Dashboard() {
   const { theme } = useThemeStore();
@@ -14,9 +15,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch user data to check if tenant
-    fetch('/api/user', { method: 'POST' })
-      .then(res => res.json())
+    // Get user data using server action
+    getCurrentUserData()
       .then(data => {
         setIsTenant(data.isTenant ?? true);
         setLoading(false);

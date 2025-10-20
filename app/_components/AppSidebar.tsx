@@ -25,6 +25,7 @@ import { usePathname } from "next/navigation";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { useThemeStore } from "@/store/theme-store";
 import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
+import { getCurrentUserData } from "@/actions/user-actions";
 
 const mainItems = [
   { title: "Munkaterület", url: "/dashboard", icon: Layers },
@@ -57,9 +58,8 @@ export function AppSidebar() {
   }, [user]);
 
   useEffect(() => {
-    // Fetch user data to check if tenant
-    fetch('/api/user', { method: 'POST' })
-      .then(res => res.json())
+    // Get user data using server action
+    getCurrentUserData()
       .then(data => {
         setIsTenant(data.isTenant ?? true);
       })
