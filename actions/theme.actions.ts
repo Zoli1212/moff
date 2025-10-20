@@ -36,6 +36,15 @@ export async function setTheme(theme: Theme): Promise<{ success: boolean; error?
   const name = user.fullName || user.firstName || 'User';
 
   try {
+    // Check if user email exists in WorkforceRegistry
+    const workforceEntry = await prisma.workforceRegistry.findFirst({
+      where: { email: email },
+      select: { id: true }
+    });
+
+    // If user is in WorkforceRegistry, they are NOT a tenant
+    const isTenant = !workforceEntry;
+
     await prisma.user.upsert({
       where: { email },
       update: { theme },
@@ -43,7 +52,8 @@ export async function setTheme(theme: Theme): Promise<{ success: boolean; error?
         email,
         name,
         theme,
-        role: 'USER'
+        role: 'USER',
+        isTenant: isTenant
       },
     });
 

@@ -39,6 +39,7 @@ model User {
   email        String   @unique
   role         String   @default("USER")
   isSuperUser  Boolean  @default(false)
+  isTenant     Boolean  @default(true)
   theme        String   @default("landing")
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt

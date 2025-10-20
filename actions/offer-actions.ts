@@ -450,29 +450,83 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     }
 
     try {
-      const offer = await prisma.offer.create({
-        data: offerData,
+      // Check if an offer already exists for this requirement or recordId
+      const existingOfferForUpdate = await prisma.offer.findFirst({
+        where: {
+          OR: [
+            { requirementId: requirement.id },
+            ...(recordId ? [{ recordId }] : [])
+          ]
+        },
         select: {
           id: true,
           title: true,
-          description: true,
           createdAt: true,
-          items: true,
-          notes: true,
-          offerSummary: true,
         },
       });
 
-      console.log("Offer created successfully:", {
-        id: offer.id,
-        title: offer.title,
-        recordId: recordId || "N/A",
-        createdAt: offer.createdAt,
-        hasItems: !!offer.items,
-        hasNotes: !!offer.notes,
-        hasOfferSummary: !!offer.offerSummary,
-        offerSummary: offer.offerSummary || "N/A",
-      });
+      let offer;
+      
+      if (existingOfferForUpdate) {
+        // UPDATE existing offer to prevent duplicates
+        console.log("Updating existing offer:", {
+          id: existingOfferForUpdate.id,
+          title: existingOfferForUpdate.title,
+          createdAt: existingOfferForUpdate.createdAt,
+        });
+
+        offer = await prisma.offer.update({
+          where: { id: existingOfferForUpdate.id },
+          data: offerData,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            createdAt: true,
+            items: true,
+            notes: true,
+            offerSummary: true,
+          },
+        });
+
+        console.log("Offer updated successfully:", {
+          id: offer.id,
+          title: offer.title,
+          recordId: recordId || "N/A",
+          createdAt: offer.createdAt,
+          hasItems: !!offer.items,
+          hasNotes: !!offer.notes,
+          hasOfferSummary: !!offer.offerSummary,
+          offerSummary: offer.offerSummary || "N/A",
+        });
+      } else {
+        // CREATE new offer
+        console.log("Creating new offer");
+
+        offer = await prisma.offer.create({
+          data: offerData,
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            createdAt: true,
+            items: true,
+            notes: true,
+            offerSummary: true,
+          },
+        });
+
+        console.log("Offer created successfully:", {
+          id: offer.id,
+          title: offer.title,
+          recordId: recordId || "N/A",
+          createdAt: offer.createdAt,
+          hasItems: !!offer.items,
+          hasNotes: !!offer.notes,
+          hasOfferSummary: !!offer.offerSummary,
+          offerSummary: offer.offerSummary || "N/A",
+        });
+      }
 
       revalidatePath("/jobs");
       revalidatePath("/offers");
