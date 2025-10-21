@@ -21,7 +21,7 @@ import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-a
 import { updateWorkersMaxRequiredAction } from "@/actions/update-workers-maxrequired";
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
-import { useActiveWorkersStore } from "@/stores/active-workers-store";
+import { useActiveWorkersStore } from "@/store/active-workers-store";
 
 interface Props {
   workId: number;

@@ -11,10 +11,13 @@ import { Label } from "@/components/ui/label";
 import React, { useEffect, useMemo, useState } from "react";
 import { Calendar, X, Plus, Users, User, BookOpen } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
-import { updateWorkItemCompletedQuantityFromLatestDiary, getSliderInitialValue } from "@/actions/workdiary-actions";
+import {
+  updateWorkItemCompletedQuantityFromLatestDiary,
+  getSliderInitialValue,
+} from "@/actions/workdiary-actions";
 import { updateGroupApproval } from "@/actions/group-approval-actions";
 import { updateWorkItemQuantity } from "@/actions/update-workitem-quantity";
-import { useActiveWorkersStore } from "@/stores/active-workers-store";
+import { useActiveWorkersStore } from "@/store/active-workers-store";
 import UpdateWorkItemQuantityModal from "./_components/UpdateWorkItemQuantityModal";
 import { toast } from "sonner";
 
@@ -48,7 +51,8 @@ export default function GroupedDiaryForm({
 
   // Check if current user is tenant
   const currentEmail = user?.emailAddresses?.[0]?.emailAddress || "";
-  const isTenant = currentEmail.toLowerCase() === (diary?.tenantEmail || "").toLowerCase();
+  const isTenant =
+    currentEmail.toLowerCase() === (diary?.tenantEmail || "").toLowerCase();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [selectedGroupedItems, setSelectedGroupedItems] = useState<
@@ -67,8 +71,7 @@ export default function GroupedDiaryForm({
   const [originalCompletedQuantities, setOriginalCompletedQuantities] =
     useState<Map<number, number>>(new Map());
 
-    console.log(originalCompletedQuantities)
-    
+  console.log(originalCompletedQuantities);
 
   // Track local progress for this diary entry (progressAtDate)
   const [localProgress, setLocalProgress] = useState<Map<number, number>>(
@@ -84,70 +87,80 @@ export default function GroupedDiaryForm({
   useEffect(() => {
     if (workItems && workItems.length > 0) {
       const initializeProgress = async () => {
-        console.log(`🚀 [Frontend] Starting slider initialization for ${workItems.length} workItems, date: ${date}`);
-        
+        console.log(
+          `🚀 [Frontend] Starting slider initialization for ${workItems.length} workItems, date: ${date}`
+        );
+
         const initialProgress = new Map<number, number>();
-        
+
         // First, set all items to completedQuantity (fast)
         workItems.forEach((item) => {
           initialProgress.set(item.id, item.completedQuantity || 0);
         });
-        
+
         // Set initial values immediately
         setLocalProgress(new Map(initialProgress));
-        
+
         // Then, async update only selected items with previous progress (only if not already initialized)
         const updateSelectedItems = async () => {
           for (const groupedItem of selectedGroupedItems) {
             const item = groupedItem.workItem;
-            
+
             // Skip if already initialized
             if (initializedItems.has(item.id)) {
-              console.log(`⏭️ [Frontend] Skipping already initialized item: ${item.name}`);
+              console.log(
+                `⏭️ [Frontend] Skipping already initialized item: ${item.name}`
+              );
               continue;
             }
-            
-            console.log(`📊 [Frontend] Checking previous progress for selected item: ${item.name} (id: ${item.id})`);
-            
+
+            console.log(
+              `📊 [Frontend] Checking previous progress for selected item: ${item.name} (id: ${item.id})`
+            );
+
             const sliderValue = await getSliderInitialValue(
-              item.id, 
-              date, 
+              item.id,
+              date,
               item.completedQuantity || 0
             );
-            
-            console.log(`📈 [Frontend] Updated slider value for ${item.name}: ${sliderValue}`);
-            
+
+            console.log(
+              `📈 [Frontend] Updated slider value for ${item.name}: ${sliderValue}`
+            );
+
             // Update only this item
-            setLocalProgress(prev => {
+            setLocalProgress((prev) => {
               const newMap = new Map(prev);
               newMap.set(item.id, sliderValue);
               return newMap;
             });
-            
+
             // Also update the original value for correct delta calculation
-            setOriginalCompletedQuantities(prev => {
+            setOriginalCompletedQuantities((prev) => {
               const newMap = new Map(prev);
               newMap.set(item.id, sliderValue);
               return newMap;
             });
-            
+
             // Mark as initialized
-            setInitializedItems(prev => new Set(prev).add(item.id));
+            setInitializedItems((prev) => new Set(prev).add(item.id));
           }
         };
-        
+
         if (selectedGroupedItems.length > 0) {
           updateSelectedItems();
         }
       };
-      
+
       initializeProgress();
     }
   }, [workItems, date, selectedGroupedItems]);
 
   // Reset initialized items when date changes
   useEffect(() => {
-    console.log(`📅 [Frontend] Date changed to: ${date}, resetting initialized items`);
+    console.log(
+      `📅 [Frontend] Date changed to: ${date}, resetting initialized items`
+    );
     setInitializedItems(new Set());
   }, [date]);
 
@@ -505,11 +518,12 @@ export default function GroupedDiaryForm({
         const hasProgress = totalProgress > 0;
 
         for (const [index, groupedItem] of selectedGroupedItems.entries()) {
-          console.log(index)
+          console.log(index);
           const itemProgress = localProgress.get(groupedItem.workItem.id) || 0;
 
           // Calculate delta (difference from original slider start value, not completedQuantity)
-          const originalStartValue = originalCompletedQuantities.get(groupedItem.workItem.id) || 0;
+          const originalStartValue =
+            originalCompletedQuantities.get(groupedItem.workItem.id) || 0;
           const deltaQuantity = Math.max(0, itemProgress - originalStartValue);
 
           // Proportional distribution
@@ -517,10 +531,11 @@ export default function GroupedDiaryForm({
             ? deltaQuantity / totalProgress
             : 1 / selectedGroupedItems.length;
 
-            console.log(proportion)
-          
+          console.log(proportion);
+
           // Work hours: distribute evenly among selected items regardless of progress
-          const hoursPerWorkItem = workerTotalHours / selectedGroupedItems.length;
+          const hoursPerWorkItem =
+            workerTotalHours / selectedGroupedItems.length;
 
           const quantityForThisWorker =
             totalWorkerHours > 0
@@ -562,19 +577,29 @@ export default function GroupedDiaryForm({
 
       // Wait a bit to ensure database transaction is committed
       console.log(`⏳ [UPDATE_PROGRESS] Waiting for database commit...`);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       // NOW update work item progress for all selected items (AFTER diary items are created)
-      console.log(`🔄 [UPDATE_PROGRESS] Starting to update ${selectedGroupedItems.length} workItems...`);
+      console.log(
+        `🔄 [UPDATE_PROGRESS] Starting to update ${selectedGroupedItems.length} workItems...`
+      );
       for (const groupedItem of selectedGroupedItems) {
-        console.log(`🔄 [UPDATE_PROGRESS] Updating workItem ${groupedItem.workItem.id} (${groupedItem.workItem.name})...`);
+        console.log(
+          `🔄 [UPDATE_PROGRESS] Updating workItem ${groupedItem.workItem.id} (${groupedItem.workItem.name})...`
+        );
         try {
           const result = await updateWorkItemCompletedQuantityFromLatestDiary(
             groupedItem.workItem.id
           );
-          console.log(`✅ [UPDATE_PROGRESS] WorkItem ${groupedItem.workItem.id} updated successfully:`, result);
+          console.log(
+            `✅ [UPDATE_PROGRESS] WorkItem ${groupedItem.workItem.id} updated successfully:`,
+            result
+          );
         } catch (error) {
-          console.error(`❌ [UPDATE_PROGRESS] Failed to update workItem ${groupedItem.workItem.id}:`, error);
+          console.error(
+            `❌ [UPDATE_PROGRESS] Failed to update workItem ${groupedItem.workItem.id}:`,
+            error
+          );
         }
       }
       console.log(`✅ [UPDATE_PROGRESS] All workItems updated!`);
@@ -664,9 +689,7 @@ export default function GroupedDiaryForm({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <div className="text-lg font-medium text-gray-800">
-              Frissítés
-            </div>
+            <div className="text-lg font-medium text-gray-800">Frissítés</div>
             <div className="text-sm text-gray-600">
               Napló bejegyzések feldolgozása...
             </div>
@@ -791,46 +814,50 @@ export default function GroupedDiaryForm({
             {/* Selected Workers Display */}
             {selectedWorkers.length > 0 && (
               <div className="space-y-2">
-                {selectedWorkers.map((worker: WorkItemWorker, index: number) => (
-                  <div
-                    key={`${worker.workerId}-${worker.name}-${index}`}
-                    className="flex items-center justify-between bg-white p-3 rounded border"
-                  >
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm font-medium">{worker.name}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="24"
-                          step="0.5"
-                          value={workerHours.get(worker.name || "") || ""}
-                          onChange={(e) =>
-                            updateWorkerHours(
-                              worker.name || "",
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                          className="w-16 h-8 text-xs"
-                          placeholder="8"
-                        />
-                        <span className="text-xs text-gray-500">óra</span>
+                {selectedWorkers.map(
+                  (worker: WorkItemWorker, index: number) => (
+                    <div
+                      key={`${worker.workerId}-${worker.name}-${index}`}
+                      className="flex items-center justify-between bg-white p-3 rounded border"
+                    >
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium">
+                          {worker.name}
+                        </span>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeWorker(worker.name || "")}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="24"
+                            step="0.5"
+                            value={workerHours.get(worker.name || "") || ""}
+                            onChange={(e) =>
+                              updateWorkerHours(
+                                worker.name || "",
+                                parseFloat(e.target.value) || 0
+                              )
+                            }
+                            className="w-16 h-8 text-xs"
+                            placeholder="8"
+                          />
+                          <span className="text-xs text-gray-500">óra</span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeWorker(worker.name || "")}
+                          className="text-red-500 hover:text-red-700 p-1"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             )}
 
@@ -1337,7 +1364,7 @@ export default function GroupedDiaryForm({
 
       {/* Image Gallery Modal */}
       {selectedImage && images.length > 0 && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-95 flex items-center justify-center z-50"
           onClick={() => setSelectedImage(null)}
         >
@@ -1360,7 +1387,10 @@ export default function GroupedDiaryForm({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const newIndex = currentImageIndex > 0 ? currentImageIndex - 1 : images.length - 1;
+                  const newIndex =
+                    currentImageIndex > 0
+                      ? currentImageIndex - 1
+                      : images.length - 1;
                   setCurrentImageIndex(newIndex);
                   setSelectedImage(images[newIndex]);
                 }}
@@ -1376,7 +1406,10 @@ export default function GroupedDiaryForm({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  const newIndex = currentImageIndex < images.length - 1 ? currentImageIndex + 1 : 0;
+                  const newIndex =
+                    currentImageIndex < images.length - 1
+                      ? currentImageIndex + 1
+                      : 0;
                   setCurrentImageIndex(newIndex);
                   setSelectedImage(images[newIndex]);
                 }}
@@ -1410,7 +1443,9 @@ export default function GroupedDiaryForm({
                     src={img}
                     alt={`Thumbnail ${idx + 1}`}
                     className={`w-16 h-16 object-cover rounded cursor-pointer transition-opacity ${
-                      idx === currentImageIndex ? 'opacity-100 ring-2 ring-white' : 'opacity-50 hover:opacity-80'
+                      idx === currentImageIndex
+                        ? "opacity-100 ring-2 ring-white"
+                        : "opacity-50 hover:opacity-80"
                     }`}
                     onClick={(e) => {
                       e.stopPropagation();

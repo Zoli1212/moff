@@ -34,6 +34,14 @@ export async function getBillings() {
       where: {
         tenantEmail: userEmail,
       },
+      include: {
+        work: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
       orderBy: {
         createdAt: "desc",
       },

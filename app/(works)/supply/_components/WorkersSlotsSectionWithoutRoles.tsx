@@ -8,7 +8,7 @@ import type {
   Professional,
 } from "@/types/work";
 
-import { Plus, Trash2} from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import WorkerAddModal from "./WorkerAddModal";
 import WorkerEditModal, { WorkerAssignment } from "./WorkerEditModal";
@@ -20,7 +20,7 @@ import {
 import { addWorkerToRegistryAndAssign } from "@/actions/add-worker-to-registry-and-assign";
 import { removeWorkersFromWorkItem } from "@/actions/remove-workers-from-workitem";
 import WorkerRemoveModal from "./WorkerRemoveModal";
-import { useActiveWorkersStore } from "@/stores/active-workers-store";
+import { useActiveWorkersStore } from "@/store/active-workers-store";
 
 interface Props {
   workId: number;
@@ -132,7 +132,7 @@ function WorkersSlotsSectionWithoutRoles({
     null
   );
 
-  console.log(addLock)
+  console.log(addLock);
 
   // No automatic calculation - slots are manually managed
   // totalRequiredWorkers is always 0 (not calculated from workItems)
@@ -143,7 +143,7 @@ function WorkersSlotsSectionWithoutRoles({
   const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
     useState<string>("");
 
-console.log(setSelectedRoleForRemoval)
+  console.log(setSelectedRoleForRemoval);
 
   const handleRemoveFromWorkItem = async (workItemId: number) => {
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);
@@ -264,26 +264,24 @@ console.log(setSelectedRoleForRemoval)
     }
   };
 
- 
-
   // Simple delete function that only removes workItemWorker record
   const handleDeleteWorkItemWorkerOnly = async (id: number) => {
     // Store current assignments for rollback if needed
     const previousAssignments = [...assignments];
-    
+
     try {
       // Optimistic UI update - remove from local state immediately
       setAssignments((prev) => prev.filter((a) => a.id !== id));
-      
+
       // Delete from server
       await deleteWorkItemWorker(id);
-      
+
       // Reload assignments from server to ensure consistency
       const { getWorkItemWorkersForWork } = await import(
         "@/actions/get-workitemworkers-for-work"
       );
       const data = await getWorkItemWorkersForWork(workId);
-      
+
       // Only update if we got valid data back
       if (data) {
         setAssignments(data);
@@ -296,7 +294,7 @@ console.log(setSelectedRoleForRemoval)
     } catch (err) {
       console.error(err);
       toast.error("Hiba történt törlés közben.");
-      
+
       // Rollback to previous state on error
       setAssignments(previousAssignments);
     }

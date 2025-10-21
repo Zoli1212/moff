@@ -17,10 +17,9 @@ import type {
 import type { WorkDiaryItemUpdate } from "@/types/work-diary";
 import { Work } from "../../works/page";
 import type { WorkforceRegistryData } from "@/actions/workforce-registry-actions";
-import { useActiveWorkersStore } from "@/stores/active-workers-store";
+import { useActiveWorkersStore } from "@/store/active-workers-store";
 
 // Define the Work type locally based on its usage in page.tsx
-
 
 type DiaryWithEditing = WorkDiaryWithItem & {
   __editingItemId?: number;
@@ -29,7 +28,9 @@ type DiaryWithEditing = WorkDiaryWithItem & {
 };
 
 interface DiaryPageClientProps {
-  work: (Work & { workers: Worker[]; expectedProfitPercent: number | null }) | null;
+  work:
+    | (Work & { workers: Worker[]; expectedProfitPercent: number | null })
+    | null;
   items: WorkItem[];
   diaries: WorkDiaryWithItem[];
   workforceRegistry: WorkforceRegistryData[];
@@ -43,12 +44,14 @@ export default function DiaryPageClient({
   items,
   diaries,
   workforceRegistry,
-  error
+  error,
 }: DiaryPageClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [view, setView] = useState<'dayGridMonth' | 'timeGridWeek'>('timeGridWeek');
+  const [view, setView] = useState<"dayGridMonth" | "timeGridWeek">(
+    "timeGridWeek"
+  );
   const [showDiaryModal, setShowDiaryModal] = useState(false);
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(
     null
@@ -76,19 +79,20 @@ export default function DiaryPageClient({
   useEffect(() => {
     const loadActiveWorkers = async () => {
       if (!work?.id) return;
-      
+
       try {
         const { getWorkItemWorkersForWork } = await import(
           "@/actions/get-workitemworkers-for-work"
         );
         const assignments = await getWorkItemWorkersForWork(Number(work.id));
-        
+
         if (assignments && assignments.length > 0) {
           // Group by role and get unique workers
           const grouped: Record<string, unknown[]> = {};
           for (const assignment of assignments) {
             const role = assignment.role || "Ismeretlen";
-            const hasData = Boolean(assignment.name) || Boolean(assignment.email);
+            const hasData =
+              Boolean(assignment.name) || Boolean(assignment.email);
             if (!hasData) continue;
             if (!grouped[role]) grouped[role] = [];
             grouped[role].push(assignment);
@@ -109,7 +113,9 @@ export default function DiaryPageClient({
             });
           });
 
-          const activeWorkerList = Array.from(uniqueWorkers.values()) as WorkItemWorker[];
+          const activeWorkerList = Array.from(
+            uniqueWorkers.values()
+          ) as WorkItemWorker[];
           setActiveWorkers(activeWorkerList);
           setWorkerHours(hoursMap);
         }
@@ -123,7 +129,10 @@ export default function DiaryPageClient({
 
   // Stabilizáljuk a referenciákat a useMemo számára
   const stableWorkers = useMemo(() => work?.workers ?? [], [work?.workers]);
-  const stableWorkforceRegistry = useMemo(() => workforceRegistry, [workforceRegistry]);
+  const stableWorkforceRegistry = useMemo(
+    () => workforceRegistry,
+    [workforceRegistry]
+  );
 
   const performanceData = usePerformanceData({
     diaries,
@@ -192,126 +201,123 @@ export default function DiaryPageClient({
           Munkanapló
         </h1>
 
-   
-
-      {error && (
-        <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">{error}</div>
-      )}
-      <GoogleCalendarView
-        diaries={diaries}
-        workItems={items}
-        currentDate={currentDate}
-        setCurrentDate={setCurrentDate}
-        view={view}
-        setView={setView}
-        onEventClick={(diary) => {
-          // extract clicked WorkDiaryItem id set by calendar
-          const d = diary as DiaryWithEditing;
-          const clickedId = d.__editingItemId;
-          let itemForEdit:
-            | (Partial<WorkDiaryItemUpdate> & {
-                id: number;
-                name?: string;
-                email?: string;
-              })
-            | undefined = undefined;
-          if (clickedId && Array.isArray(d.workDiaryItems)) {
-            const it = (d.workDiaryItems as WorkDiaryItemDTO[]).find(
-              (i) => i.id === clickedId
-            );
-            if (it) {
-              itemForEdit = {
-                id: it.id,
-                workItemId: it.workItemId ?? undefined,
-                workerId: it.workerId ?? undefined,
-                date: it.date,
-                quantity: it.quantity ?? undefined,
-                unit: it.unit ?? undefined,
-                workHours: it.workHours ?? undefined,
-                images: it.images ?? [],
-                notes: it.notes ?? undefined,
-                name: it.name ?? undefined,
-                email: it.email ?? undefined,
-                // ensure tenant sees current accepted state in the form
-                accepted: it.accepted ?? undefined,
-              };
-            }
-          }
-
-          // Set editing mode based on whether we have existing items or grouping
-          if (
-            d.isGrouped ||
-            (d.workDiaryItems && d.workDiaryItems.length > 0)
-          ) {
-            setIsGroupedMode(true);
-          } else {
-            setIsGroupedMode(false);
-          }
-
-          setEditingItem(itemForEdit);
-          setSelectedDiary(diary);
-          setShowDiaryModal(true);
-        }}
-        onDateClick={handleDateSelect}
-      />
-      
-      {/* DiaryEntryDetail modal - always opens for selected day */}
-      {showDiaryModal && selectedDiary && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-4xl w-[95%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
-            {isGroupedMode ? (
-              selectedDiary.workDiaryItems &&
-              selectedDiary.workDiaryItems.length > 0 ? (
-                <GroupedDiaryEditForm
-                  diary={selectedDiary}
-                  workItems={items}
-                  onSave={() => {
-                    setShowDiaryModal(false);
-                    setEditingItem(undefined);
-                    try {
-                      router.refresh();
-                    } catch {}
-                  }}
-                  onCancel={handleCloseModal}
-                />
-              ) : (
-                <GroupedDiaryCreateForm
-                  diary={selectedDiary}
-                  workItems={items}
-                  onSave={() => {
-                    setShowDiaryModal(false);
-                    setEditingItem(undefined);
-                    try {
-                      router.refresh();
-                    } catch {}
-                  }}
-                  onCancel={handleCloseModal}
-                />
-              )
-            ) : (
-              <WorkerDiaryEditForm
-                diary={selectedDiary}
-                workItems={items}
-                editingItem={editingItem}
-                onSave={() => {
-                  setShowDiaryModal(false);
-                  setEditingItem(undefined);
-                  try {
-                    router.refresh();
-                  } catch {}
-                }}
-                onCancel={handleCloseModal}
-              />
-            )}
+        {error && (
+          <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">
+            {error}
           </div>
+        )}
+        <GoogleCalendarView
+          diaries={diaries}
+          workItems={items}
+          currentDate={currentDate}
+          setCurrentDate={setCurrentDate}
+          view={view}
+          setView={setView}
+          onEventClick={(diary) => {
+            // extract clicked WorkDiaryItem id set by calendar
+            const d = diary as DiaryWithEditing;
+            const clickedId = d.__editingItemId;
+            let itemForEdit:
+              | (Partial<WorkDiaryItemUpdate> & {
+                  id: number;
+                  name?: string;
+                  email?: string;
+                })
+              | undefined = undefined;
+            if (clickedId && Array.isArray(d.workDiaryItems)) {
+              const it = (d.workDiaryItems as WorkDiaryItemDTO[]).find(
+                (i) => i.id === clickedId
+              );
+              if (it) {
+                itemForEdit = {
+                  id: it.id,
+                  workItemId: it.workItemId ?? undefined,
+                  workerId: it.workerId ?? undefined,
+                  date: it.date,
+                  quantity: it.quantity ?? undefined,
+                  unit: it.unit ?? undefined,
+                  workHours: it.workHours ?? undefined,
+                  images: it.images ?? [],
+                  notes: it.notes ?? undefined,
+                  name: it.name ?? undefined,
+                  email: it.email ?? undefined,
+                  // ensure tenant sees current accepted state in the form
+                  accepted: it.accepted ?? undefined,
+                };
+              }
+            }
+
+            // Set editing mode based on whether we have existing items or grouping
+            if (
+              d.isGrouped ||
+              (d.workDiaryItems && d.workDiaryItems.length > 0)
+            ) {
+              setIsGroupedMode(true);
+            } else {
+              setIsGroupedMode(false);
+            }
+
+            setEditingItem(itemForEdit);
+            setSelectedDiary(diary);
+            setShowDiaryModal(true);
+          }}
+          onDateClick={handleDateSelect}
+        />
+
+        {/* DiaryEntryDetail modal - always opens for selected day */}
+        {showDiaryModal && selectedDiary && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-4xl w-[95%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
+              {isGroupedMode ? (
+                selectedDiary.workDiaryItems &&
+                selectedDiary.workDiaryItems.length > 0 ? (
+                  <GroupedDiaryEditForm
+                    diary={selectedDiary}
+                    workItems={items}
+                    onSave={() => {
+                      setShowDiaryModal(false);
+                      setEditingItem(undefined);
+                      try {
+                        router.refresh();
+                      } catch {}
+                    }}
+                    onCancel={handleCloseModal}
+                  />
+                ) : (
+                  <GroupedDiaryCreateForm
+                    diary={selectedDiary}
+                    workItems={items}
+                    onSave={() => {
+                      setShowDiaryModal(false);
+                      setEditingItem(undefined);
+                      try {
+                        router.refresh();
+                      } catch {}
+                    }}
+                    onCancel={handleCloseModal}
+                  />
+                )
+              ) : (
+                <WorkerDiaryEditForm
+                  diary={selectedDiary}
+                  workItems={items}
+                  editingItem={editingItem}
+                  onSave={() => {
+                    setShowDiaryModal(false);
+                    setEditingItem(undefined);
+                    try {
+                      router.refresh();
+                    } catch {}
+                  }}
+                  onCancel={handleCloseModal}
+                />
+              )}
+            </div>
+          </div>
+        )}
+        <div className="mb-20 mt-4">
+          <PerformanceSummary data={performanceData} isLoading={isLoading} />
         </div>
-      )}
-      <div className="mb-20 mt-4">
-         <PerformanceSummary 
-           data={performanceData} 
-           isLoading={isLoading} 
-         />
-      </div>
       </div>
     </div>
   );

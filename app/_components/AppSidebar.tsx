@@ -26,6 +26,7 @@ import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 import { useThemeStore } from "@/store/theme-store";
 import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
 import { getCurrentUserData } from "@/actions/user-actions";
+import { useUserStore } from "@/store/userStore";
 
 const mainItems = [
   { title: "Munkáim", url: "/works", icon: Layers },
@@ -44,7 +45,8 @@ export function AppSidebar() {
   const { user } = useUser();
   const { theme: currentTheme, setTheme } = useThemeStore();
   const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const [isTenant, setIsTenant] = useState<boolean>(true);
+  const { isTenant, shouldRefetch, setUserData, setLoading, clearUserData } =
+    useUserStore();
 
   useEffect(() => {
     if (user?.id) {
@@ -53,15 +55,30 @@ export function AppSidebar() {
   }, [user]);
 
   useEffect(() => {
-    // Get user data using server action
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+
+    // KRITIKUS: Ha nincs bejelentkezve, AZONNAL töröljük a cache-t
+    if (!userEmail) {
+      clearUserData();
+      return;
+    }
+
+    // Csak akkor frissítünk, ha megváltozott a felhasználó vagy nincs cache
+    if (!shouldRefetch(userEmail)) return;
+
+    // Háttérben frissítjük az adatokat (nem blokkolja a UI-t)
     getCurrentUserData()
-      .then(data => {
-        setIsTenant(data.isTenant ?? true);
+      .then((data) => {
+        if (userEmail) {
+          setUserData(data.isTenant ?? true, userEmail);
+        }
       })
       .catch(() => {
-        setIsTenant(true); // Default to tenant on error
+        if (userEmail) {
+          setUserData(true, userEmail);
+        }
       });
-  }, []);
+  }, [user?.emailAddresses?.[0]?.emailAddress, shouldRefetch, setUserData, clearUserData]);
 
   return (
     <Sidebar className="bg-[#121212] text-[#ffeb3b] border-r border-[#333]">
@@ -94,8 +111,7 @@ export function AppSidebar() {
                 })
                 .map((item, index) => {
                   const isActive =
-                    path === item.url ||
-                    path.startsWith(item.url + "/");
+                    path === item.url || path.startsWith(item.url + "/");
 
                   return (
                     <a
@@ -144,7 +160,7 @@ export function AppSidebar() {
 
       <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-black">
         <TenantSelectorSidebar />
-        
+
         <UserButton afterSignOutUrl="/" />
 
         {showThemeSelector && (

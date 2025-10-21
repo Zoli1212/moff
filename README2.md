@@ -1033,7 +1033,7 @@ feladatot kijelölölheti, be tudja X ni
 mindenhol számlázott profit 
 ---
 RAG kontext
-ha rákattintok egyből ugorjon ne legyen delay
+
 nem látszik általános, segédmunkás nem kell
 Pénzügyileg teljesített nem kell paid_cash felrirat nem Számla
 1. Goldmark Károly Sorszám: Kelte Számla
