@@ -1,10 +1,22 @@
 'use client';
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getCurrentUserData } from "@/actions/user-actions";
 
 export default function WorksLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [isTenant, setIsTenant] = useState<boolean>(true);
+
+  useEffect(() => {
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+      })
+      .catch(() => {
+        setIsTenant(true);
+      });
+  }, []);
 
   // Extract workId from /works/:id if present
   let workId: number | null = null;
@@ -52,6 +64,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
     {
       href: `/supply/${workId}`,
       label: "Erőforrás",
+      tenantOnly: true,
       icon: (
           <img 
       src="/munka.png" 
@@ -88,6 +101,7 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
       // href: `/others/${workId}`,
       href: `/seged`,
       label: "Egyéb",
+      tenantOnly: true,
       icon: (
         <svg
           width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -134,7 +148,15 @@ export default function WorksLayout({ children }: { children: React.ReactNode })
               opacity: 1,
             }}
           >
-            {menu.map(({ href, label, icon }) => {
+            {menu
+              .filter(item => {
+                // Hide tenant-only items for workers
+                if (!isTenant && item.tenantOnly) {
+                  return false;
+                }
+                return true;
+              })
+              .map(({ href, label, icon }) => {
   // Use href directly, don't append id again
   const isActive = pathname === href || pathname.startsWith(href + '/');
   return (

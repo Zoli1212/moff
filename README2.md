@@ -1032,10 +1032,8 @@ nem látja a profitot,
 feladatot kijelölölheti, be tudja X ni
 mindenhol számlázott profit 
 ---
-
 RAG kontext
 ha rákattintok egyből ugorjon ne legyen delay
-képek!
 nem látszik általános, segédmunkás nem kell
 Pénzügyileg teljesített nem kell paid_cash felrirat nem Számla
 1. Goldmark Károly Sorszám: Kelte Számla
@@ -1043,8 +1041,8 @@ Pénzügyileg teljesített nem kell paid_cash felrirat nem Számla
 számlaszámot kiirni
 link a számlára
 lássa a tételeket mik voltak
----
-Munkaterület nem kell
-Három menű főmenü
+----
+
+
 
  
