@@ -11,9 +11,9 @@ interface PositionsState {
   resetPositions: () => void;
 }
 const defaultPositions = {
-  offers: { x: 30, y: 40 },
-  jobs: { x: 70, y: 40 },
-  billings: { x: 50, y: 70 }
+  offers: { x: 30, y: 68 },
+  jobs: { x: 50, y: 76 },
+  billings: { x: 70, y: 68 }
 };
 
 export const usePositionStore = create<PositionsState>((set) => ({

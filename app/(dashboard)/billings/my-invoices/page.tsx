@@ -2,15 +2,35 @@
 
 import { useState, useEffect } from "react";
 import { getBillings } from "@/actions/billing-actions";
+import { getCurrentUserData } from "@/actions/user-actions";
 import Link from "next/link";
 import { ArrowLeft } from 'lucide-react';
 import { Billing } from '@prisma/client';
+import { useRouter } from "next/navigation";
 
 export default function MyInvoicesPage() {
+  const router = useRouter();
   const [billings, setBillings] = useState<Billing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTenant, setIsTenant] = useState<boolean>(true);
+
+  // Check if user is tenant
+  useEffect(() => {
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+        if (!data.isTenant) {
+          router.push('/dashboard');
+        }
+      })
+      .catch(() => {
+        setIsTenant(true);
+      });
+  }, [router]);
 
   useEffect(() => {
+    if (!isTenant) return;
+    
     const loadBillings = async () => {
       try {
         const data = await getBillings();
@@ -23,7 +43,7 @@ export default function MyInvoicesPage() {
     };
 
     loadBillings();
-  }, []);
+  }, [isTenant]);
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
@@ -37,6 +57,10 @@ export default function MyInvoicesPage() {
         return status;
     }
   };
+
+  if (!isTenant) {
+    return null; // Will redirect
+  }
 
   return (
     <div className="min-h-screen w-full bg-gray-50 pt-4">

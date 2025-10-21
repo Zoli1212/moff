@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { getUserWorks } from "@/actions/work-actions";
+import { getCurrentUserData } from "@/actions/user-actions";
 import Link from "next/link";
 import { ArrowLeft } from 'lucide-react';
+import { useRouter } from "next/navigation";
 
 interface Work {
   id: number;
@@ -17,10 +19,28 @@ interface Work {
 }
 
 export default function BillingsPage() {
+  const router = useRouter();
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isTenant, setIsTenant] = useState<boolean>(true);
+
+  // Check if user is tenant
+  useEffect(() => {
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+        if (!data.isTenant) {
+          router.push('/dashboard');
+        }
+      })
+      .catch(() => {
+        setIsTenant(true);
+      });
+  }, [router]);
 
   useEffect(() => {
+    if (!isTenant) return;
+    
     const loadWorks = async () => {
       try {
         const data = await getUserWorks();
@@ -44,7 +64,7 @@ export default function BillingsPage() {
     };
 
     loadWorks();
-  }, []);
+  }, [isTenant]);
 
   const getStatusDisplay = (status: string) => {
     switch (status) {
@@ -62,6 +82,10 @@ export default function BillingsPage() {
         return status;
     }
   };
+
+  if (!isTenant) {
+    return null; // Will redirect
+  }
 
   return (
     <div className="min-h-screen w-full bg-gray-50 pt-4">

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { getCurrentUserData } from "@/actions/user-actions";
 import {
   getBillingById,
   updateBilling,
@@ -33,12 +34,14 @@ interface Billing {
 
 export default function BillingDraftPage() {
   const params = useParams();
+  const router = useRouter();
   const billingId = Number(params.billingId as string);
   const [billing, setBilling] = useState<Billing | null>(null);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTenant, setIsTenant] = useState<boolean>(true);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isMarkingPaid, setIsMarkingPaid] = useState(false);
   const [editedTitle, setEditedTitle] = useState("");
@@ -49,7 +52,22 @@ export default function BillingDraftPage() {
   const [taxNumber, setTaxNumber] = useState("");
   const [euTaxNumber, setEuTaxNumber] = useState("");
 
+  // Check if user is tenant
   useEffect(() => {
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+        if (!data.isTenant) {
+          router.push('/dashboard');
+        }
+      })
+      .catch(() => {
+        setIsTenant(true);
+      });
+  }, [router]);
+
+  useEffect(() => {
+    if (!isTenant) return;
     const fetchBilling = async () => {
       try {
         setLoading(true);
@@ -82,7 +100,7 @@ export default function BillingDraftPage() {
     };
 
     fetchBilling();
-  }, [billingId]);
+  }, [billingId, isTenant]);
 
   useEffect(() => {
     if (billing) {
@@ -94,6 +112,10 @@ export default function BillingDraftPage() {
       );
     }
   }, [billing]);
+
+  if (!isTenant) {
+    return null; // Will redirect
+  }
 
   const total = useMemo(() => {
     return editableItems

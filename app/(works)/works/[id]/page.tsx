@@ -27,6 +27,7 @@ import Link from "next/link";
 // import { getAssignedToolsForWork } from "@/actions/tools-registry-actions";
 import { checkWorkHasDiaries, deleteWorkWithRelatedData } from "@/actions/delete-work-actions";
 import { useRouter } from "next/navigation";
+import { getCurrentUserData } from "@/actions/user-actions";
 
 export default function WorkDetailPage({
   params,
@@ -46,6 +47,9 @@ export default function WorkDetailPage({
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [hasDiaries, setHasDiaries] = useState(false);
   const [diaryCount, setDiaryCount] = useState(0);
+  
+  // State for tenant check
+  const [isTenant, setIsTenant] = useState<boolean>(true);
 
   // State for image upload
   const [workImage, setWorkImage] = useState<string | null>(null);
@@ -84,6 +88,17 @@ export default function WorkDetailPage({
       typeof (obj as { message: unknown }).message === "string"
     );
   }
+
+  // Load tenant status
+  useEffect(() => {
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+      })
+      .catch(() => {
+        setIsTenant(true); // Default to tenant on error
+      });
+  }, []);
 
   // Load work data
   useEffect(() => {
@@ -653,7 +668,8 @@ export default function WorkDetailPage({
         </div>
 
 
-        {/* Progress Section */}
+        {/* Progress Section - Only for tenants */}
+        {isTenant && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
 
           <div className="space-y-4">
@@ -701,8 +717,10 @@ export default function WorkDetailPage({
 
           </div>
         </div>
+        )}
 
-        {/* Profit Section */}
+        {/* Profit Section - Only for tenants */}
+        {isTenant && (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             <h3 className="font-semibold text-gray-600">Profitráta elemzés</h3>
@@ -746,6 +764,7 @@ export default function WorkDetailPage({
             </div>
           </div>
         </div>
+        )}
 
         {/* Workers and Tools Summary */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hidden">

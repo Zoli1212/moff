@@ -1033,8 +1033,19 @@ feladatot kijelölölheti, be tudja X ni
 mindenhol számlázott profit 
 ---
 
-
+RAG kontext
+Ikonok a szoknyáján legyenek
+ha rákattintok egyből ugorjon ne legyen delay
+képek!
+nem látszik általános, segédmunkás nem kell
+Pénzügyileg teljesített nem kell paid_cash felrirat nem Számla
+1. Goldmark Károly Sorszám: Kelte Számla
+2. Goldmark Károly Pénzügyileg teljesített Munkához tartozóan 
+számlaszámot kiirni
+link a számlára
+lássa a tételeket mik voltak
 ---
-
+Munkaterület nem kell
+Három menű főmenü
 
  

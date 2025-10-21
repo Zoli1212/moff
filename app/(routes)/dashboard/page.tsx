@@ -12,39 +12,17 @@ export default function Dashboard() {
   const { theme } = useThemeStore();
   const { positions, updatePosition } = usePositionStore();
   const [isTenant, setIsTenant] = useState<boolean>(true);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get user data using server action
+    // Get user data using server action in background
     getCurrentUserData()
       .then(data => {
         setIsTenant(data.isTenant ?? true);
-        setLoading(false);
       })
       .catch(() => {
         setIsTenant(true); // Default to tenant on error
-        setLoading(false);
       });
   }, []);
-
-  if (loading) {
-    return (
-      <div className="relative h-screen w-screen overflow-hidden">
-        <div className="fixed inset-0 -z-10">
-          <Image
-            src={`/${theme || "landing"}.jpg`}
-            alt="Background image"
-            fill
-            priority
-            className="object-cover"
-            style={{ objectPosition: "center bottom" }}
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-black/20"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
@@ -79,17 +57,27 @@ export default function Dashboard() {
           </DraggableIcon>
         )}
 
-        <DraggableIcon 
-          id="works"
-          position={positions.jobs}
-          onPositionChange={(x, y) => updatePosition('jobs', x, y)}
-        >
-          <Link href="/works" className="block w-20 h-20">
-            <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
-              <Wrench className="text-orange-500" size={32} />
-            </div>
-          </Link>
-        </DraggableIcon>
+        {isTenant ? (
+          <DraggableIcon 
+            id="works"
+            position={positions.jobs}
+            onPositionChange={(x, y) => updatePosition('jobs', x, y)}
+          >
+            <Link href="/works" className="block w-20 h-20">
+              <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
+                <Wrench className="text-orange-500" size={32} />
+              </div>
+            </Link>
+          </DraggableIcon>
+        ) : (
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:left-[calc(50%+7rem)]">
+            <Link href="/works" className="block w-20 h-20">
+              <div className="w-full h-full rounded-full border-2 border-orange-500 flex items-center justify-center bg-transparent hover:bg-white/20 transition-all duration-200 shadow-lg">
+                <Wrench className="text-orange-500" size={32} />
+              </div>
+            </Link>
+          </div>
+        )}
 
         {/* Billings - Only for tenants */}
         {isTenant && (

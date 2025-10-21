@@ -447,9 +447,9 @@ console.log(setSelectedRoleForRemoval)
                       <Image
                         src={w.avatarUrl || "/worker.jpg"}
                         alt={w.name ?? ""}
-                        width={28}
-                        height={28}
-                        className="rounded-full object-cover border border-[#eee]"
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover border border-[#eee] w-10 h-10 flex-shrink-0"
                       />
                       <div className="text-[14px] text-[#333] font-medium">
                         {w.name}

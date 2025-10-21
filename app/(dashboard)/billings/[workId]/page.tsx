@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { getWorkById } from "@/actions/work-actions";
+import { getCurrentUserData } from "@/actions/user-actions";
 import { createBilling } from "@/actions/billing-actions";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -47,6 +48,7 @@ export default function BillingsDetailPage() {
   const [work, setWork] = useState<Work | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isTenant, setIsTenant] = useState<boolean>(true);
 
   const [billingItems, setBillingItems] = useState<BillingWorkItem[]>([]);
 
@@ -54,7 +56,22 @@ export default function BillingsDetailPage() {
     return billingItems.some((item) => item.isSelected);
   }, [billingItems]);
 
+  // Check if user is tenant
   useEffect(() => {
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+        if (!data.isTenant) {
+          router.push('/dashboard');
+        }
+      })
+      .catch(() => {
+        setIsTenant(true);
+      });
+  }, [router]);
+
+  useEffect(() => {
+    if (!isTenant) return;
     const fetchWork = async () => {
       try {
         setLoading(true);
@@ -88,7 +105,7 @@ export default function BillingsDetailPage() {
     };
 
     fetchWork();
-  }, [workId]);
+  }, [workId, isTenant]);
 
   useEffect(() => {
     if (work) {
@@ -193,6 +210,10 @@ export default function BillingsDetailPage() {
       console.error("Error during billing creation:", error);
     }
   };
+
+  if (!isTenant) {
+    return null; // Will redirect
+  }
 
   return (
     <div className="min-h-screen w-full bg-gray-50 pt-4 pb-24">

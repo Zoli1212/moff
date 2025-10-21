@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useCallback } from "react";
 import { getUserWorks, initializeAllWorkTotals } from "@/actions/work-actions";
+import { getCurrentUserData } from "@/actions/user-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
 import WorksAutoUpdater from "./_components/WorksAutoUpdater";
@@ -22,7 +23,8 @@ export type Work = {
 
 function toCardProps(
   work: Work,
-  workStates: Record<string | number, string>
+  workStates: Record<string | number, string>,
+  isTenant: boolean
 ): WorkCardProps {
   const workState = workStates[work.id];
   const isUpdating = workState === "updating";
@@ -61,6 +63,7 @@ function toCardProps(
     totalQuantity: (work.totalQuantity as number) || 0,
     isUpdating,
     isDisabled,
+    isTenant,
   };
 }
 
@@ -71,8 +74,18 @@ const WorkListPage = () => {
   );
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isTenant, setIsTenant] = useState<boolean>(true);
 
   React.useEffect(() => {
+    // Get user tenant status
+    getCurrentUserData()
+      .then(data => {
+        setIsTenant(data.isTenant ?? true);
+      })
+      .catch(() => {
+        setIsTenant(true);
+      });
+
     const fetchWorks = async () => {
       try {
         const fetchedWorks = await getUserWorks();
@@ -213,12 +226,12 @@ const WorkListPage = () => {
         works={activeWorks}
         onWorkStateChange={handleWorkStateChange}
       />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "20px" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "20px", justifyContent: "center" }}>
         {activeWorks.length === 0 ? (
           <div style={{ color: "#ffffff" }}>Nincs aktív munka.</div>
         ) : (
           activeWorks.map((work) => {
-            const cardProps = toCardProps(work, workStates);
+            const cardProps = toCardProps(work, workStates, isTenant);
             const isDisabled = cardProps.isDisabled;
 
             if (isDisabled) {

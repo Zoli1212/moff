@@ -21,6 +21,7 @@ export interface WorkCardProps {
   workSummary?: string;
   isUpdating?: boolean;
   isDisabled?: boolean;
+  isTenant?: boolean; // Show financial data only for tenants
   // Új aggregált értékek
   totalCompleted?: number;
   totalBilled?: number;
@@ -44,6 +45,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     urgentLevel,
     isUpdating = false,
     isDisabled = false,
+    isTenant = true, // Default to true for backward compatibility
     offerItems = [],
     offerDescription = "",
     workSummary = "",
@@ -184,7 +186,8 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           Határidő: {deadline}
         </span>
       </div>
-      {/* Teljesített */}
+      {/* Teljesített - Only for tenants */}
+      {isTenant && (
       <div style={{ marginBottom: 8 }}>
         <div style={{ fontSize: 13, color: "#666" }}>Teljesített</div>
         <div
@@ -209,7 +212,9 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           {totalQuantity > 0 ? `${((totalCompleted / totalQuantity) * 100).toFixed(0)}%` : "0%"}
         </div>
       </div>
-      {/* Számlázott */}
+      )}
+      {/* Számlázott - Only for tenants */}
+      {isTenant && (
       <div style={{ marginBottom: 8 }}>
         <div style={{ fontSize: 13, color: "#666" }}>Számlázott</div>
         <div
@@ -234,7 +239,9 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           {totalQuantity > 0 ? `${((totalBilled / totalQuantity) * 100).toFixed(0)}%` : "0%"}
         </div>
       </div>
-      {/* Számlázható */}
+      )}
+      {/* Számlázható - Only for tenants */}
+      {isTenant && (
       <div style={{ marginBottom: 8 }}>
         <div style={{ fontSize: 13, color: "#666" }}>Számlázható</div>
         <div
@@ -259,6 +266,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
           {totalQuantity > 0 ? `${((totalBillable / totalQuantity) * 100).toFixed(0)}%` : "0%"}
         </div>
       </div>
+      )}
       {urgentTask && (
         <div style={{ display: "flex", alignItems: "center", marginTop: 14 }}>
           <span style={{ display: "flex", alignItems: "center", marginRight: 8 }}>
