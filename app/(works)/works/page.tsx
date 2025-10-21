@@ -154,36 +154,6 @@ const WorkListPage = () => {
 
   console.log(activeWorks, "ACTIVE WORKS");
 
-  // Ha nincs valós adat, adjunk két példát, egy warning és egy danger mockot
-  if (activeWorks.length === 0) {
-    activeWorks = [
-      {
-        id: "mock-warning-1",
-        title: "Sárga példa munka 1",
-        deadline: "2025-08-10",
-        summary: "Ez egy sárga (warning) mock példa.",
-        progress: 60,
-        progressPlanned: 100,
-        financial: 50,
-        financialPlanned: 100,
-        urgentTask: "Határidő közeleg!",
-        urgentLevel: "warning",
-      },
-      {
-        id: "mock-warning-2",
-        title: "Sárga példa munka 2",
-        deadline: "2025-07-30",
-        summary: "Ez is egy sárga (warning) mock példa.",
-        progress: 80,
-        progressPlanned: 100,
-        financial: 10,
-        financialPlanned: 100,
-        urgentTask: "Közeleg a határidő!",
-        urgentLevel: "warning",
-      },
-    ];
-  }
-
   return (
     <div style={{ padding: 32, background: "#f9fafb", minHeight: "100vh", overflowY: "auto" }}>
       <div
@@ -228,7 +198,44 @@ const WorkListPage = () => {
       />
       <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "20px", justifyContent: "center" }}>
         {activeWorks.length === 0 ? (
-          <div style={{ color: "#ffffff" }}>Nincs aktív munka.</div>
+          <div
+            style={{
+              background: "#ffffff",
+              border: "2px solid #ff4444",
+              borderRadius: 12,
+              padding: "32px 24px",
+              textAlign: "center",
+              maxWidth: 400,
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <div
+              style={{
+                fontSize: 48,
+                marginBottom: 16,
+              }}
+            >
+              ⚠️
+            </div>
+            <div
+              style={{
+                fontSize: 18,
+                fontWeight: 600,
+                color: "#000000",
+                marginBottom: 8,
+              }}
+            >
+              Munkák nem elérhetőek
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                color: "#666666",
+              }}
+            >
+              Forduljon az üzemeltetőhöz
+            </div>
+          </div>
         ) : (
           activeWorks.map((work) => {
             const cardProps = toCardProps(work, workStates, isTenant);
@@ -257,78 +264,80 @@ const WorkListPage = () => {
           })
         )}
       </div>
-      {/* Frissítés gomb az oldal alján */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: 20,
-          paddingBottom: 120,
-        }}
-      >
-        <button
-          onClick={handleRefresh}
-          disabled={refreshing}
+      {/* Frissítés gomb az oldal alján - csak tenanteknek */}
+      {isTenant && (
+        <div
           style={{
-            background: "transparent",
-            color: refreshing ? "#999" : "#FFC107",
-            border: refreshing ? "2px solid #999" : "2px solid #FFC107",
-            borderRadius: 6,
-            padding: "10px 20px",
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: refreshing ? "not-allowed" : "pointer",
             display: "flex",
-            alignItems: "center",
-            gap: 8,
-            transition: "all 0.2s",
-          }}
-          onMouseEnter={(e) => {
-            if (!refreshing) {
-              e.currentTarget.style.background = "#FFC107";
-              e.currentTarget.style.color = "#000";
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!refreshing) {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#FFC107";
-            }
+            justifyContent: "center",
+            marginTop: 20,
+            paddingBottom: 120,
           }}
         >
-          {refreshing ? (
-            <>
-              <div
-                style={{
-                  width: 14,
-                  height: 14,
-                  border: "2px solid #999",
-                  borderTop: "2px solid transparent",
-                  borderRadius: "50%",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-              Frissítés...
-            </>
-          ) : (
-            <>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-              </svg>
-              Frissítés
-            </>
-          )}
-        </button>
-      </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            style={{
+              background: "transparent",
+              color: refreshing ? "#999" : "#FFC107",
+              border: refreshing ? "2px solid #999" : "2px solid #FFC107",
+              borderRadius: 6,
+              padding: "10px 20px",
+              fontSize: 14,
+              fontWeight: 500,
+              cursor: refreshing ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              if (!refreshing) {
+                e.currentTarget.style.background = "#FFC107";
+                e.currentTarget.style.color = "#000";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!refreshing) {
+                e.currentTarget.style.background = "transparent";
+                e.currentTarget.style.color = "#FFC107";
+              }
+            }}
+          >
+            {refreshing ? (
+              <>
+                <div
+                  style={{
+                    width: 14,
+                    height: 14,
+                    border: "2px solid #999",
+                    borderTop: "2px solid transparent",
+                    borderRadius: "50%",
+                    animation: "spin 1s linear infinite",
+                  }}
+                />
+                Frissítés...
+              </>
+            ) : (
+              <>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                </svg>
+                Frissítés
+              </>
+            )}
+          </button>
+        </div>
+      )}
       <style jsx>{`
         @keyframes spin {
           0% {

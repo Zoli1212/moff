@@ -76,8 +76,10 @@ async function refreshCompletedQuantitiesForWork(
 
 export async function getUserWorks() {
   const { user, tenantEmail } = await getTenantSafeAuth();
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
 
-  const works = await prisma.work.findMany({
+  // 1. Tenant munkái
+  const tenantWorks = await prisma.work.findMany({
     where: {
       tenantEmail: tenantEmail,
       isActive: true,
@@ -94,12 +96,48 @@ export async function getUserWorks() {
     },
   });
 
+  // 2. Worker munkái (ahol hozzá van rendelve WorkItemWorker-ben)
+  const workerAssignments = await prisma.workItemWorker.findMany({
+    where: {
+      email: userEmail,
+    },
+    select: {
+      workId: true,
+    },
+  });
+
+  const workerWorkIds = [...new Set(workerAssignments.map(a => a.workId).filter(id => id !== null))] as number[];
+
+  const workerWorks = workerWorkIds.length > 0 ? await prisma.work.findMany({
+    where: {
+      id: { in: workerWorkIds },
+      isActive: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      workItems: {
+        select: {
+          quantity: true,
+        },
+      },
+    },
+  }) : [];
+
+  // 3. Egyesítjük a két listát (duplikátumok kiszűrésével)
+  const allWorksMap = new Map();
+  [...tenantWorks, ...workerWorks].forEach(work => {
+    allWorksMap.set(work.id, work);
+  });
+  const works = Array.from(allWorksMap.values());
+
   // Calculate totalPrice and totalQuantity for each work
   const worksWithCalculatedFields = works.map((work) => {
     // Összes tervezett mennyiség (csak nem-nulla quantity-s workItem-ek)
     const totalQuantity = work.workItems
-      .filter((item) => (item.quantity || 0) > 0)
-      .reduce((sum, item) => sum + (item.quantity || 0), 0);
+      .filter((item: any) => (item.quantity || 0) > 0)
+      .reduce((sum: number, item: any) => sum + (item.quantity || 0), 0);
 
     return {
       ...work,
@@ -760,11 +798,30 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
 
 export async function getWorkItemsWithWorkers(workId: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
-  const email = tenantEmail;
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
+  
+  // Check if user is tenant or assigned worker
+  const work = await prisma.work.findUnique({
+    where: { id: workId },
+    select: { tenantEmail: true },
+  });
+  
+  const isTenant = work?.tenantEmail === tenantEmail;
+  const isAssignedWorker = !isTenant ? await prisma.workItemWorker.findFirst({
+    where: {
+      workId: workId,
+      email: userEmail,
+    },
+  }) : null;
+  
+  if (!isTenant && !isAssignedWorker) {
+    throw new Error("Unauthorized");
+  }
+  
   return prisma.workItem.findMany({
     where: {
       workId,
-      tenantEmail: email,
+      tenantEmail: work?.tenantEmail || tenantEmail,
     },
     include: {
       workItemWorkers: {
@@ -783,6 +840,7 @@ export async function getWorkItemsWithWorkers(workId: number) {
 
 export async function getWorkById(id: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
 
   // First refresh completed quantities from diary entries
   await refreshCompletedQuantitiesForWork(id, tenantEmail);
@@ -799,8 +857,20 @@ export async function getWorkById(id: number) {
     },
   });
 
-  // Verify the work belongs to the user
-  if (!work || work.tenantEmail !== tenantEmail) {
+  if (!work) {
+    throw new Error("Unauthorized");
+  }
+
+  // Verify the work belongs to the user OR user is assigned as worker
+  const isTenant = work.tenantEmail === tenantEmail;
+  const isAssignedWorker = await prisma.workItemWorker.findFirst({
+    where: {
+      workId: id,
+      email: userEmail,
+    },
+  });
+
+  if (!isTenant && !isAssignedWorker) {
     throw new Error("Unauthorized");
   }
 
@@ -818,11 +888,30 @@ export async function getWorkById(id: number) {
 // Get all workDiaryItems for a specific work
 export async function getWorkDiaryItemsByWorkId(workId: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
+
+  // Check if user is tenant or assigned worker
+  const work = await prisma.work.findUnique({
+    where: { id: workId },
+    select: { tenantEmail: true },
+  });
+  
+  const isTenant = work?.tenantEmail === tenantEmail;
+  const isAssignedWorker = !isTenant ? await prisma.workItemWorker.findFirst({
+    where: {
+      workId: workId,
+      email: userEmail,
+    },
+  }) : null;
+  
+  if (!isTenant && !isAssignedWorker) {
+    throw new Error("Unauthorized");
+  }
 
   const workDiaryItems = await prisma.workDiaryItem.findMany({
     where: {
       workId: workId,
-      tenantEmail: tenantEmail,
+      tenantEmail: work?.tenantEmail || tenantEmail,
     },
     orderBy: {
       date: 'desc',

@@ -1034,7 +1034,6 @@ mindenhol számlázott profit
 ---
 
 RAG kontext
-Ikonok a szoknyáján legyenek
 ha rákattintok egyből ugorjon ne legyen delay
 képek!
 nem látszik általános, segédmunkás nem kell

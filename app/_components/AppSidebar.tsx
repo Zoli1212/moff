@@ -28,15 +28,10 @@ import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
 import { getCurrentUserData } from "@/actions/user-actions";
 
 const mainItems = [
-  { title: "Munkaterület", url: "/dashboard", icon: Layers },
-  { title: "Áraim", url: "/dashboard", icon: Layers },
-  { title: "Ügyfelek", url: "/dashboard", icon: Layers },
-  { title: "Ajánlataim", url: "/dashboard", icon: Layers },
-  { title: "Munkások", url: "/others", icon: Users },
-  { title: "Asszisztens", url: "/dashboard/tools/assistant", icon: Inbox },
-  { title: "Csevegés", url: "/ai-tools", icon: Inbox },
-  { title: "Előzményeim", url: "/my-history", icon: Calendar },
-  { title: "Számláim", url: "/my-billing", icon: Calendar },
+  { title: "Munkáim", url: "/works", icon: Layers },
+  { title: "Ajánlataim", url: "/offers", icon: Inbox, tenantOnly: true },
+  { title: "Számláim", url: "/billings", icon: Wallet, tenantOnly: true },
+  { title: "Munkások", url: "/others", icon: Users, tenantOnly: true },
 ];
 
 const secondaryItems = [
@@ -85,28 +80,22 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#121212]">
-        <SidebarGroup>
+      <SidebarContent className="bg-[#121212] flex flex-col">
+        <SidebarGroup className="flex-1">
           <SidebarGroupContent className="bg-[#121212]">
             <SidebarMenu className="mt-2 space-y-1">
               {mainItems
                 .filter((item) => {
                   // Hide tenant-only items for non-tenant users (workers)
-                  if (!isTenant) {
-                    const tenantOnlyItems = ["Munkások", "Ajánlataim", "Számláim"];
-                    return !tenantOnlyItems.includes(item.title);
+                  if (!isTenant && item.tenantOnly) {
+                    return false;
                   }
                   return true;
                 })
                 .map((item, index) => {
                   const isActive =
                     path === item.url ||
-                    (item.url === "/ai-tools" && path.startsWith("/ai-tools")) ||
-                    (item.url === "/my-history" &&
-                      path.startsWith("/my-history")) ||
-                    (item.url === "/my-billing" &&
-                      path.startsWith("/my-billing")) ||
-                    (item.url === "/others" && path.startsWith("/others"));
+                    path.startsWith(item.url + "/");
 
                   return (
                     <a
@@ -124,32 +113,33 @@ export function AppSidebar() {
                     </a>
                   );
                 })}
-
-              <div className="my-4 border-t border-[#444]"></div>
-
-              <div className="flex flex-wrap gap-2 justify-center">
-                {secondaryItems.map((item, index) => {
-                  const isActive = path === item.url;
-                  return (
-                    <a
-                      key={"secondary-" + index}
-                      href={item.url}
-                      className={`min-w-[120px] flex-1 max-w-[180px] p-4 flex flex-col items-center text-center rounded-xl transition-all border-2
-          ${
-            isActive
-              ? "bg-yellow-500 text-black border-yellow-500 font-semibold shadow-md"
-              : "bg-[#2a2a2a] text-[#ffeb3b] border-yellow-400 hover:bg-[#3a3a3a] hover:shadow"
-          }`}
-                    >
-                      <item.icon className="h-6 w-6 mb-1" />
-                      <span>{item.title}</span>
-                    </a>
-                  );
-                })}
-              </div>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Secondary items pushed to bottom */}
+        <div className="mt-auto border-t border-[#444] pt-4 pb-4">
+          <div className="flex flex-wrap gap-2 justify-center px-2">
+            {secondaryItems.map((item, index) => {
+              const isActive = path === item.url;
+              return (
+                <a
+                  key={"secondary-" + index}
+                  href={item.url}
+                  className={`min-w-[120px] flex-1 max-w-[180px] p-4 flex flex-col items-center text-center rounded-xl transition-all border-2
+        ${
+          isActive
+            ? "bg-yellow-500 text-black border-yellow-500 font-semibold shadow-md"
+            : "bg-[#2a2a2a] text-[#ffeb3b] border-yellow-400 hover:bg-[#3a3a3a] hover:shadow"
+        }`}
+                >
+                  <item.icon className="h-6 w-6 mb-1" />
+                  <span>{item.title}</span>
+                </a>
+              );
+            })}
+          </div>
+        </div>
       </SidebarContent>
 
       <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-black">
