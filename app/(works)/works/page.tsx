@@ -5,6 +5,7 @@ import { getCurrentUserData } from "@/actions/user-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
 import WorksAutoUpdater from "./_components/WorksAutoUpdater";
+import WorksSkeletonLoader from "../_components/WorksSkeletonLoader";
 
 // Minimal Work típus, hogy ne legyen 'any'
 export type Work = {
@@ -133,20 +134,7 @@ const WorkListPage = () => {
   };
 
   if (loading) {
-    return (
-      <div
-        style={{
-          padding: 32,
-          background: "#f9fafb",
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div style={{ color: "#000000" }}>Munkák betöltése...</div>
-      </div>
-    );
+    return <WorksSkeletonLoader />;
   }
 
   let activeWorks = works.filter((w) => w.active !== false);

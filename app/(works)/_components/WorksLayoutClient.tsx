@@ -1,7 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState, useTransition } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import WorksSkeletonLoader from "./WorksSkeletonLoader";
 
 interface WorksLayoutClientProps {
   children: React.ReactNode;
@@ -13,6 +14,14 @@ export default function WorksLayoutClient({
   isTenant,
 }: WorksLayoutClientProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  // Reset loading state when pathname changes
+  React.useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname]);
 
   // Extract workId from /works/:id if present
   let workId: number | null = null;
@@ -159,7 +168,7 @@ export default function WorksLayoutClient({
 
   return (
     <div style={{ minHeight: "100vh", position: "relative" }}>
-      {children}
+      {isNavigating ? <WorksSkeletonLoader /> : children}
       {workId !== null && (
         <div
           style={{
@@ -213,7 +222,11 @@ export default function WorksLayoutClient({
                     key={href}
                     href={href}
                     style={{ textDecoration: "none", color: "inherit" }}
-                    onClick={() => {
+                    onClick={(e) => {
+                      // Ha nem ugyanarra az oldalra kattintunk
+                      if (pathname !== href && !pathname.startsWith(href + "/")) {
+                        setIsNavigating(true);
+                      }
                       window.scrollTo({ top: 0, behavior: "instant" });
                     }}
                   >

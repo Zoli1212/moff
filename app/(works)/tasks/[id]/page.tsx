@@ -17,6 +17,7 @@ import {
 } from "../_components/WorkItemEditModal";
 import { updateWorkItemDetails } from "@/actions/update-workitem-details";
 import WorkHeader from "@/components/WorkHeader";
+import WorksSkeletonLoader from "../../_components/WorksSkeletonLoader";
 
 import { WorkDiary } from "@/types/work-diary";
 
@@ -403,10 +404,7 @@ export default function TasksPage() {
         </div>
         <div style={{ marginBottom: 8 }}></div>
         {loading ? (
-          <div className="flex items-center justify-center p-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mr-3"></div>
-            <span>Betöltés...</span>
-          </div>
+          <WorksSkeletonLoader />
         ) : error ? (
           <div style={{ color: "red" }}>{error}</div>
         ) : !work ? (

@@ -28,6 +28,7 @@ import Link from "next/link";
 import { checkWorkHasDiaries, deleteWorkWithRelatedData } from "@/actions/delete-work-actions";
 import { useRouter } from "next/navigation";
 import { getCurrentUserData } from "@/actions/user-actions";
+import WorksSkeletonLoader from "../../_components/WorksSkeletonLoader";
 
 export default function WorkDetailPage({
   params,
@@ -319,7 +320,7 @@ export default function WorkDetailPage({
     }
   };
 
-  if (loading) return <div style={{ padding: 40 }}>Betöltés...</div>;
+  if (loading) return <WorksSkeletonLoader />;
   if (error)
     return <div style={{ padding: 40, color: "red" }}>Hiba: {error}</div>;
   if (!work) return <div style={{ padding: 40 }}>Nincs adat a munkához.</div>;
