@@ -6,8 +6,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { getGoogleAuthUrl } from "./googleAuth";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const user = await currentUser();
+  console.log(_req)
 
   const email = user?.emailAddresses?.[0]?.emailAddress;
   if (!email) {

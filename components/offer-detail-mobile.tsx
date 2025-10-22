@@ -161,6 +161,8 @@ export function OfferDetailView({
     }
   }, [offer.items]);
 
+  console.log(originalItems)
+
   // Parse currency values
   const parseCurrency = (value: string | null | undefined): number => {
     if (!value) return 0;
@@ -462,6 +464,7 @@ export function OfferDetailView({
         toast.error(result.error || "Hiba történt a törlés során");
       }
     } catch (error) {
+      console.error("❌ [OFFER-DETAIL] Error deleting offer:", error);
       toast.error("Hiba történt a törlés során");
     } finally {
       setIsOfferDeleting(false);

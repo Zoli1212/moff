@@ -267,6 +267,7 @@ export default function WorkerDiaryEditForm({
         opt?.email ??
         (sel.workerId ? workersById.get(sel.workerId)?.email : undefined) ??
         assigned?.email;
+        console.log(name, email)
     } catch {}
   }, [
     selectedWorkerToken,
@@ -570,6 +571,7 @@ export default function WorkerDiaryEditForm({
                   ? workersById.get(sel.workerId)?.email
                   : undefined) ??
                 assigned?.email;
+                console.log(name, email)
             } catch {}
           }}
           disabled={selectedWorkItemId === ""}
@@ -960,6 +962,7 @@ export default function WorkerDiaryEditForm({
                     }
                   }
                 } catch (error) {
+                  console.log(error)
                   showToast("error", "Hiba történt a törlés során.");
                 }
               }}

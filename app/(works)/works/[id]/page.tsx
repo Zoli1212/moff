@@ -81,6 +81,8 @@ export default function WorkDetailPage({
     profitMargin: 15.2,
   });
 
+  console.log(generalWorkersFromDB)
+
   function hasMessage(obj: unknown): obj is { message: string } {
     return (
       typeof obj === "object" &&
@@ -175,6 +177,7 @@ export default function WorkDetailPage({
               });
             }
           } catch (err) {
+            console.error("❌ [WORKITEMS] Error loading work items:", err);
             setWorkItemsWithWorkers(
               (workData.workItems as unknown as WorkItem[]) || []
             );

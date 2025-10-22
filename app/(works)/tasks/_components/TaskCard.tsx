@@ -29,7 +29,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   title,
   deadline = "",
   summary = "",
-  progress = 0,
   quantity,
   completedQuantity,
   unit,

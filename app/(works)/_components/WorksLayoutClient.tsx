@@ -1,7 +1,7 @@
 "use client";
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import WorksSkeletonLoader from "./WorksSkeletonLoader";
 
 interface WorksLayoutClientProps {
@@ -14,9 +14,7 @@ export default function WorksLayoutClient({
   isTenant,
 }: WorksLayoutClientProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   // Reset loading state when pathname changes
   React.useEffect(() => {
@@ -224,6 +222,7 @@ export default function WorksLayoutClient({
                     style={{ textDecoration: "none", color: "inherit" }}
                     onClick={(e) => {
                       // Ha nem ugyanarra az oldalra kattintunk
+                      console.log(e)
                       if (pathname !== href && !pathname.startsWith(href + "/")) {
                         setIsNavigating(true);
                       }

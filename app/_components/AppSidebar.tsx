@@ -11,7 +11,6 @@ import {
   SidebarMenu,
 } from "@/components/ui/sidebar";
 import {
-  Calendar,
   Inbox,
   Layers,
   Palette,
@@ -45,7 +44,7 @@ export function AppSidebar() {
   const { user } = useUser();
   const { theme: currentTheme, setTheme } = useThemeStore();
   const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const { isTenant, shouldRefetch, setUserData, setLoading, clearUserData } =
+  const { isTenant, shouldRefetch, setUserData, clearUserData } =
     useUserStore();
 
   useEffect(() => {

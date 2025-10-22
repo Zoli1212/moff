@@ -30,7 +30,6 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   open,
   onOpenChange,
   material,
-  workItems,
   onSubmit,
   onDelete,
 }) => {

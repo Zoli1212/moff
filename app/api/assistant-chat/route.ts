@@ -43,10 +43,10 @@ Válaszolj röviden, tömören és segítőkészen magyarul. Ha a felhasználó 
     const reply = completion.choices[0]?.message?.content || "Nem tudok válaszolni.";
 
     return NextResponse.json({ reply });
-  } catch (error: any) {
+  } catch (error) {
     console.error("[assistant-chat] Error:", error);
     return NextResponse.json(
-      { error: "Hiba történt a válasz generálása során.", details: error.message },
+      { error: "Hiba történt a válasz generálása során.", details: (error as Error).message },
       { status: 500 }
     );
   }

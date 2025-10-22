@@ -29,8 +29,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
   open,
   onClose,
   profession,
-  onSave,
-  relevantWorkItems,
+  onSave
 }) => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -40,8 +39,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
   const [isNew, setIsNew] = useState(true);
   const [showWorkerList, setShowWorkerList] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [relevantWorkItemsWithWorkers, setRelevantWorkItemsWithWorkers] =
-    useState<WorkItem[]>(relevantWorkItems);
+ 
 
   // Avatar upload state
   const [avatarUrl, setAvatarUrl] = useState<string>("");
@@ -72,6 +70,8 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
     setIsNew(false);
     setShowWorkerList(false);
   };
+
+  console.log(startTransition)
 
   const handleSave = () => {
     if (!isNew && selectedId) {

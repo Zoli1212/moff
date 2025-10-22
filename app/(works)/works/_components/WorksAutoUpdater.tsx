@@ -145,6 +145,7 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
   if (total === 0) {
     return null;
   }
+  console.log(showStatus, errorMsg)
 
   // Fade out when done
   if (hideBar) return null;

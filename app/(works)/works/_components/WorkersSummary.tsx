@@ -150,6 +150,7 @@ const WorkersSummary: React.FC<Props> = ({
               }) as AssignmentEx
           );
         } catch (e) {
+          console.log(e)
           return [];
         }
       });

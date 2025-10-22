@@ -21,6 +21,7 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
 async function extractTextFromExcel(buffer: Buffer, fileType: string): Promise<string> {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
   let text = '';
+  console.log(fileType)
   
   workbook.SheetNames.forEach(sheetName => {
     const worksheet = workbook.Sheets[sheetName];

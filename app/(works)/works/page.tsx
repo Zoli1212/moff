@@ -137,7 +137,7 @@ const WorkListPage = () => {
     return <WorksSkeletonLoader />;
   }
 
-  let activeWorks = works.filter((w) => w.active !== false);
+  const activeWorks = works.filter((w) => w.active !== false);
 
   return (
     <div style={{ padding: 32, background: "#f9fafb", minHeight: "100vh", overflowY: "auto" }}>

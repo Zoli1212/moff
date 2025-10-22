@@ -130,6 +130,8 @@ function WorkersSlotsSectionWithoutRoles({
     null
   );
 
+  console.log(addLock)
+
   // No automatic calculation - slots are manually managed
   // totalRequiredWorkers is always 0 (not calculated from workItems)
 
@@ -143,6 +145,8 @@ function WorkersSlotsSectionWithoutRoles({
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);
     await refreshAssignments();
   };
+
+  console.log(setSelectedRoleForRemoval)
 
   // Handle slot count changes
 

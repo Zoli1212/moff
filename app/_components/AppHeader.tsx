@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { Menu, MessageCircle } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { AssistantChatModal } from "./AssistantChatModal";

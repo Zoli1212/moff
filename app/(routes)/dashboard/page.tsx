@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { getCurrentUserData } from "@/actions/user-actions";
 import DashboardIcons from "./_components/DashboardIcons";
 

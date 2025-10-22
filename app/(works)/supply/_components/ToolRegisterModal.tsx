@@ -206,6 +206,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                       setAvatarUrl("");
                     }
                   } catch (err) {
+                    console.log(err)
                     setAvatarError("Hiba a feltöltés során.");
                     setAvatarUrl("");
                   } finally {

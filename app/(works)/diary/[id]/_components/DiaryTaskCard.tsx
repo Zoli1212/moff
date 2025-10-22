@@ -13,13 +13,11 @@ interface TaskCardProps {
 }
 
 const DiaryTaskCard: React.FC<TaskCardProps> = ({
-  id,
   title,
   deadline = "",
   summary = "",
   progress = 0,
   checked = false,
-  onCheck,
   children,
   className = "",
 }) => {

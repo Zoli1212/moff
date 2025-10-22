@@ -37,6 +37,8 @@ export default function ParticipantsSection({
     setModalProfession(null);
   };
 
+  console.log(setAddingIdx)
+
   const handleSaveWorker = async (data: {
     name: string;
     email: string;
@@ -116,6 +118,7 @@ export default function ParticipantsSection({
       setModalOpen(false);
       setModalProfession(null);
     } catch (e) {
+      console.log(e)
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
     }
   };
