@@ -24,7 +24,6 @@ const TOKEN_PATH = process.env.TOKEN_PATH;
 import { getGoogleCredentials } from "@/actions/server.action";
 export async function loadCredentialsDirect(tenantEmail: string) {
   const cred = await getGoogleCredentials(tenantEmail);
-  console.log(cred, "cred");
   return {
     web: {
       client_id: cred.client_id,
@@ -261,7 +260,6 @@ export async function authorizeWithCode(
       for (const part of email.payload.parts) {
         if (part.filename && part.body?.attachmentId) {
           try {
-            console.log(`Processing attachment: ${part.filename}`);
             const attachment = await gmail.users.messages.attachments.get({
               userId: "me",
               messageId: msg.id,
@@ -277,8 +275,6 @@ export async function authorizeWithCode(
             // Clean up the base64 data
             const base64Data = data.replace(/-/g, '+').replace(/_/g, '/');
             const buffer = Buffer.from(base64Data, 'base64');
-            
-            console.log(`File info - Name: ${part.filename}, Size: ${buffer.length} bytes, Type: ${part.mimeType || 'unknown'}`);
     
             // Upload to ImageKit
             const imageKitFile = await imagekit.upload({
@@ -293,7 +289,6 @@ export async function authorizeWithCode(
               throw new Error('No URL in ImageKit response');
             }
     
-            console.log(`✅ Successfully uploaded: ${imageKitFile.name} (${imageKitFile.url})`);
             attachmentUrls.push(imageKitFile.url);
             attachmentFilenames.push(part.filename);
     
@@ -305,8 +300,6 @@ export async function authorizeWithCode(
         }
       }
     }
-
-    console.log(content, 'CONTENT')
 
     // Email mentése server action-nel
     // importáld a createEmail-t a server.action-ből
@@ -321,12 +314,6 @@ export async function authorizeWithCode(
       attachmentUrls: attachmentUrls.length > 0 ? attachmentUrls : undefined,
       tenantEmail: tenantEmail || "",
     });
-
-    console.log(
-      `📧 ${subject || "(nincs tárgy)"} ← ${from || "(nincs feladó)"}`
-    );
-    console.log(`📝 Tartalom: ${content.substring(0, 200)}...`);
-    console.log("--------------------------------------------------");
   }
 
   return client;

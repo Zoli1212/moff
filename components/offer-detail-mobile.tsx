@@ -139,21 +139,12 @@ export function OfferDetailView({
     setOfferItems(editableItems);
   }, [editableItems, setOfferItems]);
 
-  // Log items when they change
-  useEffect(() => {
-    console.log("Current items:", JSON.stringify(editableItems, null, 2));
-    console.log(originalItems.length);
-  }, [editableItems]);
-
   // Initialize items
   useEffect(() => {
     if (offer.items) {
       const items = Array.isArray(offer.items) ? offer.items : [];
       // Ensure all items have the required fields
 
-      for (let i = 0; i < offer.items.length; i++) {
-        console.log(offer.items[i], "+");
-      }
       const validatedItems = items.map((item, index) => ({
         id: index, // Add unique id for each item
         name: item.name || "",
@@ -471,7 +462,6 @@ export function OfferDetailView({
         toast.error(result.error || "Hiba történt a törlés során");
       }
     } catch (error) {
-      console.log(error);
       toast.error("Hiba történt a törlés során");
     } finally {
       setIsOfferDeleting(false);
@@ -522,12 +512,6 @@ export function OfferDetailView({
     );
     return emailMatch ? emailMatch[0] : "";
   };
-
-  // Debug: log the requirement object
-  useEffect(() => {
-    console.log("Requirement object:", offer.requirement);
-    console.log("Requirement description:", offer.requirement?.description);
-  }, [offer.requirement]);
 
   // Always use editableItems
   const items = editableItems;

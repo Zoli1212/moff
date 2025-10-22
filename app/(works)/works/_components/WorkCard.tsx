@@ -36,8 +36,6 @@ const getUrgentColor = (level: "warning" | "danger") => {
 };
 
 const WorkCard: React.FC<WorkCardProps> = (props) => {
-  console.log("WorkCard props:", props);
-
   const {
     title,
     deadline,

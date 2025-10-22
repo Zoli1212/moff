@@ -37,7 +37,6 @@ export default function ParticipantsSection({
     setModalProfession(null);
   };
 
-  console.log("DEBUG workers:", workers, workItems, setWorkers, setAddingIdx);
   const handleSaveWorker = async (data: {
     name: string;
     email: string;
@@ -66,12 +65,10 @@ export default function ParticipantsSection({
       }
       // 3. Find the Worker record for this role and workId
 
-      console.log(workers, "WORKERS2", data.profession);
       const worker = workers.find(
         (w) => w.name === (member.role || data.profession)
       );
 
-      console.log(worker, "WORKER");
       if (!worker || typeof worker.id !== "number")
         throw new Error("Nincs megfelelő Worker rekord");
       // 4. Update the JSON array
@@ -120,7 +117,6 @@ export default function ParticipantsSection({
       setModalProfession(null);
     } catch (e) {
       toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
-      console.log(e);
     }
   };
 

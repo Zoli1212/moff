@@ -56,8 +56,6 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
   const [avatarError, setAvatarError] = useState<string>("");
 
-  console.log(tools, "RGT");
-
   React.useEffect(() => {
     if (open && requiredToolName) {
       setLoading(true);
@@ -210,7 +208,6 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                   } catch (err) {
                     setAvatarError("Hiba a feltöltés során.");
                     setAvatarUrl("");
-                    console.log(err);
                   } finally {
                     setAvatarUploading(false);
                   }

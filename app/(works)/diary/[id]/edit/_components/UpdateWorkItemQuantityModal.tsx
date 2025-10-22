@@ -32,12 +32,9 @@ export default function UpdateWorkItemQuantityModal({
   }
 
   const handleSave = () => {
-    console.log('[Modal] handleSave triggered. Raw quantity:', quantity);
     const newQuantity = parseFloat(quantity);
     if (!isNaN(newQuantity)) {
-      console.log('[Modal] Quantity is valid. Calling onSave with:', newQuantity);
       onSave(newQuantity);
-      console.log('[Modal] Calling onClose.');
       onClose();
     } else {
       console.error('[Modal] Invalid quantity:', quantity);

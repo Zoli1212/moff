@@ -45,8 +45,6 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [isConfirmOpen, setConfirmOpen] = useState(false);
 
-  console.log(workItems);
-
   React.useEffect(() => {
     setName(material?.name || "");
     setQuantity(material?.quantity?.toString() || "");

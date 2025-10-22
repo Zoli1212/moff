@@ -105,8 +105,6 @@ const WorkersSlotsSection: React.FC<Props> = ({
           "@/actions/get-workitemworkers-for-work"
         );
         const data = await getWorkItemWorkersForWork(workId);
-        console.log("=== DEBUG workItemWorkers for workId", workId, "===");
-        console.log("Direct workItemWorker query result:", data);
         setAssignments(data || []);
       } catch (error) {
         console.error("Error loading workItemWorkers:", error);

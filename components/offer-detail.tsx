@@ -47,11 +47,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   const [originalItems, setOriginalItems] = useState<OfferItem[]>([]);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Log items when they change
-  useEffect(() => {
-    console.log("Current items:", JSON.stringify(editableItems, null, 2));
-  }, [editableItems]);
-
   // Initialize items
   useEffect(() => {
     if (offer.items) {
@@ -219,12 +214,6 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     work: workTotal,
     total: grandTotal,
   } = calculateTotals();
-
-  // Debug: log the requirement object
-  useEffect(() => {
-    console.log("Requirement object:", offer.requirement);
-    console.log("Requirement description:", offer.requirement?.description);
-  }, [offer.requirement]);
 
   // Ensure notes is always an array of strings
   const notes = Array.isArray(offer.notes) ? offer.notes : [];

@@ -32,8 +32,6 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const [toolAvailable, setToolAvailable] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
 
-  console.log(tools, "RGT");
-
   React.useEffect(() => {
     if (open && requiredToolName) {
       setLoading(true);

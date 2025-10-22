@@ -4,8 +4,6 @@ import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(_req: NextRequest) {
 
-  console.log(_req.url)
-
   try {
     const user = await currentUser();
 

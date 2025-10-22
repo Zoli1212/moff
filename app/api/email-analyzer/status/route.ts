@@ -13,25 +13,9 @@ export async function GET(req: NextRequest) {
             );
         }
 
-        console.log('Looking for analysis with recordId:', recordId);
-
-        // First, log all records in the database for debugging
-        console.log('Fetching all history records...');
         const allRecords = await prisma.history.findMany({
             orderBy: { createdAt: 'desc' },
             take: 10 // Just get the most recent 10 records
-        });
-
-        console.log(`Found ${allRecords.length} recent records in DB`);
-        allRecords.forEach((record, index) => {
-            console.log(`Record ${index + 1}:`, {
-                id: record.id,
-                recordId: record.recordId,
-                aiAgentType: record.aiAgentType,
-                createdAt: record.createdAt,
-                hasContent: !!record.content,
-                contentKeys: record.content ? Object.keys(record.content) : []
-            });
         });
 
         // Try to find the specific record
@@ -44,20 +28,12 @@ export async function GET(req: NextRequest) {
         });
 
         if (analysis) {
-            console.log('Found matching analysis in DB:', {
-                id: analysis.id,
-                recordId: analysis.recordId,
-                createdAt: analysis.createdAt,
-                contentKeys: analysis.content ? Object.keys(analysis.content) : []
-            });
-            
             return NextResponse.json({
                 status: 'Completed',
                 result: analysis.content,
                 message: 'Analysis completed successfully'
             });
         } else {
-            console.log('No matching analysis found for recordId:', recordId);
             return NextResponse.json(
                 { 
                     status: 'not_found', 

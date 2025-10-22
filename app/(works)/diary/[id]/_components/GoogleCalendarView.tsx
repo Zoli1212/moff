@@ -74,17 +74,12 @@ export default function GoogleCalendarView({
       }
     >();
 
-    console.groupCollapsed("[Calendar] Build grouped events");
-    console.log("Diaries count:", diaries?.length ?? 0);
-
     // First, collect all items and group them by groupNo
     for (const d of diaries ?? []) {
       const items = d.workDiaryItems as WorkDiaryItemDTO[] | undefined;
-      console.log("Diary:", d.id, "Items count:", items?.length ?? 0);
       if (!items || items.length === 0) continue;
 
       for (const it of items) {
-        console.log("Item:", it.id, "groupNo:", it.groupNo, "name:", it.name);
         // Only process items with valid groupNo
         if (it.groupNo != null && it.groupNo !== undefined) {
           const groupNo = it.groupNo;
@@ -144,48 +139,20 @@ export default function GoogleCalendarView({
           }
         } else {
           // Skip individual events - only show grouped events
-          console.log(
-            "Skipping individual event for item:",
-            it.id,
-            "(no groupNo)"
-          );
         }
       }
     }
 
     // Create events for each group
     for (const group of groups.values()) {
-      console.log(`=== CSOPORT #${group.groupNo} RÉSZLETES ADATOK ===`);
-      console.log("Dátum:", group.date);
-      console.log("Összes bejegyzés:", group.items.length);
-      console.log("Dolgozók:", group.workers);
-      console.log("Munkafázisok:", group.workItemNames);
-      console.log("Összes munkaóra:", group.totalHours);
-
-      console.log("BEJEGYZÉSEK RÉSZLETESEN:");
       let calculatedTotal = 0;
-      group.items.forEach((item, index) => {
+      group.items.forEach((item) => {
         const hours =
           item.workHours != null && !isNaN(Number(item.workHours))
             ? Number(item.workHours)
             : 0;
         calculatedTotal += hours;
-        console.log(`  ${index + 1}. Bejegyzés:`, {
-          id: item.id,
-          dolgozó: item.name,
-          email: item.email,
-          munkaóra: item.workHours,
-          munkaóra_szám: hours,
-          mennyiség: item.quantity,
-          egység: item.unit,
-          workItemId: item.workItemId,
-          notes: item.notes,
-          dátum: item.date,
-        });
       });
-      console.log("Számított összeg:", calculatedTotal);
-      console.log("Tárolt összeg:", group.totalHours);
-      console.log("=== CSOPORT VÉGE ===\n");
 
       const ev: EventInput = {
         id: `group-${group.groupNo}`,
@@ -212,8 +179,6 @@ export default function GoogleCalendarView({
       list.push(ev);
     }
 
-    console.log("Total grouped events:", list.length);
-    console.groupEnd();
     return list;
   }, [diaries]);
 
@@ -455,12 +420,6 @@ export default function GoogleCalendarView({
                 ),
               };
 
-              console.log(
-                "Opening grouped diary with items:",
-                groupItems.length,
-                "groupNo:",
-                groupNo
-              );
               onEventClick(groupedDiary);
             }
           } else {
@@ -481,7 +440,6 @@ export default function GoogleCalendarView({
         selectLongPressDelay={400}
         select={(info: DateSelectArg) => {
           onDateClick?.(info.start);
-          console.log("[Calendar] select:", info);
         }}
         height={view === "dayGridMonth" ? 600 : 400}
         locale={huLocale}

@@ -110,12 +110,6 @@ export async function POST(req: NextRequest) {
     const data = await openaiResponse.json();
     const content: string = data.choices?.[0]?.message?.content ?? "";
 
-    // Log the OpenAI response
-    console.log("--- OPENAI RAW RESPONSE ---");
-    console.dir(data, { depth: null });
-    console.log("--- OPENAI CONTENT FIELD ---");
-    console.log(content);
-
     const cleaned = content
       .trim()
       .replace(/^```json[\r\n]*/i, "")

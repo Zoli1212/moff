@@ -86,8 +86,6 @@ export default function GroupedDiaryEditForm({
   const [originalProgressAtDate, setOriginalProgressAtDate] = useState<
   Map<number, number>
   >(new Map());
-  
-  console.log(sliderInteracted, originalProgressAtDate)
 
   // Group approval state
   const [groupApprovalStatus, setGroupApprovalStatus] = useState<{
@@ -128,7 +126,6 @@ export default function GroupedDiaryEditForm({
     workItemId: number,
     newQuantity: number
   ) => {
-    console.log("[Form] handleUpdateQuantity function started.");
     // Update UI immediately for better UX
     setSelectedGroupedItems((prev) =>
       prev.map((item) =>
@@ -141,9 +138,6 @@ export default function GroupedDiaryEditForm({
       )
     );
 
-    console.log(setWorkHours);
-    console.log(originalCompletedQuantities);
-
     // Modal will be closed by the modal component itself after successful save
 
     // Save to server
@@ -155,7 +149,6 @@ export default function GroupedDiaryEditForm({
         showToast("error", result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
-      console.log("Error updating quantity:", error);
       showToast("error", "Hiba a mennyiség frissítése során");
     }
   };
@@ -378,12 +371,9 @@ export default function GroupedDiaryEditForm({
       workerHoursMap.forEach((totalHours, uniqueKey) => {
         const worker = workersMap.get(uniqueKey);
         if (worker && !manuallyModifiedWorkers.has(worker.id)) {
-          console.log(`🔄 [AUTO_SET_WORKER_HOURS] Worker: ${worker.name} (ID: ${worker.id}), Calculated Hours: ${Math.round(totalHours)}`);
           setWorkerHours(
             (prev) => new Map(prev.set(worker.id, Math.round(totalHours)))
           );
-        } else if (worker && manuallyModifiedWorkers.has(worker.id)) {
-          console.log(`⚠️ [SKIP_AUTO_SET] Worker: ${worker.name} (ID: ${worker.id}) was manually modified, keeping current value`);
         }
       });
 
@@ -486,7 +476,6 @@ export default function GroupedDiaryEditForm({
   };
 
   const updateWorkerHours = (uniqueId: number, hours: number) => {
-    console.log(`🕐 [UPDATE_WORKER_HOURS] Worker ID: ${uniqueId}, New Hours: ${hours}`);
     setWorkerHours((prev) => new Map(prev.set(uniqueId, hours)));
     setManuallyModifiedWorkers((prev) => new Set(prev.add(uniqueId)));
   };
@@ -564,7 +553,6 @@ export default function GroupedDiaryEditForm({
 
         // Delete existing diary items for this group
         await deleteWorkDiaryItemsByGroup({ groupNo });
-        console.log(`🗑️ DEBUG - Deleted diary items for group: ${groupNo}`);
       } else {
         // Fallback groupNo if no existing items
         groupNo = Math.floor(Date.now() / 1000);
@@ -595,7 +583,6 @@ export default function GroupedDiaryEditForm({
 
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.id) || workHours;
-        console.log(`🔍 DEBUG - Worker ${worker.name} total hours: ${workerTotalHours}, from workerHours.get: ${workerHours.get(worker.id)}, default workHours: ${workHours}`);
 
         // Use local progress values (progressAtDate) for each work item
         const progressValues = selectedGroupedItems.map(
@@ -607,8 +594,6 @@ export default function GroupedDiaryEditForm({
           0
         );
 
-        console.log(`🔍 DEBUG - Worker: ${worker.name}, progressValues:`, progressValues, `totalProgress: ${totalProgress}`);
-
         for (let i = 0; i < selectedGroupedItems.length; i++) {
           const groupedItem = selectedGroupedItems[i];
           const itemProgress = progressValues[i] || 0;
@@ -619,7 +604,6 @@ export default function GroupedDiaryEditForm({
               ? itemProgress / totalProgress
               : 1 / selectedGroupedItems.length;
           const hoursPerWorkItem = workerTotalHours * proportion;
-          console.log(`🔍 DEBUG - Worker: ${worker.name}, WorkItem: ${groupedItem.workItem.name}, Proportion: ${proportion}, Hours per item: ${hoursPerWorkItem}`);
 
           // Get previous progressAtDate for delta calculation
           const { getPreviousProgressAtDate } = await import(
@@ -633,8 +617,6 @@ export default function GroupedDiaryEditForm({
           
           // Calculate delta: current slider position - previous progressAtDate
           const deltaProgress = Math.max(0, itemProgress - previousProgressAtDate);
-          
-          console.log(`🔍 DEBUG - WorkItem: ${groupedItem.workItem.name}, Current: ${itemProgress}, Previous: ${previousProgressAtDate}, Delta: ${deltaProgress}`);
 
           // Distribute delta proportionally based on worker hours
           const quantityForThisWorker = totalWorkerHours > 0
@@ -676,23 +658,18 @@ export default function GroupedDiaryEditForm({
       }
 
       // Wait a bit to ensure database transaction is committed
-      console.log(`⏳ [UPDATE_PROGRESS] Waiting for database commit...`);
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // NOW update work item progress for all selected items (AFTER diary items are created)
-      console.log(`🔄 [UPDATE_PROGRESS] Starting to update ${selectedGroupedItems.length} workItems...`);
       for (const groupedItem of selectedGroupedItems) {
-        console.log(`🔄 [UPDATE_PROGRESS] Updating workItem ${groupedItem.workItem.id} (${groupedItem.workItem.name})...`);
         try {
-          const result = await updateWorkItemCompletedQuantityFromLatestDiary(
+          await updateWorkItemCompletedQuantityFromLatestDiary(
             groupedItem.workItem.id
           );
-          console.log(`✅ [UPDATE_PROGRESS] WorkItem ${groupedItem.workItem.id} updated successfully:`, result);
         } catch (error) {
           console.error(`❌ [UPDATE_PROGRESS] Failed to update workItem ${groupedItem.workItem.id}:`, error);
         }
       }
-      console.log(`✅ [UPDATE_PROGRESS] All workItems updated!`);
 
       // Handle pending group approval change if exists
       if (
@@ -730,7 +707,6 @@ export default function GroupedDiaryEditForm({
       showToast("success", "Csoportos napló bejegyzés sikeresen frissítve.");
       onSave({});
     } catch (error) {
-      console.log((error as Error).message);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     } finally {
       setIsSubmitting(false);
@@ -773,16 +749,7 @@ export default function GroupedDiaryEditForm({
         isOpen={showQuantityModal}
         onClose={() => setShowQuantityModal(false)}
         onSave={(quantity) => {
-          console.log(
-            "[Form] onSave triggered from modal with quantity:",
-            quantity
-          );
           if (selectedWorkItemId) {
-            console.log(
-              "[Form] selectedWorkItemId is valid:",
-              selectedWorkItemId,
-              ". Calling handleUpdateQuantity."
-            );
             handleUpdateQuantity(selectedWorkItemId, quantity);
           } else {
             console.error(

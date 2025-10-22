@@ -21,7 +21,6 @@ async function extractTextFromDocx(buffer: Buffer): Promise<string> {
 async function extractTextFromExcel(buffer: Buffer, fileType: string): Promise<string> {
   const workbook = XLSX.read(buffer, { type: 'buffer' });
   let text = '';
-  console.log(fileType)
   
   workbook.SheetNames.forEach(sheetName => {
     const worksheet = workbook.Sheets[sheetName];
@@ -70,7 +69,6 @@ export async function POST(req: NextRequest) {
         let existingItems = [];
         try {
           const existingItemsStr = formData.get('existingItems')?.toString();
-          console.log('existingItemsStr', existingItemsStr);
           if (existingItemsStr) {
             existingItems = JSON.parse(existingItemsStr);
             if (!Array.isArray(existingItems)) {

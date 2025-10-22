@@ -46,8 +46,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [newQuantity, setNewQuantity] = useState<string>("");
 
-  console.log(progress);
-
   const handleQuantitySubmit = () => {
     if (onQuantityChange) {
       const quantityValue = parseFloat(newQuantity);
@@ -61,7 +59,6 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
   const effectiveQuantity = quantity;
 
-  console.log(id);
   return (
     <div
       className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? "border-2 border-blue-500 bg-blue-50" : "border border-gray-200 bg-white"} ${className} ${onEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}

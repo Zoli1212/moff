@@ -12,11 +12,9 @@ export async function POST(req: NextRequest) {
         }
     });
     const runId = resultIds?.ids[0];
-    console.log(runId, 'runID')
     let runStatus;
     while (true) {
         runStatus = await getRuns(runId);
-        console.log(runStatus?.data);
         if (runStatus?.data[0]?.status === 'Completed') {
             break;
         }
@@ -28,7 +26,6 @@ export async function POST(req: NextRequest) {
         await new Promise(resolve => setTimeout(resolve, 500))
     }
 
-    console.log("runStatus:", JSON.stringify(runStatus, null, 2));
     return NextResponse.json(runStatus.data?.[0].output?.output[0])
 
 }

@@ -15,12 +15,10 @@ export async function POST(req: NextRequest) {
         }
     });
     const runId = resultIds?.ids[0];
-    console.log("RUNID", runId)
     let runStatus;
     //Use Polling to check Run status
     while (true) {
         runStatus = await getRuns(runId);
-        console.log(runStatus?.data);
         if (runStatus?.data[0]?.status === 'Completed') {
             break;
         }

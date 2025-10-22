@@ -65,14 +65,6 @@ export function TenantSelectorSidebar() {
     return undefined
   }
 
-  // Debug logging
-  console.log('TenantSelectorSidebar Debug:', {
-    isLoading,
-    availableTenantsLength: availableTenants.length,
-    selectedTenantEmail,
-    user: user?.emailAddresses?.[0]?.emailAddress
-  })
-
   if (isLoading) {
     return (
       <div className="w-full px-4 pb-3">

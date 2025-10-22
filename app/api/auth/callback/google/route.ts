@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
   const code = searchParams.get("code");
   const user = await currentUser();
   const email = user?.emailAddresses?.[0]?.emailAddress;
-  console.log(email, 'email');
 
   if (!code) {
     return NextResponse.json({ error: "Missing code param" }, { status: 400 });

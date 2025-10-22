@@ -21,8 +21,6 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        console.log('Sending EmailAnalyzer event with recordId:', recordId);
-        
         // Trigger the email analysis
         try {
             const result = await inngest.send({
@@ -39,7 +37,6 @@ export async function POST(req: NextRequest) {
             });
 
             const eventId = result.ids?.[0];
-            console.log('Inngest event sent. Event ID:', eventId, 'Record ID:', recordId);
             
             return NextResponse.json({ 
                 status: "queued", 

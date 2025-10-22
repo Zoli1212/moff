@@ -271,9 +271,7 @@ export default function TasksPage() {
     setAddingNewItem(true);
     setAssignError(null);
 
-    console.log("Tasks page - saving new item:", newItemData);
-
-    try {
+    try{
       // Create the work item with the form data
       const result = await addWorkItemAndOfferItem(workId, {
         name: newItemData.name,
@@ -283,10 +281,7 @@ export default function TasksPage() {
         unitPrice: newItemData.unitPrice,
       });
 
-      console.log("Tasks page - result:", result);
-
       if (result.success) {
-        console.log("Tasks page - success, refreshing data");
         // Refresh the work items to show the new item
         await doFetchWorkAndItems();
         // Show success message
@@ -333,12 +328,7 @@ export default function TasksPage() {
     updatedData: Partial<WorkItemEditData>
   ) => {
     try {
-      console.log("handleSaveEditedWorkItem called with:", {
-        workItemId,
-        updatedData,
-      });
       const result = await updateWorkItemDetails(workItemId, updatedData);
-      console.log("updateWorkItemDetails result:", result);
 
       if (result.success) {
         // Update local state

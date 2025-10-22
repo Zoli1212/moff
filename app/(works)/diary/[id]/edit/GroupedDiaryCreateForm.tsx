@@ -71,8 +71,6 @@ export default function GroupedDiaryForm({
   const [originalCompletedQuantities, setOriginalCompletedQuantities] =
     useState<Map<number, number>>(new Map());
 
-  console.log(originalCompletedQuantities);
-
   // Track local progress for this diary entry (progressAtDate)
   const [localProgress, setLocalProgress] = useState<Map<number, number>>(
     new Map()
@@ -87,19 +85,15 @@ export default function GroupedDiaryForm({
   useEffect(() => {
     if (workItems && workItems.length > 0) {
       const initializeProgress = async () => {
-        console.log(
-          `🚀 [Frontend] Starting slider initialization for ${workItems.length} workItems, date: ${date}`
-        );
-
-        const initialProgress = new Map<number, number>();
+        const progressMap = new Map<number, number>();
 
         // First, set all items to completedQuantity (fast)
         workItems.forEach((item) => {
-          initialProgress.set(item.id, item.completedQuantity || 0);
+          progressMap.set(item.id, item.completedQuantity || 0);
         });
 
         // Set initial values immediately
-        setLocalProgress(new Map(initialProgress));
+        setLocalProgress(new Map(progressMap));
 
         // Then, async update only selected items with previous progress (only if not already initialized)
         const updateSelectedItems = async () => {
@@ -108,24 +102,13 @@ export default function GroupedDiaryForm({
 
             // Skip if already initialized
             if (initializedItems.has(item.id)) {
-              console.log(
-                `⏭️ [Frontend] Skipping already initialized item: ${item.name}`
-              );
               continue;
             }
-
-            console.log(
-              `📊 [Frontend] Checking previous progress for selected item: ${item.name} (id: ${item.id})`
-            );
 
             const sliderValue = await getSliderInitialValue(
               item.id,
               date,
               item.completedQuantity || 0
-            );
-
-            console.log(
-              `📈 [Frontend] Updated slider value for ${item.name}: ${sliderValue}`
             );
 
             // Update only this item
@@ -158,9 +141,6 @@ export default function GroupedDiaryForm({
 
   // Reset initialized items when date changes
   useEffect(() => {
-    console.log(
-      `📅 [Frontend] Date changed to: ${date}, resetting initialized items`
-    );
     setInitializedItems(new Set());
   }, [date]);
 
@@ -179,7 +159,6 @@ export default function GroupedDiaryForm({
     workItemId: number,
     newQuantity: number
   ) => {
-    console.log("[Form] handleUpdateQuantity function started.");
     // Update UI immediately for better UX
     setSelectedGroupedItems((prev) =>
       prev.map((item) =>
@@ -201,7 +180,6 @@ export default function GroupedDiaryForm({
         toast.error(result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
-      console.log("Error updating quantity:", error);
       toast.error("Hiba a mennyiség frissítése során");
     }
   };
@@ -517,8 +495,7 @@ export default function GroupedDiaryForm({
         // If no progress at all, still record work hours but with 0 quantity
         const hasProgress = totalProgress > 0;
 
-        for (const [index, groupedItem] of selectedGroupedItems.entries()) {
-          console.log(index);
+        for (const [, groupedItem] of selectedGroupedItems.entries()) {
           const itemProgress = localProgress.get(groupedItem.workItem.id) || 0;
 
           // Calculate delta (difference from original slider start value, not completedQuantity)
@@ -530,8 +507,6 @@ export default function GroupedDiaryForm({
           const proportion = hasProgress
             ? deltaQuantity / totalProgress
             : 1 / selectedGroupedItems.length;
-
-          console.log(proportion);
 
           // Work hours: distribute evenly among selected items regardless of progress
           const hoursPerWorkItem =
@@ -576,24 +551,13 @@ export default function GroupedDiaryForm({
       }
 
       // Wait a bit to ensure database transaction is committed
-      console.log(`⏳ [UPDATE_PROGRESS] Waiting for database commit...`);
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // NOW update work item progress for all selected items (AFTER diary items are created)
-      console.log(
-        `🔄 [UPDATE_PROGRESS] Starting to update ${selectedGroupedItems.length} workItems...`
-      );
       for (const groupedItem of selectedGroupedItems) {
-        console.log(
-          `🔄 [UPDATE_PROGRESS] Updating workItem ${groupedItem.workItem.id} (${groupedItem.workItem.name})...`
-        );
         try {
-          const result = await updateWorkItemCompletedQuantityFromLatestDiary(
+          await updateWorkItemCompletedQuantityFromLatestDiary(
             groupedItem.workItem.id
-          );
-          console.log(
-            `✅ [UPDATE_PROGRESS] WorkItem ${groupedItem.workItem.id} updated successfully:`,
-            result
           );
         } catch (error) {
           console.error(
@@ -602,7 +566,6 @@ export default function GroupedDiaryForm({
           );
         }
       }
-      console.log(`✅ [UPDATE_PROGRESS] All workItems updated!`);
 
       // Handle pending group approval change if exists
       if (
@@ -640,7 +603,6 @@ export default function GroupedDiaryForm({
       showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
       onSave({});
     } catch (error) {
-      console.log((error as Error).message);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     } finally {
       setIsSubmitting(false);
@@ -660,16 +622,7 @@ export default function GroupedDiaryForm({
         isOpen={showQuantityModal}
         onClose={() => setShowQuantityModal(false)}
         onSave={(quantity) => {
-          console.log(
-            "[Form] onSave triggered from modal with quantity:",
-            quantity
-          );
           if (selectedWorkItemId) {
-            console.log(
-              "[Form] selectedWorkItemId is valid:",
-              selectedWorkItemId,
-              ". Calling handleUpdateQuantity."
-            );
             handleUpdateQuantity(selectedWorkItemId, quantity);
           } else {
             console.error(

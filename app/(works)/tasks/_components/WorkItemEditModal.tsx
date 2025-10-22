@@ -107,9 +107,6 @@ export function WorkItemEditModal({
       return;
     }
 
-
-    console.log("Saving work item with data:", formData);
-
     setIsSaving(true);
     try {
       await onSave(workItem.id, {

@@ -105,8 +105,6 @@ function WorkersSlotsSectionWithoutRoles({
           "@/actions/get-workitemworkers-for-work"
         );
         const data = await getWorkItemWorkersForWork(workId);
-        console.log("=== DEBUG workItemWorkers for workId", workId, "===");
-        console.log("Direct workItemWorker query result:", data);
         setAssignments(data || []);
       } catch (error) {
         console.error("Error loading workItemWorkers:", error);
@@ -132,8 +130,6 @@ function WorkersSlotsSectionWithoutRoles({
     null
   );
 
-  console.log(addLock);
-
   // No automatic calculation - slots are manually managed
   // totalRequiredWorkers is always 0 (not calculated from workItems)
 
@@ -142,8 +138,6 @@ function WorkersSlotsSectionWithoutRoles({
   const [removeModalOpen, setRemoveModalOpen] = useState(false);
   const [selectedRoleForRemoval, setSelectedRoleForRemoval] =
     useState<string>("");
-
-  console.log(setSelectedRoleForRemoval);
 
   const handleRemoveFromWorkItem = async (workItemId: number) => {
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);

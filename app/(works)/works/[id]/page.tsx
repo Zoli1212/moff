@@ -174,7 +174,6 @@ export default function WorkDetailPage({
               });
             }
           } catch (err) {
-            console.log(err);
             setWorkItemsWithWorkers(
               (workData.workItems as unknown as WorkItem[]) || []
             );
@@ -367,36 +366,6 @@ export default function WorkDetailPage({
     workers: item.workers ?? [],
     workItemWorkers: item.workItemWorkers ?? [],
   }));
-
-  console.log(workItemsWithWorkers, "WORKITEMSWITHWORKERS");
-  console.log(workers, "WORKERS - from work.workers");
-  console.log(
-    generalWorkersFromDB,
-    "GENERAL_WORKERS_FROM_DB - workItemId=null from workItemWorkers table"
-  );
-
-  // Debug: Check if we have general workers from both sources
-  const generalWorkers = workers.filter((w) => w.workItemId === null);
-  const specificWorkers = workers.filter((w) => w.workItemId !== null);
-  console.log(
-    `[CLIENT DEBUG] Total workers from work.workers: ${workers.length}`
-  );
-  console.log(
-    `[CLIENT DEBUG] General workers from work.workers (workItemId=null): ${generalWorkers.length}`,
-    generalWorkers
-  );
-  console.log(
-    `[CLIENT DEBUG] Specific workers from work.workers (workItemId!=null): ${specificWorkers.length}`,
-    specificWorkers.map((w) => ({
-      id: w.id,
-      name: w.name,
-      workItemId: w.workItemId,
-    }))
-  );
-  console.log(
-    `[CLIENT DEBUG] General workers from workItemWorkers table: ${generalWorkersFromDB.length}`,
-    generalWorkersFromDB
-  );
 
   // --- TOOL AGGREGÁCIÓ ---
   const toolMap = new Map<string, { tool: Tool; quantity: number }>();

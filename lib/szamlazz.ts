@@ -56,8 +56,6 @@ export class Client {
   constructor(private config: { key: string }) {}
 
   async generateInvoice(invoiceData: InvoiceData, items: InvoiceItem[]) {
-    console.log('Generating invoice with data:', JSON.stringify({ invoiceData, items }, null, 2));
-
     const currentDate = new Date()
     const xmlContent = `<?xml version="1.0" encoding="UTF-8"?>
 <xmlszamla xmlns="http://www.szamlazz.hu/xmlszamla">
@@ -120,15 +118,10 @@ export class Client {
 
     if (!response.ok) {
       const responseText = await response.text()
-      console.log('Got response from Számlázz.hu:', { 
-      status: response.status,
-      statusText: response.statusText
-    });
       throw new Error(`Számlázz.hu API error: ${response.status} ${response.statusText}\nResponse: ${responseText}`)
     }
 
     const responseText = await response.text();
-    console.log('Számlázz.hu RAW response:', responseText);
 
     // Use regex to parse the XML response as DOMParser is not available in Node.js
     const invoiceNumberMatch = responseText.match(/<szamlaszam>(.+?)<\/szamlaszam>/);

@@ -24,8 +24,6 @@ export async function POST(req: NextRequest) {
   const json = req.json();
   const { email, attachments }: { email: string; attachments: Attachment[] } = await json;
 
-  console.log('API /send called with:', { email, attachments });
-
   try {
     const html = getOfferEmail(email);
     const data = await resend.emails.send({
@@ -40,7 +38,6 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    console.log('Resend API response:', data);
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error sending email:', error);

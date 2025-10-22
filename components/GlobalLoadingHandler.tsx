@@ -5,7 +5,6 @@ import { useDemandStore } from "@/store/offerLetterStore";
 
 export function GlobalLoadingHandler() {
   const { isGlobalLoading, setGlobalLoading } = useDemandStore();
-  console.log(isGlobalLoading)
 
   useEffect(() => {
     // Check for loading state in session storage on mount

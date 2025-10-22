@@ -50,7 +50,6 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
   const [avatarError, setAvatarError] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  console.log(relevantWorkItemsWithWorkers, "relevantWorkItemsWithWorkers");
   useEffect(() => {
     if (open) {
       getWorkforce().then(setWorkers);
@@ -62,13 +61,6 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
       setShowWorkerList(false);
     }
   }, [open]);
-
-  console.log(
-    workers,
-    "WORKERS",
-    startTransition,
-    setRelevantWorkItemsWithWorkers
-  );
 
   const handleSelect = (worker: WorkforceMember) => {
     setSelectedId(worker.id);
@@ -96,7 +88,6 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
       }
     } else {
       // Add new worker (just pass data up, all logic in ParticipantsSection)
-      console.log("Saving worker, avatarUrl:", avatarUrl);
       onSave({ name, email, mobile, profession, avatarUrl });
     }
     onClose();

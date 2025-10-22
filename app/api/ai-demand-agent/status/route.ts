@@ -21,8 +21,6 @@ export async function GET(req: NextRequest) {
     const run = result.data?.data?.[0];
     const status = run?.status || "Unknown";
 
-    console.log('status', status)
-
     return NextResponse.json({ status });
   } catch (error) {
     return NextResponse.json({ error: `Failed to check run status${(error as Error).message}` }, { status: 500 });

@@ -36,8 +36,6 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
   // Remove stopOnError - we want to continue processing other works
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  console.log(showStatus);
-
   useEffect(() => {
     const notUpdated = works.filter((w) => w.updatedByAI !== true);
     if (notUpdated.length === 0) {
@@ -142,12 +140,6 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
       setHideBar(false);
     }
   }, [done, total]);
-  // DEBUG: Log to console how many works need update
-  if (typeof window !== "undefined") {
-    console.log("WorksAutoUpdater: notUpdated count:", total, notUpdated);
-  }
-
-  console.log(errorMsg);
 
   // Ha minden munka frissítve van, ne jelenítsünk semmit
   if (total === 0) {

@@ -30,7 +30,6 @@ export function parseOfferText(text: string): ParsedOffer {
   const offerSummaryMatch = text.match(/offerSummary:\s*(.+?)(?:\n|$)/i);
   if (offerSummaryMatch) {
     offerSummary = offerSummaryMatch[1].trim();
-    console.log("🎯 Parsed offerSummary:", offerSummary);
   }
 
   // Extract title from the first line containing 'kerület' or fallback
@@ -58,8 +57,6 @@ export function parseOfferText(text: string): ParsedOffer {
       const [
         _, name, quantity, unit, unitPrice, materialUnitPrice, laborTotal, materialTotal
       ] = itemMatch;
-
-      console.log(_)
 
       const workTotalNum = parseFloat((laborTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;
       const materialTotalNum = parseFloat((materialTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;

@@ -90,7 +90,6 @@ const WorkListPage = () => {
       try {
         const fetchedWorks = await getUserWorks();
         setWorks(fetchedWorks);
-        console.log("WORKS", fetchedWorks);
       } catch {
         setWorks([]);
       } finally {
@@ -151,8 +150,6 @@ const WorkListPage = () => {
   }
 
   let activeWorks = works.filter((w) => w.active !== false);
-
-  console.log(activeWorks, "ACTIVE WORKS");
 
   return (
     <div style={{ padding: 32, background: "#f9fafb", minHeight: "100vh", overflowY: "auto" }}>

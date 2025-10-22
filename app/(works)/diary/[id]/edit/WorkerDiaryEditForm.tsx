@@ -207,43 +207,6 @@ export default function WorkerDiaryEditForm({
     }));
   }, [assignedWorkers, selectedItem, workersById]);
 
-  // DEBUG: dump incoming props and derived state
-  useEffect(() => {
-    try {
-      console.log("[WorkerDiaryEditForm][DEBUG] props/state", {
-        diary,
-        editingItem,
-        workItemsCount: workItems?.length ?? 0,
-        workItems,
-        selectedWorkItemId,
-        selectedItem,
-        assignedWorkers,
-        workerOptions,
-        selectedWorkerToken,
-      });
-      if (editingItem?.id && !selectedWorkerToken) {
-        const token = editingItem.workItemWorkerId
-          ? `aw:${editingItem.workItemWorkerId}`
-          : editingItem.workerId
-            ? `w:${editingItem.workerId}`
-            : "";
-        console.log(
-          "[WorkerDiaryEditForm][DEBUG] computed token from editingItem",
-          token
-        );
-      }
-    } catch {}
-  }, [
-    diary,
-    editingItem,
-    workItems,
-    selectedWorkItemId,
-    selectedItem,
-    assignedWorkers,
-    workerOptions,
-    selectedWorkerToken,
-  ]);
-
   // Extend options with a synthetic one from editingItem when missing (so select can display it)
   const displayWorkerOptions = useMemo(() => {
     if (!editingItem?.id) return workerOptions;
@@ -304,14 +267,6 @@ export default function WorkerDiaryEditForm({
         opt?.email ??
         (sel.workerId ? workersById.get(sel.workerId)?.email : undefined) ??
         assigned?.email;
-      console.log("[WorkerDiaryEditForm] selected worker changed:", {
-        selectedWorkerToken,
-        parsed: sel,
-        opt,
-        assigned,
-        name,
-        email,
-      });
     } catch {}
   }, [
     selectedWorkerToken,
@@ -519,17 +474,6 @@ export default function WorkerDiaryEditForm({
         id: editingItem.id,
         ...base,
       };
-      try {
-        console.log("[WorkerDiaryEditForm] update selected:", {
-          selectedWorkItemId,
-          workerId: sel.workerId,
-          selectedOpt,
-          selectedAssignment,
-          selectedEmail,
-          selectedName,
-        });
-        console.log("[WorkerDiaryEditForm] update payload:", updatePayload);
-      } catch {}
       const result: ActionResult<Partial<WorkDiaryWithItem>> =
         await updateWorkDiaryItem(updatePayload);
       if (result.success && result.data) {
@@ -562,17 +506,6 @@ export default function WorkerDiaryEditForm({
         ...base,
         diaryId: diaryIdToUse,
       };
-      try {
-        console.log("[WorkerDiaryEditForm] create selected:", {
-          selectedWorkItemId,
-          workerId: sel.workerId,
-          selectedOpt,
-          selectedAssignment,
-          selectedEmail,
-          selectedName,
-        });
-        console.log("[WorkerDiaryEditForm] create payload:", createPayload);
-      } catch {}
       const result: ActionResult<Partial<WorkDiaryWithItem>> =
         await createWorkDiaryItem(createPayload);
       if (result.success && result.data) {
@@ -637,14 +570,6 @@ export default function WorkerDiaryEditForm({
                   ? workersById.get(sel.workerId)?.email
                   : undefined) ??
                 assigned?.email;
-              console.log("[WorkerDiaryEditForm] select change:", {
-                selectedWorkerToken: token,
-                parsed: sel,
-                opt,
-                assigned,
-                name,
-                email,
-              });
             } catch {}
           }}
           disabled={selectedWorkItemId === ""}
@@ -1035,7 +960,6 @@ export default function WorkerDiaryEditForm({
                     }
                   }
                 } catch (error) {
-                  console.log((error as Error).message)
                   showToast("error", "Hiba történt a törlés során.");
                 }
               }}

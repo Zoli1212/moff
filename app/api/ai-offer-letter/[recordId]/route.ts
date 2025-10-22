@@ -9,7 +9,6 @@ export async function GET(
   try {
     const user = await currentUser();
 
-    console.log(user, "user");
     const userEmail = user?.emailAddresses?.[0]?.emailAddress;
 
     const recordId = (await params).recordId;
@@ -38,7 +37,6 @@ export async function GET(
       },
     });
 
-    console.log(record, "record");
     if (!record) {
       return new NextResponse(JSON.stringify({ error: "Offer not found" }), {
         status: 404,
