@@ -37,6 +37,7 @@ interface DiaryPageClientProps {
   error: string | null;
   type: "workers" | "contractor";
   diaryIds: number[];
+  isTenant: boolean;
 }
 
 export default function DiaryPageClient({
@@ -45,6 +46,7 @@ export default function DiaryPageClient({
   diaries,
   workforceRegistry,
   error,
+  isTenant,
 }: DiaryPageClientProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -315,9 +317,11 @@ export default function DiaryPageClient({
             </div>
           </div>
         )}
+        {isTenant && (
         <div className="mb-20 mt-4">
           <PerformanceSummary data={performanceData} isLoading={isLoading} />
         </div>
+        )}
       </div>
     </div>
   );

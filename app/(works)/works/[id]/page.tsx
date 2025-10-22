@@ -610,7 +610,8 @@ export default function WorkDetailPage({
           )}
 
 
-          {/* Cost Summary */}
+          {/* Cost Summary - Only for tenants */}
+          {isTenant && (
           <div className="border-t border-gray-200 pt-4">
             <div className="space-y-3">
               <div className="flex justify-between items-center">
@@ -634,6 +635,7 @@ export default function WorkDetailPage({
               </div>
             </div>
           </div>
+          )}
         </div>
 
 

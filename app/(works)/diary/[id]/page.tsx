@@ -4,6 +4,7 @@ import {
   WorkDiaryWithItem,
 } from "@/actions/get-workdiariesbyworkid-actions";
 import { getAllWorkforceRegistry, WorkforceRegistryData } from "@/actions/workforce-registry-actions";
+import { getCurrentUserData } from "@/actions/user-actions";
 import { notFound } from "next/navigation";
 import { WorkItem, Worker } from "@/types/work"; // Importáljuk a hiányzó típusokat
 import DiaryPageClient from "./DiaryPageClient";
@@ -18,6 +19,10 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
   const workId = Number((await params).id);
   const { diaryType } = await searchParams;
   if (!workId) return notFound();
+
+  // Server-side role detection - no layout shift!
+  const userData = await getCurrentUserData();
+  const isTenant = userData.isTenant ?? true;
 
   let work: (Work & { workers: Worker[], expectedProfitPercent: number | null }) | null = null;
   let items: WorkItem[] = [];
@@ -66,6 +71,7 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
         error={error}
         type={type}
         diaryIds={diaryIds}
+        isTenant={isTenant}
       />
     </div>
   );
