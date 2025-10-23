@@ -27,6 +27,7 @@ interface Props {
   workItems: WorkItem[];
   workers: Worker[]; // Worker rows for this work (professions)
   showAllWorkItems?: boolean; // If true, treat all workItems as active (for works/[id] page)
+  maxRequiredWorkers?: number | null;
 }
 
 // Extend WorkItemWorker with optional fields that can be present from the API/DB
@@ -79,6 +80,7 @@ function WorkersSlotsSectionWithoutRoles({
   workItems,
   workers,
   showAllWorkItems = false,
+  maxRequiredWorkers,
 }: Props) {
   // State to control if empty slot is visible
   const [showEmptySlot, setShowEmptySlot] = useState(true);
