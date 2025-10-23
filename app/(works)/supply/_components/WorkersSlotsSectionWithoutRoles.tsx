@@ -147,6 +147,7 @@ function WorkersSlotsSectionWithoutRoles({
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);
     await refreshAssignments();
   };
+  console.log(maxRequiredWorkers)
 
   console.log(setSelectedRoleForRemoval)
 
