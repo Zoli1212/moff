@@ -306,7 +306,8 @@ model WorkDiary {
   images         String[]    // URLs to stored images
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
-  tenantEmail    String      @default("")
+  tenantEmail    String      @default("") // Work owner's email
+  creatorEmail   String      @default("") // Who created this diary entry
   workDiaryItems WorkDiaryItem[]
 }
 
@@ -582,7 +583,8 @@ model WorkDiaryItem {
   notes         String?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
-  tenantEmail   String     @default("")
+  tenantEmail   String     @default("") // Work owner's email
+  creatorEmail  String     @default("") // Who created this diary item
   accepted      Boolean    @default(false)
   groupNo       Int?
 }

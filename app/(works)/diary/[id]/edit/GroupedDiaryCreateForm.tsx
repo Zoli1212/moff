@@ -180,7 +180,7 @@ export default function GroupedDiaryForm({
         toast.error(result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("Hiba a mennyiség frissítése során");
     }
   };
@@ -509,7 +509,7 @@ export default function GroupedDiaryForm({
             ? deltaQuantity / totalProgress
             : 1 / selectedGroupedItems.length;
 
-            console.log(proportion)
+          console.log(proportion);
 
           // Work hours: distribute evenly among selected items regardless of progress
           const hoursPerWorkItem =
@@ -537,7 +537,7 @@ export default function GroupedDiaryForm({
             progressAtDate: itemProgress, // Progress at this specific date
             groupNo: groupNo,
             tenantEmail: user?.emailAddresses?.[0]?.emailAddress || "",
-            accepted: isTenant, // If tenant creates diary items, they are auto-accepted
+            // accepted field is handled by server based on work tenant check
           };
 
           promises.push(createWorkDiaryItem(diaryItemData));
@@ -606,7 +606,7 @@ export default function GroupedDiaryForm({
       showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
       onSave({});
     } catch (error) {
-      console.log(error)
+      console.log(error);
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     } finally {
       setIsSubmitting(false);

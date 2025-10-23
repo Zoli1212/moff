@@ -318,9 +318,9 @@ export default function DiaryPageClient({
           </div>
         )}
         {isTenant && (
-        <div className="mb-20 mt-4">
-          <PerformanceSummary data={performanceData} isLoading={isLoading} />
-        </div>
+          <div className="mb-20 mt-4">
+            <PerformanceSummary data={performanceData} isLoading={isLoading} />
+          </div>
         )}
       </div>
     </div>
