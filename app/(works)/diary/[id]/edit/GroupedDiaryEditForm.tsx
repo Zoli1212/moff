@@ -121,6 +121,8 @@ export default function GroupedDiaryEditForm({
     return !!a && !!b && a === b;
   }, [currentEmail, diary?.tenantEmail]);
 
+  console.log(setWorkHours, originalCompletedQuantities, sliderInteracted, originalProgressAtDate)
+
   // This function updates the quantity in the local state AND saves to server
   const handleUpdateQuantity = async (
     workItemId: number,
@@ -149,6 +151,7 @@ export default function GroupedDiaryEditForm({
         showToast("error", result.error || "Hiba a mennyiség frissítése során");
       }
     } catch (error) {
+      console.log(error)
       showToast("error", "Hiba a mennyiség frissítése során");
     }
   };
@@ -707,6 +710,7 @@ export default function GroupedDiaryEditForm({
       showToast("success", "Csoportos napló bejegyzés sikeresen frissítve.");
       onSave({});
     } catch (error) {
+      console.log(error)
       showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
     } finally {
       setIsSubmitting(false);

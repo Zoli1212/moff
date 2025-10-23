@@ -113,10 +113,6 @@ export default function BillingDraftPage() {
     }
   }, [billing]);
 
-  if (!isTenant) {
-    return null; // Will redirect
-  }
-
   const total = useMemo(() => {
     return editableItems
       .filter((item) => item.isSelected)
@@ -132,6 +128,10 @@ export default function BillingDraftPage() {
   const hasSelectedItems = useMemo(() => {
     return editableItems.some((item) => item.isSelected);
   }, [editableItems]);
+
+  if (!isTenant) {
+    return null; // Will redirect
+  }
 
   const handleUpdateBilling = async () => {
     if (!billing) return;

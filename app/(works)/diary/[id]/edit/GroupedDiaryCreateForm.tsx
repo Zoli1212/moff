@@ -48,11 +48,6 @@ export default function GroupedDiaryForm({
   const [date, setDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [images, setImages] = useState<string[]>([]);
-
-  // Check if current user is tenant
-  const currentEmail = user?.emailAddresses?.[0]?.emailAddress || "";
-  const isTenant =
-    currentEmail.toLowerCase() === (diary?.tenantEmail || "").toLowerCase();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState<number>(0);
   const [selectedGroupedItems, setSelectedGroupedItems] = useState<

@@ -4,17 +4,56 @@ import { useState, useEffect } from "react";
 import { getBillings } from "@/actions/billing-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
 import Link from "next/link";
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, X, ChevronDown } from 'lucide-react';
 import { Billing } from '@prisma/client';
 import { useRouter } from "next/navigation";
+
+interface BillingItem {
+  name: string;
+  description?: string;
+  quantity: number;
+  unit?: string;
+  materialTotal?: number;
+  workTotal?: number;
+  totalPrice?: number;
+  unitPrice?: number;
+}
+
+interface BillingWithWork extends Billing {
+  work?: {
+    title: string;
+  };
+}
+
+interface SelectedBillingData extends Billing {
+  work?: {
+    title: string;
+  };
+  workTitle: string;
+  invoiceLabel: string;
+  invoiceNumberInWork: number;
+}
 
 export default function MyInvoicesPage() {
   const router = useRouter();
   const [billings, setBillings] = useState<Billing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTenant, setIsTenant] = useState<boolean>(true);
-  const [selectedBilling, setSelectedBilling] = useState<any>(null);
+  const [selectedBilling, setSelectedBilling] = useState<SelectedBillingData | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [expandedWorks, setExpandedWorks] = useState<Set<string>>(new Set());
+
+  const toggleWork = (workTitle: string) => {
+    setExpandedWorks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(workTitle)) {
+        newSet.delete(workTitle);
+      } else {
+        newSet.add(workTitle);
+      }
+      return newSet;
+    });
+  };
 
   // Check if user is tenant
   useEffect(() => {
@@ -83,58 +122,118 @@ export default function MyInvoicesPage() {
               <p className="text-gray-500">Nincsenek kiállított számlák.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {billings.map((billing, index) => {
-                // Calculate invoice number within work (count billings with same workId up to this point)
-                const invoiceNumberInWork = billings
-                  .slice(0, index + 1)
-                  .filter(b => b.workId === billing.workId)
-                  .length;
-                
-                // Get work title from billing.work if available
-                const workTitle = (billing as any).work?.title || "Ismeretlen munka";
-                
-                // Determine label based on status
-                const invoiceLabel = billing.status === "paid_cash" 
-                  ? "Pénzügyileg teljesített" 
-                  : "Számla";
+            <div className="space-y-6">
+              {Object.entries(
+                billings.reduce((groups, billing) => {
+                  const workTitle = (billing as BillingWithWork).work?.title || "Ismeretlen munka";
+                  if (!groups[workTitle]) {
+                    groups[workTitle] = [];
+                  }
+                  groups[workTitle].push(billing);
+                  return groups;
+                }, {} as Record<string, typeof billings>)
+              ).map(([workTitle, workBillings]) => {
+                const isExpanded = expandedWorks.has(workTitle);
+                // Only sum finalized and paid invoices (exclude drafts)
+                const totalAmount = workBillings
+                  .filter(b => b.status !== 'draft')
+                  .reduce((sum, b) => sum + b.totalPrice, 0);
+                // Sum draft invoices separately
+                const draftAmount = workBillings
+                  .filter(b => b.status === 'draft')
+                  .reduce((sum, b) => sum + b.totalPrice, 0);
                 
                 return (
-                  <div 
-                    key={billing.id} 
-                    className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => {
-                      setSelectedBilling({ ...billing, workTitle, invoiceLabel, invoiceNumberInWork });
-                      setShowModal(true);
-                    }}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium text-gray-900">
-                          {workTitle} - {invoiceLabel} {invoiceNumberInWork}
-                        </h3>
-                        <div className="text-sm text-gray-500 mt-1">
-                          {new Date(billing.createdAt).toLocaleDateString('hu-HU')}
-                          {billing.invoiceNumber && (
-                            <span className="ml-2">• Számlaszám: {billing.invoiceNumber}</span>
-                          )}
+                  <div key={workTitle} className="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <button
+                      onClick={() => toggleWork(workTitle)}
+                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <ChevronDown 
+                          className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        />
+                        <div className="text-left">
+                          <h2 className="text-lg font-semibold text-gray-800">
+                            {workTitle}
+                          </h2>
+                          <p className="text-sm text-gray-500">
+                            {workBillings.length} számla
+                          </p>
                         </div>
                       </div>
-                      {billing.status !== "paid_cash" && (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
-                          {getStatusDisplay(billing.status)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-2 flex justify-end">
-                      <div className="font-semibold text-gray-900">
-                        {new Intl.NumberFormat("hu-HU", {
-                          style: "currency",
-                          currency: "HUF",
-                          maximumFractionDigits: 0,
-                        }).format(billing.totalPrice)}
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900">
+                          {new Intl.NumberFormat("hu-HU", {
+                            style: "currency",
+                            currency: "HUF",
+                            maximumFractionDigits: 0,
+                          }).format(totalAmount)}
+                        </div>
+                        {draftAmount > 0 && (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Piszkozat: {new Intl.NumberFormat("hu-HU", {
+                              style: "currency",
+                              currency: "HUF",
+                              maximumFractionDigits: 0,
+                            }).format(draftAmount)}
+                          </div>
+                        )}
                       </div>
-                    </div>
+                    </button>
+                    
+                    {isExpanded && (
+                      <div className="border-t bg-gray-50 p-4 space-y-3">
+                    {workBillings.map((billing, index) => {
+                      // Calculate invoice number within this work
+                      const invoiceNumberInWork = index + 1;
+                      
+                      // Determine label based on status
+                      const invoiceLabel = billing.status === "paid_cash" 
+                        ? "Pénzügyileg teljesített" 
+                        : "Számla";
+                      
+                      return (
+                        <div 
+                          key={billing.id} 
+                          className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow ml-4"
+                          onClick={() => {
+                            setSelectedBilling({ ...billing, workTitle, invoiceLabel, invoiceNumberInWork });
+                            setShowModal(true);
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="font-medium text-gray-900">
+                                {invoiceLabel} {invoiceNumberInWork}
+                              </h3>
+                              <div className="text-sm text-gray-500 mt-1">
+                                {new Date(billing.createdAt).toLocaleDateString('hu-HU')}
+                                {billing.invoiceNumber && (
+                                  <span className="ml-2">• Számlaszám: {billing.invoiceNumber}</span>
+                                )}
+                              </div>
+                            </div>
+                            {billing.status !== "paid_cash" && (
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
+                                {getStatusDisplay(billing.status)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="mt-2 flex justify-end">
+                            <div className="font-semibold text-gray-900">
+                              {new Intl.NumberFormat("hu-HU", {
+                                style: "currency",
+                                currency: "HUF",
+                                maximumFractionDigits: 0,
+                              }).format(billing.totalPrice)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -169,9 +268,9 @@ export default function MyInvoicesPage() {
 
             <div className="p-4">
               <h3 className="font-semibold text-gray-900 mb-3">Számlázott tételek:</h3>
-              {selectedBilling.items && selectedBilling.items.length > 0 ? (
+              {Array.isArray(selectedBilling.items) && selectedBilling.items.length > 0 ? (
                 <div className="space-y-2">
-                  {selectedBilling.items.map((item: any, index: number) => (
+                  {(selectedBilling.items as unknown as BillingItem[]).map((item: BillingItem, index: number) => (
                     <div key={index} className="border rounded-lg p-3 bg-gray-50">
                       <div className="flex justify-between items-start">
                         <div className="flex-1">
@@ -189,14 +288,14 @@ export default function MyInvoicesPage() {
                               style: "currency",
                               currency: "HUF",
                               maximumFractionDigits: 0,
-                            }).format(item.totalPrice || (item.quantity * item.unitPrice))}
+                            }).format(item.totalPrice || (item.quantity * (item.unitPrice || 0)))}
                           </div>
                           <div className="text-sm text-gray-500">
                             {new Intl.NumberFormat("hu-HU", {
                               style: "currency",
                               currency: "HUF",
                               maximumFractionDigits: 0,
-                            }).format(item.unitPrice)} / {item.unit || 'db'}
+                            }).format(item.unitPrice || 0)} / {item.unit || 'db'}
                           </div>
                         </div>
                       </div>
