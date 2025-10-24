@@ -22,6 +22,8 @@ interface BillingItem {
 interface BillingWithWork extends Billing {
   work?: {
     title: string;
+    totalMaterialCost?: number;
+    totalLaborCost?: number;
   };
 }
 
@@ -162,14 +164,28 @@ export default function MyInvoicesPage() {
                           </p>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-gray-900">
-                          {new Intl.NumberFormat("hu-HU", {
-                            style: "currency",
-                            currency: "HUF",
-                            maximumFractionDigits: 0,
-                          }).format(totalAmount)}
+                      <div className="text-right space-y-1">
+                        <div className="flex items-center justify-end gap-2">
+                          <span className="text-sm text-gray-600">Teljesített:</span>
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                            {new Intl.NumberFormat("hu-HU", {
+                              maximumFractionDigits: 0,
+                            }).format(totalAmount)} Ft
+                          </span>
                         </div>
+                        {(workBillings[0] as BillingWithWork)?.work && (
+                          <div className="flex items-center justify-end gap-2">
+                            <span className="text-sm text-gray-600">Teljes érték:</span>
+                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                              {new Intl.NumberFormat("hu-HU", {
+                                maximumFractionDigits: 0,
+                              }).format(
+                                (((workBillings[0] as BillingWithWork).work?.totalMaterialCost || 0) + 
+                                ((workBillings[0] as BillingWithWork).work?.totalLaborCost || 0))
+                              )} Ft
+                            </span>
+                          </div>
+                        )}
                         {draftAmount > 0 && (
                           <div className="text-xs text-gray-500 mt-1">
                             Piszkozat: {new Intl.NumberFormat("hu-HU", {

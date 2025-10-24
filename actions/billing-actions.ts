@@ -39,6 +39,8 @@ export async function getBillings() {
           select: {
             id: true,
             title: true,
+            totalMaterialCost: true,
+            totalLaborCost: true,
           },
         },
       },
