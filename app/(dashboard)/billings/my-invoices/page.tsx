@@ -165,18 +165,18 @@ export default function MyInvoicesPage() {
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <div className="flex items-center justify-end gap-2">
-                          <span className="text-sm text-gray-600">Teljesített:</span>
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 text-green-800">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
+                          <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Teljesített:</span>
+                          <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 whitespace-nowrap">
                             {new Intl.NumberFormat("hu-HU", {
                               maximumFractionDigits: 0,
                             }).format(totalAmount)} Ft
                           </span>
                         </div>
                         {(workBillings[0] as BillingWithWork)?.work && (
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-sm text-gray-600">Teljes érték:</span>
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold bg-blue-100 text-blue-800">
+                          <div className="flex items-center justify-end gap-1 sm:gap-2">
+                            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Teljes érték:</span>
+                            <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 whitespace-nowrap">
                               {new Intl.NumberFormat("hu-HU", {
                                 maximumFractionDigits: 0,
                               }).format(
