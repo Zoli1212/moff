@@ -24,6 +24,7 @@ interface BillingWithWork extends Billing {
     title: string;
     totalMaterialCost?: number;
     totalLaborCost?: number;
+    totalBilledAmount?: number;
   };
 }
 
@@ -170,7 +171,7 @@ export default function MyInvoicesPage() {
                           <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 whitespace-nowrap">
                             {new Intl.NumberFormat("hu-HU", {
                               maximumFractionDigits: 0,
-                            }).format(totalAmount)} Ft
+                            }).format((workBillings[0] as BillingWithWork)?.work?.totalBilledAmount || 0)} Ft
                           </span>
                         </div>
                         {(workBillings[0] as BillingWithWork)?.work && (

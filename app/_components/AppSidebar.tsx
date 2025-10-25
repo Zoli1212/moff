@@ -80,25 +80,22 @@ export function AppSidebar() {
   }, [user?.emailAddresses?.[0]?.emailAddress, shouldRefetch, setUserData, clearUserData]);
 
   return (
-    <Sidebar className="bg-[#121212] text-[#ffeb3b] border-r border-[#333]">
-      <SidebarHeader className="bg-black">
+    <Sidebar className="bg-white text-[#FF7700] border-r border-[#333]">
+      <SidebarHeader className="bg-white">
         <div className="p-4 flex flex-col items-center">
           <Image
             src={"/logo.svg"}
             alt="logo"
-            width={80}
-            height={80}
+            width={120}
+            height={120}
             className="mb-2"
           />
-          <h2 className="text-sm text-[#ffd600] text-center">
-            Fejlessz nagyszerű készségeket!
-          </h2>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-[#121212] flex flex-col">
+      <SidebarContent className="bg-white flex flex-col">
         <SidebarGroup className="flex-1">
-          <SidebarGroupContent className="bg-[#121212]">
+          <SidebarGroupContent className="bg-white">
             <SidebarMenu className="mt-2 space-y-1">
               {mainItems
                 .filter((item) => {
@@ -116,11 +113,11 @@ export function AppSidebar() {
                     <a
                       key={index}
                       href={item.url}
-                      className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors text-[#ffeb3b]
+                      className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors text-[#FF7700]
                         ${
                           isActive
-                            ? "bg-gradient-to-r from-yellow-500 via-yellow-400 to-yellow-300 text-black font-semibold"
-                            : "hover:bg-[#333333] hover:text-yellow-400"
+                            ? "bg-gradient-to-r from-orange-500 via-orange-400 to-orange-300 text-black font-semibold"
+                            : "hover:bg-gray-100 hover:text-orange-400"
                         }`}
                     >
                       <item.icon className="w-5 h-5" />
@@ -133,7 +130,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Secondary items pushed to bottom */}
-        <div className="mt-auto border-t border-[#444] pt-4 pb-4">
+        <div className="mt-auto border-t border-[#FF9900] pt-4 pb-4">
           <div className="flex flex-wrap gap-2 justify-center px-2">
             {secondaryItems.map((item, index) => {
               const isActive = path === item.url;
@@ -144,8 +141,8 @@ export function AppSidebar() {
                   className={`min-w-[120px] flex-1 max-w-[180px] p-4 flex flex-col items-center text-center rounded-xl transition-all border-2
         ${
           isActive
-            ? "bg-yellow-500 text-black border-yellow-500 font-semibold shadow-md"
-            : "bg-[#2a2a2a] text-[#ffeb3b] border-yellow-400 hover:bg-[#3a3a3a] hover:shadow"
+            ? "bg-orange-600 text-black border-orange-600 font-semibold shadow-md"
+            : "bg-gray-100 text-[#FF7700] border-orange-500 hover:bg-gray-200 hover:shadow"
         }`}
                 >
                   <item.icon className="h-6 w-6 mb-1" />
@@ -157,21 +154,21 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <div className="flex flex-col items-center w-full border-t border-[#444] pt-4 pb-3 bg-black">
+      <div className="flex flex-col items-center w-full border-t border-[#FF7700] pt-4 pb-3 bg-white">
         <TenantSelectorSidebar />
 
         <UserButton afterSignOutUrl="/" />
 
         {showThemeSelector && (
           <div className="mt-4 w-full px-4">
-            <div className="bg-[#2c2c2c] border border-[#444] rounded-xl p-3 shadow-lg">
+            <div className="bg-gray-50 border border-[#FF7700] rounded-xl p-3 shadow-lg">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-sm font-semibold text-[#ffd600]">
+                <h2 className="text-sm font-semibold text-[#FF7700]">
                   Válassz hátteret
                 </h2>
                 <button
                   onClick={() => setShowThemeSelector(false)}
-                  className="text-[#999] hover:text-yellow-400"
+                  className="text-[#999] hover:text-orange-400"
                 >
                   <X size={16} />
                 </button>
@@ -187,8 +184,8 @@ export function AppSidebar() {
                     className={`p-2 rounded-md text-sm transition-all
                       ${
                         currentTheme === theme
-                          ? "bg-yellow-500 text-black font-semibold"
-                          : "bg-[#444] text-[#ffeb3b] hover:bg-[#555]"
+                          ? "bg-orange-600 text-black font-semibold"
+                          : "bg-gray-200 text-[#FF7700] hover:bg-gray-300"
                       }`}
                   >
                     {theme.charAt(0).toUpperCase() + theme.slice(1)}
@@ -201,17 +198,17 @@ export function AppSidebar() {
 
         <button
           onClick={() => setShowThemeSelector(!showThemeSelector)}
-          className="w-11/12 mt-3 bg-[#2e2e2e] hover:bg-[#3a3a3a] text-[#ffd600] py-2 px-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+          className="w-11/12 mt-3 bg-gray-100 hover:bg-gray-200 text-[#FF7700] py-2 px-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors"
         >
           <Palette size={16} />
           <span>Háttér beállítása</span>
         </button>
       </div>
 
-      <SidebarFooter className="bg-black">
+      <SidebarFooter className="bg-white">
         <div className="w-full px-4 pb-4">
           <SignOutButton redirectUrl="/">
-            <button className="w-full px-4 py-2 border border-yellow-500 text-yellow-500 rounded hover:bg-yellow-500 hover:text-black transition-colors text-sm">
+            <button className="w-full px-4 py-2 border border-orange-600 text-orange-600 rounded hover:bg-orange-600 hover:text-black transition-colors text-sm">
               Kijelentkezés
             </button>
           </SignOutButton>

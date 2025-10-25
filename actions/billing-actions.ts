@@ -41,6 +41,7 @@ export async function getBillings() {
             title: true,
             totalMaterialCost: true,
             totalLaborCost: true,
+            totalBilledAmount: true,
           },
         },
       },
@@ -326,6 +327,21 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     if (workIdToRecalculate) {
       await recalculateWorkTotals(workIdToRecalculate, tenantEmail);
       console.log(`✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totals recalculated`);
+      
+      // Frissítjük a totalBilledAmount mezőt
+      const currentWork = await prisma.work.findUnique({
+        where: { id: workIdToRecalculate },
+        select: { totalBilledAmount: true },
+      });
+      
+      const newTotalBilledAmount = (currentWork?.totalBilledAmount || 0) + updatedBilling.totalPrice;
+      
+      await prisma.work.update({
+        where: { id: workIdToRecalculate },
+        data: { totalBilledAmount: newTotalBilledAmount },
+      });
+      
+      console.log(`✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`);
     }
 
     // Update offer items with billed quantities
@@ -490,14 +506,16 @@ export async function markAsPaidCash(billingId: number) {
     );
     console.log("🔍 [markAsPaidCash] BillingItems:", billingItems);
 
+    let workIdToUpdate: number | null = null;
+
     for (const billingItem of billingItems) {
       if (billingItem.workItemId) {
         const newPaidQuantity = parseFloat(billingItem.quantity || "0");
 
-        // Get current paidQuantity
+        // Get current paidQuantity and workId
         const currentWorkItem = await prisma.workItem.findUnique({
           where: { id: billingItem.workItemId },
-          select: { paidQuantity: true, name: true },
+          select: { paidQuantity: true, name: true, workId: true },
         });
 
         if (currentWorkItem) {
@@ -514,6 +532,11 @@ export async function markAsPaidCash(billingId: number) {
               paidQuantity: updatedPaidQuantity,
             },
           });
+
+          // Megjegyezzük a workId-t
+          if (!workIdToUpdate) {
+            workIdToUpdate = currentWorkItem.workId;
+          }
         } else {
           console.log(
             `❌ [markAsPaidCash] WorkItem not found: ${billingItem.workItemId}`
@@ -535,6 +558,23 @@ export async function markAsPaidCash(billingId: number) {
         notes: (billing.notes || "") + " [Készpénzben fizetve]",
       },
     });
+
+    // Frissítjük a totalBilledAmount mezőt, ha van workId
+    if (workIdToUpdate) {
+      const currentWork = await prisma.work.findUnique({
+        where: { id: workIdToUpdate },
+        select: { totalBilledAmount: true },
+      });
+      
+      const newTotalBilledAmount = (currentWork?.totalBilledAmount || 0) + billing.totalPrice;
+      
+      await prisma.work.update({
+        where: { id: workIdToUpdate },
+        data: { totalBilledAmount: newTotalBilledAmount },
+      });
+      
+      console.log(`✅ [markAsPaidCash] Work #${workIdToUpdate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`);
+    }
 
     return {
       success: true,

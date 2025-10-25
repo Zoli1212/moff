@@ -176,6 +176,7 @@ model Work {
   totalCompleted Float?      @default(0) // Összes teljesített mennyiség
   totalBilled    Float?      @default(0) // Összes számlázott mennyiség
   totalBillable  Float?      @default(0) // Összes számlázható mennyiség
+  totalBilledAmount Float?   @default(0) // Eddig kiszámlázott összeg (Ft)
   
   estimatedDuration String?  
   progress         Float?    @default(0) 
