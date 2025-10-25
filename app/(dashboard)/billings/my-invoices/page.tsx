@@ -137,10 +137,7 @@ export default function MyInvoicesPage() {
                 }, {} as Record<string, typeof billings>)
               ).map(([workTitle, workBillings]) => {
                 const isExpanded = expandedWorks.has(workTitle);
-                // Only sum finalized and paid invoices (exclude drafts)
-                const totalAmount = workBillings
-                  .filter(b => b.status !== 'draft')
-                  .reduce((sum, b) => sum + b.totalPrice, 0);
+              
                 // Sum draft invoices separately
                 const draftAmount = workBillings
                   .filter(b => b.status === 'draft')
