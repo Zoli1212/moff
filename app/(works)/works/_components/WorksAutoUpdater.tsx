@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { updateWorkWithAIResult } from "@/actions/work-actions";
 import { toast } from "sonner";
 import { OfferItem } from "@/types/offer.types";
@@ -27,40 +27,42 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
   works,
   onWorkStateChange,
 }) => {
-  const [updatingIds, setUpdatingIds] = useState<(number | string)[]>([]);
-  const [doneIds, setDoneIds] = useState<(number | string)[]>([]);
-  const [failedIds, setFailedIds] = useState<(number | string)[]>([]);
+  // Use refs instead of state to avoid infinite loop
+  const updatingIdsRef = useRef<Set<number | string>>(new Set());
+  const doneIdsRef = useRef<Set<number | string>>(new Set());
+  const failedIdsRef = useRef<Set<number | string>>(new Set());
+  const processedRef = useRef(false);
+
   const [showStatus, setShowStatus] = useState(false);
   const [hideBar, setHideBar] = useState(false);
-
-  // Remove stopOnError - we want to continue processing other works
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const notUpdated = works.filter((w) => w.updatedByAI !== true);
     if (notUpdated.length === 0) {
       setShowStatus(false);
+      processedRef.current = false;
       return;
     }
     setShowStatus(true);
 
     // Process multiple works concurrently, but limit to 2 at a time to avoid overwhelming
     const updateNext = async () => {
-      const currentlyUpdating = updatingIds.length;
+      const currentlyUpdating = updatingIdsRef.current.size;
       const maxConcurrent = 2;
 
       if (currentlyUpdating >= maxConcurrent) return;
 
       const next = notUpdated.find(
         (work) =>
-          !updatingIds.includes(work.id) &&
-          !doneIds.includes(work.id) &&
-          !failedIds.includes(work.id)
+          !updatingIdsRef.current.has(work.id) &&
+          !doneIdsRef.current.has(work.id) &&
+          !failedIdsRef.current.has(work.id)
       );
 
       if (!next) return;
 
-      setUpdatingIds((ids) => [...ids, next.id]);
+      updatingIdsRef.current.add(next.id);
       onWorkStateChange?.(next.id, "updating");
       try {
         const workData = {
@@ -80,29 +82,29 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
           if (!dbResult.success) {
             const msg = `Work ${next.id} save error: ${dbResult.error || "Unknown error"}`;
             toast.error(msg);
-            setFailedIds((ids) => [...ids, next.id]);
+            failedIdsRef.current.add(next.id);
             onWorkStateChange?.(next.id, "failed");
             setErrorMsg(msg);
           } else {
             toast.success(`Work ${next.id} AI-updated!`);
-            setDoneIds((ids) => [...ids, next.id]);
+            doneIdsRef.current.add(next.id);
             onWorkStateChange?.(next.id, "done");
           }
         } else {
           const msg = `Work ${next.id}: ${data?.error || "AI processing error!"}`;
           toast.error(msg);
-          setFailedIds((ids) => [...ids, next.id]);
+          failedIdsRef.current.add(next.id);
           onWorkStateChange?.(next.id, "failed");
           setErrorMsg(msg);
         }
       } catch (err) {
         const msg = `Work ${next.id} network error: ${(err as Error).message}`;
         toast.error(msg);
-        setFailedIds((ids) => [...ids, next.id]);
+        failedIdsRef.current.add(next.id);
         onWorkStateChange?.(next.id, "failed");
         setErrorMsg(msg);
       } finally {
-        setUpdatingIds((ids) => ids.filter((id) => id !== next.id));
+        updatingIdsRef.current.delete(next.id);
       }
     };
 
@@ -114,23 +116,25 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
     };
 
     startUpdates();
-    // eslint-disable-next-line
-  }, [works, updatingIds, doneIds, failedIds, onWorkStateChange]);
+  }, [works, onWorkStateChange]);
 
   useEffect(() => {
     // Hide status bar when all are done
     const notUpdated = works.filter((w) => w.updatedByAI !== true);
+    const done = doneIdsRef.current.size;
+    const failed = failedIdsRef.current.size;
+    
     if (
       notUpdated.length > 0 &&
-      doneIds.length + failedIds.length === notUpdated.length
+      done + failed === notUpdated.length
     ) {
       setTimeout(() => setShowStatus(false), 2000); // Hide after 2s
     }
-  }, [doneIds, failedIds, works]);
+  }, [works]);
 
   const notUpdated = works.filter((w) => w.updatedByAI !== true);
   const total = notUpdated.length;
-  const done = doneIds.length;
+  const done = doneIdsRef.current.size;
 
   useEffect(() => {
     if (done === total && total > 0) {
