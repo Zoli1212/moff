@@ -102,28 +102,28 @@ export default function TasksPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const handleQuantityChange = async (
-    workItemId: number,
-    newQuantity: number
-  ) => {
-    try {
-      const result = await updateWorkItemQuantity(workItemId, newQuantity);
-      if (result.success) {
-        // Update local state
-        setWorkItems((prev) =>
-          prev.map((item) =>
-            item.id === workItemId ? { ...item, quantity: newQuantity } : item
-          )
-        );
-        showToast("success", "Mennyiség sikeresen módosítva!");
-      } else {
-        showToast("error", result.error || "Hiba történt a módosítás során");
-      }
-    } catch (error) {
-      console.error("Error updating quantity:", error);
-      showToast("error", "Hiba történt a módosítás során");
-    }
-  };
+  // const handleQuantityChange = async (
+  //   workItemId: number,
+  //   newQuantity: number
+  // ) => {
+  //   try {
+  //     const result = await updateWorkItemQuantity(workItemId, newQuantity);
+  //     if (result.success) {
+  //       // Update local state
+  //       setWorkItems((prev) =>
+  //         prev.map((item) =>
+  //           item.id === workItemId ? { ...item, quantity: newQuantity } : item
+  //         )
+  //       );
+  //       showToast("success", "Mennyiség sikeresen módosítva!");
+  //     } else {
+  //       showToast("error", result.error || "Hiba történt a módosítás során");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error updating quantity:", error);
+  //     showToast("error", "Hiba történt a módosítás során");
+  //   }
+  // };
 
   const doFetchWorkAndItems = useCallback(async () => {
     if (isNaN(workId)) {
