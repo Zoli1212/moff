@@ -1576,7 +1576,7 @@ export function OfferDetailView({
                 : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-4">
+          <DialogFooter className="mt-4 gap-2">
             <Button
               variant="outline"
               onClick={() => setIsStatusDialogOpen(false)}
