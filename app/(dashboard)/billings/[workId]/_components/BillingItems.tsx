@@ -151,9 +151,6 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     );
   };
 
-  const handleToggleSelectAll = (checked: boolean) => {
-    onItemsChange(items.map((item) => ({ ...item, isSelected: checked })));
-  };
 
   const calculateTotals = useCallback(() => {
     return (items || [])
