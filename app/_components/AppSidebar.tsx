@@ -77,26 +77,31 @@ export function AppSidebar() {
           setUserData(true, userEmail);
         }
       });
-  }, [user?.emailAddresses?.[0]?.emailAddress, shouldRefetch, setUserData, clearUserData]);
+  }, [
+    user?.emailAddresses?.[0]?.emailAddress,
+    shouldRefetch,
+    setUserData,
+    clearUserData,
+  ]);
 
   return (
-    <Sidebar className="bg-white text-[#FF7700] border-r border-[#333]">
-      <SidebarHeader className="bg-white">
-        <div className="p-4 flex flex-col items-center">
+    <Sidebar className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 border-r border-gray-700">
+      <SidebarHeader className="bg-gradient-to-b from-gray-900 to-gray-800 border-b border-gray-700">
+        <div className="p-3 flex flex-col items-center">
           <Image
             src={"/logo.svg"}
             alt="logo"
-            width={120}
-            height={120}
+            width={100}
+            height={100}
             className="mb-2"
           />
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="bg-white flex flex-col">
+      <SidebarContent className="bg-gradient-to-b from-gray-900 to-gray-800 flex flex-col">
         <SidebarGroup className="flex-1">
-          <SidebarGroupContent className="bg-white">
-            <SidebarMenu className="mt-2 space-y-1">
+          <SidebarGroupContent className="bg-transparent">
+            <SidebarMenu className="mt-2 space-y-2">
               {mainItems
                 .filter((item) => {
                   // Hide tenant-only items for non-tenant users (workers)
@@ -113,15 +118,15 @@ export function AppSidebar() {
                     <a
                       key={index}
                       href={item.url}
-                      className={`flex items-center gap-3 p-2 rounded-lg text-md transition-colors text-[#FF7700]
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all
                         ${
                           isActive
-                            ? "bg-gradient-to-r from-orange-500 via-orange-400 to-orange-300 text-black font-semibold"
-                            : "hover:bg-gray-100 hover:text-orange-400"
+                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                            : "text-gray-300 hover:bg-gray-700 hover:text-orange-400"
                         }`}
                     >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      <span className="truncate">{item.title}</span>
                     </a>
                   );
                 })}
@@ -130,23 +135,23 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Secondary items pushed to bottom */}
-        <div className="mt-auto border-t border-[#FF9900] pt-4 pb-4">
-          <div className="flex flex-wrap gap-2 justify-center px-2">
+        <div className="mt-auto border-t border-gray-700 pt-3 pb-3">
+          <div className="flex flex-col gap-2 px-2">
             {secondaryItems.map((item, index) => {
               const isActive = path === item.url;
               return (
                 <a
                   key={"secondary-" + index}
                   href={item.url}
-                  className={`min-w-[120px] flex-1 max-w-[180px] p-4 flex flex-col items-center text-center rounded-xl transition-all border-2
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border border-gray-600
         ${
           isActive
-            ? "bg-orange-600 text-black border-orange-600 font-semibold shadow-md"
-            : "bg-gray-100 text-[#FF7700] border-orange-500 hover:bg-gray-200 hover:shadow"
+            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+            : "text-gray-300 bg-gray-700/50 hover:bg-gray-600 hover:text-orange-400"
         }`}
                 >
-                  <item.icon className="h-6 w-6 mb-1" />
-                  <span>{item.title}</span>
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="truncate">{item.title}</span>
                 </a>
               );
             })}
@@ -154,21 +159,21 @@ export function AppSidebar() {
         </div>
       </SidebarContent>
 
-      <div className="flex flex-col items-center w-full border-t border-[#FF7700] pt-4 pb-3 bg-white">
+      <div className="flex flex-col items-center w-full border-t border-gray-700 pt-3 pb-3 bg-gradient-to-b from-gray-900 to-gray-800">
         <TenantSelectorSidebar />
 
         <UserButton afterSignOutUrl="/" />
 
         {showThemeSelector && (
-          <div className="mt-4 w-full px-4">
-            <div className="bg-gray-50 border border-[#FF7700] rounded-xl p-3 shadow-lg">
+          <div className="mt-3 w-full px-3">
+            <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-xl">
               <div className="flex justify-between items-center mb-2">
-                <h2 className="text-sm font-semibold text-[#FF7700]">
-                  Válassz hátteret
+                <h2 className="text-xs font-semibold text-orange-400">
+                  Háttér választása
                 </h2>
                 <button
                   onClick={() => setShowThemeSelector(false)}
-                  className="text-[#999] hover:text-orange-400"
+                  className="text-gray-500 hover:text-orange-400 transition-colors"
                 >
                   <X size={16} />
                 </button>
@@ -181,11 +186,11 @@ export function AppSidebar() {
                       setTheme(theme);
                       setShowThemeSelector(false);
                     }}
-                    className={`p-2 rounded-md text-sm transition-all
+                    className={`p-2 rounded-md text-xs font-medium transition-all
                       ${
                         currentTheme === theme
-                          ? "bg-orange-600 text-black font-semibold"
-                          : "bg-gray-200 text-[#FF7700] hover:bg-gray-300"
+                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-orange-400"
                       }`}
                   >
                     {theme.charAt(0).toUpperCase() + theme.slice(1)}
@@ -198,17 +203,17 @@ export function AppSidebar() {
 
         <button
           onClick={() => setShowThemeSelector(!showThemeSelector)}
-          className="w-11/12 mt-3 bg-gray-100 hover:bg-gray-200 text-[#FF7700] py-2 px-3 rounded-md text-sm font-medium flex items-center justify-center gap-2 transition-colors"
+          className="w-11/12 mt-2 bg-gray-700 hover:bg-gray-600 text-orange-400 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors border border-gray-600"
         >
-          <Palette size={16} />
-          <span>Háttér beállítása</span>
+          <Palette size={14} />
+          <span>Háttér</span>
         </button>
       </div>
 
-      <SidebarFooter className="bg-white">
-        <div className="w-full px-4 pb-4">
+      <SidebarFooter className="bg-gradient-to-b from-gray-900 to-gray-800 border-t border-gray-700">
+        <div className="w-full px-3 pb-2">
           <SignOutButton redirectUrl="/">
-            <button className="w-full px-4 py-2 border border-orange-600 text-orange-600 rounded hover:bg-orange-600 hover:text-black transition-colors text-sm">
+            <button className="w-full px-3 py-2 border border-orange-500 text-orange-400 rounded-lg hover:bg-orange-500 hover:text-white transition-colors text-xs font-medium">
               Kijelentkezés
             </button>
           </SignOutButton>

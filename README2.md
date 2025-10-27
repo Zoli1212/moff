@@ -1026,10 +1026,13 @@ feladatot kijelölölheti, be tudja X ni
 mindenhol számlázott profit 
 ---
 RAG kontext
-
 link a számlára
-
 ----
+ami számlázhat azok legyenek default kipipálva és felül
+adószámok egybeolvasztása a vevő adataik alapján
+és eleve legyenek kijelölve 
+contextusba küldjük vissza legyen kontuxtusba
+
 
 
 
