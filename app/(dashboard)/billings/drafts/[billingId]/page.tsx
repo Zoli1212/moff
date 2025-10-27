@@ -86,6 +86,7 @@ export default function BillingDraftPage() {
             (data.items || []).map((item: OfferItem) => ({
               ...item,
               id: item.id || Math.random(),
+              isSelected: true, // ✅ Alapból bepipálva
             }))
           );
         } else {
@@ -108,6 +109,7 @@ export default function BillingDraftPage() {
         (billing.items || []).map((item: OfferItem) => ({
           ...item,
           id: item.id || Math.random(),
+          isSelected: true, // ✅ Alapból bepipálva
         }))
       );
     }

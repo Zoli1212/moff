@@ -324,29 +324,22 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
           </Button>
         </div>
 
-        <div className="flex items-center gap-3 mb-4 pl-4 py-2 border rounded-md bg-gray-50">
-          <Checkbox
-            id="select-all"
-            checked={
-              (items || []).length > 0 &&
-              (items || []).every((item) => item.isSelected)
-            }
-            onCheckedChange={(checked) =>
-              handleToggleSelectAll(
-                checked === "indeterminate" ? false : !!checked
-              )
-            }
-          />
-          <Label
-            htmlFor="select-all"
-            className="font-medium text-sm text-gray-700 select-none"
-          >
-            Összes kijelölése
-          </Label>
-        </div>
-
         <div className="space-y-4">
-          {(items || []).map((item, index) => (
+          {(items || [])
+            .sort((a, b) => {
+              // Calculate billable quantity for each item
+              const billableA = Math.max(
+                0,
+                (a.completedQuantity || 0) - ((a.billedQuantity || 0) + (a.paidQuantity || 0))
+              );
+              const billableB = Math.max(
+                0,
+                (b.completedQuantity || 0) - ((b.billedQuantity || 0) + (b.paidQuantity || 0))
+              );
+              // Items with billable quantity > 0 come first
+              return billableB - billableA;
+            })
+            .map((item, index) => (
             <div
               key={item.id}
               className={`border rounded-lg p-4 transition-colors ${item.isSelected ? "bg-blue-50/50 border-blue-200" : "bg-gray-50/50"}`}
@@ -503,7 +496,8 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                   label="Számlázható"
                   value={Math.max(
                     0,
-                    (item.completedQuantity || 0) - ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                    (item.completedQuantity || 0) -
+                      ((item.billedQuantity || 0) + (item.paidQuantity || 0))
                   )}
                   max={
                     typeof item.quantity === "number"
