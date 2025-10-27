@@ -118,12 +118,36 @@ export function AppSidebar() {
                     <a
                       key={index}
                       href={item.url}
-                      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all
-                        ${
-                          isActive
-                            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-                            : "text-gray-300 hover:bg-gray-700 hover:text-orange-400"
-                        }`}
+                      style={{
+                        backgroundColor: isActive ? "#DE6B12" : "transparent",
+                        color: isActive ? "white" : "#D1D5DB",
+                        boxShadow: isActive ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)" : "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "#374151";
+                          e.currentTarget.style.color = "#DE6B12";
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "#D1D5DB";
+                        }
+                      }}
+                      onTouchStart={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "#374151";
+                          e.currentTarget.style.color = "#DE6B12";
+                        }
+                      }}
+                      onTouchEnd={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                          e.currentTarget.style.color = "#D1D5DB";
+                        }
+                      }}
+                      className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-medium transition-all cursor-pointer active:bg-[#374151] active:text-[#DE6B12]`}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
                       <span className="truncate">{item.title}</span>
@@ -143,12 +167,37 @@ export function AppSidebar() {
                 <a
                   key={"secondary-" + index}
                   href={item.url}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border border-gray-600
-        ${
-          isActive
-            ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-            : "text-gray-300 bg-gray-700/50 hover:bg-gray-600 hover:text-orange-400"
-        }`}
+                  style={{
+                    backgroundColor: isActive ? "#DE6B12" : "rgba(55, 65, 81, 0.5)",
+                    color: isActive ? "white" : "#D1D5DB",
+                    borderColor: "#4B5563",
+                    boxShadow: isActive ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)" : "none",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = "#4B5563";
+                      e.currentTarget.style.color = "#DE6B12";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                      e.currentTarget.style.color = "#D1D5DB";
+                    }
+                  }}
+                  onTouchStart={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = "#4B5563";
+                      e.currentTarget.style.color = "#DE6B12";
+                    }
+                  }}
+                  onTouchEnd={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                      e.currentTarget.style.color = "#D1D5DB";
+                    }
+                  }}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border cursor-pointer active:bg-[#4B5563] active:text-[#DE6B12]`}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
                   <span className="truncate">{item.title}</span>
@@ -186,12 +235,36 @@ export function AppSidebar() {
                       setTheme(theme);
                       setShowThemeSelector(false);
                     }}
-                    className={`p-2 rounded-md text-xs font-medium transition-all
-                      ${
-                        currentTheme === theme
-                          ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600 hover:text-orange-400"
-                      }`}
+                    style={{
+                      backgroundColor: currentTheme === theme ? "#DE6B12" : "#374151",
+                      color: currentTheme === theme ? "white" : "#D1D5DB",
+                      boxShadow: currentTheme === theme ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)" : "none",
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentTheme !== theme) {
+                        e.currentTarget.style.backgroundColor = "#4B5563";
+                        e.currentTarget.style.color = "#DE6B12";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentTheme !== theme) {
+                        e.currentTarget.style.backgroundColor = "#374151";
+                        e.currentTarget.style.color = "#D1D5DB";
+                      }
+                    }}
+                    onTouchStart={(e) => {
+                      if (currentTheme !== theme) {
+                        e.currentTarget.style.backgroundColor = "#4B5563";
+                        e.currentTarget.style.color = "#DE6B12";
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      if (currentTheme !== theme) {
+                        e.currentTarget.style.backgroundColor = "#374151";
+                        e.currentTarget.style.color = "#D1D5DB";
+                      }
+                    }}
+                    className={`p-2 rounded-md text-xs font-medium transition-all cursor-pointer active:bg-[#4B5563] active:text-[#DE6B12]`}
                   >
                     {theme.charAt(0).toUpperCase() + theme.slice(1)}
                   </button>
@@ -203,7 +276,24 @@ export function AppSidebar() {
 
         <button
           onClick={() => setShowThemeSelector(!showThemeSelector)}
-          className="w-11/12 mt-2 bg-gray-700 hover:bg-gray-600 text-orange-400 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors border border-gray-600"
+          style={{
+            backgroundColor: "#374151",
+            color: "#DE6B12",
+            borderColor: "#4B5563",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "#4B5563";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#374151";
+          }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.backgroundColor = "#4B5563";
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.backgroundColor = "#374151";
+          }}
+          className="w-11/12 mt-2 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors border cursor-pointer active:bg-[#4B5563]"
         >
           <Palette size={14} />
           <span>Háttér</span>
@@ -213,7 +303,29 @@ export function AppSidebar() {
       <SidebarFooter className="bg-gradient-to-b from-gray-900 to-gray-800 border-t border-gray-700">
         <div className="w-full px-3 pb-2">
           <SignOutButton redirectUrl="/">
-            <button className="w-full px-3 py-2 border border-orange-500 text-orange-400 rounded-lg hover:bg-orange-500 hover:text-white transition-colors text-xs font-medium">
+            <button
+              style={{
+                borderColor: "#DE6B12",
+                color: "#DE6B12",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#DE6B12";
+                e.currentTarget.style.color = "white";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "#DE6B12";
+              }}
+              onTouchStart={(e) => {
+                e.currentTarget.style.backgroundColor = "#DE6B12";
+                e.currentTarget.style.color = "white";
+              }}
+              onTouchEnd={(e) => {
+                e.currentTarget.style.backgroundColor = "transparent";
+                e.currentTarget.style.color = "#DE6B12";
+              }}
+              className="w-full px-3 py-2 border rounded-lg text-xs font-medium transition-colors cursor-pointer active:bg-[#DE6B12] active:text-white"
+            >
               Kijelentkezés
             </button>
           </SignOutButton>
