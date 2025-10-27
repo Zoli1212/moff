@@ -1086,10 +1086,10 @@ export function OfferDetailView({
                     </span>
                     <button
                       onClick={handleValidUntilEdit}
-                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-[#FFB545] hover:text-[#e68a00] transition-colors"
                       title="Érvényességi dátum szerkesztése"
                     >
-                      <Pencil className="h-3 w-3" />
+                      <Pencil className="h-4 w-4" />
                     </button>
                   </div>
                 )}

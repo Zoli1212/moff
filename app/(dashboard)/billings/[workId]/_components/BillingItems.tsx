@@ -506,7 +506,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 />
               </div>
             </div>
-          ))}
+            ))}
         </div>
 
         <div className="mt-6 pt-4 border-t">

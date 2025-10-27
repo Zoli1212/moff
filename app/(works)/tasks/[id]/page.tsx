@@ -456,7 +456,6 @@ export default function TasksPage() {
                           : ""
                       }
                       onCheck={(checked) => handleAssignDiary(item.id, checked)}
-                      onQuantityChange={handleQuantityChange}
                       onEdit={handleEditWorkItem}
                       // Add billing-related props with default values
                       billedQuantity={item.billedQuantity || 0}

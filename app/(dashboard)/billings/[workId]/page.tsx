@@ -110,18 +110,25 @@ export default function BillingsDetailPage() {
   useEffect(() => {
     if (work) {
       setBillingItems(
-        (work.workItems || []).map((item: WorkItemFromDb) => ({
-          ...item,
-          isSelected: false,
-          billableQuantity: item.completedQuantity || 0,
-          totalQuantity: item.quantity || 0,
-          billedQuantity: item.billedQuantity || 0,
-          paidQuantity: item.paidQuantity || 0,
-          tools: item.tools || [],
-          materials: item.materials || [],
-          workers: item.workers || [],
-          workItemWorkers: item.workItemWorkers || [],
-        }))
+        (work.workItems || []).map((item: WorkItemFromDb) => {
+          // Calculate billable quantity
+          const billableQuantity = Math.max(
+            0,
+            (item.completedQuantity || 0) - ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+          );
+          return {
+            ...item,
+            isSelected: billableQuantity > 0, // Auto-select if there's billable quantity
+            billableQuantity: item.completedQuantity || 0,
+            totalQuantity: item.quantity || 0,
+            billedQuantity: item.billedQuantity || 0,
+            paidQuantity: item.paidQuantity || 0,
+            tools: item.tools || [],
+            materials: item.materials || [],
+            workers: item.workers || [],
+            workItemWorkers: item.workItemWorkers || [],
+          };
+        })
       );
     }
   }, [work]);
