@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { currentUser } from "@clerk/nextjs/server";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,6 +8,15 @@ const openai = new OpenAI({
 
 export async function POST(req: NextRequest) {
   try {
+    // ✅ SECURITY: Check authentication
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized - Login required" },
+        { status: 401 }
+      );
+    }
+
     const { message, context } = await req.json();
 
     if (!message) {

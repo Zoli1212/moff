@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ParsedWork, WorkItem } from "@/types/work";
+import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
   try {
+    // ✅ SECURITY: Check authentication
+    const user = await currentUser();
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized - Login required" },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { location, offerDescription, estimatedDuration, offerItems } = body;
 

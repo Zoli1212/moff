@@ -584,6 +584,24 @@ export default function GroupedDiaryEditForm({
         return sum + (workerHours.get(w.id) || workHours);
       }, 0);
 
+      // ✅ OPTIMIZATION: Fetch all previous progress values in PARALLEL (not sequential)
+      const { getPreviousProgressAtDate } = await import(
+        "@/actions/get-previous-progress-actions"
+      );
+      
+      const previousProgressMap = new Map<number, number>();
+      const previousProgressPromises = selectedGroupedItems.map(async (item) => {
+        const prev = await getPreviousProgressAtDate(
+          diary.workId,
+          item.workItem.id,
+          date
+        );
+        previousProgressMap.set(item.workItem.id, prev);
+      });
+      
+      // Wait for ALL previous progress queries in parallel
+      await Promise.all(previousProgressPromises);
+
       for (const worker of selectedWorkers) {
         const workerTotalHours = workerHours.get(worker.id) || workHours;
 
@@ -608,15 +626,8 @@ export default function GroupedDiaryEditForm({
               : 1 / selectedGroupedItems.length;
           const hoursPerWorkItem = workerTotalHours * proportion;
 
-          // Get previous progressAtDate for delta calculation
-          const { getPreviousProgressAtDate } = await import(
-            "@/actions/get-previous-progress-actions"
-          );
-          const previousProgressAtDate = await getPreviousProgressAtDate(
-            diary.workId,
-            groupedItem.workItem.id, 
-            date // current diary date
-          );
+          // ✅ Get previous progressAtDate from cache (already fetched in parallel)
+          const previousProgressAtDate = previousProgressMap.get(groupedItem.workItem.id) || 0;
           
           // Calculate delta: current slider position - previous progressAtDate
           const deltaProgress = Math.max(0, itemProgress - previousProgressAtDate);
