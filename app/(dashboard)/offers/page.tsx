@@ -85,7 +85,9 @@ export default function OffersPage() {
             ) as Note[],
             description: offer.description || undefined, // Convert null to undefined
             // Ensure createdAt is a Date object for consistent sorting
-            createdAt: offer.createdAt ? new Date(offer.createdAt) : new Date(0),
+            createdAt: offer.createdAt
+              ? new Date(offer.createdAt)
+              : new Date(0),
           }))
           // Sort by createdAt in descending order (newest first)
           .sort((a, b) => {
@@ -93,21 +95,23 @@ export default function OffersPage() {
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             return dateB - dateA; // Descending order
           })
-          .filter((() => {
-            const seen = new Set();
-            return (offer: Offer) => {
-              if (!offer.title) {
-                // Keep offers without a title as they are unique
-                return true;
-              }
-              if (seen.has(offer.title)) {
-                return false;
-              } else {
-                seen.add(offer.title);
-                return true;
-              }
-            };
-          })());
+          .filter(
+            (() => {
+              const seen = new Set();
+              return (offer: Offer) => {
+                if (!offer.title) {
+                  // Keep offers without a title as they are unique
+                  return true;
+                }
+                if (seen.has(offer.title)) {
+                  return false;
+                } else {
+                  seen.add(offer.title);
+                  return true;
+                }
+              };
+            })()
+          );
         setOffers(transformedData);
       } catch (error) {
         console.error("Error loading offers:", error);
@@ -149,18 +153,18 @@ export default function OffersPage() {
     setIsDeleting(true);
     try {
       const result = await deleteOffer(offerToDelete.id);
-      
+
       if (result.success) {
         toast.success("Ajánlat sikeresen törölve");
         // Remove from local state
-        setOffers(prev => prev.filter(o => o.id !== offerToDelete.id));
+        setOffers((prev) => prev.filter((o) => o.id !== offerToDelete.id));
         setDeleteModalOpen(false);
         setOfferToDelete(null);
       } else {
         toast.error(result.error || "Hiba történt a törlés során");
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       toast.error("Hiba történt a törlés során");
     } finally {
       setIsDeleting(false);
@@ -234,13 +238,16 @@ export default function OffersPage() {
                       href={`/offers/${offer.requirementId}?offerId=${offer.id}`}
                       className="block bg-white border border-gray-200 rounded-lg transition-shadow"
                       style={{
-                        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
+                        boxShadow:
+                          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                        e.currentTarget.style.boxShadow =
+                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+                        e.currentTarget.style.boxShadow =
+                          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
                       }}
                     >
                       <div className="p-4">
@@ -251,27 +258,48 @@ export default function OffersPage() {
                             </h3>
                             {offer.offerSummary && (
                               <p className="mt-1 text-sm text-gray-700">
-                               
-                                {offer.offerSummary.length > 100 
+                                {offer.offerSummary.length > 100
                                   ? `${offer.offerSummary.substring(0, 150)}...`
                                   : offer.offerSummary}
                               </p>
                             )}
                             {offer.description && (
                               <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                                {offer.description.includes("Becsült kivitelezési idő")
+                                {offer.description.includes(
+                                  "Becsült kivitelezési idő"
+                                )
                                   ? (() => {
-                                      const text = offer.description.substring(offer.description.indexOf("Becsült kivitelezési idő"));
-                                      const parts = text.split("Becsült kivitelezési idő:");
+                                      const text = offer.description.substring(
+                                        offer.description.indexOf(
+                                          "Becsült kivitelezési idő"
+                                        )
+                                      );
+                                      const parts = text.split(
+                                        "Becsült kivitelezési idő:"
+                                      );
                                       const afterColon = parts[1] || "";
                                       // Extract only the time duration (e.g., "10-14 nap")
-                                      const timeMatch = afterColon.match(/^\s*(\d+-?\d*\s*nap)/);
-                                      const timePart = timeMatch ? timeMatch[1] : "";
-                                      const restPart = timeMatch ? afterColon.substring(timeMatch[0].length) : afterColon;
+                                      const timeMatch =
+                                        afterColon.match(
+                                          /^\s*(\d+-?\d*\s*nap)/
+                                        );
+                                      const timePart = timeMatch
+                                        ? timeMatch[1]
+                                        : "";
+                                      const restPart = timeMatch
+                                        ? afterColon.substring(
+                                            timeMatch[0].length
+                                          )
+                                        : afterColon;
                                       return (
                                         <>
-                                          <span className="font-bold">Becsült kivitelezési idő:</span>
-                                          <span className="font-bold"> {timePart}</span>
+                                          <span className="font-bold">
+                                            Becsült kivitelezési idő:
+                                          </span>
+                                          <span className="font-bold">
+                                            {" "}
+                                            {timePart}
+                                          </span>
                                           {restPart}
                                         </>
                                       );
@@ -283,18 +311,20 @@ export default function OffersPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            {offer.status === 'draft' && (
+                            {offer.status === "draft" && (
                               <button
                                 onClick={(e) => handleDeleteClick(offer, e)}
                                 className="p-1 transition-colors"
-                                style={{ color: '#FE9C00' }}
+                                style={{ color: "#FE9C00" }}
                                 title="Ajánlat törlése"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             )}
                             {getStatusDisplay(offer.status) && (
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === 'work' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === "work" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
+                              >
                                 {getStatusDisplay(offer.status)}
                               </span>
                             )}
@@ -305,7 +335,9 @@ export default function OffersPage() {
                           <div className="text-sm text-gray-500">
                             {offer.totalPrice ? (
                               <>
-                                <span className="font-medium text-black">Összesen: </span>
+                                <span className="font-medium text-black">
+                                  Összesen:{" "}
+                                </span>
                                 <span className="font-medium text-gray-900">
                                   {new Intl.NumberFormat("hu-HU", {
                                     style: "currency",
@@ -328,17 +360,19 @@ export default function OffersPage() {
           </div>
         </div>
       </main>
-      {!isDialogOpen && <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-4 z-[9999]">
-        <div className="max-w-7xl mx-auto">
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            variant="outline"
-            className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
-          >
-            <span className="text-lg font-medium">+ Új felmérés</span>
-          </Button>
+      {!isDialogOpen && (
+        <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-4 z-[9999]">
+          <div className="max-w-7xl mx-auto">
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              variant="outline"
+              className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+            >
+              <span className="text-lg font-medium">+ Új felmérés</span>
+            </Button>
+          </div>
         </div>
-      </div>}
+      )}
 
       <TextInputDialog
         open={isDialogOpen}
@@ -351,7 +385,7 @@ export default function OffersPage() {
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title="Ajánlat törlése"
-        message={`Biztosan törölni szeretnéd a(z) "${offerToDelete?.title || 'Névtelen ajánlat'}" ajánlatot? Ez a művelet nem vonható vissza.`}
+        message={`Biztosan törölni szeretnéd a(z) "${offerToDelete?.title || "Névtelen ajánlat"}" ajánlatot? Ez a művelet nem vonható vissza.`}
         confirmText="Törlés"
         cancelText="Mégse"
         isLoading={isDeleting}

@@ -27,7 +27,6 @@ const OfferLetterEmailSender = dynamic(
   { ssr: false }
 );
 import {
-  ArrowLeft,
   FileText,
   List,
   Clock,
