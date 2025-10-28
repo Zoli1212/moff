@@ -1478,7 +1478,7 @@ export default function GroupedDiaryEditForm({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" style={{ color: '#FE9C00' }} />
                     Törlés
                   </div>
                 )}
@@ -1520,7 +1520,7 @@ export default function GroupedDiaryEditForm({
             <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="h-5 w-5 text-red-600" />
+                  <Trash2 className="h-5 w-5" style={{ color: '#FE9C00' }} />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">

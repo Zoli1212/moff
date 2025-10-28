@@ -466,7 +466,8 @@ const WorkersSummary: React.FC<Props> = ({
                                   worker.name || "Névtelen munkás"
                                 )
                               }
-                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                              className="hover:text-red-700 p-1 rounded hover:bg-red-50"
+                              style={{ color: '#FE9C00' }}
                               title="Munkás eltávolítása"
                             >
                               <Trash2 size={16} />

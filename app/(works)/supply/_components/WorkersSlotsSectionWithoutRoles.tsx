@@ -463,7 +463,8 @@ function WorkersSlotsSectionWithoutRoles({
                           e.stopPropagation();
                           handleDeleteWorkItemWorkerOnly(w.id);
                         }}
-                        className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                        className="hover:text-red-700 p-1 rounded hover:bg-red-50"
+                        style={{ color: '#FE9C00' }}
                         title="Munkás eltávolítása"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -490,7 +491,8 @@ function WorkersSlotsSectionWithoutRoles({
                     </button>
                     <button
                       onClick={() => setShowEmptySlot(false)}
-                      className="flex items-center justify-center w-12 h-12 rounded border border-red-300 text-red-500 bg-white hover:bg-red-50 hover:border-red-400 hover:text-red-600"
+                      className="flex items-center justify-center w-12 h-12 rounded border border-red-300 bg-white hover:bg-red-50 hover:border-red-400"
+                      style={{ color: '#FE9C00' }}
                       title="Üres slot elrejtése"
                     >
                       <Trash2 className="w-4 h-4" />

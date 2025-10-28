@@ -732,7 +732,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
                             e.stopPropagation();
                             handleRemoveRole(role);
                           }}
-                          className="text-red-500 hover:text-red-700"
+                          className="hover:text-red-700"
+                          style={{ color: '#FE9C00' }}
                           title={`${role} eltávolítása munkafázisból`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -797,7 +798,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                     e.stopPropagation();
                                     handleDeleteWorkItemWorkerOnly(w.id);
                                   }}
-                                  className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                  className="hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                  style={{ color: '#FE9C00' }}
                                   title="Munkás eltávolítása"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -827,7 +829,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                 // Remove this empty slot from view
                                 handleRemoveEmptySlot(role);
                               }}
-                              className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
+                              className="hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
+                              style={{ color: '#FE9C00' }}
                               title="Üres slot eltávolítása"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -919,7 +922,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                 e.stopPropagation();
                                 handleRemoveRole(role);
                               }}
-                              className="text-red-500 hover:text-red-700"
+                              className="hover:text-red-700"
+                              style={{ color: '#FE9C00' }}
                               title={`${role} eltávolítása munkafázisból`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -984,7 +988,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                         e.stopPropagation();
                                         handleDeleteWorkItemWorkerOnly(w.id);
                                       }}
-                                      className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                      className="hover:text-red-700 p-1 rounded hover:bg-red-50"
+                                      style={{ color: '#FE9C00' }}
                                       title="Munkás eltávolítása"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -1014,7 +1019,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                     // Remove this empty slot from view
                                     handleRemoveEmptySlot(role);
                                   }}
-                                  className="text-red-500 hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#bbb] bg-[#f8f8f8] hover:bg-red-50"
+                                  className="hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#bbb] bg-[#f8f8f8] hover:bg-red-50"
+                                  style={{ color: '#FE9C00' }}
                                   title="Üres slot eltávolítása"
                                 >
                                   <Trash2 className="h-4 w-4" />

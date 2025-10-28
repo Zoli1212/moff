@@ -370,7 +370,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                     size="icon"
                     onClick={() => handleRemoveItem(index)}
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
+                    <Trash2 className="h-4 w-4" style={{ color: '#FE9C00' }} />
                   </Button>
                 </div>
               </div>

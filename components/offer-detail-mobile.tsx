@@ -1304,7 +1304,7 @@ export function OfferDetailView({
                           </div>
                         </div>
                       </div>
-                      <div className="flex space-x-2">
+                      <div className="flex space-x-4">
                         <button
                           onClick={() => startEditing(index)}
                           className="text-[#FF9900] hover:text-[#e68a00] transition-colors"

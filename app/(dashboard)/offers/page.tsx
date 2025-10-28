@@ -286,7 +286,8 @@ export default function OffersPage() {
                             {offer.status === 'draft' && (
                               <button
                                 onClick={(e) => handleDeleteClick(offer, e)}
-                                className="p-1 text-red-500 transition-colors"
+                                className="p-1 transition-colors"
+                                style={{ color: '#FE9C00' }}
                                 title="Ajánlat törlése"
                               >
                                 <Trash2 className="h-4 w-4" />

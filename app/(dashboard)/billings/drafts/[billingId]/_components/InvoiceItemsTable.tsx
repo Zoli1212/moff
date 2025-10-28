@@ -173,7 +173,7 @@ export function InvoiceItemsTable({ items, onItemsChange }: InvoiceItemsTablePro
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Button size="icon" variant="ghost" onClick={() => startEditing(index, item)}><Pencil className="h-4 w-4" /></Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                      <Button size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}><Trash2 className="h-4 w-4" style={{ color: '#FE9C00' }} /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -302,7 +302,7 @@ export function InvoiceItemsTable({ items, onItemsChange }: InvoiceItemsTablePro
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => handleRemoveItem(index)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
+                        <Trash2 className="h-4 w-4" style={{ color: '#FE9C00' }} />
                       </Button>
                     </div>
                   </div>

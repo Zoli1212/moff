@@ -325,7 +325,8 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(worker)}
-                      className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
+                      className="flex items-center gap-1 hover:text-red-700 hover:bg-red-50 flex-1 sm:flex-none"
+                      style={{ color: '#FE9C00' }}
                     >
                       <Trash2 className="h-4 w-4" />
                       <span className="hidden xs:inline">Törlés</span>

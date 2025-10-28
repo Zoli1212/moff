@@ -305,7 +305,8 @@ export default function JobsPage() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          className="ml-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                          className="ml-2 hover:bg-destructive/10 hover:text-destructive"
+                          style={{ color: '#FE9C00' }}
                           onClick={() => handleRemovePhase(phaseIndex)}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -335,7 +336,8 @@ export default function JobsPage() {
                               type="button"
                               variant="ghost"
                               size="icon"
-                              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              className="hover:bg-destructive/10 hover:text-destructive"
+                              style={{ color: '#FE9C00' }}
                               onClick={() =>
                                 handleRemoveTask(phaseIndex, taskIndex)
                               }

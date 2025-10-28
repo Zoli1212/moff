@@ -479,7 +479,8 @@ export default function WorkDetailPage({
           {/* Delete button */}
           <button
             onClick={handleDeleteClick}
-            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+            style={{ color: '#FE9C00' }}
             title="Munka törlése"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
