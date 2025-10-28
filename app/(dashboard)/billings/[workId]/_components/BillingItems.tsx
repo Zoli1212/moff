@@ -363,7 +363,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                     size="icon"
                     onClick={() => startEditing(index)}
                   >
-                    <Pencil className="h-4 w-4" />
+                    <Pencil className="h-4 w-4 text-orange-500" />
                   </Button>
                   <Button
                     variant="ghost"
