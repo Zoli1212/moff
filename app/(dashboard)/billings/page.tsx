@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { getUserWorks } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
 import Link from "next/link";
-import { ArrowLeft } from 'lucide-react';
 import { useRouter } from "next/navigation";
 
 interface Work {
@@ -27,10 +26,10 @@ export default function BillingsPage() {
   // Check if user is tenant
   useEffect(() => {
     getCurrentUserData()
-      .then(data => {
+      .then((data) => {
         setIsTenant(data.isTenant ?? true);
         if (!data.isTenant) {
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
       })
       .catch(() => {
@@ -40,7 +39,7 @@ export default function BillingsPage() {
 
   useEffect(() => {
     if (!isTenant) return;
-    
+
     const loadWorks = async () => {
       try {
         const data = await getUserWorks();
@@ -93,11 +92,28 @@ export default function BillingsPage() {
         <div className="w-full mx-auto px-4 max-w-7xl">
           <div className="mb-6">
             <div className="flex items-center justify-between">
-                <Link href="/dashboard" className="p-2">
-                    <ArrowLeft className="h-6 w-6 text-gray-600" />
-                </Link>
-                <h1 className="text-2xl font-bold text-gray-800">Számlázás</h1>
-                <div className="w-8"></div>
+              <Link
+                href="/dashboard"
+                className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+                aria-label="Vissza az irányítópultra"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </Link>
+              <h1 className="text-2xl font-bold text-gray-800">Számlázás</h1>
+              <div className="w-8"></div>
             </div>
 
             <div className="mt-6 space-y-4">
@@ -107,7 +123,9 @@ export default function BillingsPage() {
                 </div>
               ) : works.length === 0 ? (
                 <div className="bg-white rounded-lg p-6 text-center">
-                  <p className="text-gray-500">Nincsenek munkák, amikből számlát lehetne készíteni.</p>
+                  <p className="text-gray-500">
+                    Nincsenek munkák, amikből számlát lehetne készíteni.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -117,13 +135,16 @@ export default function BillingsPage() {
                       href={`/billings/${work.id}`}
                       className="block bg-white border border-gray-200 rounded-lg transition-shadow"
                       style={{
-                        boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)"
+                        boxShadow:
+                          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow = "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                        e.currentTarget.style.boxShadow =
+                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow = "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+                        e.currentTarget.style.boxShadow =
+                          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
                       }}
                     >
                       <div className="p-4">
@@ -139,7 +160,9 @@ export default function BillingsPage() {
                             )}
                           </div>
                           <div className="text-right">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${work.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${work.status === "active" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
+                            >
                               {getStatusDisplay(work.status)}
                             </span>
                           </div>

@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { updateOfferItems, updateOfferStatus, updateOfferValidUntil } from "@/actions/offer-actions";
+import {
+  updateOfferItems,
+  updateOfferStatus,
+  updateOfferValidUntil,
+} from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
 import { RequirementDetail } from "./requirement-detail";
@@ -161,13 +165,15 @@ export function OfferDetailView({
     }
   }, [offer.items]);
 
-  console.log(originalItems)
+  console.log(originalItems);
 
   // Parse currency values
   const parseCurrency = (value: string | null | undefined): number => {
     if (!value) return 0;
     const stringValue = String(value);
-    const numericValue = stringValue.replace(/[^0-9,-]+/g, "").replace(",", ".");
+    const numericValue = stringValue
+      .replace(/[^0-9,-]+/g, "")
+      .replace(",", ".");
     return parseFloat(numericValue) || 0;
   };
 
@@ -390,14 +396,14 @@ export function OfferDetailView({
     if (offer.validUntil) {
       const date = new Date(offer.validUntil);
       const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
       setValidUntilValue(`${year}-${month}-${day}`);
     } else {
       const today = new Date();
       const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, '0');
-      const day = String(today.getDate()).padStart(2, '0');
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
       setValidUntilValue(`${year}-${month}-${day}`);
     }
     setIsEditingValidUntil(true);
@@ -418,7 +424,7 @@ export function OfferDetailView({
     setIsUpdatingValidUntil(true);
     try {
       const result = await updateOfferValidUntil(offer.id, selectedDate);
-      
+
       if (result.success) {
         toast.success("Az érvényességi dátum sikeresen frissítve");
         setIsEditingValidUntil(false);
@@ -567,8 +573,6 @@ export function OfferDetailView({
       setIsUpdatingStatus(false);
     }
   };
-
-
 
   // Get status display text
   function getStatusDisplay(status: string) {
@@ -860,9 +864,7 @@ export function OfferDetailView({
                 <div className="col-span-3 flex items-center">
                   <Input
                     id="workUnitPrice"
-                    value={formatNumberWithSpace(
-                      editingItem?.item.unitPrice
-                    )}
+                    value={formatNumberWithSpace(editingItem?.item.unitPrice)}
                     onChange={(e) =>
                       handleModalChange(
                         "unitPrice",
@@ -877,19 +879,13 @@ export function OfferDetailView({
               <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
                 <Label className="text-right font-medium">Anyag összesen</Label>
                 <div className="col-span-3 font-medium">
-                  {formatNumberWithSpace(
-                    editingItem?.item.materialTotal
-                  )}{" "}
-                  Ft
+                  {formatNumberWithSpace(editingItem?.item.materialTotal)} Ft
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label className="text-right font-medium">Díj összesen</Label>
                 <div className="col-span-3 font-medium">
-                  {formatNumberWithSpace(
-                    editingItem?.item.workTotal
-                  )}{" "}
-                  Ft
+                  {formatNumberWithSpace(editingItem?.item.workTotal)} Ft
                 </div>
               </div>
             </div>
@@ -913,9 +909,23 @@ export function OfferDetailView({
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={onBack}
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+              aria-label="Vissza"
             >
-              <ArrowLeft className="h-5 w-5 mr-2" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
+              </svg>
             </button>
             <Button
               onClick={() => setIsStatusDialogOpen(true)}
@@ -1033,8 +1043,8 @@ export function OfferDetailView({
                       offer.status === "work"
                         ? "text-green-600"
                         : offer.status === "draft"
-                        ? "text-blue-600"
-                        : "text-gray-700"
+                          ? "text-blue-600"
+                          : "text-gray-700"
                     }`}
                   >
                     {getStatusDisplay(offer.status || "draft")}
@@ -1082,7 +1092,9 @@ export function OfferDetailView({
                 ) : (
                   <div className="ml-1 flex items-center gap-2">
                     <span className="font-medium">
-                      {offer.validUntil ? formatDate(offer.validUntil) : "Nincs megadva"}
+                      {offer.validUntil
+                        ? formatDate(offer.validUntil)
+                        : "Nincs megadva"}
                     </span>
                     <button
                       onClick={handleValidUntilEdit}
@@ -1127,24 +1139,24 @@ export function OfferDetailView({
             </div>
           )}
 
-        {/* Requirements Section */}
-        {offer.requirement && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <button
-              onClick={() => setShowRequirementDetail(true)}
-              className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
-            >
-              <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                <List className="h-5 w-5 mr-2 text-gray-500" />
-                Követelmény
-                <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                  {offer?.requirement?.updateCount || "1"}
-                </span>
-              </h2>
-              <ChevronRight className="h-5 w-5 text-gray-500" />
-            </button>
-          </div>
-        )}
+          {/* Requirements Section */}
+          {offer.requirement && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setShowRequirementDetail(true)}
+                className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+              >
+                <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                  <List className="h-5 w-5 mr-2 text-gray-500" />
+                  Követelmény
+                  <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                    {offer?.requirement?.updateCount || "1"}
+                  </span>
+                </h2>
+                <ChevronRight className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+          )}
 
           {offer.description && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -1157,15 +1169,15 @@ export function OfferDetailView({
               <div className="p-6">
                 <p className="text-gray-700 whitespace-pre-line">
                   {offer.description
-                    .split('\n')
-                    .filter(line => {
+                    .split("\n")
+                    .filter((line) => {
                       const trimmed = line.trim();
                       // Ha nem csillaggal kezdődik, megtartjuk
-                      if (!trimmed.startsWith('*')) return true;
+                      if (!trimmed.startsWith("*")) return true;
                       // Ha csillaggal kezdődik, csak akkor tartjuk meg, ha kérdőjelet tartalmaz
-                      return trimmed.includes('?');
+                      return trimmed.includes("?");
                     })
-                    .join('\n')
+                    .join("\n")
                     .trim()}
                 </p>
               </div>
@@ -1361,9 +1373,8 @@ export function OfferDetailView({
                                   onClick={() => startEditing(index)}
                                 >
                                   {item.unitPrice
-                                    ? formatNumberWithSpace(
-                                        item.unitPrice
-                                      ) + " Ft"
+                                    ? formatNumberWithSpace(item.unitPrice) +
+                                      " Ft"
                                     : "0 Ft"}
                                 </div>
                               </td>
@@ -1381,16 +1392,14 @@ export function OfferDetailView({
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
                                 {item.materialTotal
-                                  ? formatNumberWithSpace(
-                                      item.materialTotal
-                                    ) + " Ft"
+                                  ? formatNumberWithSpace(item.materialTotal) +
+                                    " Ft"
                                   : "0 Ft"}
                               </td>
                               <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
                                 {item.workTotal
-                                  ? formatNumberWithSpace(
-                                      item.workTotal
-                                    ) + " Ft"
+                                  ? formatNumberWithSpace(item.workTotal) +
+                                    " Ft"
                                   : "0 Ft"}
                               </td>
                             </tr>
@@ -1404,7 +1413,7 @@ export function OfferDetailView({
                 {/* Summary Section */}
                 <div className="border-t-2 border-gray-200 bg-gray-50 p-4">
                   <div className="grid grid-cols-2 gap-4">
-                     <div className="text-right">
+                    <div className="text-right">
                       <div className="text-sm font-medium text-gray-700">
                         Anyagköltség összesen:
                       </div>
@@ -1420,7 +1429,6 @@ export function OfferDetailView({
                         {workTotal.toLocaleString("hu-HU")} Ft
                       </div>
                     </div>
-                   
                   </div>
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
@@ -1471,7 +1479,6 @@ export function OfferDetailView({
                         </div>
                       )}
                     </div>
-
                   </div>
                 </div>
               </div>

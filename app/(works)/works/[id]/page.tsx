@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { Pencil } from "lucide-react";
 
 import {
   getWorkById,
@@ -465,10 +466,22 @@ export default function WorkDetailPage({
           <div className="flex items-center gap-3">
             <Link
               href="/works"
-              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+              className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+              aria-label="Vissza a munkákhoz"
             >
-              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </Link>
             <h1 className="text-xl font-bold text-gray-900 truncate">
@@ -523,9 +536,10 @@ export default function WorkDetailPage({
                   <span className="text-xs text-gray-900">{startDate}</span>
                   <button
                     onClick={() => setShowDateModal(true)}
-                    className="px-1 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                    className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+                    title="Kezdés dátumának szerkesztése"
                   >
-                    ✏️
+                    <Pencil className="h-4 w-4" />
                   </button>
                 </div>
               </div>
@@ -536,9 +550,10 @@ export default function WorkDetailPage({
                   <span className="text-xs text-gray-900">{endDate}</span>
                   <button
                     onClick={() => setShowDateModal(true)}
-                    className="px-1 py-0.5 text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-700 rounded border border-gray-300 transition-colors"
+                    className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+                    title="Befejezés dátumának szerkesztése"
                   >
-                    ✏️
+                    <Pencil className="h-4 w-4" />
                   </button>
                 </div>
               </div>

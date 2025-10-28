@@ -215,14 +215,14 @@ export default function RequirementOffersPage() {
   }, [requirementId, offerId]);
 
   const handleBackToList = () => {
-    if (isDetailView || window.location.search.includes('offerId=')) {
+    if (isDetailView || window.location.search.includes("offerId=")) {
       // If we're in detail view, go back to the list view
       router.push(`/jobs/${requirementId}`, { scroll: false });
       setIsDetailView(false);
       setSelectedOffer(null);
     } else {
       // If we're in list view, go back to /jobs
-      router.push('/jobs', { scroll: false });
+      router.push("/jobs", { scroll: false });
     }
   };
 
@@ -300,12 +300,12 @@ export default function RequirementOffersPage() {
 
   // Handle status change for an offer
   const handleStatusChange = (offerId: number, newStatus: string) => {
-    setOffers(prevOffers => 
-      prevOffers.map(offer => 
+    setOffers((prevOffers) =>
+      prevOffers.map((offer) =>
         offer.id === offerId ? { ...offer, status: newStatus } : offer
       )
     );
-    
+
     if (selectedOffer && selectedOffer.id === offerId) {
       setSelectedOffer({ ...selectedOffer, status: newStatus });
     }
@@ -316,10 +316,12 @@ export default function RequirementOffersPage() {
     return (
       <div className="min-h-screen w-full bg-gray-50 pt-4">
         <div className="w-full mx-auto px-4 max-w-6xl">
-          <OfferDetailView 
-            offer={selectedOffer} 
-            onBack={handleBackToList} 
-            onStatusChange={(newStatus) => handleStatusChange(selectedOffer.id, newStatus)}
+          <OfferDetailView
+            offer={selectedOffer}
+            onBack={handleBackToList}
+            onStatusChange={(newStatus) =>
+              handleStatusChange(selectedOffer.id, newStatus)
+            }
           />
         </div>
       </div>

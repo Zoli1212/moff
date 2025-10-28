@@ -52,7 +52,7 @@ export default function WorksLayoutClient({
         >
           <path
             d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4h-4v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10.5z"
-            stroke="#111"
+            stroke="#FE9C00"
             strokeWidth="1.2"
             strokeLinejoin="round"
           />
@@ -78,12 +78,12 @@ export default function WorksLayoutClient({
             width="18"
             height="18"
             rx="3"
-            stroke="#111"
+            stroke="#FE9C00"
             strokeWidth="1.2"
           />
           <path
             d="M7 12l3 3 7-7"
-            stroke="#111"
+            stroke="#FE9C00"
             strokeWidth="1.2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -97,7 +97,7 @@ export default function WorksLayoutClient({
       tenantOnly: true,
       icon: (
         <img
-          src="/munka.png"
+          src="/worker2.png"
           alt="Erőforrás"
           width="24"
           height="24"
@@ -129,12 +129,12 @@ export default function WorksLayoutClient({
             width="18"
             height="16"
             rx="2"
-            stroke="#111"
+            stroke="#FE9C00"
             strokeWidth="1.2"
           />
           <path
             d="M16 3v4M8 3v4M3 9h18"
-            stroke="#111"
+            stroke="#FE9C00"
             strokeWidth="1.2"
             strokeLinecap="round"
           />
@@ -156,9 +156,9 @@ export default function WorksLayoutClient({
           aria-label="egyeb"
           style={{ opacity: 0.6 }}
         >
-          <circle cx="6" cy="12" r="2" fill="#111" />
-          <circle cx="12" cy="12" r="2" fill="#111" />
-          <circle cx="18" cy="12" r="2" fill="#111" />
+          <circle cx="6" cy="12" r="2" fill="#FE9C00" />
+          <circle cx="12" cy="12" r="2" fill="#FE9C00" />
+          <circle cx="18" cy="12" r="2" fill="#FE9C00" />
         </svg>
       ),
     },
@@ -238,7 +238,7 @@ export default function WorksLayoutClient({
                         background: "transparent",
                         borderRadius: 10,
                         padding: "2px 8px",
-                        color: "#000",
+                        color: "#FE9C00",
                         fontWeight: "600",
                         transition: "background 0.2s",
                         position: "relative",
@@ -254,7 +254,7 @@ export default function WorksLayoutClient({
                             width: 28,
                             height: 3,
                             borderRadius: 3,
-                            background: "#bbb",
+                            background: "#FE9C00",
                           }}
                         />
                       )}

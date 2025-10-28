@@ -118,7 +118,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       unit: newItemData.unit,
       materialUnitPrice: newItemData.materialUnitPrice,
       unitPrice: newItemData.unitPrice,
-      materialTotal: calculateTotal(newItemData.quantity, newItemData.materialUnitPrice),
+      materialTotal: calculateTotal(
+        newItemData.quantity,
+        newItemData.materialUnitPrice
+      ),
       workTotal: calculateTotal(newItemData.quantity, newItemData.unitPrice),
     };
 
@@ -130,9 +133,9 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   // Helper function to calculate totals
   const calculateTotal = (quantity: string, unitPrice: string) => {
     const qty = parseFloat(quantity) || 0;
-    const price = parseFloat(unitPrice.replace(/[^\d.-]/g, '')) || 0;
+    const price = parseFloat(unitPrice.replace(/[^\d.-]/g, "")) || 0;
     const total = qty * price;
-    return `${total.toLocaleString('hu-HU')} Ft`;
+    return `${total.toLocaleString("hu-HU")} Ft`;
   };
 
   // Remove item
@@ -748,7 +751,8 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
                               onClick={() => startEditing(index)}
                             >
-                              {item.name.replace(/^\*\s*/, "") || "Kattints a szerkesztéshez"}
+                              {item.name.replace(/^\*\s*/, "") ||
+                                "Kattints a szerkesztéshez"}
                             </div>
                           )}
                         </td>
@@ -840,8 +844,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                 type="text"
                                 className="w-24 p-1 border rounded text-right"
                                 value={
-                                  item.unitPrice?.replace(/\s*Ft$/, "") ||
-                                  "0"
+                                  item.unitPrice?.replace(/\s*Ft$/, "") || "0"
                                 }
                                 onChange={(e) =>
                                   handleItemChange(

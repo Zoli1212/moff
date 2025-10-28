@@ -142,7 +142,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         }
       `}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <span style={{ fontWeight: 600, fontSize: 18 }}>{title}</span>
+        <span style={{ fontWeight: 600, fontSize: 18, color: "#FE9C00" }}>{title}</span>
         {isUpdating && (
           <div
             style={{

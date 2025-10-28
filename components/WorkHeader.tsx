@@ -30,12 +30,21 @@ export default function WorkHeader({ title, onAddClick, addButtonDisabled }: Wor
           marginRight: 8,
           fontWeight: "bold",
           textDecoration: "none",
-          color: "#222",
+          color: "#FE9C00",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           width: 36,
           height: 36,
+          transition: "color 0.2s",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.color = "#FE9C00";
+          e.currentTarget.style.opacity = "0.8";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.color = "#FE9C00";
+          e.currentTarget.style.opacity = "1";
         }}
       >
         <svg

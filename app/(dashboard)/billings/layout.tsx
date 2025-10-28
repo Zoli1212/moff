@@ -32,16 +32,30 @@ export default function BillingsLayout({ children }: { children: React.ReactNode
           maxWidth: 420,
           margin: '0 auto',
           zIndex: 10,
-          background: '#fff',
-          borderTop: '1px solid #eee',
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+          transform: "translateZ(0)",
+          WebkitTransform: "translateZ(0)",
+          willChange: "transform",
         }}
       >
+        <div
+          style={{
+            height: 1,
+            background: "#eee",
+            width: "100%",
+            marginBottom: 2,
+          }}
+        />
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-around',
             alignItems: 'center',
+            background: '#fff',
+            borderRadius: 18,
+            boxShadow: "0 1px 6px #eee",
             padding: '12px 0 8px 0',
+            opacity: 1,
           }}
         >
           {menu.map(({ href, label, icon }) => {
@@ -58,12 +72,29 @@ export default function BillingsLayout({ children }: { children: React.ReactNode
                     flexDirection: 'column',
                     alignItems: 'center',
                     fontSize: 18,
+                    background: "transparent",
+                    borderRadius: 10,
                     padding: '2px 8px',
-                    color: isActive ? '#FF9900' : '#333',
-                    transition: 'color 0.2s',
+                    color: '#FE9C00',
+                    fontWeight: '600',
+                    transition: 'background 0.2s',
                     position: 'relative',
                   }}
                 >
+                  {isActive && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: -10,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        width: 28,
+                        height: 3,
+                        borderRadius: 3,
+                        background: '#FE9C00',
+                      }}
+                    />
+                  )}
                   {icon}
                   <span style={{ fontSize: 12, marginTop: 4 }}>{label}</span>
                 </div>

@@ -80,7 +80,7 @@ const WorkListPage = () => {
   React.useEffect(() => {
     // Get user tenant status
     getCurrentUserData()
-      .then(data => {
+      .then((data) => {
         setIsTenant(data.isTenant ?? true);
       })
       .catch(() => {
@@ -140,7 +140,14 @@ const WorkListPage = () => {
   const activeWorks = works.filter((w) => w.active !== false);
 
   return (
-    <div style={{ padding: 32, background: "#f9fafb", minHeight: "100vh", overflowY: "auto" }}>
+    <div
+      style={{
+        padding: 32,
+        background: "#f9fafb",
+        minHeight: "100vh",
+        overflowY: "auto",
+      }}
+    >
       <div
         style={{
           display: "flex",
@@ -155,33 +162,44 @@ const WorkListPage = () => {
             display: "inline-flex",
             alignItems: "center",
             textDecoration: "none",
-            color: "#000000",
+            color: "#FE9C00",
           }}
         >
           <svg
-            width="28"
-            height="28"
-            viewBox="0 0 28 28"
-            fill="none"
             xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
           >
             <path
-              d="M16.5 9L12 14L16.5 19"
-              stroke="#000000"
-              strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
             />
           </svg>
         </a>
-        <h2 style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#000000" }}>Munkák</h2>
+        <h2
+          style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#000000" }}
+        >
+          Munkák
+        </h2>
       </div>
       {/* Automatically update all works that have not been AI-updated */}
       <WorksAutoUpdater
         works={activeWorks}
         onWorkStateChange={handleWorkStateChange}
       />
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 32, paddingBottom: "20px", justifyContent: "center" }}>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 32,
+          paddingBottom: "20px",
+          justifyContent: "center",
+        }}
+      >
         {activeWorks.length === 0 ? (
           <div
             style={{

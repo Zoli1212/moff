@@ -1044,24 +1044,9 @@ nyíl narancssárga nagyobb a jobb
 narancssárga a title
 
 
-trash icon backe narancssárga
-ceruza a szerkeszts
+
 * narancssárga legyen
-trash nagyobb a a back a + nagyobb legyen
-nagyobb legyen a nyomofelület
-kattintaható felület 
 alső jobb sarokba legyen 
-back nyíl mindenhol narancssárga
-narancssárga legyen szürke legyen
-billing visszanyíl
-betűméretek legyen
-húzzuk szét kuk az narancssárga legyen
-X legyen narancsárga!
-narancssárga legyen
-subscribe is narancssárga,
-az is narancssárga
-Ft
-legyen a subscription
-a pipa is legyen narancssárga
+
 
 FE9C00

@@ -71,14 +71,12 @@ interface RequirementDetailProps {
   onBlockIdsChange?: (blockIds: number[]) => void;
 }
 
-
 export function RequirementDetail({
   requirement,
   onBack,
   onRequirementUpdated,
   onBlockIdsChange,
 }: RequirementDetailProps) {
- 
   const router = useRouter();
   const searchParams = useSearchParams();
   const {
@@ -185,7 +183,7 @@ export function RequirementDetail({
       if (offerId) {
         try {
           const offer = await getOfferById(parseInt(offerId));
-           if (offer) {
+          if (offer) {
             if (offer.title) {
               setOfferTitle(offer.title);
             } else {
@@ -220,7 +218,10 @@ export function RequirementDetail({
             // Store offer.items in OfferItemCheckStore
             if (offer.items) {
               useOfferItemCheckStore.getState().setOfferItems(offer.items);
-              console.log('[OfferItemCheckStore] offerItems elmentve:', useOfferItemCheckStore.getState().offerItems);
+              console.log(
+                "[OfferItemCheckStore] offerItems elmentve:",
+                useOfferItemCheckStore.getState().offerItems
+              );
             }
           }
         } catch (error) {
@@ -288,7 +289,10 @@ export function RequirementDetail({
       }
 
       // Log the offerTitle after save
-      console.log("[handleSubmit] offerTitle:", useOfferTitleStore.getState().offerTitle);
+      console.log(
+        "[handleSubmit] offerTitle:",
+        useOfferTitleStore.getState().offerTitle
+      );
 
       toast.success("Követelmény sikeresen frissítve!");
     } catch (error) {
@@ -302,7 +306,9 @@ export function RequirementDetail({
     }
   };
 
-  const setRequirementId = useRequirementIdStore((state) => state.setRequirementId);
+  const setRequirementId = useRequirementIdStore(
+    (state) => state.setRequirementId
+  );
 
   const handleResubmit = async () => {
     // Save newText as a new block if present
@@ -395,10 +401,12 @@ export function RequirementDetail({
         formData.append("existingItems", JSON.stringify(storedItems));
       }
       if (storedItems.length === 0 && initialTableItems.length > 0) {
-       
         setStoredItems(initialTableItems);
-       // Kiírás közvetlenül eltárolás után
-       console.log('[useDemandStore] storedItems elmentve:', useDemandStore.getState().storedItems);
+        // Kiírás közvetlenül eltárolás után
+        console.log(
+          "[useDemandStore] storedItems elmentve:",
+          useDemandStore.getState().storedItems
+        );
       }
 
       // Call the API

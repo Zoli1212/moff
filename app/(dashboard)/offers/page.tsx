@@ -181,7 +181,7 @@ export default function OffersPage() {
               <div className="flex items-center space-x-2">
                 <Link
                   href="/dashboard"
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
+                  className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
                   aria-label="Vissza a főoldalra"
                 >
                   <svg
@@ -246,7 +246,7 @@ export default function OffersPage() {
                       <div className="p-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="text-lg font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
+                            <h3 className="text-lg font-medium text-[#FE9C00] group-hover:text-[#FE9C00]/80 transition-colors">
                               {offer.title || "Névtelen ajánlat"}
                             </h3>
                             {offer.offerSummary && (
