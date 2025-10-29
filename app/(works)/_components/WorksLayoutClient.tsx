@@ -53,7 +53,7 @@ export default function WorksLayoutClient({
           <path
             d="M3 10.5L12 4l9 6.5V20a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-4h-4v4a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V10.5z"
             stroke="#FE9C00"
-            strokeWidth="1.2"
+            strokeWidth="1.1"
             strokeLinejoin="round"
           />
         </svg>
@@ -79,12 +79,12 @@ export default function WorksLayoutClient({
             height="18"
             rx="3"
             stroke="#FE9C00"
-            strokeWidth="1.2"
+            strokeWidth="1.1"
           />
           <path
             d="M7 12l3 3 7-7"
             stroke="#FE9C00"
-            strokeWidth="1.2"
+            strokeWidth="1.1"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -97,14 +97,14 @@ export default function WorksLayoutClient({
       tenantOnly: true,
       icon: (
         <img
-          src="/worker2.png"
+          src="/worker3.png"
           alt="Erőforrás"
           width="24"
           height="24"
           style={{
             display: "block",
             opacity: 1,
-            filter: "contrast(1.9)",
+            filter: "contrast(1)",
             WebkitFilter: "none",
           }}
         />
@@ -130,12 +130,12 @@ export default function WorksLayoutClient({
             height="16"
             rx="2"
             stroke="#FE9C00"
-            strokeWidth="1.2"
+            strokeWidth="1.1"
           />
           <path
             d="M16 3v4M8 3v4M3 9h18"
             stroke="#FE9C00"
-            strokeWidth="1.2"
+            strokeWidth="1.1"
             strokeLinecap="round"
           />
         </svg>

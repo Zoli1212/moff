@@ -1,5 +1,3 @@
-"use client";
-
 import React from "react";
 import Link from "next/link";
 
@@ -42,15 +40,6 @@ export default function WorkHeader({
           justifyContent: "center",
           width: 36,
           height: 36,
-          transition: "color 0.2s",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = "#FE9C00";
-          e.currentTarget.style.opacity = "0.8";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = "#FE9C00";
-          e.currentTarget.style.opacity = "1";
         }}
       >
         <svg

@@ -150,7 +150,7 @@ export default function BillingsPage() {
                       <div className="p-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium text-gray-900">
+                            <h3 className="font-medium" style={{ color: "#FE9C00" }}>
                               {work.title || "Névtelen munka"}
                             </h3>
                             {work.description && (

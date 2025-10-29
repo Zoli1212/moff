@@ -490,6 +490,23 @@ export default function GoogleCalendarView({
             font-size: 0.7rem; /* slightly smaller than xs */
             border-radius: 0.375rem; /* rounded-md */
           }
+          /* Hónapmozgató nyilak narancssárga színe */
+          .fc .fc-button.fc-prev-button,
+          .fc .fc-button.fc-next-button {
+            color: #FE9C00 !important;
+          }
+          .fc .fc-button.fc-prev-button .fc-icon,
+          .fc .fc-button.fc-next-button .fc-icon {
+            color: #FE9C00 !important;
+          }
+          .fc .fc-button.fc-prev-button::before,
+          .fc .fc-button.fc-next-button::before {
+            color: #FE9C00 !important;
+          }
+          .fc .fc-button.fc-prev-button:hover,
+          .fc .fc-button.fc-next-button:hover {
+            color: #FE9C00 !important;
+          }
         }
         /* ===== DESKTOP & MOBILE: Az első (axis) oszlop maradjon a layoutban, de 0 szélességgel ===== */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-scrollgrid-shrink,

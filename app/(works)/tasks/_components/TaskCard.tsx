@@ -64,7 +64,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
       onClick={() => onEdit && onEdit(id)}
     >
       <div className="flex-1">
-        <div className="font-bold text-lg">{title}</div>
+        <div className="font-bold text-lg" style={{ color: "#FE9C00" }}>
+          {title.replace(/^\*\s*/, "")}
+        </div>
         {deadline && (
           <div className="text-xs text-gray-500">Határidő: {deadline}</div>
         )}
