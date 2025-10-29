@@ -50,6 +50,7 @@ export async function POST(_req: NextRequest) {
     // Insert new user
     const newUser = await prisma.user.create({
       data: {
+        clerkId: user.id,
         name: user.fullName ?? "",
         email: email,
         isTenant: isTenant,
