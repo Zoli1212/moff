@@ -17,7 +17,6 @@ interface AssistantChatModalProps {
 export function AssistantChatModal({
   isOpen,
   onClose,
-  context,
 }: AssistantChatModalProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
