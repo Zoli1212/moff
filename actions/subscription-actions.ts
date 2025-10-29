@@ -104,12 +104,12 @@ export async function createSubscription(formData: FormData) {
     }),
     success_url:
       process.env.NODE_ENV === "production"
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?success=true`
-        : "http://localhost:3000/dashboard?success=true",
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`
+        : "http://localhost:3000/payment/success",
     cancel_url:
       process.env.NODE_ENV === "production"
-        ? `${process.env.NEXT_PUBLIC_APP_URL}/billing?canceled=true`
-        : "http://localhost:3000/billing?canceled=true",
+        ? `${process.env.NEXT_PUBLIC_APP_URL}/payment/canceled`
+        : "http://localhost:3000/payment/canceled",
   });
 
   return redirect(session.url as string);

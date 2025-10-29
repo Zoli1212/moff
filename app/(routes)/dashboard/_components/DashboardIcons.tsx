@@ -6,9 +6,6 @@ import Link from "next/link";
 import { useThemeStore } from "@/store/theme-store";
 import { usePositionStore } from "@/store/position-store";
 import DraggableIcon from "@/components/DraggableIcon";
-import { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
 
 interface DashboardIconsProps {
   isTenant: boolean;
@@ -17,35 +14,6 @@ interface DashboardIconsProps {
 export default function DashboardIcons({ isTenant }: DashboardIconsProps) {
   const { theme } = useThemeStore();
   const { positions, updatePosition } = usePositionStore();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-
-  useEffect(() => {
-    const success = searchParams.get("success");
-    const canceled = searchParams.get("canceled");
-
-    if (success === "true") {
-      toast.success("Sikeres előfizetés!", {
-        description: "Az előfizetésed sikeresen aktiválva lett. Köszönjük!",
-        duration: 5000,
-      });
-      // Remove query params from URL after toast is shown
-      setTimeout(() => {
-        router.replace("/dashboard");
-      }, 100);
-    }
-
-    if (canceled === "true") {
-      toast.error("Előfizetés megszakítva", {
-        description: "Az előfizetési folyamat megszakadt. Próbáld újra később!",
-        duration: 5000,
-      });
-      // Remove query params from URL after toast is shown
-      setTimeout(() => {
-        router.replace("/dashboard");
-      }, 100);
-    }
-  }, [searchParams, router]);
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
