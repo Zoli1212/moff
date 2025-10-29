@@ -18,6 +18,7 @@ import {
   UserCircle,
   Wallet,
   Users,
+  Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -26,6 +27,7 @@ import { useThemeStore } from "@/store/theme-store";
 import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
 import { getCurrentUserData } from "@/actions/user-actions";
 import { useUserStore } from "@/store/userStore";
+import { getUserSubscription } from "@/actions/subscription-actions";
 
 const mainItems = [
   { title: "Munkáim", url: "/works", icon: Layers },
@@ -46,6 +48,7 @@ export function AppSidebar() {
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { isTenant, shouldRefetch, setUserData, clearUserData } =
     useUserStore();
+  const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.id) {
@@ -83,6 +86,21 @@ export function AppSidebar() {
     setUserData,
     clearUserData,
   ]);
+
+  // Fetch subscription plan
+  useEffect(() => {
+    getUserSubscription().then((subscription) => {
+      if (subscription) {
+        const planMap: Record<string, string> = {
+          [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || ""]: "Pro",
+          [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_YEARLY || ""]: "Pro",
+          [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM || ""]: "Premium",
+          [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM_YEARLY || ""]: "Premium",
+        };
+        setSubscriptionPlan(planMap[subscription.stripePriceId] || null);
+      }
+    });
+  }, [user]);
 
   return (
     <Sidebar className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 border-r border-gray-700">
@@ -165,6 +183,7 @@ export function AppSidebar() {
           <div className="flex flex-col gap-2 px-2">
             {secondaryItems.map((item, index) => {
               const isActive = path === item.url;
+              const isBillingItem = item.url === "/billing";
               return (
                 <a
                   key={"secondary-" + index}
@@ -208,7 +227,15 @@ export function AppSidebar() {
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border cursor-pointer active:bg-[#4B5563] active:text-[#DE6B12]`}
                 >
                   <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className="truncate">{item.title}</span>
+                  <span className="truncate flex-1">{item.title}</span>
+                  {isBillingItem && subscriptionPlan && (
+                    <div className="flex items-center gap-1">
+                      <Sparkles className="h-4 w-4 text-purple-400" />
+                      <span className="text-xs font-semibold text-purple-400">
+                        {subscriptionPlan}
+                      </span>
+                    </div>
+                  )}
                 </a>
               );
             })}

@@ -29,8 +29,10 @@ export default function DashboardIcons({ isTenant }: DashboardIconsProps) {
         description: "Az előfizetésed sikeresen aktiválva lett. Köszönjük!",
         duration: 5000,
       });
-      // Remove query params from URL
-      router.replace("/dashboard");
+      // Remove query params from URL after toast is shown
+      setTimeout(() => {
+        router.replace("/dashboard");
+      }, 100);
     }
 
     if (canceled === "true") {
@@ -38,8 +40,10 @@ export default function DashboardIcons({ isTenant }: DashboardIconsProps) {
         description: "Az előfizetési folyamat megszakadt. Próbáld újra később!",
         duration: 5000,
       });
-      // Remove query params from URL
-      router.replace("/dashboard");
+      // Remove query params from URL after toast is shown
+      setTimeout(() => {
+        router.replace("/dashboard");
+      }, 100);
     }
   }, [searchParams, router]);
 

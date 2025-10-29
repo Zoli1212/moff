@@ -16,8 +16,10 @@ export default function BillingNotifications() {
         description: "Az előfizetési folyamat megszakadt. Próbáld újra később!",
         duration: 5000,
       });
-      // Remove query params from URL
-      router.replace("/billing");
+      // Remove query params from URL after toast is shown
+      setTimeout(() => {
+        router.replace("/billing");
+      }, 100);
     }
   }, [searchParams, router]);
 

@@ -47,6 +47,21 @@ export async function createSubscription(formData: FormData) {
     throw new Error("User not found");
   }
 
+  // Check if user already has an active subscription
+  const existingSubscription = await prisma.subscription.findFirst({
+    where: {
+      userId: user.id,
+      status: {
+        in: ["active", "trialing"],
+      },
+    },
+  });
+
+  if (existingSubscription) {
+    // Redirect to billing page if already has active subscription
+    redirect("/billing");
+  }
+
   // Create Stripe customer if doesn't exist
   if (!user.stripeCustomerId) {
     const stripeCustomer = await stripe.customers.create({
