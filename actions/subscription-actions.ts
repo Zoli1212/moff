@@ -139,3 +139,30 @@ export async function createCustomerPortal() {
 
   return redirect(session.url);
 }
+
+export async function getUserSubscription() {
+  const clerkUser = await currentUser();
+
+  if (!clerkUser) {
+    return null;
+  }
+
+  const userEmail =
+    clerkUser.emailAddresses?.[0]?.emailAddress ||
+    clerkUser.primaryEmailAddress?.emailAddress;
+
+  if (!userEmail) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: userEmail,
+    },
+    include: {
+      subscription: true,
+    },
+  });
+
+  return user?.subscription || null;
+}
