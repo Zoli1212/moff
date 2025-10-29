@@ -13,8 +13,24 @@ export async function autoSyncWorkToRAG(workId: number) {
     const work = await prisma.work.findUnique({
       where: { id: workId, tenantEmail },
       include: {
-        workItems: true,
-        workDiaries: true,
+        workItems: {
+          include: {
+            workItemWorkers: {
+              include: {
+                workforceRegistry: true
+              }
+            }
+          }
+        },
+        workDiaries: {
+          include: {
+            workDiaryItems: {
+              include: {
+                worker: true
+              }
+            }
+          }
+        },
         workTools: true
       }
     });
@@ -64,12 +80,18 @@ Haladás: ${work.progress || 0}%
 
     // WorkItem-ek szinkronizálása
     for (const item of work.workItems) {
+      // Munkások listája ehhez a workItem-hez
+      const workers = item.workItemWorkers
+        ?.map((wiw: any) => wiw.workforceRegistry?.name || 'Névtelen munkás')
+        .join(', ') || 'Nincs munkás hozzárendelve';
+
       const itemContent = `
 Munkafázis: ${item.name}
 Mennyiség: ${item.quantity} ${item.unit}
 Elvégzett: ${item.completedQuantity || 0} ${item.unit}
 Progress: ${item.progress || 0}%
 Státusz: ${item.inProgress ? 'Folyamatban' : 'Nem aktív'}
+Munkások: ${workers}
 Projekt: ${work.title}
       `.trim();
 
@@ -79,9 +101,44 @@ Projekt: ${work.title}
         workItemId: item.id,
         workTitle: work.title,
         itemName: item.name,
+        workers: workers,
         lastSync: new Date().toISOString()
       });
       syncedItems++;
+    }
+
+    // WorkDiary szinkronizálása (legutóbbi bejegyzések)
+    for (const diary of work.workDiaries) {
+      if (!diary.workDiaryItems || diary.workDiaryItems.length === 0) continue;
+
+      // Csoportosítás dátum szerint (legutóbbi 10 nap)
+      const recentItems = diary.workDiaryItems
+        .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 10);
+
+      for (const diaryItem of recentItems) {
+        const workerName = diaryItem.worker?.name || 'Névtelen munkás';
+        const date = new Date(diaryItem.date).toLocaleDateString('hu-HU');
+        
+        const diaryContent = `
+Naplóbejegyzés: ${date}
+Munkás: ${workerName}
+Munkaórák: ${diaryItem.workHours || 0} óra
+Megjegyzés: ${diaryItem.notes || 'Nincs megjegyzés'}
+Projekt: ${work.title}
+        `.trim();
+
+        await addRAGContext(diaryContent, 'work_diary', {
+          source: 'workDiaryItem',
+          workId: work.id,
+          workTitle: work.title,
+          workerName: workerName,
+          date: date,
+          workHours: diaryItem.workHours,
+          lastSync: new Date().toISOString()
+        });
+        syncedItems++;
+      }
     }
 
     console.log(`✅ RAG szinkronizáció kész munkához (${workId}): ${syncedItems} elem`);

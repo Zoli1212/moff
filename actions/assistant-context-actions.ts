@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
+import { getRAGContext } from "@/actions/rag-context-actions";
 
 /**
  * Betölti a felhasználó munkáinak és ajánlatainak összefoglalóit
@@ -115,6 +116,52 @@ export async function getAssistantContext() {
       context: "",
       worksCount: 0,
       offersCount: 0,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
+/**
+ * RAG-enhanced kontextus betöltés a chat asszisztenshez
+ * Kombinálja a summary-kat és a semantic search eredményeket
+ */
+export async function getAssistantContextWithRAG(userQuestion: string) {
+  try {
+    // 1. Alapvető summary-k (gyors áttekintés)
+    const summaryResult = await getAssistantContext();
+    
+    // 2. Semantic search - releváns részletek a KnowledgeBase-ből
+    const ragResult = await getRAGContext(userQuestion);
+    
+    let detailedContext = "";
+    if (ragResult.success && ragResult.context.length > 0) {
+      detailedContext = "\n\n## RÉSZLETES INFORMÁCIÓK (releváns a kérdéshez):\n\n";
+      ragResult.context.forEach((item: any, idx: number) => {
+        detailedContext += `${idx + 1}. [${item.category}] ${item.content}\n\n`;
+      });
+    }
+    
+    return {
+      success: true,
+      summaries: summaryResult.context,
+      details: detailedContext,
+      fullContext: summaryResult.context + detailedContext,
+      worksCount: summaryResult.worksCount,
+      offersCount: summaryResult.offersCount,
+      ragItemsCount: ragResult.success ? ragResult.context.length : 0,
+    };
+  } catch (error) {
+    console.error("[getAssistantContextWithRAG] Error:", error);
+    // Fallback: csak summary-k
+    const summaryResult = await getAssistantContext();
+    return {
+      success: false,
+      summaries: summaryResult.context,
+      details: "",
+      fullContext: summaryResult.context,
+      worksCount: summaryResult.worksCount,
+      offersCount: summaryResult.offersCount,
+      ragItemsCount: 0,
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }

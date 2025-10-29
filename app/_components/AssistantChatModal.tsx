@@ -48,7 +48,6 @@ export function AssistantChatModal({
         },
         body: JSON.stringify({
           message: input,
-          context: context,
         }),
       });
 

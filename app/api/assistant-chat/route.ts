@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { currentUser } from "@clerk/nextjs/server";
+import { getAssistantContextWithRAG } from "@/actions/assistant-context-actions";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { message, context } = await req.json();
+    const { message } = await req.json();
 
     if (!message) {
       return NextResponse.json(
@@ -26,11 +27,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // RAG-enhanced kontextus betöltése
+    const ragContext = await getAssistantContextWithRAG(message);
+    
     // Kontextus előkészítése
     const systemMessage = `Te egy építőipari asszisztens vagy, aki segít a felhasználónak a munkáiról és ajánlatairól.
-    
+
 A felhasználó munkái és ajánlatai:
-${context || "Nincs elérhető adat."}
+${ragContext.fullContext || "Nincs elérhető adat."}
 
 Válaszolj röviden, tömören és segítőkészen magyarul. Ha a felhasználó kérdez valamit a munkáiról vagy ajánlatairól, használd a fenti kontextust.`;
 
