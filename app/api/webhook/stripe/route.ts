@@ -65,9 +65,14 @@ export async function POST(req: Request) {
             
             // Use the found user
             const updatedUser = userByEmail;
-            const periodEndTimestamp = (subscription as any).trial_end 
-              || (subscription as any).items?.data?.[0]?.current_period_end
-              || (subscription as any).current_period_end;
+            const subscriptionData = subscription as unknown as {
+              trial_end?: number;
+              items?: { data?: Array<{ current_period_end?: number }> };
+              current_period_end?: number;
+            };
+            const periodEndTimestamp = subscriptionData.trial_end 
+              || subscriptionData.items?.data?.[0]?.current_period_end
+              || subscriptionData.current_period_end;
             
             const periodEnd = periodEndTimestamp 
               ? new Date(periodEndTimestamp * 1000)
@@ -103,9 +108,14 @@ export async function POST(req: Request) {
 
       // Use upsert to avoid duplicate key errors
       // Get period end from trial_end or items[0].current_period_end
-      const periodEndTimestamp = (subscription as any).trial_end 
-        || (subscription as any).items?.data?.[0]?.current_period_end
-        || (subscription as any).current_period_end;
+      const subscriptionData = subscription as unknown as {
+        trial_end?: number;
+        items?: { data?: Array<{ current_period_end?: number }> };
+        current_period_end?: number;
+      };
+      const periodEndTimestamp = subscriptionData.trial_end 
+        || subscriptionData.items?.data?.[0]?.current_period_end
+        || subscriptionData.current_period_end;
       
       const periodEnd = periodEndTimestamp 
         ? new Date(periodEndTimestamp * 1000)
@@ -140,7 +150,9 @@ export async function POST(req: Request) {
 
   if (event.type === "invoice.payment_succeeded") {
     try {
-      const invoice = event.data.object as any;
+      const invoice = event.data.object as unknown as {
+        subscription?: string;
+      };
       
       if (!invoice.subscription) {
         console.log("⚠️ No subscription in invoice, skipping");
@@ -148,12 +160,17 @@ export async function POST(req: Request) {
       }
       
       const subscription = await stripe.subscriptions.retrieve(
-        invoice.subscription as string
+        invoice.subscription
       );
       
-      const periodEndTimestamp = (subscription as any).trial_end 
-        || (subscription as any).items?.data?.[0]?.current_period_end
-        || (subscription as any).current_period_end;
+      const subscriptionData = subscription as unknown as {
+        trial_end?: number;
+        items?: { data?: Array<{ current_period_end?: number }> };
+        current_period_end?: number;
+      };
+      const periodEndTimestamp = subscriptionData.trial_end 
+        || subscriptionData.items?.data?.[0]?.current_period_end
+        || subscriptionData.current_period_end;
       
       const periodEnd = periodEndTimestamp 
         ? new Date(periodEndTimestamp * 1000)
@@ -179,9 +196,14 @@ export async function POST(req: Request) {
     try {
       const subscription = event.data.object as Stripe.Subscription;
       
-      const periodEndTimestamp = (subscription as any).trial_end 
-        || (subscription as any).items?.data?.[0]?.current_period_end
-        || (subscription as any).current_period_end;
+      const subscriptionData = subscription as unknown as {
+        trial_end?: number;
+        items?: { data?: Array<{ current_period_end?: number }> };
+        current_period_end?: number;
+      };
+      const periodEndTimestamp = subscriptionData.trial_end 
+        || subscriptionData.items?.data?.[0]?.current_period_end
+        || subscriptionData.current_period_end;
       
       const periodEnd = periodEndTimestamp 
         ? new Date(periodEndTimestamp * 1000)
