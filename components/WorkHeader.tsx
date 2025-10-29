@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 
@@ -7,7 +9,11 @@ interface WorkHeaderProps {
   addButtonDisabled?: boolean;
 }
 
-export default function WorkHeader({ title, onAddClick, addButtonDisabled }: WorkHeaderProps) {
+export default function WorkHeader({
+  title,
+  onAddClick,
+  addButtonDisabled,
+}: WorkHeaderProps) {
   return (
     <div
       style={{
@@ -75,9 +81,7 @@ export default function WorkHeader({ title, onAddClick, addButtonDisabled }: Wor
             minHeight: 36,
             borderRadius: "50%",
             backgroundColor: "transparent",
-            border: addButtonDisabled
-              ? "2px solid #ccc"
-              : "2px solid #f97316",
+            border: addButtonDisabled ? "2px solid #ccc" : "2px solid #f97316",
             color: addButtonDisabled ? "#ccc" : "#f97316",
             fontSize: 24,
             fontWeight: "normal",
@@ -105,7 +109,13 @@ export default function WorkHeader({ title, onAddClick, addButtonDisabled }: Wor
             }
           }}
         >
-          <span style={{ display: "block", lineHeight: 0, transform: "translateY(-2px)" }}>
+          <span
+            style={{
+              display: "block",
+              lineHeight: 0,
+              transform: "translateY(-2px)",
+            }}
+          >
             {addButtonDisabled ? "..." : "+"}
           </span>
         </button>

@@ -1050,3 +1050,22 @@ alső jobb sarokba legyen
 
 
 FE9C00
+neonosabb
+* eltüntetése
+megosztás
+kivétel a munkából 
+ikon benntebb van egységes
+jobbra legyen a ceruza
+követelmények nyíl narancssárga
+megosztás narancssárga
+tétel narancssárga
+betűméret ne legyen kisebb befejezés helyszín bold
+kép kerete és ikon is narancssárga *
+narancssárga a naptáron a nyílak
+számlák narancssárga 
+---
+Kártya 
+back narancssárga új tétel narancssárga 
+kártyán narancssárga
+alatta legyen a teljesítés
+számlán 

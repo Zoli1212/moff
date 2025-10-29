@@ -5,7 +5,6 @@ import { useRouter, useParams } from "next/navigation";
 import { getWorkById } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
 import { createBilling } from "@/actions/billing-actions";
-import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -59,10 +58,10 @@ export default function BillingsDetailPage() {
   // Check if user is tenant
   useEffect(() => {
     getCurrentUserData()
-      .then(data => {
+      .then((data) => {
         setIsTenant(data.isTenant ?? true);
         if (!data.isTenant) {
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
       })
       .catch(() => {
@@ -114,7 +113,8 @@ export default function BillingsDetailPage() {
           // Calculate billable quantity
           const billableQuantity = Math.max(
             0,
-            (item.completedQuantity || 0) - ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+            (item.completedQuantity || 0) -
+              ((item.billedQuantity || 0) + (item.paidQuantity || 0))
           );
           return {
             ...item,
@@ -178,7 +178,9 @@ export default function BillingsDetailPage() {
         // Calculate billable quantity (completed - already billed - already paid)
         const billableQuantity = Math.max(
           0,
-          (item.completedQuantity || 0) - (item.billedQuantity || 0) - (item.paidQuantity || 0)
+          (item.completedQuantity || 0) -
+            (item.billedQuantity || 0) -
+            (item.paidQuantity || 0)
         );
 
         // Recalculate totals based on billable quantity
@@ -227,7 +229,21 @@ export default function BillingsDetailPage() {
       <main className="flex-grow w-full mx-auto px-4 max-w-7xl">
         <div className="flex items-center justify-between mb-6">
           <Link href="/billings" className="p-2">
-            <ArrowLeft className="h-6 w-6 text-gray-600" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              style={{ color: "#FE9C00" }}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
           </Link>
           <h1 className="text-xl font-bold text-gray-800 truncate">
             {work?.title || "Számla létrehozása"}

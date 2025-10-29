@@ -121,7 +121,9 @@ export function AppSidebar() {
                       style={{
                         backgroundColor: isActive ? "#DE6B12" : "transparent",
                         color: isActive ? "white" : "#D1D5DB",
-                        boxShadow: isActive ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)" : "none",
+                        boxShadow: isActive
+                          ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)"
+                          : "none",
                       }}
                       onMouseEnter={(e) => {
                         if (!isActive) {
@@ -168,10 +170,14 @@ export function AppSidebar() {
                   key={"secondary-" + index}
                   href={item.url}
                   style={{
-                    backgroundColor: isActive ? "#DE6B12" : "rgba(55, 65, 81, 0.5)",
+                    backgroundColor: isActive
+                      ? "#DE6B12"
+                      : "rgba(55, 65, 81, 0.5)",
                     color: isActive ? "white" : "#D1D5DB",
                     borderColor: "#4B5563",
-                    boxShadow: isActive ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)" : "none",
+                    boxShadow: isActive
+                      ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)"
+                      : "none",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) {
@@ -181,7 +187,8 @@ export function AppSidebar() {
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(55, 65, 81, 0.5)";
                       e.currentTarget.style.color = "#D1D5DB";
                     }
                   }}
@@ -193,7 +200,8 @@ export function AppSidebar() {
                   }}
                   onTouchEnd={(e) => {
                     if (!isActive) {
-                      e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(55, 65, 81, 0.5)";
                       e.currentTarget.style.color = "#D1D5DB";
                     }
                   }}
@@ -236,9 +244,13 @@ export function AppSidebar() {
                       setShowThemeSelector(false);
                     }}
                     style={{
-                      backgroundColor: currentTheme === theme ? "#DE6B12" : "#374151",
+                      backgroundColor:
+                        currentTheme === theme ? "#DE6B12" : "#374151",
                       color: currentTheme === theme ? "white" : "#D1D5DB",
-                      boxShadow: currentTheme === theme ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)" : "none",
+                      boxShadow:
+                        currentTheme === theme
+                          ? "0 10px 15px -3px rgba(222, 107, 18, 0.3)"
+                          : "none",
                     }}
                     onMouseEnter={(e) => {
                       if (currentTheme !== theme) {
