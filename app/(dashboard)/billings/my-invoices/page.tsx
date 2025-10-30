@@ -173,64 +173,67 @@ export default function MyInvoicesPage() {
                   >
                     <button
                       onClick={() => toggleWork(workTitle)}
-                      className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                      className="w-full px-4 py-3 hover:bg-gray-50 transition-colors"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-start gap-3">
                         <ChevronDown
-                          className={`h-5 w-5 text-gray-500 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                          className={`h-5 w-5 text-[#FE9C00] transition-transform flex-shrink-0 mt-0.5 ${isExpanded ? "rotate-180" : ""}`}
                         />
-                        <div className="text-left">
-                          <h2 className="text-lg font-semibold text-gray-800">
+                        <div className="flex-1 text-left space-y-2">
+                          <h2 className="text-lg font-semibold text-[#FE9C00]">
                             {workTitle}
                           </h2>
+                          
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                                Teljesített:
+                              </span>
+                              <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 whitespace-nowrap">
+                                {new Intl.NumberFormat("hu-HU", {
+                                  maximumFractionDigits: 0,
+                                }).format(
+                                  (workBillings[0] as BillingWithWork)?.work
+                                    ?.totalBilledAmount || 0
+                                )}{" "}
+                                Ft
+                              </span>
+                            </div>
+                            {(workBillings[0] as BillingWithWork)?.work && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
+                                  Teljes érték:
+                                </span>
+                                <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 whitespace-nowrap">
+                                  {new Intl.NumberFormat("hu-HU", {
+                                    maximumFractionDigits: 0,
+                                  }).format(
+                                    ((workBillings[0] as BillingWithWork).work
+                                      ?.totalMaterialCost || 0) +
+                                      ((workBillings[0] as BillingWithWork).work
+                                        ?.totalLaborCost || 0)
+                                  )}{" "}
+                                  Ft
+                                </span>
+                              </div>
+                            )}
+                          </div>
+
                           <p className="text-sm text-gray-500">
                             {workBillings.length} számla
                           </p>
-                        </div>
-                      </div>
-                      <div className="text-right space-y-1">
-                        <div className="flex items-center justify-end gap-1 sm:gap-2">
-                          <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                            Teljesített:
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 whitespace-nowrap">
-                            {new Intl.NumberFormat("hu-HU", {
-                              maximumFractionDigits: 0,
-                            }).format(
-                              (workBillings[0] as BillingWithWork)?.work
-                                ?.totalBilledAmount || 0
-                            )}{" "}
-                            Ft
-                          </span>
-                        </div>
-                        {(workBillings[0] as BillingWithWork)?.work && (
-                          <div className="flex items-center justify-end gap-1 sm:gap-2">
-                            <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                              Teljes érték:
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 whitespace-nowrap">
+                          
+                          {draftAmount > 0 && (
+                            <div className="text-xs text-gray-500">
+                              Piszkozat:{" "}
                               {new Intl.NumberFormat("hu-HU", {
+                                style: "currency",
+                                currency: "HUF",
                                 maximumFractionDigits: 0,
-                              }).format(
-                                ((workBillings[0] as BillingWithWork).work
-                                  ?.totalMaterialCost || 0) +
-                                  ((workBillings[0] as BillingWithWork).work
-                                    ?.totalLaborCost || 0)
-                              )}{" "}
-                              Ft
-                            </span>
-                          </div>
-                        )}
-                        {draftAmount > 0 && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            Piszkozat:{" "}
-                            {new Intl.NumberFormat("hu-HU", {
-                              style: "currency",
-                              currency: "HUF",
-                              maximumFractionDigits: 0,
-                            }).format(draftAmount)}
-                          </div>
-                        )}
+                              }).format(draftAmount)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </button>
 
@@ -262,7 +265,7 @@ export default function MyInvoicesPage() {
                             >
                               <div className="flex justify-between items-start">
                                 <div>
-                                  <h3 className="font-medium text-gray-900">
+                                  <h3 className="font-medium text-[#FE9C00]">
                                     {invoiceLabel} {invoiceNumberInWork}
                                   </h3>
                                   <div className="text-sm text-gray-500 mt-1">

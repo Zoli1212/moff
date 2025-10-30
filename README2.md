@@ -1031,8 +1031,7 @@ megosztás t széthúzni mindegyik narancssárga
 
 napló fehér narancssárga a keret
 
-számla kárty a címe csillag ne legyen
-narancssárga a kár
+
 vevő adatai narancssárga
 számlazott össze van csúszva 
 és narancssárga
