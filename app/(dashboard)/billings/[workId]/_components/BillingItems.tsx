@@ -315,7 +315,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
             Tételek
           </h2>
-          <Button variant="outline" size="sm" onClick={handleAddItem}>
+          <Button variant="outline" size="sm" onClick={handleAddItem} style={{ color: '#FE9C00', borderColor: '#FE9C00' }}>
             <Plus className="h-4 w-4 mr-2" />
             Új tétel
           </Button>
@@ -353,7 +353,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                   />
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-800 pr-4">
-                      {index + 1}. {item.name}
+                      {index + 1}. {item.name.replace(/^\*+\s*/, '')}
                     </h3>
                   </div>
                 </div>

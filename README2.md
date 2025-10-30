@@ -1022,3 +1022,17 @@ Határidő lejjebb / Bold
 PRO 29.000
 PREMIUM 59.000
 
+Státusz berendezve
+Kivétel a munlából
+megosztás
+Követelmény nyíl narancssárga
+lenn narancssárga
+megosztás t széthúzni mindegyik narancssárga
+
+napló fehér narancssárga a keret
+
+számla kárty a címe csillag ne legyen
+narancssárga a kár
+vevő adatai narancssárga
+számlazott össze van csúszva 
+és narancssárga
