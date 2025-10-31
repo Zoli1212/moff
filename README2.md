@@ -1028,10 +1028,34 @@ megosztás
 Követelmény nyíl narancssárga
 lenn narancssárga
 megosztás t széthúzni mindegyik narancssárga
-
 napló fehér narancssárga a keret
+További információ nem kell bele
 
 
-vevő adatai narancssárga
-számlazott össze van csúszva 
-és narancssárga
+Pending
+Új felmérés gomb színe 
+minden dialógus legyen egységes narancssára legyen 
+Dialógus legyen egységes narancssára legyen 
+mindenhol egységes narancssára legyen egységes dialogus box
+nem teljesen menjen ki aszélére mentés gomb legyen narancssárga
+combobox kiválasztható
+egységes 
+alatta mikor munkába álljtottam default ból - + becsült érték
+kezdés és beffejezés a becsült idővel 
+megnöveli a becsült időtartamat
+mobilról megnézni
+képfelteltős ios
+villogás ne legyen
+nincs leimplementálod kikattintom a munkást akkor vegye ki
++ ikon naarancssárga legyen
+felső plus narancssár
+egységes nyíl legyen back nyil vissza gomb legyen narancssárga
+pipa szerkesztés gomb legyen narancssárga
+szerkesztés ceruza legyen az eszközöknél
+kép legyen oldalt
+vegyük ki a korlátozást
+lehessen törölni a azokat az eszközöket amik nem kellenek
+pipa + törlés 
+mennyiségi egység
+
+nem jön ki a széléig törlés piros mentés

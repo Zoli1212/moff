@@ -960,10 +960,10 @@ export function OfferDetailView({
                 )}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                    <button className="p-2 rounded-full hover:bg-orange-50 transition-colors">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 text-gray-600"
+                        className="h-5 w-5 text-[#FE9C00]"
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
@@ -1030,26 +1030,24 @@ export function OfferDetailView({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-6 mt-4">
-              <div className="flex items-center">
-                <div
-                  className="flex items-center text-gray-600 cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
-                  onClick={() => handleStatusUpdate()}
+            <div className="flex flex-col gap-3 mt-4">
+              <div
+                className="flex items-center text-gray-600 cursor-pointer hover:bg-gray-100 py-1 rounded transition-colors w-fit"
+                onClick={() => handleStatusUpdate()}
+              >
+                <Tag className="h-4 w-4 mr-2 text-gray-400" />
+                <span>Státusz: </span>
+                <span
+                  className={`ml-1 font-medium ${
+                    offer.status === "work"
+                      ? "text-green-600"
+                      : offer.status === "draft"
+                        ? "text-blue-600"
+                        : "text-gray-700"
+                  }`}
                 >
-                  <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>Státusz: </span>
-                  <span
-                    className={`ml-1 font-medium ${
-                      offer.status === "work"
-                        ? "text-green-600"
-                        : offer.status === "draft"
-                          ? "text-blue-600"
-                          : "text-gray-700"
-                    }`}
-                  >
-                    {getStatusDisplay(offer.status || "draft")}
-                  </span>
-                </div>
+                  {getStatusDisplay(offer.status || "draft")}
+                </span>
               </div>
 
               <div className="flex items-center text-gray-600">
@@ -1596,7 +1594,7 @@ export function OfferDetailView({
               disabled={isUpdatingStatus}
               className={
                 offer.status === "draft"
-                  ? "bg-green-600 hover:bg-green-700"
+                  ? "bg-[#FE9C00] hover:bg-[#E58A00]"
                   : "bg-blue-600 hover:bg-blue-700"
               }
             >

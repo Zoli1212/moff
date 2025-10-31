@@ -181,3 +181,52 @@ export async function getUserSubscription() {
 
   return user?.subscription || null;
 }
+
+/**
+ * Ellenőrzi, hogy a felhasználónak van-e aktív hozzáférése (subscription vagy trial)
+ */
+export async function hasActiveAccess() {
+  const clerkUser = await currentUser();
+
+  if (!clerkUser) {
+    return { hasAccess: false, reason: "not_logged_in" as const };
+  }
+
+  const userEmail =
+    clerkUser.emailAddresses?.[0]?.emailAddress ||
+    clerkUser.primaryEmailAddress?.emailAddress;
+
+  if (!userEmail) {
+    return { hasAccess: false, reason: "no_email" as const };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email: userEmail },
+    include: { subscription: true },
+  });
+
+  if (!user) {
+    return { hasAccess: false, reason: "user_not_found" as const };
+  }
+
+  // SuperUser mindig hozzáfér
+  if (user.isSuperUser) {
+    return { hasAccess: true, reason: "super_user" as const };
+  }
+
+  // Aktív subscription ellenőrzése
+  if (user.subscription && user.subscription.status === "active") {
+    return { hasAccess: true, reason: "active_subscription" as const };
+  }
+
+  // Trial ellenőrzése
+  if (user.trialEndsAt && user.trialEndsAt > new Date()) {
+    return { 
+      hasAccess: true, 
+      reason: "trial" as const, 
+      trialEndsAt: user.trialEndsAt 
+    };
+  }
+
+  return { hasAccess: false, reason: "no_access" as const };
+}

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useThemeStore } from "@/store/theme-store";
 import { usePositionStore } from "@/store/position-store";
 import DraggableIcon from "@/components/DraggableIcon";
+import { InviteTokenHandler } from "./InviteTokenHandler";
 
 interface DashboardIconsProps {
   isTenant: boolean;
@@ -17,6 +18,8 @@ export default function DashboardIcons({ isTenant }: DashboardIconsProps) {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
+      {/* Invite token handler - háttérben fut */}
+      <InviteTokenHandler />
       {/* Háttérkép */}
       <div className="fixed inset-0 -z-10">
         <Image

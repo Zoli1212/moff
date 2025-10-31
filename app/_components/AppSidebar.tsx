@@ -19,6 +19,8 @@ import {
   Wallet,
   Users,
   Sparkles,
+  UserPlus,
+  Check,
 } from "lucide-react";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -28,6 +30,7 @@ import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
 import { getCurrentUserData } from "@/actions/user-actions";
 import { useUserStore } from "@/store/userStore";
 import { getUserSubscription } from "@/actions/subscription-actions";
+import { generateInviteLink } from "@/actions/invite-actions";
 
 const mainItems = [
   { title: "Munkáim", url: "/works", icon: Layers },
@@ -49,6 +52,9 @@ export function AppSidebar() {
   const { isTenant, shouldRefetch, setUserData, clearUserData } =
     useUserStore();
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
+  const [isSuperUser, setIsSuperUser] = useState(false);
+  const [inviteLoading, setInviteLoading] = useState(false);
+  const [inviteCopied, setInviteCopied] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -73,6 +79,9 @@ export function AppSidebar() {
       .then((data) => {
         if (userEmail) {
           setUserData(data.isTenant ?? true, userEmail);
+          if ('isSuperUser' in data) {
+            setIsSuperUser(data.isSuperUser ?? false);
+          }
         }
       })
       .catch(() => {
@@ -101,6 +110,26 @@ export function AppSidebar() {
       }
     });
   }, [user]);
+
+  const handleGenerateInvite = async () => {
+    setInviteLoading(true);
+    setInviteCopied(false);
+    
+    const result = await generateInviteLink();
+    
+    if (result.success && result.inviteUrl) {
+      // Vágólapra másolás
+      await navigator.clipboard.writeText(result.inviteUrl);
+      setInviteCopied(true);
+      
+      // 3 másodperc után eltűnik a "Másolva" jelzés
+      setTimeout(() => {
+        setInviteCopied(false);
+      }, 3000);
+    }
+    
+    setInviteLoading(false);
+  };
 
   return (
     <Sidebar className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 border-r border-gray-700">
@@ -239,6 +268,58 @@ export function AppSidebar() {
                 </a>
               );
             })}
+            
+            {/* Meghívás gomb - csak superUser-eknek */}
+            {isSuperUser && (
+              <button
+                onClick={handleGenerateInvite}
+                disabled={inviteLoading}
+                style={{
+                  backgroundColor: inviteCopied ? "#10B981" : "rgba(55, 65, 81, 0.5)",
+                  color: inviteCopied ? "white" : "#D1D5DB",
+                  borderColor: inviteCopied ? "#10B981" : "#4B5563",
+                  boxShadow: inviteCopied
+                    ? "0 10px 15px -3px rgba(16, 185, 129, 0.3)"
+                    : "none",
+                }}
+                onMouseEnter={(e) => {
+                  if (!inviteCopied && !inviteLoading) {
+                    e.currentTarget.style.backgroundColor = "#4B5563";
+                    e.currentTarget.style.color = "#DE6B12";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!inviteCopied && !inviteLoading) {
+                    e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                    e.currentTarget.style.color = "#D1D5DB";
+                  }
+                }}
+                onTouchStart={(e) => {
+                  if (!inviteCopied && !inviteLoading) {
+                    e.currentTarget.style.backgroundColor = "#4B5563";
+                    e.currentTarget.style.color = "#DE6B12";
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  if (!inviteCopied && !inviteLoading) {
+                    e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                    e.currentTarget.style.color = "#D1D5DB";
+                  }
+                }}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all border cursor-pointer active:bg-[#4B5563] active:text-[#DE6B12] ${
+                  inviteLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                {inviteCopied ? (
+                  <Check className="h-5 w-5 flex-shrink-0" />
+                ) : (
+                  <UserPlus className="h-5 w-5 flex-shrink-0" />
+                )}
+                <span className="truncate">
+                  {inviteCopied ? "Másolva!" : "Meghívás"}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </SidebarContent>

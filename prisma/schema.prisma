@@ -42,6 +42,8 @@ model User {
   isTenant         Boolean        @default(true)
   theme            String         @default("landing")
   stripeCustomerId String?        @unique
+  invitedBy        String?        // SuperUser email aki meghívta
+  trialEndsAt      DateTime?      // Trial lejárati dátum
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   subscription     Subscription?
@@ -777,4 +779,19 @@ model KnowledgeBase {
   @@index([tenantEmail])
   @@index([category])
 
+}
+
+model InviteToken {
+  id          String   @id @default(cuid())
+  token       String   @unique
+  createdBy   String   // SuperUser email aki létrehozta
+  usedBy      String?  // User email aki felhasználta (null ha még nem használták)
+  usedAt      DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([token])
+  @@index([createdBy])
 }

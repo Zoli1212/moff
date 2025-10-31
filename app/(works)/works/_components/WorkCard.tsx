@@ -121,51 +121,32 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         <div
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 3,
-            background: "linear-gradient(90deg, #3498db, #2ecc71, #3498db)",
-            backgroundSize: "200% 100%",
-            animation: "loading 2s linear infinite",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: 48,
+            height: 48,
+            border: "4px solid #FEF3E6",
+            borderTop: "4px solid #FE9C00",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+            zIndex: 10,
           }}
         />
       )}
       <style jsx>{`
-        @keyframes loading {
+        @keyframes spin {
           0% {
-            background-position: 200% 0;
+            transform: translate(-50%, -50%) rotate(0deg);
           }
           100% {
-            background-position: -200% 0;
+            transform: translate(-50%, -50%) rotate(360deg);
           }
         }
       `}</style>
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <span style={{ fontWeight: 600, fontSize: 18, color: "#FE9C00" }}>{title}</span>
-        {isUpdating && (
-          <div
-            style={{
-              width: 16,
-              height: 16,
-              border: "2px solid #3498db",
-              borderTop: "2px solid transparent",
-              borderRadius: "50%",
-              animation: "spin 1s linear infinite",
-            }}
-          />
-        )}
       </div>
-      <style jsx>{`
-        @keyframes spin {
-          0% {
-            transform: rotate(0deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
       <div
         style={{
           margin: "8px 0",

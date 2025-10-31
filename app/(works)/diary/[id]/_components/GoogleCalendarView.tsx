@@ -507,6 +507,20 @@ export default function GoogleCalendarView({
           .fc .fc-button.fc-next-button:hover {
             color: #FE9C00 !important;
           }
+          /* Hó Hét Nap gombok narancssárga színe - fehér háttér */
+          .fc .fc-button-group .fc-button {
+            color: #FE9C00 !important;
+            border-color: #FE9C00 !important;
+            background-color: white !important;
+          }
+          .fc .fc-button-group .fc-button:hover {
+            background-color: #FEF3E6 !important;
+            color: #FE9C00 !important;
+          }
+          .fc .fc-button-group .fc-button.fc-button-active {
+            background-color: #FE9C00 !important;
+            color: white !important;
+          }
         }
         /* ===== DESKTOP & MOBILE: Az első (axis) oszlop maradjon a layoutban, de 0 szélességgel ===== */
         .fc-mobile-wrap .fc .fc-timeGridWeek-view .fc-scrollgrid-shrink,
