@@ -1,14 +1,15 @@
 import { SignUp } from '@clerk/nextjs'
 import { redirect } from 'next/navigation'
 
-export default function Page({
+export default async function Page({
   searchParams,
 }: {
-  searchParams: { invite?: string }
+  searchParams: Promise<{ invite?: string }>
 }) {
+  const params = await searchParams;
   // Ha van invite token, átirányítjuk az invite oldalra
-  if (searchParams.invite) {
-    redirect(`/invite/${searchParams.invite}`)
+  if (params.invite) {
+    redirect(`/invite/${params.invite}`)
   }
 
   return (

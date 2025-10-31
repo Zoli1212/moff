@@ -110,12 +110,19 @@ export async function useInviteToken(token: string, userEmail: string) {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
-    // User frissítése
-    await prisma.user.update({
+    // User létrehozása vagy frissítése (upsert)
+    await prisma.user.upsert({
       where: { email: userEmail },
-      data: {
+      update: {
         invitedBy: inviteToken.createdBy,
         trialEndsAt,
+      },
+      create: {
+        email: userEmail,
+        name: userEmail.split('@')[0], // Email első része mint név
+        invitedBy: inviteToken.createdBy,
+        trialEndsAt,
+        isTenant: true, // Default érték
       },
     });
 

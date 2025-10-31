@@ -1,7 +1,7 @@
 'use client';
 // Új stílusos AppSidebar arany-sötétszürke témában
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Sidebar,
   SidebarContent,
@@ -59,6 +59,7 @@ export function AppSidebar() {
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const hasLoadedUserData = useRef(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -72,11 +73,17 @@ export function AppSidebar() {
     // KRITIKUS: Ha nincs bejelentkezve, AZONNAL töröljük a cache-t
     if (!userEmail) {
       clearUserData();
+      hasLoadedUserData.current = false;
       return;
     }
 
+    // Ha már betöltöttük, ne futtassuk újra
+    if (hasLoadedUserData.current) return;
+    
     // Csak akkor frissítünk, ha megváltozott a felhasználó vagy nincs cache
     if (!shouldRefetch(userEmail)) return;
+
+    hasLoadedUserData.current = true;
 
     // Háttérben frissítjük az adatokat (nem blokkolja a UI-t)
     getCurrentUserData()

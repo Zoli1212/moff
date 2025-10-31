@@ -5,9 +5,9 @@ import Link from "next/link";
 export default async function InvitePage({
   params,
 }: {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }) {
-  const { token } = params;
+  const { token } = await params;
 
   // Token validálása
   const validation = await validateInviteToken(token);

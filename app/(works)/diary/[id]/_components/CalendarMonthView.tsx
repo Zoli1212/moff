@@ -1,6 +1,16 @@
 "use client";
 import React, { useState } from "react";
-import { subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, format } from "date-fns";
+import {
+  subMonths,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  addDays,
+  isSameMonth,
+  isSameDay,
+  format,
+} from "date-fns";
 
 interface CalendarMonthViewProps {
   selectedDate: Date;
@@ -8,7 +18,11 @@ interface CalendarMonthViewProps {
   diaryDates: Date[];
 }
 
-export default function CalendarMonthView({ selectedDate, onDateSelect, diaryDates }: CalendarMonthViewProps) {
+export default function CalendarMonthView({
+  selectedDate,
+  onDateSelect,
+  diaryDates,
+}: CalendarMonthViewProps) {
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(selectedDate));
 
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
@@ -16,8 +30,15 @@ export default function CalendarMonthView({ selectedDate, onDateSelect, diaryDat
 
   const renderHeader = () => (
     <div className="flex items-center justify-between mb-4">
-      <button onClick={prevMonth} className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300">◀</button>
-      <span className="font-bold text-lg">{format(currentMonth, "yyyy. MMMM")}</span>
+      <button
+        onClick={prevMonth}
+        className="px-2 py-1 bg-gray-200 rounded hover:bg-gray-300"
+      >
+        ◀
+      </button>
+      <span className="font-bold text-lg">
+        {format(currentMonth, "yyyy. MMMM")}
+      </span>
       <span className="w-8" />
     </div>
   );
@@ -27,7 +48,10 @@ export default function CalendarMonthView({ selectedDate, onDateSelect, diaryDat
     const date = startOfWeek(currentMonth, { weekStartsOn: 1 });
     for (let i = 0; i < 7; i++) {
       days.push(
-        <div key={i} className="text-xs text-center font-semibold text-gray-600">
+        <div
+          key={i}
+          className="text-xs text-center font-semibold text-gray-600"
+        >
           {format(addDays(date, i), "EEE")}
         </div>
       );

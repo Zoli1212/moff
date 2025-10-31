@@ -28,9 +28,9 @@ export default function InviteClient({
     const result = await activateInviteToken(token, email);
 
     if (result.success) {
-      // Sikeres aktiválás, átirányítás a főoldalra
+      // Sikeres aktiválás, átirányítás a dashboard-ra
       setTimeout(() => {
-        router.push("/works");
+        router.push("/dashboard");
       }, 2000);
     } else {
       setError(result.error || "Hiba történt");
@@ -113,7 +113,7 @@ export default function InviteClient({
           Meghívó: {createdBy}
         </p>
         <p className="text-sm text-gray-500">
-          Átirányítás a munkák oldalra...
+          Átirányítás a főoldalra...
         </p>
       </div>
     </div>

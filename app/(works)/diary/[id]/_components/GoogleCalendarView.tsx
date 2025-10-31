@@ -470,6 +470,13 @@ export default function GoogleCalendarView({
           .fc-mobile-wrap .fc .fc-header-toolbar {
             margin-bottom: 0.35rem;
             gap: 0.2rem;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+          }
+          .fc-mobile-wrap .fc .fc-toolbar-chunk {
+            display: flex !important;
+            align-items: center !important;
+            flex-shrink: 0 !important;
           }
           /* Mobile: keep axis elements but make them 0 width */
           /* Add spacing between grouped header buttons */
@@ -484,16 +491,20 @@ export default function GoogleCalendarView({
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            flex-shrink: 1 !important;
           }
           .fc-mobile-wrap .fc .fc-button {
             padding: 0.2rem 0.45rem; /* even smaller */
             font-size: 0.7rem; /* slightly smaller than xs */
             border-radius: 0.375rem; /* rounded-md */
           }
-          /* Hónapmozgató nyilak narancssárga színe */
+          /* Hónapmozgató nyilak és 'ma' gomb narancssárga színe */
           .fc .fc-button.fc-prev-button,
-          .fc .fc-button.fc-next-button {
+          .fc .fc-button.fc-next-button,
+          .fc .fc-button.fc-today-button {
             color: #FE9C00 !important;
+            background-color: white !important;
+            border-color: #FE9C00 !important;
           }
           .fc .fc-button.fc-prev-button .fc-icon,
           .fc .fc-button.fc-next-button .fc-icon {
@@ -504,8 +515,17 @@ export default function GoogleCalendarView({
             color: #FE9C00 !important;
           }
           .fc .fc-button.fc-prev-button:hover,
-          .fc .fc-button.fc-next-button:hover {
+          .fc .fc-button.fc-next-button:hover,
+          .fc .fc-button.fc-today-button:hover {
+            background-color: #FEF3E6 !important;
             color: #FE9C00 !important;
+            border-color: #FE9C00 !important;
+          }
+          .fc .fc-button.fc-today-button:disabled {
+            background-color: #FE9C00 !important;
+            color: white !important;
+            border-color: #FE9C00 !important;
+            opacity: 1 !important;
           }
           /* Hó Hét Nap gombok narancssárga színe - fehér háttér */
           .fc .fc-button-group .fc-button {
@@ -516,10 +536,18 @@ export default function GoogleCalendarView({
           .fc .fc-button-group .fc-button:hover {
             background-color: #FEF3E6 !important;
             color: #FE9C00 !important;
+            border-color: #FE9C00 !important;
+          }
+          .fc .fc-button-group .fc-button:focus,
+          .fc .fc-button-group .fc-button:active {
+            outline: none !important;
+            box-shadow: 0 0 0 2px #FE9C00 !important;
+            border-color: #FE9C00 !important;
           }
           .fc .fc-button-group .fc-button.fc-button-active {
             background-color: #FE9C00 !important;
             color: white !important;
+            border-color: #FE9C00 !important;
           }
         }
         /* ===== DESKTOP & MOBILE: Az első (axis) oszlop maradjon a layoutban, de 0 szélességgel ===== */
