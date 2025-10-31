@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useInviteToken } from "@/actions/invite-actions";
+import { useInviteToken as activateInviteToken } from "@/actions/invite-actions";
 
 /**
  * Komponens ami ellenőrzi van-e pending invite token localStorage-ban
@@ -11,9 +11,12 @@ import { useInviteToken } from "@/actions/invite-actions";
 export function InviteTokenHandler() {
   const { user, isLoaded } = useUser();
   const [processing, setProcessing] = useState(false);
+  const hasRun = useRef(false);
 
   useEffect(() => {
-    if (!isLoaded || !user || processing) return;
+    if (!isLoaded || !user || processing || hasRun.current) return;
+    
+    hasRun.current = true;
 
     const activatePendingInvite = async () => {
       // Ellenőrizzük van-e pending token
@@ -28,7 +31,7 @@ export function InviteTokenHandler() {
         if (!email) return;
 
         // Trial aktiválása
-        const result = await useInviteToken(pendingToken, email);
+        const result = await activateInviteToken(pendingToken, email);
 
         if (result.success) {
           // Token törlése localStorage-ból
@@ -44,7 +47,7 @@ export function InviteTokenHandler() {
     };
 
     activatePendingInvite();
-  }, [isLoaded, user, processing]);
+  }, [isLoaded, user]);
 
   // Ez a komponens nem renderel semmit, csak háttérben fut
   return null;

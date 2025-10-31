@@ -23,7 +23,10 @@ export async function generateInviteLink() {
     });
 
     if (!dbUser?.isSuperUser) {
-      return { success: false, error: "Nincs jogosultság meghívó link létrehozásához" };
+      return {
+        success: false,
+        error: "Nincs jogosultság meghívó link létrehozásához",
+      };
     }
 
     // Egyedi token generálása
@@ -45,7 +48,10 @@ export async function generateInviteLink() {
     return { success: true, inviteUrl };
   } catch (error) {
     console.error("Error generating invite link:", error);
-    return { success: false, error: "Hiba történt a meghívó link generálása során" };
+    return {
+      success: false,
+      error: "Hiba történt a meghívó link generálása során",
+    };
   }
 }
 
@@ -67,7 +73,10 @@ export async function validateInviteToken(token: string) {
     }
 
     if (inviteToken.usedBy) {
-      return { valid: false, error: "Ez a meghívó link már fel lett használva" };
+      return {
+        valid: false,
+        error: "Ez a meghívó link már fel lett használva",
+      };
     }
 
     if (inviteToken.expiresAt && inviteToken.expiresAt < new Date()) {
@@ -77,7 +86,10 @@ export async function validateInviteToken(token: string) {
     return { valid: true, createdBy: inviteToken.createdBy };
   } catch (error) {
     console.error("Error validating invite token:", error);
-    return { valid: false, error: "Hiba történt a meghívó link ellenőrzése során" };
+    return {
+      valid: false,
+      error: "Hiba történt a meghívó link ellenőrzése során",
+    };
   }
 }
 
@@ -120,7 +132,10 @@ export async function useInviteToken(token: string, userEmail: string) {
     return { success: true, trialEndsAt };
   } catch (error) {
     console.error("Error using invite token:", error);
-    return { success: false, error: "Hiba történt a meghívó felhasználása során" };
+    return {
+      success: false,
+      error: "Hiba történt a meghívó felhasználása során",
+    };
   }
 }
 
@@ -150,10 +165,10 @@ export async function checkUserAccess(email: string) {
 
     // Trial ellenőrzése
     if (user.trialEndsAt && user.trialEndsAt > new Date()) {
-      return { 
-        hasAccess: true, 
-        reason: "trial", 
-        trialEndsAt: user.trialEndsAt 
+      return {
+        hasAccess: true,
+        reason: "trial",
+        trialEndsAt: user.trialEndsAt,
       };
     }
 

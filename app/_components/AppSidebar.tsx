@@ -1,3 +1,4 @@
+'use client';
 // Új stílusos AppSidebar arany-sötétszürke témában
 
 import React, { useEffect, useState } from "react";
@@ -23,8 +24,9 @@ import {
   Check,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
+import { UserButton, useUser, useClerk } from "@clerk/nextjs";
 import { useThemeStore } from "@/store/theme-store";
 import { TenantSelectorSidebar } from "@/components/TenantSelectorSidebar";
 import { getCurrentUserData } from "@/actions/user-actions";
@@ -47,6 +49,7 @@ const secondaryItems = [
 export function AppSidebar() {
   const path = usePathname();
   const { user } = useUser();
+  const { signOut } = useClerk();
   const { theme: currentTheme, setTheme } = useThemeStore();
   const [showThemeSelector, setShowThemeSelector] = useState(false);
   const { isTenant, shouldRefetch, setUserData, clearUserData } =
@@ -55,6 +58,7 @@ export function AppSidebar() {
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (user?.id) {
@@ -79,7 +83,7 @@ export function AppSidebar() {
       .then((data) => {
         if (userEmail) {
           setUserData(data.isTenant ?? true, userEmail);
-          if ('isSuperUser' in data) {
+          if ("isSuperUser" in data) {
             setIsSuperUser(data.isSuperUser ?? false);
           }
         }
@@ -89,12 +93,8 @@ export function AppSidebar() {
           setUserData(true, userEmail);
         }
       });
-  }, [
-    user?.emailAddresses?.[0]?.emailAddress,
-    shouldRefetch,
-    setUserData,
-    clearUserData,
-  ]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.emailAddresses?.[0]?.emailAddress]);
 
   // Fetch subscription plan
   useEffect(() => {
@@ -104,7 +104,8 @@ export function AppSidebar() {
           [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO || ""]: "Pro",
           [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_YEARLY || ""]: "Pro",
           [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM || ""]: "Premium",
-          [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM_YEARLY || ""]: "Premium",
+          [process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM_YEARLY || ""]:
+            "Premium",
         };
         setSubscriptionPlan(planMap[subscription.stripePriceId] || null);
       }
@@ -114,20 +115,20 @@ export function AppSidebar() {
   const handleGenerateInvite = async () => {
     setInviteLoading(true);
     setInviteCopied(false);
-    
+
     const result = await generateInviteLink();
-    
+
     if (result.success && result.inviteUrl) {
       // Vágólapra másolás
       await navigator.clipboard.writeText(result.inviteUrl);
       setInviteCopied(true);
-      
+
       // 3 másodperc után eltűnik a "Másolva" jelzés
       setTimeout(() => {
         setInviteCopied(false);
       }, 3000);
     }
-    
+
     setInviteLoading(false);
   };
 
@@ -162,7 +163,7 @@ export function AppSidebar() {
                     path === item.url || path.startsWith(item.url + "/");
 
                   return (
-                    <a
+                    <Link
                       key={index}
                       href={item.url}
                       style={{
@@ -200,7 +201,7 @@ export function AppSidebar() {
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
                       <span className="truncate">{item.title}</span>
-                    </a>
+                    </Link>
                   );
                 })}
             </SidebarMenu>
@@ -214,7 +215,7 @@ export function AppSidebar() {
               const isActive = path === item.url;
               const isBillingItem = item.url === "/billing";
               return (
-                <a
+                <Link
                   key={"secondary-" + index}
                   href={item.url}
                   style={{
@@ -265,17 +266,19 @@ export function AppSidebar() {
                       </span>
                     </div>
                   )}
-                </a>
+                </Link>
               );
             })}
-            
+
             {/* Meghívás gomb - csak superUser-eknek */}
             {isSuperUser && (
               <button
                 onClick={handleGenerateInvite}
                 disabled={inviteLoading}
                 style={{
-                  backgroundColor: inviteCopied ? "#10B981" : "rgba(55, 65, 81, 0.5)",
+                  backgroundColor: inviteCopied
+                    ? "#10B981"
+                    : "rgba(55, 65, 81, 0.5)",
                   color: inviteCopied ? "white" : "#D1D5DB",
                   borderColor: inviteCopied ? "#10B981" : "#4B5563",
                   boxShadow: inviteCopied
@@ -290,7 +293,8 @@ export function AppSidebar() {
                 }}
                 onMouseLeave={(e) => {
                   if (!inviteCopied && !inviteLoading) {
-                    e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                    e.currentTarget.style.backgroundColor =
+                      "rgba(55, 65, 81, 0.5)";
                     e.currentTarget.style.color = "#D1D5DB";
                   }
                 }}
@@ -302,7 +306,8 @@ export function AppSidebar() {
                 }}
                 onTouchEnd={(e) => {
                   if (!inviteCopied && !inviteLoading) {
-                    e.currentTarget.style.backgroundColor = "rgba(55, 65, 81, 0.5)";
+                    e.currentTarget.style.backgroundColor =
+                      "rgba(55, 65, 81, 0.5)";
                     e.currentTarget.style.color = "#D1D5DB";
                   }
                 }}
@@ -422,33 +427,52 @@ export function AppSidebar() {
 
       <SidebarFooter className="bg-gradient-to-b from-gray-900 to-gray-800 border-t border-gray-700">
         <div className="w-full px-3 pb-2">
-          <SignOutButton redirectUrl="/">
-            <button
-              style={{
-                borderColor: "#DE6B12",
-                color: "#DE6B12",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = "#DE6B12";
-                e.currentTarget.style.color = "white";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#DE6B12";
-              }}
-              onTouchStart={(e) => {
-                e.currentTarget.style.backgroundColor = "#DE6B12";
-                e.currentTarget.style.color = "white";
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.backgroundColor = "transparent";
-                e.currentTarget.style.color = "#DE6B12";
-              }}
-              className="w-full px-3 py-2 border rounded-lg text-xs font-medium transition-colors cursor-pointer active:bg-[#DE6B12] active:text-white"
-            >
-              Kijelentkezés
-            </button>
-          </SignOutButton>
+          <button
+            onClick={async () => {
+              if (signingOut) return;
+              setSigningOut(true);
+              
+              // Timeout fallback - 3 másodperc után mindenképpen átirányít
+              const timeoutId = setTimeout(() => {
+                window.location.href = "/";
+              }, 3000);
+              
+              try {
+                await signOut();
+                clearTimeout(timeoutId);
+                window.location.href = "/";
+              } catch (error) {
+                clearTimeout(timeoutId);
+                window.location.href = "/";
+              }
+            }}
+            style={{
+              borderColor: "#DE6B12",
+              color: "#DE6B12",
+              opacity: signingOut ? 0.5 : 1,
+              cursor: signingOut ? "not-allowed" : "pointer",
+              pointerEvents: signingOut ? "none" : "auto",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#DE6B12";
+              e.currentTarget.style.color = "white";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "#DE6B12";
+            }}
+            onTouchStart={(e) => {
+              e.currentTarget.style.backgroundColor = "#DE6B12";
+              e.currentTarget.style.color = "white";
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.backgroundColor = "transparent";
+              e.currentTarget.style.color = "#DE6B12";
+            }}
+            className="w-full px-3 py-2 border rounded-lg text-xs font-medium transition-colors cursor-pointer active:bg-[#DE6B12] active:text-white"
+          >
+            Kijelentkezés
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>
