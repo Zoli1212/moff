@@ -400,7 +400,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                       (item, index) => `
                     <tr>
                       <td class="text-center">${index + 1}.</td>
-                      <td>${item.name.replace(/^\*\s*/, "")}</td>
+                      <td>${item.name}</td>
                       <td class="text-center">${item.quantity}</td>
                       <td class="text-center">${item.unit}</td>
                       <td class="text-right">${item.materialUnitPrice || "0 Ft"}</td>
@@ -751,7 +751,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               className="font-medium cursor-pointer hover:bg-gray-100 p-1 rounded"
                               onClick={() => startEditing(index)}
                             >
-                              {item.name.replace(/^\*\s*/, "") ||
+                              {item.name ||
                                 "Kattints a szerkesztéshez"}
                             </div>
                           )}

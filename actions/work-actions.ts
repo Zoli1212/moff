@@ -559,7 +559,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
         const createdWorkItem = await prisma.workItem.create({
           data: {
             workId,
-            name: item.name,
+            name: item.name.replace(/^\*+\s*/, '').replace(/\s*\*+$/, ''),
             description: item.description,
             quantity: Number(item.quantity) || 1,
             unit: item.unit || "",

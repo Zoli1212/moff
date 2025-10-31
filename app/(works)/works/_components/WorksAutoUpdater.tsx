@@ -86,7 +86,7 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
             onWorkStateChange?.(next.id, "failed");
             setErrorMsg(msg);
           } else {
-            toast.success(`Work ${next.id} AI-updated!`);
+            toast.success(`Frissítés megtörtént`);
             doneIdsRef.current.add(next.id);
             onWorkStateChange?.(next.id, "done");
           }

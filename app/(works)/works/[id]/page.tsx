@@ -117,16 +117,30 @@ export default function WorkDetailPage({
         setWorkImage(workData.workImageUrl || null);
 
         // Initialize date states
-        setEditStartDate(
-          workData.startDate
-            ? new Date(workData.startDate).toISOString().split("T")[0]
-            : ""
-        );
-        setEditEndDate(
-          workData.endDate
-            ? new Date(workData.endDate).toISOString().split("T")[0]
-            : ""
-        );
+        // Kezdés default: startDate vagy createdAt
+        const defaultStartDate = workData.startDate
+          ? new Date(workData.startDate).toISOString().split("T")[0]
+          : workData.createdAt
+          ? new Date(workData.createdAt).toISOString().split("T")[0]
+          : "";
+        
+        // Befejezés default: endDate vagy createdAt + estimatedDuration
+        let defaultEndDate = "";
+        if (workData.endDate) {
+          defaultEndDate = new Date(workData.endDate).toISOString().split("T")[0];
+        } else if (workData.createdAt && workData.estimatedDuration) {
+          const startDateObj = new Date(workData.createdAt);
+          const durationMatch = workData.estimatedDuration.match(/(\d+)/);
+          if (durationMatch) {
+            const days = parseInt(durationMatch[1], 10);
+            const endDateObj = new Date(startDateObj);
+            endDateObj.setDate(endDateObj.getDate() + days);
+            defaultEndDate = endDateObj.toISOString().split("T")[0];
+          }
+        }
+        
+        setEditStartDate(defaultStartDate);
+        setEditEndDate(defaultEndDate);
 
         if (workData && workData.id) {
           try {
@@ -333,16 +347,40 @@ export default function WorkDetailPage({
   if (!work) return <div style={{ padding: 40 }}>Nincs adat a munkához.</div>;
 
   // Dates
+  // Kezdés: startDate vagy createdAt
   const startDate = (work as Record<string, unknown>).startDate
     ? new Date(
         (work as Record<string, unknown>).startDate as string
       ).toLocaleDateString()
-    : "-";
-  const endDate = (work as Record<string, unknown>).endDate
+    : (work as Record<string, unknown>).createdAt
     ? new Date(
-        (work as Record<string, unknown>).endDate as string
+        (work as Record<string, unknown>).createdAt as string
       ).toLocaleDateString()
     : "-";
+  
+  // Befejezés: endDate vagy createdAt + estimatedDuration
+  let endDate = "-";
+  if ((work as Record<string, unknown>).endDate) {
+    endDate = new Date(
+      (work as Record<string, unknown>).endDate as string
+    ).toLocaleDateString();
+  } else if (
+    (work as Record<string, unknown>).createdAt &&
+    (work as Record<string, unknown>).estimatedDuration
+  ) {
+    const startDateObj = new Date(
+      (work as Record<string, unknown>).createdAt as string
+    );
+    const durationMatch = (
+      (work as Record<string, unknown>).estimatedDuration as string
+    ).match(/(\d+)/);
+    if (durationMatch) {
+      const days = parseInt(durationMatch[1], 10);
+      const endDateObj = new Date(startDateObj);
+      endDateObj.setDate(endDateObj.getDate() + days);
+      endDate = endDateObj.toLocaleDateString();
+    }
+  }
   // const createdAt = (work as Record<string, unknown>).createdAt
   //   ? new Date(
   //       (work as Record<string, unknown>).createdAt as string

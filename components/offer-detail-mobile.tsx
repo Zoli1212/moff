@@ -730,7 +730,7 @@ export function OfferDetailView({
   //                     (item, index) => `
   //                   <tr>
   //                     <td class="text-center">${index + 1}.</td>
-  //                     <td>${item.name.replace(/^\*\s*/, "")}</td>
+  //                     <td>${item.name}</td>
   //                     <td class="text-center">${item.quantity}</td>
   //                     <td class="text-center">${item.unit}</td>
   //                     <td class="text-right">${item.materialUnitPrice || "0 Ft"}</td>
@@ -1324,7 +1324,7 @@ export function OfferDetailView({
                             onClick={() => startEditing(index)}
                             className="cursor-pointer hover:bg-gray-100 p-1 rounded"
                           >
-                            {index + 1}. {item.name.replace(/^\*\s*/, "")}
+                            {index + 1}. {item.name}
                           </div>
                         </div>
                       </div>

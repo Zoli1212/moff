@@ -155,7 +155,7 @@ export function WorkItemEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[500px] max-w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle>Tétel szerkesztése</DialogTitle>
         </DialogHeader>
@@ -164,7 +164,7 @@ export function WorkItemEditModal({
           {/* Name field */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right font-medium">
-              Megnevezés *
+              Megnevezés
             </Label>
             <Input
               id="name"
@@ -345,7 +345,10 @@ export function WorkItemEditModal({
           <Button
             onClick={handleSave}
             disabled={isSaving}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="text-white"
+            style={{ backgroundColor: '#FE9C00' }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#E58A00')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FE9C00')}
           >
             {isSaving ? "Mentés..." : "Mentés"}
           </Button>
