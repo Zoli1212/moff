@@ -1,10 +1,11 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useInviteToken } from "@/actions/invite-actions";
+import { useInviteToken as activateInviteToken } from "@/actions/invite-actions";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 
 export default function InviteClient({
   token,
@@ -17,6 +18,25 @@ export default function InviteClient({
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const activateTrial = useCallback(async () => {
+    if (!user?.emailAddresses?.[0]?.emailAddress) return;
+
+    setProcessing(true);
+    const email = user.emailAddresses[0].emailAddress;
+
+    const result = await activateInviteToken(token, email);
+
+    if (result.success) {
+      // Sikeres aktiválás, átirányítás a főoldalra
+      setTimeout(() => {
+        router.push("/works");
+      }, 2000);
+    } else {
+      setError(result.error || "Hiba történt");
+      setProcessing(false);
+    }
+  }, [user, token, router]);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -33,26 +53,7 @@ export default function InviteClient({
 
     // Ha be van jelentkezve, aktiváljuk a trial-t
     activateTrial();
-  }, [isLoaded, user]);
-
-  const activateTrial = async () => {
-    if (!user?.emailAddresses?.[0]?.emailAddress) return;
-
-    setProcessing(true);
-    const email = user.emailAddresses[0].emailAddress;
-
-    const result = await useInviteToken(token, email);
-
-    if (result.success) {
-      // Sikeres aktiválás, átirányítás a főoldalra
-      setTimeout(() => {
-        router.push("/works");
-      }, 2000);
-    } else {
-      setError(result.error || "Hiba történt");
-      setProcessing(false);
-    }
-  };
+  }, [isLoaded, user, token, router, activateTrial]);
 
   if (!isLoaded || processing) {
     return (
@@ -73,12 +74,12 @@ export default function InviteClient({
         <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-lg p-8 text-center">
           <h1 className="text-2xl font-bold text-red-400 mb-4">Hiba</h1>
           <p className="text-gray-300 mb-6">{error}</p>
-          <a
+          <Link
             href="/"
             className="inline-block px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
           >
             Vissza a főoldalra
-          </a>
+          </Link>
         </div>
       </div>
     );

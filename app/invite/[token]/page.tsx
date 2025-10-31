@@ -1,6 +1,6 @@
 import { validateInviteToken } from "@/actions/invite-actions";
-import { redirect } from "next/navigation";
 import InviteClient from "./InviteClient";
+import Link from "next/link";
 
 export default async function InvitePage({
   params,
@@ -20,12 +20,12 @@ export default async function InvitePage({
             Érvénytelen meghívó
           </h1>
           <p className="text-gray-300 mb-6">{validation.error}</p>
-          <a
+          <Link
             href="/"
             className="inline-block px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
           >
             Vissza a főoldalra
-          </a>
+          </Link>
         </div>
       </div>
     );
