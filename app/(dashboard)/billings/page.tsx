@@ -69,6 +69,8 @@ export default function BillingsPage() {
     switch (status) {
       case "draft":
         return "Piszkozat";
+      case "pending":
+        return "Folyamatban";
       case "sent":
         return "Elküldve";
       case "accepted":
@@ -161,7 +163,11 @@ export default function BillingsPage() {
                           </div>
                           <div className="text-right">
                             <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${work.status === "active" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                work.status === "active" || work.status === "pending"
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
                             >
                               {getStatusDisplay(work.status)}
                             </span>

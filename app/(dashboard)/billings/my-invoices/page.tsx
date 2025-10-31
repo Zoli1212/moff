@@ -94,6 +94,8 @@ export default function MyInvoicesPage() {
     switch (status) {
       case "draft":
         return "Piszkozat";
+      case "pending":
+        return "Folyamatban";
       case "issued":
         return "Kiállítva";
       case "paid":
@@ -281,7 +283,11 @@ export default function MyInvoicesPage() {
                                 </div>
                                 {billing.status !== "paid_cash" && (
                                   <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      billing.status === "pending"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-blue-100 text-blue-800"
+                                    }`}
                                   >
                                     {getStatusDisplay(billing.status)}
                                   </span>

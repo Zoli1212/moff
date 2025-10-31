@@ -903,6 +903,48 @@ export function OfferDetailView({
           </DialogContent>
         </Dialog>
 
+        {/* Valid Until Edit Modal */}
+        <Dialog open={isEditingValidUntil} onOpenChange={setIsEditingValidUntil}>
+          <DialogContent className="max-w-[90%] sm:max-w-[425px] rounded-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-center">Érvényesség szerkesztése</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="validUntil" className="text-sm font-medium">
+                  Érvényes
+                </Label>
+                <Input
+                  id="validUntil"
+                  type="date"
+                  value={validUntilValue}
+                  onChange={(e) => setValidUntilValue(e.target.value)}
+                  className="w-full rounded-lg"
+                  disabled={isUpdatingValidUntil}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={handleValidUntilSave}
+                disabled={isUpdatingValidUntil}
+                className="w-full rounded-lg py-6 text-base font-semibold"
+                style={{ backgroundColor: '#FE9C00' }}
+              >
+                {isUpdatingValidUntil ? "Mentés..." : "Mentés"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleValidUntilCancel}
+                disabled={isUpdatingValidUntil}
+                className="w-full rounded-lg py-6 text-base"
+              >
+                Mégse
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <div className="space-y-6 flex-grow">
           {/* Header with back button */}
           <div className="flex items-center justify-between mb-6">
@@ -1061,48 +1103,20 @@ export function OfferDetailView({
               <div className="flex items-center text-gray-600">
                 <Clock className="h-4 w-4 mr-2 text-gray-400" />
                 <span>Érvényes: </span>
-                {isEditingValidUntil ? (
-                  <div className="ml-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
-                    <input
-                      type="date"
-                      value={validUntilValue}
-                      onChange={(e) => setValidUntilValue(e.target.value)}
-                      className="px-2 py-1 border border-gray-300 rounded text-sm flex-1 min-w-0"
-                      disabled={isUpdatingValidUntil}
-                    />
-                    <div className="flex gap-2 w-full sm:w-auto">
-                      <button
-                        onClick={handleValidUntilSave}
-                        disabled={isUpdatingValidUntil}
-                        className="px-3 py-1 border border-green-600 text-green-600 text-xs rounded hover:bg-green-50 disabled:opacity-50 flex-1 sm:flex-none"
-                      >
-                        {isUpdatingValidUntil ? "Mentés..." : "Mentés"}
-                      </button>
-                      <button
-                        onClick={handleValidUntilCancel}
-                        disabled={isUpdatingValidUntil}
-                        className="px-3 py-1 border border-gray-500 text-gray-500 text-xs rounded hover:bg-gray-50 disabled:opacity-50 flex-1 sm:flex-none"
-                      >
-                        Mégse
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="ml-1 flex items-center gap-2">
-                    <span className="font-medium">
-                      {offer.validUntil
-                        ? formatDate(offer.validUntil)
-                        : "Nincs megadva"}
-                    </span>
-                    <button
-                      onClick={handleValidUntilEdit}
-                      className="text-[#FFB545] hover:text-[#e68a00] transition-colors"
-                      title="Érvényességi dátum szerkesztése"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
+                <div className="ml-1 flex items-center gap-2">
+                  <span className="font-medium">
+                    {offer.validUntil
+                      ? formatDate(offer.validUntil)
+                      : "Nincs megadva"}
+                  </span>
+                  <button
+                    onClick={handleValidUntilEdit}
+                    className="text-[#FFB545] hover:text-[#e68a00] transition-colors"
+                    title="Érvényességi dátum szerkesztése"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
 
