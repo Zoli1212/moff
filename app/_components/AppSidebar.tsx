@@ -449,6 +449,7 @@ export function AppSidebar() {
                 clearTimeout(timeoutId);
                 window.location.href = "/";
               } catch (error) {
+                console.log(error)
                 clearTimeout(timeoutId);
                 window.location.href = "/";
               }
