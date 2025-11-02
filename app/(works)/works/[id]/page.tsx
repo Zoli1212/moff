@@ -11,6 +11,7 @@ import { getGeneralWorkersForWork } from "@/actions/workitemworker-actions";
 import { calculateWorkProfitAction } from "@/actions/work-profit-actions";
 import { updateWorkImageUrl } from "@/actions/update-work-image";
 import { updateWorkDates } from "@/actions/update-work-dates";
+import { updateWorkDuration } from "@/actions/update-work-duration";
 import type {
   WorkItem,
   WorkItemFromDb,
@@ -77,6 +78,10 @@ export default function WorkDetailPage({
   const [showDateModal, setShowDateModal] = useState(false);
   const [editStartDate, setEditStartDate] = useState<string>("");
   const [editEndDate, setEditEndDate] = useState<string>("");
+
+  // State for duration
+  const [showDurationModal, setShowDurationModal] = useState(false);
+  const [editDuration, setEditDuration] = useState<number>(0);
 
   const [dynamicProfit, setDynamicProfit] = useState({
     totalRevenue: 0,
@@ -297,6 +302,29 @@ export default function WorkDetailPage({
       }
     } catch (error) {
       console.error("Error updating dates:", error);
+    }
+  };
+
+  // Handle duration save
+  const handleDurationSave = async () => {
+    try {
+      if (!work || !work.id || editDuration <= 0) return;
+
+      const workId = (work as Record<string, unknown>).id as number;
+      const updateResult = await updateWorkDuration(workId, editDuration);
+
+      if (updateResult.success) {
+        // Update the work object with new duration
+        setWork((prev: Record<string, unknown> | null) => ({
+          ...prev,
+          estimatedDuration: `${editDuration} nap`,
+        }));
+        setShowDurationModal(false);
+      } else {
+        console.error("Failed to update duration:", updateResult.error);
+      }
+    } catch (error) {
+      console.error("Error updating duration:", error);
     }
   };
 
@@ -562,7 +590,7 @@ export default function WorkDetailPage({
             <div className="flex-1 space-y-3">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">
+                  <span className="text-base font-semibold text-gray-900">
                     Helyszín:
                   </span>
                   {((work as Record<string, unknown>).location as string) && (
@@ -597,10 +625,10 @@ export default function WorkDetailPage({
               </div>
 
               <div className="space-y-0.5">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-base font-semibold text-gray-900">
                   Kezdés:
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-900">{startDate}</span>
                   <button
                     onClick={() => setShowDateModal(true)}
@@ -613,10 +641,10 @@ export default function WorkDetailPage({
               </div>
 
               <div className="space-y-0.5">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-base font-semibold text-gray-900">
                   Befejezés:
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-900">{endDate}</span>
                   <button
                     onClick={() => setShowDateModal(true)}
@@ -629,12 +657,29 @@ export default function WorkDetailPage({
               </div>
 
               <div className="space-y-1">
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-base font-semibold text-gray-900">
                   Becsült időtartam:
                 </span>
-                <div className="text-sm text-gray-900">
-                  {((work as Record<string, unknown>)
-                    .estimatedDuration as string) || "Nincs megadva"}
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-gray-900">
+                    {((work as Record<string, unknown>)
+                      .estimatedDuration as string) || "Nincs megadva"}
+                  </span>
+                  <button
+                    onClick={() => {
+                      // Extract number from duration string (e.g., "7-10 nap" -> 7, "11 nap" -> 11)
+                      const durationStr = ((work as Record<string, unknown>)
+                        .estimatedDuration as string) || "";
+                      const match = durationStr.match(/\d+/);
+                      const currentDays = match ? parseInt(match[0]) : 0;
+                      setEditDuration(currentDays);
+                      setShowDurationModal(true);
+                    }}
+                    className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+                    title="Becsült időtartam szerkesztése"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -1171,6 +1216,58 @@ export default function WorkDetailPage({
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
               >
                 Mentés
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duration Edit Modal */}
+      {showDurationModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDurationModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Becsült időtartam szerkesztése
+            </h3>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Napok száma:
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={editDuration}
+                  onChange={(e) => setEditDuration(parseInt(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Pl.: 11"
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Eredmény: {editDuration > 0 ? `${editDuration} nap` : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleDurationSave}
+                disabled={editDuration <= 0}
+                className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Mentés
+              </button>
+              <button
+                onClick={() => setShowDurationModal(false)}
+                className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Mégse
               </button>
             </div>
           </div>
