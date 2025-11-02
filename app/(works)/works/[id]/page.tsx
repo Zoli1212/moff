@@ -313,11 +313,13 @@ export default function WorkDetailPage({
       const workId = (work as Record<string, unknown>).id as number;
       const updateResult = await updateWorkDuration(workId, editDuration);
 
-      if (updateResult.success) {
-        // Update the work object with new duration
+      if (updateResult.success && updateResult.work) {
+        // Update the work object with new duration, endDate, and potentially startDate
         setWork((prev: Record<string, unknown> | null) => ({
           ...prev,
           estimatedDuration: `${editDuration} nap`,
+          startDate: updateResult.work.startDate,
+          endDate: updateResult.work.endDate,
         }));
         setShowDurationModal(false);
       } else {
@@ -1244,9 +1246,12 @@ export default function WorkDetailPage({
                 <input
                   type="number"
                   min="1"
-                  value={editDuration}
-                  onChange={(e) => setEditDuration(parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={editDuration === 0 ? "" : editDuration}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setEditDuration(val === "" ? 0 : parseInt(val) || 0);
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                   placeholder="Pl.: 11"
                 />
                 <p className="text-sm text-gray-500 mt-1">
