@@ -37,6 +37,8 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     item: BillingWorkItem;
   } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null);
 
   const parseCurrency = (value: string): number => {
     const numericValue = String(value)
@@ -90,7 +92,17 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
   };
 
   const handleRemoveItem = (index: number) => {
-    onItemsChange(items.filter((_, i) => i !== index));
+    setItemToDelete(index);
+    setDeleteConfirmOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete !== null) {
+      onItemsChange(items.filter((_, i) => i !== itemToDelete));
+      setDeleteConfirmOpen(false);
+      setItemToDelete(null);
+      toast.success("Tétel törölve");
+    }
   };
 
   const startEditing = (index: number) => {
@@ -179,8 +191,12 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
 
   return (
     <>
+      {/* Szerkesztő modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent 
+          className="sm:max-w-[425px] rounded-2xl p-6"
+          style={{ width: 'min(90vw, 425px)' }}
+        >
           <DialogHeader>
             <DialogTitle>Tétel szerkesztése</DialogTitle>
           </DialogHeader>
@@ -301,12 +317,40 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Mégse
             </Button>
-            <Button onClick={saveItem}>Mentés</Button>
+            <Button onClick={saveItem} style={{ backgroundColor: '#FE9C00', color: 'white' }} className="hover:opacity-90">Mentés</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Törlés megerősítő modal */}
+      <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <DialogContent 
+          className="sm:max-w-[425px] rounded-2xl p-6"
+          style={{ width: 'min(90vw, 425px)' }}
+        >
+          <DialogHeader>
+            <DialogTitle>Biztosan ki szeretnéd törölni?</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-4">
+            <Button 
+              onClick={confirmDelete}
+              className="w-full"
+              style={{ backgroundColor: '#EF4444', color: 'white' }}
+            >
+              Törlés
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setDeleteConfirmOpen(false)}
+              className="w-full"
+            >
+              Mégse
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 

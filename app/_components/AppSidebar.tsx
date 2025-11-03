@@ -56,6 +56,7 @@ export function AppSidebar() {
     useUserStore();
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
   const [isSuperUser, setIsSuperUser] = useState(false);
+  const [isSuperUserLoading, setIsSuperUserLoading] = useState(true);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteCopied, setInviteCopied] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -74,16 +75,25 @@ export function AppSidebar() {
     if (!userEmail) {
       clearUserData();
       hasLoadedUserData.current = false;
+      setIsSuperUserLoading(false);
+      setIsSuperUser(false);
       return;
     }
 
     // Ha már betöltöttük, ne futtassuk újra
-    if (hasLoadedUserData.current) return;
+    if (hasLoadedUserData.current) {
+      setIsSuperUserLoading(false);
+      return;
+    }
     
     // Csak akkor frissítünk, ha megváltozott a felhasználó vagy nincs cache
-    if (!shouldRefetch(userEmail)) return;
+    if (!shouldRefetch(userEmail)) {
+      setIsSuperUserLoading(false);
+      return;
+    }
 
     hasLoadedUserData.current = true;
+    setIsSuperUserLoading(true);
 
     // Háttérben frissítjük az adatokat (nem blokkolja a UI-t)
     getCurrentUserData()
@@ -99,6 +109,9 @@ export function AppSidebar() {
         if (userEmail) {
           setUserData(true, userEmail);
         }
+      })
+      .finally(() => {
+        setIsSuperUserLoading(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.emailAddresses?.[0]?.emailAddress]);
@@ -277,8 +290,8 @@ export function AppSidebar() {
               );
             })}
 
-            {/* Meghívás gomb - csak superUser-eknek */}
-            {isSuperUser && (
+            {/* Meghívás gomb - csak superUser-eknek, de mindig látható loading alatt */}
+            {!isSuperUserLoading && isSuperUser && (
               <button
                 onClick={handleGenerateInvite}
                 disabled={inviteLoading}

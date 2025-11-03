@@ -191,25 +191,45 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
     if (workerMode === "existing") {
       // Handle existing worker assignment
-      if (selectedExistingWorkers.length === 0) {
-        toast.error("Kérjük válassz legalább egy munkást!");
-        return;
-      }
-
-      // Meglévő munkásnál nem kérjük a napi díjat
-
       setLoading(true);
       try {
+        // Find workers that were unchecked (initially selected but now not selected)
+        const uncheckedWorkers = initiallySelectedWorkers.filter(
+          workerId => !selectedExistingWorkers.includes(workerId)
+        );
+
+        // Delete unchecked workers from workItemWorker table
+        if (uncheckedWorkers.length > 0) {
+          const { deleteWorkItemWorker } = await import(
+            "@/actions/update-workitemworker"
+          );
+          
+          for (const workerId of uncheckedWorkers) {
+            const worker = existingWorkers.find(
+              (w) => w.id.toString() === workerId
+            );
+            if (!worker) continue;
+
+            // Find the workItemWorker record by matching worker details
+            const assignment = currentAssignments.find(a => 
+              (a.email && worker.email && a.email === worker.email) ||
+              (a.name && worker.name && a.name === worker.name)
+            );
+
+            if (assignment && assignment.id) {
+              await deleteWorkItemWorker(assignment.id);
+            }
+          }
+
+          if (uncheckedWorkers.length > 0) {
+            toast.success(`${uncheckedWorkers.length} munkás eltávolítva!`);
+          }
+        }
+
         // Only add workers that are newly selected (not in initial selection)
         const newlySelectedWorkers = selectedExistingWorkers.filter(
           workerId => !initiallySelectedWorkers.includes(workerId)
         );
-
-        if (newlySelectedWorkers.length === 0) {
-          toast.info("Nincs új munkás kiválasztva.");
-          onOpenChange(false);
-          return;
-        }
 
         // Process only newly selected workers
         for (const workerId of newlySelectedWorkers) {
@@ -232,13 +252,22 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           });
         }
 
-        toast.success(`${newlySelectedWorkers.length} munkás sikeresen hozzáadva!`);
+        if (newlySelectedWorkers.length > 0) {
+          toast.success(`${newlySelectedWorkers.length} munkás sikeresen hozzáadva!`);
+        }
 
         // Reset form on success
         setSelectedExistingWorkers([]);
         setInitiallySelectedWorkers([]);
         setSelectedRole("");
+        
+        // Force close and reopen to trigger refresh in parent component
         onOpenChange(false);
+        
+        // Trigger a small delay to ensure parent component refreshes
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
       } catch (error) {
         console.error("Error assigning existing workers:", error);
         toast.error("Hiba történt a munkások hozzárendelése során.");
@@ -351,7 +380,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle>
             Új munkás regisztrálása és hozzárendelése munkához
@@ -375,10 +404,22 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               <button
                 type="button"
                 onClick={() => setWorkerMode("existing")}
-                className="w-10 h-10 rounded-full border-2 border-[#f97316] text-[#f97316] hover:bg-[#f97316] hover:text-white flex items-center justify-center transition-colors font-bold text-xl"
+                className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
                 title="Vissza a listához"
               >
-                <span style={{ display: "block", lineHeight: 0, transform: "translateY(-1px)" }}>←</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
               </button>
             </div>
           )}
@@ -674,16 +715,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           )}
 
           <DialogFooter className="mt-4">
-            <div className="flex gap-4 w-full">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={loading}
-                className="flex-1"
-              >
-                Mégse
-              </Button>
+            <div className="flex flex-col gap-2 w-full">
               <Button
                 type="submit"
                 disabled={
@@ -695,9 +727,18 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   (workerMode === "new" && !name) ||
                   (workerMode === "existing" && selectedExistingWorkers.length === 0)
                 }
-                className="bg-[#FF9900] hover:bg-[#e68a00] text-white flex-1"
+                className="bg-[#FF9900] hover:bg-[#e68a00] text-white w-full"
               >
                 {loading ? "Mentés..." : "Mentés"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+                className="w-full"
+              >
+                Mégse
               </Button>
             </div>
           </DialogFooter>
