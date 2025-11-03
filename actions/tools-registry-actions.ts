@@ -111,3 +111,45 @@ export async function removeWorkToolAssignment(workToolsRegistryId: number) {
     where: { id: workToolsRegistryId },
   });
 }
+
+// Remove tool from specific workItems (WorkToolsRegistry, Tool model, and WorkItem.tools) by name (case-insensitive)
+export async function removeToolFromWorkEverywhere(workId: number, toolName: string, workItemIds?: number[]) {
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  
+  // 1. Delete from WorkToolsRegistry
+  await prisma.workToolsRegistry.deleteMany({
+    where: {
+      workId,
+      tenantEmail,
+      toolName: {
+        equals: toolName,
+        mode: 'insensitive' // Case-insensitive comparison
+      }
+    }
+  });
+  
+  // 2. Delete from Tool model (all tools with matching name for this work)
+  // Build the where clause
+  const whereClause: any = {
+    workId,
+    tenantEmail,
+    name: {
+      equals: toolName,
+      mode: 'insensitive' // Case-insensitive comparison
+    }
+  };
+  
+  // If workItemIds provided, only delete from those workItems
+  if (workItemIds && workItemIds.length > 0) {
+    whereClause.workItemId = {
+      in: workItemIds
+    };
+  }
+  
+  await prisma.tool.deleteMany({
+    where: whereClause
+  });
+  
+  revalidatePath(`/works/${workId}`);
+  revalidatePath(`/works`);
+}

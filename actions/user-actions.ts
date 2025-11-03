@@ -34,6 +34,25 @@ export async function getCurrentUserData() {
     });
 
     if (existingUser) {
+      // Check if user is in WorkforceRegistry (worker)
+      const workforceEntry = await prisma.workforceRegistry.findFirst({
+        where: { email: email },
+        select: { id: true },
+      });
+
+      // If in WorkforceRegistry, update isTenant to false
+      if (workforceEntry && existingUser.isTenant) {
+        await prisma.user.update({
+          where: { email },
+          data: { isTenant: false },
+        });
+        return {
+          success: true,
+          ...existingUser,
+          isTenant: false,
+        };
+      }
+
       return {
         success: true,
         ...existingUser,

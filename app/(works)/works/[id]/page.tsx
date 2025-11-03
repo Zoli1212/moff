@@ -289,12 +289,13 @@ export default function WorkDetailPage({
         editEndDate || null
       );
 
-      if (updateResult.success) {
-        // Update the work object with new dates
+      if (updateResult.success && updateResult.work) {
+        // Update the work object with new dates and calculated estimatedDuration
         setWork((prev: Record<string, unknown> | null) => ({
           ...prev,
-          startDate: editStartDate ? new Date(editStartDate) : null,
-          endDate: editEndDate ? new Date(editEndDate) : null,
+          startDate: updateResult.work.startDate,
+          endDate: updateResult.work.endDate,
+          estimatedDuration: updateResult.work.estimatedDuration,
         }));
         setShowDateModal(false);
       } else {
@@ -1189,7 +1190,7 @@ export default function WorkDetailPage({
                   type="date"
                   value={editStartDate}
                   onChange={(e) => setEditStartDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                 />
               </div>
 
@@ -1201,23 +1202,23 @@ export default function WorkDetailPage({
                   type="date"
                   value={editEndDate}
                   onChange={(e) => setEditEndDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowDateModal(false)}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
-              >
-                Mégse
-              </button>
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleDateSave}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors"
               >
                 Mentés
+              </button>
+              <button
+                onClick={() => setShowDateModal(false)}
+                className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Mégse
               </button>
             </div>
           </div>

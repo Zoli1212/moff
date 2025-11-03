@@ -70,8 +70,8 @@ export default function WorkHeader({
             minHeight: 36,
             borderRadius: "50%",
             backgroundColor: "transparent",
-            border: addButtonDisabled ? "2px solid #ccc" : "2px solid #f97316",
-            color: addButtonDisabled ? "#ccc" : "#f97316",
+            border: addButtonDisabled ? "2px solid #ccc" : "2px solid #FE9C00",
+            color: addButtonDisabled ? "#ccc" : "#FE9C00",
             fontSize: 24,
             fontWeight: "normal",
             cursor: addButtonDisabled ? "not-allowed" : "pointer",
@@ -87,14 +87,14 @@ export default function WorkHeader({
           }}
           onMouseEnter={(e) => {
             if (!addButtonDisabled) {
-              e.currentTarget.style.borderColor = "#ea580c";
-              e.currentTarget.style.color = "#ea580c";
+              e.currentTarget.style.borderColor = "#E68A00";
+              e.currentTarget.style.color = "#E68A00";
             }
           }}
           onMouseLeave={(e) => {
             if (!addButtonDisabled) {
-              e.currentTarget.style.borderColor = "#f97316";
-              e.currentTarget.style.color = "#f97316";
+              e.currentTarget.style.borderColor = "#FE9C00";
+              e.currentTarget.style.color = "#FE9C00";
             }
           }}
         >

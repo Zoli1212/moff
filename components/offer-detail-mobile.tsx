@@ -390,22 +390,12 @@ export function OfferDetailView({
     setShowOfferDeleteModal(true);
   };
 
-  // Handle validUntil editing
+  // Handle validUntil editing - directly trigger date picker
   const handleValidUntilEdit = () => {
-    if (offer.validUntil) {
-      const date = new Date(offer.validUntil);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      setValidUntilValue(`${year}-${month}-${day}`);
-    } else {
-      const today = new Date();
-      const year = today.getFullYear();
-      const month = String(today.getMonth() + 1).padStart(2, "0");
-      const day = String(today.getDate()).padStart(2, "0");
-      setValidUntilValue(`${year}-${month}-${day}`);
+    const dateInput = document.getElementById('hidden-validUntil-input') as HTMLInputElement;
+    if (dateInput) {
+      dateInput.showPicker();
     }
-    setIsEditingValidUntil(true);
   };
 
   const handleValidUntilSave = async () => {
@@ -1109,6 +1099,26 @@ export function OfferDetailView({
                       ? formatDate(offer.validUntil)
                       : "Nincs megadva"}
                   </span>
+                  <input
+                    id="hidden-validUntil-input"
+                    type="date"
+                    className="hidden"
+                    value={offer.validUntil ? format(new Date(offer.validUntil), 'yyyy-MM-dd') : ''}
+                    onChange={async (e) => {
+                      const selectedDate = new Date(e.target.value);
+                      if (!isNaN(selectedDate.getTime())) {
+                        const result = await updateOfferValidUntil(offer.id, selectedDate);
+                        if (result.success) {
+                          toast.success("Az érvényességi dátum sikeresen frissítve");
+                          if (onOfferUpdated && result.offer) {
+                            onOfferUpdated({ validUntil: result.offer.validUntil });
+                          }
+                        } else {
+                          toast.error(result.error || "Hiba történt a dátum frissítésekor");
+                        }
+                      }
+                    }}
+                  />
                   <button
                     onClick={handleValidUntilEdit}
                     className="text-[#FFB545] hover:text-[#e68a00] transition-colors"
@@ -1165,7 +1175,7 @@ export function OfferDetailView({
                     {offer?.requirement?.updateCount || "1"}
                   </span>
                 </h2>
-                <ChevronRight className="h-5 w-5 text-gray-500" />
+                <ChevronRight className="h-5 w-5 text-[#FE9C00]" />
               </button>
             </div>
           )}
@@ -1509,7 +1519,7 @@ export function OfferDetailView({
                 <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5 text-gray-600"
+                    className="h-5 w-5 text-[#FE9C00]"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"

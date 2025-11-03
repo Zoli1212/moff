@@ -101,3 +101,34 @@ export async function deleteMaterial(id: number) {
   revalidatePath(`/supply`);
   return true;
 }
+
+// Remove material from specific workItems (Material model) by name (case-insensitive)
+export async function removeMaterialFromWorkEverywhere(workId: number, materialName: string, workItemIds?: number[]) {
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  
+  // Build the where clause for Material model
+  const whereClause: any = {
+    workId,
+    tenantEmail,
+    name: {
+      equals: materialName,
+      mode: 'insensitive' // Case-insensitive comparison
+    }
+  };
+  
+  // If workItemIds provided, only delete from those workItems
+  if (workItemIds && workItemIds.length > 0) {
+    whereClause.workItemId = {
+      in: workItemIds
+    };
+  }
+  
+  // Delete all Material records matching the criteria
+  // Work.materials és WorkItem.materials törlődnek automatikusan az onDelete: Cascade miatt
+  await prisma.material.deleteMany({
+    where: whereClause
+  });
+  
+  revalidatePath(`/supply/${workId}`);
+  revalidatePath(`/supply`);
+}

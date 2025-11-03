@@ -19,9 +19,10 @@ import {
   Trash2, 
   Calendar,
   CheckCircle,
-  XCircle
+  XCircle,
+  Lock
 } from 'lucide-react'
-import { WorkforceRegistryData, toggleWorkforceRegistryActive } from '@/actions/workforce-registry-actions'
+import { WorkforceRegistryData, toggleWorkforceRegistryActive, toggleWorkforceRegistryRestricted } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
 import WorkforceAddModal from './WorkforceAddModal'
 import WorkforceEditModal from './WorkforceEditModal'
@@ -76,6 +77,26 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
       }
     } catch {
       toast.error('Hiba történt a státusz módosítása során')
+    }
+  }
+
+  const handleToggleRestricted = async (workerId: number) => {
+    try {
+      const result = await toggleWorkforceRegistryRestricted(workerId)
+      if (result.success) {
+        setWorkforceRegistry(prev => 
+          prev.map(worker => 
+            worker.id === workerId 
+              ? { ...worker, isRestricted: !worker.isRestricted }
+              : worker
+          )
+        )
+        toast.success('Korlátozás státusz sikeresen módosítva')
+      } else {
+        toast.error(result.error || 'Hiba történt')
+      }
+    } catch {
+      toast.error('Hiba történt a korlátozás módosítása során')
     }
   }
 
@@ -176,7 +197,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
               <Search className="h-5 w-5" />
               Szűrők és Keresés
             </CardTitle>
-            <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 w-full sm:w-auto">
+            <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 w-full sm:w-auto bg-[#FE9C00] hover:bg-[#E68A00] text-white">
               <Plus className="h-4 w-4" />
               Új munkás hozzáadása
             </Button>
@@ -307,6 +328,18 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                       checked={worker.isActive}
                       onCheckedChange={() => handleToggleActive(worker.id!)}
                       className={`${worker.isActive ? 'data-[state=checked]:bg-green-600' : ''}`}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-center space-x-2 w-full">
+                    <Label htmlFor={`restricted-${worker.id}`} className="text-sm font-medium">
+                      Korlátozás
+                    </Label>
+                    <Switch
+                      id={`restricted-${worker.id}`}
+                      checked={worker.isRestricted}
+                      onCheckedChange={() => handleToggleRestricted(worker.id!)}
+                      className={`${worker.isRestricted ? 'data-[state=checked]:bg-red-600' : ''}`}
                     />
                   </div>
                   

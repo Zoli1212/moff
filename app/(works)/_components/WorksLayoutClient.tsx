@@ -1,8 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import WorksSkeletonLoader from "./WorksSkeletonLoader";
+import { getWorkerRestrictionStatus } from "@/actions/workforce-registry-actions";
 
 interface WorksLayoutClientProps {
   children: React.ReactNode;
@@ -15,11 +16,21 @@ export default function WorksLayoutClient({
 }: WorksLayoutClientProps) {
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isRestricted, setIsRestricted] = useState(false);
 
   // Reset loading state when pathname changes
   React.useEffect(() => {
     setIsNavigating(false);
   }, [pathname]);
+
+  // Check worker restriction status on mount
+  useEffect(() => {
+    if (!isTenant) {
+      getWorkerRestrictionStatus().then((result) => {
+        setIsRestricted(result.isRestricted);
+      });
+    }
+  }, [isTenant]);
 
   // Extract workId from /works/:id if present
   let workId: number | null = null;
@@ -113,6 +124,7 @@ export default function WorksLayoutClient({
     {
       href: `/diary/${workId}`,
       label: "Napló",
+      restrictedWorkerOnly: true,
       icon: (
         <svg
           width="24"
@@ -204,9 +216,13 @@ export default function WorksLayoutClient({
             }}
           >
             {menu
-              .filter((item) => {
+              .filter((item: any) => {
                 // Hide tenant-only items for workers
                 if (!isTenant && item.tenantOnly) {
+                  return false;
+                }
+                // Hide diary for restricted workers
+                if (!isTenant && isRestricted && item.restrictedWorkerOnly) {
                   return false;
                 }
                 return true;

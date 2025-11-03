@@ -488,6 +488,7 @@ model WorkforceRegistry {
   leftDate           DateTime?
   isActive           Boolean  @default(true)
   isDeleted          Boolean  @default(false)
+  isRestricted       Boolean  @default(false)  // Korlátozás - nem láthatja a /diary-t
   notes              String?
   dailyRate          Float?   @default(0)
   createdAt          DateTime @default(now())

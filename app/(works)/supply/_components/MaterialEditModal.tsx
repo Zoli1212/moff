@@ -78,7 +78,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="rounded-2xl max-w-[calc(100%-2rem)] w-96">
         <DialogHeader>
           <DialogTitle>Anyag szerkesztése</DialogTitle>
         </DialogHeader>
@@ -86,7 +86,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           <div>
             <label className="block text-sm font-medium mb-1">Név</label>
             <input
-              className="w-full border rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -95,7 +95,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           <div>
             <label className="block text-sm font-medium mb-1">Mennyiség</label>
             <input
-              className="w-full border rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
               type="number"
               min={0}
               value={quantity}
@@ -106,7 +106,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           <div>
             <label className="block text-sm font-medium mb-1">Mennyiségi egység</label>
             <input
-              className="w-full border rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
               placeholder="pl. kg, db, m²"
@@ -117,7 +117,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               Elérhető mennyiség
             </label>
             <input
-              className="w-full border rounded px-2 py-1"
+              className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
               type="number"
               min={0}
               max={quantity}
@@ -126,18 +126,21 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               required
             />
           </div>
-          <DialogFooter className="flex flex-row justify-between mt-2 gap-2">
+          <DialogFooter className="flex flex-col gap-2 mt-2">
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="w-full bg-[#FF9900] hover:bg-[#FF9900]/90 text-white"
+            >
+              Mentés
+            </Button>
             <Button
               type="button"
-              variant="destructive"
               onClick={() => setConfirmOpen(true)}
               disabled={loading}
-              className="flex-1"
+              className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
               Törlés
-            </Button>
-            <Button type="submit" disabled={loading} className="flex-1">
-              Mentés
             </Button>
           </DialogFooter>
         </form>

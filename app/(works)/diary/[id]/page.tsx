@@ -3,9 +3,9 @@ import {
   getWorkDiariesByWorkId,
   WorkDiaryWithItem,
 } from "@/actions/get-workdiariesbyworkid-actions";
-import { getAllWorkforceRegistry, WorkforceRegistryData } from "@/actions/workforce-registry-actions";
+import { getAllWorkforceRegistry, WorkforceRegistryData, getWorkerRestrictionStatus } from "@/actions/workforce-registry-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { WorkItem, Worker } from "@/types/work"; // Importáljuk a hiányzó típusokat
 import DiaryPageClient from "./DiaryPageClient";
 import { Work } from "../../works/page";
@@ -23,6 +23,14 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
   // Server-side role detection - no layout shift!
   const userData = await getCurrentUserData();
   const isTenant = userData.isTenant ?? true;
+
+  // Check if restricted worker - redirect to /works
+  if (!isTenant) {
+    const restrictionStatus = await getWorkerRestrictionStatus();
+    if (restrictionStatus.isRestricted) {
+      redirect(`/works/${workId}`);
+    }
+  }
 
   let work: (Work & { workers: Worker[], expectedProfitPercent: number | null }) | null = null;
   let items: WorkItem[] = [];

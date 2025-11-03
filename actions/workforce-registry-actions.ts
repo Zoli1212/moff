@@ -15,6 +15,7 @@ export interface WorkforceRegistryData {
   leftDate: Date | null;
   isActive: boolean;
   isDeleted: boolean;
+  isRestricted: boolean;
   notes: string | null;
   avatarUrl: string | null;
   dailyRate: number | null;
@@ -425,6 +426,72 @@ export async function toggleWorkforceRegistryActive(id: number) {
   } catch (error) {
     console.error("Error toggling workforce registry active status:", error);
     return { success: false, error: "Hiba az aktív státusz módosítása során" };
+  }
+}
+
+// Toggle restricted status
+export async function toggleWorkforceRegistryRestricted(id: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Get current entry
+    const existingEntry = await prisma.workforceRegistry.findFirst({
+      where: {
+        id: id,
+        tenantEmail: tenantEmail,
+      },
+    });
+
+    if (!existingEntry) {
+      return {
+        success: false,
+        error: "Munkás nem található vagy nincs jogosultság",
+      };
+    }
+
+    const updatedEntry = await prisma.workforceRegistry.update({
+      where: { id: id },
+      data: {
+        isRestricted: !existingEntry.isRestricted,
+      },
+    });
+
+    revalidatePath("/others");
+    revalidatePath("/diary");
+    return { success: true, data: updatedEntry };
+  } catch (error) {
+    console.error("Error toggling workforce registry restricted status:", error);
+    return { success: false, error: "Hiba a korlátozás módosítása során" };
+  }
+}
+
+// Get worker restriction status (tenant-safe)
+export async function getWorkerRestrictionStatus() {
+  try {
+    const { user, tenantEmail, originalUserEmail } = await getTenantSafeAuth();
+
+    if (!originalUserEmail) {
+      return { isRestricted: false };
+    }
+
+    // Step 1: Find worker by email (any tenant)
+    const worker = await prisma.workforceRegistry.findFirst({
+      where: {
+        email: originalUserEmail,
+      },
+    });
+
+    if (!worker) {
+      return { isRestricted: false };
+    }
+
+    // Step 2: Return the worker's isRestricted status
+    return {
+      isRestricted: worker.isRestricted ?? false,
+    };
+  } catch (error) {
+    console.error("Error getting worker restriction status:", error);
+    return { isRestricted: false };
   }
 }
 

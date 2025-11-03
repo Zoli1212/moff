@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import type { Material } from "@/types/work";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Pencil, Trash2 } from "lucide-react";
 import MaterialAddModal from "./MaterialAddModal";
 import MaterialEditModal from "./MaterialEditModal";
 import {
@@ -10,6 +11,7 @@ import {
   updateMaterial,
   deleteMaterial,
   setMaterialAvailableFull,
+  removeMaterialFromWorkEverywhere,
 } from "@/actions/materials-action";
 
 import type { WorkItem } from "@/types/work";
@@ -266,9 +268,42 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
           {materials.map((mat) => (
             <div key={mat.id}>
               <div
-                className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 cursor-pointer hover:bg-[#ececec]"
-                onClick={() => setEditMaterial(mat)}
+                className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 relative"
               >
+                {/* Edit and Delete icons in top right corner */}
+                <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditMaterial(mat);
+                    }}
+                    className="p-1.5"
+                    aria-label="Anyag szerkesztése"
+                  >
+                    <Pencil className="w-4 h-4 text-[#FF9900]" />
+                  </button>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        // Delete material only from the workItems that are aggregated
+                        const workItemIdsToDelete = mat.workItemIds || [mat.workItemId];
+                        await removeMaterialFromWorkEverywhere(workId, mat.name, workItemIdsToDelete);
+                        
+                        toast.success("Az anyag sikeresen törölve a munkáról!");
+                        // Remove all aggregated materials with the same name
+                        setMaterials((prev) => prev.filter((m) => m.name.toLowerCase() !== mat.name.toLowerCase()));
+                      } catch (err) {
+                        toast.error("Hiba a törlés során: " + (err as Error).message);
+                      }
+                    }}
+                    className="p-1.5"
+                    aria-label="Anyag törlése"
+                  >
+                    <Trash2 className="w-4 h-4 text-[#FF9900]" />
+                  </button>
+                </div>
+
                 <div className="flex items-center gap-2.5">
                   <input
                     type="checkbox"
@@ -281,16 +316,24 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                     className="mr-2.5 w-[18px] h-[18px]"
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <div className="flex-2 font-semibold">{mat.name.charAt(0).toUpperCase() + mat.name.slice(1)}</div>
-                  <div className="ml-auto font-bold text-[16px] text-[#222] flex flex-col items-end">
-                    {typeof mat.quantity !== "undefined" &&
-                    mat.quantity !== null ? (
-                      <span className="text-lg font-bold text-[#222]">
-                        {mat.availableQuantity ?? 0}/{mat.quantity} {mat.unit}
-                      </span>
-                    ) : (
-                      <span>-</span>
-                    )}
+                  <div className="flex-1 font-semibold flex items-center gap-3">
+                    <span>{mat.name.charAt(0).toUpperCase() + mat.name.slice(1)}</span>
+                    <div className="font-semibold text-[14px] text-[#222] flex items-center">
+                      {typeof mat.quantity !== "undefined" &&
+                      mat.quantity !== null ? (
+                        <>
+                          <span>{mat.availableQuantity ?? 0}</span>
+                          <span className="mx-1">/</span>
+                          <span>{mat.quantity}</span>
+                          <span className="ml-1">{mat.unit}</span>
+                        </>
+                      ) : (
+                        <span>-</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="ml-auto pr-16">
+                    {/* Placeholder for future content */}
                   </div>
                 </div>
                 <div className="w-2/3 mt-2">

@@ -2,12 +2,14 @@
 import React, { useState } from "react";
 import type { Tool as BaseTool, Tool } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
+import { Pencil, Trash2 } from "lucide-react";
 // import { checkToolExists } from "../../../../actions/tool-exists.server";
 import {
   addToolToRegistry,
   getAssignedToolsForWork,
   decrementWorkToolQuantity,
   createWorkToolsRegistry,
+  removeToolFromWorkEverywhere,
 } from "../../../../actions/tools-registry-actions";
 import { toast } from "sonner";
 
@@ -234,8 +236,8 @@ const ToolsSlotsSection: React.FC<Props> = ({
   // if (!tools.length) return null;
 
   // Build display list from required tools across IN-PROGRESS work items only (max quantity per name)
-  type DisplayTool = { name: string; required: number; tool: Tool };
-  const requiredByName: Record<string, number> = {};
+  type DisplayTool = { name: string; required: number; tool: Tool; workItemIds: number[] };
+  const requiredByName: Record<string, { required: number; workItemIds: number[] }> = {};
   
   // Show only inProgress workItems in supply section
   const relevantItems = workItems.filter(wi => wi.inProgress);
@@ -246,19 +248,26 @@ const ToolsSlotsSection: React.FC<Props> = ({
       const name = t.name;
       if (!name) return;
       const q = t.quantity ?? 1;
-      requiredByName[name] = Math.max(requiredByName[name] || 0, q);
+      if (!requiredByName[name]) {
+        requiredByName[name] = { required: q, workItemIds: [wi.id] };
+      } else {
+        requiredByName[name].required = Math.max(requiredByName[name].required, q);
+        if (!requiredByName[name].workItemIds.includes(wi.id)) {
+          requiredByName[name].workItemIds.push(wi.id);
+        }
+      }
     });
   });
 
   const displayTools: DisplayTool[] = Object.entries(requiredByName).map(
-    ([name, required]) => {
+    ([name, { required, workItemIds }]) => {
       const registryCandidates = tools
         .filter((t) => t.name === name)
         .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0));
       const candidate =
         registryCandidates[0] || ({ id: -1, name, quantity: required } as Tool);
       // Ensure the displayed quantity reflects requirement, not registry stock
-      return { name, required, tool: { ...candidate, quantity: required } };
+      return { name, required, tool: { ...candidate, quantity: required }, workItemIds };
     }
   );
 
@@ -307,7 +316,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
         </Button>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {displayTools.map(({ name, required, tool }) => {
+        {displayTools.map(({ name, required, tool, workItemIds }) => {
           const q = required;
           const assignedCount = assignedTools
             .filter((at) => at.toolName === name)
@@ -316,14 +325,50 @@ const ToolsSlotsSection: React.FC<Props> = ({
           return (
             <div key={name}>
               <div
-                className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 cursor-pointer hover:bg-[#ececec]"
-                onClick={() => {
-                  setSelectedTool(tool);
-                  setMaxQuantity(q);
-                  setModalOpen(true);
-                }}
+                className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 relative"
               >
-                <div className="flex items-center gap-2.5">
+                {/* Edit and Delete icons in top right corner */}
+                <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTool(tool);
+                      setMaxQuantity(q);
+                      setModalOpen(true);
+                    }}
+                    className="p-1.5"
+                    aria-label="Eszköz szerkesztése"
+                  >
+                    <Pencil className="w-4 h-4 text-[#FF9900]" />
+                  </button>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        // Delete tool only from the workItems that are aggregated
+                        await removeToolFromWorkEverywhere(workId, name, workItemIds);
+                        
+                        toast.success("Az eszköz sikeresen törölve a munkáról!");
+                        // Update selected tools state
+                        setSelectedTools(prev => prev.filter(id => {
+                          const toolToRemove = tools.find(t => t.id === id);
+                          return !toolToRemove || toolToRemove.name.toLowerCase() !== name.toLowerCase();
+                        }));
+                        await fetchAssignedToolsAndUpdateState();
+                      } catch (err) {
+                        toast.error("Hiba a törlés során: " + (err as Error).message);
+                      }
+                    }}
+                    className="p-1.5"
+                    aria-label="Eszköz törlése"
+                  >
+                    <Trash2 className="w-4 h-4 text-[#FF9900]" />
+                  </button>
+                </div>
+
+                <div 
+                  className="flex items-center gap-2.5"
+                >
                   <input
                     type="checkbox"
                     checked={selectedTools.includes(tool.id) || assignedCount >= q}
@@ -332,15 +377,16 @@ const ToolsSlotsSection: React.FC<Props> = ({
                     disabled={!hasRegistry}
                     onClick={e => e.stopPropagation()}
                   />
-                  <div className="flex-2 font-semibold flex items-center gap-2">
+                  <div className="flex-1 font-semibold flex items-center gap-3">
                     <span>{capitalizeWords(name)}</span>
-                    {!hasRegistry && (
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">
-                        nincs regisztrálva
-                      </span>
-                    )}
+                    <div className="font-semibold text-[14px] text-[#222] flex items-center">
+                      <span>{assignedCount}</span>
+                      <span className="mx-1">/</span>
+                      <span>{q}</span>
+                      <span className="ml-1">db</span>
+                    </div>
                   </div>
-                  <div className="ml-auto flex items-center gap-2">
+                  <div className="ml-auto flex items-center gap-2 pr-16">
                     {/* Tool image preview */}
                     {tool.avatarUrl && (
                       <img
@@ -349,13 +395,6 @@ const ToolsSlotsSection: React.FC<Props> = ({
                         style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', border: '1px solid #ddd', background: '#fafafa' }}
                       />
                     )}
-                    {/* No inline register button per request */}
-                    <div className="font-semibold text-[14px] text-[#222] flex items-center">
-                      <span>{assignedCount}</span>
-                      <span className="mx-1">/</span>
-                      <span>{q}</span>
-                      <span className="ml-1">db</span>
-                    </div>
                   </div>
                 </div>
                 <div className="w-2/3 mt-2">
