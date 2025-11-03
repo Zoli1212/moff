@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import WorksSkeletonLoader from "./WorksSkeletonLoader";
 import { getWorkerRestrictionStatus } from "@/actions/workforce-registry-actions";
@@ -107,16 +108,15 @@ export default function WorksLayoutClient({
       label: "Erőforrás",
       tenantOnly: true,
       icon: (
-        <img
+        <Image
           src="/worker3.png"
           alt="Erőforrás"
-          width="24"
-          height="24"
+          width={24}
+          height={24}
           style={{
             display: "block",
             opacity: 1,
             filter: "contrast(1)",
-            WebkitFilter: "none",
           }}
         />
       ),
@@ -216,7 +216,7 @@ export default function WorksLayoutClient({
             }}
           >
             {menu
-              .filter((item: any) => {
+              .filter((item: { tenantOnly?: boolean; restrictedWorkerOnly?: boolean }) => {
                 // Hide tenant-only items for workers
                 if (!isTenant && item.tenantOnly) {
                   return false;

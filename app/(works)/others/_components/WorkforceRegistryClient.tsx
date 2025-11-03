@@ -19,8 +19,7 @@ import {
   Trash2, 
   Calendar,
   CheckCircle,
-  XCircle,
-  Lock
+  XCircle
 } from 'lucide-react'
 import { WorkforceRegistryData, toggleWorkforceRegistryActive, toggleWorkforceRegistryRestricted } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
