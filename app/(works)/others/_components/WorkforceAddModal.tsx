@@ -48,7 +48,8 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
         notes: formData.notes || null,
         avatarUrl: formData.avatarUrl || null,
         dailyRate: formData.dailyRate ? parseFloat(formData.dailyRate) : null,
-        isDeleted: false
+        isDeleted: false,
+        isRestricted: false
       }
 
       const result = await createWorkforceRegistry(dataToSubmit)
