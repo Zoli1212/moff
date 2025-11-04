@@ -132,6 +132,9 @@ export function OfferDetailView({
   const [showOfferDeleteModal, setShowOfferDeleteModal] = useState(false);
   const [isOfferDeleting, setIsOfferDeleting] = useState(false);
   const [isUpdatingValidUntil, setIsUpdatingValidUntil] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState("");
+  const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -438,6 +441,45 @@ export function OfferDetailView({
     } finally {
       setIsUpdatingValidUntil(false);
     }
+  };
+
+  // Handle title editing
+  const handleTitleEdit = () => {
+    setTitleValue(offer.title || "");
+    setIsEditingTitle(true);
+  };
+
+  const handleTitleSave = async () => {
+    if (!titleValue.trim()) {
+      toast.error("Kérem adjon meg egy címet");
+      return;
+    }
+
+    setIsUpdatingTitle(true);
+    try {
+      const { updateOfferTitle } = await import("@/actions/offer-actions");
+      const result = await updateOfferTitle(offer.id, titleValue);
+
+      if (result.success) {
+        toast.success("A cím sikeresen frissítve");
+        setIsEditingTitle(false);
+        if (onOfferUpdated && result.offer) {
+          onOfferUpdated({ title: result.offer.title });
+        }
+      } else {
+        toast.error(result.error || "Hiba történt a cím frissítésekor");
+      }
+    } catch (error) {
+      console.error("Error updating title:", error);
+      toast.error("Hiba történt a cím frissítésekor");
+    } finally {
+      setIsUpdatingTitle(false);
+    }
+  };
+
+  const handleTitleCancel = () => {
+    setIsEditingTitle(false);
+    setTitleValue("");
   };
 
   const handleOfferDeleteConfirm = async () => {
@@ -895,6 +937,55 @@ export function OfferDetailView({
           </DialogContent>
         </Dialog>
 
+        {/* Title Edit Modal */}
+        {isEditingTitle && (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setIsEditingTitle(false)}
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Cím szerkesztése
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ajánlat címe:
+                  </label>
+                  <input
+                    type="text"
+                    value={titleValue}
+                    onChange={(e) => setTitleValue(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FE9C00] focus:border-[#FE9C00]"
+                    disabled={isUpdatingTitle}
+                    placeholder="Pl. Budapest Sólyom utca 11"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleTitleSave}
+                  disabled={isUpdatingTitle}
+                  className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
+                >
+                  {isUpdatingTitle ? "Mentés..." : "Mentés"}
+                </button>
+                <button
+                  onClick={handleTitleCancel}
+                  disabled={isUpdatingTitle}
+                  className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                >
+                  Mégse
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-6 flex-grow">
           {/* Header with back button */}
@@ -938,9 +1029,20 @@ export function OfferDetailView({
           {/* Offer Header */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
-              <h1 className="text-2xl font-bold text-gray-900">
-                {offer.title || "Ajánlat részletei"}
-              </h1>
+              <div className="flex items-center gap-3 flex-1">
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {offer.title || "Ajánlat részletei"}
+                </h1>
+                {offer.status === "draft" && (
+                  <button
+                    onClick={handleTitleEdit}
+                    className="text-[#FE9C00] hover:text-[#e68a00] transition-colors"
+                    title="Cím szerkesztése"
+                  >
+                    <Pencil className="h-5 w-5" />
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-2">
                 {offer.status === "draft" && (
                   <button

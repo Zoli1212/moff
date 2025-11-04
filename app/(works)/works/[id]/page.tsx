@@ -83,6 +83,11 @@ export default function WorkDetailPage({
   const [showDurationModal, setShowDurationModal] = useState(false);
   const [editDuration, setEditDuration] = useState<number>(0);
 
+  // State for title editing
+  const [showTitleModal, setShowTitleModal] = useState(false);
+  const [editTitle, setEditTitle] = useState<string>("");
+  const [titleSaving, setTitleSaving] = useState(false);
+
   const [dynamicProfit, setDynamicProfit] = useState({
     totalRevenue: 0,
     totalCost: 0,
@@ -331,6 +336,32 @@ export default function WorkDetailPage({
     }
   };
 
+  // Handle title save
+  const handleTitleSave = async () => {
+    try {
+      if (!work || !work.id || !editTitle.trim()) return;
+
+      setTitleSaving(true);
+      const workId = (work as Record<string, unknown>).id as number;
+      const { updateWorkTitle } = await import("@/actions/update-work-title");
+      const updateResult = await updateWorkTitle(workId, editTitle);
+
+      if (updateResult.success && updateResult.work) {
+        setWork((prev: Record<string, unknown> | null) => ({
+          ...prev,
+          title: updateResult.work.title,
+        }));
+        setShowTitleModal(false);
+      } else {
+        console.error("Failed to update title:", updateResult.error);
+      }
+    } catch (error) {
+      console.error("Error updating title:", error);
+    } finally {
+      setTitleSaving(false);
+    }
+  };
+
   // Handle delete work
   const handleDeleteClick = async () => {
     if (!work || !work.id) return;
@@ -557,10 +588,22 @@ export default function WorkDetailPage({
                 />
               </svg>
             </Link>
-            <h1 className="text-xl font-bold text-gray-900 truncate">
-              {((work as Record<string, unknown>).title as string) ||
-                "Munka részletei"}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-xl font-bold text-gray-900 truncate">
+                {((work as Record<string, unknown>).title as string) ||
+                  "Munka részletei"}
+              </h1>
+              <button
+                onClick={() => {
+                  setEditTitle(((work as Record<string, unknown>).title as string) || "");
+                  setShowTitleModal(true);
+                }}
+                className="text-[#FE9C00] hover:text-[#e68a00] transition-colors"
+                title="Cím szerkesztése"
+              >
+                <Pencil className="h-5 w-5" />
+              </button>
+            </div>
           </div>
 
           {/* Delete button */}
@@ -1272,6 +1315,56 @@ export default function WorkDetailPage({
               <button
                 onClick={() => setShowDurationModal(false)}
                 className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+              >
+                Mégse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Title Edit Modal */}
+      {showTitleModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowTitleModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Cím szerkesztése
+            </h3>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Munka címe:
+                </label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FE9C00] focus:border-[#FE9C00]"
+                  placeholder="Pl. Budapest Sólyom utca 11"
+                  disabled={titleSaving}
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleTitleSave}
+                disabled={!editTitle.trim() || titleSaving}
+                className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {titleSaving ? "Mentés..." : "Mentés"}
+              </button>
+              <button
+                onClick={() => setShowTitleModal(false)}
+                disabled={titleSaving}
+                className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
               >
                 Mégse
               </button>

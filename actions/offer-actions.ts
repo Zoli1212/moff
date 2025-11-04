@@ -849,7 +849,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
               (item) =>
                 ({
                   id: item.id,
-                  name: item.name || "",
+                  name: item.name ? item.name.replace(/^\*+\s*/, '') : "",
                   quantity: item.quantity || "0",
                   unit: item.unit || "db",
                   materialUnitPrice: item.materialUnitPrice || "0",
@@ -936,6 +936,68 @@ export async function updateOfferValidUntil(offerId: number, validUntil: Date) {
     return {
       success: false,
       error: "Hiba történt az érvényességi dátum frissítésekor",
+    };
+  }
+}
+
+export async function updateOfferTitle(offerId: number, title: string) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Verify the offer belongs to the current user
+    const existingOffer = await prisma.offer.findFirst({
+      where: {
+        id: offerId,
+        tenantEmail: tenantEmail,
+      },
+      select: { id: true },
+    });
+
+    if (!existingOffer) {
+      return {
+        success: false,
+        error: "Az ajánlat nem található vagy nincs jogosultságod a módosításához!",
+      };
+    }
+
+    // Update the title field
+    const updatedOffer = await prisma.offer.update({
+      where: {
+        id: offerId,
+        tenantEmail: tenantEmail,
+      },
+      data: {
+        title: title,
+        updatedAt: new Date(),
+      },
+      select: {
+        id: true,
+        title: true,
+        updatedAt: true,
+      },
+    });
+
+    console.log("✅ Offer title updated successfully:", {
+      id: updatedOffer.id,
+      title: updatedOffer.title,
+    });
+
+    // Revalidate the offers page to show updated data
+    revalidatePath("/offers");
+    revalidatePath(`/offers/${offerId}`);
+    revalidatePath(`/(dashboard)/offers`);
+    revalidatePath(`/(dashboard)/offers/${offerId}`);
+    revalidatePath(`/(dashboard)/offers/[requirementId]`);
+
+    return {
+      success: true,
+      offer: updatedOffer,
+    };
+  } catch (error) {
+    console.error("Error updating offer title:", error);
+    return {
+      success: false,
+      error: "Hiba történt a cím frissítésekor",
     };
   }
 }
