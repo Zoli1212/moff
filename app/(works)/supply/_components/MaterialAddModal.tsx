@@ -5,9 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 import type { WorkItem } from "@/types/work";
 interface MaterialAddModalProps {
