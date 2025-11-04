@@ -360,7 +360,7 @@ export default function OffersPage() {
             <Button
               onClick={() => setIsDialogOpen(true)}
               variant="outline"
-              className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
+              className="w-full py-6 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00]/80 hover:border-[#FE9C00]/80 focus:ring-[#FE9C00] focus:ring-offset-2 focus:ring-2"
             >
               <span className="text-lg font-medium">+ Új felmérés</span>
             </Button>

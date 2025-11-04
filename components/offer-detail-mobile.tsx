@@ -131,7 +131,7 @@ export function OfferDetailView({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showOfferDeleteModal, setShowOfferDeleteModal] = useState(false);
   const [isOfferDeleting, setIsOfferDeleting] = useState(false);
-  const [isEditingValidUntil, setIsEditingValidUntil] = useState(false);
+  const [showValidUntilModal, setShowValidUntilModal] = useState(false);
   const [validUntilValue, setValidUntilValue] = useState("");
   const [isUpdatingValidUntil, setIsUpdatingValidUntil] = useState(false);
   const { setDemandText } = useDemandStore();
@@ -390,12 +390,14 @@ export function OfferDetailView({
     setShowOfferDeleteModal(true);
   };
 
-  // Handle validUntil editing - directly trigger date picker
+  // Handle validUntil editing - open modal
   const handleValidUntilEdit = () => {
-    const dateInput = document.getElementById('hidden-validUntil-input') as HTMLInputElement;
-    if (dateInput) {
-      dateInput.showPicker();
-    }
+    // Set current value or empty string
+    const currentValue = offer.validUntil 
+      ? format(new Date(offer.validUntil), 'yyyy-MM-dd')
+      : '';
+    setValidUntilValue(currentValue);
+    setShowValidUntilModal(true);
   };
 
   const handleValidUntilSave = async () => {
@@ -416,7 +418,7 @@ export function OfferDetailView({
 
       if (result.success) {
         toast.success("Az érvényességi dátum sikeresen frissítve");
-        setIsEditingValidUntil(false);
+        setShowValidUntilModal(false);
         setValidUntilValue("");
         // Update the offer object in the parent component
         if (onOfferUpdated && result.offer) {
@@ -434,7 +436,7 @@ export function OfferDetailView({
   };
 
   const handleValidUntilCancel = () => {
-    setIsEditingValidUntil(false);
+    setShowValidUntilModal(false);
     setValidUntilValue("");
   };
 
@@ -894,46 +896,53 @@ export function OfferDetailView({
         </Dialog>
 
         {/* Valid Until Edit Modal */}
-        <Dialog open={isEditingValidUntil} onOpenChange={setIsEditingValidUntil}>
-          <DialogContent className="max-w-[90%] sm:max-w-[425px] rounded-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-center">Érvényesség szerkesztése</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="validUntil" className="text-sm font-medium">
-                  Érvényes
-                </Label>
-                <Input
-                  id="validUntil"
-                  type="date"
-                  value={validUntilValue}
-                  onChange={(e) => setValidUntilValue(e.target.value)}
-                  className="w-full rounded-lg"
+        {showValidUntilModal && (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowValidUntilModal(false)}
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Érvényesség szerkesztése
+              </h3>
+
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Érvényes:
+                  </label>
+                  <input
+                    type="date"
+                    value={validUntilValue}
+                    onChange={(e) => setValidUntilValue(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FE9C00] focus:border-[#FE9C00]"
+                    disabled={isUpdatingValidUntil}
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={handleValidUntilSave}
                   disabled={isUpdatingValidUntil}
-                />
+                  className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
+                >
+                  {isUpdatingValidUntil ? "Mentés..." : "Mentés"}
+                </button>
+                <button
+                  onClick={handleValidUntilCancel}
+                  disabled={isUpdatingValidUntil}
+                  className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                >
+                  Mégse
+                </button>
               </div>
             </div>
-            <div className="flex flex-col gap-2">
-              <Button
-                onClick={handleValidUntilSave}
-                disabled={isUpdatingValidUntil}
-                className="w-full rounded-lg py-6 text-base font-semibold"
-                style={{ backgroundColor: '#FE9C00' }}
-              >
-                {isUpdatingValidUntil ? "Mentés..." : "Mentés"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleValidUntilCancel}
-                disabled={isUpdatingValidUntil}
-                className="w-full rounded-lg py-6 text-base"
-              >
-                Mégse
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
 
         <div className="space-y-6 flex-grow">
           {/* Header with back button */}
@@ -1099,26 +1108,6 @@ export function OfferDetailView({
                       ? formatDate(offer.validUntil)
                       : "Nincs megadva"}
                   </span>
-                  <input
-                    id="hidden-validUntil-input"
-                    type="date"
-                    className="hidden"
-                    value={offer.validUntil ? format(new Date(offer.validUntil), 'yyyy-MM-dd') : ''}
-                    onChange={async (e) => {
-                      const selectedDate = new Date(e.target.value);
-                      if (!isNaN(selectedDate.getTime())) {
-                        const result = await updateOfferValidUntil(offer.id, selectedDate);
-                        if (result.success) {
-                          toast.success("Az érvényességi dátum sikeresen frissítve");
-                          if (onOfferUpdated && result.offer) {
-                            onOfferUpdated({ validUntil: result.offer.validUntil });
-                          }
-                        } else {
-                          toast.error(result.error || "Hiba történt a dátum frissítésekor");
-                        }
-                      }
-                    }}
-                  />
                   <button
                     onClick={handleValidUntilEdit}
                     className="text-[#FFB545] hover:text-[#e68a00] transition-colors"

@@ -332,7 +332,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
 
                   <div className="flex items-center justify-center space-x-2 w-full">
                     <Label htmlFor={`restricted-${worker.id}`} className="text-sm font-medium">
-                      Korlátozás
+                      Napló korlátozása
                     </Label>
                     <Switch
                       id={`restricted-${worker.id}`}
@@ -349,6 +349,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                       size="sm"
                       onClick={() => handleEdit(worker)}
                       className="flex items-center gap-1 flex-1 sm:flex-none"
+                      style={{ color: '#FE9C00' }}
                     >
                       <Edit className="h-4 w-4" />
                       <span className="hidden xs:inline">Szerkesztés</span>
