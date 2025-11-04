@@ -383,12 +383,12 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     if (filteredNotes.length > 0) {
       console.log("Original notes:", filteredNotes);
       // Remove offerSummary lines from notes
-      filteredNotes = filteredNotes.filter(note => 
-        !note.toLowerCase().startsWith('offersummary:')
+      filteredNotes = filteredNotes.filter(
+        (note) => !note.toLowerCase().startsWith("offersummary:")
       );
       console.log("Filtered notes (without offerSummary):", filteredNotes);
     }
-    
+
     const formattedNotes =
       filteredNotes.length > 0
         ? filteredNotes.join("\n\n")
@@ -426,7 +426,9 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       noteCount: parsedContent.notes?.length || 0,
       descriptionPreview: formattedNotes.substring(0, 100) + "...",
       hasOfferSummary: !!parsedContent.offerSummary,
-      offerSummaryPreview: parsedContent.offerSummary ? parsedContent.offerSummary.substring(0, 100) + "..." : "N/A",
+      offerSummaryPreview: parsedContent.offerSummary
+        ? parsedContent.offerSummary.substring(0, 100) + "..."
+        : "N/A",
     });
 
     // Add items if they exist
@@ -455,8 +457,8 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         where: {
           OR: [
             { requirementId: requirement.id },
-            ...(recordId ? [{ recordId }] : [])
-          ]
+            ...(recordId ? [{ recordId }] : []),
+          ],
         },
         select: {
           id: true,
@@ -466,7 +468,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       });
 
       let offer;
-      
+
       if (existingOfferForUpdate) {
         // UPDATE existing offer to prevent duplicates
         console.log("Updating existing offer:", {
@@ -534,9 +536,14 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       // Automatikus RAG szinkronizáció (háttérben)
       try {
         await autoSyncOfferToRAG(offer.id);
-        console.log(`✅ RAG automatikusan szinkronizálva ajánlathoz: ${offer.id}`);
+        console.log(
+          `✅ RAG automatikusan szinkronizálva ajánlathoz: ${offer.id}`
+        );
       } catch (ragError) {
-        console.error(`❌ RAG szinkronizáció hiba ajánlathoz ${offer.id}:`, ragError);
+        console.error(
+          `❌ RAG szinkronizáció hiba ajánlathoz ${offer.id}:`,
+          ragError
+        );
         // Ne blokkoljuk a fő műveletet RAG hiba miatt
       }
 
@@ -636,26 +643,28 @@ export async function getOfferById(id: number) {
     }
 
     // Parse items and notes if they exist
-    const items = (offer.items ? JSON.parse(offer.items as string) : []).map((item: any) => {
-      const quantity = parseFloat(item.quantity) || 0;
-      const unitPrice = parseFloat(item.unitPrice) || 0; // This is work unit price
-      const materialUnitPrice = parseFloat(item.materialUnitPrice) || 0;
+    const items = (offer.items ? JSON.parse(offer.items as string) : []).map(
+      (item: any) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitPrice = parseFloat(item.unitPrice) || 0; // This is work unit price
+        const materialUnitPrice = parseFloat(item.materialUnitPrice) || 0;
 
-      // Calculate totals, ensuring they are numbers
-      const workTotal = quantity * unitPrice;
-      const materialTotal = quantity * materialUnitPrice;
-      const totalPrice = workTotal + materialTotal;
+        // Calculate totals, ensuring they are numbers
+        const workTotal = quantity * unitPrice;
+        const materialTotal = quantity * materialUnitPrice;
+        const totalPrice = workTotal + materialTotal;
 
-      return {
-        ...item,
-        quantity,
-        unitPrice, // Munkadíj egységár
-        materialUnitPrice, // Anyag egységár
-        workTotal, // Munkadíj összesen
-        materialTotal, // Anyagköltség összesen
-        totalPrice, // Teljes ár (munkadíj + anyag)
-      };
-    });
+        return {
+          ...item,
+          quantity,
+          unitPrice, // Munkadíj egységár
+          materialUnitPrice, // Anyag egységár
+          workTotal, // Munkadíj összesen
+          materialTotal, // Anyagköltség összesen
+          totalPrice, // Teljes ár (munkadíj + anyag)
+        };
+      }
+    );
     const notes = offer.notes ? JSON.parse(offer.notes as string) : [];
 
     // Log the parsed data for debugging
@@ -692,10 +701,10 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
         id: offerId,
         tenantEmail: userEmail,
       },
-      select: { 
-        id: true, 
+      select: {
+        id: true,
         status: true,
-        items: true 
+        items: true,
       },
     });
 
@@ -706,51 +715,62 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
     }
 
     // Parse existing items to compare with new items
-    const existingItems = existingOffer.items ? 
-      (Array.isArray(existingOffer.items) ? existingOffer.items : JSON.parse(existingOffer.items as string)) : [];
-    
+    const existingItems = existingOffer.items
+      ? Array.isArray(existingOffer.items)
+        ? existingOffer.items
+        : JSON.parse(existingOffer.items as string)
+      : [];
+
     // If offer is in 'work' status, we need to sync work items
-    if (existingOffer.status === 'work') {
+    if (existingOffer.status === "work") {
       // Find the corresponding work
       const work = await prisma.work.findFirst({
         where: { offerId: offerId },
-        select: { id: true }
+        select: { id: true },
       });
 
       if (work) {
         // Get existing work items
         const existingWorkItems = await prisma.workItem.findMany({
           where: { workId: work.id },
-          select: { id: true, name: true, quantity: true }
+          select: { id: true, name: true, quantity: true },
         });
 
         // Find items that were deleted (exist in old items but not in new items)
-        const deletedItems = existingItems.filter((existingItem: any) => 
-          !items.some(newItem => newItem.id === existingItem.id)
+        const deletedItems = existingItems.filter(
+          (existingItem: any) =>
+            !items.some((newItem) => newItem.id === existingItem.id)
         );
 
         // Delete corresponding work items
         for (const deletedItem of deletedItems) {
-          const workItemToDelete = existingWorkItems.find(wi => 
-            wi.name === deletedItem.name && wi.quantity === parseInt(deletedItem.quantity)
+          const workItemToDelete = existingWorkItems.find(
+            (wi) =>
+              wi.name === deletedItem.name &&
+              wi.quantity === parseInt(deletedItem.quantity)
           );
           if (workItemToDelete) {
             await prisma.workItem.delete({
-              where: { id: workItemToDelete.id }
+              where: { id: workItemToDelete.id },
             });
             console.log(`Deleted work item: ${workItemToDelete.name}`);
           }
         }
 
         // Find new items (exist in new items but not in old items)
-        const newItems = items.filter(newItem => 
-          !existingItems.some((existingItem: any) => existingItem.id === newItem.id)
+        const newItems = items.filter(
+          (newItem) =>
+            !existingItems.some(
+              (existingItem: any) => existingItem.id === newItem.id
+            )
         );
 
         // Create corresponding work items for new items
         for (const newItem of newItems) {
-          const materialUnitPriceNum = parseFloat(newItem.materialUnitPrice.replace(/[^\d.-]/g, '')) || 0;
-          const unitPriceNum = parseFloat(newItem.unitPrice.replace(/[^\d.-]/g, '')) || 0;
+          const materialUnitPriceNum =
+            parseFloat(newItem.materialUnitPrice.replace(/[^\d.-]/g, "")) || 0;
+          const unitPriceNum =
+            parseFloat(newItem.unitPrice.replace(/[^\d.-]/g, "")) || 0;
           const quantityNum = parseInt(newItem.quantity) || 1;
 
           await prisma.workItem.create({
@@ -764,7 +784,8 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
               materialUnitPrice: materialUnitPriceNum,
               workTotal: quantityNum * unitPriceNum,
               materialTotal: quantityNum * materialUnitPriceNum,
-              totalPrice: (quantityNum * unitPriceNum) + (quantityNum * materialUnitPriceNum),
+              totalPrice:
+                quantityNum * unitPriceNum + quantityNum * materialUnitPriceNum,
               tenantEmail: userEmail,
               progress: 0,
               completedQuantity: 0,
@@ -849,7 +870,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
               (item) =>
                 ({
                   id: item.id,
-                  name: item.name ? item.name.replace(/^\*+\s*/, '') : "",
+                  name: item.name ? item.name.replace(/^\*+\s*/, "") : "",
                   quantity: item.quantity || "0",
                   unit: item.unit || "db",
                   materialUnitPrice: item.materialUnitPrice || "0",
@@ -891,7 +912,8 @@ export async function updateOfferValidUntil(offerId: number, validUntil: Date) {
     if (!existingOffer) {
       return {
         success: false,
-        error: "Az ajánlat nem található vagy nincs jogosultságod a módosításához!",
+        error:
+          "Az ajánlat nem található vagy nincs jogosultságod a módosításához!",
       };
     }
 
@@ -943,6 +965,7 @@ export async function updateOfferValidUntil(offerId: number, validUntil: Date) {
 export async function updateOfferTitle(offerId: number, title: string) {
   try {
     const { user, tenantEmail } = await getTenantSafeAuth();
+    console.log(user);
 
     // Verify the offer belongs to the current user
     const existingOffer = await prisma.offer.findFirst({
@@ -956,7 +979,8 @@ export async function updateOfferTitle(offerId: number, title: string) {
     if (!existingOffer) {
       return {
         success: false,
-        error: "Az ajánlat nem található vagy nincs jogosultságod a módosításához!",
+        error:
+          "Az ajánlat nem található vagy nincs jogosultságod a módosításához!",
       };
     }
 
@@ -1103,4 +1127,3 @@ export async function updateOfferStatus(offerId: number, status: string) {
     };
   }
 }
-
