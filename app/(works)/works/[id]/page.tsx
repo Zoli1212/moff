@@ -1336,18 +1336,11 @@ export default function WorkDetailPage({
               )}
             </div>
 
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                disabled={deleteLoading}
-                className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
-              >
-                Mégse
-              </button>
+            <div className="flex flex-col gap-3">
               <button
                 onClick={handleDeleteConfirm}
                 disabled={deleteLoading}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors disabled:opacity-50 flex items-center gap-2"
+                className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {deleteLoading && (
                   <svg
@@ -1371,6 +1364,13 @@ export default function WorkDetailPage({
                   </svg>
                 )}
                 {deleteLoading ? "Törlés..." : "Törlés"}
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                disabled={deleteLoading}
+                className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+              >
+                Mégse
               </button>
             </div>
           </div>

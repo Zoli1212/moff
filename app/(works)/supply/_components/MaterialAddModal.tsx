@@ -58,7 +58,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[90%] sm:max-w-md rounded-2xl overflow-hidden">
         <DialogHeader>
           <DialogTitle>Új anyag hozzáadása</DialogTitle>
         </DialogHeader>
@@ -68,7 +68,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
             placeholder="Anyag neve"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="border rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2"
             required
           />
           <input
@@ -78,7 +78,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
             onChange={(e) =>
               setQuantity(e.target.value === "" ? "" : Number(e.target.value))
             }
-            className="border rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2"
             required
             min={0}
             step={0.01}
@@ -88,7 +88,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
             placeholder="Mértékegység (pl. kg, db)"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            className="border rounded px-3 py-2"
+            className="w-full border rounded px-3 py-2"
             required
           />
           <input
@@ -98,7 +98,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
             onChange={(e) =>
               setUnitPrice(e.target.value === "" ? "" : Number(e.target.value))
             }
-            className="border rounded px-3 py-2 mt-2"
+            className="w-full border rounded px-3 py-2"
             required
             min={0}
             step={0.01}
@@ -108,7 +108,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
             onChange={(e) =>
               setWorkItemId(e.target.value ? Number(e.target.value) : "")
             }
-            className="border rounded px-3 py-2 mt-2"
+            className="w-full border rounded px-3 py-2"
             required
           >
             <option value="">Válassz munkarészt...</option>
@@ -118,21 +118,22 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
               </option>
             ))}
           </select>
-          <DialogFooter>
-            <Button
+          <div className="flex flex-col gap-3 pt-2">
+            <button
               type="submit"
               disabled={loading || !name || !quantity || !unit}
+              className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
             >
-              {loading ? "Mentés..." : "Hozzáadás"}
-            </Button>
-            <Button
+              {loading ? "Hozzáadás..." : "Hozzáadás"}
+            </button>
+            <button
               type="button"
-              variant="outline"
               onClick={() => onOpenChange(false)}
+              className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
             >
-              Mégsem
-            </Button>
-          </DialogFooter>
+              Mégse
+            </button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

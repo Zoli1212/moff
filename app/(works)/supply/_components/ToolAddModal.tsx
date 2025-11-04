@@ -31,7 +31,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-w-[90%] sm:max-w-md rounded-2xl overflow-hidden">
         <DialogHeader>
           <DialogTitle>Új eszköz hozzáadása</DialogTitle>
         </DialogHeader>
@@ -70,10 +70,22 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmi
               required
             />
           </div>
-          <DialogFooter>
-            <Button type="submit" disabled={loading}>Hozzáadás</Button>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Mégse</Button>
-          </DialogFooter>
+          <div className="flex flex-col gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
+            >
+              {loading ? "Hozzáadás..." : "Hozzáadás"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+            >
+              Mégse
+            </button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

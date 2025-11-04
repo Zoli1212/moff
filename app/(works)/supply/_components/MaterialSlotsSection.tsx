@@ -313,7 +313,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                       e.stopPropagation();
                       handleToggle(mat.id);
                     }}
-                    className="mr-2.5 w-[18px] h-[18px]"
+                    className="mr-2.5 w-[18px] h-[18px] accent-green-600"
                     onClick={(e) => e.stopPropagation()}
                   />
                   <div className="flex-1 font-semibold flex items-center gap-3">

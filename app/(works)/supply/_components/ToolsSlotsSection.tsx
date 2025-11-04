@@ -373,7 +373,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                     type="checkbox"
                     checked={selectedTools.includes(tool.id) || assignedCount >= q}
                     onChange={e => { e.stopPropagation(); handleToggle(tool.id, name, q); }}
-                    className="mr-2.5 w-[18px] h-[18px]"
+                    className="mr-2.5 w-[18px] h-[18px] accent-green-600"
                     disabled={!hasRegistry}
                     onClick={e => e.stopPropagation()}
                   />

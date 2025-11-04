@@ -1298,7 +1298,7 @@ export default function GroupedDiaryForm({
               selectedWorkers.length === 0 ||
               isSubmitting
             }
-            className="bg-blue-600 hover:bg-blue-700"
+            className="bg-[#FE9C00] hover:bg-[#FE9C00]/90"
           >
             {isSubmitting ? (
               <div className="flex items-center gap-2">

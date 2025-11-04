@@ -1478,7 +1478,7 @@ export default function GroupedDiaryEditForm({
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Trash2 className="h-4 w-4" style={{ color: '#FE9C00' }} />
+                    <Trash2 className="h-4 w-4 text-red-600" />
                     Törlés
                   </div>
                 )}
@@ -1500,7 +1500,7 @@ export default function GroupedDiaryEditForm({
                 isSubmitting ||
                 isDeleting
               }
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-[#FE9C00] hover:bg-[#FE9C00]/90"
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">
@@ -1520,7 +1520,7 @@ export default function GroupedDiaryEditForm({
             <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex-shrink-0 w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                  <Trash2 className="h-5 w-5" style={{ color: '#FE9C00' }} />
+                  <Trash2 className="h-5 w-5 text-red-600" />
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
@@ -1539,30 +1539,30 @@ export default function GroupedDiaryEditForm({
                 </p>
               </div>
 
-              <div className="flex gap-3 justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  disabled={isDeleting}
-                >
-                  Mégsem
-                </Button>
-                <Button
+              <div className="flex flex-col gap-3">
+                <button
                   type="button"
                   onClick={handleDeleteGroup}
                   disabled={isDeleting}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors disabled:opacity-50"
                 >
                   {isDeleting ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center justify-center gap-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       Törlés...
                     </div>
                   ) : (
                     "Igen, törlöm"
                   )}
-                </Button>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+                >
+                  Mégse
+                </button>
               </div>
             </div>
           </div>

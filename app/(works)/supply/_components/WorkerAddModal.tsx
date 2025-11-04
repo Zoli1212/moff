@@ -492,7 +492,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                                 );
                               }
                             }}
-                            className="w-4 h-4 text-orange-500 border-gray-300 rounded focus:ring-orange-500"
+                            className="w-4 h-4 border-gray-300 rounded focus:ring-green-500 accent-green-600"
                           />
                           <div className="flex-1 text-sm">
                             <div className="font-medium">{worker.name || "Névtelen"}</div>
