@@ -567,10 +567,10 @@ export default function WorkDetailPage({
       <div className="space-y-6 flex-grow p-4">
         {/* Header with back button, title and delete button */}
         <div className="flex items-center justify-between mb-6 pt-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <Link
               href="/works"
-              className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+              className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors flex-shrink-0"
               aria-label="Vissza a munkákhoz"
             >
               <svg
@@ -588,45 +588,44 @@ export default function WorkDetailPage({
                 />
               </svg>
             </Link>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-gray-900 truncate">
-                {((work as Record<string, unknown>).title as string) ||
-                  "Munka részletei"}
-              </h1>
-              <button
-                onClick={() => {
-                  setEditTitle(((work as Record<string, unknown>).title as string) || "");
-                  setShowTitleModal(true);
-                }}
-                className="text-[#FE9C00] hover:text-[#e68a00] transition-colors"
-                title="Cím szerkesztése"
-              >
-                <Pencil className="h-5 w-5" />
-              </button>
-            </div>
+            <h1 className="text-xl font-bold text-gray-900 truncate flex-1">
+              {((work as Record<string, unknown>).title as string) ||
+                "Munka részletei"}
+            </h1>
           </div>
 
-          {/* Delete button */}
-          <button
-            onClick={handleDeleteClick}
-            className="p-2 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-            style={{ color: "#FE9C00" }}
-            title="Munka törlése"
-          >
-            <svg
-              className="h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => {
+                setEditTitle(((work as Record<string, unknown>).title as string) || "");
+                setShowTitleModal(true);
+              }}
+              className="p-2 rounded-full hover:bg-orange-50 transition-colors text-[#FE9C00] hover:text-[#e68a00]"
+              title="Cím szerkesztése"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-          </button>
+              <Pencil className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleDeleteClick}
+              className="p-2 rounded-full hover:bg-red-50 transition-colors text-red-500 hover:text-red-600"
+              title="Munka törlése"
+            >
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1H9a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* Work Header */}

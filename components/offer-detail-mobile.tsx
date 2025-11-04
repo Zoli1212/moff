@@ -1028,22 +1028,20 @@ export function OfferDetailView({
 
           {/* Offer Header */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex justify-between items-start mb-4">
-              <div className="flex items-center gap-3 flex-1">
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {offer.title || "Ajánlat részletei"}
-                </h1>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-2xl font-bold text-gray-900 flex-1">
+                {offer.title || "Ajánlat részletei"}
+              </h1>
+              <div className="flex items-center gap-2">
                 {offer.status === "draft" && (
                   <button
                     onClick={handleTitleEdit}
-                    className="text-[#FE9C00] hover:text-[#e68a00] transition-colors"
+                    className="p-2 rounded-full hover:bg-orange-50 transition-colors text-[#FE9C00] hover:text-[#e68a00]"
                     title="Cím szerkesztése"
                   >
                     <Pencil className="h-5 w-5" />
                   </button>
                 )}
-              </div>
-              <div className="flex items-center gap-2">
                 {offer.status === "draft" && (
                   <button
                     onClick={handleOfferDeleteClick}

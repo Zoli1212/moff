@@ -1026,6 +1026,47 @@ export async function updateOfferTitle(offerId: number, title: string) {
   }
 }
 
+// Helper function to process work immediately with AI
+async function processWorkImmediately(workId: number, workData: any) {
+  try {
+    console.log(`🚀 Azonnali feldolgozás kezdése: Work ID ${workId}`);
+    
+    // Call the same API that WorksAutoUpdater uses
+    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/start-work`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        location: workData.location || "",
+        offerDescription: workData.offerDescription || "",
+        estimatedDuration: workData.estimatedDuration || "0",
+        offerItems: workData.offerItems || [],
+      }),
+    });
+    
+    const aiResult = await response.json();
+    
+    if (aiResult && !aiResult.error) {
+      // Import and call updateWorkWithAIResult
+      const { updateWorkWithAIResult } = await import('@/actions/work-actions');
+      const dbResult = await updateWorkWithAIResult(workId, aiResult);
+      
+      if (dbResult.success) {
+        console.log(`✅ Work ${workId} sikeresen feldolgozva azonnal`);
+        return true;
+      } else {
+        console.error(`❌ Work ${workId} mentési hiba:`, dbResult.error);
+        return false;
+      }
+    } else {
+      console.error(`❌ Work ${workId} AI feldolgozási hiba:`, aiResult?.error);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Hiba a munka azonnali feldolgozásában:', error);
+    return false;
+  }
+}
+
 export async function updateOfferStatus(offerId: number, status: string) {
   console.log(offerId, "OFFERID");
   try {
@@ -1060,6 +1101,8 @@ export async function updateOfferStatus(offerId: number, status: string) {
       });
 
       // 4.2. Munka státusz logika (logikai törlés/aktiválás)
+      let workIdToProcess: number | null = null;
+      
       if (status === "work") {
         if (existingWork) {
           // Ha már van work, csak aktiváljuk
@@ -1067,10 +1110,11 @@ export async function updateOfferStatus(offerId: number, status: string) {
             where: { id: existingWork.id },
             data: { isActive: true },
           });
+          workIdToProcess = existingWork.id;
         } else {
           // Ha nincs, mindig létrehozzuk
           const workTitle = offer.title || "Új munka";
-          await tx.work.create({
+          const newWork = await tx.work.create({
             data: {
               offerId: updatedOffer.id,
               status: "pending",
@@ -1094,6 +1138,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
               isActive: true,
             },
           });
+          workIdToProcess = newWork.id;
         }
       } else if (status === "draft" && existingWork) {
         // Ha draftba állítjuk, csak logikailag inaktiváljuk
@@ -1103,10 +1148,25 @@ export async function updateOfferStatus(offerId: number, status: string) {
         });
       }
 
-      return updatedOffer;
+      return { updatedOffer, workIdToProcess };
     });
 
-    // 5. Cache frissítése
+    // 5. Ha munkába állítottuk, azonnal indítsuk el a feldolgozást
+    if (status === "work" && result.workIdToProcess) {
+      console.log(`🎯 Munkába állítás sikeres, azonnali feldolgozás indítása...`);
+      
+      // Háttérben futtatjuk a feldolgozást (nem várunk rá)
+      processWorkImmediately(result.workIdToProcess, {
+        location: offer.title || "N/A",
+        offerDescription: offer.description || "",
+        estimatedDuration: "0",
+        offerItems: offer.items ? (Array.isArray(offer.items) ? offer.items : JSON.parse(JSON.stringify(offer.items))) : [],
+      }).catch(error => {
+        console.error('Háttér feldolgozási hiba:', error);
+      });
+    }
+
+    // 6. Cache frissítése
     revalidatePath(`/dashboard/offers/${offerId}`);
     revalidatePath("/dashboard/offers");
     revalidatePath("/works");
@@ -1114,7 +1174,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
     return {
       success: true,
       message: `Az ajánlat sikeresen ${status === "work" ? "munkába állítva" : "frissítve"}!`,
-      offer: result,
+      offer: result.updatedOffer,
     };
   } catch (error) {
     console.error("Hiba az állapot frissítésekor:", error);
