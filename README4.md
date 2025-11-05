@@ -342,16 +342,3 @@ Ha problémába ütközöl a tesztek futtatásakor:
 
 **A database testing rendszer teljes mértékben működőképes és production-ready!** 🎉
 
-
-kép a regisztrációban is és itt is lhessen szerkeszteni a képet
-kép szerkesztése megadása
-Ajánlat árat átírom db be kerüljön 
-Globális legyen és csillag 
-Nincs ilyen bejegyzés akkor bekerül a db be
-KÉP módosuljon
-db be új tétel legyen!
-Anyag és munkadíjat is jegyezze meg
-Kombo doboz számot és felugró mennyiség egység
-Milyen mennyiségi egységet kombox 
-Magyar ékezet nem kell és csillag sem kell
-utf-8
