@@ -319,6 +319,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
         estimatedDuration: aiResult.estimatedDuration,
         workSummary: aiResult.workSummary || null, // AI által generált 4 mondatos összefoglaló
         updatedByAI: true,
+        processingByAI: false, // Feldolgozás befejeződött
         // bármi egyéb mező, amit az AI visszaad
       },
       include: { workItems: true },

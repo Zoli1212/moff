@@ -286,6 +286,14 @@ export function OfferDetailView({
   const handleRemoveItem = async () => {
     if (itemToDelete === null) return;
 
+    // Ha az ajánlat munkában van, ne engedjük törölni
+    if (offer.status === "work") {
+      toast.error("Munkába állított ajánlatból nem lehet tételt törölni!");
+      setShowDeleteConfirm(false);
+      setItemToDelete(null);
+      return;
+    }
+
     const newItems = [...editableItems];
     newItems.splice(itemToDelete, 1);
 
@@ -590,6 +598,37 @@ export function OfferDetailView({
         toast.success(
           `Az ajánlat sikeresen áthelyezve a ${newStatus === "work" ? "munkálatok" : "piszkozatok"} közé!`
         );
+        
+        // Ha munkába állítottuk, indítsuk el az AI feldolgozást
+        if (newStatus === "work" && result.workId) {
+          console.log("🚀 AI feldolgozás indítása munkába állítás után...");
+          // Háttérben futtatjuk, nem várunk rá
+          fetch("/api/start-work", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              location: offer.title || "",
+              offerDescription: offer.description || "",
+              estimatedDuration: "0",
+              offerItems: editableItems || [],
+            }),
+          })
+            .then((res) => res.json())
+            .then(async (aiResult) => {
+              if (aiResult && !aiResult.error) {
+                // Frissítjük a work-öt az AI eredménnyel
+                const { updateWorkWithAIResult } = await import("@/actions/work-actions");
+                await updateWorkWithAIResult(result.workId!, aiResult);
+                console.log("✅ AI feldolgozás sikeres");
+              } else {
+                console.error("❌ AI feldolgozási hiba:", aiResult?.error);
+              }
+            })
+            .catch((err) => {
+              console.error("❌ AI feldolgozási hiba:", err);
+            });
+        }
+        
         // Notify parent component about the status change
         if (onStatusChange) {
           onStatusChange(newStatus);
@@ -1331,7 +1370,12 @@ export function OfferDetailView({
           }}
           onConfirm={handleRemoveItem}
           title="Tétel törlése"
-          description="Biztosan törölni szeretnéd ezt a tételt? Ez a művelet nem vonható vissza."
+          description={
+            offer.status === "work"
+              ? "⚠️ Munkába állítva - Ez az ajánlat már munkába van állítva, ezért nem lehet tételt törölni belőle."
+              : "Biztosan törölni szeretnéd ezt a tételt? Ez a művelet nem vonható vissza."
+          }
+          hideConfirmButton={offer.status === "work"}
         />
 
         {/* Notes Section */}

@@ -576,7 +576,17 @@ export async function getUserOffers() {
       include: {
         requirements: {
           include: {
-            offers: true,
+            offers: {
+              include: {
+                work: {
+                  select: {
+                    id: true,
+                    processingByAI: true,
+                    updatedByAI: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -1028,47 +1038,6 @@ export async function updateOfferTitle(offerId: number, title: string) {
   }
 }
 
-// Helper function to process work immediately with AI
-async function processWorkImmediately(workId: number, workData: any) {
-  try {
-    console.log(`🚀 Azonnali feldolgozás kezdése: Work ID ${workId}`);
-    
-    // Call the same API that WorksAutoUpdater uses
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/start-work`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        location: workData.location || "",
-        offerDescription: workData.offerDescription || "",
-        estimatedDuration: workData.estimatedDuration || "0",
-        offerItems: workData.offerItems || [],
-      }),
-    });
-    
-    const aiResult = await response.json();
-    
-    if (aiResult && !aiResult.error) {
-      // Import and call updateWorkWithAIResult
-      const { updateWorkWithAIResult } = await import('@/actions/work-actions');
-      const dbResult = await updateWorkWithAIResult(workId, aiResult);
-      
-      if (dbResult.success) {
-        console.log(`✅ Work ${workId} sikeresen feldolgozva azonnal`);
-        return true;
-      } else {
-        console.error(`❌ Work ${workId} mentési hiba:`, dbResult.error);
-        return false;
-      }
-    } else {
-      console.error(`❌ Work ${workId} AI feldolgozási hiba:`, aiResult?.error);
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Hiba a munka azonnali feldolgozásában:', error);
-    return false;
-  }
-}
-
 export async function updateOfferStatus(offerId: number, status: string) {
   console.log(offerId, "OFFERID");
   try {
@@ -1107,10 +1076,10 @@ export async function updateOfferStatus(offerId: number, status: string) {
       
       if (status === "work") {
         if (existingWork) {
-          // Ha már van work, csak aktiváljuk
+          // Ha már van work, csak aktiváljuk és beállítjuk a processingByAI-t
           await tx.work.update({
             where: { id: existingWork.id },
-            data: { isActive: true },
+            data: { isActive: true, processingByAI: true },
           });
           workIdToProcess = existingWork.id;
         } else {
@@ -1138,6 +1107,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
                 ? JSON.parse(JSON.stringify(offer.items))
                 : null,
               isActive: true,
+              processingByAI: true,
             },
           });
           workIdToProcess = newWork.id;
@@ -1153,20 +1123,8 @@ export async function updateOfferStatus(offerId: number, status: string) {
       return { updatedOffer, workIdToProcess };
     });
 
-    // 5. Ha munkába állítottuk, azonnal indítsuk el a feldolgozást
-    if (status === "work" && result.workIdToProcess) {
-      console.log(`🎯 Munkába állítás sikeres, azonnali feldolgozás indítása...`);
-      
-      // Háttérben futtatjuk a feldolgozást (nem várunk rá)
-      processWorkImmediately(result.workIdToProcess, {
-        location: offer.title || "N/A",
-        offerDescription: offer.description || "",
-        estimatedDuration: "0",
-        offerItems: offer.items ? (Array.isArray(offer.items) ? offer.items : JSON.parse(JSON.stringify(offer.items))) : [],
-      }).catch(error => {
-        console.error('Háttér feldolgozási hiba:', error);
-      });
-    }
+    // 5. processingByAI flag már be van állítva a tranzakcióban
+    // A kliens oldal fogja meghívni az /api/start-work endpoint-ot
 
     // 6. Cache frissítése
     revalidatePath(`/dashboard/offers/${offerId}`);
@@ -1177,6 +1135,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
       success: true,
       message: `Az ajánlat sikeresen ${status === "work" ? "munkába állítva" : "frissítve"}!`,
       offer: result.updatedOffer,
+      workId: result.workIdToProcess, // Visszaadjuk a workId-t a kliens számára
     };
   } catch (error) {
     console.error("Hiba az állapot frissítésekor:", error);

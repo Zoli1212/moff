@@ -482,8 +482,8 @@ function WorkersSlotsSectionWithoutRoles({
                     className="flex items-center w-full gap-2 h-12"
                   >
                     <button
-                      className="flex-grow flex items-center justify-center rounded border border-dashed bg-[#fafbfc] hover:bg-[#f5f7fa] px-3 py-2 h-full"
-                      style={{ borderColor: '#FE9C00', color: '#FE9C00' }}
+                      className="flex-grow flex items-center justify-center rounded border bg-[#f5f5f5] hover:bg-[#ebebeb] px-3 py-2 h-full"
+                      style={{ borderColor: '#ddd', color: '#FE9C00' }}
                       onClick={() => {
                         setAddLock(null); // No role lock - general assignment
                         setIsAddOpen(true);

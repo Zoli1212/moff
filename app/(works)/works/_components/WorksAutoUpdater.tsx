@@ -8,6 +8,7 @@ import { OfferItem } from "@/types/offer.types";
 export interface Work {
   id: number | string;
   updatedByAI?: boolean;
+  processingByAI?: boolean;
   location?: string;
   offerDescription?: string;
   estimatedDuration?: string;
@@ -38,7 +39,10 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    const notUpdated = works.filter((w) => w.updatedByAI !== true);
+    // Filter out works that are already updated OR currently being processed
+    const notUpdated = works.filter(
+      (w) => w.updatedByAI !== true && w.processingByAI !== true
+    );
     if (notUpdated.length === 0) {
       setShowStatus(false);
       processedRef.current = false;
@@ -120,7 +124,9 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
 
   useEffect(() => {
     // Hide status bar when all are done
-    const notUpdated = works.filter((w) => w.updatedByAI !== true);
+    const notUpdated = works.filter(
+      (w) => w.updatedByAI !== true && w.processingByAI !== true
+    );
     const done = doneIdsRef.current.size;
     const failed = failedIdsRef.current.size;
     
@@ -132,7 +138,9 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
     }
   }, [works]);
 
-  const notUpdated = works.filter((w) => w.updatedByAI !== true);
+  const notUpdated = works.filter(
+    (w) => w.updatedByAI !== true && w.processingByAI !== true
+  );
   const total = notUpdated.length;
   const done = doneIdsRef.current.size;
 

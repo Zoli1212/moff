@@ -7,9 +7,17 @@ interface ConfirmationDialogProps {
   onConfirm: () => void;
   title: string;
   description: string;
+  hideConfirmButton?: boolean; // Optional prop to hide confirm button
 }
 
-const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ isOpen, onClose, onConfirm, title, description }) => {
+const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  description,
+  hideConfirmButton = false 
+}) => {
   if (!isOpen) {
     return null;
   }
@@ -20,8 +28,12 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({ isOpen, onClose
         <h3 className="text-lg font-bold">{title}</h3>
         <p className="text-sm text-gray-600 mt-2 mb-6">{description}</p>
         <div className="flex flex-col gap-3">
-          <Button variant="destructive" onClick={onConfirm} className="w-full">Törlés</Button>
-          <Button variant="outline" onClick={onClose} className="w-full bg-gray-100">Mégse</Button>
+          {!hideConfirmButton && (
+            <Button variant="destructive" onClick={onConfirm} className="w-full">Törlés</Button>
+          )}
+          <Button variant="outline" onClick={onClose} className="w-full bg-gray-100">
+            {hideConfirmButton ? "Rendben" : "Mégse"}
+          </Button>
         </div>
       </div>
     </div>

@@ -211,6 +211,7 @@ model Work {
   workDiaryItems WorkDiaryItem[]
   offerItems    Json?  
   updatedByAI   Boolean   @default(false)
+  processingByAI Boolean  @default(false) // Feldolgozás folyamatban flag
   workImageUrl  String?   // Kép URL a munkához
   performances  Performance[] // Kapcsolat a Performance táblához
   workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez

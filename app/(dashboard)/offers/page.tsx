@@ -50,6 +50,11 @@ interface Offer {
     id: number;
     title: string;
   };
+  work?: {
+    id: number;
+    processingByAI?: boolean;
+    updatedByAI?: boolean;
+  } | null;
 }
 
 export default function OffersPage() {
@@ -232,25 +237,38 @@ export default function OffersPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {offers.map((offer: Offer) => (
+                  {offers.map((offer: Offer) => {
+                    const isProcessing = offer.work?.processingByAI === true;
+                    const isDisabled = isProcessing;
+                    
+                    return (
                     <Link
                       key={offer.id}
-                      href={`/offers/${offer.requirementId}?offerId=${offer.id}`}
-                      className="block bg-white border border-gray-200 rounded-lg transition-shadow"
+                      href={isDisabled ? '#' : `/offers/${offer.requirementId}?offerId=${offer.id}`}
+                      onClick={(e) => {
+                        if (isDisabled) {
+                          e.preventDefault();
+                        }
+                      }}
+                      className={`block bg-white border border-gray-200 rounded-lg transition-shadow ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
                       style={{
                         boxShadow:
                           "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                        if (!isDisabled) {
+                          e.currentTarget.style.boxShadow =
+                            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                        }
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.boxShadow =
-                          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+                        if (!isDisabled) {
+                          e.currentTarget.style.boxShadow =
+                            "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+                        }
                       }}
                     >
-                      <div className="p-4">
+                      <div className="p-4 relative">
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="text-lg font-medium text-[#FE9C00] group-hover:text-[#FE9C00]/80 transition-colors">
@@ -305,7 +323,13 @@ export default function OffersPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            {offer.status === "draft" && (
+                            {isProcessing && (
+                              <div className="flex items-center gap-2 text-orange-600">
+                                <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                <span className="text-xs font-medium">Feldolgozás...</span>
+                              </div>
+                            )}
+                            {offer.status === "draft" && !isProcessing && (
                               <button
                                 onClick={(e) => handleDeleteClick(offer, e)}
                                 className="p-1 transition-colors"
@@ -315,7 +339,7 @@ export default function OffersPage() {
                                 <Trash2 className="h-4 w-4" />
                               </button>
                             )}
-                            {getStatusDisplay(offer.status) && (
+                            {!isProcessing && getStatusDisplay(offer.status) && (
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === "work" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
                               >
@@ -347,7 +371,8 @@ export default function OffersPage() {
                         </div>
                       </div>
                     </Link>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
