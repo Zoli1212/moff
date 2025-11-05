@@ -141,7 +141,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : null)}>
-      <DialogContent className="sm:max-w-md rounded-2xl p-6">
+      <DialogContent className="max-w-[90vw] sm:max-w-[425px] rounded-2xl p-6">
         <DialogHeader>
           <DialogTitle className="text-center text-xl sm:text-2xl tracking-tight">Eszköz kiválasztása</DialogTitle>
         </DialogHeader>
@@ -296,7 +296,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         <DialogFooter className="mt-2 flex gap-3 sm:gap-4">
           <Button variant="secondary" className="flex-1" onClick={onClose}>Mégse</Button>
           <Button
-            className="flex-1"
+            className="flex-1 bg-[#FE9C00] hover:bg-[#e68a00] text-white"
             onClick={handleSave}
           >
             Mentés

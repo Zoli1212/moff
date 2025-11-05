@@ -16,9 +16,9 @@ import { toast } from "sonner";
 // Segédfüggvény a nagy kezdőbetűs formázáshoz
 const capitalizeWords = (str: string): string => {
   return str
-    .split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(' ');
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
 };
 
 const ToolDetailsModal = ({
@@ -71,7 +71,7 @@ const ToolDetailsModal = ({
           ×
         </button>
         <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
-          {capitalizeWords(tool.name || '')}
+          {capitalizeWords(tool.name || "")}
         </h2>
         <div style={{ fontSize: 16, marginBottom: 8 }}>
           Mennyiség: <b>{tool.quantity}</b> db
@@ -91,7 +91,12 @@ export type AssignedTool = {
   tool: Tool & { description: string | null };
 };
 import type { WorkItem } from "@/types/work";
-type Props = { tools: Tool[]; workId: number; assignedTools: AssignedTool[]; workItems: WorkItem[] };
+type Props = {
+  tools: Tool[];
+  workId: number;
+  assignedTools: AssignedTool[];
+  workItems: WorkItem[];
+};
 
 import ToolAddModal from "./ToolAddModal";
 import { Button } from "@/components/ui/button";
@@ -102,7 +107,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
   workItems,
 }) => {
   // Szűrés: csak azok az eszközök jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
-  
+
   // Local state for assignedTools to enable instant UI update
   const [assignedTools, setAssignedTools] =
     useState<AssignedTool[]>(assignedToolsProp);
@@ -112,58 +117,97 @@ const ToolsSlotsSection: React.FC<Props> = ({
   const [maxQuantity, setMaxQuantity] = useState<number>(1);
   const [showAddToolModal, setShowAddToolModal] = useState(false);
   const [selectedTools, setSelectedTools] = useState<number[]>(() => {
-  // Preselect based on required quantities aggregated from all work items (max per name)
-  const requiredByName: Record<string, number> = {};
-  workItems.forEach((wi) => {
-    (wi.tools || []).forEach((t) => {
-      const name = t.name;
-      if (!name) return;
-      const q = t.quantity ?? 1;
-      requiredByName[name] = Math.max(requiredByName[name] || 0, q);
+    // Preselect based on required quantities aggregated from all work items (max per name)
+    const requiredByName: Record<string, number> = {};
+    workItems.forEach((wi) => {
+      (wi.tools || []).forEach((t) => {
+        const name = t.name;
+        if (!name) return;
+        const q = t.quantity ?? 1;
+        requiredByName[name] = Math.max(requiredByName[name] || 0, q);
+      });
     });
+    return Object.entries(requiredByName)
+      .map(([name, required]) => {
+        const assignedCount = assignedTools
+          .filter((at) => at.toolName === name)
+          .reduce((sum, at) => sum + at.quantity, 0);
+        const candidate = tools
+          .filter((t) => t.name === name)
+          .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0))[0];
+        return assignedCount >= required && candidate ? candidate.id : -1;
+      })
+      .filter((id) => id !== -1);
   });
-  return Object.entries(requiredByName)
-    .map(([name, required]) => {
-      const assignedCount = assignedTools
-        .filter((at) => at.toolName === name)
-        .reduce((sum, at) => sum + at.quantity, 0);
-      const candidate = tools
-        .filter((t) => t.name === name)
-        .sort((a, b) => (b.quantity ?? 0) - (a.quantity ?? 0))[0];
-      return assignedCount >= required && candidate ? candidate.id : -1;
-    })
-    .filter((id) => id !== -1);
-});
 
   // Checkbox toggle handler
-  const handleToggle = async (id: number, toolName: string, required: number) => {
+  const handleToggle = async (
+    id: number,
+    toolName: string,
+    required: number
+  ) => {
     const willBeChecked = !selectedTools.includes(id);
-    setSelectedTools((prev) =>
-      willBeChecked ? [...prev, id] : prev.filter((tid) => tid !== id)
-    );
 
     // Increment logic when checking
     if (willBeChecked) {
-      const assignments = assignedTools.filter(at => at.toolName === toolName);
-      const assignedCount = assignments.reduce((sum, at) => sum + at.quantity, 0);
+      const assignments = assignedTools.filter(
+        (at) => at.toolName === toolName
+      );
+      const assignedCount = assignments.reduce(
+        (sum, at) => sum + at.quantity,
+        0
+      );
       const toAdd = required - assignedCount;
       if (toAdd > 0) {
         try {
-          const tool = tools.find(t => t.id === id);
-          if (!tool) {
-            toast.error("Nem található a kiválasztott eszköz!");
-            return;
+          let toolId = id;
+          let finalToolName = toolName;
+          
+          // Ha az eszköz nincs a registry-ben (id === -1), először regisztráljuk
+          if (id === -1) {
+            const savedTool = await addToolToRegistry(
+              toolName,
+              toAdd,
+              "",
+              toolName
+            );
+            toolId = savedTool.id;
+            finalToolName = savedTool.name;
+            toast.success("Eszköz regisztrálva és hozzárendelve a munkához!");
+          } else {
+            const tool = tools.find((t) => t.id === id);
+            if (!tool) {
+              toast.error("Nem található a kiválasztott eszköz!");
+              return;
+            }
           }
-          await createWorkToolsRegistry(workId, tool.id, toAdd, tool.name);
-          toast.success("A szükséges mennyiségre kiegészítve az eszköz hozzárendelése.");
+          
+          // Hozzárendeljük a munkához
+          await createWorkToolsRegistry(workId, toolId, toAdd, finalToolName);
+          if (id !== -1) {
+            toast.success("Az eszköz sikeresen hozzárendelve a munkához!");
+          }
           await fetchAssignedToolsAndUpdateState();
+          
+          // Frissítjük a selectedTools-t az új ID-vel
+          setSelectedTools((prev) => [...prev.filter((tid) => tid !== id), toolId]);
         } catch (err) {
-          toast.error("Nem sikerült növelni az eszköz mennyiségét: " + (err as Error).message);
+          toast.error(
+            "Nem sikerült hozzárendelni az eszközt: " +
+              (err as Error).message
+          );
         }
+      } else {
+        // Ha már elég van hozzárendelve, csak checkoljuk be
+        setSelectedTools((prev) => [...prev, id]);
       }
     } else {
-      // Decrement logic when unchecking: remove all assignments for this tool
-      const assignments = assignedTools.filter(at => at.toolName === toolName);
+      // Decrement logic when unchecking: remove all assignments for this tool (de a registry-ben marad!)
+      setSelectedTools((prev) => prev.filter((tid) => tid !== id));
+      
+      const assignments = assignedTools.filter(
+        (at) => at.toolName === toolName
+      );
       let errors = 0;
       for (const at of assignments) {
         for (let i = 0; i < at.quantity; i++) {
@@ -171,13 +215,16 @@ const ToolsSlotsSection: React.FC<Props> = ({
             await decrementWorkToolQuantity(at.id);
           } catch (err) {
             errors++;
-            toast.error("Nem sikerült törölni az eszköz hozzárendelését: " + (err as Error).message);
+            toast.error(
+              "Nem sikerült törölni az eszköz hozzárendelését: " +
+                (err as Error).message
+            );
             break;
           }
         }
       }
       if (assignments.length > 0 && errors === 0) {
-        toast.success("Az összes hozzárendelés eltávolítva az eszközből.");
+        toast.success("Az eszköz eltávolítva a munkáról (a registry-ben megmaradt).");
       }
       await fetchAssignedToolsAndUpdateState();
     }
@@ -236,13 +283,20 @@ const ToolsSlotsSection: React.FC<Props> = ({
   // if (!tools.length) return null;
 
   // Build display list from required tools across IN-PROGRESS work items only (max quantity per name)
-  type DisplayTool = { name: string; required: number; tool: Tool; workItemIds: number[] };
-  const requiredByName: Record<string, { required: number; workItemIds: number[] }> = {};
-  
+  type DisplayTool = {
+    name: string;
+    required: number;
+    tool: Tool;
+    workItemIds: number[];
+  };
+  const requiredByName: Record<
+    string,
+    { required: number; workItemIds: number[] }
+  > = {};
+
   // Show only inProgress workItems in supply section
-  const relevantItems = workItems.filter(wi => wi.inProgress);
-  
-  
+  const relevantItems = workItems.filter((wi) => wi.inProgress);
+
   relevantItems.forEach((wi) => {
     (wi.tools || []).forEach((t) => {
       const name = t.name;
@@ -251,7 +305,10 @@ const ToolsSlotsSection: React.FC<Props> = ({
       if (!requiredByName[name]) {
         requiredByName[name] = { required: q, workItemIds: [wi.id] };
       } else {
-        requiredByName[name].required = Math.max(requiredByName[name].required, q);
+        requiredByName[name].required = Math.max(
+          requiredByName[name].required,
+          q
+        );
         if (!requiredByName[name].workItemIds.includes(wi.id)) {
           requiredByName[name].workItemIds.push(wi.id);
         }
@@ -267,10 +324,14 @@ const ToolsSlotsSection: React.FC<Props> = ({
       const candidate =
         registryCandidates[0] || ({ id: -1, name, quantity: required } as Tool);
       // Ensure the displayed quantity reflects requirement, not registry stock
-      return { name, required, tool: { ...candidate, quantity: required }, workItemIds };
+      return {
+        name,
+        required,
+        tool: { ...candidate, quantity: required },
+        workItemIds,
+      };
     }
   );
-
 
   return (
     <div style={{ marginBottom: 32 }}>
@@ -281,35 +342,50 @@ const ToolsSlotsSection: React.FC<Props> = ({
           // Itt kell meghívni a megfelelő szerver oldali függvényt (pl. addToolToRegistry és createWorkToolsRegistry)
 
           try {
-            const savedTool = await addToolToRegistry(name, quantity, '', name);
-            await createWorkToolsRegistry(workId, savedTool.id, quantity, savedTool.name);
+            const savedTool = await addToolToRegistry(name, quantity, "", name);
+            await createWorkToolsRegistry(
+              workId,
+              savedTool.id,
+              quantity,
+              savedTool.name
+            );
             toast.success("Új eszköz sikeresen hozzáadva!");
             await fetchAssignedToolsAndUpdateState();
           } catch (err) {
-            toast.error("Hiba az eszköz hozzáadásakor: " + (err as Error).message);
+            toast.error(
+              "Hiba az eszköz hozzáadásakor: " + (err as Error).message
+            );
           }
         }}
         workItems={workItems}
       />
-    
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 18, marginTop: 8 }}>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-end",
+          marginBottom: 18,
+          marginTop: 8,
+        }}
+      >
         <Button
           onClick={() => setShowAddToolModal(true)}
           variant="outline"
           aria-label="Új eszköz hozzáadása"
           className="border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
-          style={{ 
-            width: 32, 
-            height: 32, 
-            minWidth: 32, 
-            minHeight: 32, 
-            borderRadius: '50%', 
-            padding: 0, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
+          style={{
+            width: 32,
+            height: 32,
+            minWidth: 32,
+            minHeight: 32,
+            borderRadius: "50%",
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
             fontSize: 18,
-            lineHeight: 1
+            lineHeight: 1,
           }}
         >
           +
@@ -324,9 +400,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
           const hasRegistry = tools.some((t) => t.name === name);
           return (
             <div key={name}>
-              <div
-                className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 relative"
-              >
+              <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 relative">
                 {/* Edit and Delete icons in top right corner */}
                 <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
                   <button
@@ -346,17 +420,31 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       e.stopPropagation();
                       try {
                         // Delete tool only from the workItems that are aggregated
-                        await removeToolFromWorkEverywhere(workId, name, workItemIds);
-                        
-                        toast.success("Az eszköz sikeresen törölve a munkáról!");
+                        await removeToolFromWorkEverywhere(
+                          workId,
+                          name,
+                          workItemIds
+                        );
+
+                        toast.success(
+                          "Az eszköz sikeresen törölve a munkáról!"
+                        );
                         // Update selected tools state
-                        setSelectedTools(prev => prev.filter(id => {
-                          const toolToRemove = tools.find(t => t.id === id);
-                          return !toolToRemove || toolToRemove.name.toLowerCase() !== name.toLowerCase();
-                        }));
+                        setSelectedTools((prev) =>
+                          prev.filter((id) => {
+                            const toolToRemove = tools.find((t) => t.id === id);
+                            return (
+                              !toolToRemove ||
+                              toolToRemove.name.toLowerCase() !==
+                                name.toLowerCase()
+                            );
+                          })
+                        );
                         await fetchAssignedToolsAndUpdateState();
                       } catch (err) {
-                        toast.error("Hiba a törlés során: " + (err as Error).message);
+                        toast.error(
+                          "Hiba a törlés során: " + (err as Error).message
+                        );
                       }
                     }}
                     className="p-1.5"
@@ -366,16 +454,18 @@ const ToolsSlotsSection: React.FC<Props> = ({
                   </button>
                 </div>
 
-                <div 
-                  className="flex items-center gap-2.5"
-                >
+                <div className="flex items-center gap-2.5">
                   <input
                     type="checkbox"
-                    checked={selectedTools.includes(tool.id) || assignedCount >= q}
-                    onChange={e => { e.stopPropagation(); handleToggle(tool.id, name, q); }}
+                    checked={
+                      selectedTools.includes(tool.id) || assignedCount >= q
+                    }
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleToggle(tool.id, name, q);
+                    }}
                     className="mr-2.5 w-[18px] h-[18px] accent-green-600"
-                    disabled={!hasRegistry}
-                    onClick={e => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
                   />
                   <div className="flex-1 font-semibold flex items-center gap-3">
                     <span>{capitalizeWords(name)}</span>
@@ -392,7 +482,14 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       <img
                         src={tool.avatarUrl}
                         alt="tool"
-                        style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', border: '1px solid #ddd', background: '#fafafa' }}
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 6,
+                          objectFit: "cover",
+                          border: "1px solid #ddd",
+                          background: "#fafafa",
+                        }}
                       />
                     )}
                   </div>
@@ -402,7 +499,9 @@ const ToolsSlotsSection: React.FC<Props> = ({
                     {/* Filled green bar */}
                     <div
                       className="bg-green-400 h-4 absolute left-0 top-0 transition-all duration-300"
-                      style={{ width: `${Math.min((assignedCount / q) * 100, 100)}%` }}
+                      style={{
+                        width: `${Math.min((assignedCount / q) * 100, 100)}%`,
+                      }}
                     ></div>
                   </div>
                 </div>
