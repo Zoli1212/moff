@@ -1,4 +1,4 @@
-'use client';
+"use client";
 // Új stílusos AppSidebar arany-sötétszürke témában
 
 import React, { useEffect, useState, useRef } from "react";
@@ -52,8 +52,7 @@ export function AppSidebar() {
   const { signOut } = useClerk();
   const { theme: currentTheme, setTheme } = useThemeStore();
   const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const { isTenant, shouldRefetch, setUserData, clearUserData } =
-    useUserStore();
+  const { isTenant, setUserData, clearUserData } = useUserStore();
   const [subscriptionPlan, setSubscriptionPlan] = useState<string | null>(null);
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [isSuperUserLoading, setIsSuperUserLoading] = useState(true);
@@ -96,7 +95,10 @@ export function AppSidebar() {
         if (userEmail) {
           setUserData(data.isTenant ?? true, userEmail);
           if ("isSuperUser" in data) {
-            console.log("✅ Setting isSuperUser to:", data.isSuperUser ?? false);
+            console.log(
+              "✅ Setting isSuperUser to:",
+              data.isSuperUser ?? false
+            );
             setIsSuperUser(data.isSuperUser ?? false);
           }
         }
@@ -111,7 +113,7 @@ export function AppSidebar() {
         console.log("✅ isSuperUserLoading set to false");
         setIsSuperUserLoading(false);
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.emailAddresses?.[0]?.emailAddress]);
 
   // Fetch subscription plan
@@ -149,6 +151,8 @@ export function AppSidebar() {
 
     setInviteLoading(false);
   };
+
+  console.log(isSuperUserLoading);
 
   return (
     <Sidebar className="bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100 border-r border-gray-700">
@@ -449,18 +453,18 @@ export function AppSidebar() {
             onClick={async () => {
               if (signingOut) return;
               setSigningOut(true);
-              
+
               // Timeout fallback - 3 másodperc után mindenképpen átirányít
               const timeoutId = setTimeout(() => {
                 window.location.href = "/";
               }, 3000);
-              
+
               try {
                 await signOut();
                 clearTimeout(timeoutId);
                 window.location.href = "/";
               } catch (error) {
-                console.log(error)
+                console.log(error);
                 clearTimeout(timeoutId);
                 window.location.href = "/";
               }
