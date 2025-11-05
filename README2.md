@@ -925,5 +925,5 @@ db be új tétel legyen lokálisban!
 Anyag és munkadíjat is jegyezze meg
 Kombo doboz számot és felugró mennyiség egység
 Milyen mennyiségi egységet kombox 
-Magyar ékezet nem jól látszik és csillag sem kell a pdf ben
-utf-8 a pdf ben ő betű
+
+#FE9C00

@@ -81,7 +81,18 @@ const getStatusDisplay = (status: string): string => {
   return statusMap[status] || status;
 };
 
-export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsProps) {
+// Helper function to sanitize text for PDF (remove * and replace ő, ö with o)
+const sanitizeForPdf = (text: string | null | undefined): string => {
+  if (!text) return "";
+  return text
+    .replace(/\*/g, "") // Remove asterisks
+    .replace(/[őö]/g, "o") // Replace ő and ö with o
+    .replace(/[ŐÖ]/g, "O"); // Replace Ő and Ö with O
+};
+
+export default function SocialShareButtonsExcel({
+  offer,
+}: SocialShareButtonsProps) {
   // const pathname = usePathname();
   // const pageUrl = `${window.location.origin}${pathname}`;
 
@@ -165,20 +176,20 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
 
       // Add title
       doc.setFontSize(18);
-      doc.text(offer.title || "Ajánlat", 14, 22);
+      doc.text(sanitizeForPdf(offer.title || "Ajánlat"), 14, 22);
 
       // Add metadata
       doc.setFontSize(10);
       doc.setTextColor(100);
       doc.text(
-        `Létrehozva: ${formatDate(offer.createdAt || new Date())}`,
+        sanitizeForPdf(`Létrehozva: ${formatDate(offer.createdAt || new Date())}`),
         14,
         30
       );
       if (offer.validUntil) {
-        doc.text(`Érvényes: ${formatDate(offer.validUntil)}`, 14, 36);
+        doc.text(sanitizeForPdf(`Érvényes: ${formatDate(offer.validUntil)}`), 14, 36);
       }
-      doc.text(`Státusz: ${getStatusDisplay(offer.status || "draft")}`, 14, 42);
+      doc.text(sanitizeForPdf(`Státusz: ${getStatusDisplay(offer.status || "draft")}`), 14, 42);
 
       let finalY = 50;
 
@@ -209,13 +220,13 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
         // Prepare table data with all 7 columns
         const itemsData = offer.items.map((item, index) => [
           (index + 1).toString(),
-          item.name,
-          item.quantity,
-          item.unit,
-          item.materialUnitPrice || "0 Ft",
-          item.unitPrice || "0 Ft",
-          item.materialTotal || "0 Ft",
-          item.workTotal || "0 Ft",
+          sanitizeForPdf(item.name),
+          sanitizeForPdf(item.quantity),
+          sanitizeForPdf(item.unit),
+          sanitizeForPdf(item.materialUnitPrice || "0 Ft"),
+          sanitizeForPdf(item.unitPrice || "0 Ft"),
+          sanitizeForPdf(item.materialTotal || "0 Ft"),
+          sanitizeForPdf(item.workTotal || "0 Ft"),
         ]);
 
         const autoTableTyped: AutoTableWithPrevious = autoTable;
@@ -223,13 +234,13 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
         // Prepare table headers for all 7 columns
         const head = [
           "#",
-          "Tétel megnevezése",
-          "Mennyiség",
-          "Egység",
-          "Anyag egységár",
-          "Díj egységár",
-          "Anyag összesen",
-          "Díj összesen",
+          sanitizeForPdf("Tétel megnevezése"),
+          sanitizeForPdf("Mennyiség"),
+          sanitizeForPdf("Egység"),
+          sanitizeForPdf("Anyag egységár"),
+          sanitizeForPdf("Díj egységár"),
+          sanitizeForPdf("Anyag összesen"),
+          sanitizeForPdf("Díj összesen"),
         ];
 
         // Add the main table
@@ -295,18 +306,18 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
         const textY3 = boxY + 36;
 
         // Work total
-        doc.text("Munkadíj összesen:", boxX + 10, textY1);
+        doc.text(sanitizeForPdf("Munkadíj összesen:"), boxX + 10, textY1);
         doc.text(
-          `${totals.work.toLocaleString("hu-HU")} Ft`,
+          sanitizeForPdf(`${totals.work.toLocaleString("hu-HU")} Ft`),
           boxX + boxWidth - 10,
           textY1,
           { align: "right" }
         );
 
         // Material cost
-        doc.text("Anyagköltség összesen:", boxX + 10, textY2);
+        doc.text(sanitizeForPdf("Anyagköltség összesen:"), boxX + 10, textY2);
         doc.text(
-          `${totals.material.toLocaleString("hu-HU")} Ft`,
+          sanitizeForPdf(`${totals.material.toLocaleString("hu-HU")} Ft`),
           boxX + boxWidth - 10,
           textY2,
           { align: "right" }
@@ -315,9 +326,9 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
         // Total cost
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Összesített nettó költség:", boxX + 10, textY3);
+        doc.text(sanitizeForPdf("Összesített nettó költség:"), boxX + 10, textY3);
         doc.text(
-          `${(totals.work + totals.material).toLocaleString("hu-HU")} Ft`,
+          sanitizeForPdf(`${(totals.work + totals.material).toLocaleString("hu-HU")} Ft`),
           boxX + boxWidth - 10,
           textY3,
           { align: "right" }
@@ -335,7 +346,7 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
         doc.setFont("helvetica", "normal");
         doc.setTextColor(100);
         doc.text(
-          `Érvényes: ${date.toLocaleDateString("hu-HU")}`,
+          sanitizeForPdf(`Érvényes: ${date.toLocaleDateString("hu-HU")}`),
           14,
           finalY + 15
         );
@@ -403,7 +414,9 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
   return (
     <div className="flex flex-col items-center">
       {/* Megosztás */}
-      <div className="text-xs font-medium text-gray-500 mb-1 text-center">Megosztás</div>
+      <div className="text-xs font-medium text-gray-500 mb-1 text-center">
+        Megosztás
+      </div>
       <div className="flex gap-1.5 mb-1 justify-center">
         <button
           onClick={handleShare}
@@ -411,23 +424,25 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
           className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
         >
           <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 text-gray-600"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
-                      <polyline points="16 6 12 2 8 6" />
-                      <line x1="12" y1="2" x2="12" y2="15" />
-                    </svg>
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-5 w-5 text-gray-600"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" />
+            <polyline points="16 6 12 2 8 6" />
+            <line x1="12" y1="2" x2="12" y2="15" />
+          </svg>
         </button>
       </div>
       {/* Letöltés */}
-      <div className="text-xs font-medium text-gray-500 mb-1 text-center">Letöltés</div>
+      <div className="text-xs font-medium text-gray-500 mb-1 text-center">
+        Letöltés
+      </div>
       <div className="flex gap-1.5 justify-center">
         {/* PDF */}
         <button
@@ -452,7 +467,7 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
             }
           }}
           aria-label="PDF letöltése"
-          className="bg-red-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-red-700 px-3 py-1 text-sm font-semibold"
+          className="bg-[#FE9C00] text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-[#e68a00] px-3 py-1 text-sm font-semibold"
         >
           <FileDigit className="w-4 h-4 mr-2" />
           <span>PDF</span>
@@ -473,50 +488,87 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
                 ["Ajánlat", offer?.title || ""],
                 ["Leírás", offer?.description || ""],
                 ["Státusz", offer?.status || ""],
-                ["Létrehozva", offer?.createdAt ? new Date(offer.createdAt).toLocaleString('hu-HU') : ""],
-                ["Érvényes", offer?.validUntil ? new Date(offer.validUntil).toLocaleDateString('hu-HU') : ""],
-                [""]
+                [
+                  "Létrehozva",
+                  offer?.createdAt
+                    ? new Date(offer.createdAt).toLocaleString("hu-HU")
+                    : "",
+                ],
+                [
+                  "Érvényes",
+                  offer?.validUntil
+                    ? new Date(offer.validUntil).toLocaleDateString("hu-HU")
+                    : "",
+                ],
+                [""],
               ];
               if (offer?.totalPrice) {
-                projectDetails.push(["Összesített nettó költség:", offer.totalPrice.toLocaleString("hu-HU") + " Ft"]);
+                projectDetails.push([
+                  "Összesített nettó költség:",
+                  offer.totalPrice.toLocaleString("hu-HU") + " Ft",
+                ]);
               }
               const wsProject = XLSX.utils.aoa_to_sheet(projectDetails);
-              if (!wsProject['!merges']) wsProject['!merges'] = [];
-              wsProject['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } });
+              if (!wsProject["!merges"]) wsProject["!merges"] = [];
+              wsProject["!merges"].push({
+                s: { r: 0, c: 0 },
+                e: { r: 0, c: 6 },
+              });
 
               // 3. Tételek sheet
               const offerItemsData = [
-                ["Tétel megnevezése", "Mennyiség", "Egység", "Anyag egységár", "Díj egységár", "Anyag összesen", "Díj összesen"],
-                ...(offer?.items || []).map(item => [
+                [
+                  "Tétel megnevezése",
+                  "Mennyiség",
+                  "Egység",
+                  "Anyag egységár",
+                  "Díj egységár",
+                  "Anyag összesen",
+                  "Díj összesen",
+                ],
+                ...(offer?.items || []).map((item) => [
                   item.name,
                   item.quantity,
                   item.unit,
                   item.materialUnitPrice,
                   item.unitPrice,
                   item.materialTotal,
-                  item.workTotal
-                ])
+                  item.workTotal,
+                ]),
               ];
               if (offer?.totalPrice) {
-                offerItemsData.push(["", "", "", "", "", "Összesen:", offer.totalPrice.toLocaleString("hu-HU") + " Ft"]);
+                offerItemsData.push([
+                  "",
+                  "",
+                  "",
+                  "",
+                  "",
+                  "Összesen:",
+                  offer.totalPrice.toLocaleString("hu-HU") + " Ft",
+                ]);
               }
               const wsItems = XLSX.utils.aoa_to_sheet(offerItemsData);
-              wsItems['!cols'] = [
+              wsItems["!cols"] = [
                 { wch: 40 },
                 { wch: 10 },
                 { wch: 8 },
                 { wch: 15 },
                 { wch: 15 },
                 { wch: 15 },
-                { wch: 15 }
+                { wch: 15 },
               ];
 
               XLSX.utils.book_append_sheet(wb, wsProject, "Projekt adatok");
               XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat tételes");
 
               // 4. Excel file generálás és letöltés
-              const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-              const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+              const excelBuffer = XLSX.write(wb, {
+                bookType: "xlsx",
+                type: "array",
+              });
+              const blob = new Blob([excelBuffer], {
+                type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+              });
               const url = URL.createObjectURL(blob);
               const a = document.createElement("a");
               a.href = url;
@@ -527,7 +579,9 @@ export default function SocialShareButtonsExcel({ offer }: SocialShareButtonsPro
               URL.revokeObjectURL(url);
             } catch (error) {
               console.error("Hiba az Excel letöltése közben:", error);
-              alert("Hiba történt az Excel letöltése közben. Kérjük, próbáld újra később.");
+              alert(
+                "Hiba történt az Excel letöltése közben. Kérjük, próbáld újra később."
+              );
             }
           }}
           aria-label="Excel letöltése"
