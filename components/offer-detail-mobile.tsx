@@ -401,16 +401,19 @@ export function OfferDetailView({
 
   // Handle validUntil editing - trigger date input click
   const handleValidUntilEdit = () => {
-    const dateInput = document.getElementById('validUntil-date-input') as HTMLInputElement;
+    const dateInput = document.getElementById(
+      "validUntil-date-input"
+    ) as HTMLInputElement;
     if (dateInput) {
       // Try focus first, then click
       dateInput.focus();
       // Small delay to ensure focus is set
       setTimeout(() => {
-        if (typeof dateInput.showPicker === 'function') {
+        if (typeof dateInput.showPicker === "function") {
           try {
             dateInput.showPicker();
           } catch (e) {
+            console.log(e);
             dateInput.click();
           }
         } else {
@@ -420,7 +423,9 @@ export function OfferDetailView({
     }
   };
 
-  const handleValidUntilChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleValidUntilChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const value = e.target.value;
     if (!value) return;
 
@@ -598,7 +603,7 @@ export function OfferDetailView({
         toast.success(
           `Az ajánlat sikeresen áthelyezve a ${newStatus === "work" ? "munkálatok" : "piszkozatok"} közé!`
         );
-        
+
         // Ha munkába állítottuk, indítsuk el az AI feldolgozást
         if (newStatus === "work" && result.workId) {
           console.log("🚀 AI feldolgozás indítása munkába állítás után...");
@@ -617,7 +622,9 @@ export function OfferDetailView({
             .then(async (aiResult) => {
               if (aiResult && !aiResult.error) {
                 // Frissítjük a work-öt az AI eredménnyel
-                const { updateWorkWithAIResult } = await import("@/actions/work-actions");
+                const { updateWorkWithAIResult } = await import(
+                  "@/actions/work-actions"
+                );
                 await updateWorkWithAIResult(result.workId!, aiResult);
                 console.log("✅ AI feldolgozás sikeres");
               } else {
@@ -628,7 +635,7 @@ export function OfferDetailView({
               console.error("❌ AI feldolgozási hiba:", err);
             });
         }
-        
+
         // Notify parent component about the status change
         if (onStatusChange) {
           onStatusChange(newStatus);
@@ -962,8 +969,8 @@ export function OfferDetailView({
               </div>
             </div>
             <div className="flex flex-col gap-2 mt-6 border-t pt-4">
-              <button 
-                onClick={saveItem} 
+              <button
+                onClick={saveItem}
                 disabled={isSaving}
                 className="w-full px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-opacity hover:opacity-90"
                 style={{
@@ -1059,10 +1066,10 @@ export function OfferDetailView({
             <Button
               onClick={() => setIsStatusDialogOpen(true)}
               variant="outline"
-              style={{ 
-                backgroundColor: '#FEF3E6',
-                color: '#FE9C00',
-                borderColor: '#FE9C00'
+              style={{
+                backgroundColor: "#FEF3E6",
+                color: "#FE9C00",
+                borderColor: "#FE9C00",
               }}
               className="hover:bg-orange-100"
             >
@@ -1209,7 +1216,11 @@ export function OfferDetailView({
                   <input
                     id="validUntil-date-input"
                     type="date"
-                    value={offer.validUntil ? format(new Date(offer.validUntil), 'yyyy-MM-dd') : ''}
+                    value={
+                      offer.validUntil
+                        ? format(new Date(offer.validUntil), "yyyy-MM-dd")
+                        : ""
+                    }
                     onChange={handleValidUntilChange}
                     disabled={isUpdatingValidUntil}
                     className="absolute left-0 opacity-0 w-px h-px"

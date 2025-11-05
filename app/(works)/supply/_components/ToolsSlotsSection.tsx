@@ -397,7 +397,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
           const assignedCount = assignedTools
             .filter((at) => at.toolName === name)
             .reduce((sum, at) => sum + at.quantity, 0);
-          const hasRegistry = tools.some((t) => t.name === name);
+    
           return (
             <div key={name}>
               <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1 relative">
