@@ -145,12 +145,12 @@ export default function WorkforceEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl mx-auto my-auto w-[calc(100%-3rem)]">
-        <DialogHeader>
-          <DialogTitle>Munkás szerkesztése</DialogTitle>
+      <DialogContent className="!w-[calc(100vw-1rem)] !max-w-[calc(100vw-1rem)] sm:!max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl !p-3 sm:!p-6 !gap-3">
+        <DialogHeader className="pr-8">
+          <DialogTitle className="text-base sm:text-lg">Munkás szerkesztése</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-6 overflow-x-hidden">
           {/* Avatar Upload Section */}
           <div className="flex flex-col items-center gap-3 pb-4 border-b">
             <div className="relative">

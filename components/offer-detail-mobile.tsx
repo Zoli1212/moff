@@ -1392,7 +1392,7 @@ export function OfferDetailView({
                             onClick={() => startEditing(index)}
                             className="cursor-pointer hover:bg-gray-100 p-1 rounded"
                           >
-                            {index + 1}. {item.name}
+                            {index + 1}. {item.name.replace(/^\*+\s*/, "")}
                           </div>
                         </div>
                       </div>
