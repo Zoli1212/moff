@@ -34,6 +34,8 @@ export default function WorkforceEditModal({
   onWorkerUpdated,
 }: WorkforceEditModalProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageError, setImageError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     role: "",
@@ -109,14 +111,95 @@ export default function WorkforceEditModal({
     }));
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImageError("");
+    setImageUploading(true);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append("file", file);
+
+      const res = await fetch("/api/upload-avatar", {
+        method: "POST",
+        body: formDataUpload,
+      });
+      const data = await res.json();
+
+      if (data.url) {
+        setFormData((prev) => ({ ...prev, avatarUrl: data.url }));
+        toast.success("Kép sikeresen feltöltve");
+      } else {
+        throw new Error(data.error || "Hiba történt a feltöltésnél.");
+      }
+    } catch (err) {
+      setImageError("Hiba a feltöltés során: " + (err as Error).message);
+      toast.error("Hiba a kép feltöltése során");
+    } finally {
+      setImageUploading(false);
+      e.target.value = "";
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl mx-auto my-auto w-[calc(100%-3rem)]">
         <DialogHeader>
           <DialogTitle>Munkás szerkesztése</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Avatar Upload Section */}
+          <div className="flex flex-col items-center gap-3 pb-4 border-b">
+            <div className="relative">
+              {formData.avatarUrl ? (
+                <div className="relative group">
+                  <img
+                    src={formData.avatarUrl}
+                    alt="Profilkép"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setFormData((prev) => ({ ...prev, avatarUrl: "" }))}
+                    className="absolute -top-2 -right-2 bg-white border border-red-500 text-red-500 rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-50 transition"
+                    title="Kép törlése"
+                  >
+                    ×
+                  </button>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <span className="text-white text-sm font-medium">Csere</span>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                      disabled={imageUploading}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:bg-gray-50 transition">
+                  <span className="text-xs text-gray-500 text-center px-2">
+                    {imageUploading ? "Feltöltés..." : "Kép hozzáadása"}
+                  </span>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={imageUploading}
+                  />
+                </label>
+              )}
+            </div>
+            {imageError && (
+              <div className="text-red-600 text-xs">{imageError}</div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name - Required */}
             <div>
@@ -217,19 +300,6 @@ export default function WorkforceEditModal({
             />
           </div>
 
-          {/* Avatar URL */}
-          <div>
-            <Label htmlFor="avatarUrl">Profilkép URL</Label>
-            <Input
-              id="avatarUrl"
-              type="url"
-              value={formData.avatarUrl}
-              onChange={(e) => handleInputChange("avatarUrl", e.target.value)}
-              placeholder="https://example.com/avatar.jpg"
-              className="mt-1"
-            />
-          </div>
-
           {/* Notes */}
           <div>
             <Label htmlFor="notes">Megjegyzések</Label>
@@ -258,24 +328,28 @@ export default function WorkforceEditModal({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-end space-x-2 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isLoading}
-            >
-              Mégse
-            </Button>
-            <Button
+          <div className="flex flex-col gap-2 pt-4 border-t">
+            <button
               type="submit"
               disabled={
                 isLoading || !formData.name.trim() || !formData.role.trim()
               }
+              className="w-full px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{
+                backgroundColor: "#FE9C00",
+              }}
             >
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin inline" />}
               Mentés
-            </Button>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={isLoading}
+              className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
+            >
+              Mégse
+            </button>
           </div>
         </form>
       </DialogContent>

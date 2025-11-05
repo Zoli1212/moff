@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,6 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
   const [avatarPreview, setAvatarPreview] = useState<string>("");
   const [avatarUploading, setAvatarUploading] = useState<boolean>(false);
   const [avatarError, setAvatarError] = useState<string>("");
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [loading, setLoading] = useState(false);
   const [isConfirmOpen, setConfirmOpen] = useState(false);
 
@@ -111,14 +110,110 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
             )}
           </div>
 
-          {/* Worker info display - non-editable */}
+          {/* Worker info display with editable avatar */}
           <div className="flex flex-col items-center gap-3 pb-4 border-b">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={avatarPreview || avatarUrl || "/worker.jpg"}
-              alt="Worker avatar"
-              className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 shadow-md"
-            />
+            <div className="relative">
+              {avatarPreview || avatarUrl ? (
+                <div className="relative group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={avatarPreview || avatarUrl}
+                    alt="Worker avatar"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { 
+                      setAvatarPreview(""); 
+                      setAvatarUrl(""); 
+                      setAvatarError(""); 
+                    }}
+                    className="absolute -top-2 -right-2 bg-white border border-red-500 text-red-500 rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-50 transition"
+                    title="Kép törlése"
+                  >
+                    ×
+                  </button>
+                  <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <span className="text-white text-sm font-medium">Csere</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={avatarUploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setAvatarError("");
+                        setAvatarUploading(true);
+                        setAvatarPreview(URL.createObjectURL(file));
+                        try {
+                          const formData = new FormData();
+                          formData.append("file", file);
+                          const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });
+                          const data = await res.json();
+                          if (data.url) {
+                            setAvatarUrl(data.url);
+                          } else {
+                            setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                            setAvatarUrl("");
+                            setAvatarPreview("");
+                          }
+                        } catch (err) {
+                          setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
+                          setAvatarUrl("");
+                          setAvatarPreview("");
+                        } finally {
+                          setAvatarUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:bg-gray-50 transition">
+                  <span className="text-xs text-gray-500 text-center px-2">
+                    {avatarUploading ? "Feltöltés..." : "Kép hozzáadása"}
+                  </span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={avatarUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setAvatarError("");
+                      setAvatarUploading(true);
+                      setAvatarPreview(URL.createObjectURL(file));
+                      try {
+                        const formData = new FormData();
+                        formData.append("file", file);
+                        const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });
+                        const data = await res.json();
+                        if (data.url) {
+                          setAvatarUrl(data.url);
+                        } else {
+                          setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                          setAvatarUrl("");
+                          setAvatarPreview("");
+                        }
+                      } catch (err) {
+                        setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
+                        setAvatarUrl("");
+                        setAvatarPreview("");
+                      } finally {
+                        setAvatarUploading(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+            {avatarError && (
+              <div className="text-red-600 text-xs">{avatarError}</div>
+            )}
             <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{name || "Névtelen munkás"}</h3>
               {phone && (
@@ -134,113 +229,6 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
             </div>
           </div>
 
-          {/* Editable fields below - HIDDEN */}
-          <div style={{ display: "none" }}>
-            <label className="block text-sm font-medium mb-1">Név</label>
-            <input
-              className="w-full border rounded px-2 py-1"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "none" }}>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              className="w-full border rounded px-2 py-1"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "none" }}>
-            <label className="block text-sm font-medium mb-1">Telefon</label>
-            <input
-              className="w-full border rounded px-2 py-1"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </div>
-          <div style={{ display: "none" }}>
-            <label className="block text-sm font-medium mb-1">Szakma</label>
-            <input
-              className="w-full border rounded px-2 py-1"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            />
-          </div>
-          {/* Avatar upload with preview - polished UI - HIDDEN */}
-          <div style={{ display: "none" }}>
-            <label className="block text-sm font-medium mb-1">Profilkép</label>
-            <div className="flex items-center gap-4 mt-1">
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={avatarPreview || avatarUrl || "/worker.jpg"}
-                  alt="Avatar preview"
-                  className="w-24 h-24 rounded-full object-cover border border-[#e6e6e6] shadow-sm"
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black text-white rounded-full px-3 py-0.5 text-[12px] shadow"
-                >
-                  {avatarPreview || avatarUrl ? "Csere" : "Kép feltöltése"}
-                </button>
-                {(avatarPreview || avatarUrl) && (
-                  <button
-                    type="button"
-                    onClick={() => { setAvatarPreview(""); setAvatarUrl(""); setAvatarError(""); }}
-                    title="Profilkép törlése"
-                    className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-[#ddd] text-red-600 inline-flex items-center justify-center shadow"
-                  >
-                    ×
-                  </button>
-                )}
-              </div>
-              <div className="flex-1">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-                    setAvatarError("");
-                    setAvatarUploading(true);
-                    setAvatarPreview(URL.createObjectURL(file));
-                    try {
-                      const formData = new FormData();
-                      formData.append("file", file);
-                      const res = await fetch("/api/upload-avatar", { method: "POST", body: formData });
-                      const data = await res.json();
-                      if (data.url) {
-                        setAvatarUrl(data.url);
-                      } else {
-                        setAvatarError(data.error || "Hiba történt a feltöltésnél.");
-                        setAvatarUrl("");
-                        setAvatarPreview("");
-                      }
-                    } catch (err) {
-                      setAvatarError("Hiba a feltöltés során: " + (err as Error).message);
-                      setAvatarUrl("");
-                      setAvatarPreview("");
-                    } finally {
-                      setAvatarUploading(false);
-                    }
-                  }}
-                  className="hidden"
-                />
-                <div className="text-xs text-[#666]">PNG vagy JPG, max 5MB</div>
-                {avatarUploading && (
-                  <div className="mt-2 h-1.5 bg-[#f1f1f1] rounded-full overflow-hidden">
-                    <div className="w-full h-full bg-gradient-to-r from-[#0070f3] to-[#42a5f5] animate-pulse"></div>
-                  </div>
-                )}
-                {avatarError && <div className="text-red-600 text-xs mt-2">{avatarError}</div>}
-              </div>
-            </div>
-          </div>
           <DialogFooter className="flex flex-row justify-center mt-2">
             <Button
               type="button"

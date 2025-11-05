@@ -85,12 +85,6 @@ export function AppSidebar() {
       setIsSuperUserLoading(false);
       return;
     }
-    
-    // Csak akkor frissítünk, ha megváltozott a felhasználó vagy nincs cache
-    if (!shouldRefetch(userEmail)) {
-      setIsSuperUserLoading(false);
-      return;
-    }
 
     hasLoadedUserData.current = true;
     setIsSuperUserLoading(true);
@@ -98,19 +92,23 @@ export function AppSidebar() {
     // Háttérben frissítjük az adatokat (nem blokkolja a UI-t)
     getCurrentUserData()
       .then((data) => {
+        console.log("🔍 getCurrentUserData result:", data);
         if (userEmail) {
           setUserData(data.isTenant ?? true, userEmail);
           if ("isSuperUser" in data) {
+            console.log("✅ Setting isSuperUser to:", data.isSuperUser ?? false);
             setIsSuperUser(data.isSuperUser ?? false);
           }
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("❌ getCurrentUserData error:", error);
         if (userEmail) {
           setUserData(true, userEmail);
         }
       })
       .finally(() => {
+        console.log("✅ isSuperUserLoading set to false");
         setIsSuperUserLoading(false);
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -290,8 +288,8 @@ export function AppSidebar() {
               );
             })}
 
-            {/* Meghívás gomb - csak superUser-eknek, de mindig látható loading alatt */}
-            {!isSuperUserLoading && isSuperUser && (
+            {/* Meghívás gomb - csak superUser-eknek */}
+            {isSuperUser && (
               <button
                 onClick={handleGenerateInvite}
                 disabled={inviteLoading}

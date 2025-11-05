@@ -830,11 +830,11 @@ export function OfferDetailView({
       <div className="flex flex-col h-full" id="printable-area">
         {/* Edit Item Modal */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[425px] rounded-2xl flex flex-col max-h-[90vh] mx-auto my-auto w-[calc(100%-3rem)]">
             <DialogHeader>
               <DialogTitle>Tétel szerkesztése</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Megnevezés
@@ -922,17 +922,24 @@ export function OfferDetailView({
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
+            <div className="flex flex-col gap-2 mt-6 border-t pt-4">
+              <button 
+                onClick={saveItem} 
+                disabled={isSaving}
+                className="w-full px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-opacity hover:opacity-90"
+                style={{
+                  backgroundColor: "#FE9C00",
+                }}
+              >
+                {isSaving ? "Mentés..." : "Mentés"}
+              </button>
+              <button
                 onClick={cancelEditing}
                 disabled={isSaving}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
                 Mégse
-              </Button>
-              <Button onClick={saveItem} disabled={isSaving}>
-                {isSaving ? "Mentés..." : "Mentés"}
-              </Button>
+              </button>
             </div>
           </DialogContent>
         </Dialog>
