@@ -800,14 +800,16 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
     // Calculate new totals
     const totals = items.reduce(
       (acc, item) => {
-        const material =
-          parseFloat(
-            item.materialTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
-          ) || 0;
-        const work =
-          parseFloat(
-            item.workTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
-          ) || 0;
+        const material = typeof item.materialTotal === 'string'
+          ? parseFloat(
+              item.materialTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
+            ) || 0
+          : parseFloat(String(item.materialTotal)) || 0;
+        const work = typeof item.workTotal === 'string'
+          ? parseFloat(
+              item.workTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
+            ) || 0
+          : parseFloat(String(item.workTotal)) || 0;
         return {
           material: acc.material + material,
           work: acc.work + work,
