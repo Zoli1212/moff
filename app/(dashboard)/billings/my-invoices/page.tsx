@@ -222,89 +222,85 @@ export default function MyInvoicesPage() {
                           </div>
 
                           <p className="text-sm text-gray-500">
-                            {workBillings.length} számla
+                            {workBillings.filter((b) => b.status !== "draft").length} számla
+                            {workBillings.filter((b) => b.status === "draft").length > 0 && (
+                              <span className="ml-2">
+                                • {workBillings.filter((b) => b.status === "draft").length} piszkozat
+                              </span>
+                            )}
                           </p>
-                          
-                          {draftAmount > 0 && (
-                            <div className="text-xs text-gray-500">
-                              Piszkozat:{" "}
-                              {new Intl.NumberFormat("hu-HU", {
-                                style: "currency",
-                                currency: "HUF",
-                                maximumFractionDigits: 0,
-                              }).format(draftAmount)}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </button>
 
                     {isExpanded && (
                       <div className="border-t bg-gray-50 p-4 space-y-3">
-                        {workBillings.map((billing, index) => {
-                          // Calculate invoice number within this work
-                          const invoiceNumberInWork = index + 1;
+                        {workBillings
+                          .filter((b) => b.status !== "draft")
+                          .map((billing, index) => {
+                            // Calculate invoice number within this work (excluding drafts)
+                            const invoiceNumberInWork = index + 1;
 
-                          // Determine label based on status
-                          const invoiceLabel =
-                            billing.status === "paid_cash"
-                              ? "Pénzügyileg teljesített"
-                              : "Számla";
+                            // Determine label based on status
+                            const invoiceLabel =
+                              billing.status === "paid_cash"
+                                ? "Pénzügyileg teljesített"
+                                : "Számla";
 
-                          return (
-                            <div
-                              key={billing.id}
-                              className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow ml-4"
-                              onClick={() => {
-                                setSelectedBilling({
-                                  ...billing,
-                                  workTitle,
-                                  invoiceLabel,
-                                  invoiceNumberInWork,
-                                });
-                                setShowModal(true);
-                              }}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <h3 className="font-medium text-[#FE9C00]">
-                                    {invoiceLabel} {invoiceNumberInWork}
-                                  </h3>
-                                  <div className="text-sm text-gray-500 mt-1">
-                                    {new Date(
-                                      billing.createdAt
-                                    ).toLocaleDateString("hu-HU")}
-                                    {billing.invoiceNumber && (
-                                      <span className="ml-2">
-                                        • Számlaszám: {billing.invoiceNumber}
-                                      </span>
-                                    )}
+                            return (
+                              <div
+                                key={billing.id}
+                                className="bg-white rounded-lg shadow-sm p-4 cursor-pointer hover:shadow-md transition-shadow ml-4"
+                                onClick={() => {
+                                  setSelectedBilling({
+                                    ...billing,
+                                    workTitle,
+                                    invoiceLabel,
+                                    invoiceNumberInWork,
+                                  });
+                                  setShowModal(true);
+                                }}
+                              >
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h3 className="font-medium text-[#FE9C00]">
+                                      {invoiceLabel} {invoiceNumberInWork}
+                                    </h3>
+                                    <div className="text-sm text-gray-500 mt-1">
+                                      {new Date(
+                                        billing.createdAt
+                                      ).toLocaleDateString("hu-HU")}
+                                      {billing.invoiceNumber && (
+                                        <span className="ml-2">
+                                          • Számlaszám: {billing.invoiceNumber}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  {billing.status !== "paid_cash" && (
+                                    <span
+                                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                        billing.status === "pending"
+                                          ? "bg-green-100 text-green-800"
+                                          : "bg-blue-100 text-blue-800"
+                                      }`}
+                                    >
+                                      {getStatusDisplay(billing.status)}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-2 flex justify-end">
+                                  <div className="font-semibold text-gray-900">
+                                    {new Intl.NumberFormat("hu-HU", {
+                                      style: "currency",
+                                      currency: "HUF",
+                                      maximumFractionDigits: 0,
+                                    }).format(billing.totalPrice)}
                                   </div>
                                 </div>
-                                {billing.status !== "paid_cash" && (
-                                  <span
-                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                      billing.status === "pending"
-                                        ? "bg-green-100 text-green-800"
-                                        : "bg-blue-100 text-blue-800"
-                                    }`}
-                                  >
-                                    {getStatusDisplay(billing.status)}
-                                  </span>
-                                )}
                               </div>
-                              <div className="mt-2 flex justify-end">
-                                <div className="font-semibold text-gray-900">
-                                  {new Intl.NumberFormat("hu-HU", {
-                                    style: "currency",
-                                    currency: "HUF",
-                                    maximumFractionDigits: 0,
-                                  }).format(billing.totalPrice)}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                       </div>
                     )}
                   </div>

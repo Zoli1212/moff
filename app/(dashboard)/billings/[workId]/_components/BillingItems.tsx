@@ -419,94 +419,66 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 </div>
               </div>
 
-              {/* Desktop layout */}
-              <div className="mt-4 hidden sm:grid grid-cols-3 gap-4 text-sm">
-                <div className="col-span-1 font-medium text-gray-500">
-                  Egységár ({item.unit})
-                </div>
-                <div className="col-span-1 text-right text-gray-700">ANYAG</div>
-                <div className="col-span-1 text-right text-gray-700">DÍJ</div>
-
-                <div></div>
-                <div className="text-right">
-                  {formatCurrency(
-                    typeof item.materialUnitPrice === "number"
-                      ? item.materialUnitPrice
-                      : parseCurrency(String(item.materialUnitPrice || 0))
-                  )}
-                </div>
-                <div className="text-right">
-                  {formatCurrency(
-                    typeof item.unitPrice === "number"
-                      ? item.unitPrice
-                      : parseCurrency(String(item.unitPrice || 0))
-                  )}
-                </div>
-
-                <div className="col-span-1 font-medium text-gray-500">
-                  {item.quantity} {item.unit}
-                </div>
-                <div className="col-span-1 text-right font-semibold text-gray-900">
-                  {formatCurrency(
-                    typeof item.materialTotal === "number"
-                      ? item.materialTotal
-                      : parseCurrency(String(item.materialTotal || 0))
-                  )}
-                </div>
-                <div className="col-span-1 text-right font-semibold text-gray-900">
-                  {formatCurrency(
-                    typeof item.workTotal === "number"
-                      ? item.workTotal
-                      : parseCurrency(String(item.workTotal || 0))
-                  )}
-                </div>
-              </div>
-
-              {/* Mobile layout */}
-              <div className="mt-4 sm:hidden space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="font-medium text-gray-500">Mennyiség:</span>
-                  <span className="font-semibold">
-                    {item.quantity} {item.unit}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">ANYAG</div>
-                    <div className="text-sm">
-                      {formatCurrency(
-                        typeof item.materialUnitPrice === "number"
-                          ? item.materialUnitPrice
-                          : parseCurrency(String(item.materialUnitPrice || 0))
-                      )}
-                      /db
-                    </div>
-                    <div className="font-semibold text-gray-900">
-                      {formatCurrency(
-                        typeof item.materialTotal === "number"
-                          ? item.materialTotal
-                          : parseCurrency(String(item.materialTotal || 0))
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">MUNKADÍJ</div>
-                    <div className="text-sm">
-                      {formatCurrency(
-                        typeof item.unitPrice === "number"
-                          ? item.unitPrice
-                          : parseCurrency(String(item.unitPrice || 0))
-                      )}
-                      /db
-                    </div>
-                    <div className="font-semibold text-gray-900">
-                      {formatCurrency(
-                        typeof item.workTotal === "number"
-                          ? item.workTotal
-                          : parseCurrency(String(item.workTotal || 0))
-                      )}
-                    </div>
-                  </div>
+              {/* Price Grid - Same layout as offer-detail-mobile */}
+              <div className="mt-3 text-sm">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full">
+                    <thead>
+                      <tr>
+                        <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                        <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Anyag
+                        </th>
+                        <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Díj
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      <tr>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
+                          Egységár ({item.unit})
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap text-right">
+                          {formatNumberWithSpace(
+                            typeof item.materialUnitPrice === "number"
+                              ? item.materialUnitPrice
+                              : parseCurrency(String(item.materialUnitPrice || 0))
+                          )} Ft
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap text-right">
+                          {formatNumberWithSpace(
+                            typeof item.unitPrice === "number"
+                              ? item.unitPrice
+                              : parseCurrency(String(item.unitPrice || 0))
+                          )} Ft
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
+                          <div className="text-sm text-gray-500 mt-1">
+                            <div className="text-gray-900 font-bold">
+                              {item.quantity} {item.unit}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
+                          {formatNumberWithSpace(
+                            typeof item.materialTotal === "number"
+                              ? item.materialTotal
+                              : parseCurrency(String(item.materialTotal || 0))
+                          )} Ft
+                        </td>
+                        <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
+                          {formatNumberWithSpace(
+                            typeof item.workTotal === "number"
+                              ? item.workTotal
+                              : parseCurrency(String(item.workTotal || 0))
+                          )} Ft
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </div>
               </div>
 
