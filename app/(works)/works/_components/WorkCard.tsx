@@ -86,6 +86,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
         toast.error(result.error || "Hiba történt a törlés során");
       }
     } catch (error) {
+      console.log(error)
       toast.error("Hiba történt a törlés során");
     } finally {
       setIsDeleting(false);
