@@ -574,6 +574,10 @@ export async function markAsPaidCash(billingId: number) {
       });
       
       console.log(`✅ [markAsPaidCash] Work #${workIdToUpdate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`);
+      
+      // Frissítjük a Work aggregált értékeit (totalCompleted, totalBilled, totalBillable)
+      await recalculateWorkTotals(workIdToUpdate, tenantEmail);
+      console.log(`✅ [markAsPaidCash] Work #${workIdToUpdate} totals recalculated`);
     }
 
     return {

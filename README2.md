@@ -638,3 +638,13 @@ Kombo doboz számot és felugró mennyiség egység
 Milyen mennyiségi egységet kombox 
 
 #FE9C00
+----
+Nem táródik vissza a drawer profil, előfizetés
+Számlázott számlázható
+Piszkozatot is el kelljen menteni, e hozzon létre ennyit
+Ugyanúgy nézzen ki ahogy az ajánlatban van, a számláknál is az legyen,
+mindenhol ugyanúgy
+nem összesen kell hanem Számlázható
+billing/[id] ugyanúgy nézzen ki mint az offernél
+számlázott 
+Eddig számlázott - Teljesített ugy nézzen ki mint az offertett

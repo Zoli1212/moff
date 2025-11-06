@@ -189,7 +189,7 @@ export default function MyInvoicesPage() {
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                                Teljesített:
+                                Eddig számlázott:
                               </span>
                               <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 whitespace-nowrap">
                                 {new Intl.NumberFormat("hu-HU", {
