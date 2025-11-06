@@ -1157,3 +1157,31 @@ export async function recalculateWorkTotals(
     // Ne dobjunk hibát - ne blokkoljuk a fő műveletet
   }
 }
+
+/**
+ * Set processingByAI flag for a work and revalidate the /works page
+ */
+export async function setWorkProcessingFlag(workId: number, processing: boolean) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+    
+    await prisma.work.update({
+      where: { 
+        id: workId,
+        tenantEmail: tenantEmail,
+      },
+      data: { 
+        processingByAI: processing,
+      },
+    });
+    
+    // Revalidate the /works page so the UI updates
+    revalidatePath("/works");
+    
+    console.log(`✅ Work #${workId} processingByAI set to ${processing}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ Error setting processingByAI for work #${workId}:`, error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}

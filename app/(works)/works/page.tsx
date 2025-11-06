@@ -1,11 +1,13 @@
 "use client";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { getUserWorks, initializeAllWorkTotals } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
+import { checkStuckProcessingWorks } from "@/actions/work-cleanup-actions";
 import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
 import WorksAutoUpdater from "./_components/WorksAutoUpdater";
 import WorksSkeletonLoader from "../_components/WorksSkeletonLoader";
+import { useRouter } from "next/navigation";
 
 // Minimal Work típus, hogy ne legyen 'any'
 export type Work = {
@@ -19,17 +21,19 @@ export type Work = {
   financialPlanned?: number | null;
   urgentTask?: string;
   urgentLevel?: "warning" | "danger";
+  processingByAI?: boolean;
   [key: string]: unknown;
 };
 
 function toCardProps(
   work: Work,
   workStates: Record<string | number, string>,
-  isTenant: boolean
+  isTenant: boolean,
+  isStuck: boolean = false
 ): WorkCardProps {
   const workState = workStates[work.id];
   const isUpdating = workState === "updating";
-  const isDisabled = isUpdating;
+  const isDisabled = isUpdating || work.processingByAI === true;
 
   return {
     ...work,
@@ -64,18 +68,33 @@ function toCardProps(
     totalQuantity: (work.totalQuantity as number) || 0,
     isUpdating,
     isDisabled,
+    processingByAI: work.processingByAI === true,
+    isStuck,
     isTenant,
   };
 }
 
 const WorkListPage = () => {
+  const router = useRouter();
   const [works, setWorks] = useState<Work[]>([]);
   const [workStates, setWorkStates] = useState<Record<string | number, string>>(
     {}
   );
+  const [stuckWorkIds, setStuckWorkIds] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isTenant, setIsTenant] = useState<boolean>(true);
+
+  const fetchWorks = useCallback(async () => {
+    try {
+      const fetchedWorks = await getUserWorks();
+      setWorks(fetchedWorks);
+    } catch {
+      setWorks([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   React.useEffect(() => {
     // Get user tenant status
@@ -87,18 +106,48 @@ const WorkListPage = () => {
         setIsTenant(true);
       });
 
-    const fetchWorks = async () => {
-      try {
-        const fetchedWorks = await getUserWorks();
-        setWorks(fetchedWorks);
-      } catch {
-        setWorks([]);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchWorks();
-  }, []);
+  }, [fetchWorks]);
+
+  // Auto-refresh every 3 seconds if there are works being processed
+  useEffect(() => {
+    const hasProcessingWorks = works.some(
+      (w) => w.processingByAI === true || w.updatedByAI !== true
+    );
+
+    if (!hasProcessingWorks) return;
+
+    const startTime = Date.now();
+    const maxDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+    const interval = setInterval(async () => {
+      const elapsed = Date.now() - startTime;
+      
+      // Stop after 5 minutes
+      if (elapsed >= maxDuration) {
+        console.log("⏱️ Auto-refresh stopped after 5 minutes");
+        clearInterval(interval);
+        return;
+      }
+
+      console.log("🔄 Auto-refreshing works...");
+      
+      // Check for stuck works every 30 seconds
+      if (Math.floor(elapsed / 1000) % 30 === 0) {
+        console.log("🔍 Checking for stuck works...");
+        const checkResult = await checkStuckProcessingWorks();
+        if (checkResult.success && checkResult.stuckWorkIds.length > 0) {
+          console.log(`⚠️ Found ${checkResult.stuckWorkIds.length} stuck work(s)`);
+          setStuckWorkIds(checkResult.stuckWorkIds);
+        }
+      }
+      
+      router.refresh();
+      fetchWorks();
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [works, router, fetchWorks]);
 
   const handleWorkStateChange = useCallback(
     (
@@ -241,7 +290,8 @@ const WorkListPage = () => {
           </div>
         ) : (
           activeWorks.map((work) => {
-            const cardProps = toCardProps(work, workStates, isTenant);
+            const isStuck = stuckWorkIds.includes(Number(work.id));
+            const cardProps = toCardProps(work, workStates, isTenant, isStuck);
             const isDisabled = cardProps.isDisabled;
 
             if (isDisabled) {

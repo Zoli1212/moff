@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useRef } from "react";
-import { updateWorkWithAIResult } from "@/actions/work-actions";
+import { updateWorkWithAIResult, setWorkProcessingFlag } from "@/actions/work-actions";
 import { toast } from "sonner";
 import { OfferItem } from "@/types/offer.types";
 
@@ -48,6 +48,20 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
       processedRef.current = false;
       return;
     }
+
+    // Check if there are any works that need processing (not already done/failed/updating)
+    const needsProcessing = notUpdated.filter(
+      (work) =>
+        !updatingIdsRef.current.has(work.id) &&
+        !doneIdsRef.current.has(work.id) &&
+        !failedIdsRef.current.has(work.id)
+    );
+
+    // If nothing needs processing, don't start the update loop
+    if (needsProcessing.length === 0) {
+      return;
+    }
+
     setShowStatus(true);
 
     // Process multiple works concurrently, but limit to 2 at a time to avoid overwhelming
@@ -89,10 +103,16 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
             failedIdsRef.current.add(next.id);
             onWorkStateChange?.(next.id, "failed");
             setErrorMsg(msg);
+            
+            // Set processingByAI to false on error
+            await setWorkProcessingFlag(Number(next.id), false);
           } else {
             toast.success(`Frissítés megtörtént`);
             doneIdsRef.current.add(next.id);
             onWorkStateChange?.(next.id, "done");
+            
+            // Set processingByAI to false on success
+            await setWorkProcessingFlag(Number(next.id), false);
           }
         } else {
           const msg = `Work ${next.id}: ${data?.error || "AI processing error!"}`;
@@ -100,6 +120,9 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
           failedIdsRef.current.add(next.id);
           onWorkStateChange?.(next.id, "failed");
           setErrorMsg(msg);
+          
+          // Set processingByAI to false on error
+          await setWorkProcessingFlag(Number(next.id), false);
         }
       } catch (err) {
         const msg = `Work ${next.id} network error: ${(err as Error).message}`;
@@ -107,6 +130,9 @@ const WorksAutoUpdater: React.FC<WorksAutoUpdaterProps> = ({
         failedIdsRef.current.add(next.id);
         onWorkStateChange?.(next.id, "failed");
         setErrorMsg(msg);
+        
+        // Set processingByAI to false on error
+        await setWorkProcessingFlag(Number(next.id), false);
       } finally {
         updatingIdsRef.current.delete(next.id);
       }

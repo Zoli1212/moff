@@ -627,12 +627,26 @@ export function OfferDetailView({
                 );
                 await updateWorkWithAIResult(result.workId!, aiResult);
                 console.log("✅ AI feldolgozás sikeres");
+                
+                // Frissítjük a processingByAI flag-et false-ra server action-nel
+                const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+                await setWorkProcessingFlag(result.workId!, false);
               } else {
                 console.error("❌ AI feldolgozási hiba:", aiResult?.error);
+                // Hiba esetén is állítsuk false-ra a flag-et
+                const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+                await setWorkProcessingFlag(result.workId!, false);
               }
             })
-            .catch((err) => {
+            .catch(async (err) => {
               console.error("❌ AI feldolgozási hiba:", err);
+              // Hiba esetén is állítsuk false-ra a flag-et
+              try {
+                const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+                await setWorkProcessingFlag(result.workId!, false);
+              } catch (dbErr) {
+                console.error("❌ DB frissítési hiba:", dbErr);
+              }
             });
         }
 
