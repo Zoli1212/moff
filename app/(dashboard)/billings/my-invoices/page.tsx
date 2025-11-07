@@ -17,6 +17,7 @@ interface BillingItem {
   workTotal?: number;
   totalPrice?: number;
   unitPrice?: number;
+  materialUnitPrice?: number;
 }
 
 interface BillingWithWork extends Billing {
@@ -29,9 +30,6 @@ interface BillingWithWork extends Billing {
 }
 
 interface SelectedBillingData extends Billing {
-  work?: {
-    title: string;
-  };
   workTitle: string;
   invoiceLabel: string;
   invoiceNumberInWork: number;
@@ -185,7 +183,7 @@ export default function MyInvoicesPage() {
                           <h2 className="text-lg font-semibold text-[#FE9C00]">
                             {workTitle}
                           </h2>
-                          
+
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
@@ -222,10 +220,21 @@ export default function MyInvoicesPage() {
                           </div>
 
                           <p className="text-sm text-gray-500">
-                            {workBillings.filter((b) => b.status !== "draft").length} számla
-                            {workBillings.filter((b) => b.status === "draft").length > 0 && (
+                            {
+                              workBillings.filter((b) => b.status !== "draft")
+                                .length
+                            }{" "}
+                            számla
+                            {workBillings.filter((b) => b.status === "draft")
+                              .length > 0 && (
                               <span className="ml-2">
-                                • {workBillings.filter((b) => b.status === "draft").length} piszkozat
+                                •{" "}
+                                {
+                                  workBillings.filter(
+                                    (b) => b.status === "draft"
+                                  ).length
+                                }{" "}
+                                piszkozat
                               </span>
                             )}
                           </p>
@@ -314,15 +323,14 @@ export default function MyInvoicesPage() {
       {/* Invoice Details Modal */}
       {showModal && selectedBilling && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b p-4 flex justify-between items-start">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">
-                  {selectedBilling.workTitle} - {selectedBilling.invoiceLabel}{" "}
-                  {selectedBilling.invoiceNumberInWork}
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-[#FE9C00] to-[#FE9C00]/90 p-4 flex justify-between items-start rounded-t-2xl">
+              <div className="flex-1">
+                <h2 className="text-xl font-bold text-white">
+                  {selectedBilling.workTitle}
                 </h2>
-                <div className="text-sm text-gray-500 mt-1">
-                  Kelte:{" "}
+                <div className="text-sm text-white/90 mt-2">
                   {new Date(selectedBilling.createdAt).toLocaleDateString(
                     "hu-HU"
                   )}
@@ -335,58 +343,104 @@ export default function MyInvoicesPage() {
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-white hover:text-white/80 transition-colors"
               >
                 <X className="h-6 w-6" />
               </button>
             </div>
 
-            <div className="p-4">
-              <h3 className="font-semibold text-gray-900 mb-3">
-                Számlázott tételek:
-              </h3>
+            <div className="p-4 space-y-4">
+              {/* Items */}
               {Array.isArray(selectedBilling.items) &&
               selectedBilling.items.length > 0 ? (
-                <div className="space-y-2">
+                <div className="space-y-4">
                   {(selectedBilling.items as unknown as BillingItem[]).map(
                     (item: BillingItem, index: number) => (
                       <div
                         key={index}
-                        className="border rounded-lg p-3 bg-gray-50"
+                        className="border border-gray-200 rounded-lg p-4 bg-white"
                       >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="font-medium text-gray-900">
-                              {item.name}
-                            </div>
-                            {item.description && (
-                              <div className="text-sm text-gray-600 mt-1">
-                                {item.description}
-                              </div>
-                            )}
-                            <div className="text-sm text-gray-500 mt-1">
-                              Mennyiség: {item.quantity} {item.unit || "db"}
-                            </div>
+                        <h3 className="font-semibold text-gray-900 mb-3">
+                          {index + 1}. {item.name}
+                        </h3>
+
+                        {item.description && (
+                          <div className="text-sm text-gray-600 mb-3 pb-3 border-b">
+                            {item.description}
                           </div>
-                          <div className="text-right ml-4">
-                            <div className="font-semibold text-gray-900">
-                              {new Intl.NumberFormat("hu-HU", {
-                                style: "currency",
-                                currency: "HUF",
-                                maximumFractionDigits: 0,
-                              }).format(
-                                item.totalPrice ||
-                                  item.quantity * (item.unitPrice || 0)
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                              {new Intl.NumberFormat("hu-HU", {
-                                style: "currency",
-                                currency: "HUF",
-                                maximumFractionDigits: 0,
-                              }).format(item.unitPrice || 0)}{" "}
-                              / {item.unit || "db"}
-                            </div>
+                        )}
+
+                        {/* Price Grid - Same layout as offer-detail-mobile */}
+                        <div className="mt-3 text-sm">
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full">
+                              <thead>
+                                <tr>
+                                  <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                                  <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Anyag
+                                  </th>
+                                  <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Díj
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-gray-200">
+                                <tr>
+                                  <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
+                                    Egységár ({item.unit || "db"})
+                                  </td>
+                                  <td className="px-2 py-1 whitespace-nowrap text-right text-gray-600">
+                                    {new Intl.NumberFormat("hu-HU", {
+                                      style: "currency",
+                                      currency: "HUF",
+                                      maximumFractionDigits: 0,
+                                    }).format(item.materialUnitPrice || 0)}
+                                  </td>
+                                  <td className="px-2 py-1 whitespace-nowrap text-right text-gray-600">
+                                    {new Intl.NumberFormat("hu-HU", {
+                                      style: "currency",
+                                      currency: "HUF",
+                                      maximumFractionDigits: 0,
+                                    }).format(item.unitPrice || 0)}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
+                                    <div className="py-1 whitespace-nowrap text-sm font-normal text-gray-900">
+                                      Számlázott mennyiség
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900">
+                                      {item.quantity} {item.unit || "db"}
+                                    </div>
+                                  </td>
+                                  <td className="px-2 py-1 whitespace-nowrap text-right">
+                                    <div className="text-xs text-gray-500 uppercase tracking-wider">
+                                      Anyag
+                                    </div>
+                                    <div className="text-sm font-normal text-gray-600">
+                                      {new Intl.NumberFormat("hu-HU", {
+                                        style: "currency",
+                                        currency: "HUF",
+                                        maximumFractionDigits: 0,
+                                      }).format(item.materialTotal || 0)}
+                                    </div>
+                                  </td>
+                                  <td className="px-2 py-1 whitespace-nowrap text-right">
+                                    <div className="text-xs text-gray-500 uppercase tracking-wider">
+                                      Díj
+                                    </div>
+                                    <div className="text-sm font-normal text-gray-600">
+                                      {new Intl.NumberFormat("hu-HU", {
+                                        style: "currency",
+                                        currency: "HUF",
+                                        maximumFractionDigits: 0,
+                                      }).format(item.workTotal || 0)}
+                                    </div>
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </table>
                           </div>
                         </div>
                       </div>
@@ -399,12 +453,45 @@ export default function MyInvoicesPage() {
                 </div>
               )}
 
-              <div className="mt-6 pt-4 border-t">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-900">
-                    Végösszeg:
+              {/* Summary */}
+              <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Anyagköltség összesen:</span>
+                  <span className="font-semibold text-gray-900">
+                    {new Intl.NumberFormat("hu-HU", {
+                      style: "currency",
+                      currency: "HUF",
+                      maximumFractionDigits: 0,
+                    }).format(
+                      (
+                        selectedBilling.items as unknown as BillingItem[]
+                      )?.reduce(
+                        (sum, item) => sum + (item.materialTotal || 0),
+                        0
+                      ) || 0
+                    )}
                   </span>
-                  <span className="text-xl font-bold text-gray-900">
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-600">Munkadíj összesen:</span>
+                  <span className="font-semibold text-gray-900">
+                    {new Intl.NumberFormat("hu-HU", {
+                      style: "currency",
+                      currency: "HUF",
+                      maximumFractionDigits: 0,
+                    }).format(
+                      (
+                        selectedBilling.items as unknown as BillingItem[]
+                      )?.reduce(
+                        (sum, item) => sum + (item.workTotal || 0),
+                        0
+                      ) || 0
+                    )}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-base font-bold border-t pt-3">
+                  <span className="text-gray-900">Mindösszesen:</span>
+                  <span className="text-[#FE9C00]">
                     {new Intl.NumberFormat("hu-HU", {
                       style: "currency",
                       currency: "HUF",
