@@ -161,10 +161,6 @@ export default function MyInvoicesPage() {
               ).map(([workTitle, workBillings]) => {
                 const isExpanded = expandedWorks.has(workTitle);
 
-                // Sum draft invoices separately
-                const draftAmount = workBillings
-                  .filter((b) => b.status === "draft")
-                  .reduce((sum, b) => sum + b.totalPrice, 0);
 
                 return (
                   <div
