@@ -161,7 +161,6 @@ export default function MyInvoicesPage() {
               ).map(([workTitle, workBillings]) => {
                 const isExpanded = expandedWorks.has(workTitle);
 
-
                 return (
                   <div
                     key={workTitle}
@@ -402,9 +401,9 @@ export default function MyInvoicesPage() {
                                   </td>
                                 </tr>
                                 <tr>
-                                  <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
-                                    <div className="py-1 whitespace-nowrap text-sm font-normal text-gray-900">
-                                      Számlázott mennyiség
+                                  <td className="px-2 py-1 text-sm font-normal text-gray-900">
+                                    <div className="text-xs text-gray-500 leading-tight">
+                                      Számlázott<br />mennyiség
                                     </div>
                                     <div className="text-sm font-bold text-gray-900">
                                       {item.quantity} {item.unit || "db"}
@@ -432,6 +431,22 @@ export default function MyInvoicesPage() {
                                         currency: "HUF",
                                         maximumFractionDigits: 0,
                                       }).format(item.workTotal || 0)}
+                                    </div>
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="px-2 py-1"></td>
+                                  <td className="px-2 py-1"></td>
+                                  <td className="px-2 py-1 whitespace-nowrap text-right">
+                                    <div className="text-xs text-gray-500 uppercase tracking-wider">
+                                      Összesen
+                                    </div>
+                                    <div className="text-sm font-bold text-gray-900">
+                                      {new Intl.NumberFormat("hu-HU", {
+                                        style: "currency",
+                                        currency: "HUF",
+                                        maximumFractionDigits: 0,
+                                      }).format((item.materialTotal || 0) + (item.workTotal || 0))}
                                     </div>
                                   </td>
                                 </tr>

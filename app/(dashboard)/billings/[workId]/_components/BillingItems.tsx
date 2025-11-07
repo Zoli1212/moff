@@ -163,7 +163,6 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     );
   };
 
-
   const calculateTotals = useCallback(() => {
     return (items || [])
       .filter((item) => item.isSelected)
@@ -193,9 +192,9 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     <>
       {/* Szerkesztő modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent 
+        <DialogContent
           className="sm:max-w-[425px] rounded-2xl p-6"
-          style={{ width: 'min(90vw, 425px)' }}
+          style={{ width: "min(90vw, 425px)" }}
         >
           <DialogHeader>
             <DialogTitle>Tétel szerkesztése</DialogTitle>
@@ -321,29 +320,35 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Mégse
             </Button>
-            <Button onClick={saveItem} style={{ backgroundColor: '#FE9C00', color: 'white' }} className="hover:opacity-90">Mentés</Button>
+            <Button
+              onClick={saveItem}
+              style={{ backgroundColor: "#FE9C00", color: "white" }}
+              className="hover:opacity-90"
+            >
+              Mentés
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Törlés megerősítő modal */}
       <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <DialogContent 
+        <DialogContent
           className="sm:max-w-[425px] rounded-2xl p-6"
-          style={{ width: 'min(90vw, 425px)' }}
+          style={{ width: "min(90vw, 425px)" }}
         >
           <DialogHeader>
             <DialogTitle>Biztosan ki szeretnéd törölni?</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 mt-4">
-            <Button 
+            <Button
               onClick={confirmDelete}
               className="w-full"
-              style={{ backgroundColor: '#EF4444', color: 'white' }}
+              style={{ backgroundColor: "#EF4444", color: "white" }}
             >
               Törlés
             </Button>
-            <Button 
+            <Button
               variant="outline"
               onClick={() => setDeleteConfirmOpen(false)}
               className="w-full"
@@ -359,7 +364,12 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
             Tételek
           </h2>
-          <Button variant="outline" size="sm" onClick={handleAddItem} style={{ color: '#FE9C00', borderColor: '#FE9C00' }}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleAddItem}
+            style={{ color: "#FE9C00", borderColor: "#FE9C00" }}
+          >
             <Plus className="h-4 w-4 mr-2" />
             Új tétel
           </Button>
@@ -371,157 +381,235 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               // Calculate billable quantity for each item
               const billableA = Math.max(
                 0,
-                (a.completedQuantity || 0) - ((a.billedQuantity || 0) + (a.paidQuantity || 0))
+                (a.completedQuantity || 0) -
+                  ((a.billedQuantity || 0) + (a.paidQuantity || 0))
               );
               const billableB = Math.max(
                 0,
-                (b.completedQuantity || 0) - ((b.billedQuantity || 0) + (b.paidQuantity || 0))
+                (b.completedQuantity || 0) -
+                  ((b.billedQuantity || 0) + (b.paidQuantity || 0))
               );
               // Items with billable quantity > 0 come first
               return billableB - billableA;
             })
             .map((item, index) => (
-            <div
-              key={item.id}
-              className={`border rounded-lg p-4 transition-colors ${item.isSelected ? "bg-blue-50/50 border-blue-200" : "bg-gray-50/50"}`}
-            >
-              <div className="flex justify-between items-start">
-                <div className="flex items-start gap-4 flex-1">
-                  <Checkbox
-                    id={`item-${index}`}
-                    checked={item.isSelected ?? false}
-                    onCheckedChange={(checked) =>
-                      handleToggleSelect(index, !!checked)
-                    }
-                    className="mt-1"
-                  />
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-800 pr-4">
-                      {index + 1}. {item.name.replace(/^\*+\s*/, '')}
-                    </h3>
+              <div
+                key={item.id}
+                className={`border rounded-lg p-4 transition-colors ${item.isSelected ? "bg-blue-50/50 border-blue-200" : "bg-gray-50/50"}`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex items-start gap-4 flex-1">
+                    <Checkbox
+                      id={`item-${index}`}
+                      checked={item.isSelected ?? false}
+                      onCheckedChange={(checked) =>
+                        handleToggleSelect(index, !!checked)
+                      }
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-800 pr-4">
+                        {index + 1}. {item.name.replace(/^\*+\s*/, "")}
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => startEditing(index)}
+                    >
+                      <Pencil className="h-4 w-4 text-orange-500" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveItem(index)}
+                    >
+                      <Trash2
+                        className="h-4 w-4"
+                        style={{ color: "#FE9C00" }}
+                      />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => startEditing(index)}
-                  >
-                    <Pencil className="h-4 w-4 text-orange-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveItem(index)}
-                  >
-                    <Trash2 className="h-4 w-4" style={{ color: '#FE9C00' }} />
-                  </Button>
-                </div>
-              </div>
 
-              {/* Price Grid - Same layout as offer-detail-mobile */}
-              <div className="mt-3 text-sm">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead>
-                      <tr>
-                        <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
-                        <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Anyag
-                        </th>
-                        <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Díj
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      <tr>
-                        <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
-                          Egységár ({item.unit})
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap text-right">
-                          {formatNumberWithSpace(
-                            typeof item.materialUnitPrice === "number"
-                              ? item.materialUnitPrice
-                              : parseCurrency(String(item.materialUnitPrice || 0))
-                          )} Ft
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap text-right">
-                          {formatNumberWithSpace(
-                            typeof item.unitPrice === "number"
-                              ? item.unitPrice
-                              : parseCurrency(String(item.unitPrice || 0))
-                          )} Ft
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="px-2 py-1 whitespace-nowrap text-sm font-medium text-gray-900">
-                          <div className="text-sm text-gray-500 mt-1">
-                            <div className="text-gray-900 font-bold">
-                              {item.quantity} {item.unit}
+                {/* Price Grid - Same layout as offer-detail-mobile */}
+                <div className="mt-3 text-sm">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full">
+                      <thead>
+                        <tr>
+                          <th className="px-2 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                          <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Anyag
+                          </th>
+                          <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Díj
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        <tr>
+                          <td className="px-2 py-1 whitespace-nowrap text-sm font-normal text-gray-900">
+                            Egységár ({item.unit})
+                          </td>
+                          <td className="px-2 py-1 whitespace-nowrap text-right">
+                            {formatNumberWithSpace(
+                              typeof item.materialUnitPrice === "number"
+                                ? item.materialUnitPrice
+                                : parseCurrency(
+                                    String(item.materialUnitPrice || 0)
+                                  )
+                            )}{" "}
+                            Ft
+                          </td>
+                          <td className="px-2 py-1 whitespace-nowrap text-right">
+                            {formatNumberWithSpace(
+                              typeof item.unitPrice === "number"
+                                ? item.unitPrice
+                                : parseCurrency(String(item.unitPrice || 0))
+                            )}{" "}
+                            Ft
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-1 text-sm font-normal text-gray-900">
+                            <div className="text-xs text-gray-500 leading-tight">
+                              Számlázható<br />mennyiség
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
-                          {formatNumberWithSpace(
-                            typeof item.materialTotal === "number"
-                              ? item.materialTotal
-                              : parseCurrency(String(item.materialTotal || 0))
-                          )} Ft
-                        </td>
-                        <td className="px-2 py-1 whitespace-nowrap font-bold text-right">
-                          {formatNumberWithSpace(
-                            typeof item.workTotal === "number"
-                              ? item.workTotal
-                              : parseCurrency(String(item.workTotal || 0))
-                          )} Ft
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+                            <div className="text-sm font-bold text-gray-900">
+                              {Math.max(
+                                0,
+                                (item.completedQuantity || 0) -
+                                  ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                              )} {item.unit}
+                            </div>
+                          </td>
+                          <td className="px-2 py-1 whitespace-nowrap text-right">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider">
+                              Anyag
+                            </div>
+                            <div className="text-sm font-bold text-gray-600">
+                              {(() => {
+                                const billableQty = Math.max(
+                                  0,
+                                  (item.completedQuantity || 0) -
+                                    ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                                );
+                                const materialUnitPrice =
+                                  typeof item.materialUnitPrice === "number"
+                                    ? item.materialUnitPrice
+                                    : parseCurrency(String(item.materialUnitPrice || 0));
+                                const billableMaterialTotal = billableQty * materialUnitPrice;
+                                return (
+                                  formatNumberWithSpace(billableMaterialTotal) + " Ft"
+                                );
+                              })()}
+                            </div>
+                          </td>
+                          <td className="px-2 py-1 whitespace-nowrap text-right">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider">
+                              Díj
+                            </div>
+                            <div className="text-sm font-bold text-gray-600">
+                              {(() => {
+                                const billableQty = Math.max(
+                                  0,
+                                  (item.completedQuantity || 0) -
+                                    ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                                );
+                                const workUnitPrice =
+                                  typeof item.unitPrice === "number"
+                                    ? item.unitPrice
+                                    : parseCurrency(String(item.unitPrice || 0));
+                                const billableWorkTotal = billableQty * workUnitPrice;
+                                return (
+                                  formatNumberWithSpace(billableWorkTotal) + " Ft"
+                                );
+                              })()}
+                            </div>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-2 py-1"></td>
+                          <td className="px-2 py-1"></td>
+                          <td className="px-2 py-1 whitespace-nowrap text-right">
+                            <div className="text-xs text-gray-500 uppercase tracking-wider">
+                              Összesen
+                            </div>
+                            <div className="text-sm font-bold text-gray-900">
+                              {(() => {
+                                const billableQty = Math.max(
+                                  0,
+                                  (item.completedQuantity || 0) -
+                                    ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                                );
+                                const materialUnitPrice =
+                                  typeof item.materialUnitPrice === "number"
+                                    ? item.materialUnitPrice
+                                    : parseCurrency(String(item.materialUnitPrice || 0));
+                                const workUnitPrice =
+                                  typeof item.unitPrice === "number"
+                                    ? item.unitPrice
+                                    : parseCurrency(String(item.unitPrice || 0));
+                                const billableMaterialTotal = billableQty * materialUnitPrice;
+                                const billableWorkTotal = billableQty * workUnitPrice;
+                                const total = billableMaterialTotal + billableWorkTotal;
+                                return (
+                                  formatNumberWithSpace(total) + " Ft"
+                                );
+                              })()}
+                            </div>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
+                  <ProgressBar
+                    label="Teljesített"
+                    value={item.completedQuantity || 0}
+                    max={
+                      typeof item.quantity === "number"
+                        ? item.quantity
+                        : Number(item.quantity) || 0
+                    }
+                    unit={item.unit}
+                    color="bg-blue-500"
+                  />
+                  <ProgressBar
+                    label="Számlázott"
+                    value={
+                      (item.billedQuantity || 0) + (item.paidQuantity || 0)
+                    }
+                    max={
+                      typeof item.quantity === "number"
+                        ? item.quantity
+                        : Number(item.quantity) || 0
+                    }
+                    unit={item.unit}
+                    color="bg-green-500"
+                  />
+                  <ProgressBar
+                    label="Számlázható"
+                    value={Math.max(
+                      0,
+                      (item.completedQuantity || 0) -
+                        ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                    )}
+                    max={
+                      typeof item.quantity === "number"
+                        ? item.quantity
+                        : Number(item.quantity) || 0
+                    }
+                    unit={item.unit}
+                    color="bg-yellow-500"
+                  />
                 </div>
               </div>
-
-              <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-                <ProgressBar
-                  label="Teljesített"
-                  value={item.completedQuantity || 0}
-                  max={
-                    typeof item.quantity === "number"
-                      ? item.quantity
-                      : Number(item.quantity) || 0
-                  }
-                  unit={item.unit}
-                  color="bg-blue-500"
-                />
-                <ProgressBar
-                  label="Számlázott"
-                  value={(item.billedQuantity || 0) + (item.paidQuantity || 0)}
-                  max={
-                    typeof item.quantity === "number"
-                      ? item.quantity
-                      : Number(item.quantity) || 0
-                  }
-                  unit={item.unit}
-                  color="bg-green-500"
-                />
-                <ProgressBar
-                  label="Számlázható"
-                  value={Math.max(
-                    0,
-                    (item.completedQuantity || 0) -
-                      ((item.billedQuantity || 0) + (item.paidQuantity || 0))
-                  )}
-                  max={
-                    typeof item.quantity === "number"
-                      ? item.quantity
-                      : Number(item.quantity) || 0
-                  }
-                  unit={item.unit}
-                  color="bg-yellow-500"
-                />
-              </div>
-            </div>
             ))}
         </div>
 
