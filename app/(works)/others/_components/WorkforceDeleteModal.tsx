@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { checkWorkerDeletionRequirements, deleteWorkforceRegistry, cleanupAndDeleteWorkforceRegistry, removeWorkItemWorkerAssignment, removeWorkerDiaryEntries, removeWorkerFromRegistryOnly, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
+import { checkWorkerDeletionRequirements, cleanupAndDeleteWorkforceRegistry, removeWorkItemWorkerAssignment, removeWorkerDiaryEntries, removeWorkerFromRegistryOnly, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
