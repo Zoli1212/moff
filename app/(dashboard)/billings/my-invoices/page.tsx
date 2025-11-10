@@ -402,18 +402,15 @@ export default function MyInvoicesPage() {
                                 </tr>
                                 <tr>
                                   <td className="px-2 py-1 text-sm font-normal text-gray-900">
-                                    <div className="text-xs text-gray-500 leading-tight">
+                                    <div className="text-xs text-black leading-tight">
                                       Számlázott<br />mennyiség
                                     </div>
-                                    <div className="text-sm font-bold text-gray-900">
+                                    <div className="text-sm font-bold text-black">
                                       {item.quantity} {item.unit || "db"}
                                     </div>
                                   </td>
-                                  <td className="px-2 py-1 whitespace-nowrap text-right">
-                                    <div className="text-xs text-gray-500 uppercase tracking-wider">
-                                      Anyag
-                                    </div>
-                                    <div className="text-sm font-normal text-gray-600">
+                                  <td className="px-2 py-1 text-right">
+                                    <div className="text-sm font-bold text-black pt-6">
                                       {new Intl.NumberFormat("hu-HU", {
                                         style: "currency",
                                         currency: "HUF",
@@ -421,11 +418,8 @@ export default function MyInvoicesPage() {
                                       }).format(item.materialTotal || 0)}
                                     </div>
                                   </td>
-                                  <td className="px-2 py-1 whitespace-nowrap text-right">
-                                    <div className="text-xs text-gray-500 uppercase tracking-wider">
-                                      Díj
-                                    </div>
-                                    <div className="text-sm font-normal text-gray-600">
+                                  <td className="px-2 py-1 text-right">
+                                    <div className="text-sm font-bold text-black pt-6">
                                       {new Intl.NumberFormat("hu-HU", {
                                         style: "currency",
                                         currency: "HUF",
@@ -438,15 +432,15 @@ export default function MyInvoicesPage() {
                                   <td className="px-2 py-1"></td>
                                   <td className="px-2 py-1"></td>
                                   <td className="px-2 py-1 whitespace-nowrap text-right">
-                                    <div className="text-xs text-gray-500 uppercase tracking-wider">
-                                      Összesen
-                                    </div>
                                     <div className="text-sm font-bold text-gray-900">
                                       {new Intl.NumberFormat("hu-HU", {
                                         style: "currency",
                                         currency: "HUF",
                                         maximumFractionDigits: 0,
-                                      }).format((item.materialTotal || 0) + (item.workTotal || 0))}
+                                      }).format(
+                                        (item.materialTotal || 0) +
+                                          (item.workTotal || 0)
+                                      )}
                                     </div>
                                   </td>
                                 </tr>

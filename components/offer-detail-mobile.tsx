@@ -901,7 +901,7 @@ export function OfferDetailView({
                 </Label>
                 <Input
                   id="name"
-                  value={editingItem?.item.name || ""}
+                  value={(editingItem?.item.name || "").replace(/^\*+\s*/, "")}
                   onChange={(e) => handleModalChange("name", e.target.value)}
                   className="col-span-3"
                 />
@@ -917,17 +917,34 @@ export function OfferDetailView({
                   onChange={(e) =>
                     handleModalChange("quantity", e.target.value)
                   }
-                  className="col-span-1"
+                  className="col-span-3"
                 />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="unit" className="text-right">
                   Egység
                 </Label>
-                <Input
+                <select
                   id="unit"
                   value={editingItem?.item.unit || ""}
                   onChange={(e) => handleModalChange("unit", e.target.value)}
-                  className="col-span-1"
-                />
+                  className="col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="">Válassz egységet</option>
+                  <option value="m²">m²</option>
+                  <option value="m³">m³</option>
+                  <option value="fm">fm</option>
+                  <option value="db">db</option>
+                  <option value="pár">pár</option>
+                  <option value="kg">kg</option>
+                  <option value="l">l</option>
+                  <option value="m">m</option>
+                  <option value="cm">cm</option>
+                  <option value="csomag">csomag</option>
+                  <option value="doboz">doboz</option>
+                  <option value="tonna">tonna</option>
+                  <option value="óra">óra</option>
+                </select>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="materialUnitPrice" className="text-right">
