@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { deleteWorkforceRegistry, cleanupAndDeleteWorkforceRegistry, removeWorkItemWorkerAssignment, removeWorkerDiaryEntries, removeWorkerFromRegistryOnly, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
+import { checkWorkerDeletionRequirements, deleteWorkforceRegistry, cleanupAndDeleteWorkforceRegistry, removeWorkItemWorkerAssignment, removeWorkerDiaryEntries, removeWorkerFromRegistryOnly, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
 import { toast } from 'sonner'
 import { Loader2, AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -51,7 +51,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
 
   const checkWorkerConnections = async () => {
     try {
-      const result = await deleteWorkforceRegistry(worker.id!)
+      const result = await checkWorkerDeletionRequirements(worker.id!)
       
       if ('needsCleanup' in result && result.needsCleanup) {
         // Has connections - show cleanup interface
@@ -123,7 +123,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
         toast.success('Összes munkafázis hozzárendelés eltávolítva')
         
         // Refresh cleanup data
-        const refreshResult = await deleteWorkforceRegistry(worker.id!)
+        const refreshResult = await checkWorkerDeletionRequirements(worker.id!)
         if ('needsCleanup' in refreshResult && refreshResult.needsCleanup) {
           setCleanupData(refreshResult as CleanupData)
         } else {
@@ -143,7 +143,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
       if (result.success) {
         toast.success('Napló bejegyzések törölve')
         // Refresh cleanup data
-        const refreshResult = await deleteWorkforceRegistry(worker.id!)
+        const refreshResult = await checkWorkerDeletionRequirements(worker.id!)
         if ('needsCleanup' in refreshResult && refreshResult.needsCleanup) {
           setCleanupData(refreshResult as CleanupData)
         } else {
@@ -174,9 +174,36 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
     }
   }
 
+  const handlePermanentDelete = async () => {
+    if (!worker || !worker.id) {
+      toast.error('Munkás adatok hiányoznak!')
+      return
+    }
+    
+    setIsLoading(true)
+
+    try {
+      // Permanent delete - this will delete everything
+      const result = await cleanupAndDeleteWorkforceRegistry(worker.id!)
+      
+      if (result.success) {
+        toast.success('Munkás véglegesen törölve')
+        onWorkerDeleted(worker.id!)
+        onClose()
+      } else {
+        toast.error(result.error || 'Hiba történt a munkás törlése során')
+      }
+    } catch (error) {
+      console.log((error as Error).message)
+      toast.error('Hiba történt a munkás törlése során')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cleanupData ? "max-w-2xl max-h-[90vh] overflow-y-auto" : "max-w-md"}>
+      <DialogContent className={cleanupData ? "max-w-sm max-h-[90vh] overflow-y-auto rounded-xl" : "max-w-sm rounded-xl"}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <AlertTriangle className="h-5 w-5" />
@@ -285,26 +312,26 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                 )}
               </div>
 
-              <div className="flex justify-between pt-4 border-t">
+              <div className="flex flex-col gap-2 pt-4 border-t">
+                <Button
+                  type="button"
+                  className="w-full"
+                  style={{ backgroundColor: '#FE9C00', color: 'white' }}
+                  onClick={handleCleanupAndDelete}
+                  disabled={isLoading}
+                >
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Minden egyszerre
+                </Button>
                 <Button
                   type="button"
                   variant="outline"
+                  className="w-full"
                   onClick={onClose}
                   disabled={isLoading}
                 >
                   Mégse
                 </Button>
-                <div className="space-x-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleCleanupAndDelete}
-                    disabled={isLoading}
-                  >
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Minden egyszerre
-                  </Button>
-                </div>
               </div>
             </div>
           ) : (
@@ -329,23 +356,35 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                 Biztosan deaktiválni szeretné <strong>{worker.name}</strong> munkást a rendszerben?
               </p>
 
-              <div className="flex justify-end space-x-2 pt-4">
+              <div className="flex flex-col gap-2 pt-4">
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={onClose}
+                  className="w-full"
+                  style={{ backgroundColor: '#FE9C00', color: 'white' }}
+                  onClick={handlePermanentDelete}
                   disabled={isLoading}
                 >
-                  Mégse
+                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Végleges törlés
                 </Button>
                 <Button
                   type="button"
-                  variant="destructive"
+                  className="w-full"
+                  style={{ backgroundColor: '#FE9C00', color: 'white' }}
                   onClick={handleDelete}
                   disabled={isLoading}
                 >
                   {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Deaktiválás
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  onClick={onClose}
+                  disabled={isLoading}
+                >
+                  Mégse
                 </Button>
               </div>
             </>

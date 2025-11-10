@@ -660,3 +660,19 @@ A számla nézetnél is ugy így legyenek az elrendezés mint az ajánlatnál (i
 És a számlázottnál a tételeknél is ugyan így legyen
 Számláim: A számla összesítőnél: Nem teljesített, Hanem Számlázott, Teljes Összeg, Fennmaradó:  
 piszkozatok értéke nem kell
+
+Iphone 15 Pro Max
+nem ugrik át
+vizuálisan ne menjen túl a progress
+bug 470500 nem lehet megadni ezres ugrás oke a 
+betonos 2 t nem tudta kitörölni kiirta a hibát error nem tudjuk kitörölni, de utána kitörli
+nem szerepel: goldmark 1 gépi esztrich 0 ft a díj edge case, alap sorrendbe jöjjenek a munkák
+mikor munkába állítja akkor legyen, order t tartse meg
+ha ki van számlázva akkor akkor alján legyen,
+mindig atételek sorrendje szerint
++ munkafázist amit hozzáaadunk
++ munkához rendelés
+egy munka több ajánlathoz tartózhat
+checklista lassú checkbox
+! mennyiért tudná beszerezni
+

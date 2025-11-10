@@ -174,6 +174,137 @@ export async function updateWorkforceRegistry(
   }
 }
 
+// Check if worker can be deleted (without actually deleting)
+export async function checkWorkerDeletionRequirements(id: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Verify ownership
+    const existingEntry = await prisma.workforceRegistry.findFirst({
+      where: {
+        id: id,
+        tenantEmail: tenantEmail,
+      },
+    });
+
+    if (!existingEntry) {
+      return {
+        success: false,
+        error: "Munkás nem található vagy nincs jogosultság",
+        canDelete: false,
+      };
+    }
+
+    // Step 1: Check if workforceRegistry.id exists in workItemWorker.workforceRegistryId
+    const workItemAssignments = await prisma.workItemWorker.findMany({
+      where: {
+        workforceRegistryId: existingEntry.id,
+        tenantEmail: tenantEmail,
+      },
+      include: {
+        workItem: {
+          include: {
+            work: true,
+          },
+        },
+      },
+    });
+
+    console.log("[DEBUG] Worker:", existingEntry.name, "ID:", existingEntry.id);
+    console.log(
+      "[DEBUG] Found workItemAssignments:",
+      workItemAssignments.length
+    );
+    console.log(
+      "[DEBUG] WorkItemWorker IDs:",
+      workItemAssignments.map((a) => a.id)
+    );
+
+    // Step 2: Check diary entries - first by workItemWorkerId, then by name
+    let totalDiaryEntries = 0;
+    let diaryEntriesByWorkItemWorker: any[] = [];
+    let diaryEntriesByName: any[] = [];
+
+    // First: Check by workItemWorkerId (new entries)
+    if (workItemAssignments.length > 0) {
+      const workItemWorkerIds = workItemAssignments.map(
+        (assignment) => assignment.id
+      );
+
+      diaryEntriesByWorkItemWorker = await prisma.workDiaryItem.findMany({
+        where: {
+          workItemWorkerId: {
+            in: workItemWorkerIds,
+          },
+          tenantEmail: tenantEmail,
+        },
+      });
+
+      console.log(
+        "[DEBUG] Diary entries found by workItemWorkerId:",
+        diaryEntriesByWorkItemWorker
+      );
+    }
+
+    // Second: Check by name (legacy entries)
+    diaryEntriesByName = await prisma.workDiaryItem.findMany({
+      where: {
+        name: existingEntry.name,
+        tenantEmail: tenantEmail,
+      },
+    });
+
+    console.log("[DEBUG] Diary entries found by name:", diaryEntriesByName);
+
+    // Combine both results (avoid duplicates)
+    const allDiaryEntryIds = new Set([
+      ...diaryEntriesByWorkItemWorker.map((d) => d.id),
+      ...diaryEntriesByName.map((d) => d.id),
+    ]);
+
+    totalDiaryEntries = allDiaryEntryIds.size;
+
+    console.log("[DEBUG] Total diaryEntries:", totalDiaryEntries);
+
+    // Check if worker is on any pending works
+    const pendingWorks = workItemAssignments.filter(
+      (assignment) => assignment.workItem?.work?.status === "pending"
+    );
+
+    if (
+      workItemAssignments.length > 0 ||
+      totalDiaryEntries > 0 ||
+      pendingWorks.length > 0
+    ) {
+      return {
+        success: false,
+        error: "Munkafázison dolgozik! Előbb töröld ki onnan.",
+        canDelete: false,
+        needsCleanup: true,
+        workItemAssignments: workItemAssignments.map((a) => ({
+          id: a.id,
+          workItemName: a.workItem?.name,
+          workName: a.workItem?.work?.title,
+        })),
+        diaryEntriesCount: totalDiaryEntries,
+      };
+    }
+
+    // Can be deleted
+    return {
+      success: true,
+      canDelete: true,
+    };
+  } catch (error) {
+    console.error("Error checking worker deletion requirements:", error);
+    return {
+      success: false,
+      error: "Hiba a munkás ellenőrzése során",
+      canDelete: false,
+    };
+  }
+}
+
 // Delete workforce registry entry
 export async function deleteWorkforceRegistry(id: number) {
   try {
@@ -368,13 +499,15 @@ export async function cleanupAndDeleteWorkforceRegistry(id: number) {
     });
 
     for (const worker of workersWithThisName) {
-      const updatedWorkers = (worker.workers as any[]).filter(
-        (w) => w.name !== existingEntry.name
-      );
-      await prisma.worker.update({
-        where: { id: worker.id },
-        data: { workers: updatedWorkers },
-      });
+      if (worker.workers && Array.isArray(worker.workers)) {
+        const updatedWorkers = (worker.workers as any[]).filter(
+          (w) => w.name !== existingEntry.name
+        );
+        await prisma.worker.update({
+          where: { id: worker.id },
+          data: { workers: updatedWorkers },
+        });
+      }
     }
 
     // Finally delete from workforce registry
