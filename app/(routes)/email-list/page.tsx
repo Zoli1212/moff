@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { getAllEmails } from "../../../actions/server.action";
+import { getAllEmails } from "../../../actions/email-actions";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import {
@@ -149,17 +149,17 @@ function EmailList() {
         // First, load the emails
         const data = await getAllEmails();
         setEmails(data);
-        
+
         // Then start the bulk processing
-        await fetch('/api/process-emails', {
-          method: 'POST',
+        await fetch("/api/process-emails", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
-        console.log('Bulk email processing started');
+        console.log("Bulk email processing started");
       } catch (error) {
-        console.error('Error starting email processing:', error);
+        console.error("Error starting email processing:", error);
       }
     };
 

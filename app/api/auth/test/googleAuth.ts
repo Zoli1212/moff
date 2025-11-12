@@ -2,7 +2,7 @@ import fs from "fs";
 import { google } from "googleapis";
 import { OAuth2Client } from "google-auth-library";
 import { getEmail, listEmails } from "./gmail-fetch";
-import { createEmail } from "@/actions/server.action";
+import { createEmail } from "@/actions/email-actions";
 import ImageKit from "imagekit";
 
 // Initialize ImageKit
@@ -21,7 +21,7 @@ const SCOPE = [
 const TOKEN_PATH = process.env.TOKEN_PATH;
 
 // 🔐 Credentials lekérdezése adatbázisból Prisma-val
-import { getGoogleCredentials } from "@/actions/server.action";
+import { getGoogleCredentials } from "@/actions/email-actions";
 export async function loadCredentialsDirect(tenantEmail: string) {
   const cred = await getGoogleCredentials(tenantEmail);
   return {
@@ -96,56 +96,56 @@ export async function getGoogleAuthUrl(tenantEmail: string): Promise<string> {
 function extractEmailContent(email: gmail_v1.Schema$Message): string {
   // Helper to clean up HTML entities and unwanted patterns
   function cleanContent(content: string): string {
-    if (!content) return '';
-    
+    if (!content) return "";
+
     // Replace HTML entities
     const entities: { [key: string]: string } = {
-      '&lt;': '<',
-      '&gt;': '>',
-      '&amp;': '&',
-      '&quot;': '"',
-      '&#39;': "'",
-      '&nbsp;': ' ',
-      '&copy;': '©',
-      '&reg;': '®',
-      '&euro;': '€',
-      '&pound;': '£',
-      '&yen;': '¥',
-      '&cent;': '¢',
-      '&sect;': '§',
-      '&para;': '¶',
-      '&deg;': '°',
-      '&plusmn;': '±',
-      '&times;': '×',
-      '&divide;': '÷',
-      '&apos;': "'"
+      "&lt;": "<",
+      "&gt;": ">",
+      "&amp;": "&",
+      "&quot;": '"',
+      "&#39;": "'",
+      "&nbsp;": " ",
+      "&copy;": "©",
+      "&reg;": "®",
+      "&euro;": "€",
+      "&pound;": "£",
+      "&yen;": "¥",
+      "&cent;": "¢",
+      "&sect;": "§",
+      "&para;": "¶",
+      "&deg;": "°",
+      "&plusmn;": "±",
+      "&times;": "×",
+      "&divide;": "÷",
+      "&apos;": "'",
     };
 
     try {
       // First decode any URL encoded characters
       let cleaned = decodeURIComponent(content);
-      
+
       // Replace HTML entities
       Object.entries(entities).forEach(([entity, replacement]) => {
-        cleaned = cleaned.replace(new RegExp(entity, 'g'), replacement);
+        cleaned = cleaned.replace(new RegExp(entity, "g"), replacement);
       });
 
       // Remove email signatures and quoted text
       cleaned = cleaned
         // Remove lines starting with '>' (quoted text)
-        .split('\n')
-        .filter(line => !line.trim().startsWith('>'))
-        .join('\n')
+        .split("\n")
+        .filter((line) => !line.trim().startsWith(">"))
+        .join("\n")
         // Remove common email signature patterns (using [\s\S] instead of . with s flag for wider compatibility)
-        .replace(/^--\s*\n[\s\S]*?\n(?:\n|$)/gm, '')
-        .replace(/^_{2,}\n[\s\S]*?\n(?:\n|$)/gm, '')
+        .replace(/^--\s*\n[\s\S]*?\n(?:\n|$)/gm, "")
+        .replace(/^_{2,}\n[\s\S]*?\n(?:\n|$)/gm, "")
         // Remove multiple spaces and newlines
-        .replace(/\s+/g, ' ')
+        .replace(/\s+/g, " ")
         .trim();
 
       return cleaned;
     } catch (error) {
-      console.error('Error cleaning content:', error);
+      console.error("Error cleaning content:", error);
       return content; // Return original if cleaning fails
     }
   }
@@ -157,8 +157,8 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
       const decoded = Buffer.from(fixed, "base64").toString("utf-8");
       return cleanContent(decoded);
     } catch (error) {
-      console.error('Error decoding base64:', error);
-      return '';
+      console.error("Error decoding base64:", error);
+      return "";
     }
   }
 
@@ -172,25 +172,25 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
     if (!part) return null;
 
     // If this part has plain text, return it
-    if (part.mimeType === 'text/plain' && part.body?.data) {
+    if (part.mimeType === "text/plain" && part.body?.data) {
       return decodeBase64(part.body.data);
     }
 
     // If this part has HTML, return it as plain text
-    if (part.mimeType === 'text/html' && part.body?.data) {
+    if (part.mimeType === "text/html" && part.body?.data) {
       const html = decodeBase64(part.body.data);
       // Basic HTML to text conversion
       return html
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '') // Remove style tags
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '') // Remove script tags
-        .replace(/<[^>]+>/g, ' ') // Remove all HTML tags
-        .replace(/\s+/g, ' ')     // Collapse whitespace
-        .replace(/^\s+|\s+$/g, '') // Trim
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "") // Remove style tags
+        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "") // Remove script tags
+        .replace(/<[^>]+>/g, " ") // Remove all HTML tags
+        .replace(/\s+/g, " ") // Collapse whitespace
+        .replace(/^\s+|\s+$/g, "") // Trim
         .trim();
     }
 
     // If this is a multipart message, search its parts
-    if (part.mimeType?.startsWith('multipart/') && part.parts) {
+    if (part.mimeType?.startsWith("multipart/") && part.parts) {
       for (const subPart of part.parts) {
         const text = findTextContent(subPart);
         if (text) return text;
@@ -210,7 +210,7 @@ function extractEmailContent(email: gmail_v1.Schema$Message): string {
       try {
         return decodeBase64(part.body.data);
       } catch (e) {
-        console.error('Error decoding part data:', e);
+        console.error("Error decoding part data:", e);
       }
     }
 
@@ -265,35 +265,37 @@ export async function authorizeWithCode(
               messageId: msg.id,
               id: part.body.attachmentId,
             });
-    
+
             const data = attachment.data?.data;
             if (!data) {
-              console.error('No data in attachment');
+              console.error("No data in attachment");
               continue;
             }
-    
+
             // Clean up the base64 data
-            const base64Data = data.replace(/-/g, '+').replace(/_/g, '/');
-            const buffer = Buffer.from(base64Data, 'base64');
-    
+            const base64Data = data.replace(/-/g, "+").replace(/_/g, "/");
+            const buffer = Buffer.from(base64Data, "base64");
+
             // Upload to ImageKit
             const imageKitFile = await imagekit.upload({
               file: buffer,
               fileName: part.filename,
               useUniqueFileName: true,
               isPrivateFile: false,
-              tags: ['email-attachment']
+              tags: ["email-attachment"],
             });
-    
+
             if (!imageKitFile.url) {
-              throw new Error('No URL in ImageKit response');
+              throw new Error("No URL in ImageKit response");
             }
-    
+
             attachmentUrls.push(imageKitFile.url);
             attachmentFilenames.push(part.filename);
-    
           } catch (error) {
-            console.error(`❌ Error processing attachment ${part.filename}:`, error instanceof Error ? error.message : 'Unknown error');
+            console.error(
+              `❌ Error processing attachment ${part.filename}:`,
+              error instanceof Error ? error.message : "Unknown error"
+            );
             // Optionally continue with other attachments even if one fails
             continue;
           }

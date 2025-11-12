@@ -613,7 +613,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   className="border rounded px-3 py-2 w-full"
                   required
                   min="0"
-                  step="1000"
+                  step="1"
                 />
                 <div className="text-xs text-gray-500">
                   8 órás munkanapra vonatkozó díj
