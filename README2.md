@@ -639,33 +639,11 @@ Milyen mennyiségi egységet kombox
 
 #FE9C00
 ----
-Nem táródik vissza a drawer profil, előfizetés
-Számlázott számlázható
-Piszkozatot is el kelljen menteni, e hozzon létre ennyit
-Ugyanúgy nézzen ki ahogy az ajánlatban van, a számláknál is az legyen,
-mindenhol ugyanúgy
-nem összesen kell hanem Számlázható
-billing/[id] ugyanúgy nézzen ki mint az offernél
-számlázott 
-Eddig számlázott - Teljesített ugy nézzen ki mint az offertett
-
-Számlázható: db és az összeg
-Az alsó gombok felcsusznak ez nagyon zavaró
-profitratanal eltuntek a kis nyilacskak
-Szamlak koze berakja azokat amiket nem is hoztam letre csak bemegyek es utana vissza lasd Goldmark, itt csak azok legyen létrehozva, ami ki lett számlázva, vagy pénzügyileg teljesítve lett, piszkozatból ki lett már állítva(a piszkozattal ne foglalkozzunk)
-Számlázásnál a az összesítésnél a kártyáknál nem jók a számok, úgy kéne kinéznie mint az ajánlatnál és csak a számlázható mennyiségnek legyen ott a mennyisége és az összege.
-Egység ár (mennyiségi egység), Anyag, Díj
-Számlázható: 150 db, Anyag Díj összesen
-A számla nézetnél is ugy így legyenek az elrendezés mint az ajánlatnál (itt már nem kell kiírni, hogy számlázható)
-És a számlázottnál a tételeknél is ugyan így legyen
-Számláim: A számla összesítőnél: Nem teljesített, Hanem Számlázott, Teljes Összeg, Fennmaradó:  
-piszkozatok értéke nem kell
 
 Iphone 15 Pro Max
 nem ugrik át
 vizuálisan ne menjen túl a progress
 bug 470500 nem lehet megadni ezres ugrás oke a 
-betonos 2 t nem tudta kitörölni kiirta a hibát error nem tudjuk kitörölni, de utána kitörli
 nem szerepel: goldmark 1 gépi esztrich 0 ft a díj edge case, alap sorrendbe jöjjenek a munkák
 mikor munkába állítja akkor legyen, order t tartse meg
 ha ki van számlázva akkor akkor alján legyen,

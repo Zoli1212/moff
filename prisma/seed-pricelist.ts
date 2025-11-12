@@ -3,6 +3,11 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main() {
+  // Törlöm a meglévő adatokat
+  console.log("Meglévő PriceList adatok törlése...");
+  await prisma.priceList.deleteMany({});
+  console.log("PriceList adatok sikeresen törölve!");
+
   const priceListData = [
       {
     "category": "Telek előkészítése, tereprendezés",

@@ -5,6 +5,7 @@ import {
   updateOfferItems,
   updateOfferStatus,
   updateOfferValidUntil,
+  saveTenantPrice,
 } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
@@ -135,6 +136,7 @@ export function OfferDetailView({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState("");
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
+  const [saveTenantPriceChecked, setSaveTenantPriceChecked] = useState(true); // Default: bejelölve
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -374,6 +376,39 @@ export function OfferDetailView({
       );
 
       if (result.success) {
+        // Ha a checkbox be van jelölve, mentjük a vállalkozói szintű árakat is
+        if (saveTenantPriceChecked) {
+          console.log("Vállalkozói szintű ár mentése...", {
+            name: item.name,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+            materialUnitPrice: item.materialUnitPrice,
+          });
+
+          const laborCost = parseCurrency(item.unitPrice || "0");
+          const materialCost = parseCurrency(item.materialUnitPrice || "0");
+
+          console.log("Parsed costs:", { laborCost, materialCost });
+
+          const priceResult = await saveTenantPrice(
+            item.name,
+            null, // category - nem szükséges a modal-ból
+            null, // technology - nem szükséges a modal-ból
+            item.unit,
+            laborCost,
+            materialCost
+          );
+
+          console.log("Vállalkozói szintű ár mentés eredménye:", priceResult);
+
+          if (!priceResult.success) {
+            console.warn("Vállalkozói szintű ár mentése sikertelen:", priceResult.message);
+            // Nem jelezzük hibát, mert az offer már mentve van
+          } else {
+            console.log("Vállalkozói szintű ár sikeresen mentve");
+          }
+        }
+
         toast.success("A tétel sikeresen mentve");
         setEditableItems(newItems);
         setOriginalItems(newItems.map((item) => ({ ...item })));
@@ -996,6 +1031,20 @@ export function OfferDetailView({
                 <Label className="text-right font-medium">Díj összesen</Label>
                 <div className="col-span-3 font-medium">
                   {formatNumberWithSpace(editingItem?.item.workTotal)} Ft
+                </div>
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
+                <div className="col-span-4 flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="saveTenantPrice"
+                    checked={saveTenantPriceChecked}
+                    onChange={(e) => setSaveTenantPriceChecked(e.target.checked)}
+                    className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-green-600"
+                  />
+                  <Label htmlFor="saveTenantPrice" className="cursor-pointer text-sm">
+                    Mentés vállalkozói szinten is (globális árként)
+                  </Label>
                 </div>
               </div>
             </div>

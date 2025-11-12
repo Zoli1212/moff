@@ -164,16 +164,7 @@ export const AiOfferChatAgent = createAgent({
        > "A következő tétel nem volt az adatbázisban: '[Task name] (egyedi tétel)'."
      - Every custom item must include a brief reason at the end of that section, explaining why it was not found in the catalog.
 
-  3. Source summary (for internal traceability):
-     At the very end of your message, include a short machine-readable block:
-  
-     JSON summary:
-     [
-       {"task": "Task name", "source": "catalog"},
-       {"task": "Other task", "source": "custom", "reason": "no matching item in catalog"}
-     ]
-
-  4. Forbidden:
+  3. Forbidden:
      - Never create custom items if any catalog entry could partially or fully represent the task.
      - Never write “custom item” or similar wording inside the main offer lines.
   
@@ -3246,7 +3237,7 @@ export const AiOfferChatAgent = createAgent({
     "technology": "1-2 réteg",
     "unit": "m²",
     "laborCost": 5000,
-    "materialCost": 500
+    "materialCost": 590
   },
   {
     "category": "Festés, mázolás",

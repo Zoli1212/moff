@@ -13,6 +13,87 @@ import {
 } from "@/types/offer.types";
 import { v4 as uuidv4 } from "uuid";
 
+/**
+ * 2-szintű árkeresés: TenantPriceList → PriceList (globális)
+ * Ha egyik sincs, marad az eredeti ár
+ * Visszaadja az új árakat + újraszámolt totálokat
+ */
+async function getOfferItemPrice(
+  task: string,
+  tenantEmail: string,
+  originalLaborCost: number,
+  originalMaterialCost: number,
+  quantity: number
+): Promise<{
+  laborCost: number;
+  materialCost: number;
+  workTotal: number;
+  materialTotal: number;
+  totalPrice: number;
+}> {
+  try {
+    let laborCost = originalLaborCost;
+    let materialCost = originalMaterialCost;
+
+    // 1. Tenant-specifikus ár keresése
+    const tenantPrice = await prisma.tenantPriceList.findUnique({
+      where: {
+        tenant_task_unique: {
+          task,
+          tenantEmail,
+        },
+      },
+    });
+
+    if (tenantPrice) {
+      laborCost = tenantPrice.laborCost;
+      materialCost = tenantPrice.materialCost;
+    } else {
+      // 2. Globális ár keresése
+      const globalPrice = await prisma.priceList.findUnique({
+        where: {
+          task_tenantEmail: {
+            task,
+            tenantEmail: "",
+          },
+        },
+      });
+
+      if (globalPrice) {
+        laborCost = globalPrice.laborCost;
+        materialCost = globalPrice.materialCost;
+      }
+    }
+
+    // Újraszámolt totálok
+    const workTotal = quantity * laborCost;
+    const materialTotal = quantity * materialCost;
+    const totalPrice = workTotal + materialTotal;
+
+    return {
+      laborCost,
+      materialCost,
+      workTotal,
+      materialTotal,
+      totalPrice,
+    };
+  } catch (error) {
+    console.error("Error looking up price for task:", task, error);
+    // Fallback: eredeti árak + újraszámolt totálok
+    const workTotal = quantity * originalLaborCost;
+    const materialTotal = quantity * originalMaterialCost;
+    const totalPrice = workTotal + materialTotal;
+
+    return {
+      laborCost: originalLaborCost,
+      materialCost: originalMaterialCost,
+      workTotal,
+      materialTotal,
+      totalPrice,
+    };
+  }
+}
+
 // Using shared OfferWithItems type from @/types/offer.types
 
 interface SaveOfferData {
@@ -188,6 +269,38 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     console.log("ITEMS", parsedContent.items || parsedContent.notes);
 
     const { user, tenantEmail: emailToUse } = await getTenantSafeAuth();
+
+    // 2-szintű árkeresés és újraszámolás az items-hez
+    if (parsedContent.items && parsedContent.items.length > 0) {
+      console.log("Processing items with price lookup...");
+      const processedItems = await Promise.all(
+        parsedContent.items.map(async (item: any) => {
+          const quantity = parseFloat(item.quantity) || 1;
+          const laborCost = parseFloat(item.unitPrice) || 0;
+          const materialCost = parseFloat(item.materialUnitPrice) || 0;
+
+          // Árkeresés és újraszámolás
+          const priceData = await getOfferItemPrice(
+            item.name,
+            emailToUse,
+            laborCost,
+            materialCost,
+            quantity
+          );
+
+          return {
+            ...item,
+            unitPrice: priceData.laborCost.toString(),
+            materialUnitPrice: priceData.materialCost.toString(),
+            workTotal: priceData.workTotal.toString(),
+            materialTotal: priceData.materialTotal.toString(),
+            totalPrice: priceData.totalPrice.toString(),
+          };
+        })
+      );
+      parsedContent.items = processedItems;
+      console.log("Items processed with price lookup");
+    }
 
     // Extract title, customer name, and time from offer content
     let title = "Új ajánlat";
@@ -1145,6 +1258,102 @@ export async function updateOfferStatus(offerId: number, status: string) {
         error instanceof Error
           ? error.message
           : "Ismeretlen hiba történt az állapot frissítésekor",
+    };
+  }
+}
+
+/**
+ * Vállalkozói szintű ár mentése - amikor az offer-detail-mobile-ban módosítják az árakat
+ * Vállalkozói szint = tenant-specifikus ár a TenantPriceList-ben
+ */
+export async function saveTenantPrice(
+  task: string,
+  category: string | null,
+  technology: string | null,
+  unit: string | null,
+  laborCost: number,
+  materialCost: number
+) {
+  try {
+    // Tisztítsd meg a task nevet a * karaktertől
+    const cleanedTask = task.replace(/^\*+\s*/, "").trim();
+
+    // Tenant email lekérése
+    const { tenantEmail } = await getTenantSafeAuth();
+
+    console.log("saveTenantPrice meghívva:", {
+      originalTask: task,
+      cleanedTask,
+      tenantEmail,
+      category,
+      technology,
+      unit,
+      laborCost,
+      materialCost,
+    });
+
+    // Vállalkozói szintű ár = tenant-specifikus ár a TenantPriceList-ben
+    // Upsert: ha már van ilyen task-hoz ár, frissítjük; ha nincs, létrehozzuk
+    
+    // Csak azokat a mezőket adjuk meg, amelyeknek van értéke
+    const updateData: any = {
+      laborCost,
+      materialCost,
+    };
+    
+    if (unit) {
+      updateData.unit = unit;
+    }
+    if (category) {
+      updateData.category = category;
+    }
+    if (technology) {
+      updateData.technology = technology;
+    }
+
+    const createData: any = {
+      task: cleanedTask,
+      tenantEmail,
+      laborCost,
+      materialCost,
+    };
+    
+    if (unit) {
+      createData.unit = unit;
+    }
+    if (category) {
+      createData.category = category;
+    }
+    if (technology) {
+      createData.technology = technology;
+    }
+
+    const result = await prisma.tenantPriceList.upsert({
+      where: {
+        tenant_task_unique: {
+          task: cleanedTask,
+          tenantEmail,
+        },
+      },
+      update: updateData,
+      create: createData,
+    });
+
+    console.log("saveTenantPrice sikeres:", result);
+
+    return {
+      success: true,
+      message: "Vállalkozói szintű ár sikeresen mentve",
+      data: result,
+    };
+  } catch (error) {
+    console.error("Hiba a vállalkozói szintű ár mentésekor:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a vállalkozói szintű ár mentésekor",
     };
   }
 }

@@ -471,11 +471,28 @@ model PriceList {
   unit          String
   laborCost     Int
   materialCost  Int
-  tenantEmail   String
+  tenantEmail   String   @default("") // Globális árak: tenantEmail = ""
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   @@unique([task, tenantEmail], name: "task_tenantEmail")
+}
+
+// Tenant-specifikus árak (felülírja a globális árakat)
+model TenantPriceList {
+  id            Int      @id @default(autoincrement())
+  task          String
+  category      String?
+  technology    String?
+  unit          String?
+  laborCost     Int
+  materialCost  Int
+  tenantEmail   String   // Konkrét tenant email
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([task, tenantEmail], name: "tenant_task_unique")
+  @@index([tenantEmail])
 }
 
 model WorkforceRegistry {
