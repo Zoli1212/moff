@@ -70,7 +70,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
         {deadline && (
           <div className="text-xs text-gray-500">Határidő: {deadline}</div>
         )}
-        {summary && <div className="text-sm mt-1">{summary}</div>}
+        {summary && (
+          <div className="text-sm mt-1">
+            {summary.split(/[.!?]+/)[0] + (summary.includes(".") || summary.includes("!") || summary.includes("?") ? "." : "")}
+          </div>
+        )}
         {/* Progress bars below */}
         <div className="mt-3 space-y-2">
           <ProgressBar

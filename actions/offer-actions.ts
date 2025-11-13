@@ -35,11 +35,14 @@ async function getOfferItemPrice(
     let laborCost = originalLaborCost;
     let materialCost = originalMaterialCost;
 
+    // Eltávolítjuk a csillagot a task névből, ha van (az AI csillaggal küldi vissza)
+    const cleanedTask = task.replace(/^\*\s*/, "").trim();
+
     // 1. Tenant-specifikus ár keresése
     const tenantPrice = await prisma.tenantPriceList.findUnique({
       where: {
         tenant_task_unique: {
-          task,
+          task: cleanedTask,
           tenantEmail,
         },
       },
@@ -53,7 +56,7 @@ async function getOfferItemPrice(
       const globalPrice = await prisma.priceList.findUnique({
         where: {
           task_tenantEmail: {
-            task,
+            task: cleanedTask,
             tenantEmail: "",
           },
         },
@@ -923,16 +926,18 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
     // Calculate new totals
     const totals = items.reduce(
       (acc, item) => {
-        const material = typeof item.materialTotal === 'string'
-          ? parseFloat(
-              item.materialTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
-            ) || 0
-          : parseFloat(String(item.materialTotal)) || 0;
-        const work = typeof item.workTotal === 'string'
-          ? parseFloat(
-              item.workTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
-            ) || 0
-          : parseFloat(String(item.workTotal)) || 0;
+        const material =
+          typeof item.materialTotal === "string"
+            ? parseFloat(
+                item.materialTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
+              ) || 0
+            : parseFloat(String(item.materialTotal)) || 0;
+        const work =
+          typeof item.workTotal === "string"
+            ? parseFloat(
+                item.workTotal.replace(/[^0-9,-]+/g, "").replace(",", ".")
+              ) || 0
+            : parseFloat(String(item.workTotal)) || 0;
         return {
           material: acc.material + material,
           work: acc.work + work,
@@ -1186,7 +1191,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
 
       // 4.2. Munka státusz logika (logikai törlés/aktiválás)
       let workIdToProcess: number | null = null;
-      
+
       if (status === "work") {
         if (existingWork) {
           // Ha már van work, csak aktiváljuk és beállítjuk a processingByAI-t
@@ -1294,13 +1299,13 @@ export async function saveTenantPrice(
 
     // Vállalkozói szintű ár = tenant-specifikus ár a TenantPriceList-ben
     // Upsert: ha már van ilyen task-hoz ár, frissítjük; ha nincs, létrehozzuk
-    
+
     // Csak azokat a mezőket adjuk meg, amelyeknek van értéke
     const updateData: any = {
       laborCost,
       materialCost,
     };
-    
+
     if (unit) {
       updateData.unit = unit;
     }
@@ -1317,7 +1322,7 @@ export async function saveTenantPrice(
       laborCost,
       materialCost,
     };
-    
+
     if (unit) {
       createData.unit = unit;
     }
@@ -1354,6 +1359,98 @@ export async function saveTenantPrice(
         error instanceof Error
           ? error.message
           : "Ismeretlen hiba történt a vállalkozói szintű ár mentésekor",
+    };
+  }
+}
+
+/**
+ * Globális ár mentése - amikor az offer-detail-mobile-ban módosítják az árakat
+ * Globális szint = globális ár a PriceList-ben (tenantEmail: '')
+ */
+export async function saveGlobalPrice(
+  task: string,
+  category: string | null,
+  technology: string | null,
+  unit: string | null,
+  laborCost: number,
+  materialCost: number
+) {
+  try {
+    // Tisztítsd meg a task nevet a * karaktertől
+    const cleanedTask = task.replace(/^\*+\s*/, "").trim();
+
+    console.log("saveGlobalPrice meghívva:", {
+      originalTask: task,
+      cleanedTask,
+      category,
+      technology,
+      unit,
+      laborCost,
+      materialCost,
+    });
+
+    // Globális szintű ár = globális ár a PriceList-ben (tenantEmail: '')
+    // Upsert: ha már van ilyen task-hoz ár, frissítjük; ha nincs, létrehozzuk
+
+    // Csak azokat a mezőket adjuk meg, amelyeknek van értéke
+    const updateData: any = {
+      laborCost,
+      materialCost,
+    };
+
+    if (unit) {
+      updateData.unit = unit;
+    }
+    if (category) {
+      updateData.category = category;
+    }
+    if (technology) {
+      updateData.technology = technology;
+    }
+
+    const createData: any = {
+      task: cleanedTask,
+      tenantEmail: "", // Globális = üres string
+      laborCost,
+      materialCost,
+    };
+
+    if (unit) {
+      createData.unit = unit;
+    }
+    if (category) {
+      createData.category = category;
+    }
+    if (technology) {
+      createData.technology = technology;
+    }
+
+    const result = await prisma.priceList.upsert({
+      where: {
+        task_tenantEmail: {
+          task: cleanedTask,
+          tenantEmail: "", // Globális = üres string
+        },
+      },
+      update: updateData,
+      create: createData,
+    });
+
+    console.log("saveGlobalPrice sikeres:", result);
+
+    return {
+      success: true,
+      message: "Globális ár sikeresen mentve",
+      data: result,
+    };
+  } catch (error) {
+    console.error("Hiba a globális ár mentésekor:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a globális ár mentésekor",
     };
   }
 }

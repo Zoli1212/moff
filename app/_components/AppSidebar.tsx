@@ -22,6 +22,7 @@ import {
   Sparkles,
   UserPlus,
   Check,
+  DollarSign,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -39,6 +40,7 @@ const mainItems = [
   { title: "Ajánlataim", url: "/offers", icon: Inbox, tenantOnly: true },
   { title: "Számláim", url: "/billings", icon: Wallet, tenantOnly: true },
   { title: "Munkások", url: "/others", icon: Users, tenantOnly: true },
+  { title: "Áraim", url: "/prices", icon: DollarSign, tenantOnly: true },
 ];
 
 const secondaryItems = [

@@ -654,3 +654,14 @@ egy munka több ajánlathoz tartózhat
 checklista lassú checkbox
 ! mennyiért tudná beszerezni
 
+TenantPriceList - saját árlista
+Globálisra rakunk egy hátsó service +
+Bekerül de bővül
+felkiáltójel -  saját - háromszög felkiáltójel piros uj tétel
+lokális, globális, tenant árlista
+munkába állított - 
+nézz meg a követelményeket, munkába állításkor
+ármodosítás a globális adatbázisban
+uj tétel, + globális adatbázisba 
+kerüljön be a globálisba
+globális

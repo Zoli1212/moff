@@ -137,6 +137,8 @@ export function OfferDetailView({
   const [titleValue, setTitleValue] = useState("");
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const [saveTenantPriceChecked, setSaveTenantPriceChecked] = useState(true); // Default: bejelölve
+  const [saveGlobalPriceChecked, setSaveGlobalPriceChecked] = useState(false); // Default: nincs bejelölve
+  const [isSuperUser, setIsSuperUser] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -166,6 +168,21 @@ export function OfferDetailView({
       setOriginalItems(validatedItems);
     }
   }, [offer.items]);
+
+  // Check if user is super user
+  useEffect(() => {
+    const checkSuperUser = async () => {
+      try {
+        const { checkIsSuperUser } = await import("@/actions/user-management-actions");
+        const result = await checkIsSuperUser();
+        setIsSuperUser(result.isSuperUser || false);
+      } catch (error) {
+        console.error("Error checking super user status:", error);
+        setIsSuperUser(false);
+      }
+    };
+    checkSuperUser();
+  }, []);
 
   console.log(originalItems);
 
@@ -376,6 +393,9 @@ export function OfferDetailView({
       );
 
       if (result.success) {
+        const laborCost = parseCurrency(item.unitPrice || "0");
+        const materialCost = parseCurrency(item.materialUnitPrice || "0");
+
         // Ha a checkbox be van jelölve, mentjük a vállalkozói szintű árakat is
         if (saveTenantPriceChecked) {
           console.log("Vállalkozói szintű ár mentése...", {
@@ -385,11 +405,9 @@ export function OfferDetailView({
             materialUnitPrice: item.materialUnitPrice,
           });
 
-          const laborCost = parseCurrency(item.unitPrice || "0");
-          const materialCost = parseCurrency(item.materialUnitPrice || "0");
-
           console.log("Parsed costs:", { laborCost, materialCost });
 
+          const { saveTenantPrice } = await import("@/actions/offer-actions");
           const priceResult = await saveTenantPrice(
             item.name,
             null, // category - nem szükséges a modal-ból
@@ -402,10 +420,45 @@ export function OfferDetailView({
           console.log("Vállalkozói szintű ár mentés eredménye:", priceResult);
 
           if (!priceResult.success) {
-            console.warn("Vállalkozói szintű ár mentése sikertelen:", priceResult.message);
+            console.warn(
+              "Vállalkozói szintű ár mentése sikertelen:",
+              priceResult.message
+            );
             // Nem jelezzük hibát, mert az offer már mentve van
           } else {
             console.log("Vállalkozói szintű ár sikeresen mentve");
+          }
+        }
+
+        // Ha a checkbox be van jelölve, mentjük a globális árakat is
+        if (saveGlobalPriceChecked) {
+          console.log("Globális ár mentése...", {
+            name: item.name,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+            materialUnitPrice: item.materialUnitPrice,
+          });
+
+          const { saveGlobalPrice } = await import("@/actions/offer-actions");
+          const globalPriceResult = await saveGlobalPrice(
+            item.name,
+            null, // category - nem szükséges a modal-ból
+            null, // technology - nem szükséges a modal-ból
+            item.unit,
+            laborCost,
+            materialCost
+          );
+
+          console.log("Globális ár mentés eredménye:", globalPriceResult);
+
+          if (!globalPriceResult.success) {
+            console.warn(
+              "Globális ár mentése sikertelen:",
+              globalPriceResult.message
+            );
+            // Nem jelezzük hibát, mert az offer már mentve van
+          } else {
+            console.log("Globális ár sikeresen mentve");
           }
         }
 
@@ -662,14 +715,18 @@ export function OfferDetailView({
                 );
                 await updateWorkWithAIResult(result.workId!, aiResult);
                 console.log("✅ AI feldolgozás sikeres");
-                
+
                 // Frissítjük a processingByAI flag-et false-ra server action-nel
-                const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+                const { setWorkProcessingFlag } = await import(
+                  "@/actions/work-actions"
+                );
                 await setWorkProcessingFlag(result.workId!, false);
               } else {
                 console.error("❌ AI feldolgozási hiba:", aiResult?.error);
                 // Hiba esetén is állítsuk false-ra a flag-et
-                const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+                const { setWorkProcessingFlag } = await import(
+                  "@/actions/work-actions"
+                );
                 await setWorkProcessingFlag(result.workId!, false);
               }
             })
@@ -677,7 +734,9 @@ export function OfferDetailView({
               console.error("❌ AI feldolgozási hiba:", err);
               // Hiba esetén is állítsuk false-ra a flag-et
               try {
-                const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+                const { setWorkProcessingFlag } = await import(
+                  "@/actions/work-actions"
+                );
                 await setWorkProcessingFlag(result.workId!, false);
               } catch (dbErr) {
                 console.error("❌ DB frissítési hiba:", dbErr);
@@ -1039,14 +1098,40 @@ export function OfferDetailView({
                     type="checkbox"
                     id="saveTenantPrice"
                     checked={saveTenantPriceChecked}
-                    onChange={(e) => setSaveTenantPriceChecked(e.target.checked)}
+                    onChange={(e) =>
+                      setSaveTenantPriceChecked(e.target.checked)
+                    }
                     className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-green-600"
                   />
-                  <Label htmlFor="saveTenantPrice" className="cursor-pointer text-sm">
-                    Mentés vállalkozói szinten is (globális árként)
+                  <Label
+                    htmlFor="saveTenantPrice"
+                    className="cursor-pointer text-sm"
+                  >
+                    Mentés vállalkozói tételként
                   </Label>
                 </div>
               </div>
+              {isSuperUser && (
+                <div className="grid grid-cols-4 items-center gap-4 pt-2">
+                  <div className="col-span-4 flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="saveGlobalPrice"
+                      checked={saveGlobalPriceChecked}
+                      onChange={(e) =>
+                        setSaveGlobalPriceChecked(e.target.checked)
+                      }
+                      className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-green-600"
+                    />
+                    <Label
+                      htmlFor="saveGlobalPrice"
+                      className="cursor-pointer text-sm"
+                    >
+                      Mentés globális tételként
+                    </Label>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex flex-col gap-2 mt-6 border-t pt-4">
               <button
@@ -1382,6 +1467,8 @@ export function OfferDetailView({
                     .split("\n")
                     .filter((line) => {
                       const trimmed = line.trim();
+                      // Üres sorokat kihagyunk
+                      if (!trimmed) return false;
                       // Ha nem csillaggal kezdődik, megtartjuk
                       if (!trimmed.startsWith("*")) return true;
                       // Ha csillaggal kezdődik, csak akkor tartjuk meg, ha kérdőjelet tartalmaz
