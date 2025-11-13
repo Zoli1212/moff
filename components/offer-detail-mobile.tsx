@@ -4,8 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   updateOfferItems,
   updateOfferStatus,
-  updateOfferValidUntil,
-  saveTenantPrice,
+  updateOfferValidUntil
 } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
