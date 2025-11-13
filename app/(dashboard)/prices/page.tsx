@@ -31,7 +31,6 @@ interface EditingItem extends PriceItem {
 
 export default function PricesPage() {
   const router = useRouter();
-  const { user } = useUser();
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [globalPrices, setGlobalPrices] = useState<PriceItem[]>([]);
   const [tenantPrices, setTenantPrices] = useState<PriceItem[]>([]);
