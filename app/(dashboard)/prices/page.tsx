@@ -392,7 +392,7 @@ export default function PricesPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                Globális Áraim
+                Globális Árak
               </h2>
               <button
                 onClick={() => {
