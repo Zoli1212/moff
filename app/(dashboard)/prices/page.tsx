@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useUser } from "@clerk/nextjs";
 import { checkIsSuperUser } from "@/actions/user-management-actions";
 import {
   getGlobalPrices,
