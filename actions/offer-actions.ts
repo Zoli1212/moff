@@ -550,7 +550,24 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     // Add items if they exist
     if (parsedContent.items && parsedContent.items.length > 0) {
       console.log(`Adding ${parsedContent.items.length} items to offer`);
-      offerData.items = JSON.stringify(parsedContent.items);
+
+      // Process items: add "new": true for items with ! and remove the !
+      // All other items get "new": false
+      const processedItems = parsedContent.items.map((item: any) => {
+        if (item.name && item.name.endsWith('!')) {
+          return {
+            ...item,
+            name: item.name.slice(0, -1), // Remove the ! from the end
+            new: true
+          };
+        }
+        return {
+          ...item,
+          new: false // Explicitly set new: false for all non-custom items
+        };
+      });
+
+      offerData.items = JSON.stringify(processedItems);
       console.log("Items JSON:", offerData.items);
     } else {
       console.log("No items to add to offer");
@@ -949,6 +966,24 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 
     const { material: materialTotal, work: workTotal, grandTotal } = totals;
 
+    // Process items: add "new": true for items with ! and remove the !
+    // Also preserve the "new" field if it already exists
+    const processedItems = items.map((item: any) => {
+      const result: any = { ...item };
+      
+      // If item name ends with !, remove it and set new: true
+      if (item.name && item.name.endsWith('!')) {
+        result.name = item.name.slice(0, -1); // Remove the ! from the end
+        result.new = true;
+      }
+      // If the item already has new field, preserve it
+      else if (item.new) {
+        result.new = true;
+      }
+      
+      return result;
+    });
+
     // Update the offer with new items and total price
     const updatedOffer = await prisma.offer.update({
       where: {
@@ -956,7 +991,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
         tenantEmail: userEmail, // Ensure we only update if the offer belongs to the user
       },
       data: {
-        items: items as unknown as Prisma.InputJsonValue, // Type-safe JSON serialization
+        items: processedItems as unknown as Prisma.InputJsonValue, // Type-safe JSON serialization
         totalPrice: grandTotal,
         materialTotal: parseFloat(materialTotal.toFixed(2)),
         workTotal: parseFloat(workTotal.toFixed(2)),
@@ -997,8 +1032,8 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
 
             // Validate and transform each item to match OfferItem
             return items.map(
-              (item) =>
-                ({
+              (item) => {
+                const transformedItem: any = {
                   id: item.id,
                   name: item.name ? item.name.replace(/^\*+\s*/, "") : "",
                   quantity: item.quantity || "0",
@@ -1008,7 +1043,17 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
                   materialTotal: item.materialTotal || "0",
                   workTotal: item.workTotal || "0",
                   description: item.description || "",
-                }) as OfferItem
+                };
+                
+                // Explicitly preserve the new field for custom items
+                if (item.new === true || item.new === "true") {
+                  transformedItem.new = true;
+                } else {
+                  transformedItem.new = false;
+                }
+                
+                return transformedItem as OfferItem;
+              }
             );
           } catch (error) {
             console.error("Error parsing offer items:", error);

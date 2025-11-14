@@ -1,0 +1,95 @@
+{
+  "title": "Ismeretlen cím",
+  "location": "",
+  "items": [
+    {
+      "name": "*Régi konyhabútor eltávolítása",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "3000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "135000 Ft",
+      "materialTotal": "22500 Ft",
+      "totalPrice": "157 500 Ft"
+    },
+    {
+      "name": "*Felületek portalanítása, glettelés",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "590 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "26550 Ft",
+      "totalPrice": "251 550 Ft"
+    },
+    {
+      "name": "*Fali csempeburkolat készítése (20x20 – 30x60 cm)",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "81000 Ft",
+      "totalPrice": "306 000 Ft"
+    },
+    {
+      "name": "*Belső falak festése diszperziós festékkel",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "81000 Ft",
+      "totalPrice": "306 000 Ft"
+    },
+    {
+      "name": "*Konyhabútor, egyéb beépített bútorok",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "2500 Ft",
+      "workTotal": "10000 Ft",
+      "materialTotal": "2500 Ft",
+      "totalPrice": "12 500 Ft"
+    },
+    {
+      "name": "*Hideg-meleg víz alapvezeték kiépítése",
+      "quantity": "45",
+      "unit": "fm",
+      "unitPrice": "6500 Ft",
+      "materialUnitPrice": "3800 Ft",
+      "workTotal": "292500 Ft",
+      "materialTotal": "171000 Ft",
+      "totalPrice": "463 500 Ft"
+    },
+    {
+      "name": "*Vezetékek alapcsövezése padlóban",
+      "quantity": "45",
+      "unit": "fm",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1600 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "72000 Ft",
+      "totalPrice": "297 000 Ft"
+    },
+    {
+      "name": "*Meglévő gázvezeték átvezetése az új konyhabútor alatt!",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "25000 Ft",
+      "materialUnitPrice": "5000 Ft",
+      "workTotal": "25000 Ft",
+      "materialTotal": "5000 Ft",
+      "totalPrice": "30 000 Ft"
+    }
+  ],
+  "totalPrice": 1824050,
+  "notes": [
+    "Kispest, Kossuth Lajos utca 20",
+    "További információ:",
+    "A következő tétel nem volt az adatbázisban: 'Meglévő gázvezeték átvezetése az új konyhabútor alatt (egyedi tétel)'.",
+    "Indoklás: A feladat speciális, a gázvezeték átvezetése egyedi tervezést és kivitelezést igényel.",
+    "Becsült kivitelezési idő: 15 nap"
+  ],
+  "offerSummary": "Az ajánlat tartalmazza a konyha teljes felújítását: régi bútor eltávolítását, falak előkészítését, csempézést, festést, új bútor beépítését, víz- és elektromos hálózat kiépítését és gázvezeték átvezetését. A projekt során egy 45 nm-es konyha teljes megújítására kerül sor."
+}

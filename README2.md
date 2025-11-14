@@ -665,3 +665,23 @@ nézz meg a követelményeket, munkába állításkor
 uj tétel, + globális adatbázisba 
 kerüljön be a globálisba
 globális
+---
+Teszt utca 442 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, a 70x2.1m es ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanzo 150000, a wc-e 50000, a kad 160000.
+
+---
+
+5. Teszt utca 444 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanzo 150000, a wc-e 50000, a kad 160000.
+
+MEGJEGYZÉS: Ez a követelmény garantáltan tartalmaz egyedi tételeket, mivel a "meglévő kőburkolat és csempe felszedése" és a "meglévő zuhanyzó, mosdó és WC eltávolítása" nem található a katalógusban. Az AI-nak fel kell vennie őket az ajánlatba és jelölje meg őket (egyedi tétel). Az egyedi tételek végén `!` jel jelenik meg, és a notes-ban szerepelnek a magyarázatai.
+
+---
+
+6. Kispest, Kossuth Lajos utca 12-ben egy 45 nm-es konyha felújítása szükséges. A régi konyhabútort ki kell venni, a falakat fel kell készíteni új csempézéshez. Az új csempét 1,5 méteres magasságig kell lerakni, majd a fal többi részét fehér festékkel ki kell festeni. Az új konyhabútort beépíteni kell, valamint új vízvezeték és elektromos hálózat kiépítése szükséges. A munka során a meglévő gázvezeték átvezetése is szükséges az új konyhabútor alatt. Az ügyfél által biztosított anyagok: új konyhabútor 280000 Ft, csempe 45000 Ft.
+
+MEGJEGYZÉS: Ez a követelmény szintén tartalmaz egyedi tételeket, mivel a "meglévő gázvezeték átvezetése" és a "falak előkészítése csempézéshez" nem található a katalógusban. Az AI-nak fel kell vennie őket az ajánlatba és jelölje meg őket (egyedi tétel).
+
+---
+
+7. Szolnok, Petőfi Sándor utca 5-ben egy 30 nm-es nappali felújítása szükséges. Az ügyfél szeretné az összes falat laminált parkettára cserélni, az összes falat festeni, valamint egy új gipszkarton mennyezetet szereltetni LED-es világítással. Az elektromos hálózat bővítése is szükséges az új világítás miatt. Az ügyfél által biztosított anyagok: laminált parkett 120000 Ft, festék 25000 Ft, gipszkarton 40000 Ft.
+
+MEGJEGYZÉS: Ez a követelmény garantáltan tartalmaz egyedi tételeket, mivel a "gipszkarton mennyezet LED-es világítással" és az "elektromos hálózat bővítése" nem található a katalógusban. Az AI-nak fel kell vennie őket az ajánlatba és jelölje meg őket (egyedi tétel). Az egyedi tételek végén `!` jel jelenik meg, és a notes-ban szerepelnek a magyarázatai.

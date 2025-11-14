@@ -196,10 +196,10 @@ export default function PricesPage() {
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="p-2 rounded-lg transition-colors hover:bg-gray-200"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             title="Vissza"
           >
-            <ChevronLeft className="h-6 w-6 text-black" />
+            <ChevronLeft className="h-6 w-6" style={{ color: "#FE9C00" }} />
           </button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Áraim kezelése

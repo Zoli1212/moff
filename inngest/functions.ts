@@ -185,11 +185,20 @@ CUSTOM ITEM RULES
 ===============================
 
 - In the main offer list, use the SAME standard format as catalog items.
-- Do NOT write “custom item” in the offer line.
-- In the “További információ” section you MUST include:
+- NEVER write "(egyedi tétel)" or "custom" or "custom item" in the offer line itself.
+- NEVER add "(egyedi tétel)" to the item name in the main list.
+- If a task is NOT found in the catalog (custom item), you MUST:
+  1. Add it to the items list with a ! at the end of the name (e.g., "Task name!")
+  2. Include it in the "További információ" section with explanation
+  3. Use standard format: quantity × unit price (díj) + material price (anyag)
+- In the "További információ" section you MUST include:
 
+  For CUSTOM items (no catalog match):
   A következő tétel nem volt az adatbázisban: '[Task name] (egyedi tétel)'.
   Indoklás: [reason why no catalog match existed].
+
+  For FUZZY MATCH items (close match found):
+  A következő tétel közeli egyezőség alapján lett kiválasztva: '[Task name]'.
 
 ===============================
 FORBIDDEN
@@ -4333,31 +4342,43 @@ export const AiOfferAgent = inngest.createFunction(
         "AiOfferChatAgent result!!!:",
         JSON.stringify(result, null, 2)
       );
-      
+
       // Részletes logolás az AI válaszról
       console.log("=== AI RESPONSE DETAILED LOG ===");
       console.log("Result type:", typeof result);
       console.log("Result keys:", Object.keys(result || {}));
-      
+
       if (result && result.output && Array.isArray(result.output)) {
         console.log("Output array length:", result.output.length);
         result.output.forEach((item, index) => {
           console.log(`Output[${index}]:`, {
             type: typeof item,
             keys: Object.keys(item || {}),
-            hasContent: 'content' in item
+            hasContent: "content" in item,
           });
-          
+
           // Keressük az offerSummary-t a válaszban
-          if ('content' in item && item.content && typeof item.content === 'string') {
-            console.log("Content preview:", item.content.substring(0, 500) + "...");
-            
-            const offerSummaryMatch = item.content.match(/offerSummary:\s*([^\n]+(?:\n[^\n]+)?)/i);
+          if (
+            "content" in item &&
+            item.content &&
+            typeof item.content === "string"
+          ) {
+            console.log(
+              "Content preview:",
+              item.content.substring(0, 500) + "..."
+            );
+
+            const offerSummaryMatch = item.content.match(
+              /offerSummary:\s*([^\n]+(?:\n[^\n]+)?)/i
+            );
             if (offerSummaryMatch) {
               console.log("🎯 FOUND offerSummary:", offerSummaryMatch[1]);
             } else {
               console.log("❌ offerSummary NOT FOUND in content");
-              console.log("Full content preview:", item.content.substring(0, 1000));
+              console.log(
+                "Full content preview:",
+                item.content.substring(0, 1000)
+              );
             }
           } else {
             console.log("❌ No content property in message");

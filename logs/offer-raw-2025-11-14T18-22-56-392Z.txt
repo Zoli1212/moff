@@ -1,0 +1,21 @@
+Raw Offer Text:
+
+# Teszt utca 443
+
+*Kőburkolat és csempe felszedése: 15 m² (padló) + 36 m² (fal) × 2 000 Ft/m² (díj) + 300 Ft/m² (anyag) = 102 000 Ft (díj összesen) + 15 300 Ft (anyag összesen)*
+*Meglévő zuhanyzó, mosdó és WC eltávolítása: 3 db × 5 000 Ft/db (díj) + 0 Ft/db (anyag) = 15 000 Ft (díj összesen) + 0 Ft (anyag összesen)*
+*Szaniterek elhelyezése: 1 zuhanyzó + 1 WC + 1 kád × 10 000 Ft/db (díj) + 0 Ft/db (anyag) = 30 000 Ft (díj összesen) + 0 Ft (anyag összesen)*
+*Mennyezet festése fehér diszperziós festékkel: 15 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 75 000 Ft (díj összesen) + 27 000 Ft (anyag összesen)*
+*Padlólap ragasztása (30x30 – 45x45 cm): 15 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 75 000 Ft (díj összesen) + 27 000 Ft (anyag összesen)*
+*Fali csempeburkolat készítése (20x20 – 30x60 cm): 36 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 180 000 Ft (díj összesen) + 64 800 Ft (anyag összesen)*
+*Beltéri ajtók mázolása: 1 db × 18 000 Ft/db (díj) + 1 000 Ft/db (anyag) = 18 000 Ft (díj összesen) + 1 000 Ft (anyag összesen)*
+*Új zuhanyzó (anyagár): 150 000 Ft (anyag összesen)*
+*Új WC (anyagár): 50 000 Ft (anyag összesen)*
+*Új kád (anyagár): 160 000 Ft (anyag összesen)*
+
+Becsült kivitelezési idő: 10 nap
+
+offerSummary: Az ajánlat tartalmazza a fürdőszoba bontását, új szaniterek beépítését, csempézést, festést és az ajtó mázolását. A projekt során egy 3x5 méteres fürdőszoba teljes felújítására kerül sor.
+
+---
+Timestamp: 2025-11-14T18:22:56.392Z

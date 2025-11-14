@@ -1,0 +1,203 @@
+{
+  "title": "Kiss Ignácz utca 2, II. kerület, Budapest",
+  "location": "Kiss Ignácz utca 2, II. kerület",
+  "items": [
+    {
+      "name": "*Felületek portalanítása, glettelés",
+      "quantity": "180",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "590 Ft",
+      "workTotal": "900000 Ft",
+      "materialTotal": "106200 Ft",
+      "totalPrice": "1 006 200 Ft"
+    },
+    {
+      "name": "*Csiszolás, felületkiegyenlítés",
+      "quantity": "180",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "900000 Ft",
+      "materialTotal": "90000 Ft",
+      "totalPrice": "990 000 Ft"
+    },
+    {
+      "name": "*Takarás, maszkolás ajtók, nyílászárók mentén",
+      "quantity": "50",
+      "unit": "fm",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "250000 Ft",
+      "materialTotal": "90000 Ft",
+      "totalPrice": "340 000 Ft"
+    },
+    {
+      "name": "*Belső falak festése színes festékkel",
+      "quantity": "180",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "900000 Ft",
+      "materialTotal": "90000 Ft",
+      "totalPrice": "990 000 Ft"
+    },
+    {
+      "name": "*Mennyezet festése",
+      "quantity": "78",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "390000 Ft",
+      "materialTotal": "140400 Ft",
+      "totalPrice": "530 400 Ft"
+    },
+    {
+      "name": "*Aljzat ellenőrzése, szintezés, alapozás",
+      "quantity": "25",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "125000 Ft",
+      "materialTotal": "12500 Ft",
+      "totalPrice": "137 500 Ft"
+    },
+    {
+      "name": "*Padlólap ragasztása (30x30 – 45x45 cm)",
+      "quantity": "25",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "125000 Ft",
+      "materialTotal": "45000 Ft",
+      "totalPrice": "170 000 Ft"
+    },
+    {
+      "name": "*Fugázás, sarokszegély kialakítás",
+      "quantity": "25",
+      "unit": "fm",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "125000 Ft",
+      "materialTotal": "12500 Ft",
+      "totalPrice": "137 500 Ft"
+    },
+    {
+      "name": "*Alátétfólia, párazáró réteg leterítése",
+      "quantity": "50",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "250000 Ft",
+      "materialTotal": "90000 Ft",
+      "totalPrice": "340 000 Ft"
+    },
+    {
+      "name": "*Laminált padló fektetése klikkes rendszerrel",
+      "quantity": "50",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "250000 Ft",
+      "materialTotal": "90000 Ft",
+      "totalPrice": "340 000 Ft"
+    },
+    {
+      "name": "*Szegélyléc felhelyezése (laminált padlóhoz)",
+      "quantity": "50",
+      "unit": "fm",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "250000 Ft",
+      "materialTotal": "25000 Ft",
+      "totalPrice": "275 000 Ft"
+    },
+    {
+      "name": "*Konyhabútor bontása és új beépítése",
+      "quantity": "4.5",
+      "unit": "fm",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "2500 Ft",
+      "workTotal": "45000 Ft",
+      "materialTotal": "11250 Ft",
+      "totalPrice": "56 250 Ft"
+    },
+    {
+      "name": "*Hideg-meleg víz alapvezeték kiépítése",
+      "quantity": "10",
+      "unit": "fm",
+      "unitPrice": "6500 Ft",
+      "materialUnitPrice": "3800 Ft",
+      "workTotal": "65000 Ft",
+      "materialTotal": "38000 Ft",
+      "totalPrice": "103 000 Ft"
+    },
+    {
+      "name": "*Mosogató csaptelep és szifon szerelése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Zuhany- vagy kádcsap felszerelése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Kábeltálcák, védőcsövek fektetése",
+      "quantity": "40",
+      "unit": "fm",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "200000 Ft",
+      "materialTotal": "72000 Ft",
+      "totalPrice": "272 000 Ft"
+    },
+    {
+      "name": "*Dugalj (konnektor) felszerelése",
+      "quantity": "20",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "160000 Ft",
+      "materialTotal": "10000 Ft",
+      "totalPrice": "170 000 Ft"
+    },
+    {
+      "name": "*Mennyezeti lámpa felszerelése",
+      "quantity": "6",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "48000 Ft",
+      "materialTotal": "3000 Ft",
+      "totalPrice": "51 000 Ft"
+    },
+    {
+      "name": "*FI relé beépítése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    }
+  ],
+  "totalPrice": 5934350,
+  "notes": [
+    "# Kiss Ignácz utca 2, II. kerület, Budapest",
+    "Becsült kivitelezési idő: 15 nap",
+    "offerSummary: Az ajánlat tartalmazza a lakás teljes belső festését, hidegburkolatok cseréjét, laminált padló fektetését, konyhabútor beépítését, vízvezeték és elektromos hálózat részleges felújítását. A projekt során a 78 m²-es II. kerületi lakás részleges felújítása valósul meg."
+  ],
+  "offerSummary": "Az ajánlat tartalmazza a lakás teljes belső festését, hidegburkolatok cseréjét, laminált padló fektetését, konyhabútor beépítését, vízvezeték és elektromos hálózat részleges felújítását. A projekt során a 78 m²-es II. kerületi lakás részleges felújítása valósul meg."
+}

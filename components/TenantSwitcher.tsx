@@ -71,18 +71,18 @@ export function TenantSwitcher() {
   }
 
   return (
-    <div className="fixed bottom-4 left-4 bg-white p-3 rounded-lg shadow-lg z-50 border">
+    <div className="fixed bottom-4 left-4 bg-[#1e293b] p-3 rounded-lg shadow-lg z-50 border border-[#FE9C00]">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Bérlő váltása:</span>
+        <span className="text-sm font-medium text-[#FE9C00]">Bérlő váltása:</span>
         <Select onValueChange={handleTenantChange} value={selectedTenantEmail || undefined}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Válassz bérlőt">
+          <SelectTrigger className="w-[200px] bg-gray-800 text-white border-[#FE9C00]">
+            <SelectValue placeholder="Válassz bérlőt" className="text-gray-400">
               {getCurrentDisplayValue()}
             </SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-gray-800 border-[#FE9C00]">
             {availableTenants.map((tenant) => (
-              <SelectItem key={tenant.id} value={tenant.email}>
+              <SelectItem key={tenant.id} value={tenant.email} className="text-white hover:bg-gray-700">
                 {tenant.name || tenant.email}
               </SelectItem>
             ))}
@@ -93,7 +93,7 @@ export function TenantSwitcher() {
             variant="outline"
             size="sm"
             onClick={handleClearSelection}
-            className="p-2 h-8 w-8"
+            className="p-2 h-8 w-8 bg-[#FE9C00] hover:bg-[#E58A00] text-white border-0"
             title="Bérlő kiválasztás törlése"
           >
             <X className="h-4 w-4" />

@@ -183,7 +183,8 @@ export default function RequirementOffersPage() {
               materialUnitPrice: isNewFormat ? item.materialUnitPrice : '0',
               unitPrice: isNewFormat ? item.unitPrice : (item.unitPrice || '0'),
               materialTotal: isNewFormat ? item.materialTotal : '0',
-              workTotal: isNewFormat ? item.workTotal : (item.totalPrice || '0')
+              workTotal: isNewFormat ? item.workTotal : (item.totalPrice || '0'),
+              new: item.new || false, // Preserve the new field for custom items
             };
           }) : [];
         

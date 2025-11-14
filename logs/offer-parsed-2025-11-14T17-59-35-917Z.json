@@ -1,0 +1,157 @@
+{
+  "title": "Ismeretlen cím",
+  "location": "",
+  "items": [
+    {
+      "name": "*Helyszíni bejárás, területfelmérés",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "18000 Ft",
+      "materialUnitPrice": "0 Ft",
+      "workTotal": "18000 Ft",
+      "materialTotal": "0 Ft",
+      "totalPrice": "18 000 Ft"
+    },
+    {
+      "name": "*Meglévő csempe eltávolítása",
+      "quantity": "48",
+      "unit": "m²",
+      "unitPrice": "2500 Ft",
+      "materialUnitPrice": "600 Ft",
+      "workTotal": "120000 Ft",
+      "materialTotal": "28800 Ft",
+      "totalPrice": "148 800 Ft"
+    },
+    {
+      "name": "*WC kiépítése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Kád bekötése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Zuhany- vagy kádcsap felszerelése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Felületek portalanítása, glettelés",
+      "quantity": "48",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "590 Ft",
+      "workTotal": "240000 Ft",
+      "materialTotal": "28320 Ft",
+      "totalPrice": "268 320 Ft"
+    },
+    {
+      "name": "*Mennyezet festése",
+      "quantity": "15",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "75000 Ft",
+      "materialTotal": "27000 Ft",
+      "totalPrice": "102 000 Ft"
+    },
+    {
+      "name": "*Padlólap ragasztása (30x30 – 45x45 cm)",
+      "quantity": "15",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "75000 Ft",
+      "materialTotal": "27000 Ft",
+      "totalPrice": "102 000 Ft"
+    },
+    {
+      "name": "*Belső ajtók mázolása",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "18000 Ft",
+      "materialUnitPrice": "1000 Ft",
+      "workTotal": "18000 Ft",
+      "materialTotal": "1000 Ft",
+      "totalPrice": "19 000 Ft"
+    },
+    {
+      "name": "*WC (anyag)",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "0 Ft",
+      "materialUnitPrice": "50000 Ft",
+      "workTotal": "0 Ft",
+      "materialTotal": "50000 Ft",
+      "totalPrice": "50 000 Ft"
+    },
+    {
+      "name": "*Zuhanyzo (anyag)",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "0 Ft",
+      "materialUnitPrice": "150000 Ft",
+      "workTotal": "0 Ft",
+      "materialTotal": "150000 Ft",
+      "totalPrice": "150 000 Ft"
+    },
+    {
+      "name": "*Kád (anyag)",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "0 Ft",
+      "materialUnitPrice": "160000 Ft",
+      "workTotal": "0 Ft",
+      "materialTotal": "160000 Ft",
+      "totalPrice": "160 000 Ft"
+    },
+    {
+      "name": "*Mosdó, kézmosó csaptelep felszerelése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Fali csempeburkolat készítése (20x20 – 30x60 cm)",
+      "quantity": "48",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "240000 Ft",
+      "materialTotal": "86400 Ft",
+      "totalPrice": "326 400 Ft"
+    }
+  ],
+  "totalPrice": 1378520,
+  "notes": [
+    "# Teszt utca 441",
+    "Fürdőszoba felújítási ajánlat a Teszt utca 441 alatt található 3x5 méteres fürdőszobára.",
+    "Becsült kivitelezési idő: 14 nap",
+    "További információ:",
+    "A meglevo koburkolatot es csempet fel kell szedni -> Meglévő csempe eltávolítása (Fuzzy match)",
+    "A meglevo zuhanyzot, mosdot es wc-t ki kell venni -> WC kiépítése (a teljes szaniter kiépítés a wc-vel kezdődik)",
+    "Fali csempeburkolat készítése (20x20 – 30x60 cm) -> A javasolt méret a megadott értékek alapján lett feltételezve, ha a csempe mérete eltér, az az ár változhat."
+  ],
+  "offerSummary": "Az ajánlat tartalmazza a fürdőszoba teljes felújítását, beleértve a meglévő burkolatok eltávolítását, új szaniterek beszerelését, festést és csempézést. A projekt egy 3x5 méteres fürdőszoba teljes körű megújítására irányul."
+}

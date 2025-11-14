@@ -1,0 +1,260 @@
+{
+  "title": "Ismeretlen cím",
+  "location": "",
+  "items": [
+    {
+      "name": "*Konyhabútor, egyéb beépített bútorok: Helyszín felmérése és bútorpozíciók jelölése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "2500 Ft",
+      "workTotal": "10000 Ft",
+      "materialTotal": "2500 Ft",
+      "totalPrice": "12 500 Ft"
+    },
+    {
+      "name": "*Konyhabútor, egyéb beépített bútorok: Mosogató és csaptelep beépítése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "2500 Ft",
+      "workTotal": "10000 Ft",
+      "materialTotal": "2500 Ft",
+      "totalPrice": "12 500 Ft"
+    },
+    {
+      "name": "*Konyhabútor, egyéb beépített bútorok: Beépíthető készülékek rögzítése (főzőlap, sütő)",
+      "quantity": "2",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "2500 Ft",
+      "workTotal": "20000 Ft",
+      "materialTotal": "5000 Ft",
+      "totalPrice": "25 000 Ft"
+    },
+    {
+      "name": "*Konyhabútor, egyéb beépített bútorok: Ajtók, fiókok beállítása",
+      "quantity": "10",
+      "unit": "db",
+      "unitPrice": "18000 Ft",
+      "materialUnitPrice": "3000 Ft",
+      "workTotal": "180000 Ft",
+      "materialTotal": "30000 Ft",
+      "totalPrice": "210 000 Ft"
+    },
+    {
+      "name": "*Konyhabútor, egyéb beépített bútorok: Beépítési dokumentáció, átadás",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "12000 Ft",
+      "materialUnitPrice": "3000 Ft",
+      "workTotal": "12000 Ft",
+      "materialTotal": "3000 Ft",
+      "totalPrice": "15 000 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Helyszíni mérés, kiállások pozícióinak kijelölése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "12000 Ft",
+      "materialUnitPrice": "0 Ft",
+      "workTotal": "12000 Ft",
+      "materialTotal": "0 Ft",
+      "totalPrice": "12 000 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Elosztó helyek előkészítése",
+      "quantity": "2",
+      "unit": "db",
+      "unitPrice": "12000 Ft",
+      "materialUnitPrice": "1500 Ft",
+      "workTotal": "24000 Ft",
+      "materialTotal": "3000 Ft",
+      "totalPrice": "27 000 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Átvezetések falban, padlóban",
+      "quantity": "5",
+      "unit": "db",
+      "unitPrice": "9000 Ft",
+      "materialUnitPrice": "1200 Ft",
+      "workTotal": "45000 Ft",
+      "materialTotal": "6000 Ft",
+      "totalPrice": "51 000 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Lejtés ellenőrzése szintezőlézerrel",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "9000 Ft",
+      "materialUnitPrice": "800 Ft",
+      "workTotal": "9000 Ft",
+      "materialTotal": "800 Ft",
+      "totalPrice": "9800 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Padlóösszefolyók, WC csatlakozás kiépítése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "12000 Ft",
+      "materialUnitPrice": "8000 Ft",
+      "workTotal": "12000 Ft",
+      "materialTotal": "8000 Ft",
+      "totalPrice": "20 000 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Próbatöltés és nyomáspróba (víz)",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "1500 Ft",
+      "workTotal": "10000 Ft",
+      "materialTotal": "1500 Ft",
+      "totalPrice": "11 500 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Folyáspróba (csatorna)",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "9000 Ft",
+      "materialUnitPrice": "1000 Ft",
+      "workTotal": "9000 Ft",
+      "materialTotal": "1000 Ft",
+      "totalPrice": "10 000 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Villamos bekötések ellenőrzése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "1200 Ft",
+      "workTotal": "10000 Ft",
+      "materialTotal": "1200 Ft",
+      "totalPrice": "11 200 Ft"
+    },
+    {
+      "name": "*Víz-, csatorna-, villany alapszerelés: Dokumentáció készítése, fotózás",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "12000 Ft",
+      "materialUnitPrice": "1200 Ft",
+      "workTotal": "12000 Ft",
+      "materialTotal": "1200 Ft",
+      "totalPrice": "13 200 Ft"
+    },
+    {
+      "name": "*Belső burkolatok: Aljzat ellenőrzése, szintezés, alapozás",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "22500 Ft",
+      "totalPrice": "247 500 Ft"
+    },
+    {
+      "name": "*Belső burkolatok: Fali csempeburkolat készítése (20x20 – 30x60 cm)",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "81000 Ft",
+      "totalPrice": "306 000 Ft"
+    },
+    {
+      "name": "*Festés, mázolás: Felületek portalanítása, glettelés",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "590 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "26550 Ft",
+      "totalPrice": "251 550 Ft"
+    },
+    {
+      "name": "*Festés, mázolás: Csiszolás, felületkiegyenlítés",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "22500 Ft",
+      "totalPrice": "247 500 Ft"
+    },
+    {
+      "name": "*Festés, mázolás: Belső falak festése diszperziós festékkel",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "81000 Ft",
+      "totalPrice": "306 000 Ft"
+    },
+    {
+      "name": "*Festés, mázolás: Mennyezet festése",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "81000 Ft",
+      "totalPrice": "306 000 Ft"
+    },
+    {
+      "name": "*Festés, mázolás: Festés utáni takarítás, elszállítás",
+      "quantity": "45",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "225000 Ft",
+      "materialTotal": "22500 Ft",
+      "totalPrice": "247 500 Ft"
+    },
+    {
+      "name": "*Festés, mázolás: Festési napló, színkód dokumentáció",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "10000 Ft",
+      "materialUnitPrice": "1000 Ft",
+      "workTotal": "10000 Ft",
+      "materialTotal": "1000 Ft",
+      "totalPrice": "11 000 Ft"
+    },
+    {
+      "name": "*Gázvezeték átvezetése!",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "50000 Ft",
+      "materialUnitPrice": "10000 Ft",
+      "workTotal": "50000 Ft",
+      "materialTotal": "10000 Ft",
+      "totalPrice": "60 000 Ft"
+    }
+  ],
+  "totalPrice": 2423750,
+  "notes": [
+    "Kispest, Kossuth Lajos utca 14.",
+    "*Konyhabútor, egyéb beépített bútorok: Alsó szekrényelemek összeállítása és szintezése: 45 nm × 10 000 Ft/fm (díj) + 2 500 Ft/fm (anyag) = 450 000 Ft (díj összesen) + 112 500 Ft (anyag összesen)",
+    "*Konyhabútor, egyéb beépített bútorok: Felső szekrényelemek rögzítése fali tartóra: 45 nm × 10 000 Ft/fm (díj) + 2 500 Ft/fm (anyag) = 450 000 Ft (díj összesen) + 112 500 Ft (anyag összesen)",
+    "*Konyhabútor, egyéb beépített bútorok: Munkapult elhelyezése és rögzítése: 45 nm × 10 000 Ft/fm (díj) + 2 500 Ft/fm (anyag) = 450 000 Ft (díj összesen) + 112 500 Ft (anyag összesen)",
+    "*Konyhabútor, egyéb beépített bútorok: Szegélylécek, záróelemek felszerelése: 45 nm × 6 000 Ft/fm (díj) + 2 000 Ft/fm (anyag) = 270 000 Ft (díj összesen) + 90 000 Ft (anyag összesen)",
+    "*Víz-, csatorna-, villany alapszerelés: Gépészeti nyomvonalak felrajzolása: 45 nm × 5 000 Ft/fm (díj) + 0 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 0 Ft (anyag összesen)",
+    "*Víz-, csatorna-, villany alapszerelés: Hideg-meleg víz alapvezeték kiépítése: 45 nm × 6 500 Ft/fm (díj) + 3 800 Ft/fm (anyag) = 292 500 Ft (díj összesen) + 171 000 Ft (anyag összesen)",
+    "*Víz-, csatorna-, villany alapszerelés: Szennyvíz lefolyócsövek elhelyezése: 45 nm × 6 000 Ft/fm (díj) + 4 200 Ft/fm (anyag) = 270 000 Ft (díj összesen) + 189 000 Ft (anyag összesen)",
+    "*Víz-, csatorna-, villany alapszerelés: Kábeltálcák, védőcsövek fektetése: 45 nm × 5 000 Ft/fm (díj) + 1 800 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)",
+    "*Víz-, csatorna-, villany alapszerelés: Vezetékek alapcsövezése padlóban: 45 nm × 5 000 Ft/fm (díj) + 1 600 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 72 000 Ft (anyag összesen)",
+    "*Víz-, csatorna-, villany alapszerelés: Földelés kiépítése (alaptestbe): 45 nm × 4 500 Ft/fm (díj) + 2 200 Ft/fm (anyag) = 202 500 Ft (díj összesen) + 99 000 Ft (anyag összesen)",
+    "*Belső burkolatok: Fugázás, sarokszegély kialakítás: 45 nm × 5 000 Ft/fm (díj) + 500 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 22 500 Ft (anyag összesen)",
+    "*Festés, mázolás: Takarás, maszkolás ajtók, nyílászárók mentén: 45 m² × 5 000 Ft/fm (díj) + 1 800 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)",
+    "Becsült kivitelezési idő: 21 nap",
+    "További információ:",
+    "A következő tétel nem volt az adatbázisban: 'Gázvezeték átvezetése (egyedi tétel)'.",
+    "Indoklás: A katalógus nem tartalmazza a gázvezeték átvezetésének feladatát.",
+    "Az ügyfél által biztosított anyagok:",
+    "- Új konyhabútor: 280 000 Ft",
+    "- Csempe: 45 000 Ft"
+  ],
+  "offerSummary": "Az ajánlat a konyhabútor beépítését, víz- és elektromos hálózat kiépítését, falelőkészítést, csempézést és festést tartalmazza. A projekt során egy 45 nm-es konyha teljes felújítására kerül sor Kispesten, a Kossuth Lajos utcában."
+}

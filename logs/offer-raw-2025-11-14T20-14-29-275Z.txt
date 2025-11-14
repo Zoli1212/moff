@@ -1,0 +1,21 @@
+Raw Offer Text:
+
+# Szolnok, Petőfi Sándor utca 6.
+
+*Belső falak festése színes festékkel: 30 m² × 5 000 Ft/m² (díj) + 500 Ft/m² (anyag) = 150 000 Ft (díj összesen) + 15 000 Ft (anyag összesen)
+*Gipszkarton vázszerkezet építése CW/UW profilból: 30 m² × 5 000 Ft/m² (díj) + 0 Ft/m² (anyag) = 150 000 Ft (díj összesen) + 0 Ft (anyag összesen)
+*Gipszkarton burkolat szerelése 1 réteg: 30 m² × 6 500 Ft/m² (díj) + 0 Ft/m² (anyag) = 195 000 Ft (díj összesen) + 0 Ft (anyag összesen)
+*LED spot vagy sínrendszer bekötése: 30 m² × 8 000 Ft/m² (díj) + 500 Ft/m² (anyag) = 240 000 Ft (díj összesen) + 15 000 Ft (anyag összesen)
+*Aljzat ellenőrzése, szintezés, alapozás!: 30 m² × 5 000 Ft/m² (díj) + 500 Ft/m² (anyag) = 150 000 Ft (díj összesen) + 15 000 Ft (anyag összesen)
+
+Becsült kivitelezési idő: 10 nap
+
+További információ:
+A következő tétel nem volt az adatbázisban: 'Aljzat ellenőrzése, szintezés, alapozás! (egyedi tétel)'.
+Indoklás: A laminált parketta falra helyezése nem található a listában.
+
+offerSummary: Az ajánlat tartalmazza a nappali falainak festését, gipszkarton mennyezet szerelését LED világítással és laminált parketta felrakását a falakra. A projekt során a 30 nm-es nappali teljes átalakítása történik meg Szolnokon.
+
+
+---
+Timestamp: 2025-11-14T20:14:29.275Z

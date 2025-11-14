@@ -16,7 +16,7 @@ import { useOfferTitleStore } from "@/store/offer-title-store";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { getOfferById } from "@/actions/offer-actions";
 import { getRequirementBlocks } from "@/actions/requirement-block-actions";
-import { Loader2, X, Send, ArrowLeft, Trash2 } from "lucide-react";
+import { Loader2, X, Send, ChevronLeft, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -664,7 +664,7 @@ export function RequirementDetail({
           onClick={onBack}
           className="rounded-full w-10 h-10 hover:bg-gray-100"
         >
-          <ArrowLeft className="h-5 w-5 text-gray-600" />
+          <ChevronLeft className="h-5 w-5" style={{ color: "#FE9C00" }} />
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">
           {requirement.title}

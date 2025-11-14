@@ -68,8 +68,8 @@ export function TenantSelectorSidebar() {
   if (isLoading) {
     return (
       <div className="w-full px-4 pb-3">
-        <div className="bg-gray-50 border border-[#FF7700] rounded-xl p-3 shadow-lg">
-          <div className="text-sm text-[#FF7700]">Bérlők betöltése...</div>
+        <div className="bg-[#1e293b] border border-[#FE9C00] rounded-xl p-3 shadow-lg">
+          <div className="text-sm text-[#FE9C00]">Bérlők betöltése...</div>
         </div>
       </div>
     )
@@ -81,25 +81,25 @@ export function TenantSelectorSidebar() {
 
   return (
     <div className="w-full px-4 pb-3">
-      <div className="bg-gray-50 border border-[#FF7700] rounded-xl p-3 shadow-lg">
+      <div className="bg-[#1e293b] border border-[#FE9C00] rounded-xl p-3 shadow-lg">
         <div className="flex items-center gap-2 mb-3">
-          <Users className="h-4 w-4 text-[#FF7700]" />
-          <span className="text-sm font-semibold text-[#FF7700]">Bérlő váltása</span>
+          <Users className="h-4 w-4 text-[#FE9C00]" />
+          <span className="text-sm font-semibold text-[#FE9C00]">Bérlő váltása</span>
         </div>
         
         <div className="flex items-center gap-2">
           <Select onValueChange={handleTenantChange} value={selectedTenantEmail || undefined}>
-            <SelectTrigger className="flex-1 bg-white border-[#FF7700] text-[#FF7700] hover:bg-gray-100 focus:ring-orange-500 focus:border-orange-500">
+            <SelectTrigger className="flex-1 bg-gray-800 border-[#FE9C00] text-white hover:bg-gray-700 focus:ring-orange-500 focus:border-orange-500">
               <SelectValue placeholder="Válassz bérlőt">
                 {getCurrentDisplayValue()}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent className="bg-white border-[#FF7700]">
+            <SelectContent className="bg-gray-800 border-[#FE9C00]">
               {availableTenants.map((tenant) => (
                 <SelectItem 
                   key={tenant.id} 
                   value={tenant.email}
-                  className="text-[#FF7700] hover:bg-gray-100 focus:bg-gray-200 focus:text-orange-600"
+                  className="text-white hover:bg-gray-700 focus:bg-gray-600"
                 >
 {tenant.email}
                 </SelectItem>
@@ -111,7 +111,7 @@ export function TenantSelectorSidebar() {
             variant="outline"
             size="sm"
             onClick={handleClearSelection}
-            className="p-2 h-8 w-8 bg-white border-[#FF7700] text-[#FF7700] hover:bg-gray-100 hover:text-orange-600"
+            className="p-2 h-8 w-8 bg-[#FE9C00] hover:bg-[#E58A00] text-white border-0"
             title="Bérlő kiválasztás törlése"
           >
             <X className="h-4 w-4" />
@@ -119,7 +119,7 @@ export function TenantSelectorSidebar() {
         </div>
         
         {selectedTenantEmail && (
-          <div className="mt-2 text-xs text-[#999]">
+          <div className="mt-2 text-xs text-gray-400">
             Aktív bérlő: {selectedTenantEmail}
           </div>
         )}

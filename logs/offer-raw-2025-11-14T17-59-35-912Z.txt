@@ -1,0 +1,32 @@
+Raw Offer Text:
+
+# Teszt utca 441
+Fürdőszoba felújítási ajánlat a Teszt utca 441 alatt található 3x5 méteres fürdőszobára.
+
+*Helyszíni bejárás, területfelmérés: 1 db × 18 000 Ft/db (díj) + 0 Ft/db (anyag) = 18 000 Ft (díj összesen) + 0 Ft (anyag összesen)
+*Meglévő csempe eltávolítása: 48 m² × 2 500 Ft/m² (díj) + 600 Ft/m² (anyag) = 120 000 Ft (díj összesen) + 28 800 Ft (anyag összesen)
+*WC kiépítése: 1 db × 8 000 Ft/db (díj) + 500 Ft/db (anyag) = 8 000 Ft (díj összesen) + 500 Ft (anyag összesen)
+*Kád bekötése: 1 db × 8 000 Ft/db (díj) + 500 Ft/db (anyag) = 8 000 Ft (díj összesen) + 500 Ft (anyag összesen)
+*Zuhany- vagy kádcsap felszerelése: 1 db × 8 000 Ft/db (díj) + 500 Ft/db (anyag) = 8 000 Ft (díj összesen) + 500 Ft (anyag összesen)
+*Felületek portalanítása, glettelés: 48 m² × 5 000 Ft/m² (díj) + 590 Ft/m² (anyag) = 240 000 Ft (díj összesen) + 28 320 Ft (anyag összesen)
+*Mennyezet festése: 15 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 75 000 Ft (díj összesen) + 27 000 Ft (anyag összesen)
+*Padlólap ragasztása (30x30 – 45x45 cm): 15 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 75 000 Ft (díj összesen) + 27 000 Ft (anyag összesen)
+*Belső ajtók mázolása: 1 db × 18 000 Ft/db (díj) + 1 000 Ft/db (anyag) = 18 000 Ft (díj összesen) + 1 000 Ft (anyag összesen)
+*WC (anyag): 1 db × 0 Ft/db (díj) + 50 000 Ft/db (anyag) = 0 Ft (díj összesen) + 50 000 Ft (anyag összesen)
+*Zuhanyzo (anyag): 1 db × 0 Ft/db (díj) + 150 000 Ft/db (anyag) = 0 Ft (díj összesen) + 150 000 Ft (anyag összesen)
+*Kád (anyag): 1 db × 0 Ft/db (díj) + 160 000 Ft/db (anyag) = 0 Ft (díj összesen) + 160 000 Ft (anyag összesen)
+*Mosdó, kézmosó csaptelep felszerelése: 1 db × 8 000 Ft/db (díj) + 500 Ft/db (anyag) = 8 000 Ft (díj összesen) + 500 Ft (anyag összesen)
+*Fali csempeburkolat készítése (20x20 – 30x60 cm): 48 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 240 000 Ft (díj összesen) + 86 400 Ft (anyag összesen)
+
+Becsült kivitelezési idő: 14 nap
+
+További információ:
+A meglevo koburkolatot es csempet fel kell szedni -> Meglévő csempe eltávolítása (Fuzzy match)
+A meglevo zuhanyzot, mosdot es wc-t ki kell venni -> WC kiépítése (a teljes szaniter kiépítés a wc-vel kezdődik)
+Fali csempeburkolat készítése (20x20 – 30x60 cm) -> A javasolt méret a megadott értékek alapján lett feltételezve, ha a csempe mérete eltér, az az ár változhat.
+
+offerSummary: Az ajánlat tartalmazza a fürdőszoba teljes felújítását, beleértve a meglévő burkolatok eltávolítását, új szaniterek beszerelését, festést és csempézést. A projekt egy 3x5 méteres fürdőszoba teljes körű megújítására irányul.
+
+
+---
+Timestamp: 2025-11-14T17:59:35.912Z

@@ -1,0 +1,55 @@
+Raw Offer Text:
+
+# Kispest, Kossuth Lajos utca 14.
+
+*Konyhabútor, egyéb beépített bútorok: Helyszín felmérése és bútorpozíciók jelölése: 1 db × 10 000 Ft/db (díj) + 2 500 Ft/db (anyag) = 10 000 Ft (díj összesen) + 2 500 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Alsó szekrényelemek összeállítása és szintezése: 45 nm × 10 000 Ft/fm (díj) + 2 500 Ft/fm (anyag) = 450 000 Ft (díj összesen) + 112 500 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Felső szekrényelemek rögzítése fali tartóra: 45 nm × 10 000 Ft/fm (díj) + 2 500 Ft/fm (anyag) = 450 000 Ft (díj összesen) + 112 500 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Munkapult elhelyezése és rögzítése: 45 nm × 10 000 Ft/fm (díj) + 2 500 Ft/fm (anyag) = 450 000 Ft (díj összesen) + 112 500 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Mosogató és csaptelep beépítése: 1 db × 10 000 Ft/db (díj) + 2 500 Ft/db (anyag) = 10 000 Ft (díj összesen) + 2 500 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Beépíthető készülékek rögzítése (főzőlap, sütő): 2 db × 10 000 Ft/db (díj) + 2 500 Ft/db (anyag) = 20 000 Ft (díj összesen) + 5 000 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Ajtók, fiókok beállítása: 10 db × 18 000 Ft/db (díj) + 3 000 Ft/db (anyag) = 180 000 Ft (díj összesen) + 30 000 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Szegélylécek, záróelemek felszerelése: 45 nm × 6 000 Ft/fm (díj) + 2 000 Ft/fm (anyag) = 270 000 Ft (díj összesen) + 90 000 Ft (anyag összesen)
+*Konyhabútor, egyéb beépített bútorok: Beépítési dokumentáció, átadás: 1 db × 12 000 Ft/db (díj) + 3 000 Ft/db (anyag) = 12 000 Ft (díj összesen) + 3 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Helyszíni mérés, kiállások pozícióinak kijelölése: 1 db × 12 000 Ft/db (díj) + 0 Ft/db (anyag) = 12 000 Ft (díj összesen) + 0 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Gépészeti nyomvonalak felrajzolása: 45 nm × 5 000 Ft/fm (díj) + 0 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 0 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Hideg-meleg víz alapvezeték kiépítése: 45 nm × 6 500 Ft/fm (díj) + 3 800 Ft/fm (anyag) = 292 500 Ft (díj összesen) + 171 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Elosztó helyek előkészítése: 2 db × 12 000 Ft/db (díj) + 1 500 Ft/db (anyag) = 24 000 Ft (díj összesen) + 3 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Átvezetések falban, padlóban: 5 db × 9 000 Ft/db (díj) + 1 200 Ft/db (anyag) = 45 000 Ft (díj összesen) + 6 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Szennyvíz lefolyócsövek elhelyezése: 45 nm × 6 000 Ft/fm (díj) + 4 200 Ft/fm (anyag) = 270 000 Ft (díj összesen) + 189 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Lejtés ellenőrzése szintezőlézerrel: 1 db × 9 000 Ft/db (díj) + 800 Ft/db (anyag) = 9 000 Ft (díj összesen) + 800 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Padlóösszefolyók, WC csatlakozás kiépítése: 1 db × 12 000 Ft/db (díj) + 8 000 Ft/db (anyag) = 12 000 Ft (díj összesen) + 8 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Kábeltálcák, védőcsövek fektetése: 45 nm × 5 000 Ft/fm (díj) + 1 800 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Vezetékek alapcsövezése padlóban: 45 nm × 5 000 Ft/fm (díj) + 1 600 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 72 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Földelés kiépítése (alaptestbe): 45 nm × 4 500 Ft/fm (díj) + 2 200 Ft/fm (anyag) = 202 500 Ft (díj összesen) + 99 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Próbatöltés és nyomáspróba (víz): 1 db × 10 000 Ft/db (díj) + 1 500 Ft/db (anyag) = 10 000 Ft (díj összesen) + 1 500 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Folyáspróba (csatorna): 1 db × 9 000 Ft/db (díj) + 1 000 Ft/db (anyag) = 9 000 Ft (díj összesen) + 1 000 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Villamos bekötések ellenőrzése: 1 db × 10 000 Ft/db (díj) + 1 200 Ft/db (anyag) = 10 000 Ft (díj összesen) + 1 200 Ft (anyag összesen)
+*Víz-, csatorna-, villany alapszerelés: Dokumentáció készítése, fotózás: 1 db × 12 000 Ft/db (díj) + 1 200 Ft/db (anyag) = 12 000 Ft (díj összesen) + 1 200 Ft (anyag összesen)
+*Belső burkolatok: Aljzat ellenőrzése, szintezés, alapozás: 45 m² × 5 000 Ft/m² (díj) + 500 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 22 500 Ft (anyag összesen)
+*Belső burkolatok: Fali csempeburkolat készítése (20x20 – 30x60 cm): 45 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)
+*Belső burkolatok: Fugázás, sarokszegély kialakítás: 45 nm × 5 000 Ft/fm (díj) + 500 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 22 500 Ft (anyag összesen)
+*Festés, mázolás: Felületek portalanítása, glettelés: 45 m² × 5 000 Ft/m² (díj) + 590 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 26 550 Ft (anyag összesen)
+*Festés, mázolás: Csiszolás, felületkiegyenlítés: 45 m² × 5 000 Ft/m² (díj) + 500 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 22 500 Ft (anyag összesen)
+*Festés, mázolás: Takarás, maszkolás ajtók, nyílászárók mentén: 45 m² × 5 000 Ft/fm (díj) + 1 800 Ft/fm (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)
+*Festés, mázolás: Belső falak festése diszperziós festékkel: 45 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)
+*Festés, mázolás: Mennyezet festése: 45 m² × 5 000 Ft/m² (díj) + 1 800 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 81 000 Ft (anyag összesen)
+*Festés, mázolás: Festés utáni takarítás, elszállítás: 45 m² × 5 000 Ft/m² (díj) + 500 Ft/m² (anyag) = 225 000 Ft (díj összesen) + 22 500 Ft (anyag összesen)
+*Festés, mázolás: Festési napló, színkód dokumentáció: 1 db × 10 000 Ft/db (díj) + 1 000 Ft/db (anyag) = 10 000 Ft (díj összesen) + 1 000 Ft (anyag összesen)
+*Gázvezeték átvezetése: 1 db × 50 000 Ft/db (díj) + 10 000 Ft/db (anyag) = 50 000 Ft (díj összesen) + 10 000 Ft (anyag összesen)
+
+Becsült kivitelezési idő: 21 nap
+
+További információ:
+A következő tétel nem volt az adatbázisban: 'Gázvezeték átvezetése (egyedi tétel)'.
+Indoklás: A katalógus nem tartalmazza a gázvezeték átvezetésének feladatát.
+
+Az ügyfél által biztosított anyagok:
+- Új konyhabútor: 280 000 Ft
+- Csempe: 45 000 Ft
+
+offerSummary: Az ajánlat a konyhabútor beépítését, víz- és elektromos hálózat kiépítését, falelőkészítést, csempézést és festést tartalmazza. A projekt során egy 45 nm-es konyha teljes felújítására kerül sor Kispesten, a Kossuth Lajos utcában.
+
+
+---
+Timestamp: 2025-11-14T18:38:29.224Z

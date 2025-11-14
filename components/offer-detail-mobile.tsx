@@ -138,6 +138,9 @@ export function OfferDetailView({
   const [saveTenantPriceChecked, setSaveTenantPriceChecked] = useState(true); // Default: bejelölve
   const [saveGlobalPriceChecked, setSaveGlobalPriceChecked] = useState(false); // Default: nincs bejelölve
   const [isSuperUser, setIsSuperUser] = useState(false);
+  const [showCustomItemModal, setShowCustomItemModal] = useState(false);
+  const [selectedCustomItem, setSelectedCustomItem] = useState<OfferItem | null>(null);
+  const [isSavingGlobalPrice, setIsSavingGlobalPrice] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -161,6 +164,7 @@ export function OfferDetailView({
         unitPrice: item.unitPrice || "0 Ft",
         materialTotal: item.materialTotal || "0 Ft",
         workTotal: item.workTotal || "0 Ft",
+        new: item.new || false, // Preserve the new field for custom items
       }));
       setEditableItems(validatedItems);
       // Store original items with their indices
@@ -479,6 +483,40 @@ export function OfferDetailView({
   // Cancel editing in modal
   const cancelEditing = () => {
     setIsModalOpen(false);
+  };
+
+  // Handle saving custom item to global price list
+  const handleSaveCustomItemToGlobal = async () => {
+    if (!selectedCustomItem) return;
+
+    setIsSavingGlobalPrice(true);
+    try {
+      const { saveGlobalPrice } = await import("@/actions/offer-actions");
+      const laborCost = parseCurrency(selectedCustomItem.unitPrice || "0");
+      const materialCost = parseCurrency(selectedCustomItem.materialUnitPrice || "0");
+
+      const result = await saveGlobalPrice(
+        selectedCustomItem.name,
+        null, // category
+        null, // technology
+        selectedCustomItem.unit,
+        laborCost,
+        materialCost
+      );
+
+      if (result.success) {
+        toast.success("Az egyedi tétel sikeresen mentve a globális árlistához!");
+        setShowCustomItemModal(false);
+        setSelectedCustomItem(null);
+      } else {
+        toast.error(result.message || "Hiba történt a mentés során");
+      }
+    } catch (error) {
+      console.error("Error saving custom item to global price list:", error);
+      toast.error("Hiba történt a mentés során");
+    } finally {
+      setIsSavingGlobalPrice(false);
+    }
   };
 
   // Handle offer deletion
@@ -1611,9 +1649,33 @@ export function OfferDetailView({
                         <div className="font-medium text-gray-900">
                           <div
                             onClick={() => startEditing(index)}
-                            className="cursor-pointer hover:bg-gray-100 p-1 rounded"
+                            className="cursor-pointer hover:bg-gray-100 p-1 rounded flex items-center gap-2"
                           >
-                            {index + 1}. {item.name.replace(/^\*+\s*/, "")}
+                            <span>
+                              {index + 1}. {item.name.replace(/^\*+\s*/, "")}
+                              {item.new && (
+                                <span
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedCustomItem(item);
+                                    setShowCustomItemModal(true);
+                                  }}
+                                  className="inline-flex items-center justify-center ml-1 flex-shrink-0 font-bold text-white text-xs cursor-pointer hover:opacity-80 transition-opacity"
+                                  title="Kattints a globális árlistához való mentéshez"
+                                  style={{
+                                    width: '12px',
+                                    height: '12px',
+                                    backgroundColor: '#ef4444',
+                                    clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                  }}
+                                >
+                                  !
+                                </span>
+                              )}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1871,7 +1933,7 @@ export function OfferDetailView({
 
       {/* Status Update Dialog */}
       <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-sm rounded-lg mx-auto w-[calc(100%-3rem)]">
           <DialogHeader>
             <DialogTitle>
               {offer.status === "draft"
@@ -1884,21 +1946,14 @@ export function OfferDetailView({
                 : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-4 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsStatusDialogOpen(false)}
-              disabled={isUpdatingStatus}
-            >
-              Mégse
-            </Button>
+          <DialogFooter className="flex flex-col gap-3 pt-6">
             <Button
               onClick={handleStatusUpdate}
               disabled={isUpdatingStatus}
               className={
                 offer.status === "draft"
-                  ? "bg-[#FE9C00] hover:bg-[#E58A00]"
-                  : "bg-blue-600 hover:bg-blue-700"
+                  ? "bg-[#FE9C00] hover:bg-[#E58A00] w-full"
+                  : "bg-blue-600 hover:bg-blue-700 w-full"
               }
             >
               {isUpdatingStatus
@@ -1906,6 +1961,14 @@ export function OfferDetailView({
                 : offer.status === "draft"
                   ? "Igen, munkába állítom"
                   : "Igen, piszkozatba teszem"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsStatusDialogOpen(false)}
+              disabled={isUpdatingStatus}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
+            >
+              Mégse
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1917,6 +1980,65 @@ export function OfferDetailView({
         onClose={() => setShowAddModal(false)}
         onSave={handleSaveNewItem}
       />
+
+      {/* Custom Item to Global Price List Modal */}
+      <Dialog open={showCustomItemModal} onOpenChange={setShowCustomItemModal}>
+        <DialogContent className="max-w-sm rounded-lg mx-auto w-[calc(100%-3rem)]">
+          <DialogHeader>
+            <DialogTitle>Egyedi tétel mentése globális árlistához</DialogTitle>
+            <DialogDescription>
+              Az alábbi egyedi tétel mentésre kerül a globális árlistához, így később más ajánlatokban is használható lesz.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedCustomItem && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Tétel neve</Label>
+                <p className="text-sm text-gray-700 mt-1">{selectedCustomItem.name}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Anyag egységár</Label>
+                  <p className="text-sm text-gray-700 mt-1">
+                    {formatNumberWithSpace(selectedCustomItem.materialUnitPrice)} Ft
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Munkadíj egységár</Label>
+                  <p className="text-sm text-gray-700 mt-1">
+                    {formatNumberWithSpace(selectedCustomItem.unitPrice)} Ft
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium">Egység</Label>
+                <p className="text-sm text-gray-700 mt-1">{selectedCustomItem.unit}</p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-col gap-3 pt-6">
+            <Button
+              onClick={handleSaveCustomItemToGlobal}
+              disabled={isSavingGlobalPrice}
+              className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
+            >
+              {isSavingGlobalPrice ? "Mentés..." : "Mentés"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCustomItemModal(false)}
+              disabled={isSavingGlobalPrice}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
+            >
+              Mégse
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Offer Modal */}
       <DeleteConfirmModal

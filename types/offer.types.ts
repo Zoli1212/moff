@@ -15,6 +15,7 @@ export interface OfferItem {
   totalQuantity?: number;
   billableQuantity?: number;
   billedQuantity?: number;
+  new?: boolean; // Indicates if this is a new/custom item
 }
 export interface OfferItemQuestion {
   id?: number;
