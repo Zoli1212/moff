@@ -497,15 +497,35 @@ export function OfferDetailView({
 
       const result = await saveGlobalPrice(
         selectedCustomItem.name,
-        null, // category
-        null, // technology
+        "Egyedi", // category
+        "Egyedi", // technology
         selectedCustomItem.unit,
         laborCost,
         materialCost
       );
 
       if (result.success) {
-        toast.success("Az egyedi tétel sikeresen mentve a globális árlistához!");
+        // Update the item in the offer to set new: false
+        const updatedItems = editableItems.map((item) =>
+          item.name === selectedCustomItem.name
+            ? { ...item, new: false }
+            : item
+        );
+
+        // Save the updated items to the database
+        const updateResult = await updateOfferItems(
+          parseInt(offer.id.toString()),
+          updatedItems
+        );
+
+        if (updateResult.success) {
+          setEditableItems(updatedItems);
+          setOriginalItems(updatedItems.map((item) => ({ ...item })));
+          toast.success("Az egyedi tétel sikeresen mentve a globális árlistához!");
+        } else {
+          toast.error("A tétel mentve, de az ajánlat frissítése sikertelen");
+        }
+
         setShowCustomItemModal(false);
         setSelectedCustomItem(null);
       } else {
