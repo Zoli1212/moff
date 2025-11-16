@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import * as path from "path";
+// import * as fs from "fs";
+// import * as path from "path";
 
 export interface OfferItem {
   name: string;
@@ -100,7 +100,7 @@ export function parseOfferText(text: string): ParsedOffer {
         materialTotal,
       ] = itemMatch;
 
-      // console.log(_);
+      console.log(_);
 
       const workTotalNum =
         parseFloat(
