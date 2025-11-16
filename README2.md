@@ -685,3 +685,17 @@ MEGJEGYZÉS: Ez a követelmény szintén tartalmaz egyedi tételeket, mivel a "m
 7. Szolnok, Petőfi Sándor utca 5-ben egy 30 nm-es nappali felújítása szükséges. Az ügyfél szeretné az összes falat laminált parkettára cserélni, az összes falat festeni, valamint egy új gipszkarton mennyezetet szereltetni LED-es világítással. Az elektromos hálózat bővítése is szükséges az új világítás miatt. Az ügyfél által biztosított anyagok: laminált parkett 120000 Ft, festék 25000 Ft, gipszkarton 40000 Ft.
 
 MEGJEGYZÉS: Ez a követelmény garantáltan tartalmaz egyedi tételeket, mivel a "gipszkarton mennyezet LED-es világítással" és az "elektromos hálózat bővítése" nem található a katalógusban. Az AI-nak fel kell vennie őket az ajánlatba és jelölje meg őket (egyedi tétel). Az egyedi tételek végén `!` jel jelenik meg, és a notes-ban szerepelnek a magyarázatai.
+
+Árak ne kelljen ékezet
+Anyag és Díj
+Nem módosította globális árat hanem a lokálisat módosította BUG
+Indoklás:
+Az ajánlat végén legyen egy pipa, az ajánlatban szereplő árak és megnevezések helyesek
+pipálás esetén bekerül automatikusan a saját adatbázisba!
+Ajánlatba szereplő árak és megnevezések helyesek
+van egy új tétel akkor határozza - leginkább hasonló akkor azt használja
+nézd meg a lokális adatbázisban hasonlókat, indoklásban legyen benne, hogy
+mindek az árát használtam - ennek használtam az anyag stb árát
+érthető is legyen
+pipálva - érthető
+akkor kérdezzen rá a tétéere ha van több hasonló különböző áron, egy tételhez KÉRDÉS

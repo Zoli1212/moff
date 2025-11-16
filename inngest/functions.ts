@@ -4093,7 +4093,7 @@ d) CUSTOM ITEM ONLY IF NOTHING MATCHES
 CUSTOM ITEM RULES
 ===============================
 
-- The main offer line MUST use standard offer format (NO "custom item" text).
+- The main offer line MUST use standard offer format (NO "custom item" or "egyedi tétel" text).
 - In the "További információ" section you MUST include the following:
 
   A következő tétel nem volt az adatbázisban: '[Task name] (egyedi tétel)'.

@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
+import { revalidatePath } from "next/cache";
 
 /**
  * Globális árak lekérése (csak superUser-ek)
@@ -104,6 +105,8 @@ export async function updateGlobalPrice(
       data: updateData,
     });
 
+    revalidatePath("/prices");
+
     return {
       success: true,
       data: price,
@@ -151,6 +154,8 @@ export async function updateTenantPrice(
       data: updateData,
     });
 
+    revalidatePath("/prices");
+
     return {
       success: true,
       data: price,
@@ -185,6 +190,8 @@ export async function deleteGlobalPrice(id: number) {
       where: { id },
     });
 
+    revalidatePath("/prices");
+
     return {
       success: true,
       message: "Globális ár sikeresen törölve",
@@ -209,6 +216,8 @@ export async function deleteTenantPrice(id: number) {
     await prisma.tenantPriceList.delete({
       where: { id },
     });
+
+    revalidatePath("/prices");
 
     return {
       success: true,
