@@ -43,7 +43,11 @@ export default function PricesPage() {
     null
   );
 
-  // Refs for input fields to prevent re-renders on every keystroke (only for price fields)
+  // Refs for input fields to prevent re-renders on every keystroke
+  const taskRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLInputElement>(null);
+  const technologyRef = useRef<HTMLInputElement>(null);
+  const unitRef = useRef<HTMLInputElement>(null);
   const laborCostRef = useRef<HTMLInputElement>(null);
   const materialCostRef = useRef<HTMLInputElement>(null);
 
@@ -89,7 +93,12 @@ export default function PricesPage() {
   const handleSave = async () => {
     if (!editingItem) return;
 
-    // Get values from refs (only for price fields)
+    // Get values from refs
+    const task = taskRef.current?.value || editingItem.task;
+    const category = categoryRef.current?.value || editingItem.category || null;
+    const technology =
+      technologyRef.current?.value || editingItem.technology || null;
+    const unit = unitRef.current?.value || editingItem.unit || null;
     const laborCost = laborCostRef.current
       ? parseInt(laborCostRef.current.value) || 0
       : editingItem.laborCost;
@@ -97,11 +106,7 @@ export default function PricesPage() {
       ? parseInt(materialCostRef.current.value) || 0
       : editingItem.materialCost;
 
-    if (
-      !editingItem.task ||
-      laborCost === undefined ||
-      materialCost === undefined
-    ) {
+    if (!task || laborCost === undefined || materialCost === undefined) {
       toast.error("Kérem töltse ki az összes kötelező mezőt");
       return;
     }
@@ -111,18 +116,18 @@ export default function PricesPage() {
       const result =
         editingItem.type === "global"
           ? await updateGlobalPrice(editingItem.id, {
-              task: editingItem.task,
-              category: editingItem.category,
-              technology: editingItem.technology,
-              unit: editingItem.unit,
+              task: task,
+              category: category,
+              technology: technology,
+              unit: unit,
               laborCost: laborCost,
               materialCost: materialCost,
             })
           : await updateTenantPrice(editingItem.id, {
-              task: editingItem.task,
-              category: editingItem.category,
-              technology: editingItem.technology,
-              unit: editingItem.unit,
+              task: task,
+              category: category,
+              technology: technology,
+              unit: unit,
               laborCost: laborCost,
               materialCost: materialCost,
             });
@@ -368,33 +373,17 @@ export default function PricesPage() {
               filteredTenantPrices.map((price) => (
                 <div
                   key={price.id}
-                  className="bg-white rounded-lg shadow p-4 space-y-2"
+                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
                 >
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900 text-sm">
-                        {price.task}
-                      </p>
-                      {price.category && (
-                        <p className="text-xs text-gray-600">
-                          Kat: {price.category}
-                        </p>
-                      )}
-                      {price.technology && (
-                        <p className="text-xs text-gray-600">
-                          Tech: {price.technology}
-                        </p>
-                      )}
-                      {price.unit && (
-                        <p className="text-xs text-gray-600">
-                          Egység: {price.unit}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex gap-2">
+                  {/* Header with title and actions */}
+                  <div className="flex justify-between items-start mb-3">
+                    <h3 className="font-semibold text-gray-900 text-base flex-1 pr-2">
+                      {price.task}
+                    </h3>
+                    <div className="flex gap-2 flex-shrink-0">
                       <button
                         onClick={() => handleEdit(price, "tenant")}
-                        className="transition-colors"
+                        className="p-1.5 rounded-md hover:bg-orange-50 transition-colors"
                         style={{ color: "#FE9C00" }}
                         title="Szerkesztés"
                       >
@@ -402,20 +391,62 @@ export default function PricesPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(price.id, "tenant")}
-                        className="text-red-600 hover:text-red-800 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors"
                         title="Törlés"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   </div>
-                  <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
-                    <span className="text-gray-600">
-                      Munka Díj: {price.laborCost.toLocaleString("hu-HU")} Ft
-                    </span>
-                    <span className="text-gray-600">
-                      Anyag: {price.materialCost.toLocaleString("hu-HU")} Ft
-                    </span>
+
+                  {/* Details */}
+                  <div className="space-y-1.5 mb-3">
+                    {price.category && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-500 w-20">
+                          Kategória:
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          {price.category}
+                        </span>
+                      </div>
+                    )}
+                    {price.technology && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-500 w-20">
+                          Technológia:
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          {price.technology}
+                        </span>
+                      </div>
+                    )}
+                    {price.unit && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-gray-500 w-20">
+                          Egység:
+                        </span>
+                        <span className="text-sm text-gray-700">
+                          {price.unit}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Prices */}
+                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {price.laborCost.toLocaleString("hu-HU")} Ft
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">Anyagköltség</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {price.materialCost.toLocaleString("hu-HU")} Ft
+                      </p>
+                    </div>
                   </div>
                 </div>
               ))
@@ -542,33 +573,17 @@ export default function PricesPage() {
                 filteredGlobalPrices.map((price) => (
                   <div
                     key={price.id}
-                    className="bg-white rounded-lg shadow p-4 space-y-2"
+                    className="bg-white rounded-lg shadow-sm border border-gray-200 p-4"
                   >
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900 text-sm">
-                          {price.task}
-                        </p>
-                        {price.category && (
-                          <p className="text-xs text-gray-600">
-                            Kat: {price.category}
-                          </p>
-                        )}
-                        {price.technology && (
-                          <p className="text-xs text-gray-600">
-                            Tech: {price.technology}
-                          </p>
-                        )}
-                        {price.unit && (
-                          <p className="text-xs text-gray-600">
-                            Egység: {price.unit}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
+                    {/* Header with title and actions */}
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-semibold text-gray-900 text-base flex-1 pr-2">
+                        {price.task}
+                      </h3>
+                      <div className="flex gap-2 flex-shrink-0">
                         <button
                           onClick={() => handleEdit(price, "global")}
-                          className="transition-colors"
+                          className="p-1.5 rounded-md hover:bg-orange-50 transition-colors"
                           style={{ color: "#FE9C00" }}
                           title="Szerkesztés"
                         >
@@ -576,20 +591,64 @@ export default function PricesPage() {
                         </button>
                         <button
                           onClick={() => handleDelete(price.id, "global")}
-                          className="text-red-600 hover:text-red-800 transition-colors"
+                          className="p-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors"
                           title="Törlés"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     </div>
-                    <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
-                      <span className="text-gray-600">
-                        Munka Díj: {price.laborCost.toLocaleString("hu-HU")} Ft
-                      </span>
-                      <span className="text-gray-600">
-                        Anyag: {price.materialCost.toLocaleString("hu-HU")} Ft
-                      </span>
+
+                    {/* Details */}
+                    <div className="space-y-1.5 mb-3">
+                      {price.category && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-500 w-20">
+                            Kategória:
+                          </span>
+                          <span className="text-sm text-gray-700">
+                            {price.category}
+                          </span>
+                        </div>
+                      )}
+                      {price.technology && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-500 w-20">
+                            Technológia:
+                          </span>
+                          <span className="text-sm text-gray-700">
+                            {price.technology}
+                          </span>
+                        </div>
+                      )}
+                      {price.unit && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-medium text-gray-500 w-20">
+                            Egység:
+                          </span>
+                          <span className="text-sm text-gray-700">
+                            {price.unit}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Prices */}
+                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {price.laborCost.toLocaleString("hu-HU")} Ft
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-1">
+                          Anyagköltség
+                        </p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {price.materialCost.toLocaleString("hu-HU")} Ft
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -803,10 +862,10 @@ export default function PricesPage() {
                   Tétel *
                 </label>
                 <input
+                  ref={taskRef}
                   type="text"
-                  value={editingItem.task}
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                  defaultValue={editingItem.task}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -815,10 +874,10 @@ export default function PricesPage() {
                   Kategória
                 </label>
                 <input
+                  ref={categoryRef}
                   type="text"
-                  value={editingItem.category || ""}
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                  defaultValue={editingItem.category || ""}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -827,10 +886,10 @@ export default function PricesPage() {
                   Technológia
                 </label>
                 <input
+                  ref={technologyRef}
                   type="text"
-                  value={editingItem.technology || ""}
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                  defaultValue={editingItem.technology || ""}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
@@ -839,10 +898,10 @@ export default function PricesPage() {
                   Egység
                 </label>
                 <input
+                  ref={unitRef}
                   type="text"
-                  value={editingItem.unit || ""}
-                  disabled
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
+                  defaultValue={editingItem.unit || ""}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
