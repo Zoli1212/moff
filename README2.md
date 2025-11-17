@@ -688,7 +688,7 @@ MEGJEGYZÉS: Ez a követelmény garantáltan tartalmaz egyedi tételeket, mivel 
 
 Árak ne kelljen ékezet
 Anyag és Díj
-Nem módosította globális árat hanem a lokálisat módosította BUG
+
 Indoklás:
 Az ajánlat végén legyen egy pipa, az ajánlatban szereplő árak és megnevezések helyesek
 pipálás esetén bekerül automatikusan a saját adatbázisba!
