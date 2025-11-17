@@ -24,19 +24,16 @@ export interface ParsedOffer {
 export function parseOfferText(text: string): ParsedOffer {
   // console.log("🔍 parseOfferText - Raw text before parsing:", text);
 
-  // // Save raw text to file for debugging
+  // Save raw text to file for debugging
   // try {
-  //   const logDir = path.join(process.cwd(), "logs");
+  //   const logDir = path.join(process.cwd(), 'logs');
   //   if (!fs.existsSync(logDir)) {
   //     fs.mkdirSync(logDir, { recursive: true });
   //   }
-
-  //   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  //
+  //   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   //   const logFile = path.join(logDir, `offer-raw-${timestamp}.txt`);
-  //   fs.writeFileSync(
-  //     logFile,
-  //     `Raw Offer Text:\n\n${text}\n\n---\nTimestamp: ${new Date().toISOString()}`
-  //   );
+  //   fs.writeFileSync(logFile, `Raw Offer Text:\n\n${text}\n\n---\nTimestamp: ${new Date().toISOString()}`);
   //   console.log(`✅ Raw offer text saved to: ${logFile}`);
   // } catch (error) {
   //   console.error("❌ Error saving raw offer text to file:", error);
@@ -201,14 +198,14 @@ export function parseOfferText(text: string): ParsedOffer {
     offerSummary,
   };
 
-  // // Save parsed result to file for debugging
+  // Save parsed result to file for debugging
   // try {
-  //   const logDir = path.join(process.cwd(), "logs");
+  //   const logDir = path.join(process.cwd(), 'logs');
   //   if (!fs.existsSync(logDir)) {
   //     fs.mkdirSync(logDir, { recursive: true });
   //   }
-
-  //   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  //
+  //   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   //   const logFile = path.join(logDir, `offer-parsed-${timestamp}.json`);
   //   fs.writeFileSync(logFile, JSON.stringify(result, null, 2));
   //   console.log(`✅ Parsed offer result saved to: ${logFile}`);
