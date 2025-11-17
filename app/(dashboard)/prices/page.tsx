@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { checkIsSuperUser } from "@/actions/user-management-actions";
 import {
@@ -39,7 +39,13 @@ export default function PricesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [newItemType, setNewItemType] = useState<"tenant" | "global" | null>(null);
+  const [newItemType, setNewItemType] = useState<"tenant" | "global" | null>(
+    null
+  );
+
+  // Refs for input fields to prevent re-renders on every keystroke (only for price fields)
+  const laborCostRef = useRef<HTMLInputElement>(null);
+  const materialCostRef = useRef<HTMLInputElement>(null);
 
   // Check super user status and load prices
   useEffect(() => {
@@ -83,10 +89,18 @@ export default function PricesPage() {
   const handleSave = async () => {
     if (!editingItem) return;
 
+    // Get values from refs (only for price fields)
+    const laborCost = laborCostRef.current
+      ? parseInt(laborCostRef.current.value) || 0
+      : editingItem.laborCost;
+    const materialCost = materialCostRef.current
+      ? parseInt(materialCostRef.current.value) || 0
+      : editingItem.materialCost;
+
     if (
       !editingItem.task ||
-      editingItem.laborCost === undefined ||
-      editingItem.materialCost === undefined
+      laborCost === undefined ||
+      materialCost === undefined
     ) {
       toast.error("Kérem töltse ki az összes kötelező mezőt");
       return;
@@ -101,24 +115,22 @@ export default function PricesPage() {
               category: editingItem.category,
               technology: editingItem.technology,
               unit: editingItem.unit,
-              laborCost: editingItem.laborCost,
-              materialCost: editingItem.materialCost,
+              laborCost: laborCost,
+              materialCost: materialCost,
             })
           : await updateTenantPrice(editingItem.id, {
               task: editingItem.task,
               category: editingItem.category,
               technology: editingItem.technology,
               unit: editingItem.unit,
-              laborCost: editingItem.laborCost,
-              materialCost: editingItem.materialCost,
+              laborCost: laborCost,
+              materialCost: materialCost,
             });
 
       if (result.success) {
         toast.success("Ár sikeresen frissítve");
-        setIsModalOpen(false);
-        setEditingItem(null);
 
-        // Reload prices
+        // Reload prices to show updated values
         const tenantResult = await getTenantPrices();
         if (tenantResult.success) {
           setTenantPrices(tenantResult.data || []);
@@ -130,6 +142,9 @@ export default function PricesPage() {
             setGlobalPrices(globalResult.data || []);
           }
         }
+
+        setIsModalOpen(false);
+        setEditingItem(null);
       } else {
         toast.error(result.message || "Hiba az ár frissítésekor");
       }
@@ -142,11 +157,29 @@ export default function PricesPage() {
   };
 
   const filteredTenantPrices = tenantPrices.filter((price) =>
-    price.task.toLowerCase().includes(searchTerm.toLowerCase())
+    price.task
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .includes(
+        searchTerm
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+      )
   );
 
   const filteredGlobalPrices = globalPrices.filter((price) =>
-    price.task.toLowerCase().includes(searchTerm.toLowerCase())
+    price.task
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .includes(
+        searchTerm
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+      )
   );
 
   const handleDelete = async (id: number, type: "global" | "tenant") => {
@@ -268,8 +301,13 @@ export default function PricesPage() {
                 <tbody className="divide-y divide-gray-200">
                   {filteredTenantPrices.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                        {searchTerm ? "Nincs találat" : "Nincsenek vállalkozói Áraim"}
+                      <td
+                        colSpan={7}
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
+                        {searchTerm
+                          ? "Nincs találat"
+                          : "Nincsenek vállalkozói Áraim"}
                       </td>
                     </tr>
                   ) : (
@@ -437,8 +475,13 @@ export default function PricesPage() {
                   <tbody className="divide-y divide-gray-200">
                     {filteredGlobalPrices.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                          {searchTerm ? "Nincs találat" : "Nincsenek globális Áraim"}
+                        <td
+                          colSpan={7}
+                          className="px-6 py-4 text-center text-gray-500"
+                        >
+                          {searchTerm
+                            ? "Nincs találat"
+                            : "Nincsenek globális Áraim"}
                         </td>
                       </tr>
                     ) : (
@@ -635,12 +678,34 @@ export default function PricesPage() {
             <div className="flex flex-col gap-3 mt-6">
               <button
                 onClick={async () => {
-                  const task = (document.getElementById("newTask") as HTMLInputElement)?.value;
-                  const category = (document.getElementById("newCategory") as HTMLInputElement)?.value;
-                  const technology = (document.getElementById("newTechnology") as HTMLInputElement)?.value;
-                  const unit = (document.getElementById("newUnit") as HTMLInputElement)?.value;
-                  const laborCost = parseInt((document.getElementById("newLaborCost") as HTMLInputElement)?.value) || 0;
-                  const materialCost = parseInt((document.getElementById("newMaterialCost") as HTMLInputElement)?.value) || 0;
+                  const task = (
+                    document.getElementById("newTask") as HTMLInputElement
+                  )?.value;
+                  const category = (
+                    document.getElementById("newCategory") as HTMLInputElement
+                  )?.value;
+                  const technology = (
+                    document.getElementById("newTechnology") as HTMLInputElement
+                  )?.value;
+                  const unit = (
+                    document.getElementById("newUnit") as HTMLInputElement
+                  )?.value;
+                  const laborCost =
+                    parseInt(
+                      (
+                        document.getElementById(
+                          "newLaborCost"
+                        ) as HTMLInputElement
+                      )?.value
+                    ) || 0;
+                  const materialCost =
+                    parseInt(
+                      (
+                        document.getElementById(
+                          "newMaterialCost"
+                        ) as HTMLInputElement
+                      )?.value
+                    ) || 0;
 
                   if (!task || !unit || laborCost === 0 || materialCost === 0) {
                     toast.error("Kérjük, töltsd ki az összes kötelező mezőt!");
@@ -668,7 +733,9 @@ export default function PricesPage() {
                           setTenantPrices(pricesResult.data || []);
                         }
                       } else {
-                        toast.error(result.message || "Hiba a tétel hozzáadásakor");
+                        toast.error(
+                          result.message || "Hiba a tétel hozzáadásakor"
+                        );
                       }
                     } else {
                       const result = await updateGlobalPrice(0, {
@@ -689,7 +756,9 @@ export default function PricesPage() {
                           setGlobalPrices(pricesResult.data || []);
                         }
                       } else {
-                        toast.error(result.message || "Hiba a tétel hozzáadásakor");
+                        toast.error(
+                          result.message || "Hiba a tétel hozzáadásakor"
+                        );
                       }
                     }
                   } catch (error) {
@@ -736,10 +805,8 @@ export default function PricesPage() {
                 <input
                   type="text"
                   value={editingItem.task}
-                  onChange={(e) =>
-                    setEditingItem({ ...editingItem, task: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
               </div>
 
@@ -750,13 +817,8 @@ export default function PricesPage() {
                 <input
                   type="text"
                   value={editingItem.category || ""}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      category: e.target.value || null,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
               </div>
 
@@ -767,13 +829,8 @@ export default function PricesPage() {
                 <input
                   type="text"
                   value={editingItem.technology || ""}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      technology: e.target.value || null,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
               </div>
 
@@ -784,13 +841,8 @@ export default function PricesPage() {
                 <input
                   type="text"
                   value={editingItem.unit || ""}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      unit: e.target.value || null,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  disabled
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
               </div>
 
@@ -799,14 +851,9 @@ export default function PricesPage() {
                   Munkaköltség (Ft) *
                 </label>
                 <input
+                  ref={laborCostRef}
                   type="number"
-                  value={editingItem.laborCost}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      laborCost: parseInt(e.target.value) || 0,
-                    })
-                  }
+                  defaultValue={editingItem.laborCost}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -816,14 +863,9 @@ export default function PricesPage() {
                   Anyagköltség (Ft) *
                 </label>
                 <input
+                  ref={materialCostRef}
                   type="number"
-                  value={editingItem.materialCost}
-                  onChange={(e) =>
-                    setEditingItem({
-                      ...editingItem,
-                      materialCost: parseInt(e.target.value) || 0,
-                    })
-                  }
+                  defaultValue={editingItem.materialCost}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>

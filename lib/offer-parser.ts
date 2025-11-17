@@ -1,5 +1,5 @@
-import * as fs from 'fs';
-import * as path from 'path';
+// import * as fs from "fs";
+// import * as path from "path";
 
 export interface OfferItem {
   name: string;
@@ -22,24 +22,24 @@ export interface ParsedOffer {
 }
 
 export function parseOfferText(text: string): ParsedOffer {
-  console.log("🔍 parseOfferText - Raw text before parsing:", text);
-  
-  // Save raw text to file for debugging
-  try {
-    const logDir = path.join(process.cwd(), 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const logFile = path.join(logDir, `offer-raw-${timestamp}.txt`);
-    fs.writeFileSync(logFile, `Raw Offer Text:\n\n${text}\n\n---\nTimestamp: ${new Date().toISOString()}`);
-    console.log(`✅ Raw offer text saved to: ${logFile}`);
-  } catch (error) {
-    console.error("❌ Error saving raw offer text to file:", error);
-  }
+  // console.log("🔍 parseOfferText - Raw text before parsing:", text);
 
-  const lines = text.split('\n').filter(line => line.trim() !== '');
+  // Save raw text to file for debugging
+  // try {
+  //   const logDir = path.join(process.cwd(), 'logs');
+  //   if (!fs.existsSync(logDir)) {
+  //     fs.mkdirSync(logDir, { recursive: true });
+  //   }
+  //
+  //   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  //   const logFile = path.join(logDir, `offer-raw-${timestamp}.txt`);
+  //   fs.writeFileSync(logFile, `Raw Offer Text:\n\n${text}\n\n---\nTimestamp: ${new Date().toISOString()}`);
+  //   console.log(`✅ Raw offer text saved to: ${logFile}`);
+  // } catch (error) {
+  //   console.error("❌ Error saving raw offer text to file:", error);
+  // }
+
+  const lines = text.split("\n").filter((line) => line.trim() !== "");
   const items: OfferItem[] = [];
   const notes: string[] = [];
 
@@ -51,23 +51,32 @@ export function parseOfferText(text: string): ParsedOffer {
   }
 
   // Extract title from the first line containing 'kerület' or fallback
-  const titleLine = lines.find(line => line.includes('kerület')) || 'Ismeretlen cím';
-  const title = titleLine.split('#').pop()?.trim() || 'Új ajánlat';
+  const titleLine =
+    lines.find((line) => line.includes("kerület")) || "Ismeretlen cím";
+  const title = titleLine.split("#").pop()?.trim() || "Új ajánlat";
 
   // Extract location from title
-  const location = title.split(',').slice(0, -1).join(',').trim();
+  const location = title.split(",").slice(0, -1).join(",").trim();
 
   for (const line of lines) {
     const trimmed = line.trim();
 
     // Skip irrelevant lines (but keep "További anyagköltségek" section)
-    if (!trimmed || trimmed.startsWith('Kedves') || 
-        trimmed.includes('előzetes ajánlat') || trimmed.includes('Összesített')) {
+    if (
+      !trimmed ||
+      trimmed.startsWith("Kedves") ||
+      trimmed.includes("előzetes ajánlat") ||
+      trimmed.includes("Összesített")
+    ) {
       continue;
     }
 
     // Skip ** lines EXCEPT those containing "További anyagköltségek" or material costs
-    if (trimmed.startsWith('**') && !trimmed.includes('További anyagköltségek') && !trimmed.includes('Anyagköltség')) {
+    if (
+      trimmed.startsWith("**") &&
+      !trimmed.includes("További anyagköltségek") &&
+      !trimmed.includes("Anyagköltség")
+    ) {
       continue;
     }
 
@@ -78,35 +87,60 @@ export function parseOfferText(text: string): ParsedOffer {
 
     if (itemMatch) {
       const [
-        _, name, quantity, unit, unitPrice, materialUnitPrice, laborTotal, materialTotal
+        _,
+        name,
+        quantity,
+        unit,
+        unitPrice,
+        materialUnitPrice,
+        laborTotal,
+        materialTotal,
       ] = itemMatch;
 
       console.log(_)
 
-      const workTotalNum = parseFloat((laborTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;
-      const materialTotalNum = parseFloat((materialTotal ?? '').toString().trim().replace(/\s/g, '').replace(',', '.')) || 0;
+      const workTotalNum =
+        parseFloat(
+          (laborTotal ?? "")
+            .toString()
+            .trim()
+            .replace(/\s/g, "")
+            .replace(",", ".")
+        ) || 0;
+      const materialTotalNum =
+        parseFloat(
+          (materialTotal ?? "")
+            .toString()
+            .trim()
+            .replace(/\s/g, "")
+            .replace(",", ".")
+        ) || 0;
       const calculatedTotal = workTotalNum + materialTotalNum;
-      
+
       // Clean up item name: remove "(egyedi tétel)" text
-      let cleanedName = (name ?? '').toString().trim();
-      cleanedName = cleanedName.replace(/\s*\(egyedi tétel\)\s*$/, '').trim();
-      
+      let cleanedName = (name ?? "").toString().trim();
+      cleanedName = cleanedName.replace(/\s*\(egyedi tétel\)\s*$/, "").trim();
+
       items.push({
         name: cleanedName,
-        quantity: (quantity ?? '').toString().trim(),
-        unit: (unit ?? '').toString().trim(),
-        unitPrice: (unitPrice ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
-        materialUnitPrice: (materialUnitPrice ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
-        workTotal: (laborTotal ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
-        materialTotal: (materialTotal ?? '').toString().trim().replace(/\s/g, '') + ' Ft',
-        totalPrice: calculatedTotal.toLocaleString('hu-HU') + ' Ft'
+        quantity: (quantity ?? "").toString().trim(),
+        unit: (unit ?? "").toString().trim(),
+        unitPrice:
+          (unitPrice ?? "").toString().trim().replace(/\s/g, "") + " Ft",
+        materialUnitPrice:
+          (materialUnitPrice ?? "").toString().trim().replace(/\s/g, "") +
+          " Ft",
+        workTotal:
+          (laborTotal ?? "").toString().trim().replace(/\s/g, "") + " Ft",
+        materialTotal:
+          (materialTotal ?? "").toString().trim().replace(/\s/g, "") + " Ft",
+        totalPrice: calculatedTotal.toLocaleString("hu-HU") + " Ft",
       });
-      
     } else if (trimmed) {
       // Skip offerSummary lines - they're handled separately
       if (!trimmed.toLowerCase().startsWith("offersummary:")) {
         // Remove ** and # characters from lines
-        const cleanedLine = trimmed.replace(/\*\*/g, '').replace(/^#\s*/, '');
+        const cleanedLine = trimmed.replace(/\*\*/g, "").replace(/^#\s*/, "");
         // Non-item lines go into notes
         notes.push(cleanedLine);
       }
@@ -115,25 +149,30 @@ export function parseOfferText(text: string): ParsedOffer {
 
   // Extract custom item names from notes and mark them in items
   const customItemNames = new Set<string>();
-  notes.forEach(note => {
-    const customMatch = note.match(/A következő tétel nem volt az adatbázisban:\s*'([^']+)\s*\(egyedi tétel\)'/i);
+  notes.forEach((note) => {
+    const customMatch = note.match(
+      /A következő tétel nem volt az adatbázisban:\s*'([^']+)\s*\(egyedi tétel\)'/i
+    );
     if (customMatch) {
       customItemNames.add(customMatch[1].trim());
     }
   });
 
   // Mark custom items with ! at the end of their name
-  const itemsWithMarking = items.map(item => {
+  const itemsWithMarking = items.map((item) => {
     // Remove leading asterisk and "(egyedi tétel)" text for comparison
-    let itemNameForComparison = item.name.replace(/^\*/, '').trim();
-    itemNameForComparison = itemNameForComparison.replace(/\s*\(egyedi tétel\)\s*$/, '').trim();
-    
+    let itemNameForComparison = item.name.replace(/^\*/, "").trim();
+    itemNameForComparison = itemNameForComparison
+      .replace(/\s*\(egyedi tétel\)\s*$/, "")
+      .trim();
+
     if (customItemNames.has(itemNameForComparison)) {
       // Also remove "(egyedi tétel)" from the actual name and add !
-      const cleanedName = item.name.replace(/\s*\(egyedi tétel\)\s*$/, '').trim() + '!';
+      const cleanedName =
+        item.name.replace(/\s*\(egyedi tétel\)\s*$/, "").trim() + "!";
       return {
         ...item,
-        name: cleanedName
+        name: cleanedName,
       };
     }
     return item;
@@ -141,8 +180,12 @@ export function parseOfferText(text: string): ParsedOffer {
 
   // Calculate total price (labor + material)
   const totalPrice = itemsWithMarking.reduce((sum, item) => {
-    const work = parseFloat(item.workTotal.replace(/\s/g, '').replace(',', '.'));
-    const material = parseFloat(item.materialTotal.replace(/\s/g, '').replace(',', '.'));
+    const work = parseFloat(
+      item.workTotal.replace(/\s/g, "").replace(",", ".")
+    );
+    const material = parseFloat(
+      item.materialTotal.replace(/\s/g, "").replace(",", ".")
+    );
     return sum + (isNaN(work) ? 0 : work) + (isNaN(material) ? 0 : material);
   }, 0);
 
@@ -152,42 +195,41 @@ export function parseOfferText(text: string): ParsedOffer {
     items: itemsWithMarking,
     totalPrice,
     notes: notes.length > 0 ? notes : undefined,
-    offerSummary
+    offerSummary,
   };
 
   // Save parsed result to file for debugging
-  try {
-    const logDir = path.join(process.cwd(), 'logs');
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const logFile = path.join(logDir, `offer-parsed-${timestamp}.json`);
-    fs.writeFileSync(logFile, JSON.stringify(result, null, 2));
-    console.log(`✅ Parsed offer result saved to: ${logFile}`);
-  } catch (error) {
-    console.error("❌ Error saving parsed offer result to file:", error);
-  }
+  // try {
+  //   const logDir = path.join(process.cwd(), 'logs');
+  //   if (!fs.existsSync(logDir)) {
+  //     fs.mkdirSync(logDir, { recursive: true });
+  //   }
+  //
+  //   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  //   const logFile = path.join(logDir, `offer-parsed-${timestamp}.json`);
+  //   fs.writeFileSync(logFile, JSON.stringify(result, null, 2));
+  //   console.log(`✅ Parsed offer result saved to: ${logFile}`);
+  // } catch (error) {
+  //   console.error("❌ Error saving parsed offer result to file:", error);
+  // }
 
   return result;
 }
-
 
 export function formatOfferForSave(parsed: ParsedOffer) {
   return {
     title: parsed.title,
     location: parsed.location,
     totalPrice: parsed.totalPrice,
-    items: parsed.items.map(item => ({
+    items: parsed.items.map((item) => ({
       ...item,
       unitPrice: item.unitPrice,
       materialUnitPrice: item.materialUnitPrice,
       workTotal: item.workTotal,
       materialTotal: item.materialTotal,
-      totalPrice: item.totalPrice
+      totalPrice: item.totalPrice,
     })),
     notes: parsed.notes,
-    offerSummary: parsed.offerSummary
+    offerSummary: parsed.offerSummary,
   };
 }
