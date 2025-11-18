@@ -436,15 +436,15 @@ export default function PricesPage() {
                   {/* Prices */}
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {price.laborCost.toLocaleString("hu-HU")} Ft
-                      </p>
-                    </div>
-                    <div className="text-center">
                       <p className="text-xs text-gray-500 mb-1">Anyagköltség</p>
                       <p className="text-sm font-semibold text-gray-900">
                         {price.materialCost.toLocaleString("hu-HU")} Ft
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {price.laborCost.toLocaleString("hu-HU")} Ft
                       </p>
                     </div>
                   </div>
@@ -636,17 +636,17 @@ export default function PricesPage() {
                     {/* Prices */}
                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                       <div className="text-center">
-                        <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
-                        <p className="text-sm font-semibold text-gray-900">
-                          {price.laborCost.toLocaleString("hu-HU")} Ft
-                        </p>
-                      </div>
-                      <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">
                           Anyagköltség
                         </p>
                         <p className="text-sm font-semibold text-gray-900">
                           {price.materialCost.toLocaleString("hu-HU")} Ft
+                        </p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {price.laborCost.toLocaleString("hu-HU")} Ft
                         </p>
                       </div>
                     </div>

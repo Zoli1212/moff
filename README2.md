@@ -699,3 +699,6 @@ mindek az árát használtam - ennek használtam az anyag stb árát
 érthető is legyen
 pipálva - érthető
 akkor kérdezzen rá a tétéere ha van több hasonló különböző áron, egy tételhez KÉRDÉS
+
+pipa 
+anyagköltség cserélve munkadijjal
