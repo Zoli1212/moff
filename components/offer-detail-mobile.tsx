@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import {
   updateOfferItems,
   updateOfferStatus,
-  updateOfferValidUntil
+  updateOfferValidUntil,
+  saveTenantPrice,
 } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
@@ -139,7 +140,8 @@ export function OfferDetailView({
   const [saveGlobalPriceChecked, setSaveGlobalPriceChecked] = useState(false); // Default: nincs bejelölve
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
-  const [selectedCustomItem, setSelectedCustomItem] = useState<OfferItem | null>(null);
+  const [selectedCustomItem, setSelectedCustomItem] =
+    useState<OfferItem | null>(null);
   const [isSavingGlobalPrice, setIsSavingGlobalPrice] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
@@ -176,7 +178,9 @@ export function OfferDetailView({
   useEffect(() => {
     const checkSuperUser = async () => {
       try {
-        const { checkIsSuperUser } = await import("@/actions/user-management-actions");
+        const { checkIsSuperUser } = await import(
+          "@/actions/user-management-actions"
+        );
         const result = await checkIsSuperUser();
         setIsSuperUser(result.isSuperUser || false);
       } catch (error) {
@@ -493,7 +497,9 @@ export function OfferDetailView({
     try {
       const { saveGlobalPrice } = await import("@/actions/offer-actions");
       const laborCost = parseCurrency(selectedCustomItem.unitPrice || "0");
-      const materialCost = parseCurrency(selectedCustomItem.materialUnitPrice || "0");
+      const materialCost = parseCurrency(
+        selectedCustomItem.materialUnitPrice || "0"
+      );
 
       const result = await saveGlobalPrice(
         selectedCustomItem.name,
@@ -507,9 +513,7 @@ export function OfferDetailView({
       if (result.success) {
         // Update the item in the offer to set new: false
         const updatedItems = editableItems.map((item) =>
-          item.name === selectedCustomItem.name
-            ? { ...item, new: false }
-            : item
+          item.name === selectedCustomItem.name ? { ...item, new: false } : item
         );
 
         // Save the updated items to the database
@@ -521,7 +525,9 @@ export function OfferDetailView({
         if (updateResult.success) {
           setEditableItems(updatedItems);
           setOriginalItems(updatedItems.map((item) => ({ ...item })));
-          toast.success("Az egyedi tétel sikeresen mentve a globális árlistához!");
+          toast.success(
+            "Az egyedi tétel sikeresen mentve a globális árlistához!"
+          );
         } else {
           toast.error("A tétel mentve, de az ajánlat frissítése sikertelen");
         }
@@ -1683,13 +1689,14 @@ export function OfferDetailView({
                                   className="inline-flex items-center justify-center ml-1 flex-shrink-0 font-bold text-white text-xs cursor-pointer hover:opacity-80 transition-opacity"
                                   title="Kattints a globális árlistához való mentéshez"
                                   style={{
-                                    width: '12px',
-                                    height: '12px',
-                                    backgroundColor: '#ef4444',
-                                    clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
+                                    width: "12px",
+                                    height: "12px",
+                                    backgroundColor: "#ef4444",
+                                    clipPath:
+                                      "polygon(50% 0%, 0% 100%, 100% 100%)",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
                                   }}
                                 >
                                   !
@@ -1822,6 +1829,111 @@ export function OfferDetailView({
                         {grandTotal.toLocaleString("hu-HU")} Ft
                       </div>
                     </div>
+
+                    {/* Save New Items Button */}
+                    {editableItems.some((item) => item.new) && (
+                      <button
+                        onClick={async () => {
+                          const newItems = editableItems.filter(
+                            (item) => item.new
+                          );
+                          if (newItems.length === 0) {
+                            toast.info("Nincs új tétel mentésre");
+                            return;
+                          }
+
+                          const savingToast = toast.loading(
+                            `${newItems.length} új tétel mentése...`
+                          );
+                          let successCount = 0;
+                          let failCount = 0;
+
+                          for (const item of newItems) {
+                            try {
+                              const laborCost = parseCurrency(item.unitPrice);
+                              const materialCost = parseCurrency(
+                                item.materialUnitPrice
+                              );
+
+                              const result = await saveTenantPrice(
+                                item.name,
+                                "Egyedi",
+                                "Egyedi",
+                                item.unit,
+                                laborCost,
+                                materialCost
+                              );
+
+                              if (result.success) {
+                                successCount++;
+                              } else {
+                                failCount++;
+                              }
+                            } catch (error) {
+                              console.error(
+                                "Error saving item:",
+                                item.name,
+                                error
+                              );
+                              failCount++;
+                            }
+                          }
+
+                          toast.dismiss(savingToast);
+
+                          if (successCount > 0) {
+                            // Update items to remove new flag
+                            const updatedItems = editableItems.map((item) =>
+                              item.new ? { ...item, new: false } : item
+                            );
+
+                            const updateResult = await updateOfferItems(
+                              parseInt(offer.id.toString()),
+                              updatedItems
+                            );
+
+                            if (updateResult.success) {
+                              setEditableItems(updatedItems);
+                              setOriginalItems(
+                                updatedItems.map((item) => ({ ...item }))
+                              );
+                              toast.success(
+                                `${successCount} tétel sikeresen mentve a vállalkozói árlistához!`
+                              );
+                            } else {
+                              toast.warning(
+                                `${successCount} tétel mentve, de az ajánlat frissítése sikertelen`
+                              );
+                            }
+                          }
+
+                          if (failCount > 0) {
+                            toast.error(
+                              `${failCount} tétel mentése sikertelen`
+                            );
+                          }
+                        }}
+                        className="w-full mt-4 bg-white border-2 border-[#FE9C00] hover:bg-orange-50 text-[#FE9C00] font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                          <polyline points="17 21 17 13 7 13 7 21" />
+                          <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        Új tételek mentése (
+                        {editableItems.filter((item) => item.new).length})
+                      </button>
+                    )}
+
                     {/* Email Sender Section */}
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-4 hidden">
                       <button
@@ -2007,7 +2119,8 @@ export function OfferDetailView({
           <DialogHeader>
             <DialogTitle>Egyedi tétel mentése globális árlistához</DialogTitle>
             <DialogDescription>
-              Az alábbi egyedi tétel mentésre kerül a globális árlistához, így később más ajánlatokban is használható lesz.
+              Az alábbi egyedi tétel mentésre kerül a globális árlistához, így
+              később más ajánlatokban is használható lesz.
             </DialogDescription>
           </DialogHeader>
 
@@ -2015,18 +2128,25 @@ export function OfferDetailView({
             <div className="space-y-4">
               <div>
                 <Label className="text-sm font-medium">Tétel neve</Label>
-                <p className="text-sm text-gray-700 mt-1">{selectedCustomItem.name}</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  {selectedCustomItem.name}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium">Anyag egységár</Label>
                   <p className="text-sm text-gray-700 mt-1">
-                    {formatNumberWithSpace(selectedCustomItem.materialUnitPrice)} Ft
+                    {formatNumberWithSpace(
+                      selectedCustomItem.materialUnitPrice
+                    )}{" "}
+                    Ft
                   </p>
                 </div>
                 <div>
-                  <Label className="text-sm font-medium">Munkadíj egységár</Label>
+                  <Label className="text-sm font-medium">
+                    Munkadíj egységár
+                  </Label>
                   <p className="text-sm text-gray-700 mt-1">
                     {formatNumberWithSpace(selectedCustomItem.unitPrice)} Ft
                   </p>
@@ -2035,7 +2155,9 @@ export function OfferDetailView({
 
               <div>
                 <Label className="text-sm font-medium">Egység</Label>
-                <p className="text-sm text-gray-700 mt-1">{selectedCustomItem.unit}</p>
+                <p className="text-sm text-gray-700 mt-1">
+                  {selectedCustomItem.unit}
+                </p>
               </div>
             </div>
           )}

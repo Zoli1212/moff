@@ -141,14 +141,42 @@ export function AppSidebar() {
     const result = await generateInviteLink();
 
     if (result.success && result.inviteUrl) {
-      // Vágólapra másolás
-      await navigator.clipboard.writeText(result.inviteUrl);
-      setInviteCopied(true);
+      // Vágólapra másolás - iOS kompatibilis verzió
+      try {
+        // Próbáljuk a modern API-t
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(result.inviteUrl);
+        } else {
+          // Fallback iOS-hez és régebbi böngészőkhöz
+          const textArea = document.createElement("textarea");
+          textArea.value = result.inviteUrl;
+          textArea.style.position = "fixed";
+          textArea.style.left = "-999999px";
+          textArea.style.top = "-999999px";
+          document.body.appendChild(textArea);
+          textArea.focus();
+          textArea.select();
 
-      // 3 másodperc után eltűnik a "Másolva" jelzés
-      setTimeout(() => {
-        setInviteCopied(false);
-      }, 3000);
+          try {
+            document.execCommand("copy");
+          } catch (err) {
+            console.error("Fallback copy failed:", err);
+          }
+
+          document.body.removeChild(textArea);
+        }
+
+        setInviteCopied(true);
+
+        // 3 másodperc után eltűnik a "Másolva" jelzés
+        setTimeout(() => {
+          setInviteCopied(false);
+        }, 3000);
+      } catch (err) {
+        console.error("Copy to clipboard failed:", err);
+        // Még mindig jelezzük, hogy megpróbáltuk
+        alert(`Meghívó link: ${result.inviteUrl}`);
+      }
     }
 
     setInviteLoading(false);
