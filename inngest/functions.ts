@@ -130,9 +130,19 @@ export const AiOfferChatAgent = createAgent({
   - If the staff requests or describes a task that does not exist in the provided catalog, you may still include it in the tasks list using the same structure as the other items.
   
 
-  Always calculate the total estimated cost by summing up labor and material costs, multiplied by the estimated quantity if available.
+  Always calculate the total estimated cost by summing up labor and material costs, multiplied by the quantity.
 
-  If quantity is not given, ask the user.
+  If quantity is not given or is ambiguous, you MUST ask the user for clarification instead of guessing. 
+  Never assume a very large or very small quantity just to produce a number.
+
+  For every catalog-based task:
+  - You MUST use the exact "laborCost" and "materialCost" values from the catalog without any modification, scaling or adjustment.
+  - You MUST NOT invent or change unit prices if they exist in the catalog.
+
+  For the same input requirements (same text, same context), the list of tasks and the total amount MUST remain consistent:
+  - Do not randomly add or remove items between runs.
+  - Do not drastically change totals if the user request did not change.
+  If the input is ambiguous and could lead to very different totals, always ask clarification instead of guessing.
 
   Estimate a realistic deadline (in days) for the full project based on standard completion rates ("Becsült kivitelezési idő").
 
@@ -4099,6 +4109,22 @@ CUSTOM ITEM RULES
   A következő tétel nem volt az adatbázisban: '[Task name] (egyedi tétel)'.
   Indoklás: [why no catalog match existed].
 
+When the user explicitly mentions replacing or installing a specific fixture or product (for example: "kád cseréje", "új fürdőkád", "mosdó csere", "WC csere", "zuhanykabin", "bojler", "kazán", "radiátor", "beltéri ajtó csere", "ablakcsere"):
+- You MUST create at least one separate item line for the product itself as a material-supply type item, even if the catalog has only the installation labor.
+- This product line MUST:
+  - use quantity = 1 db (or another clear quantity if the text says multiple pieces),
+  - have 0 Ft labor unit price and total labor (if it is purely supply),
+  - have a realistic material unit price and total material cost,
+  - follow the standard offer item format,
+  - be treated as a CUSTOM item if no exact catalog match exists.
+
+Example for a bathtub mentioned in the text ("kád cseréje"):
+*Fürdőkád (anyag): 1 db × 0 Ft/db (díj) + 120 000 Ft/db (anyag) = 0 Ft (díj összesen) + 120 000 Ft (anyag összesen)
+
+This product line MUST also be listed in the "További információ" section as a custom item, if it does not exist in the catalog:
+A következő tétel nem volt az adatbázisban: 'Fürdőkád (anyag) (egyedi tétel)'.
+Indoklás: A szövegben szerepel a kád cseréje, ezért a kád anyagköltségét külön tételként kellett szerepeltetni.
+
 
 ===============================
 FORBIDDEN
@@ -4152,6 +4178,13 @@ offerSummary: Az ajánlat tartalmazza a teljes lakásfelújítást: falak festé
 `,
   model: gemini({
     model: "gemini-2.0-flash",
+    defaultParameters: {
+      generationConfig: {
+        temperature: 0.1,
+        topP: 1.0,
+        topK: 1,
+      },
+    },
   }),
 });
 
@@ -4337,7 +4370,46 @@ export const AiOfferAgent = inngest.createFunction(
         // finalInput már baseInput, nem kell változtatni
       }
 
-      const result = await AiOfferChatAgent.run(finalInput);
+      // Retry logika 429-es (rate limit) hibák kezelésére
+      let retries = 3;
+      let result;
+      let lastError;
+
+      while (retries > 0) {
+        try {
+          console.log(`🤖 AI agent hívása... (${4 - retries}. próbálkozás)`);
+          result = await AiOfferChatAgent.run(finalInput);
+          console.log("✅ AI agent válasz sikeresen megérkezett");
+          break; // Sikeres válasz, kilépünk a loop-ból
+        } catch (error: any) {
+          lastError = error;
+          const is429 =
+            error?.status === 429 ||
+            error?.message?.includes("429") ||
+            error?.message?.includes("rate limit");
+
+          if (is429 && retries > 1) {
+            const waitTime = 60; // 60 másodperc várakozás
+            console.log(
+              `⚠️ Rate limit elérve (429), várakozás ${waitTime}s... (${retries - 1} próbálkozás maradt)`
+            );
+            await new Promise((resolve) =>
+              setTimeout(resolve, waitTime * 1000)
+            );
+            retries--;
+          } else {
+            // Nem 429-es hiba, vagy elfogytak a próbálkozások
+            console.error("❌ AI agent hiba:", error);
+            throw error;
+          }
+        }
+      }
+
+      if (!result) {
+        console.error("❌ AI agent nem adott választ 3 próbálkozás után");
+        throw lastError || new Error("AI agent nem adott választ");
+      }
+
       console.log(
         "AiOfferChatAgent result!!!:",
         JSON.stringify(result, null, 2)

@@ -305,6 +305,36 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       console.log("Items processed with price lookup");
     }
 
+    // Újraszámoljuk a totalPrice, materialTotal és workTotal értékeket az items alapján
+    let calculatedTotalPrice = 0;
+    let calculatedMaterialTotal = 0;
+    let calculatedWorkTotal = 0;
+
+    if (parsedContent.items && parsedContent.items.length > 0) {
+      const totals = parsedContent.items.reduce(
+        (acc, item: any) => {
+          const materialTotal = parseFloat(item.materialTotal) || 0;
+          const workTotal = parseFloat(item.workTotal) || 0;
+          return {
+            material: acc.material + materialTotal,
+            work: acc.work + workTotal,
+            total: acc.total + materialTotal + workTotal,
+          };
+        },
+        { material: 0, work: 0, total: 0 }
+      );
+
+      calculatedMaterialTotal = totals.material;
+      calculatedWorkTotal = totals.work;
+      calculatedTotalPrice = totals.total;
+
+      console.log("Calculated totals from items:", {
+        materialTotal: calculatedMaterialTotal,
+        workTotal: calculatedWorkTotal,
+        totalPrice: calculatedTotalPrice,
+      });
+    }
+
     // Extract title, customer name, and time from offer content
     let title = "Új ajánlat";
     let customerName = "Ügyfél";
@@ -513,7 +543,9 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     const offerData: any = {
       title: offerTitle || work.title,
       description: formattedNotes, // Save formatted notes in the description
-      totalPrice: parsedContent.totalPrice || 0,
+      totalPrice: calculatedTotalPrice || parsedContent.totalPrice || 0, // Use calculated total from items
+      materialTotal: calculatedMaterialTotal || 0, // Use calculated material total from items
+      workTotal: calculatedWorkTotal || 0, // Use calculated work total from items
       status: "draft",
       requirement: {
         connect: { id: requirement.id },
@@ -554,16 +586,16 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       // Process items: add "new": true for items with ! and remove the !
       // All other items get "new": false
       const processedItems = parsedContent.items.map((item: any) => {
-        if (item.name && item.name.endsWith('!')) {
+        if (item.name && item.name.endsWith("!")) {
           return {
             ...item,
             name: item.name.slice(0, -1), // Remove the ! from the end
-            new: true
+            new: true,
           };
         }
         return {
           ...item,
-          new: false // Explicitly set new: false for all non-custom items
+          new: false, // Explicitly set new: false for all non-custom items
         };
       });
 
@@ -970,9 +1002,9 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
     // Also preserve the "new" field if it already exists
     const processedItems = items.map((item: any) => {
       const result: any = { ...item };
-      
+
       // If item name ends with !, remove it and set new: true
-      if (item.name && item.name.endsWith('!')) {
+      if (item.name && item.name.endsWith("!")) {
         result.name = item.name.slice(0, -1); // Remove the ! from the end
         result.new = true;
       }
@@ -980,7 +1012,7 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
       else if (item.new) {
         result.new = true;
       }
-      
+
       return result;
     });
 
@@ -1031,30 +1063,28 @@ export async function updateOfferItems(offerId: number, items: OfferItem[]) {
             }
 
             // Validate and transform each item to match OfferItem
-            return items.map(
-              (item) => {
-                const transformedItem: any = {
-                  id: item.id,
-                  name: item.name ? item.name.replace(/^\*+\s*/, "") : "",
-                  quantity: item.quantity || "0",
-                  unit: item.unit || "db",
-                  materialUnitPrice: item.materialUnitPrice || "0",
-                  unitPrice: item.unitPrice || "0",
-                  materialTotal: item.materialTotal || "0",
-                  workTotal: item.workTotal || "0",
-                  description: item.description || "",
-                };
-                
-                // Explicitly preserve the new field for custom items
-                if (item.new === true || item.new === "true") {
-                  transformedItem.new = true;
-                } else {
-                  transformedItem.new = false;
-                }
-                
-                return transformedItem as OfferItem;
+            return items.map((item) => {
+              const transformedItem: any = {
+                id: item.id,
+                name: item.name ? item.name.replace(/^\*+\s*/, "") : "",
+                quantity: item.quantity || "0",
+                unit: item.unit || "db",
+                materialUnitPrice: item.materialUnitPrice || "0",
+                unitPrice: item.unitPrice || "0",
+                materialTotal: item.materialTotal || "0",
+                workTotal: item.workTotal || "0",
+                description: item.description || "",
+              };
+
+              // Explicitly preserve the new field for custom items
+              if (item.new === true || item.new === "true") {
+                transformedItem.new = true;
+              } else {
+                transformedItem.new = false;
               }
-            );
+
+              return transformedItem as OfferItem;
+            });
           } catch (error) {
             console.error("Error parsing offer items:", error);
             return [];

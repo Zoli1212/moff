@@ -32,7 +32,7 @@ export default function SilentOfferSaverPage() {
     "";
 
   const saveOfferStatus = (recordId: string) => {
-    console.log(recordId)
+    console.log(recordId);
     if (typeof window === "undefined") return;
 
     // const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
@@ -180,8 +180,14 @@ export default function SilentOfferSaverPage() {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-50">
         <div className="flex flex-col items-center gap-4">
-          <FileText className="animate-spin w-16 h-16 text-blue-600" />
-          <p className="text-lg font-mono text-blue-600 tracking-widest animate-pulse">
+          <FileText
+            className="animate-spin w-16 h-16"
+            style={{ color: "#FE9C00" }}
+          />
+          <p
+            className="text-lg font-mono tracking-widest animate-pulse"
+            style={{ color: "#FE9C00" }}
+          >
             AJÁNLAT BETÖLTÉSE...
           </p>
         </div>

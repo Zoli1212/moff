@@ -702,3 +702,6 @@ akkor kérdezzen rá a tétéere ha van több hasonló különböző áron, egy 
 
 pipa 
 anyagköltség cserélve munkadijjal
+---
+Teszt utca 403 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanyzó 150000, a wc-e 50000, a kád 160000.
+

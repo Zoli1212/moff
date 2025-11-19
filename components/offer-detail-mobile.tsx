@@ -6,6 +6,7 @@ import {
   updateOfferStatus,
   updateOfferValidUntil,
   saveTenantPrice,
+  saveGlobalPrice,
 } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
@@ -138,6 +139,7 @@ export function OfferDetailView({
   const [isUpdatingTitle, setIsUpdatingTitle] = useState(false);
   const [saveTenantPriceChecked, setSaveTenantPriceChecked] = useState(true); // Default: bejelölve
   const [saveGlobalPriceChecked, setSaveGlobalPriceChecked] = useState(false); // Default: nincs bejelölve
+  const [saveNewItemsGlobally, setSaveNewItemsGlobally] = useState(false); // Új tételek globális mentése
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [showCustomItemModal, setShowCustomItemModal] = useState(false);
   const [selectedCustomItem, setSelectedCustomItem] =
@@ -1164,7 +1166,7 @@ export function OfferDetailView({
                     onChange={(e) =>
                       setSaveTenantPriceChecked(e.target.checked)
                     }
-                    className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-green-600"
+                    className="w-4 h-4 rounded border-gray-300 cursor-pointer text-green-600 focus:ring-green-500"
                   />
                   <Label
                     htmlFor="saveTenantPrice"
@@ -1184,7 +1186,7 @@ export function OfferDetailView({
                       onChange={(e) =>
                         setSaveGlobalPriceChecked(e.target.checked)
                       }
-                      className="w-4 h-4 rounded border-gray-300 cursor-pointer accent-green-600"
+                      className="w-4 h-4 rounded border-gray-300 cursor-pointer text-green-600 focus:ring-green-500"
                     />
                     <Label
                       htmlFor="saveGlobalPrice"
@@ -1832,106 +1834,159 @@ export function OfferDetailView({
 
                     {/* Save New Items Button */}
                     {editableItems.some((item) => item.new) && (
-                      <button
-                        onClick={async () => {
-                          const newItems = editableItems.filter(
-                            (item) => item.new
-                          );
-                          if (newItems.length === 0) {
-                            toast.info("Nincs új tétel mentésre");
-                            return;
-                          }
+                      <div className="mt-4">
+                        {/* Checkbox for global save (superUser only) */}
+                        {isSuperUser && (
+                          <div className="mb-3 flex items-center space-x-2 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                            <input
+                              type="checkbox"
+                              id="saveNewItemsGlobally"
+                              checked={saveNewItemsGlobally}
+                              onChange={(e) =>
+                                setSaveNewItemsGlobally(e.target.checked)
+                              }
+                              className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                            />
+                            <label
+                              htmlFor="saveNewItemsGlobally"
+                              className="text-sm font-medium text-gray-700 cursor-pointer"
+                            >
+                              Mentés globálisan is (minden vállalkozó látja)
+                            </label>
+                          </div>
+                        )}
 
-                          const savingToast = toast.loading(
-                            `${newItems.length} új tétel mentése...`
-                          );
-                          let successCount = 0;
-                          let failCount = 0;
+                        <button
+                          onClick={async () => {
+                            const newItems = editableItems.filter(
+                              (item) => item.new
+                            );
+                            if (newItems.length === 0) {
+                              toast.info("Nincs új tétel mentésre");
+                              return;
+                            }
 
-                          for (const item of newItems) {
-                            try {
-                              const laborCost = parseCurrency(item.unitPrice);
-                              const materialCost = parseCurrency(
-                                item.materialUnitPrice
-                              );
+                            const savingToast = toast.loading(
+                              `${newItems.length} új tétel mentése...`
+                            );
+                            let successCount = 0;
+                            let failCount = 0;
+                            let globalSuccessCount = 0;
+                            let globalFailCount = 0;
 
-                              const result = await saveTenantPrice(
-                                item.name,
-                                "Egyedi",
-                                "Egyedi",
-                                item.unit,
-                                laborCost,
-                                materialCost
-                              );
+                            for (const item of newItems) {
+                              try {
+                                const laborCost = parseCurrency(item.unitPrice);
+                                const materialCost = parseCurrency(
+                                  item.materialUnitPrice
+                                );
 
-                              if (result.success) {
-                                successCount++;
-                              } else {
+                                // Mentés tenant árlistába (mindig)
+                                const tenantResult = await saveTenantPrice(
+                                  item.name,
+                                  "Egyedi",
+                                  "Egyedi",
+                                  item.unit,
+                                  laborCost,
+                                  materialCost
+                                );
+
+                                if (tenantResult.success) {
+                                  successCount++;
+                                } else {
+                                  failCount++;
+                                }
+
+                                // Mentés globális árlistába (csak ha superUser és be van jelölve)
+                                if (isSuperUser && saveNewItemsGlobally) {
+                                  const globalResult = await saveGlobalPrice(
+                                    item.name,
+                                    "Egyedi",
+                                    "Egyedi",
+                                    item.unit,
+                                    laborCost,
+                                    materialCost
+                                  );
+
+                                  if (globalResult.success) {
+                                    globalSuccessCount++;
+                                  } else {
+                                    globalFailCount++;
+                                  }
+                                }
+                              } catch (error) {
+                                console.error(
+                                  "Error saving item:",
+                                  item.name,
+                                  error
+                                );
                                 failCount++;
                               }
-                            } catch (error) {
-                              console.error(
-                                "Error saving item:",
-                                item.name,
-                                error
-                              );
-                              failCount++;
                             }
-                          }
 
-                          toast.dismiss(savingToast);
+                            toast.dismiss(savingToast);
 
-                          if (successCount > 0) {
-                            // Update items to remove new flag
-                            const updatedItems = editableItems.map((item) =>
-                              item.new ? { ...item, new: false } : item
-                            );
-
-                            const updateResult = await updateOfferItems(
-                              parseInt(offer.id.toString()),
-                              updatedItems
-                            );
-
-                            if (updateResult.success) {
-                              setEditableItems(updatedItems);
-                              setOriginalItems(
-                                updatedItems.map((item) => ({ ...item }))
+                            if (successCount > 0) {
+                              // Update items to remove new flag
+                              const updatedItems = editableItems.map((item) =>
+                                item.new ? { ...item, new: false } : item
                               );
-                              toast.success(
-                                `${successCount} tétel sikeresen mentve a vállalkozói árlistához!`
+
+                              const updateResult = await updateOfferItems(
+                                parseInt(offer.id.toString()),
+                                updatedItems
                               );
-                            } else {
-                              toast.warning(
-                                `${successCount} tétel mentve, de az ajánlat frissítése sikertelen`
+
+                              if (updateResult.success) {
+                                setEditableItems(updatedItems);
+                                setOriginalItems(
+                                  updatedItems.map((item) => ({ ...item }))
+                                );
+
+                                let message = `${successCount} tétel sikeresen mentve a vállalkozói árlistához!`;
+                                if (globalSuccessCount > 0) {
+                                  message += ` (${globalSuccessCount} tétel globálisan is mentve)`;
+                                }
+                                toast.success(message);
+                              } else {
+                                toast.warning(
+                                  `${successCount} tétel mentve, de az ajánlat frissítése sikertelen`
+                                );
+                              }
+                            }
+
+                            if (failCount > 0) {
+                              toast.error(
+                                `${failCount} tétel mentése sikertelen`
                               );
                             }
-                          }
 
-                          if (failCount > 0) {
-                            toast.error(
-                              `${failCount} tétel mentése sikertelen`
-                            );
-                          }
-                        }}
-                        className="w-full mt-4 bg-white border-2 border-[#FE9C00] hover:bg-orange-50 text-[#FE9C00] font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
+                            if (globalFailCount > 0) {
+                              toast.error(
+                                `${globalFailCount} tétel globális mentése sikertelen`
+                              );
+                            }
+                          }}
+                          className="w-full bg-white border-2 border-[#FE9C00] hover:bg-orange-50 text-[#FE9C00] font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
                         >
-                          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                          <polyline points="17 21 17 13 7 13 7 21" />
-                          <polyline points="7 3 7 8 15 8" />
-                        </svg>
-                        Új tételek mentése (
-                        {editableItems.filter((item) => item.new).length})
-                      </button>
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                          </svg>
+                          Új tételek mentése (
+                          {editableItems.filter((item) => item.new).length})
+                        </button>
+                      </div>
                     )}
 
                     {/* Email Sender Section */}
