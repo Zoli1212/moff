@@ -6,6 +6,57 @@ import { enhancePromptWithRAG } from "@/actions/rag-context-actions";
 
 const prisma = new PrismaClient();
 
+// ============================================
+// PRICELIST CACHE SYSTEM
+// ============================================
+let priceListCache: any[] | null = null;
+let priceListCacheTimestamp: number = 0;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 perc
+
+async function getPriceListCatalog(): Promise<string> {
+  const now = Date.now();
+
+  // Cache ellenőrzés
+  if (priceListCache && now - priceListCacheTimestamp < CACHE_TTL_MS) {
+    console.log("✅ PriceList cache hit");
+    return JSON.stringify(priceListCache, null, 2);
+  }
+
+  console.log("🔄 PriceList betöltés adatbázisból...");
+
+  try {
+    const priceList = await prisma.priceList.findMany({
+      where: { tenantEmail: "" },
+      select: {
+        category: true,
+        task: true,
+        technology: true,
+        unit: true,
+        laborCost: true,
+        materialCost: true,
+      },
+      orderBy: [{ category: "asc" }, { task: "asc" }],
+    });
+
+    console.log(`✅ PriceList betöltve: ${priceList.length} tétel`);
+
+    priceListCache = priceList;
+    priceListCacheTimestamp = now;
+
+    return JSON.stringify(priceList, null, 2);
+  } catch (error) {
+    console.error("❌ PriceList hiba:", error);
+    if (priceListCache) {
+      console.log("⚠️ Régi cache használata");
+      return JSON.stringify(priceListCache, null, 2);
+    }
+    console.log(
+      "⚠️ Nincs PriceList cache, üres katalógus → AI fallback-re vált (system prompt JSON)"
+    );
+    return "[]";
+  }
+}
+
 export const EmailAnalyzerAgent = createAgent({
   name: "EmailAnalyzerAgent",
   description:
@@ -136,8 +187,10 @@ export const AiOfferChatAgent = createAgent({
   Never assume a very large or very small quantity just to produce a number.
 
   For every catalog-based task:
+  - You MUST use the exact "task" name from the catalog without any modification or renaming.
   - You MUST use the exact "laborCost" and "materialCost" values from the catalog without any modification, scaling or adjustment.
   - You MUST NOT invent or change unit prices if they exist in the catalog.
+  - You MUST NOT rename or paraphrase the task name - use it exactly as written in the catalog.
 
   For the same input requirements (same text, same context), the list of tasks and the total amount MUST remain consistent:
   - Do not randomly add or remove items between runs.
@@ -164,21 +217,31 @@ export const AiOfferChatAgent = createAgent({
 STRICT CATALOG USAGE POLICY
 ===============================
 
-You must ALWAYS use the catalog below as the ONLY valid source of tasks, units, labor costs and material costs.
+You must ALWAYS use the catalog as the ONLY valid source of tasks, units, labor costs and material costs.
+
+CATALOG PRIORITY:
+1. PRIMARY: Use the catalog provided in the user input (marked as ===PRICE CATALOG===) if available
+2. FALLBACK: If no catalog is provided in the input, use the catalog below in this system prompt
 
 When the user gives a request, follow this strict matching priority:
 
 1. EXACT MATCH (highest priority)
-- Look for an exact match of the “task” name, or a direct equivalent meaning.
-- If found, you MUST use the catalog item. No creativity allowed.
+- Look for an exact match of the "task" name, or a direct equivalent meaning.
+- If found, you MUST use the catalog item exactly as written. No creativity allowed.
+- You MUST use:
+  - The exact "task" name from the catalog without renaming, paraphrasing, or modifying it in any way
+  - The exact "laborCost" and "materialCost" values without any modification
 
 2. FUZZY MATCH (only if no exact match exists)
-- If exact match does not exist, allow:
+- If exact match does not exist, allow matching by:
   - synonyms,
   - plural/singular,
   - small spelling differences,
   - Hungarian diacritics differences.
 - If meaning is clearly identical, you MUST use the closest catalog entry.
+- IMPORTANT: Once you find a matching catalog item, you MUST use:
+  - Its exact "task" name as written in the catalog (do NOT rename or paraphrase)
+  - Its exact "laborCost" and "materialCost" values without any modification
 
 3. SPLIT INTO MULTIPLE CATALOG ITEMS
 - If a request can be represented by multiple catalog tasks,
@@ -3182,7 +3245,7 @@ CATALOG STARTS BELOW
     "task": "Fali csempeburkolat készítése (20x20 – 30x60 cm)",
     "technology": "Kézi ragasztás, fugázás",
     "unit": "m²",
-    "laborCost": 5000,
+    "laborCost": 9000,
     "materialCost": 1800
   },
   {
@@ -4142,7 +4205,7 @@ OFFER FORMAT RULES (MANDATORY)
 ===============================
 
   
-When a user provides a request, always match it with the most relevant tasks from this catalog.
+When a user provides a request, always match it with the most relevant tasks from the catalog (use the input catalog marked as ===PRICE CATALOG=== if available, otherwise use the catalog in this system prompt).
 
 When returning the generated offer text, ALWAYS start with the location/address if available in this format:
 
@@ -4186,6 +4249,10 @@ offerSummary: Az ajánlat tartalmazza a teljes lakásfelújítást: falak festé
       },
     },
   }),
+  // model: openai({
+  //   model: "gpt-4o",
+  //   apiKey: process.env.OPENAI_API_KEY,
+  // }),
 });
 
 export const AiDemandAnalyzerAgent = createAgent({
@@ -4272,6 +4339,7 @@ IMPORTANT STRUCTURE REQUIREMENTS:
 `,
   model: gemini({
     model: "gemini-2.0-flash",
+    apiKey: process.env.GEMINI_API_KEY,
   }),
 });
 
@@ -4369,6 +4437,39 @@ export const AiOfferAgent = inngest.createFunction(
         console.log("🔒 RAG kikapcsolva, eredeti input használata");
         // finalInput már baseInput, nem kell változtatni
       }
+
+      // PriceList katalógus betöltése adatbázisból
+      const { priceListCatalog, catalogSource } = await step.run(
+        "load-pricelist-catalog",
+        async () => {
+          console.log("📋 PriceList katalógus betöltése...");
+          const catalog = await getPriceListCatalog();
+
+          // Ellenőrizzük, hogy van-e katalógus
+          const catalogIsEmpty = catalog === "[]" || catalog.trim() === "";
+
+          let source = "";
+          if (catalogIsEmpty) {
+            source = "⚠️ FALLBACK (system prompt JSON)";
+            console.log(
+              "⚠️ KATALÓGUS FORRÁS: FALLBACK (system prompt JSON katalógus)"
+            );
+            console.log("   → Adatbázis katalógus üres vagy nem elérhető");
+          } else {
+            const catalogItems = JSON.parse(catalog);
+            source = `✅ PRIMARY (adatbázis - ${catalogItems.length} tétel)`;
+            console.log(
+              `✅ KATALÓGUS FORRÁS: PRIMARY (adatbázis - ${catalogItems.length} tétel)`
+            );
+          }
+
+          return { priceListCatalog: catalog, catalogSource: source };
+        }
+      );
+
+      console.log(`📊 KATALÓGUS FORRÁS: ${catalogSource}`);
+      finalInput = `${finalInput}\n\n===PRICE CATALOG===\n${priceListCatalog}`;
+      console.log("✅ PriceList hozzáadva az input-hoz");
 
       // Retry logika 429-es (rate limit) hibák kezelésére
       let retries = 3;
