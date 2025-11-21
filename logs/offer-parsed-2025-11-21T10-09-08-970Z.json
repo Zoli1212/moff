@@ -1,0 +1,126 @@
+{
+  "title": "Ismeretlen cím",
+  "location": "",
+  "items": [
+    {
+      "name": "*Régi hidegburkolat bontása",
+      "quantity": "15",
+      "unit": "m²",
+      "unitPrice": "4000 Ft",
+      "materialUnitPrice": "0 Ft",
+      "workTotal": "60000 Ft",
+      "materialTotal": "0 Ft",
+      "totalPrice": "60 000 Ft"
+    },
+    {
+      "name": "*Régi hidegburkolat bontása",
+      "quantity": "36",
+      "unit": "m²",
+      "unitPrice": "4000 Ft",
+      "materialUnitPrice": "0 Ft",
+      "workTotal": "144000 Ft",
+      "materialTotal": "0 Ft",
+      "totalPrice": "144 000 Ft"
+    },
+    {
+      "name": "*Zuhanyzó (anyag)!",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "0 Ft",
+      "materialUnitPrice": "150000 Ft",
+      "workTotal": "0 Ft",
+      "materialTotal": "150000 Ft",
+      "totalPrice": "150 000 Ft"
+    },
+    {
+      "name": "*WC (anyag)!",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "0 Ft",
+      "materialUnitPrice": "50000 Ft",
+      "workTotal": "0 Ft",
+      "materialTotal": "50000 Ft",
+      "totalPrice": "50 000 Ft"
+    },
+    {
+      "name": "*Kád (anyag)!",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "0 Ft",
+      "materialUnitPrice": "160000 Ft",
+      "workTotal": "0 Ft",
+      "materialTotal": "160000 Ft",
+      "totalPrice": "160 000 Ft"
+    },
+    {
+      "name": "*Mosdó, kézmosó csaptelep felszerelése",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "8000 Ft",
+      "materialUnitPrice": "500 Ft",
+      "workTotal": "8000 Ft",
+      "materialTotal": "500 Ft",
+      "totalPrice": "8500 Ft"
+    },
+    {
+      "name": "*Mennyezet festése",
+      "quantity": "15",
+      "unit": "m²",
+      "unitPrice": "5000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "75000 Ft",
+      "materialTotal": "27000 Ft",
+      "totalPrice": "102 000 Ft"
+    },
+    {
+      "name": "*Padlócsempe ragasztása (20x20–60x60 cm)",
+      "quantity": "15",
+      "unit": "m²",
+      "unitPrice": "9000 Ft",
+      "materialUnitPrice": "1500 Ft",
+      "workTotal": "135000 Ft",
+      "materialTotal": "22500 Ft",
+      "totalPrice": "157 500 Ft"
+    },
+    {
+      "name": "*Falicsempe ragasztása (20x20–60x60 cm)",
+      "quantity": "36",
+      "unit": "m²",
+      "unitPrice": "9000 Ft",
+      "materialUnitPrice": "1800 Ft",
+      "workTotal": "324000 Ft",
+      "materialTotal": "64800 Ft",
+      "totalPrice": "388 800 Ft"
+    },
+    {
+      "name": "*Beltéri ajtók mázolása",
+      "quantity": "1",
+      "unit": "db",
+      "unitPrice": "18000 Ft",
+      "materialUnitPrice": "1000 Ft",
+      "workTotal": "18000 Ft",
+      "materialTotal": "1000 Ft",
+      "totalPrice": "19 000 Ft"
+    }
+  ],
+  "totalPrice": 1239800,
+  "notes": [
+    "Teszt utca 452",
+    "További információ:",
+    "A következő tétel nem volt az adatbázisban: 'Zuhanyzó (anyag) (egyedi tétel)'.",
+    "Indoklás: A szövegben szerepel a zuhanyzó cseréje, ezért a zuhanyzó anyagköltségét külön tételként kellett szerepeltetni.",
+    "A következő tétel nem volt az adatbázisban: 'WC (anyag) (egyedi tétel)'.",
+    "Indoklás: A szövegben szerepel a WC cseréje, ezért a WC anyagköltségét külön tételként kellett szerepeltetni.",
+    "A következő tétel nem volt az adatbázisban: 'Kád (anyag) (egyedi tétel)'.",
+    "Indoklás: A szövegben szerepel a kád cseréje, ezért a kád anyagköltségét külön tételként kellett szerepeltetni.",
+    "Tisztázandó kérdések:",
+    "1. Milyen típusú szanitereket kell elhelyezni (pl. zuhanykabin vagy zuhanyfal)?",
+    "2. A falicsempézés tartalmazza a teljes falfelületet, vagy csak egy bizonyos magasságig?",
+    "3. Milyen típusú padlóburkolatot szeretne (pl. kerámia, vinyl)?",
+    "4. A meglévő szaniterek eltávolítását tartalmazza az ajánlat?",
+    "5. A régi koburkolatot és csempét el kell szállítani?",
+    "6. A falak előkészítését (pl. glettelés, alapozás) tartalmazza a csempézés ára?",
+    "Becsült kivitelezési idő: 7 nap"
+  ],
+  "offerSummary": "Az ajánlat tartalmazza a fürdőszoba felújítását: a régi burkolatok eltávolítását, új szaniterek beszerzését és beépítését, a mennyezet festését, új padlóburkolat lerakását, a falak csempézését és az ajtó mázolását. A projekt során egy 3x5m alapterületű fürdőszoba teljes megújítására kerül sor."
+}
