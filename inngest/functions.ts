@@ -3274,14 +3274,6 @@ CATALOG STARTS BELOW
   },
   {
     "category": "Belső burkolatok",
-    "task": "Padlólap ragasztása (60x60 cm felett)",
-    "technology": "Szintező rendszerrel",
-    "unit": "m²",
-    "laborCost": 5000,
-    "materialCost": 1800
-  },
-  {
-    "category": "Belső burkolatok",
     "task": "Fugázás, sarokszegély kialakítás",
     "technology": "Szilikon + fuga",
     "unit": "fm",
@@ -3335,6 +3327,38 @@ CATALOG STARTS BELOW
     "unit": "db",
     "laborCost": 8000,
     "materialCost": 500
+  },
+  {
+    "category": "Hidegburkolás",
+    "task": "Padlócsempe ragasztása (20x20–60x60 cm)",
+    "technology": "Hagyományos ragasztással",
+    "unit": "m²",
+    "laborCost": 900,
+    "materialCost": 1500
+  },
+  {
+    "category": "Hidegburkolás",
+    "task": "Falicsempe ragasztása (20x20–60x60 cm)",
+    "technology": "Hagyományos ragasztással",
+    "unit": "m²",
+    "laborCost": 9000,
+    "materialCost": 1800
+  },
+  {
+    "category": "Hidegburkolás",
+    "task": "Lábazat készítése csempéből (vágással)",
+    "technology": "Hagyományos ragasztással",
+    "unit": "fm",
+    "laborCost": 2500,
+    "materialCost": 500
+  },
+  {
+    "category": "Bontás",
+    "task": "Régi hidegburkolat bontása",
+    "technology": "Gépi és kézi eljárással",
+    "unit": "m²",
+    "laborCost": 4000,
+    "materialCost": 0
   },
   {
     "category": "Festés, mázolás",
