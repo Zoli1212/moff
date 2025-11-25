@@ -17,12 +17,16 @@ import { useRouter } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 import { OfferItemQuestion } from "@/types/offer.types";
+import { deleteOffer } from "@/actions/delete-offer";
 
 interface TextInputDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   toolPath: string;
   questions?: string[];
+  requirementId?: number;
+  requirementDescription?: string;
+  currentOfferId?: number;
 }
 
 interface QuestionWithAnswer {
@@ -36,7 +40,10 @@ export default function TextInputDialogQuestions({
   setOpen,
   toolPath,
   questions: initialQuestions = [],
-  currentItems = []
+  currentItems = [],
+  requirementId,
+  requirementDescription = "",
+  currentOfferId,
 }: TextInputDialogProps & { currentItems?: OfferItemQuestion[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -44,13 +51,17 @@ export default function TextInputDialogQuestions({
   const router = useRouter();
 
   // Get the setOfferItems function and current items from the store
-  const { setOfferItemsQuestion, offerItemsQuestion } = useOfferItemQuestionStore();
+  const { setOfferItemsQuestion, offerItemsQuestion, clearOfferItemsQuestion } =
+    useOfferItemQuestionStore();
   const prevItemsRef = useRef(currentItems);
 
   // Log when offerItems are updated in the store
   useEffect(() => {
     if (offerItemsQuestion && offerItemsQuestion.length > 0) {
-      console.log('Items stored in offerItemsQuestionStore:', offerItemsQuestion);
+      console.log(
+        "Items stored in offerItemsQuestionStore:",
+        offerItemsQuestion
+      );
     }
   }, [offerItemsQuestion]);
 
@@ -64,10 +75,13 @@ export default function TextInputDialogQuestions({
           answer: "",
         }))
       );
-      
+
       // Store the current items in the store when dialog opens and items have changed
-      if (currentItems && currentItems.length > 0 && 
-          JSON.stringify(currentItems) !== JSON.stringify(prevItemsRef.current)) {
+      if (
+        currentItems &&
+        currentItems.length > 0 &&
+        JSON.stringify(currentItems) !== JSON.stringify(prevItemsRef.current)
+      ) {
         setOfferItemsQuestion(currentItems);
         prevItemsRef.current = currentItems;
       }
@@ -88,56 +102,154 @@ export default function TextInputDialogQuestions({
     setLoading(true);
     setError("");
 
+    // ✅ Kiürítjük a store-t, hogy ne legyen duplikáció a kérdések megválaszolása után
+    clearOfferItemsQuestion();
+
     try {
-      const recordId = uuidv4();
-      const formData = new FormData();
-
-      // Get the original demand text from the store
-      const { demandText } = useDemandStore.getState();
-      console.log("Original demandText:", demandText);
-
-      // Prepare the combined text with original demand and Q&A
-      let combinedText = demandText || "";
+      // Prepare the answered questions text
       const answeredQuestions = questions.filter((q) => q.answer.trim() !== "");
 
-      if (answeredQuestions.length > 0) {
-        combinedText += "\n\nVálaszok a kérdésekre:\n";
-        answeredQuestions.forEach(({ text, answer }) => {
-          combinedText += `\nKérdés: ${text}\nVálasz: ${answer}\n`;
-        });
+      if (answeredQuestions.length === 0) {
+        setError("Kérjük válaszoljon meg legalább egy kérdést!");
+        setLoading(false);
+        return;
       }
 
-      console.log("Sending combinedText to API:", combinedText);
+      let answersText = "";
+      answeredQuestions.forEach(({ text, answer }) => {
+        answersText += `\nKérdés: ${text}\nVálasz: ${answer}\n`;
+      });
+
+      // If we have a requirementId, update the requirement description first
+      if (requirementId) {
+        // Check if there's already a "Válaszok a kérdésekre:" section
+        let updatedDescription = "";
+        const answersMatch = requirementDescription.match(
+          /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
+        );
+
+        if (answersMatch) {
+          // If there's already an answers section, append the new answers to it
+          const existingAnswers = answersMatch[0];
+          updatedDescription = requirementDescription.replace(
+            existingAnswers,
+            `Válaszok a kérdésekre:${answersMatch[1]}${answersText}`
+          );
+        } else {
+          // If no answers section exists, add it at the end
+          updatedDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answersText}`;
+        }
+
+        // Update the requirement in the database
+        const updateResponse = await fetch("/api/update-requirement", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requirementId: requirementId,
+            data: {
+              description: updatedDescription,
+              updateCount: { increment: 1 },
+            },
+          }),
+        });
+
+        if (!updateResponse.ok) {
+          throw new Error("Hiba történt a követelmény frissítése során");
+        }
+      }
+
+      // Create a new record ID for the new offer
+      const recordId = crypto.randomUUID();
+
+      // Prepare the combined text with original requirement and answers
+      // Use the UPDATED description that includes all previous answers
+      let finalDescription = requirementDescription;
+
+      // If we updated the requirement, use the updated description
+      if (requirementId) {
+        const answersMatch = requirementDescription.match(
+          /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
+        );
+        if (answersMatch) {
+          finalDescription = requirementDescription.replace(
+            answersMatch[0],
+            `Válaszok a kérdésekre:${answersMatch[1]}${answersText}`
+          );
+        } else {
+          finalDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answersText}`;
+        }
+      }
+
+      const combinedText = `Eredeti követelmény: ${finalDescription}\n\nKiegészítő információk: A fenti kérdésekre most válaszoltam, kérlek vedd figyelembe az új válaszokat az ajánlat generálásakor.`;
+
+      // Create form data for the API
+      const formData = new FormData();
       formData.append("recordId", recordId);
       formData.append("textContent", combinedText);
       formData.append("type", "offer-letter");
 
-      const result = await axios.post("/api/ai-demand-agent", formData);
-      const { eventId } = result.data;
-      console.log("Event queued:", eventId);
+      if (requirementId) {
+        formData.append("requirementId", requirementId.toString());
+      }
+
+      // Call the API
+      const response = await fetch("/api/ai-demand-agent", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Hiba történt az újraküldés során");
+      }
+
+      const result = await response.json();
+      console.log("Event queued:", result.eventId);
 
       let attempts = 0;
       const maxAttempts = 60;
 
       const poll = async () => {
         try {
-          const res = await axios.get(
-            `/api/ai-demand-agent/status?eventId=${eventId}`
+          const statusRes = await fetch(
+            `/api/ai-demand-agent/status?eventId=${result.eventId}`
           );
-          const { status } = res.data;
+          const { status } = await statusRes.json();
           console.log("Status:", status);
 
           if (status === "Completed") {
+            // Delete the old offer if we have currentOfferId
+            if (currentOfferId) {
+              try {
+                console.log("Deleting old offer:", currentOfferId);
+                const deleteResult = await deleteOffer(currentOfferId);
+
+                if (deleteResult.success) {
+                  console.log("Old offer deleted successfully");
+                } else {
+                  console.error(
+                    "Failed to delete old offer:",
+                    deleteResult.error
+                  );
+                }
+              } catch (deleteErr) {
+                console.error("Error deleting old offer:", deleteErr);
+                // Don't block the flow if deletion fails
+              }
+            }
+
             setLoading(false);
             setOpen(false);
-            // History will be created by the backend
-            router.push(`${toolPath}/${recordId}`);
+            // Redirect to the new offer page with the updated requirement description
+            const encodedDemandText = encodeURIComponent(finalDescription);
+            router.push(
+              `${toolPath}/${recordId}?demandText=${encodedDemandText}`
+            );
             return;
           }
 
           if (status === "Cancelled" || attempts >= maxAttempts) {
             setLoading(false);
-            alert("Az elemzés nem sikerült vagy túl sokáig tartott.");
+            setError("A feldolgozás nem sikerült vagy túl sokáig tartott.");
             return;
           }
 
@@ -146,7 +258,7 @@ export default function TextInputDialogQuestions({
         } catch (err) {
           console.error("Error polling status:", err);
           setLoading(false);
-          alert("Hiba történt az állapot lekérdezése során.");
+          setError("Hiba történt az állapot lekérdezése során.");
         }
       };
 

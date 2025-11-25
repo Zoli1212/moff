@@ -581,8 +581,6 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
     // Add items if they exist
     if (parsedContent.items && parsedContent.items.length > 0) {
-      console.log(`Adding ${parsedContent.items.length} items to offer`);
-
       // Process items: add "new": true for items with ! and remove the !
       // All other items get "new": false
       const processedItems = parsedContent.items.map((item: any) => {
@@ -600,9 +598,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       });
 
       offerData.items = JSON.stringify(processedItems);
-      console.log("Items JSON:", offerData.items);
     } else {
-      console.log("No items to add to offer");
       offerData.items = "[]"; // Ensure it's a valid empty array JSON string
     }
 

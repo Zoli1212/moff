@@ -68,20 +68,54 @@ import SocialShareButtonsExcel from "./SocialShareButtonsExcel";
 function extractQuestions(description: string): string[] {
   if (!description) return [];
 
-  // Először soronként vizsgálunk, minden kérdőjellel végződő sort felveszünk
+  // Check if there's already a "Válaszok a kérdésekre:" section
+  // If yes, extract answered questions and filter them out
+  const answeredQuestions = new Set<string>();
+  const answersMatch = description.match(
+    /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
+  );
+
+  if (answersMatch) {
+    const answersSection = answersMatch[1];
+    const answerLines = answersSection.split(/\r?\n/);
+
+    for (const line of answerLines) {
+      const trimmed = line.trim();
+      // Extract questions from "Kérdés: ..." lines
+      if (trimmed.startsWith("Kérdés:")) {
+        const question = trimmed.replace(/^Kérdés:\s*/, "").trim();
+        if (question) {
+          answeredQuestions.add(question);
+        }
+      }
+    }
+  }
+
+  // Extract all questions from the description
   const lines = description.split(/\r?\n/);
   const questions: string[] = [];
 
   for (const line of lines) {
     const trimmed = line.trim();
     if (!trimmed) continue;
+
+    // Skip lines that are in the "Válaszok a kérdésekre:" section
+    if (answersMatch && answersMatch[0].includes(line)) continue;
+
     if (trimmed.endsWith("?")) {
       // Ha szám+pont/zárójel van elöl, azt levágjuk
       const match = trimmed.match(/^(\d+[.)]?\s*)(.*\?)$/);
+      let questionText = "";
+
       if (match) {
-        questions.push(match[2].trim());
+        questionText = match[2].trim();
       } else {
-        questions.push(trimmed);
+        questionText = trimmed;
+      }
+
+      // Only add if not already answered
+      if (!answeredQuestions.has(questionText)) {
+        questions.push(questionText);
       }
     }
   }
@@ -91,7 +125,7 @@ function extractQuestions(description: string): string[] {
     const sentences = description.split(/(?<=[.!?])\s+/);
     sentences.forEach((sentence) => {
       const trimmed = sentence.trim();
-      if (trimmed.endsWith("?")) {
+      if (trimmed.endsWith("?") && !answeredQuestions.has(trimmed)) {
         questions.push(trimmed);
       }
     });
@@ -1592,6 +1626,11 @@ export function OfferDetailView({
             setOpen={setIsDialogOpen}
             toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
             questions={extractQuestions(offer.description || "")}
+            requirementId={offer.requirement?.id}
+            requirementDescription={
+              offer.requirement?.description || offer.description || ""
+            }
+            currentOfferId={offer.id}
             currentItems={editableItems.map((item) => ({
               name: item.name || "",
               quantity: item.quantity || "1",
