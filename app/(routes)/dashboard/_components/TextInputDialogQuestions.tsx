@@ -11,10 +11,7 @@ import {
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { v4 as uuidv4 } from "uuid";
-import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useDemandStore } from "@/store/offerLetterStore";
 import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 import { OfferItemQuestion } from "@/types/offer.types";
 import { deleteOffer } from "@/actions/delete-offer";
