@@ -176,7 +176,7 @@ export default function OffersPage() {
             <h1 className="text-2xl font-bold text-gray-800">Munkáim</h1>
             <button
               onClick={() => setIsDialogOpen(true)}
-              className="ml-auto p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="ml-auto p-2 rounded-full border-2 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FE9C00]"
               aria-label="Új munka hozzáadása"
             >
               <svg
@@ -231,8 +231,13 @@ export default function OffersPage() {
               >
                 <div className="w-full">
                   <Link
-                    href={`/requirements/${work.id}`}
-                    className="block bg-white rounded-lg p-4 shadow-sm border border-gray-100 w-full hover:bg-gray-50 transition-colors"
+                    href={isDialogOpen ? "#" : `/requirements/${work.id}`}
+                    onClick={(e) => {
+                      if (isDialogOpen) {
+                        e.preventDefault();
+                      }
+                    }}
+                    className={`block bg-white rounded-lg p-4 shadow-sm border border-gray-100 w-full transition-colors ${isDialogOpen ? "opacity-60 cursor-not-allowed" : "hover:bg-gray-50"}`}
                   >
                     <div className="flex justify-between items-start">
                       <div>

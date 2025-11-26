@@ -240,137 +240,145 @@ export default function OffersPage() {
                   {offers.map((offer: Offer) => {
                     const isProcessing = offer.work?.processingByAI === true;
                     const isDisabled = isProcessing;
-                    
-                    return (
-                    <Link
-                      key={offer.id}
-                      href={isDisabled ? '#' : `/offers/${offer.requirementId}?offerId=${offer.id}`}
-                      onClick={(e) => {
-                        if (isDisabled) {
-                          e.preventDefault();
-                        }
-                      }}
-                      className={`block bg-white border border-gray-200 rounded-lg transition-shadow ${isDisabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-                      style={{
-                        boxShadow:
-                          "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isDisabled) {
-                          e.currentTarget.style.boxShadow =
-                            "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isDisabled) {
-                          e.currentTarget.style.boxShadow =
-                            "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
-                        }
-                      }}
-                    >
-                      <div className="p-4 relative">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-lg font-medium text-[#FE9C00] group-hover:text-[#FE9C00]/80 transition-colors">
-                              {offer.title || "Névtelen ajánlat"}
-                            </h3>
-                            {offer.offerSummary && (
-                              <p className="mt-1 text-sm text-gray-700">
-                                {offer.offerSummary.length > 100
-                                  ? `${offer.offerSummary.substring(0, 150)}...`
-                                  : offer.offerSummary}
-                              </p>
-                            )}
-                            {offer.description && (
-                              <p className="mt-1 text-sm text-gray-600 line-clamp-2">
-                                {offer.description.includes(
-                                  "Becsült kivitelezési idő"
-                                )
-                                  ? (() => {
-                                      const text = offer.description.substring(
-                                        offer.description.indexOf(
-                                          "Becsült kivitelezési idő"
-                                        )
-                                      );
-                                      const parts = text.split(
-                                        "Becsült kivitelezési idő:"
-                                      );
-                                      const afterColon = parts[1] || "";
-                                      // Extract only the time duration (e.g., "10-14 nap")
-                                      const timeMatch =
-                                        afterColon.match(
-                                          /^\s*(\d+-?\d*\s*nap)/
-                                        );
-                                      const timePart = timeMatch
-                                        ? timeMatch[1]
-                                        : "";
-                                      return (
-                                        <>
-                                          <span className="font-bold">
-                                            Becsült kivitelezési idő:
-                                          </span>
-                                          <span className="font-bold">
-                                            {" "}
-                                            {timePart}
-                                          </span>
-                                        </>
-                                      );
-                                    })()
-                                  : offer.description.length > 100
-                                    ? `${offer.description.substring(0, 250)}...`
-                                    : offer.description}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {isProcessing && (
-                              <div className="flex items-center gap-2 text-orange-600">
-                                <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
-                                <span className="text-xs font-medium">Feldolgozás...</span>
-                              </div>
-                            )}
-                            {offer.status === "draft" && !isProcessing && (
-                              <button
-                                onClick={(e) => handleDeleteClick(offer, e)}
-                                className="p-1 transition-colors"
-                                style={{ color: "#FE9C00" }}
-                                title="Ajánlat törlése"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            )}
-                            {!isProcessing && getStatusDisplay(offer.status) && (
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === "work" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
-                              >
-                                {getStatusDisplay(offer.status)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
 
-                        <div className="mt-2 flex justify-between items-center">
-                          <div className="text-sm text-gray-500">
-                            {offer.totalPrice ? (
-                              <>
-                                <span className="font-medium text-black">
-                                  Összesen:{" "}
-                                </span>
-                                <span className="font-medium text-gray-900">
-                                  {new Intl.NumberFormat("hu-HU", {
-                                    style: "currency",
-                                    currency: "HUF",
-                                    maximumFractionDigits: 0,
-                                  }).format(offer.totalPrice)}
-                                </span>
-                              </>
-                            ) : (
-                              <span>Ár nincs megadva</span>
-                            )}
+                    return (
+                      <Link
+                        key={offer.id}
+                        href={
+                          isDisabled || isDialogOpen
+                            ? "#"
+                            : `/offers/${offer.requirementId}?offerId=${offer.id}`
+                        }
+                        onClick={(e) => {
+                          if (isDisabled || isDialogOpen) {
+                            e.preventDefault();
+                          }
+                        }}
+                        className={`block bg-white border border-gray-200 rounded-lg transition-shadow ${isDisabled || isDialogOpen ? "opacity-60 cursor-not-allowed" : ""}`}
+                        style={{
+                          boxShadow:
+                            "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!isDisabled && !isDialogOpen) {
+                            e.currentTarget.style.boxShadow =
+                              "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)";
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!isDisabled && !isDialogOpen) {
+                            e.currentTarget.style.boxShadow =
+                              "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)";
+                          }
+                        }}
+                      >
+                        <div className="p-4 relative">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-medium text-[#FE9C00] group-hover:text-[#FE9C00]/80 transition-colors">
+                                {offer.title || "Névtelen ajánlat"}
+                              </h3>
+                              {offer.offerSummary && (
+                                <p className="mt-1 text-sm text-gray-700">
+                                  {offer.offerSummary.length > 100
+                                    ? `${offer.offerSummary.substring(0, 150)}...`
+                                    : offer.offerSummary}
+                                </p>
+                              )}
+                              {offer.description && (
+                                <p className="mt-1 text-sm text-gray-600 line-clamp-2">
+                                  {offer.description.includes(
+                                    "Becsült kivitelezési idő"
+                                  )
+                                    ? (() => {
+                                        const text =
+                                          offer.description.substring(
+                                            offer.description.indexOf(
+                                              "Becsült kivitelezési idő"
+                                            )
+                                          );
+                                        const parts = text.split(
+                                          "Becsült kivitelezési idő:"
+                                        );
+                                        const afterColon = parts[1] || "";
+                                        // Extract only the time duration (e.g., "10-14 nap")
+                                        const timeMatch =
+                                          afterColon.match(
+                                            /^\s*(\d+-?\d*\s*nap)/
+                                          );
+                                        const timePart = timeMatch
+                                          ? timeMatch[1]
+                                          : "";
+                                        return (
+                                          <>
+                                            <span className="font-bold">
+                                              Becsült kivitelezési idő:
+                                            </span>
+                                            <span className="font-bold">
+                                              {" "}
+                                              {timePart}
+                                            </span>
+                                          </>
+                                        );
+                                      })()
+                                    : offer.description.length > 100
+                                      ? `${offer.description.substring(0, 250)}...`
+                                      : offer.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {isProcessing && (
+                                <div className="flex items-center gap-2 text-orange-600">
+                                  <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
+                                  <span className="text-xs font-medium">
+                                    Feldolgozás...
+                                  </span>
+                                </div>
+                              )}
+                              {offer.status === "draft" && !isProcessing && (
+                                <button
+                                  onClick={(e) => handleDeleteClick(offer, e)}
+                                  className="p-1 transition-colors"
+                                  style={{ color: "#FE9C00" }}
+                                  title="Ajánlat törlése"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              )}
+                              {!isProcessing &&
+                                getStatusDisplay(offer.status) && (
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${offer.status === "work" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"}`}
+                                  >
+                                    {getStatusDisplay(offer.status)}
+                                  </span>
+                                )}
+                            </div>
+                          </div>
+
+                          <div className="mt-2 flex justify-between items-center">
+                            <div className="text-sm text-gray-500">
+                              {offer.totalPrice ? (
+                                <>
+                                  <span className="font-medium text-black">
+                                    Összesen:{" "}
+                                  </span>
+                                  <span className="font-medium text-gray-900">
+                                    {new Intl.NumberFormat("hu-HU", {
+                                      style: "currency",
+                                      currency: "HUF",
+                                      maximumFractionDigits: 0,
+                                    }).format(offer.totalPrice)}
+                                  </span>
+                                </>
+                              ) : (
+                                <span>Ár nincs megadva</span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
                     );
                   })}
                 </div>
