@@ -711,3 +711,6 @@ Fallbackeljen
 Az a cél, hogy jó árat adjon
 Kérdések
 ---
+Kérdéseket ne tegyen fel mégegyszer ugyanazt!
+Háromszor tehessen föl kérdéseket
+PAUSE ne legyen

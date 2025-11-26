@@ -169,6 +169,7 @@ export const AiOfferChatAgent = createAgent({
   Your tasks include:
   - Helping staff generate professional renovation offers based on the company's services and price list.
   - **ALWAYS generate a complete offer based on available information, BUT if critical data is missing, you MUST add a "Tisztázandó kérdések:" (Questions to Clarify) section at the end with specific questions in Hungarian.**
+  - **IMPORTANT: Before asking any question, check if there is a "Válaszok a kérdésekre:" section in the input text. If a question has already been answered there, DO NOT ask it again. Only ask questions about information that is truly missing and has NOT been answered yet.**
   - Clarifying all missing information needed for offer creation. For example:
     - Location/address (extract and display prominently)
     - Surface area or quantity (m², number of doors, etc.)
@@ -177,6 +178,7 @@ export const AiOfferChatAgent = createAgent({
     - Required materials or material grade (basic, premium, customer-provided, etc.)
   - If the necessary data is missing and not available from the database, include it in the "Tisztázandó kérdések:" section at the end of the offer.
   - Always phrase clarification needs as numbered questions in Hungarian, ending with a question mark.
+  - **NEVER repeat questions that have already been answered in the "Válaszok a kérdésekre:" section.**
   - If a predefined price list is available, use it to calculate the estimated total.
   - If prices or tasks are not provided, you may help staff prepare a structure or checklist they can complete manually.
   - If the staff requests or describes a task that does not exist in the provided catalog, you may still include it in the tasks list using the same structure as the other items.
