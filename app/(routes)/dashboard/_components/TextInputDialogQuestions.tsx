@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 import { OfferItemQuestion } from "@/types/offer.types";
 import { deleteOffer } from "@/actions/delete-offer";
+import { removeQuestionFromOffer } from "@/actions/offer-actions";
 
 interface TextInputDialogProps {
   open: boolean;
@@ -91,8 +92,32 @@ export default function TextInputDialogQuestions({
     );
   };
 
-  const handleRemoveQuestion = (id: string) => {
+  const handleRemoveQuestion = async (id: string) => {
+    // Find the question text before removing it
+    const questionToRemove = questions.find((q) => q.id === id);
+    if (!questionToRemove) return;
+
+    // Remove from local state immediately for better UX
     setQuestions((prev) => prev.filter((q) => q.id !== id));
+
+    // If we have a currentOfferId, also remove from the database
+    if (currentOfferId) {
+      try {
+        const result = await removeQuestionFromOffer(
+          currentOfferId,
+          questionToRemove.text
+        );
+        if (!result.success) {
+          console.error(
+            "Failed to remove question from offer:",
+            result.message
+          );
+          // Optionally show error to user
+        }
+      } catch (error) {
+        console.error("Error removing question from offer:", error);
+      }
+    }
   };
 
   const onAnalyze = async () => {
