@@ -25,6 +25,7 @@ interface TextInputDialogProps {
   requirementId?: number;
   requirementDescription?: string;
   currentOfferId?: number;
+  onOfferUpdated?: (updatedDescription: string) => void;
 }
 
 interface QuestionWithAnswer {
@@ -42,6 +43,7 @@ export default function TextInputDialogQuestions({
   requirementId,
   requirementDescription = "",
   currentOfferId,
+  onOfferUpdated,
 }: TextInputDialogProps & { currentItems?: OfferItemQuestion[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -113,6 +115,9 @@ export default function TextInputDialogQuestions({
             result.message
           );
           // Optionally show error to user
+        } else if (result.description && onOfferUpdated) {
+          // Notify parent component with updated description
+          onOfferUpdated(result.description);
         }
       } catch (error) {
         console.error("Error removing question from offer:", error);

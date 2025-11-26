@@ -1640,6 +1640,12 @@ export function OfferDetailView({
               materialTotal: item.materialTotal || "0 Ft",
               workTotal: item.workTotal || "0 Ft",
             }))}
+            onOfferUpdated={(updatedDescription) => {
+              // Update the offer description in the parent component
+              if (onOfferUpdated) {
+                onOfferUpdated({ description: updatedDescription });
+              }
+            }}
           />
         </div>
 
