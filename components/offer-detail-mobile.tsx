@@ -7,6 +7,7 @@ import {
   updateOfferValidUntil,
   saveTenantPrice,
   saveGlobalPrice,
+  removeAllQuestionsFromOffer,
 } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
@@ -737,6 +738,10 @@ export function OfferDetailView({
     work: workTotal,
     total: grandTotal,
   } = calculateTotals();
+
+  // Check if there are unanswered questions
+  const hasUnansweredQuestions =
+    extractQuestions(offer.description || "").length > 0;
 
   // Helper functions to extract name and email from title and description
   const extractName = (title?: string | null): string => {
@@ -1692,6 +1697,67 @@ export function OfferDetailView({
         {items.length > 0 && (
           <div className="mt-auto">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-6">
+              {/* Warning banner if there are unanswered questions */}
+              {hasUnansweredQuestions && (
+                <div className="px-6 py-3 bg-orange-50 border-b border-orange-200 flex items-start gap-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <svg
+                      className="h-5 w-5 text-orange-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-orange-800">
+                      Először válaszoljon meg a kérdéseket vagy távolítsa el
+                      őket!
+                    </p>
+                    <p className="text-xs text-orange-700 mt-1">
+                      A tételek szerkesztése csak a kérdések megválaszolása után
+                      lehetséges, hogy ne vesszenek el a módosítások.
+                    </p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const result = await removeAllQuestionsFromOffer(
+                          offer.id
+                        );
+                        if (
+                          result.success &&
+                          result.description &&
+                          onOfferUpdated
+                        ) {
+                          onOfferUpdated({ description: result.description });
+                          toast.success(
+                            "Kérdések ignorálva, most már szerkesztheti a tételeket"
+                          );
+                        } else {
+                          toast.error(
+                            "Hiba történt a kérdések eltávolítása során"
+                          );
+                        }
+                      } catch (error) {
+                        console.error("Error ignoring questions:", error);
+                        toast.error(
+                          "Hiba történt a kérdések eltávolítása során"
+                        );
+                      }
+                    }}
+                    className="flex-shrink-0 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-md transition-colors"
+                  >
+                    Kérdések ignorálása
+                  </button>
+                </div>
+              )}
               <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <div className="flex items-center space-x-4">
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
@@ -1702,7 +1768,13 @@ export function OfferDetailView({
                 <div className="flex space-x-2">
                   <button
                     onClick={handleAddItem}
-                    className="inline-flex items-center px-3 py-1 border border-[#FF9900] text-sm leading-4 font-medium rounded-md text-[#FF9900] hover:bg-[#FF9900]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
+                    disabled={hasUnansweredQuestions}
+                    className="inline-flex items-center px-3 py-1 border border-[#FF9900] text-sm leading-4 font-medium rounded-md text-[#FF9900] hover:bg-[#FF9900]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={
+                      hasUnansweredQuestions
+                        ? "Először válaszoljon meg a kérdéseket"
+                        : ""
+                    }
                   >
                     <Plus className="h-4 w-4 mr-1" /> Új tétel
                   </button>
@@ -1721,8 +1793,15 @@ export function OfferDetailView({
                       <div className="flex-1">
                         <div className="font-medium text-gray-900">
                           <div
-                            onClick={() => startEditing(index)}
-                            className="cursor-pointer hover:bg-gray-100 p-1 rounded flex items-center gap-2"
+                            onClick={() =>
+                              !hasUnansweredQuestions && startEditing(index)
+                            }
+                            className={`p-1 rounded flex items-center gap-2 ${hasUnansweredQuestions ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
+                            title={
+                              hasUnansweredQuestions
+                                ? "Először válaszoljon meg a kérdéseket"
+                                : ""
+                            }
                           >
                             <span>
                               {index + 1}. {item.name.replace(/^\*+\s*/, "")}
@@ -1756,7 +1835,13 @@ export function OfferDetailView({
                       <div className="flex space-x-4">
                         <button
                           onClick={() => startEditing(index)}
-                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
+                          disabled={hasUnansweredQuestions}
+                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={
+                            hasUnansweredQuestions
+                              ? "Először válaszoljon meg a kérdéseket"
+                              : ""
+                          }
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -1765,7 +1850,13 @@ export function OfferDetailView({
                             e.stopPropagation();
                             showDeleteConfirmation(index);
                           }}
-                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
+                          disabled={hasUnansweredQuestions}
+                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title={
+                            hasUnansweredQuestions
+                              ? "Először válaszoljon meg a kérdéseket"
+                              : ""
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

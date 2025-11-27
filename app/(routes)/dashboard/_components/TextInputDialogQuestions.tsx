@@ -425,6 +425,7 @@ export default function TextInputDialogQuestions({
                 <Button
                   variant="outline"
                   className="w-full h-14 text-base font-medium bg-gray-100 hover:bg-gray-200"
+                  disabled={loading}
                   onClick={() => {
                     setOpen(false);
                     // Reset questions when closing

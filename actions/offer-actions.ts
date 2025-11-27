@@ -1579,3 +1579,61 @@ export async function removeQuestionFromOffer(
     };
   }
 }
+
+export async function removeAllQuestionsFromOffer(offerId: number) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Get the current offer
+    const offer = await prisma.offer.findUnique({
+      where: { id: offerId },
+      select: { description: true, tenantEmail: true },
+    });
+
+    if (!offer) {
+      return { success: false, message: "Ajánlat nem található" };
+    }
+
+    // Check authorization
+    if (offer.tenantEmail !== tenantEmail) {
+      return {
+        success: false,
+        message: "Nincs jogosultsága ehhez az ajánlathoz",
+      };
+    }
+
+    if (!offer.description) {
+      return { success: false, message: "Nincs leírás az ajánlatban" };
+    }
+
+    // Remove all questions from description
+    const lines = offer.description.split(/\r?\n/);
+    const updatedLines = lines.filter((line) => {
+      const trimmed = line.trim();
+      // Remove all lines ending with "?"
+      return !trimmed.endsWith("?");
+    });
+
+    const updatedDescription = updatedLines.join("\n");
+
+    // Update the offer
+    await prisma.offer.update({
+      where: { id: offerId },
+      data: { description: updatedDescription },
+    });
+
+    revalidatePath("/offers");
+    revalidatePath(`/offers/${offerId}`);
+
+    return { success: true, description: updatedDescription };
+  } catch (error) {
+    console.error("Error removing all questions from offer:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a kérdések törlésekor",
+    };
+  }
+}
