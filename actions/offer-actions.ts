@@ -1463,38 +1463,25 @@ export async function saveGlobalPrice(
     // Globális szintű ár = globális ár a PriceList-ben (tenantEmail: '')
     // Upsert: ha már van ilyen task-hoz ár, frissítjük; ha nincs, létrehozzuk
 
-    // Csak azokat a mezőket adjuk meg, amelyeknek van értéke
+    // PriceList táblában a category, technology, unit kötelező mezők
+    // Ha null-t kapunk, használjunk alapértelmezett értékeket
     const updateData: any = {
       laborCost,
       materialCost,
+      unit: unit || "db",
+      category: category || "Egyedi",
+      technology: technology || "Egyedi",
     };
-
-    if (unit) {
-      updateData.unit = unit;
-    }
-    if (category) {
-      updateData.category = category;
-    }
-    if (technology) {
-      updateData.technology = technology;
-    }
 
     const createData: any = {
       task: cleanedTask,
       tenantEmail: "", // Globális = üres string
       laborCost,
       materialCost,
+      unit: unit || "db",
+      category: category || "Egyedi",
+      technology: technology || "Egyedi",
     };
-
-    if (unit) {
-      createData.unit = unit;
-    }
-    if (category) {
-      createData.category = category;
-    }
-    if (technology) {
-      createData.technology = technology;
-    }
 
     const result = await prisma.priceList.upsert({
       where: {

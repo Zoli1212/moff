@@ -713,4 +713,16 @@ Kérdések
 ---
 Kérdéseket ne tegyen fel mégegyszer ugyanazt!
 Háromszor tehessen föl kérdéseket
-PAUSE ne legyen
+----
+BUG
+Üzenet eltávolítása megváltoztatása DE A
+a válasz ottmarad ezt törölni, mint a ki X nél , többször ne tegye fel azt a kérdést
+Ha kitörlök egy tételt és megválaszolom a kérdések 
+BUG
+globális árak nem működnek
+MÉGSE gomb nem működik
+----
+HL
+Az ajánlatoknál lehessen munkához rendelni
+uj ajánlatot kell hozzárendelni a munkához
+----

@@ -790,7 +790,29 @@ export function RequirementDetail({
 
         {/* Footer Actions */}
         <div className="p-4 bg-gray-50 border-t border-gray-100">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-3">
+            <Button
+              onClick={handleResubmit}
+              disabled={
+                isSubmitting ||
+                isGlobalLoading ||
+                (!newText.trim() && !isLineRemoved)
+              }
+              className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-white h-12 relative"
+            >
+              <span
+                className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}
+              >
+                <Send className="h-4 w-4 mr-2" />
+                Ajánlat frissítése
+              </span>
+              {isGlobalLoading && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              )}
+            </Button>
+
             <Button
               type="button"
               variant="outline"
@@ -799,35 +821,10 @@ export function RequirementDetail({
                 setError("");
               }}
               disabled={isSubmitting || isGlobalLoading}
-              className="min-w-[120px]"
+              className="w-full h-12 bg-gray-100 hover:bg-gray-200"
             >
-              <X className="h-4 w-4 mr-2" />
               Mégse
             </Button>
-
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={handleResubmit}
-                disabled={
-                  isSubmitting ||
-                  isGlobalLoading ||
-                  (!newText.trim() && !isLineRemoved)
-                }
-                className="bg-[#FF9900] hover:bg-[#e68a00] text-white min-w-[160px] relative"
-              >
-                <span
-                  className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  Ajánlat frissítése
-                </span>
-                {isGlobalLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  </div>
-                )}
-              </Button>
-            </div>
           </div>
         </div>
       </div>

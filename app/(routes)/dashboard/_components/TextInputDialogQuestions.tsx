@@ -54,6 +54,7 @@ export default function TextInputDialogQuestions({
   const { setOfferItemsQuestion, offerItemsQuestion, clearOfferItemsQuestion } =
     useOfferItemQuestionStore();
   const prevItemsRef = useRef(currentItems);
+  const questionsInitializedRef = useRef(false);
 
   // Log when offerItems are updated in the store
   useEffect(() => {
@@ -67,7 +68,7 @@ export default function TextInputDialogQuestions({
 
   // Initialize questions with unique IDs when dialog opens
   useEffect(() => {
-    if (open) {
+    if (open && !questionsInitializedRef.current) {
       setQuestions(
         initialQuestions.map((q) => ({
           id: Math.random().toString(36).substr(2, 9),
@@ -75,6 +76,7 @@ export default function TextInputDialogQuestions({
           answer: "",
         }))
       );
+      questionsInitializedRef.current = true;
 
       // Store the current items in the store when dialog opens and items have changed
       if (
@@ -85,6 +87,11 @@ export default function TextInputDialogQuestions({
         setOfferItemsQuestion(currentItems);
         prevItemsRef.current = currentItems;
       }
+    }
+
+    // Reset the ref when dialog closes
+    if (!open) {
+      questionsInitializedRef.current = false;
     }
   }, [open, initialQuestions, currentItems, setOfferItemsQuestion]);
 
@@ -392,24 +399,7 @@ export default function TextInputDialogQuestions({
             </div>
 
             <div className="p-6 pt-0">
-              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  variant="outline"
-                  className="w-full h-14 text-base font-medium"
-                  onClick={() => {
-                    setOpen(false);
-                    // Reset questions when closing
-                    setQuestions(
-                      initialQuestions.map((q) => ({
-                        id: Math.random().toString(36).substr(2, 9),
-                        text: q,
-                        answer: "",
-                      }))
-                    );
-                  }}
-                >
-                  Mégse
-                </Button>
+              <div className="flex flex-col gap-3 pt-4 border-t border-gray-200">
                 <Button
                   className="w-full h-14 text-base font-medium bg-[#FF9900] hover:bg-[#e68a00] text-white"
                   disabled={
@@ -431,6 +421,23 @@ export default function TextInputDialogQuestions({
                       Ajánlat frissítése
                     </>
                   )}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-14 text-base font-medium bg-gray-100 hover:bg-gray-200"
+                  onClick={() => {
+                    setOpen(false);
+                    // Reset questions when closing
+                    setQuestions(
+                      initialQuestions.map((q) => ({
+                        id: Math.random().toString(36).substr(2, 9),
+                        text: q,
+                        answer: "",
+                      }))
+                    );
+                  }}
+                >
+                  Mégse
                 </Button>
               </div>
             </div>
