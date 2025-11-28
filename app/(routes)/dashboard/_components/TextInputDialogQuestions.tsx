@@ -151,7 +151,7 @@ export default function TextInputDialogQuestions({
 
       let answersText = "";
       answeredQuestions.forEach(({ text, answer }) => {
-        answersText += `\nKérdés: ${text}\nVálasz: ${answer}\n`;
+        answersText += `\n✓ MEGVÁLASZOLT: ${text}\n  Válasz: ${answer}\n`;
       });
 
       // If we have a requirementId, update the requirement description first
@@ -214,7 +214,9 @@ export default function TextInputDialogQuestions({
         }
       }
 
-      const combinedText = `Eredeti követelmény: ${finalDescription}\n\nKiegészítő információk: A fenti kérdésekre most válaszoltam, kérlek vedd figyelembe az új válaszokat az ajánlat generálásakor.`;
+      // finalDescription már tartalmazza az eredeti követelményt + a "Válaszok a kérdésekre:" részt
+      // Nem kell plusz szöveg, az AI agent tudja, hogy mit kell tennie
+      const combinedText = finalDescription;
 
       // Create form data for the API
       const formData = new FormData();

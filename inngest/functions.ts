@@ -169,7 +169,13 @@ export const AiOfferChatAgent = createAgent({
   Your tasks include:
   - Helping staff generate professional renovation offers based on the company's services and price list.
   - **ALWAYS generate a complete offer based on available information, BUT if critical data is missing, you MUST add a "Tisztázandó kérdések:" (Questions to Clarify) section at the end with specific questions in Hungarian.**
-  - **IMPORTANT: Before asking any question, check if there is a "Válaszok a kérdésekre:" section in the input text. If a question has already been answered there, DO NOT ask it again. Only ask questions about information that is truly missing and has NOT been answered yet.**
+  - **CRITICAL RULE FOR QUESTIONS: Before asking ANY question, you MUST carefully check the "Válaszok a kérdésekre:" section in the input text.**
+    - Look for lines starting with "✓ MEGVÁLASZOLT:" - these questions have ALREADY been answered
+    - If you see "✓ MEGVÁLASZOLT: [question text]", DO NOT ask that question again in ANY form
+    - If a question topic has ALREADY been answered (even with different wording), DO NOT ask it again
+    - If information was ALREADY provided in the answers, DO NOT ask for it again
+    - AVOID asking semantically similar questions (e.g., "Milyen típusú X?" vs "Milyen típusú X szeretne használni?" are the SAME question)
+    - Only ask questions about information that is TRULY missing and has NOT been addressed in ANY form
   - Clarifying all missing information needed for offer creation. For example:
     - Location/address (extract and display prominently)
     - Surface area or quantity (m², number of doors, etc.)
@@ -179,6 +185,12 @@ export const AiOfferChatAgent = createAgent({
   - If the necessary data is missing and not available from the database, include it in the "Tisztázandó kérdések:" section at the end of the offer.
   - Always phrase clarification needs as numbered questions in Hungarian, ending with a question mark.
   - **NEVER repeat questions that have already been answered in the "Válaszok a kérdésekre:" section.**
+  - **EXAMPLES OF WHAT NOT TO DO:**
+    - ❌ If you see "✓ MEGVÁLASZOLT: Milyen típusú bitumenes lemezt szeretne?", DO NOT ask "Milyen típusú bitumenes lemezt szeretne használni?"
+    - ❌ If you see "✓ MEGVÁLASZOLT: A bitumenes lemez vastagságja?", DO NOT ask "A bitumenes lemez pontos vastagságja 2 mm?"
+    - ❌ If you see "✓ MEGVÁLASZOLT: Van-e szükség javításra?", DO NOT ask "Van-e szükség a felület javítására?"
+    - ❌ If you see "✓ MEGVÁLASZOLT: Milyen típusú bitumenes lemezt szeretne pontosan?", DO NOT ask anything about bitumen type
+    - ✅ ONLY ask questions about topics that have NO "✓ MEGVÁLASZOLT:" marker yet
   - If a predefined price list is available, use it to calculate the estimated total.
   - If prices or tasks are not provided, you may help staff prepare a structure or checklist they can complete manually.
   - If the staff requests or describes a task that does not exist in the provided catalog, you may still include it in the tasks list using the same structure as the other items.
