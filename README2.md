@@ -714,3 +714,12 @@ Kérdések
 Kérdéseket ne tegyen fel mégegyszer ugyanazt!
 Háromszor tehessen föl kérdéseket
 ----
+IGNORÁLÁS
+PROMPT szempontjából 
+indító ajánlat
+1. megnézzük a requirement értelmes e és kérdez
+2. tud ajánlatot adni + kérdések vannak
+3. Az ajánlatban lévő árak a helyesek, kell e új tétel vagy nem kell új tétel
+4. Új tétel kell akkor ezt a halmazt veszi alapul, nem fallbackel
+5. módosítás bevezetése
+-----

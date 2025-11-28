@@ -1697,65 +1697,60 @@ export function OfferDetailView({
         {items.length > 0 && (
           <div className="mt-auto">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mt-6">
-              {/* Warning banner if there are unanswered questions */}
+              {/* Sticky header banner if there are unanswered questions */}
               {hasUnansweredQuestions && (
-                <div className="px-6 py-3 bg-orange-50 border-b border-orange-200 flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg
-                      className="h-5 w-5 text-orange-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-orange-800">
-                      Először válaszoljon meg a kérdéseket vagy távolítsa el
-                      őket!
-                    </p>
-                    <p className="text-xs text-orange-700 mt-1">
-                      A tételek szerkesztése csak a kérdések megválaszolása után
-                      lehetséges, hogy ne vesszenek el a módosítások.
-                    </p>
-                  </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        const result = await removeAllQuestionsFromOffer(
-                          offer.id
-                        );
-                        if (
-                          result.success &&
-                          result.description &&
-                          onOfferUpdated
-                        ) {
-                          onOfferUpdated({ description: result.description });
-                          toast.success(
-                            "Kérdések ignorálva, most már szerkesztheti a tételeket"
+                <div className="sticky top-0 z-10 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-200 px-4 py-2 shadow-sm">
+                  <div className="flex items-center justify-between max-w-4xl mx-auto">
+                    <div className="flex items-center gap-2 text-sm">
+                      <svg
+                        className="h-4 w-4 text-amber-500 flex-shrink-0"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        />
+                      </svg>
+                      <span className="text-amber-800 font-medium">
+                        Válaszolja meg a kérdéseket a tételek szerkesztéséhez
+                      </span>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const result = await removeAllQuestionsFromOffer(
+                            offer.id
                           );
-                        } else {
+                          if (
+                            result.success &&
+                            result.description &&
+                            onOfferUpdated
+                          ) {
+                            onOfferUpdated({ description: result.description });
+                            toast.success(
+                              "Kérdések ignorálva, most már szerkesztheti a tételeket"
+                            );
+                          } else {
+                            toast.error(
+                              "Hiba történt a kérdések eltávolítása során"
+                            );
+                          }
+                        } catch (error) {
+                          console.error("Error ignoring questions:", error);
                           toast.error(
                             "Hiba történt a kérdések eltávolítása során"
                           );
                         }
-                      } catch (error) {
-                        console.error("Error ignoring questions:", error);
-                        toast.error(
-                          "Hiba történt a kérdések eltávolítása során"
-                        );
-                      }
-                    }}
-                    className="flex-shrink-0 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-md transition-colors"
-                  >
-                    Kérdések ignorálása
-                  </button>
+                      }}
+                      className="flex-shrink-0 px-3 py-1.5 bg-white border border-amber-300 text-amber-700 hover:bg-amber-50 text-sm font-medium rounded-md transition-colors shadow-sm"
+                    >
+                      Ignorálás
+                    </button>
+                  </div>
                 </div>
               )}
               <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
