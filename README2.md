@@ -704,22 +704,3 @@ pipa
 anyagköltség cserélve munkadijjal
 ---
 Teszt utca 403 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanyzó 150000, a wc-e 50000, a kád 160000.
-
----
-Kérdés tegyen fel
-Fallbackeljen
-Az a cél, hogy jó árat adjon
-Kérdések
----
-Kérdéseket ne tegyen fel mégegyszer ugyanazt!
-Háromszor tehessen föl kérdéseket
-----
-IGNORÁLÁS
-PROMPT szempontjából 
-indító ajánlat
-1. megnézzük a requirement értelmes e és kérdez
-2. tud ajánlatot adni + kérdések vannak
-3. Az ajánlatban lévő árak a helyesek, kell e új tétel vagy nem kell új tétel
-4. Új tétel kell akkor ezt a halmazt veszi alapul, nem fallbackel
-5. módosítás bevezetése
------
