@@ -66,8 +66,14 @@ import TextInputDialogQuestions from "@/app/(routes)/dashboard/_components/TextI
 import SocialShareButtonsExcel from "./SocialShareButtonsExcel";
 
 // Helper function to extract questions from description
-function extractQuestions(description: string): string[] {
+// Ha updateCount >= 3, akkor üres tömböt ad vissza (nem jelennek meg kérdések)
+function extractQuestions(description: string, updateCount?: number): string[] {
   if (!description) return [];
+
+  // Ha updateCount >= 3, akkor ne jelenjenek meg kérdések
+  if (updateCount !== undefined && updateCount >= 3) {
+    return [];
+  }
 
   // Check if there's already a "Válaszok a kérdésekre:" section
   // If yes, extract answered questions and filter them out
@@ -741,7 +747,8 @@ export function OfferDetailView({
 
   // Check if there are unanswered questions
   const hasUnansweredQuestions =
-    extractQuestions(offer.description || "").length > 0;
+    extractQuestions(offer.description || "", offer.requirement?.updateCount)
+      .length > 0;
 
   // Helper functions to extract name and email from title and description
   const extractName = (title?: string | null): string => {
@@ -1319,7 +1326,7 @@ export function OfferDetailView({
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
+                className="h-7 w-7"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -1552,7 +1559,7 @@ export function OfferDetailView({
                     {offer?.requirement?.updateCount || "1"}
                   </span>
                 </h2>
-                <ChevronRight className="h-5 w-5 text-[#FE9C00]" />
+                <ChevronRight className="h-6 w-6 text-[#FE9C00]" />
               </button>
             </div>
           )}
@@ -1567,19 +1574,49 @@ export function OfferDetailView({
               </div>
               <div className="p-6">
                 <p className="text-gray-700 whitespace-pre-line">
-                  {offer.description
-                    .split("\n")
-                    .filter((line) => {
+                  {(() => {
+                    const lines = offer.description.split("\n");
+                    const filteredLines = lines.filter((line) => {
                       const trimmed = line.trim();
                       // Üres sorokat kihagyunk
                       if (!trimmed) return false;
+
+                      // Ha updateCount >= 3, akkor MINDEN kérdést ÉS a "Tisztázandó kérdések:" feliratot is kihagyunk
+                      if (
+                        offer.requirement?.updateCount !== undefined &&
+                        offer.requirement.updateCount >= 3
+                      ) {
+                        // Kérdések kiszűrése
+                        if (trimmed.endsWith("?")) {
+                          return false;
+                        }
+                        // "Tisztázandó kérdések:" felirat kiszűrése
+                        if (trimmed.includes("Tisztázandó kérdések")) {
+                          return false;
+                        }
+                      }
+
                       // Ha nem csillaggal kezdődik, megtartjuk
                       if (!trimmed.startsWith("*")) return true;
                       // Ha csillaggal kezdődik, csak akkor tartjuk meg, ha kérdőjelet tartalmaz
                       return trimmed.includes("?");
-                    })
-                    .join("\n")
-                    .trim()}
+                    });
+
+                    // Ellenőrizzük, hogy van-e kérdés a szövegben
+                    const hasQuestions = filteredLines.some((line) =>
+                      line.trim().endsWith("?")
+                    );
+
+                    // Ha nincs kérdés, akkor a "Tisztázandó kérdések:" feliratot is kiszűrjük
+                    const finalLines = hasQuestions
+                      ? filteredLines
+                      : filteredLines.filter(
+                          (line) =>
+                            !line.trim().includes("Tisztázandó kérdések")
+                        );
+
+                    return finalLines.join("\n").trim();
+                  })()}
                 </p>
               </div>
             </div>
@@ -1588,7 +1625,10 @@ export function OfferDetailView({
 
         {/* Add bottom padding when questions button is visible */}
         {(() => {
-          const questions = extractQuestions(offer.description || "");
+          const questions = extractQuestions(
+            offer.description || "",
+            offer.requirement?.updateCount
+          );
           if (!isDialogOpen && questions.length > 0) {
             return <div className="h-4"></div>;
           }
@@ -1598,7 +1638,10 @@ export function OfferDetailView({
         <div>
           {/* --- ÚJ LOGIKA: Ha nincs kérdés, plusz gomb és szabad szövegdoboz --- */}
           {(() => {
-            const questions = extractQuestions(offer.description || "");
+            const questions = extractQuestions(
+              offer.description || "",
+              offer.requirement?.updateCount
+            );
             if (!isDialogOpen && questions.length > 0) {
               return (
                 <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 px-4 py-4 z-[9999] shadow-lg">
@@ -1630,7 +1673,10 @@ export function OfferDetailView({
             open={isDialogOpen}
             setOpen={setIsDialogOpen}
             toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
-            questions={extractQuestions(offer.description || "")}
+            questions={extractQuestions(
+              offer.description || "",
+              offer.requirement?.updateCount
+            )}
             requirementId={offer.requirement?.id}
             requirementDescription={
               offer.requirement?.description || offer.description || ""
@@ -1830,13 +1876,7 @@ export function OfferDetailView({
                       <div className="flex space-x-4">
                         <button
                           onClick={() => startEditing(index)}
-                          disabled={hasUnansweredQuestions}
-                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={
-                            hasUnansweredQuestions
-                              ? "Először válaszoljon meg a kérdéseket"
-                              : ""
-                          }
+                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -1845,13 +1885,7 @@ export function OfferDetailView({
                             e.stopPropagation();
                             showDeleteConfirmation(index);
                           }}
-                          disabled={hasUnansweredQuestions}
-                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          title={
-                            hasUnansweredQuestions
-                              ? "Először válaszoljon meg a kérdéseket"
-                              : ""
-                          }
+                          className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

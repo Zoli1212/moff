@@ -109,21 +109,67 @@ export default function TextInputDialogQuestions({
     // Remove from local state immediately for better UX
     setQuestions((prev) => prev.filter((q) => q.id !== id));
 
-    // If we have a currentOfferId, also remove from the database
-    if (currentOfferId) {
+    // Mark as answered with "NEM releváns" in the background
+    if (requirementId && currentOfferId) {
+      try {
+        // Add the "answered" question to the requirement description
+        const answeredText = `\n✓ MEGVÁLASZOLT: ${questionToRemove.text}\n  Válasz: NEM releváns, hagyja figyelmen kívül\n`;
+
+        // Check if there's already a "Válaszok a kérdésekre:" section
+        let updatedDescription = "";
+        const answersMatch = requirementDescription.match(
+          /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
+        );
+
+        if (answersMatch) {
+          // If there's already an answers section, append the new answer to it
+          const existingAnswers = answersMatch[0];
+          updatedDescription = requirementDescription.replace(
+            existingAnswers,
+            `Válaszok a kérdésekre:${answersMatch[1]}${answeredText}`
+          );
+        } else {
+          // If no answers section exists, add it at the end
+          updatedDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answeredText}`;
+        }
+
+        // Update the requirement in the database
+        const updateResponse = await fetch("/api/update-requirement", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requirementId: requirementId,
+            data: {
+              description: updatedDescription,
+              updateCount: { increment: 1 },
+            },
+          }),
+        });
+
+        if (!updateResponse.ok) {
+          console.error("Failed to update requirement with skipped question");
+        }
+
+        // Also remove the question from the offer description
+        const result = await removeQuestionFromOffer(
+          currentOfferId,
+          questionToRemove.text
+        );
+
+        if (result.description && onOfferUpdated) {
+          onOfferUpdated(result.description);
+        }
+      } catch (error) {
+        console.error("Error marking question as not relevant:", error);
+      }
+    } else if (currentOfferId) {
+      // Fallback: just remove from offer if no requirementId
       try {
         const result = await removeQuestionFromOffer(
           currentOfferId,
           questionToRemove.text
         );
-        if (!result.success) {
-          console.error(
-            "Failed to remove question from offer:",
-            result.message
-          );
-          // Optionally show error to user
-        } else if (result.description && onOfferUpdated) {
-          // Notify parent component with updated description
+        if (result.description && onOfferUpdated) {
           onOfferUpdated(result.description);
         }
       } catch (error) {

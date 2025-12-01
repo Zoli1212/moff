@@ -136,10 +136,32 @@ export default function SilentOfferSaverPage() {
         }
 
         if (!result) {
-          throw new Error("No response from server");
+          console.error("No response from server");
+          toast.error("Nincs válasz a szervertől");
+          router.push("/offers");
+          return;
         }
 
-        if (result.success && result.requirementId && result.offerId) {
+        if (!result.success) {
+          // Handle error case - redirect to /offers
+          console.error(
+            "Offer save failed:",
+            "error" in result ? result.error : "Unknown error"
+          );
+          toast.error(
+            "error" in result ? result.error : "Hiba a mentés közben."
+          );
+          router.push("/offers");
+          return;
+        }
+
+        if (
+          result.success &&
+          "requirementId" in result &&
+          "offerId" in result &&
+          result.requirementId &&
+          result.offerId
+        ) {
           console.log("Offer saved to database", result);
           toast.success("Ajánlat sikeresen lementve!");
 
@@ -156,13 +178,15 @@ export default function SilentOfferSaverPage() {
           router.push(targetUrl);
           return; // Exit after successful redirect
         }
-        // Handle error case
-        toast.error(result?.error || "Hiba a mentés közben.");
-        setIsProcessing(false);
+
+        // Fallback - redirect to /offers
+        console.error("Unexpected result format:", result);
+        toast.error("Váratlan válasz formátum");
+        router.push("/offers");
       } catch (error) {
         console.error("Error fetching or saving offer:", error);
         toast.error("Hiba történt az ajánlat mentése közben.");
-        setIsProcessing(false);
+        router.push("/offers");
       }
     };
 

@@ -58,14 +58,14 @@ const parseContent = (content: string | OfferContent): OfferContent | null => {
 const parseOfferTable = (text: string) => {
   const items = [];
   const lines = text.split("\n");
-  
+
   for (const line of lines) {
     const trimmed = line.trim().replace(/^\*+/, "");
-    
+
     const match = trimmed.match(
       /^(.+?):\s*([\d\s,.]+)\s*(m²|fm|db)\s*[×xX]\s*([\d\s,.]+)\s*Ft\/\3\s*\(díj\)\s*\+\s*([\d\s,.]+)\s*Ft\/\3\s*\(anyag\)\s*=\s*([\d\s,.]+)\s*Ft\s*\(díj összesen\)\s*\+\s*([\d\s,.]+)\s*Ft\s*\(anyag összesen\)/i
     );
-    
+
     if (match) {
       const [
         _,
@@ -77,26 +77,26 @@ const parseOfferTable = (text: string) => {
         laborTotal,
         materialTotal,
       ] = match;
-      
+
       console.log(_);
-      
+
       items.push({
         name: (name ?? "").trim(),
         quantity: (qty ?? "").trim(),
         unit: (unit ?? "").trim(),
         workUnitPrice:
-        (laborUnitPrice ?? "").toString().trim().replace(/\s/g, "") + " Ft",
+          (laborUnitPrice ?? "").toString().trim().replace(/\s/g, "") + " Ft",
         materialUnitPrice:
-        (materialUnitPrice ?? "").toString().trim().replace(/\s/g, "") +
-        " Ft",
+          (materialUnitPrice ?? "").toString().trim().replace(/\s/g, "") +
+          " Ft",
         workTotal:
-        (laborTotal ?? "").toString().trim().replace(/\s/g, "") + " Ft",
+          (laborTotal ?? "").toString().trim().replace(/\s/g, "") + " Ft",
         materialTotal:
-        (materialTotal ?? "").toString().trim().replace(/\s/g, "") + " Ft",
+          (materialTotal ?? "").toString().trim().replace(/\s/g, "") + " Ft",
       });
     }
   }
-  
+
   return items;
 };
 
@@ -118,7 +118,6 @@ export default function OfferLetterResult() {
   const hasSavedRef = useRef(false);
   const [newText, setNewText] = useState("");
   const [isAlreadySaved, setIsAlreadySaved] = useState(false);
-
 
   interface TableItem {
     name: string;
@@ -252,7 +251,7 @@ export default function OfferLetterResult() {
 
   useEffect(() => {
     console.log("🔍 storedItemsRef jelenlegi érték:", storedItemsRef.current);
-    console.log(hasSaved)
+    console.log(hasSaved);
   }, [editableItems]);
 
   useEffect(() => {
@@ -281,11 +280,10 @@ export default function OfferLetterResult() {
   const isSavingRef = useRef(false);
 
   // Check localStorage to see if this offer was already saved and not expired
-  
 
   // Save offer status with 7-day expiration
   const saveOfferStatus = (recordId: string) => {
-    console.log(recordId)
+    console.log(recordId);
     if (typeof window === "undefined") return;
 
     // const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
@@ -298,9 +296,7 @@ export default function OfferLetterResult() {
     // console.log("💾 Saved offer status with expiration:", recordId);
   };
 
-
   // Check saved status on component mount
-
 
   useEffect(() => {
     const saveOfferIfNeeded = async () => {
@@ -343,26 +339,36 @@ export default function OfferLetterResult() {
           offerContent: contentToSave,
         });
 
-        if (result.success) {
-          console.log("Save successful");
-          // Save to localStorage that this offer was saved with expiration
-          if (typeof window !== "undefined" && recordid) {
-            saveOfferStatus(recordid);
-          }
-
-          hasSavedRef.current = true;
-          setHasSaved(true);
-          setIsAlreadySaved(true);
-          toast.success("Ajánlat sikeresen mentve!");
-        } else {
-          console.error("❌ Save failed:", result);
+        if (!result.success) {
+          console.error(
+            "❌ Save failed:",
+            "error" in result ? result.error : "Unknown error"
+          );
           isSavingRef.current = false;
-          toast.error("Hiba történt az ajánlat mentésekor");
+          toast.error(
+            "error" in result
+              ? result.error
+              : "Hiba történt az ajánlat mentésekor"
+          );
+          router.push("/offers");
+          return;
         }
+
+        console.log("Save successful");
+        // Save to localStorage that this offer was saved with expiration
+        if (typeof window !== "undefined" && recordid) {
+          saveOfferStatus(recordid);
+        }
+
+        hasSavedRef.current = true;
+        setHasSaved(true);
+        setIsAlreadySaved(true);
+        toast.success("Ajánlat sikeresen mentve!");
       } catch (error) {
         console.error("❌ Error during save:", error);
         isSavingRef.current = false;
         toast.error("Váratlan hiba történt");
+        router.push("/offers");
       }
     };
 

@@ -670,7 +670,7 @@ Teszt utca 442 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat 
 
 ---
 
-5. Teszt utca 444 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanzo 150000, a wc-e 50000, a kad 160000.
+5. Ujteszt utca 2 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanzo 150000, a wc-e 50000, a zuhanyzo 160000.
 
 MEGJEGYZÉS: Ez a követelmény garantáltan tartalmaz egyedi tételeket, mivel a "meglévő kőburkolat és csempe felszedése" és a "meglévő zuhanyzó, mosdó és WC eltávolítása" nem található a katalógusban. Az AI-nak fel kell vennie őket az ajánlatba és jelölje meg őket (egyedi tétel). Az egyedi tételek végén `!` jel jelenik meg, és a notes-ban szerepelnek a magyarázatai.
 
@@ -704,3 +704,11 @@ pipa
 anyagköltség cserélve munkadijjal
 ---
 Teszt utca 403 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanyzó 150000, a wc-e 50000, a kád 160000.
+kérdések
+
+Tételeket módosítani, új követelményt ne találj ki
+csak akkor kérdezz ha minkához elengedhetetlen
+letiltás feloldása és mégsem
+Hiba történt valmi
+Végtelen kérdés
+BUG network error

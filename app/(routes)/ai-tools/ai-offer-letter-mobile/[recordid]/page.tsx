@@ -357,26 +357,36 @@ export default function OfferLetterResult() {
           offerContent: contentToSave,
         });
 
-        if (result.success) {
-          console.log(" Save successful");
-          // Save to localStorage that this offer was saved with expiration
-          // if (typeof window !== "undefined" && recordid) {
-          //   saveOfferStatus(recordid);
-          // }
-
-          hasSavedRef.current = true;
-          setHasSaved(true);
-          setIsAlreadySaved(true);
-          toast.success("Ajánlat sikeresen mentve!");
-        } else {
-          console.error("Save failed:", result);
+        if (!result.success) {
+          console.error(
+            "Save failed:",
+            "error" in result ? result.error : "Unknown error"
+          );
           isSavingRef.current = false;
-          toast.error("Hiba történt az ajánlat mentésekor");
+          toast.error(
+            "error" in result
+              ? result.error
+              : "Hiba történt az ajánlat mentésekor"
+          );
+          router.push("/offers");
+          return;
         }
+
+        console.log(" Save successful");
+        // Save to localStorage that this offer was saved with expiration
+        // if (typeof window !== "undefined" && recordid) {
+        //   saveOfferStatus(recordid);
+        // }
+
+        hasSavedRef.current = true;
+        setHasSaved(true);
+        setIsAlreadySaved(true);
+        toast.success("Ajánlat sikeresen mentve!");
       } catch (error) {
         console.error("Error during save:", error);
         isSavingRef.current = false;
         toast.error("Váratlan hiba történt");
+        router.push("/offers");
       }
     };
 

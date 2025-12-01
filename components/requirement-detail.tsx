@@ -16,7 +16,8 @@ import { useOfferTitleStore } from "@/store/offer-title-store";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { getOfferById } from "@/actions/offer-actions";
 import { getRequirementBlocks } from "@/actions/requirement-block-actions";
-import { Loader2, X, Send, ChevronLeft, Trash2 } from "lucide-react";
+import { Loader2, X, Send, Trash2 } from "lucide-react";
+import BackButton from "@/app/(works)/others/_components/BackButton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
@@ -658,14 +659,7 @@ export function RequirementDetail({
     <div className="flex flex-col h-full bg-gray-50 p-4">
       {/* Header */}
       <div className="flex items-center space-x-4 mb-6">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="rounded-full w-10 h-10 hover:bg-gray-100"
-        >
-          <ChevronLeft className="h-5 w-5" style={{ color: "#FE9C00" }} />
-        </Button>
+        <BackButton onClick={onBack} size="lg" />
         <h1 className="text-2xl font-bold text-gray-900">
           {requirement.title}
         </h1>
@@ -819,6 +813,7 @@ export function RequirementDetail({
               onClick={() => {
                 setNewText("");
                 setError("");
+                onBack();
               }}
               disabled={isSubmitting || isGlobalLoading}
               className="w-full h-12 bg-gray-100 hover:bg-gray-200"
