@@ -737,7 +737,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         }
       },
       {
-        timeout: 60000, // 30 másodperc timeout (default 5000ms helyett)
+        timeout: 8000, // 8 másodperc timeout (Vercel Hobby limit: 10s)
       }
     ); // Transaction vége
   } catch (error) {
@@ -1341,7 +1341,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
         return { updatedOffer, workIdToProcess };
       },
       {
-        timeout: 60000, // 30 másodperc timeout
+        timeout: 8000, // 8 másodperc timeout (Vercel Hobby limit: 10s)
       }
     );
 

@@ -3,23 +3,8 @@ import axios from "axios";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
-  console.log("\n" + "=".repeat(80));
-  console.log(" [API /ai-offer-chat-agent] Request received");
-  console.log("=".repeat(80));
-  console.log(" Timestamp:", new Date().toISOString());
-
   try {
     const { userInput } = await req.json();
-    console.log(" Request body parsed:");
-    console.log("  ├─ userInput length:", userInput?.length || 0, "chars");
-    console.log(
-      "  └─ userInput preview:",
-      userInput?.substring(0, 100) + "..."
-    );
-
-    console.log("\n [STEP 1] Sending event to Inngest...");
-    console.log("  ├─ Event name: AiOfferAgent");
-    console.log("  └─ Sending...");
 
     const resultIds = await inngest.send({
       name: "AiOfferAgent",
@@ -29,125 +14,35 @@ export async function POST(req: NextRequest) {
     });
 
     const runId = resultIds?.ids[0];
-    console.log("  ├─ Event sent successfully");
-    console.log("  └─ Run ID:", runId);
-    console.log(" [STEP 1] Inngest event triggered");
-
-    console.log("\n [STEP 2] Polling for completion...");
     let runStatus;
     let pollCount = 0;
-    const maxPolls = 120; // 60 seconds max (120 * 500ms)
+    const maxPolls = 120;
 
     while (pollCount < maxPolls) {
       pollCount++;
-
-      if (pollCount % 10 === 0) {
-        console.log(`  ├─ Poll #${pollCount} (${pollCount * 0.5}s elapsed)...`);
-      }
-
       runStatus = await getRuns(runId);
 
-      // Részletes logolás a runStatus-ról
-      console.log(`  ├─ Poll response received:`, {
-        hasData: !!runStatus?.data,
-        dataLength: runStatus?.data?.length || 0,
-        firstItem: runStatus?.data?.[0]
-          ? {
-              status: runStatus.data[0].status,
-              hasOutput: !!runStatus.data[0].output,
-              hasError: !!runStatus.data[0].error,
-            }
-          : null,
-      });
-
       const status = runStatus?.data[0]?.status;
-      console.log(`  ├─ Current status: ${status || "undefined"}`);
 
       if (status === "Completed") {
-        console.log(`  ├─ ✅ Status: ${status} (after ${pollCount * 0.5}s)`);
-        console.log("  ├─ Output structure:", {
-          hasOutput: !!runStatus.data[0].output,
-          outputKeys: runStatus.data[0].output
-            ? Object.keys(runStatus.data[0].output)
-            : [],
-          outputSize: runStatus.data[0].output
-            ? JSON.stringify(runStatus.data[0].output).length
-            : 0,
-        });
-        console.log("  └─ Run completed successfully");
-        console.log(" [STEP 2] Polling complete - Success");
         break;
       }
 
       if (status === "Cancelled") {
-        console.error(`  ├─ Status: ${status}`);
-        console.error("  └─ Run was cancelled");
-        console.error(" [STEP 2] Polling complete - Cancelled");
         break;
       }
 
       if (status === "Failed") {
-        console.error(`  ├─ ❌ Status: ${status}`);
-        console.error("  ├─ Error details:", {
-          error: runStatus?.data[0]?.error,
-          errorType: typeof runStatus?.data[0]?.error,
-          fullData: JSON.stringify(runStatus?.data[0], null, 2),
-        });
-        console.error("  └─ Run failed");
-        console.error(" [STEP 2] Polling complete - Failed");
         break;
-      }
-
-      // Ha még fut, logoljuk hogy miért nem áll meg
-      if (status === "Running" || status === "Queued") {
-        if (pollCount % 5 === 0) {
-          console.log(
-            `  ├─ ⏳ Still ${status}... (${pollCount * 0.5}s elapsed)`
-          );
-        }
-      } else if (
-        status &&
-        status !== "Completed" &&
-        status !== "Failed" &&
-        status !== "Cancelled"
-      ) {
-        console.log(`  ├─ ⚠️ Unknown status: ${status}`);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
 
-    if (pollCount >= maxPolls) {
-      console.error("  └─ Timeout: Max polling time reached (60s)");
-      console.error(" [STEP 2] Polling timeout");
-    }
-
-    console.log("\n [STEP 3] Extracting result...");
     const output = runStatus.data?.[0].output?.output[0];
-    console.log("  ├─ Output type:", typeof output);
-    console.log(
-      "  ├─ Output keys:",
-      output ? Object.keys(output).join(", ") : "none"
-    );
-    console.log("  └─ Output size:", JSON.stringify(output).length, "chars");
-    console.log(" [STEP 3] Result extracted");
-
-    console.log("\n" + "=".repeat(80));
-    console.log(" [API /ai-offer-chat-agent] Request completed successfully");
-    console.log("=".repeat(80));
-    console.log(" Finished at:", new Date().toISOString());
 
     return NextResponse.json(output);
   } catch (error) {
-    console.log("\n" + "=".repeat(80));
-    console.error(" [API /ai-offer-chat-agent] Request failed");
-    console.log("=".repeat(80));
-    console.error(" Error type:", error?.constructor?.name || typeof error);
-    console.error(" Error message:", (error as Error).message || error);
-    console.error(" Error stack:");
-    console.error((error as Error).stack);
-    console.log("=".repeat(80));
-
     return NextResponse.json(
       {
         error: "Failed to process offer request",
@@ -169,10 +64,6 @@ const getRuns = async (runId: string) => {
     });
     return result.data;
   } catch (error) {
-    console.error("❌ getRuns error:", {
-      runId,
-      error: (error as Error).message,
-    });
     throw error;
   }
 };
