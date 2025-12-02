@@ -275,46 +275,7 @@ export default function OfferLetterResult() {
 
   const [isAlreadySaved, setIsAlreadySaved] = useState(false);
   const isSavingRef = useRef(false);
-  // Track if we've started saving
 
-  // Check localStorage to see if this offer was already saved and not expired
-  // const getSavedStatus = () => {
-  //   if (typeof window === "undefined") return false;
-
-  //   const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-  //   const savedData = savedOffers[recordid || ""];
-
-  //   // If no saved data or no expiration, consider it not saved
-  //   if (!savedData) return false;
-
-  //   // Check if the saved data has expired (7 days)
-  //   const now = Date.now();
-  //   if (savedData.expires && savedData.expires < now) {
-  //     // Remove expired entry
-  //     delete savedOffers[recordid || ""];
-  //     localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
-  //     console.log("🗑️ Removed expired save status for offer:", recordid);
-  //     return false;
-  //   }
-
-  //   return !!savedData.saved;
-  // };
-
-  // Save offer status with 7-day expiration
-  // const saveOfferStatus = (recordId: string) => {
-  //   if (typeof window === "undefined") return;
-
-  //   const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-  //   savedOffers[recordId] = {
-  //     saved: true,
-  //     savedAt: new Date().toISOString(),
-  //     expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days from now
-  //   };
-  //   localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
-  //   console.log("💾 Saved offer status with expiration:", recordId);
-  // };
-
-  // Check saved status on component mount
 
   useEffect(() => {
     const saveOfferIfNeeded = async () => {

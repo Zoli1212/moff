@@ -45,12 +45,12 @@ export default function SilentOfferSaverPage() {
     console.log("Offer saved in localStorage:", recordId);
   };
 
-  const getSavedStatus = (recordId: string) => {
-    if (typeof window === "undefined") return false;
-    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-    const savedOffer = savedOffers[recordId];
-    return savedOffer && savedOffer.expires > Date.now();
-  };
+  // const getSavedStatus = (recordId: string) => {
+  //   if (typeof window === "undefined") return false;
+  //   const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
+  //   const savedOffer = savedOffers[recordId];
+  //   return savedOffer && savedOffer.expires > Date.now();
+  // };
 
   useEffect(() => {
     const fetchAndSaveOffer = async () => {
