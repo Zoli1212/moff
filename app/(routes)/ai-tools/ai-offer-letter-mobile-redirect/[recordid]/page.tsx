@@ -35,22 +35,22 @@ export default function SilentOfferSaverPage() {
     console.log(recordId);
     if (typeof window === "undefined") return;
 
-    // const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-    // savedOffers[recordId] = {
-    //   saved: true,
-    //   savedAt: new Date().toISOString(),
-    //   expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 nap
-    // };
-    // localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
-    // console.log("Offer saved in localStorage:", recordId);
+    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
+    savedOffers[recordId] = {
+      saved: true,
+      savedAt: new Date().toISOString(),
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 nap
+    };
+    localStorage.setItem("savedOffers", JSON.stringify(savedOffers));
+    console.log("Offer saved in localStorage:", recordId);
   };
 
-  // const getSavedStatus = (recordId: string) => {
-  //   if (typeof window === "undefined") return false;
-  //   const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
-  //   const savedOffer = savedOffers[recordId];
-  //   return savedOffer && savedOffer.expires > Date.now();
-  // };
+  const getSavedStatus = (recordId: string) => {
+    if (typeof window === "undefined") return false;
+    const savedOffers = JSON.parse(localStorage.getItem("savedOffers") || "{}");
+    const savedOffer = savedOffers[recordId];
+    return savedOffer && savedOffer.expires > Date.now();
+  };
 
   useEffect(() => {
     const fetchAndSaveOffer = async () => {
@@ -62,13 +62,8 @@ export default function SilentOfferSaverPage() {
         return;
       }
 
-      // Check if this offer was already saved
-      // if (getSavedStatus(recordid)) {
-      //   console.log("Offer was already saved, skipping save");
-      //   // Redirect to offers list or handle as needed
-      //   router.push("/offers");
-      //   return;
-      // }
+      // A DB ellenőrzés már működik a saveOfferWithRequirements-ben
+      // Ha már létezik offer ezzel a recordId-vel, akkor visszaadja a meglévőt
 
       try {
         // Polling: várunk, amíg a History rekord létrejön
@@ -146,6 +141,7 @@ export default function SilentOfferSaverPage() {
           extraRequirementText,
           blockIds: blockIds,
           offerItemsQuestion: offerItemsQuestion,
+          incrementUpdateCount: true, // Frontend hívás, növeljük az updateCount-ot
           ...(requirementId ? { requirementId } : {}),
           ...(offerTitle ? { offerTitle } : {}),
         });

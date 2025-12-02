@@ -4699,65 +4699,13 @@ export const AiOfferAgent = inngest.createFunction(
           }
         });
 
-        // 2. Offer táblába mentés (saveOfferWithRequirements)
-        await step.run("save-offer-to-db", async () => {
-          console.log("  ├─ Saving offer to Offer table...");
-
-          try {
-            // Dinamikusan importáljuk a saveOfferWithRequirements függvényt
-            const { saveOfferWithRequirements } = await import(
-              "../actions/offer-actions"
-            );
-
-            // Az AI válasz content-jét kinyerjük (result.output[0].content)
-            // Ez a string amit a saveOfferWithRequirements vár
-            let offerContent: string;
-
-            if (
-              result &&
-              result.output &&
-              Array.isArray(result.output) &&
-              result.output[0]?.content
-            ) {
-              offerContent = result.output[0].content;
-              console.log(
-                "  ├─ Extracted content from result.output[0].content"
-              );
-              console.log("  ├─ Content length:", offerContent.length, "chars");
-            } else {
-              // Fallback: ha nincs output[0].content, akkor JSON.stringify
-              console.warn(
-                "  ├─ ⚠️ No result.output[0].content, using JSON.stringify fallback"
-              );
-              offerContent = JSON.stringify(result);
-            }
-
-            const saveResult = await saveOfferWithRequirements({
-              recordId: recordId,
-              demandText: userInput,
-              offerContent: offerContent,
-              checkedItems:
-                existingItems.length > 0 ? existingItems : undefined,
-              userEmail: userEmail, // Átadjuk a userEmail-t (Inngest auth bypass)
-            });
-
-            if (saveResult.success && "offerId" in saveResult) {
-              console.log("  ├─ ✅ Saved to Offer table");
-              console.log("  └─ Offer ID:", saveResult.offerId);
-              console.log("✅ [STEP 9] Database save successful");
-            } else if (!saveResult.success && "error" in saveResult) {
-              console.error("  └─ ❌ Offer save failed:", saveResult.error);
-              throw new Error(saveResult.error);
-            } else {
-              console.error("  └─ ❌ Unexpected save result:", saveResult);
-              throw new Error("Unexpected save result format");
-            }
-            return saveResult;
-          } catch (dbError) {
-            console.error("  └─ ❌ Offer save failed:", dbError);
-            throw dbError;
-          }
-        });
+        // 2. Offer táblába mentés KIHAGYVA - a frontend fogja menteni
+        console.log(
+          "  ├─ ⚠️ Skipping Offer table save (frontend will handle it)"
+        );
+        console.log(
+          "✅ [STEP 9] AI generation complete, waiting for frontend to save"
+        );
       } else {
         console.log("  └─ ⚠️ No recordId, skipping database save");
         console.log("⚠️ [STEP 9] Skipped (no recordId)");

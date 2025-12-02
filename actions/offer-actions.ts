@@ -100,7 +100,7 @@ async function getOfferItemPrice(
 // Using shared OfferWithItems type from @/types/offer.types
 
 interface SaveOfferData {
-  recordId: string;
+  recordId?: string;
   demandText: string;
   offerContent: string;
   checkedItems?: OfferItem[];
@@ -110,6 +110,7 @@ interface SaveOfferData {
   requirementId?: number;
   offerTitle?: string;
   userEmail?: string; // Optional: for Inngest function calls (bypasses Clerk auth)
+  incrementUpdateCount?: boolean; // Ha true, növeli az updateCount-ot (frontend), ha false/undefined, nem növeli (Inngest)
 }
 
 interface ParsedOfferContent {
@@ -518,8 +519,19 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
           ? latestRequirement.versionNumber + 1
           : 1;
 
-        console.log(latestRequirement, "LATESTREQUIREMENT", newVersionNumber);
-        console.log(work.title, "WORK TITLE");
+        // updateCount = ahány Requirement van az adott myWorkId-hez
+        const requirementCount = await tx.requirement.count({
+          where: { myWorkId: work.id },
+        });
+        const newUpdateCount = requirementCount + 1; // +1 mert most hozzuk létre az újat
+
+        console.log("=== REQUIREMENT VERSION INFO ===");
+        console.log("latestRequirement:", latestRequirement);
+        console.log("newVersionNumber:", newVersionNumber);
+        console.log("requirementCount:", requirementCount);
+        console.log("newUpdateCount:", newUpdateCount);
+        console.log("work.title:", work.title);
+        console.log("================================");
 
         // Prepare requirement data
         const requirementData = {
@@ -530,7 +542,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
           myWork: {
             connect: { id: work.id },
           },
-          updateCount: latestRequirement?.updateCount ?? 1,
+          updateCount: newUpdateCount,
           // Link to previous version if it exists
           ...(latestRequirement && {
             previousVersion: {
