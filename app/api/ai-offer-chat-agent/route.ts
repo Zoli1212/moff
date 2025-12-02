@@ -46,10 +46,34 @@ export async function POST(req: NextRequest) {
       }
 
       runStatus = await getRuns(runId);
+
+      // Részletes logolás a runStatus-ról
+      console.log(`  ├─ Poll response received:`, {
+        hasData: !!runStatus?.data,
+        dataLength: runStatus?.data?.length || 0,
+        firstItem: runStatus?.data?.[0]
+          ? {
+              status: runStatus.data[0].status,
+              hasOutput: !!runStatus.data[0].output,
+              hasError: !!runStatus.data[0].error,
+            }
+          : null,
+      });
+
       const status = runStatus?.data[0]?.status;
+      console.log(`  ├─ Current status: ${status || "undefined"}`);
 
       if (status === "Completed") {
-        console.log(`  ├─ Status: ${status} (after ${pollCount * 0.5}s)`);
+        console.log(`  ├─ ✅ Status: ${status} (after ${pollCount * 0.5}s)`);
+        console.log("  ├─ Output structure:", {
+          hasOutput: !!runStatus.data[0].output,
+          outputKeys: runStatus.data[0].output
+            ? Object.keys(runStatus.data[0].output)
+            : [],
+          outputSize: runStatus.data[0].output
+            ? JSON.stringify(runStatus.data[0].output).length
+            : 0,
+        });
         console.log("  └─ Run completed successfully");
         console.log(" [STEP 2] Polling complete - Success");
         break;
@@ -63,11 +87,31 @@ export async function POST(req: NextRequest) {
       }
 
       if (status === "Failed") {
-        console.error(`  ├─ Status: ${status}`);
-        console.error("  ├─ Error:", runStatus?.data[0]?.error);
+        console.error(`  ├─ ❌ Status: ${status}`);
+        console.error("  ├─ Error details:", {
+          error: runStatus?.data[0]?.error,
+          errorType: typeof runStatus?.data[0]?.error,
+          fullData: JSON.stringify(runStatus?.data[0], null, 2),
+        });
         console.error("  └─ Run failed");
         console.error(" [STEP 2] Polling complete - Failed");
         break;
+      }
+
+      // Ha még fut, logoljuk hogy miért nem áll meg
+      if (status === "Running" || status === "Queued") {
+        if (pollCount % 5 === 0) {
+          console.log(
+            `  ├─ ⏳ Still ${status}... (${pollCount * 0.5}s elapsed)`
+          );
+        }
+      } else if (
+        status &&
+        status !== "Completed" &&
+        status !== "Failed" &&
+        status !== "Cancelled"
+      ) {
+        console.log(`  ├─ ⚠️ Unknown status: ${status}`);
       }
 
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -105,7 +149,10 @@ export async function POST(req: NextRequest) {
     console.log("=".repeat(80));
 
     return NextResponse.json(
-      { error: "Failed to process offer request", details: (error as Error).message },
+      {
+        error: "Failed to process offer request",
+        details: (error as Error).message,
+      },
       { status: 500 }
     );
   }
@@ -124,7 +171,7 @@ const getRuns = async (runId: string) => {
   } catch (error) {
     console.error("❌ getRuns error:", {
       runId,
-      error: (error as Error).message
+      error: (error as Error).message,
     });
     throw error;
   }
