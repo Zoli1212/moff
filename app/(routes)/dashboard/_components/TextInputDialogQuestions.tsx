@@ -287,64 +287,28 @@ export default function TextInputDialogQuestions({
       const result = await response.json();
       console.log("Event queued:", result.eventId);
 
-      let attempts = 0;
-      const maxAttempts = 60;
-
-      const poll = async () => {
+      // Delete the old offer if we have currentOfferId
+      if (currentOfferId) {
         try {
-          const statusRes = await fetch(
-            `/api/ai-demand-agent/status?eventId=${result.eventId}`
-          );
-          const { status } = await statusRes.json();
-          console.log("Status:", status);
+          console.log("Deleting old offer:", currentOfferId);
+          const deleteResult = await deleteOffer(currentOfferId);
 
-          if (status === "Completed") {
-            // Delete the old offer if we have currentOfferId
-            if (currentOfferId) {
-              try {
-                console.log("Deleting old offer:", currentOfferId);
-                const deleteResult = await deleteOffer(currentOfferId);
-
-                if (deleteResult.success) {
-                  console.log("Old offer deleted successfully");
-                } else {
-                  console.error(
-                    "Failed to delete old offer:",
-                    deleteResult.error
-                  );
-                }
-              } catch (deleteErr) {
-                console.error("Error deleting old offer:", deleteErr);
-                // Don't block the flow if deletion fails
-              }
-            }
-
-            setLoading(false);
-            setOpen(false);
-            // Redirect to the new offer page with the updated requirement description
-            const encodedDemandText = encodeURIComponent(finalDescription);
-            router.push(
-              `${toolPath}/${recordId}?demandText=${encodedDemandText}`
-            );
-            return;
+          if (deleteResult.success) {
+            console.log("Old offer deleted successfully");
+          } else {
+            console.error("Failed to delete old offer:", deleteResult.error);
           }
-
-          if (status === "Cancelled" || attempts >= maxAttempts) {
-            setLoading(false);
-            setError("A feldolgozás nem sikerült vagy túl sokáig tartott.");
-            return;
-          }
-
-          attempts++;
-          setTimeout(poll, 2000);
-        } catch (err) {
-          console.error("Error polling status:", err);
-          setLoading(false);
-          setError("Hiba történt az állapot lekérdezése során.");
+        } catch (deleteErr) {
+          console.error("Error deleting old offer:", deleteErr);
+          // Don't block the flow if deletion fails
         }
-      };
+      }
 
-      poll();
+      // Azonnal átirányítunk a redirect oldalra, ahol database polling fog történni
+      setLoading(false);
+      setOpen(false);
+      const encodedDemandText = encodeURIComponent(finalDescription);
+      router.push(`${toolPath}/${recordId}?demandText=${encodedDemandText}`);
     } catch (err) {
       console.error("Error processing text:", err);
       setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");

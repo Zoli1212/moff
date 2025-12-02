@@ -38,40 +38,9 @@ export default function OfferLetterGenerator() {
       const { eventId } = result.data;
       console.log("Event queued:", eventId);
 
-      let attempts = 0;
-      const maxAttempts = 60;
-
-      const poll = async () => {
-        try {
-          const res = await axios.get(
-            `/api/ai-demand-agent/status?eventId=${eventId}`
-          );
-          const { status } = res.data;
-          console.log("Status:", status);
-
-          if (status === "Completed") {
-            setIsLoading(false);
-            // History will be created by the backend
-            router.push(`/ai-tools/ai-offer-letter${recordId}`);
-            return;
-          }
-
-          if (status === "Cancelled" || attempts >= maxAttempts) {
-            setIsLoading(false);
-            alert("Az elemzés nem sikerült vagy túl sokáig tartott.");
-            return;
-          }
-
-          attempts++;
-          setTimeout(poll, 2000);
-        } catch (err) {
-          console.error("Error polling status:", err);
-          setIsLoading(false);
-          alert("Hiba történt az állapot lekérdezése során.");
-        }
-      };
-
-      poll();
+      // Azonnal átirányítunk a redirect oldalra, ahol database polling fog történni
+      setIsLoading(false);
+      router.push(`/ai-tools/ai-offer-letter-mobile-redirect/${recordId}`);
     } catch (err) {
       console.error("Error processing text:", err);
       setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
