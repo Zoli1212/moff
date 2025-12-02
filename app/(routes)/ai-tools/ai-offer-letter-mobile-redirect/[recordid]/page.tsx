@@ -120,8 +120,6 @@ export default function SilentOfferSaverPage() {
           ...(offerTitle ? { offerTitle } : {}),
         });
 
-        console.log("Save result:", result);
-
         // Clear extra requirement text after successful save
         if (extraRequirementText) {
           useDemandStore.getState().clearExtraRequirementText();
@@ -136,18 +134,12 @@ export default function SilentOfferSaverPage() {
         }
 
         if (!result) {
-          console.error("No response from server");
           toast.error("Nincs válasz a szervertől");
           router.push("/offers");
           return;
         }
 
         if (!result.success) {
-          // Handle error case - redirect to /offers
-          console.error(
-            "Offer save failed:",
-            "error" in result ? result.error : "Unknown error"
-          );
           toast.error(
             "error" in result ? result.error : "Hiba a mentés közben."
           );

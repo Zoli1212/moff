@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ recordId: string }> }
 ) {
   try {
-    const user = await currentUser();
-
-    const userEmail = user?.emailAddresses?.[0]?.emailAddress;
+    const { tenantEmail } = await getTenantSafeAuth();
 
     const recordId = (await params).recordId;
 
-    if (!userEmail) {
+    if (!tenantEmail) {
       return new NextResponse(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { "Content-Type": "application/json" },
@@ -33,7 +31,7 @@ export async function GET(
       where: {
         recordId: recordId,
         aiAgentType: "ai-offer-letter",
-        tenantEmail: userEmail,
+        tenantEmail: tenantEmail,
       },
     });
 
@@ -44,20 +42,19 @@ export async function GET(
       });
     }
 
- 
     interface OutputItem {
       role: string;
       type: string;
       content: string;
     }
-    
+
     interface ParsedContent {
       output?: OutputItem[];
       [key: string]: unknown;
     }
-    
+
     let parsedContent: ParsedContent;
-    
+
     if (typeof record.content === "string") {
       try {
         parsedContent = JSON.parse(record.content) as ParsedContent;
@@ -70,14 +67,14 @@ export async function GET(
     } else {
       parsedContent = { output: [] };
     }
-    
+
     // ✅ Biztonságos output lekérés
     let output: OutputItem[] = [];
-    
-    if ('output' in parsedContent && Array.isArray(parsedContent.output)) {
+
+    if ("output" in parsedContent && Array.isArray(parsedContent.output)) {
       output = parsedContent.output;
     }
-    
+
     // Prepare the response data
     const responseData = {
       id: record.id,

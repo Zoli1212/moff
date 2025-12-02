@@ -109,6 +109,7 @@ interface SaveOfferData {
   offerItemsQuestion?: OfferItemQuestion[];
   requirementId?: number;
   offerTitle?: string;
+  userEmail?: string; // Optional: for Inngest function calls (bypasses Clerk auth)
 }
 
 interface ParsedOfferContent {
@@ -140,6 +141,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
       offerItemsQuestion, // Add default value and type annotation
       requirementId,
       offerTitle,
+      userEmail: providedUserEmail, // Inngest function-ből jövő email
     }: SaveOfferData = data; // Add type annotation
 
     // Használjunk Prisma transaction-t a rollback biztosítására
@@ -285,7 +287,20 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         console.log("PARSED CONTENT", parsedContent);
         console.log("ITEMS", parsedContent.items || parsedContent.notes);
 
-        const { user, tenantEmail: emailToUse } = await getTenantSafeAuth();
+        // Auth: ha providedUserEmail meg van adva (Inngest), akkor azt használjuk
+        // Különben Clerk auth-ot használunk (frontend)
+        let emailToUse: string;
+
+        if (providedUserEmail) {
+          // Inngest function hívás: nincs Clerk session, használjuk a provided email-t
+          console.log("Using provided userEmail (Inngest):", providedUserEmail);
+          emailToUse = providedUserEmail;
+        } else {
+          // Frontend hívás: Clerk auth
+          console.log("Using Clerk auth (frontend)");
+          const { tenantEmail } = await getTenantSafeAuth();
+          emailToUse = tenantEmail;
+        }
 
         // 2-szintű árkeresés és újraszámolás az items-hez (BATCH OPTIMALIZÁLVA)
         if (parsedContent.items && parsedContent.items.length > 0) {
@@ -758,19 +773,20 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
           // Automatikus RAG szinkronizáció (háttérben, de transaction-ön kívül)
           // RAG hiba nem okozhat rollback-et
-          Promise.resolve().then(async () => {
-            try {
-              await autoSyncOfferToRAG(offer.id);
-              console.log(
-                `✅ RAG automatikusan szinkronizálva ajánlathoz: ${offer.id}`
-              );
-            } catch (ragError) {
-              console.error(
-                `❌ RAG szinkronizáció hiba ajánlathoz ${offer.id}:`,
-                ragError
-              );
-            }
-          });
+          // KIKOMMENTELVE: Inngest function-ből hívva nincs Clerk session context
+          // Promise.resolve().then(async () => {
+          //   try {
+          //     await autoSyncOfferToRAG(offer.id);
+          //     console.log(
+          //       `✅ RAG automatikusan szinkronizálva ajánlathoz: ${offer.id}`
+          //     );
+          //   } catch (ragError) {
+          //     console.error(
+          //       `❌ RAG szinkronizáció hiba ajánlathoz ${offer.id}:`,
+          //       ragError
+          //     );
+          //   }
+          // });
 
           return {
             success: true,

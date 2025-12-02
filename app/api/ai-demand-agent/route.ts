@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { WebPDFLoader } from "@langchain/community/document_loaders/web/pdf";
 import { inngest } from "@/inngest/client";
-import { currentUser } from "@clerk/nextjs/server";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";
 // import { Readable } from 'stream';
@@ -24,6 +24,7 @@ async function extractTextFromExcel(
 ): Promise<string> {
   const workbook = XLSX.read(buffer, { type: "buffer" });
   let text = "";
+  console.log(fileType)
 
   workbook.SheetNames.forEach((sheetName) => {
     const worksheet = workbook.Sheets[sheetName];
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (error) {
+      console.log((error as Error).message)
       existingItems = [];
     }
 
@@ -87,7 +89,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Hiányzó recordId" }, { status: 400 });
     }
 
-    const user = await currentUser();
+    const { tenantEmail } = await getTenantSafeAuth();
 
     let content = "";
     let base64File = "";
@@ -122,7 +124,7 @@ export async function POST(req: NextRequest) {
       ? {
           userInput: content,
           recordId,
-          userEmail: user?.emailAddresses?.[0]?.emailAddress,
+          userEmail: tenantEmail,
           existingItems: existingItems,
         }
       : {
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
           fileType,
           fileName,
           aiAgentType,
-          userEmail: user?.emailAddresses?.[0]?.emailAddress,
+          userEmail: tenantEmail,
           inputType: demandFile ? "file" : "text",
         };
 
@@ -145,6 +147,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "queued", eventId });
   } catch (error) {
+    console.log((error as Error).message)
     return NextResponse.json(
       { error: "Hiba történt a fájl feldolgozása során" },
       { status: 500 }

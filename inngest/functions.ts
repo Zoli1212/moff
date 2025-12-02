@@ -4660,7 +4660,9 @@ export const AiOfferAgent = inngest.createFunction(
       console.log("\n💾 [STEP 9] Saving to database...");
       if (recordId) {
         console.log("  ├─ recordId:", recordId);
-        await step.run("save-offer-letter", async () => {
+
+        // 1. History táblába mentés
+        await step.run("save-offer-history", async () => {
           const historyData = {
             recordId: recordId,
             content: JSON.parse(JSON.stringify(result)),
@@ -4688,12 +4690,71 @@ export const AiOfferAgent = inngest.createFunction(
             const saved = await prisma.history.create({
               data: historyData,
             });
-            console.log("  ├─ ✅ Saved to database, ID:", saved.id);
+            console.log("  ├─ ✅ Saved to History, ID:", saved.id);
             console.log("  └─ Created at:", saved.createdAt);
-            console.log("✅ [STEP 9] Database save successful");
             return saved;
           } catch (dbError) {
-            console.error("  └─ ❌ Database save failed:", dbError);
+            console.error("  └─ ❌ History save failed:", dbError);
+            throw dbError;
+          }
+        });
+
+        // 2. Offer táblába mentés (saveOfferWithRequirements)
+        await step.run("save-offer-to-db", async () => {
+          console.log("  ├─ Saving offer to Offer table...");
+
+          try {
+            // Dinamikusan importáljuk a saveOfferWithRequirements függvényt
+            const { saveOfferWithRequirements } = await import(
+              "../actions/offer-actions"
+            );
+
+            // Az AI válasz content-jét kinyerjük (result.output[0].content)
+            // Ez a string amit a saveOfferWithRequirements vár
+            let offerContent: string;
+
+            if (
+              result &&
+              result.output &&
+              Array.isArray(result.output) &&
+              result.output[0]?.content
+            ) {
+              offerContent = result.output[0].content;
+              console.log(
+                "  ├─ Extracted content from result.output[0].content"
+              );
+              console.log("  ├─ Content length:", offerContent.length, "chars");
+            } else {
+              // Fallback: ha nincs output[0].content, akkor JSON.stringify
+              console.warn(
+                "  ├─ ⚠️ No result.output[0].content, using JSON.stringify fallback"
+              );
+              offerContent = JSON.stringify(result);
+            }
+
+            const saveResult = await saveOfferWithRequirements({
+              recordId: recordId,
+              demandText: userInput,
+              offerContent: offerContent,
+              checkedItems:
+                existingItems.length > 0 ? existingItems : undefined,
+              userEmail: userEmail, // Átadjuk a userEmail-t (Inngest auth bypass)
+            });
+
+            if (saveResult.success && "offerId" in saveResult) {
+              console.log("  ├─ ✅ Saved to Offer table");
+              console.log("  └─ Offer ID:", saveResult.offerId);
+              console.log("✅ [STEP 9] Database save successful");
+            } else if (!saveResult.success && "error" in saveResult) {
+              console.error("  └─ ❌ Offer save failed:", saveResult.error);
+              throw new Error(saveResult.error);
+            } else {
+              console.error("  └─ ❌ Unexpected save result:", saveResult);
+              throw new Error("Unexpected save result format");
+            }
+            return saveResult;
+          } catch (dbError) {
+            console.error("  └─ ❌ Offer save failed:", dbError);
             throw dbError;
           }
         });
