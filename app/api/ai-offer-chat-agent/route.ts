@@ -94,18 +94,18 @@ export async function POST(req: NextRequest) {
     console.log(" Finished at:", new Date().toISOString());
 
     return NextResponse.json(output);
-  } catch (error: any) {
+  } catch (error) {
     console.log("\n" + "=".repeat(80));
     console.error(" [API /ai-offer-chat-agent] Request failed");
     console.log("=".repeat(80));
     console.error(" Error type:", error?.constructor?.name || typeof error);
-    console.error(" Error message:", error?.message || error);
+    console.error(" Error message:", (error as Error).message || error);
     console.error(" Error stack:");
-    console.error(error?.stack);
+    console.error((error as Error).stack);
     console.log("=".repeat(80));
 
     return NextResponse.json(
-      { error: "Failed to process offer request", details: error?.message },
+      { error: "Failed to process offer request", details: (error as Error).message },
       { status: 500 }
     );
   }
@@ -121,12 +121,10 @@ const getRuns = async (runId: string) => {
       },
     });
     return result.data;
-  } catch (error: any) {
+  } catch (error) {
     console.error("❌ getRuns error:", {
       runId,
-      error: error?.message,
-      status: error?.response?.status,
-      data: error?.response?.data,
+      error: (error as Error).message
     });
     throw error;
   }
