@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { saveOfferWithRequirements } from "@/actions/offer-actions";
 import { useDemandStore } from "@/store/offerLetterStore";
@@ -71,10 +71,40 @@ export default function SilentOfferSaverPage() {
       // }
 
       try {
-        const response = await axios.get(`/api/ai-offer-letter/${recordid}`);
-        const offer = response.data;
+        // Polling: várunk, amíg a History rekord létrejön
+        let offer = null;
+        let attempts = 0;
+        const maxAttempts = 60; // 60 * 2s = 2 perc max
 
-        console.log("Offer loaded:", offer);
+        while (!offer && attempts < maxAttempts) {
+          try {
+            const response = await axios.get(
+              `/api/ai-offer-letter/${recordid}`
+            );
+            offer = response.data;
+            console.log("Offer loaded:", offer);
+            break; // Sikeres lekérdezés, kilépünk a loop-ból
+          } catch (error: unknown) {
+            if (error instanceof AxiosError && error.response?.status === 404) {
+              // History rekord még nem létezik, várunk 2 másodpercet
+              console.log(
+                `Attempt ${attempts + 1}/${maxAttempts}: Waiting for offer...`
+              );
+              attempts++;
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            } else {
+              // Más hiba, kilépünk
+              throw error;
+            }
+          }
+        }
+
+        if (!offer) {
+          console.error("Offer not found after max attempts");
+          toast.error("Az ajánlat nem található. Kérjük próbáld újra később.");
+          router.push("/offers");
+          return;
+        }
 
         const contentToSave =
           typeof offer.content === "string"
@@ -120,6 +150,14 @@ export default function SilentOfferSaverPage() {
           ...(offerTitle ? { offerTitle } : {}),
         });
 
+        console.log("=== SAVE RESULT ===");
+        console.log("Result:", result);
+        console.log("Result type:", typeof result);
+        console.log("Result.success:", result?.success);
+        console.log("Result keys:", result ? Object.keys(result) : "null");
+        console.log("Full JSON:", JSON.stringify(result, null, 2));
+        console.log("===================");
+
         // Clear extra requirement text after successful save
         if (extraRequirementText) {
           useDemandStore.getState().clearExtraRequirementText();
@@ -134,12 +172,16 @@ export default function SilentOfferSaverPage() {
         }
 
         if (!result) {
+          console.error("❌ No result from server");
           toast.error("Nincs válasz a szervertől");
           router.push("/offers");
           return;
         }
 
         if (!result.success) {
+          console.error("❌ Save failed!");
+          console.error("Error:", "error" in result ? result.error : "Unknown");
+          console.error("Full result:", JSON.stringify(result, null, 2));
           toast.error(
             "error" in result ? result.error : "Hiba a mentés közben."
           );

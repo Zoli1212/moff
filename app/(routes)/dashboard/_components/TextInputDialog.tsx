@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,15 +9,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Sparkles } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { v4 as uuidv4 } from 'uuid';
-import axios from 'axios';
-import { useRouter } from 'next/navigation';
-import { useDemandStore } from '@/store/offerLetterStore';
-import { useOfferItemQuestionStore } from '@/store/offerItemQuestionStore';
-import { useOfferItemCheckStore } from '@/store/offerItemCheckStore';
+import { Loader2, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { v4 as uuidv4 } from "uuid";
+import axios from "axios";
+import { useRouter } from "next/navigation";
+import { useDemandStore } from "@/store/offerLetterStore";
+import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
+import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 
 interface TextInputDialogProps {
   open: boolean;
@@ -25,10 +25,14 @@ interface TextInputDialogProps {
   toolPath: string;
 }
 
-export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDialogProps) {
+export default function TextInputDialog({
+  open,
+  setOpen,
+  toolPath,
+}: TextInputDialogProps) {
   const { demandText, setDemandText } = useDemandStore();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const router = useRouter();
 
   const { clearOfferItemsQuestion } = useOfferItemQuestionStore();
@@ -41,66 +45,33 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
     clearExtraRequirementText();
   }, [clearOfferItemsQuestion, clearOfferItems, clearExtraRequirementText]);
 
-
   const onAnalyze = async () => {
     if (!demandText.trim()) {
-      setError('Kérjük adj meg egy szöveget az elemzéshez!');
+      setError("Kérjük adj meg egy szöveget az elemzéshez!");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
 
     try {
       const recordId = uuidv4();
       const formData = new FormData();
-      formData.append('recordId', recordId);
-      formData.append('textContent', demandText);
-      formData.append('type', 'offer-letter');
-      
-      const result = await axios.post('/api/ai-demand-agent', formData);
+      formData.append("recordId", recordId);
+      formData.append("textContent", demandText);
+      formData.append("type", "offer-letter");
+
+      const result = await axios.post("/api/ai-demand-agent", formData);
       const { eventId } = result.data;
-      console.log('Event queued:', eventId);
+      console.log("Event queued:", eventId);
 
-      let attempts = 0;
-      const maxAttempts = 60;
-
-      const poll = async () => {
-        try {
-          const res = await axios.get(`/api/ai-demand-agent/status?eventId=${eventId}`);
-          const { status } = res.data;
-          console.log('Status:', status);
-
-          if (status === 'Completed') {
-            setLoading(false);
-            // History will be created by the backend
-            
-            router.push(`${toolPath}/${recordId}`);
-            setOpen(false);
-            return;
-           
-          }
-
-
-          if (status === 'Cancelled' || attempts >= maxAttempts) {
-            setLoading(false);
-            alert("Az elemzés nem sikerült vagy túl sokáig tartott.");
-            return;
-          }
-
-          attempts++;
-          setTimeout(poll, 2000);
-        } catch (err) {
-          console.error('Error polling status:', err);
-          setLoading(false);
-          alert("Hiba történt az állapot lekérdezése során.");
-        }
-      };
-
-      poll();
+      // Azonnal átirányítunk a redirect oldalra, ahol database polling fog történni
+      setLoading(false);
+      router.push(`${toolPath}/${recordId}`);
+      setOpen(false);
     } catch (err) {
-      console.error('Error processing text:', err);
-      setError('Hiba történt a feldolgozás során. Kérjük próbáld újra később.');
+      console.error("Error processing text:", err);
+      setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
       setLoading(false);
     }
   };
@@ -111,27 +82,34 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
         {loading ? (
           <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
             <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">Feldolgozás folyamatban</h3>
-            <p className="text-gray-600 max-w-md">Az Ön kérése feldolgozás alatt áll, kérjük várjon...</p>
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              Feldolgozás folyamatban
+            </h3>
+            <p className="text-gray-600 max-w-md">
+              Az Ön kérése feldolgozás alatt áll, kérjük várjon...
+            </p>
           </div>
         ) : (
           <div className="flex flex-col h-full">
             <DialogHeader className="px-1">
-              <DialogTitle className="text-xl font-bold text-gray-900">Új ajánlatkérés</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-gray-900">
+                Új ajánlatkérés
+              </DialogTitle>
               <DialogDescription className="text-gray-600">
-                Illessze be az ajánlatkérést vagy írja le részletesen mire van szüksége
+                Illessze be az ajánlatkérést vagy írja le részletesen mire van
+                szüksége
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="flex-1 mt-4 overflow-hidden">
               <div className="h-full flex flex-col">
-                <Textarea 
+                <Textarea
                   placeholder="Például: 50m²-es lakás felújítása, burkolással, festéssel és villanyszereléssel..."
                   className="flex-1 min-h-[200px] text-base p-4 resize-none"
                   value={demandText}
                   onChange={(e) => {
                     setDemandText(e.target.value);
-                    setError('');
+                    setError("");
                   }}
                 />
                 {error && (
@@ -139,7 +117,7 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
                     {error}
                   </div>
                 )}
-                
+
                 <div className="mt-4 pt-4 border-t border-gray-100">
                   <div className="text-sm text-gray-500 mb-3">Tippek:</div>
                   <ul className="space-y-2 text-sm text-gray-600">
@@ -159,18 +137,18 @@ export default function TextInputDialog({ open, setOpen, toolPath }: TextInputDi
                 </div>
               </div>
             </div>
-            
+
             <DialogFooter className="flex flex-col sm:flex-row gap-3 pt-4 mt-auto">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full h-14 text-base font-medium"
                 onClick={() => setOpen(false)}
               >
                 Mégse
               </Button>
-              <Button 
+              <Button
                 className="w-full h-14 text-base font-medium bg-[#FF9900] hover:bg-[#e68a00] text-white"
-                disabled={!demandText.trim() || loading} 
+                disabled={!demandText.trim() || loading}
                 onClick={onAnalyze}
                 size="lg"
               >
