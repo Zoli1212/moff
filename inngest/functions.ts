@@ -4451,180 +4451,219 @@ export const AiOfferAgent = inngest.createFunction(
   { id: "AiOfferAgent" },
   { event: "AiOfferAgent" },
   async ({ event, step }) => {
-    console.log("AiOfferAgent event received:", JSON.stringify(event, null, 2));
+    console.log("\n" + "=".repeat(80));
+    console.log("🚀 [AiOfferAgent] STARTED");
+    console.log("=".repeat(80));
+    console.log("📥 Event data:", JSON.stringify(event, null, 2));
+    console.log("⏰ Timestamp:", new Date().toISOString());
 
     try {
       const { userInput, recordId, userEmail, existingItems = [] } = event.data;
-      console.log("Processing offer letter request:", {
-        userInput,
-        recordId,
-        userEmail,
-        hasExistingItems: existingItems.length > 0,
-      });
+      console.log("\n📋 [STEP 1] Parsing event data...");
+      console.log("  ├─ userInput length:", userInput?.length || 0, "chars");
+      console.log("  ├─ recordId:", recordId);
+      console.log("  ├─ userEmail:", userEmail);
+      console.log("  └─ existingItems:", existingItems.length, "items");
 
-      // Átadjuk a meglévő tételeket az AI-nak a felhasználói bemenettel együtt
+      if (!userInput) {
+        console.error("❌ [ERROR] userInput is missing!");
+        throw new Error("Missing userInput in event data");
+      }
+      console.log("✅ [STEP 1] Event data parsed successfully");
+
+      console.log("\n📝 [STEP 2] Building base input...");
       const baseInput =
         existingItems.length > 0
           ? `${userInput}\n\nMeglévő tételek (ne vegyél fel ismétlődést):\n${JSON.stringify(existingItems, null, 2)}`
           : userInput;
+      console.log("  └─ baseInput length:", baseInput.length, "chars");
+      console.log("✅ [STEP 2] Base input built");
 
-      if (!userInput) {
-        throw new Error("Missing userInput in event data");
-      }
+      console.log("\n🔍 [STEP 3] RAG Context Enhancement...");
+      console.log("  ├─ RAG_ENABLED:", process.env.RAG_ENABLED || "undefined");
+      let finalInput = baseInput;
 
-      // RAG integráció - TELJES BIZTONSÁG
-      let finalInput = baseInput; // Alapértelmezett: eredeti input
-
-      // CSAK akkor módosítunk, ha RAG_ENABLED=true
       if (process.env.RAG_ENABLED === "true") {
         try {
-          console.log("🤖 RAG engedélyezve, kontextus bővítés...");
+          console.log("  ├─ RAG is enabled, enhancing prompt...");
           const ragEnhancedInput = await enhancePromptWithRAG(
             baseInput,
             userInput,
             true
           );
-          finalInput = ragEnhancedInput; // Csak sikeres RAG esetén
-          console.log("✅ RAG kontextus sikeresen hozzáadva");
+          finalInput = ragEnhancedInput;
+          console.log("  └─ RAG enhancement successful");
+          console.log("✅ [STEP 3] RAG context added");
         } catch (ragError) {
-          console.error("❌ RAG hiba, eredeti input használata:", ragError);
-          finalInput = baseInput; // Hiba esetén eredeti input
+          console.error("  └─ RAG error:", ragError);
+          console.log("⚠️ [STEP 3] RAG failed, using original input");
+          finalInput = baseInput;
         }
       } else {
-        console.log("🔒 RAG kikapcsolva, eredeti input használata");
-        // finalInput már baseInput, nem kell változtatni
+        console.log("  └─ RAG is disabled, skipping");
+        console.log("✅ [STEP 3] Using base input (RAG disabled)");
       }
 
-      // PriceList katalógus betöltése adatbázisból
+      console.log("\n📚 [STEP 4] Loading PriceList Catalog...");
       const { priceListCatalog, catalogSource } = await step.run(
         "load-pricelist-catalog",
         async () => {
-          console.log("📋 PriceList katalógus betöltése...");
+          console.log("  ├─ Fetching catalog from database...");
           const catalog = await getPriceListCatalog();
+          console.log("  ├─ Catalog fetched, length:", catalog.length, "chars");
 
-          // Ellenőrizzük, hogy van-e katalógus
           const catalogIsEmpty = catalog === "[]" || catalog.trim() === "";
-
           let source = "";
+
           if (catalogIsEmpty) {
             source = "⚠️ FALLBACK (system prompt JSON)";
-            console.log(
-              "⚠️ KATALÓGUS FORRÁS: FALLBACK (system prompt JSON katalógus)"
-            );
-            console.log("   → Adatbázis katalógus üres vagy nem elérhető");
+            console.log("  ├─ ⚠️ Catalog is empty, using fallback");
           } else {
             const catalogItems = JSON.parse(catalog);
             source = `✅ PRIMARY (adatbázis - ${catalogItems.length} tétel)`;
             console.log(
-              `✅ KATALÓGUS FORRÁS: PRIMARY (adatbázis - ${catalogItems.length} tétel)`
+              "  ├─ ✅ Catalog loaded:",
+              catalogItems.length,
+              "items"
             );
           }
 
+          console.log("  └─ Source:", source);
           return { priceListCatalog: catalog, catalogSource: source };
         }
       );
 
-      console.log(`📊 KATALÓGUS FORRÁS: ${catalogSource}`);
-      finalInput = `${finalInput}\n\n===PRICE CATALOG===\n${priceListCatalog}`;
-      console.log("✅ PriceList hozzáadva az input-hoz");
+      console.log("✅ [STEP 4] Catalog loaded:", catalogSource);
 
-      // Retry logika 429-es (rate limit) hibák kezelésére
+      console.log("\n🔗 [STEP 5] Appending catalog to input...");
+      finalInput = `${finalInput}\n\n===PRICE CATALOG===\n${priceListCatalog}`;
+      console.log("  └─ Final input length:", finalInput.length, "chars");
+      console.log("✅ [STEP 5] Input prepared for AI");
+
+      console.log("\n🤖 [STEP 6] Calling AI Agent (Gemini 2.0 Flash)...");
+      console.log("  ├─ Model: gemini-2.0-flash");
+      console.log("  ├─ Max retries: 3");
+      console.log("  └─ Checking GEMINI_API_KEY...");
+
+      // API Key ellenőrzés
+      const hasGeminiKey = !!process.env.GEMINI_API_KEY;
+      console.log("  └─ GEMINI_API_KEY present:", hasGeminiKey);
+      if (!hasGeminiKey) {
+        console.error("❌ [CRITICAL ERROR] GEMINI_API_KEY is missing!");
+        console.error("   Please set GEMINI_API_KEY in environment variables");
+        throw new Error("GEMINI_API_KEY is not configured");
+      }
+
       let retries = 3;
       let result;
       let lastError;
 
       while (retries > 0) {
         try {
-          console.log(`🤖 AI agent hívása... (${4 - retries}. próbálkozás)`);
+          const attemptNum = 4 - retries;
+          console.log(`\n  🔄 Attempt ${attemptNum}/3...`);
+          console.log("  ├─ Sending request to Gemini API...");
+
+          const startTime = Date.now();
           result = await AiOfferChatAgent.run(finalInput);
-          console.log("✅ AI agent válasz sikeresen megérkezett");
-          break; // Sikeres válasz, kilépünk a loop-ból
+          const duration = Date.now() - startTime;
+
+          console.log("  ├─ ✅ Response received in", duration, "ms");
+          console.log("  └─ Response type:", typeof result);
+          console.log("✅ [STEP 6] AI agent response successful");
+          break;
         } catch (error: any) {
           lastError = error;
+          console.error("  └─ ❌ Request failed:", error?.message || error);
+          console.error("     Error details:", {
+            status: error?.status,
+            code: error?.code,
+            message: error?.message,
+            stack: error?.stack?.split("\n")[0],
+          });
+
           const is429 =
             error?.status === 429 ||
             error?.message?.includes("429") ||
             error?.message?.includes("rate limit");
 
           if (is429 && retries > 1) {
-            const waitTime = 60; // 60 másodperc várakozás
-            console.log(
-              `⚠️ Rate limit elérve (429), várakozás ${waitTime}s... (${retries - 1} próbálkozás maradt)`
-            );
+            const waitTime = 60;
+            console.log(`  ⚠️ Rate limit detected, waiting ${waitTime}s...`);
+            console.log(`  └─ Retries left: ${retries - 1}`);
             await new Promise((resolve) =>
               setTimeout(resolve, waitTime * 1000)
             );
             retries--;
           } else {
-            // Nem 429-es hiba, vagy elfogytak a próbálkozások
-            console.error("❌ AI agent hiba:", error);
+            console.error("❌ [STEP 6] AI agent call failed permanently");
             throw error;
           }
         }
       }
 
       if (!result) {
-        console.error("❌ AI agent nem adott választ 3 próbálkozás után");
-        throw lastError || new Error("AI agent nem adott választ");
+        console.error("❌ [CRITICAL ERROR] No result after 3 attempts");
+        console.error("   Last error:", lastError);
+        throw lastError || new Error("AI agent returned no result");
       }
 
-      console.log(
-        "AiOfferChatAgent result!!!:",
-        JSON.stringify(result, null, 2)
-      );
+      console.log("\n📊 [STEP 7] Parsing AI Response...");
+      console.log("  ├─ Result type:", typeof result);
+      console.log("  ├─ Result keys:", Object.keys(result || {}).join(", "));
+      console.log("  └─ Full result:");
+      console.log(JSON.stringify(result, null, 2).substring(0, 1000) + "...");
 
-      // Részletes logolás az AI válaszról
-      console.log("=== AI RESPONSE DETAILED LOG ===");
-      console.log("Result type:", typeof result);
-      console.log("Result keys:", Object.keys(result || {}));
-
+      console.log("\n📦 [STEP 8] Analyzing response structure...");
       if (result && result.output && Array.isArray(result.output)) {
-        console.log("Output array length:", result.output.length);
+        console.log("  ├─ Output is array with", result.output.length, "items");
         result.output.forEach((item, index) => {
-          console.log(`Output[${index}]:`, {
+          console.log(`  ├─ Output[${index}]:`, {
             type: typeof item,
-            keys: Object.keys(item || {}),
+            keys: Object.keys(item || {}).join(", "),
             hasContent: "content" in item,
           });
 
-          // Keressük az offerSummary-t a válaszban
           if (
             "content" in item &&
             item.content &&
             typeof item.content === "string"
           ) {
+            const contentPreview = item.content.substring(0, 300);
             console.log(
-              "Content preview:",
-              item.content.substring(0, 500) + "..."
+              `  ├─ Content preview (${item.content.length} chars):`,
+              contentPreview + "..."
             );
 
             const offerSummaryMatch = item.content.match(
               /offerSummary:\s*([^\n]+(?:\n[^\n]+)?)/i
             );
             if (offerSummaryMatch) {
-              console.log("🎯 FOUND offerSummary:", offerSummaryMatch[1]);
-            } else {
-              console.log("❌ offerSummary NOT FOUND in content");
               console.log(
-                "Full content preview:",
-                item.content.substring(0, 1000)
+                "  ├─ 🎯 Found offerSummary:",
+                offerSummaryMatch[1].substring(0, 100)
               );
+            } else {
+              console.log("  ├─ ⚠️ offerSummary not found in content");
             }
           } else {
-            console.log("❌ No content property in message");
+            console.log("  ├─ ❌ No content property in item");
           }
         });
+        console.log("  └─ Analysis complete");
+        console.log("✅ [STEP 8] Response structure analyzed");
       } else {
-        console.log("❌ No output array found in result");
+        console.log("  └─ ❌ No output array found in result");
+        console.log("⚠️ [STEP 8] Unexpected response structure");
       }
-      console.log("=== END AI RESPONSE LOG ===");
 
-      // Save the result to the database using Prisma
+      console.log("\n💾 [STEP 9] Saving to database...");
       if (recordId) {
+        console.log("  ├─ recordId:", recordId);
         await step.run("save-offer-letter", async () => {
           const historyData = {
             recordId: recordId,
-            content: JSON.parse(JSON.stringify(result)), // Convert to plain object
+            content: JSON.parse(JSON.stringify(result)),
             tenantEmail: userEmail,
             aiAgentType: "ai-offer-letter",
             metaData: {
@@ -4636,25 +4675,52 @@ export const AiOfferAgent = inngest.createFunction(
             createdAt: new Date().toISOString(),
           };
 
+          console.log("  ├─ Preparing history data...");
+          console.log("  ├─ tenantEmail:", userEmail);
+          console.log("  ├─ aiAgentType: ai-offer-letter");
           console.log(
-            "Saving to history:",
-            JSON.stringify(historyData, null, 2),
-            result
+            "  ├─ content size:",
+            JSON.stringify(result).length,
+            "chars"
           );
 
-          const saved = await prisma.history.create({
-            data: historyData,
-          });
-
-          console.log("Saved history record:", saved);
-          return saved;
+          try {
+            const saved = await prisma.history.create({
+              data: historyData,
+            });
+            console.log("  ├─ ✅ Saved to database, ID:", saved.id);
+            console.log("  └─ Created at:", saved.createdAt);
+            console.log("✅ [STEP 9] Database save successful");
+            return saved;
+          } catch (dbError) {
+            console.error("  └─ ❌ Database save failed:", dbError);
+            throw dbError;
+          }
         });
+      } else {
+        console.log("  └─ ⚠️ No recordId, skipping database save");
+        console.log("⚠️ [STEP 9] Skipped (no recordId)");
       }
 
+      console.log("\n" + "=".repeat(80));
+      console.log("🎉 [AiOfferAgent] COMPLETED SUCCESSFULLY");
+      console.log("=".repeat(80));
+      console.log("⏰ Finished at:", new Date().toISOString());
+      console.log("📊 Result size:", JSON.stringify(result).length, "chars");
+
       return result;
-    } catch (error) {
-      console.error("Error in AiOfferAgent:", error);
-      throw error; // Re-throw to mark the function as failed
+    } catch (error: any) {
+      console.log("\n" + "=".repeat(80));
+      console.error("💥 [AiOfferAgent] FAILED");
+      console.log("=".repeat(80));
+      console.error("❌ Error type:", error?.constructor?.name || typeof error);
+      console.error("❌ Error message:", error?.message || error);
+      console.error("❌ Error code:", error?.code);
+      console.error("❌ Error status:", error?.status);
+      console.error("❌ Stack trace:");
+      console.error(error?.stack);
+      console.log("=".repeat(80));
+      throw error;
     }
   }
 );
