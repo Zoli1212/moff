@@ -287,36 +287,84 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
         const { user, tenantEmail: emailToUse } = await getTenantSafeAuth();
 
-        // 2-szintű árkeresés és újraszámolás az items-hez
+        // 2-szintű árkeresés és újraszámolás az items-hez (BATCH OPTIMALIZÁLVA)
         if (parsedContent.items && parsedContent.items.length > 0) {
-          console.log("Processing items with price lookup...");
-          const processedItems = await Promise.all(
-            parsedContent.items.map(async (item: any) => {
-              const quantity = parseFloat(item.quantity) || 1;
-              const laborCost = parseFloat(item.unitPrice) || 0;
-              const materialCost = parseFloat(item.materialUnitPrice) || 0;
+          console.log("Processing items with BATCH price lookup...");
 
-              // Árkeresés és újraszámolás
-              const priceData = await getOfferItemPrice(
-                item.name,
-                emailToUse,
-                laborCost,
-                materialCost,
-                quantity
-              );
-
-              return {
-                ...item,
-                unitPrice: priceData.laborCost.toString(),
-                materialUnitPrice: priceData.materialCost.toString(),
-                workTotal: priceData.workTotal.toString(),
-                materialTotal: priceData.materialTotal.toString(),
-                totalPrice: priceData.totalPrice.toString(),
-              };
-            })
+          // Tisztítsuk meg az összes task nevet egyszerre
+          const cleanedTaskNames = parsedContent.items.map((item: any) =>
+            item.name.replace(/^\*\s*/, "").trim()
           );
+
+          // BATCH: Egyetlen lekérdezés az összes tenant-specifikus árhoz
+          const tenantPrices = await tx.tenantPriceList.findMany({
+            where: {
+              task: { in: cleanedTaskNames },
+              tenantEmail: emailToUse,
+            },
+          });
+
+          // BATCH: Egyetlen lekérdezés az összes globális árhoz
+          const globalPrices = await tx.priceList.findMany({
+            where: {
+              task: { in: cleanedTaskNames },
+              tenantEmail: "",
+            },
+          });
+
+          // Map-ek a gyors kereséshez
+          const tenantPriceMap = new Map(
+            tenantPrices.map((p) => [
+              p.task,
+              { laborCost: p.laborCost, materialCost: p.materialCost },
+            ])
+          );
+          const globalPriceMap = new Map(
+            globalPrices.map((p) => [
+              p.task,
+              { laborCost: p.laborCost, materialCost: p.materialCost },
+            ])
+          );
+
+          // Feldolgozzuk az items-t a batch adatokkal
+          const processedItems = parsedContent.items.map((item: any) => {
+            const quantity = parseFloat(item.quantity) || 1;
+            let laborCost = parseFloat(item.unitPrice) || 0;
+            let materialCost = parseFloat(item.materialUnitPrice) || 0;
+
+            const cleanedTask = item.name.replace(/^\*\s*/, "").trim();
+
+            // Cascade: tenant → global → eredeti
+            const tenantPrice = tenantPriceMap.get(cleanedTask);
+            const globalPrice = globalPriceMap.get(cleanedTask);
+
+            if (tenantPrice) {
+              laborCost = tenantPrice.laborCost;
+              materialCost = tenantPrice.materialCost;
+            } else if (globalPrice) {
+              laborCost = globalPrice.laborCost;
+              materialCost = globalPrice.materialCost;
+            }
+
+            // Újraszámolt totálok
+            const workTotal = quantity * laborCost;
+            const materialTotal = quantity * materialCost;
+            const totalPrice = workTotal + materialTotal;
+
+            return {
+              ...item,
+              unitPrice: laborCost.toString(),
+              materialUnitPrice: materialCost.toString(),
+              workTotal: workTotal.toString(),
+              materialTotal: materialTotal.toString(),
+              totalPrice: totalPrice.toString(),
+            };
+          });
+
           parsedContent.items = processedItems;
-          console.log("Items processed with price lookup");
+          console.log(
+            `Items processed with BATCH price lookup (${cleanedTaskNames.length} items, 2 queries instead of ${cleanedTaskNames.length * 2})`
+          );
         }
 
         // Újraszámoljuk a totalPrice, materialTotal és workTotal értékeket az items alapján
