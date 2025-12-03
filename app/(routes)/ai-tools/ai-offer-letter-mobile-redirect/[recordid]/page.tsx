@@ -126,13 +126,8 @@ export default function SilentOfferSaverPage() {
         }
 
         // 3) Save to DB
-        console.log(
-          "Saving with demandText:!!",
-          demandTextToUse,
-          contentToSave
-        );
-
         const offerTitle = useOfferTitleStore.getState().offerTitle;
+
         const result = await saveOfferWithRequirements({
           recordId: recordid,
           demandText: demandTextToUse || "",

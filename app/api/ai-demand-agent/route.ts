@@ -24,7 +24,7 @@ async function extractTextFromExcel(
 ): Promise<string> {
   const workbook = XLSX.read(buffer, { type: "buffer" });
   let text = "";
-  console.log(fileType)
+  console.log(fileType);
 
   workbook.SheetNames.forEach((sheetName) => {
     const worksheet = workbook.Sheets[sheetName];
@@ -74,14 +74,28 @@ export async function POST(req: NextRequest) {
     let existingItems = [];
     try {
       const existingItemsStr = formData.get("existingItems")?.toString();
+      console.log("=== API ROUTE - RECEIVED EXISTING ITEMS ===");
+      console.log("existingItemsStr:", existingItemsStr);
+      console.log("textContent:", textContent);
+
       if (existingItemsStr) {
         existingItems = JSON.parse(existingItemsStr);
+        console.log("Parsed existingItems:", existingItems);
+        console.log("existingItems length:", existingItems.length);
+
         if (!Array.isArray(existingItems)) {
+          console.log("⚠️ existingItems is not an array, resetting to []");
           existingItems = [];
         }
+      } else {
+        console.log("⚠️ No existingItems in formData");
       }
+      console.log("===========================================");
     } catch (error) {
-      console.log((error as Error).message)
+      console.error(
+        "❌ Error parsing existingItems:",
+        (error as Error).message
+      );
       existingItems = [];
     }
 
@@ -120,6 +134,13 @@ export async function POST(req: NextRequest) {
 
     const isOfferLetter = type === "offer-letter";
 
+    console.log("=== API ROUTE - SENDING TO INNGEST ===");
+    console.log("isOfferLetter:", isOfferLetter);
+    console.log("content (userInput):", content.substring(0, 200) + "...");
+    console.log("existingItems to send:", existingItems);
+    console.log("existingItems length:", existingItems.length);
+    console.log("=======================================");
+
     const eventData = isOfferLetter
       ? {
           userInput: content,
@@ -147,7 +168,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "queued", eventId });
   } catch (error) {
-    console.log((error as Error).message)
+    console.log((error as Error).message);
     return NextResponse.json(
       { error: "Hiba történt a fájl feldolgozása során" },
       { status: 500 }

@@ -296,12 +296,16 @@ export function RequirementDetail({
       );
 
       toast.success("Követelmény sikeresen frissítve!");
+
+      // Return the updated description so handleResubmit can use it
+      return updatedDescription;
     } catch (error) {
       console.error("Error updating requirement:", error);
       setError(
         "Hiba történt a követelmény frissítése közben. Kérjük próbáld újra később."
       );
       toast.error("Hiba történt a követelmény frissítése közben");
+      return null;
     } finally {
       setIsSubmitting(false);
     }
@@ -379,16 +383,34 @@ export function RequirementDetail({
     const finalCleanup = cleanupOnUnmount();
 
     try {
+      let finalDescription = currentDescription;
+
       // First save the updated description if there are changes
       if (newText.trim() && newText !== currentDescription) {
-        await handleSubmit();
+        console.log("=== BEFORE handleSubmit ===");
+        console.log("currentDescription:", currentDescription);
+        console.log("newText:", newText);
+
+        const updatedDesc = await handleSubmit();
+
+        if (updatedDesc) {
+          finalDescription = updatedDesc;
+          console.log("=== AFTER handleSubmit ===");
+          console.log("updatedDesc from handleSubmit:", updatedDesc);
+        } else {
+          console.log(
+            "⚠️ handleSubmit returned null, using currentDescription"
+          );
+        }
       }
 
       // Create a new record ID
       const recordId = crypto.randomUUID();
 
-      // Prepare the combined text with original requirement and new text
-      const combinedText = `Eredeti követelmény: ${currentDescription}\n\nKiegészítő információk:\n${newText}`;
+      // Prepare the combined text - use the finalDescription
+      const combinedText = finalDescription;
+      console.log("=== FINAL combinedText ===");
+      console.log("combinedText:", combinedText);
 
       // Create form data for the API
       const formData = new FormData();
@@ -398,12 +420,23 @@ export function RequirementDetail({
       formData.append("requirementId", requirement.id.toString());
 
       // Küldjük el a meglévő tételeket is, ha vannak
+      console.log("=== REQUIREMENT DETAIL - SENDING EXISTING ITEMS ===");
+      console.log("storedItems:", storedItems);
+      console.log("storedItems length:", storedItems?.length || 0);
+      console.log("initialTableItems:", initialTableItems);
+      console.log("initialTableItems length:", initialTableItems?.length || 0);
+      console.log("newText (kiegészítés):", newText);
+      console.log("combinedText:", combinedText);
+      console.log("=================================================");
+
       if (storedItems && storedItems.length > 0) {
         formData.append("existingItems", JSON.stringify(storedItems));
+        console.log("✅ Appended existingItems to formData");
+      } else {
+        console.log("⚠️ No storedItems to append");
       }
       if (storedItems.length === 0 && initialTableItems.length > 0) {
         setStoredItems(initialTableItems);
-        // Kiírás közvetlenül eltárolás után
         console.log(
           "[useDemandStore] storedItems elmentve:",
           useDemandStore.getState().storedItems

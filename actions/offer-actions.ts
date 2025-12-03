@@ -207,16 +207,6 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
         // Merge with checked items if they exist
         if (checkedItems && checkedItems.length > 0 && parsedContent.items) {
-          console.log("--- MERGE TEST LOG ---");
-          console.log(
-            "Original parsed items:",
-            JSON.stringify(parsedContent.items, null, 2)
-          );
-          console.log(
-            "Items from store (checkedItems):",
-            JSON.stringify(checkedItems, null, 2)
-          );
-
           // Egyedi kulcs csak a name és quantity alapján
           const createKey = (item: { name: string; quantity: string }) =>
             `${item.name}||${item.quantity}`;
@@ -239,8 +229,6 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
         // If we have offerItemsQuestion, use it as the base and add any new items from parsedContent.items
         if (offerItemsQuestion && offerItemsQuestion.length > 0) {
-          console.log("Merging offerItemsQuestion with parsedContent.items");
-
           // Ensure all items in offerItemsQuestion have required properties with defaults
           const normalizedOfferItems = offerItemsQuestion.map((item) => ({
             name: item.name || "",
@@ -686,19 +674,14 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
             };
           });
 
-          offerData.items = JSON.stringify(processedItems);
+          offerData.items = processedItems as unknown as Prisma.InputJsonValue;
         } else {
-          offerData.items = "[]"; // Ensure it's a valid empty array JSON string
+          offerData.items = [] as unknown as Prisma.InputJsonValue; // Ensure it's a valid empty array
         }
 
-        // Add notes as JSON if they exist (for structured data)
+        // Add notes as STRING if they exist (notes is String? type, not Json)
         if (parsedContent.notes && parsedContent.notes.length > 0) {
-          console.log(
-            `Adding ${parsedContent.notes.length} notes to offer as JSON`
-          );
-          offerData.notes = JSON.stringify(parsedContent.notes);
-        } else {
-          console.log("No notes to add to offer");
+          offerData.notes = parsedContent.notes.join("\n\n");
         }
 
         try {
@@ -917,29 +900,27 @@ export async function getOfferById(id: number) {
     }
 
     // Parse items and notes if they exist
-    const items = (offer.items ? JSON.parse(offer.items as string) : []).map(
-      (item: any) => {
-        const quantity = parseFloat(item.quantity) || 0;
-        const unitPrice = parseFloat(item.unitPrice) || 0; // This is work unit price
-        const materialUnitPrice = parseFloat(item.materialUnitPrice) || 0;
+    const items = ((offer.items as any) || []).map((item: any) => {
+      const quantity = parseFloat(item.quantity) || 0;
+      const unitPrice = parseFloat(item.unitPrice) || 0; // This is work unit price
+      const materialUnitPrice = parseFloat(item.materialUnitPrice) || 0;
 
-        // Calculate totals, ensuring they are numbers
-        const workTotal = quantity * unitPrice;
-        const materialTotal = quantity * materialUnitPrice;
-        const totalPrice = workTotal + materialTotal;
+      // Calculate totals, ensuring they are numbers
+      const workTotal = quantity * unitPrice;
+      const materialTotal = quantity * materialUnitPrice;
+      const totalPrice = workTotal + materialTotal;
 
-        return {
-          ...item,
-          quantity,
-          unitPrice, // Munkadíj egységár
-          materialUnitPrice, // Anyag egységár
-          workTotal, // Munkadíj összesen
-          materialTotal, // Anyagköltség összesen
-          totalPrice, // Teljes ár (munkadíj + anyag)
-        };
-      }
-    );
-    const notes = offer.notes ? JSON.parse(offer.notes as string) : [];
+      return {
+        ...item,
+        quantity,
+        unitPrice, // Munkadíj egységár
+        materialUnitPrice, // Anyag egységár
+        workTotal, // Munkadíj összesen
+        materialTotal, // Anyagköltség összesen
+        totalPrice, // Teljes ár (munkadíj + anyag)
+      };
+    });
+    const notes = offer.notes ? offer.notes.split("\n\n") : [];
 
     // Log the parsed data for debugging
     console.log("Parsed offer data:", {

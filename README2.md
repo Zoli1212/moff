@@ -666,7 +666,7 @@ uj tétel, + globális adatbázisba
 kerüljön be a globálisba
 globális
 ---
-Ujteszt utca 5 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagig, a 70x2.1m es ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanzo 150000, a wc-e 50000, a zuhanyzo 160000.
+Ujteszt utca 5 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagig, a 70x2.1m es ajtot ujra kell mazolni. Az uj szaniterek anyag arai: mosdó 150000, a wc-e 50000, a zuhanyzo 160000.
 
 ---
 

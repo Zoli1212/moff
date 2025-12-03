@@ -53,7 +53,7 @@ export async function getRequirementById(requirementId: number) {
     const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
 
     const requirement = await prisma.requirement.findFirst({
-      where: { 
+      where: {
         id: requirementId,
         myWork: {
           tenantEmail: userEmail,
@@ -87,7 +87,7 @@ export async function getOffersByRequirementId(requirementId: number) {
 
     // First verify the requirement belongs to the user
     const requirement = await prisma.requirement.findFirst({
-      where: { 
+      where: {
         id: requirementId,
         myWork: {
           tenantEmail: userEmail,
@@ -100,7 +100,7 @@ export async function getOffersByRequirementId(requirementId: number) {
     }
 
     const offers = await prisma.offer.findMany({
-      where: { 
+      where: {
         requirementId,
         tenantEmail: userEmail,
       },
@@ -109,8 +109,8 @@ export async function getOffersByRequirementId(requirementId: number) {
 
     // Parse items and notes for each offer
     return offers.map((offer) => {
-      let items = [];
-      let notes = [];
+      let items: any[] = [];
+      let notes: string[] = [];
 
       try {
         if (Array.isArray(offer.items)) {
@@ -136,9 +136,11 @@ export async function getOffersByRequirementId(requirementId: number) {
       }
 
       try {
-        notes = offer.notes ? JSON.parse(offer.notes as string) : [];
+        // notes is String type, not Json - split by double newline
+        notes = offer.notes ? offer.notes.split("\n\n") : [];
       } catch (e) {
         console.error("Error parsing offer notes:", e);
+        notes = [];
       }
 
       return {
@@ -163,7 +165,7 @@ export async function createRequirement(
 
     // Verify the work belongs to the user
     const work = await prisma.myWork.findFirst({
-      where: { 
+      where: {
         id: workId,
         tenantEmail: userEmail,
       },
@@ -175,7 +177,7 @@ export async function createRequirement(
 
     // First, get the latest version number for this work
     const latestVersion = await prisma.requirement.findFirst({
-      where: { 
+      where: {
         myWorkId: workId,
         myWork: {
           tenantEmail: userEmail,
@@ -220,7 +222,7 @@ export async function updateRequirement(
 
     // First verify the requirement belongs to the user
     const requirement = await prisma.requirement.findFirst({
-      where: { 
+      where: {
         id: requirementId,
         myWork: {
           tenantEmail: userEmail,
@@ -229,11 +231,13 @@ export async function updateRequirement(
     });
 
     if (!requirement) {
-      throw new Error("A követelmény nem található vagy nincs jogosultsága a módosításhoz!");
+      throw new Error(
+        "A követelmény nem található vagy nincs jogosultsága a módosításhoz!"
+      );
     }
 
     const updatedRequirement = await prisma.requirement.update({
-      where: { 
+      where: {
         id: requirementId,
         myWork: {
           tenantEmail: userEmail,
@@ -253,13 +257,13 @@ export async function updateRequirement(
 
     // Revalidate the requirement page and related paths
     revalidatePath(`/offers/${requirementId}`);
-    
+
     if (updatedRequirement.myWork) {
       revalidatePath(`/jobs/${updatedRequirement.myWork.id}/requirements`);
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: updatedRequirement,
     };
   } catch (error) {

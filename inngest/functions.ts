@@ -4472,12 +4472,39 @@ export const AiOfferAgent = inngest.createFunction(
       console.log("✅ [STEP 1] Event data parsed successfully");
 
       console.log("\n📝 [STEP 2] Building base input...");
+      console.log("=== AI AGENT - EXISTING ITEMS DEBUG ===");
+      console.log("existingItems:", existingItems);
+      console.log("existingItems length:", existingItems.length);
+      console.log(
+        "existingItems content:",
+        JSON.stringify(existingItems, null, 2)
+      );
+      console.log("=== AI AGENT - USER INPUT ===");
+      console.log("userInput FULL TEXT:");
+      console.log(userInput);
+      console.log("---");
+      console.log("userInput length:", userInput?.length || 0);
+      console.log("userInput first 500 chars:", userInput?.substring(0, 500));
+      console.log(
+        "userInput last 500 chars:",
+        userInput?.substring(userInput.length - 500)
+      );
+      console.log("======================================");
+
       const baseInput =
         existingItems.length > 0
           ? `${userInput}\n\nMeglévő tételek (ne vegyél fel ismétlődést):\n${JSON.stringify(existingItems, null, 2)}`
           : userInput;
       console.log("  └─ baseInput length:", baseInput.length, "chars");
       console.log("✅ [STEP 2] Base input built");
+
+      if (existingItems.length > 0) {
+        console.log("✅ Base input INCLUDES existing items");
+      } else {
+        console.log(
+          "⚠️ Base input does NOT include existing items (empty array)"
+        );
+      }
 
       console.log("\n🔍 [STEP 3] RAG Context Enhancement...");
       console.log("  ├─ RAG_ENABLED:", process.env.RAG_ENABLED || "undefined");
@@ -4608,9 +4635,13 @@ export const AiOfferAgent = inngest.createFunction(
         throw lastError || new Error("AI agent returned no result");
       }
 
-      console.log("\n📊 [STEP 7] Parsing AI Response...");
+      console.log("\n📋 [STEP 7] Parsing AI Response...");
       console.log("  ├─ Result type:", typeof result);
       console.log("  ├─ Result keys:", Object.keys(result || {}).join(", "));
+      console.log("=== AI AGENT - RESPONSE DEBUG ===");
+      console.log("Full AI response:");
+      console.log(JSON.stringify(result, null, 2));
+      console.log("================================");
       console.log("  └─ Full result:");
       console.log(JSON.stringify(result, null, 2).substring(0, 1000) + "...");
 
