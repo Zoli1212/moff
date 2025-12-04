@@ -255,21 +255,6 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   const { user, tenantEmail } = await getTenantSafeAuth();
   const email = tenantEmail;
 
-  // --- AI result debug log ---
-  console.log(
-    "[AI RESULT RAW]:",
-    util.inspect(aiResult, { depth: null, colors: true })
-  );
-  // vagy egyszerű JSON formában (BigInt-safe):
-  console.log(
-    "[AI RESULT JSON]:",
-    JSON.stringify(
-      aiResult,
-      (k, v) => (typeof v === "bigint" ? v.toString() : v),
-      2
-    )
-  );
-
   // Ellenőrzés, hogy a work a felhasználóhoz tartozik
   const work = await prisma.work.findUnique({
     where: { id: workId },
@@ -294,21 +279,6 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   let updatedWork = null;
 
   try {
-    console.log(`[updateWorkWithAIResult] Updating work ${workId} with:`, {
-      location: aiResult.location,
-      totalWorkers: aiResult.totalWorkers,
-      totalLaborCost: aiResult.totalLaborCost,
-      totalTools: Array.isArray(aiResult.totalTools)
-        ? aiResult.totalTools.length
-        : Number(aiResult.totalTools) || 0,
-      totalToolCost: aiResult.totalToolCost,
-      totalMaterials: Array.isArray(aiResult.totalMaterials)
-        ? aiResult.totalMaterials.length
-        : Number(aiResult.totalMaterials) || 0,
-      totalMaterialCost: aiResult.totalMaterialCost,
-      estimatedDuration: aiResult.estimatedDuration,
-      // bármi egyéb mező, amit az AI visszaad
-    });
     updatedWork = await prisma.work.update({
       where: { id: workId },
       data: {
@@ -545,11 +515,6 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
       const normalizeRole = (s: string) => s.trim().toLowerCase();
 
       for (const item of aiResult.workItems) {
-        console.log(
-          `[updateWorkWithAIResult] Creating workItem for work ${workId}:`,
-          item
-        );
-
         // 1. Létrehozzuk a WorkItem-et
         const toolList =
           typeof item.tools === "string"
@@ -1183,6 +1148,11 @@ export async function recalculateWorkTotals(
 }
 
 /**
+ * MERGE MODE: Meglévő munkához új offer hozzáadása AI feldolgozással
+ * NE törölje a meglévő WorkItem-eket, Worker-eket, Material-okat, Tool-okat
+ * CSAK hozzáadja az újakat és frissíti az aggregált mezőket
+ */
+/**
  * Set processingByAI flag for a work and revalidate the /works page
  */
 export async function setWorkProcessingFlag(
@@ -1219,24 +1189,9 @@ export async function setWorkProcessingFlag(
   }
 }
 
-/**
- * MERGE MODE: Meglévő munkához új offer hozzáadása AI feldolgozással
- * NE törölje a meglévő WorkItem-eket, Worker-eket, Material-okat, Tool-okat
- * CSAK hozzáadja az újakat és frissíti az aggregált mezőket
- */
 export async function mergeWorkWithAIResult(workId: number, aiResult: any) {
   const { user, tenantEmail } = await getTenantSafeAuth();
   const email = tenantEmail;
-
-  console.log("[mergeWorkWithAIResult] Starting merge for work:", workId);
-  console.log(
-    "[mergeWorkWithAIResult] AI Result:",
-    JSON.stringify(
-      aiResult,
-      (k, v) => (typeof v === "bigint" ? v.toString() : v),
-      2
-    )
-  );
 
   // Ellenőrzés, hogy a work a felhasználóhoz tartozik
   const work = await prisma.work.findUnique({
@@ -1348,11 +1303,6 @@ export async function mergeWorkWithAIResult(workId: number, aiResult: any) {
       const normalizeRole = (s: string) => s.trim().toLowerCase();
 
       for (const item of aiResult.workItems) {
-        console.log(
-          `[mergeWorkWithAIResult] Adding NEW workItem to work ${workId}:`,
-          item
-        );
-
         // 1. Létrehozzuk az ÚJ WorkItem-et (meglévők MARADNAK)
         const toolList =
           typeof item.tools === "string"

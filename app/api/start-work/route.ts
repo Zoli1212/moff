@@ -3,25 +3,44 @@ import { ParsedWork, WorkItem } from "@/types/work";
 import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
+  console.log("\n🚀 [start-work] API endpoint called");
   try {
     // ✅ SECURITY: Check authentication
     const user = await currentUser();
     if (!user) {
+      console.log("❌ [start-work] Unauthorized - no user");
       return NextResponse.json(
         { error: "Unauthorized - Login required" },
         { status: 401 }
       );
     }
+    console.log(
+      "✅ [start-work] User authenticated:",
+      user.emailAddresses[0]?.emailAddress
+    );
 
     const body = await req.json();
     const { location, offerDescription, estimatedDuration, offerItems } = body;
+    console.log("📦 [start-work] Request body:", {
+      location,
+      offerDescription: offerDescription?.substring(0, 100) + "...",
+      estimatedDuration,
+      offerItemsCount: offerItems?.length,
+    });
 
     if (!location || !offerDescription || !estimatedDuration || !offerItems) {
+      console.log("❌ [start-work] Missing required fields:", {
+        hasLocation: !!location,
+        hasOfferDescription: !!offerDescription,
+        hasEstimatedDuration: !!estimatedDuration,
+        hasOfferItems: !!offerItems,
+      });
       return NextResponse.json(
         { error: "Hiányzó mezők a kérésben." },
         { status: 400 }
       );
     }
+    console.log("✅ [start-work] All required fields present");
 
     // Create the OpenAI prompt
     const prompt = `A következő információk alapján hozz létre egy részletes munkafelosztást ÉRVÉNYES JSON formátumban, az alábbi SZIGORÚ szabályokkal:
@@ -93,6 +112,7 @@ export async function POST(req: NextRequest) {
     - Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabályok betartásával! description-t mindig generálj!`;
 
     // Make the OpenAI API request
+    console.log("🤖 [start-work] Calling OpenAI API...");
     const openaiResponse = await fetch(
       "https://api.openai.com/v1/chat/completions",
       {
@@ -117,8 +137,17 @@ export async function POST(req: NextRequest) {
     );
 
     // Extract the response data
+    console.log(
+      "📥 [start-work] OpenAI response status:",
+      openaiResponse.status
+    );
     const data = await openaiResponse.json();
     const content: string = data.choices?.[0]?.message?.content ?? "";
+    console.log("📝 [start-work] OpenAI content length:", content.length);
+    console.log(
+      "📝 [start-work] OpenAI content preview:",
+      content.substring(0, 200) + "..."
+    );
 
     const cleaned = content
       .trim()
@@ -129,14 +158,25 @@ export async function POST(req: NextRequest) {
 
     let parsed: ParsedWork | null = null;
 
+    console.log("🔍 [start-work] Attempting to parse JSON...");
     try {
       parsed = JSON.parse(cleaned);
+      console.log("✅ [start-work] JSON parsed successfully");
+      console.log(
+        "📊 [start-work] Parsed workItems count:",
+        parsed?.workItems?.length
+      );
     } catch (jsonErr) {
+      console.log(
+        "⚠️ [start-work] Initial JSON parse failed, trying regex fallback..."
+      );
       const match = cleaned.match(/\{[\s\S]*\}/);
       if (match) {
         try {
           parsed = JSON.parse(match[0]);
+          console.log("✅ [start-work] JSON parsed with regex fallback");
         } catch (innerErr) {
+          console.log("❌ [start-work] Regex fallback also failed:", innerErr);
           return NextResponse.json(
             {
               error:
@@ -150,6 +190,7 @@ export async function POST(req: NextRequest) {
           );
         }
       } else {
+        console.log("❌ [start-work] No JSON found in response");
         return NextResponse.json(
           {
             error:
@@ -165,11 +206,13 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Szigorú validáció: minden workItem mező egyezzen az offerItem-mel ---
+    console.log("🔍 [start-work] Starting strict validation...");
     if (
       parsed &&
       Array.isArray(parsed.workItems) &&
       Array.isArray(offerItems)
     ) {
+      console.log("✅ [start-work] Validation arrays are valid");
       for (let i = 0; i < offerItems.length; i++) {
         const offer = offerItems[i];
         const work = parsed.workItems[i];
@@ -202,13 +245,15 @@ export async function POST(req: NextRequest) {
                 .replace(",", ".");
               return parseFloat(numericValue) || 0;
             };
-            
-            const offerMaterialTotal = parseCurrency(offer.materialTotal || "0");
+
+            const offerMaterialTotal = parseCurrency(
+              offer.materialTotal || "0"
+            );
             const offerWorkTotal = parseCurrency(offer.workTotal || "0");
             const expectedTotalPrice = offerMaterialTotal + offerWorkTotal;
-            
+
             const workTotalPrice = parseCurrency(work[field]);
-            
+
             // Allow small rounding differences (1 Ft tolerance)
             if (Math.abs(workTotalPrice - expectedTotalPrice) > 1) {
               return NextResponse.json(
@@ -240,9 +285,18 @@ export async function POST(req: NextRequest) {
       }
     }
     // --- /Szigorú validáció ---
+    console.log("✅ [start-work] Validation complete, returning parsed result");
+    console.log(
+      "📤 [start-work] Response workItems count:",
+      parsed?.workItems?.length
+    );
     return NextResponse.json(parsed);
   } catch (err) {
-    console.error("[start-work] OpenAI hívás közbeni hiba:", err);
+    console.error("❌ [start-work] Fatal error:", err);
+    console.error(
+      "❌ [start-work] Error stack:",
+      err instanceof Error ? err.stack : "No stack"
+    );
     return NextResponse.json(
       {
         error: "OpenAI válasz nem volt JSON.",
