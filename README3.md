@@ -324,3 +324,5 @@ WHERE "createdAt" < NOW() - INTERVAL '6 months';
 - Meglévő funkcionalitást nem befolyásolja
 - Fokozatos bevezetésre tervezve
 - Production-ready biztonsági intézkedésekkel
+
+FF9900

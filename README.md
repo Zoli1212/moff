@@ -3,183 +3,185 @@ INNGEST_SERVER_HOST=https://api.inngest.com
 INNGEST_SIGNING_KEY=signkey-prod-ee608d0103068ec617427050595ba78fbf4194d7e13bf995d2735fef16579e47
 
 {
-  "scope": "Részleges vagy teljes",
-  "phasing": "not specified",
-  "area_sqm": "42",
-  "location": "1234 Budapest, Erdei út 99.",
-  "proposal": {
-    "scope": "Részleges vagy teljes",
-    "phasing": "not specified",
-    "area_sqm": "42",
-    "location": "1234 Budapest, Erdei út 99.",
-    "timeline": "2025. július 1. - 2025. szeptember 30.",
-    "must_haves": [
-      "Biztonságos tetőszerkezet",
-      "Szigetelt tetőszerkezet", PO-090-01667718282873770
-      "Javított és vakolt falak",
-      "Új nyílászárók",
-      "Korszerű villamos hálózat",
-      "Új padlóburkolatok"
-    ],
-    "vat_amount": 1242000,
-    "constraints": [],
-    "company_name": "not specified",
-    "missing_info": [
-      "A felújítás pontos terjedelme (részleges vagy teljes)",
-      "Részleges felújítás esetén mely területek érintettek",
-      "Tető megerősítésének módja",
-      "Tető szigetelésének anyaga",
-      "Külső és belső falak javításának módja (milyen károk vannak?)",
-      "A vakolat típusa és színe",
-      "A nyílászárók típusa, anyaga, színe, hőszigetelési értéke",
-      "A villamos hálózat korszerűsítésének részletei (új vezetékek, kapcsolók, konnektorok, stb.)",
-      "A padlóburkolatok típusa, anyaga, színe, mintázata",
-      "Pontos költségvetés",
-      "A munkálatok tervezett időtartama",
-      "A munkálatok ütemezése",
-      "Milyen engedélyek szükségesek",
-      "Az ingatlan jelenlegi állapota (pl. képek)",
-      "Az ügyfél elképzelése a végső kinézetről (tervek, inspirációk)"
-    ],
-    "project_type": "Kunyhó felújítás",
-    "requirements": [
-      "Tetőszerkezet megerősítése",
-      "Tetőszerkezet szigetelése",
-      "Külső falak javítása",
-      "Külső falak újravakolása",
-      "Belső falak javítása",
-      "Belső falak újravakolása",
-      "Nyílászárók cseréje",
-      "Villamos hálózat korszerűsítése",
-      "Padlóburkolatok cseréje",
-      "Biztonságos állapot",
-      "Lakható állapot",
-      "Környezetbarát állapot",
-      "Megfelelő szigetelés",
-      "Új vakolat",
-      "Új nyílászárók (anyag, szín, típus nem specifikált)",
-      "Korszerű villamos hálózat (szabványoknak megfelelő)",
-      "Új padlóburkolatok (anyag, szín, mintázat nem specifikált)"
-    ],
-    "customer_name": "MintaFelújítás Kft.",
-    "nice_to_haves": [],
-    "property_type": "Kunyhó",
-    "customer_email": "info@mintafelujitas.hu",
-    "final_deadline": "2025. szeptember 30.",
-    "rooms_affected": [
-      "Teljes ingatlan"
-    ],
-    "budget_estimate": "5 000 000 Ft",
-    "summary_comment": "A kunyhó felújításának célja a biztonságos, lakható és környezetbarát állapot megteremtése. A javaslat tartalmazza a főbb munkálatokat, ütemezést és költségbecslést. A pontos részletek tisztázása érdekében további információk szükségesek az ügyféltől.",
-    "assumptions_made": [
-      "A helyszíni felmérés során nem derülnek ki rejtett hibák.",
-      "Az engedélyezési eljárás zökkenőmentesen zajlik.",
-      "Az alapanyagok ára nem változik jelentősen a felújítás ideje alatt.",
-      "A megrendelő időben biztosítja a szükséges információkat és döntéseket."
-    ],
-    "total_net_amount": 4600000,
-    "client_priorities": [
-      "Biztonság",
-      "Lakhatóság",
-      "Környezetbarátság"
-    ],
-    "total_gross_amount": 5842000,
-    "risks_or_dependencies": [
-      "Engedély kiadása"
-    ],
-    "main_work_phases_and_tasks": [
-      {
-        "phase": "1. Fázis: Tervezés és Előkészítés",
-        "tasks": [
-          "Helyszíni felmérés és állapotfelmérés",
-          "Pontos igények egyeztetése az ügyféllel (részleges vagy teljes felújítás)",
-          "Tervek készítése (műszaki tervek, engedélyezési tervek)",
-          "Költségvetés kidolgozása és jóváhagyása",
-          "Engedélyek beszerzése",
-          "Szerződéskötés"
-        ]
-      },
-      {
-        "phase": "2. Fázis: Szerkezeti Munkák és Alapozás",
-        "tasks": [
-          "Tetőszerkezet megerősítése (mód meghatározása)",
-          "Tetőszerkezet szigetelése (anyag kiválasztása)",
-          "Külső és belső falak javítása (károk felmérése és javítási mód meghatározása)",
-          "Alap szigetelés javítása",
-          "Vízelvezetés javítása"
-        ]
-      },
-      {
-        "phase": "3. Fázis: Gépészeti és Elektromos Munkák",
-        "tasks": [
-          "Nyílászárók cseréje (típus, anyag, szín kiválasztása)",
-          "Villamos hálózat korszerűsítése (vezetékek, kapcsolók, konnektorok cseréje/bővítése)"
-        ]
-      },
-      {
-        "phase": "4. Fázis: Befejező Munkák",
-        "tasks": [
-          "Falak vakolása (vakolat típusának és színének kiválasztása)",
-          "Padlóburkolatok cseréje (típus, anyag, szín, mintázat kiválasztása)",
-          "Festés, mázolás",
-          "Takarítás"
-        ]
-      },
-      {
-        "phase": "5. Fázis: Átadás",
-        "tasks": [
-          "Munkaterület átadása az ügyfélnek",
-          "Átadás-átvételi jegyzőkönyv aláírása",
-          "Garancia papírok átadása"
-        ]
-      }
-    ],
-    "timeline_and_scheduling_details": [
-      "A munkálatok kezdete: 2025. július 1.",
-      "A munkálatok befejezése: 2025. szeptember 30.",
-      "A fázisok időtartama a pontos tervek és az engedélyezési eljárás függvényében változhat.",
-      "A részletes ütemterv a szerződéskötéskor kerül pontosításra."
-    ],
-    "estimated_costs_per_phase_and_total": [
-      {
-        "cost": 500000,
-        "phase": "Tervezés és Előkészítés"
-      },
-      {
-        "cost": 1500000,
-        "phase": "Szerkezeti Munkák és Alapozás"
-      },
-      {
-        "cost": 1500000,
-        "phase": "Gépészeti és Elektromos Munkák"
-      },
-      {
-        "cost": 1000000,
-        "phase": "Befejező Munkák"
-      },
-      {
-        "cost": 100000,
-        "phase": "Átadás"
-      },
-      {
-        "cost": 4600000,
-        "phase": "Total"
-      }
-    ],
-    "relevant_implementation_notes_or_recommendations": [
-      "Javasoljuk a teljes felújítást a kunyhó hosszú távú biztonsága és lakhatósága érdekében.",
-      "Érdemes energiatakarékos megoldásokat alkalmazni a fenntarthatóság érdekében (pl. hőszigetelt nyílászárók, LED világítás).",
-      "A falak javításánál és vakolásánál a környezetbe illő, természetes anyagok használata javasolt.",
-      "A villamos hálózat korszerűsítése során a legújabb szabványoknak való megfelelés kiemelten fontos."
-    ]
-  },
-  "timeline": "2025. július 1. - 2025. szeptember 30.",
-  "project_type": "Kunyhó felújítás",
-  "property_type": "Kunyhó",
-  "rooms_affected": "Teljes ingatlan",
-  "budget_estimate": "5 000 000 Ft"
+"scope": "Részleges vagy teljes",
+"phasing": "not specified",
+"area_sqm": "42",
+"location": "1234 Budapest, Erdei út 99.",
+"proposal": {
+"scope": "Részleges vagy teljes",
+"phasing": "not specified",
+"area_sqm": "42",
+"location": "1234 Budapest, Erdei út 99.",
+"timeline": "2025. július 1. - 2025. szeptember 30.",
+"must_haves": [
+"Biztonságos tetőszerkezet",
+"Szigetelt tetőszerkezet", PO-090-01667718282873770
+"Javított és vakolt falak",
+"Új nyílászárók",
+"Korszerű villamos hálózat",
+"Új padlóburkolatok"
+],
+"vat_amount": 1242000,
+"constraints": [],
+"company_name": "not specified",
+"missing_info": [
+"A felújítás pontos terjedelme (részleges vagy teljes)",
+"Részleges felújítás esetén mely területek érintettek",
+"Tető megerősítésének módja",
+"Tető szigetelésének anyaga",
+"Külső és belső falak javításának módja (milyen károk vannak?)",
+"A vakolat típusa és színe",
+"A nyílászárók típusa, anyaga, színe, hőszigetelési értéke",
+"A villamos hálózat korszerűsítésének részletei (új vezetékek, kapcsolók, konnektorok, stb.)",
+"A padlóburkolatok típusa, anyaga, színe, mintázata",
+"Pontos költségvetés",
+"A munkálatok tervezett időtartama",
+"A munkálatok ütemezése",
+"Milyen engedélyek szükségesek",
+"Az ingatlan jelenlegi állapota (pl. képek)",
+"Az ügyfél elképzelése a végső kinézetről (tervek, inspirációk)"
+],
+"project_type": "Kunyhó felújítás",
+"requirements": [
+"Tetőszerkezet megerősítése",
+"Tetőszerkezet szigetelése",
+"Külső falak javítása",
+"Külső falak újravakolása",
+"Belső falak javítása",
+"Belső falak újravakolása",
+"Nyílászárók cseréje",
+"Villamos hálózat korszerűsítése",
+"Padlóburkolatok cseréje",
+"Biztonságos állapot",
+"Lakható állapot",
+"Környezetbarát állapot",
+"Megfelelő szigetelés",
+"Új vakolat",
+"Új nyílászárók (anyag, szín, típus nem specifikált)",
+"Korszerű villamos hálózat (szabványoknak megfelelő)",
+"Új padlóburkolatok (anyag, szín, mintázat nem specifikált)"
+],
+"customer_name": "MintaFelújítás Kft.",
+"nice_to_haves": [],
+"property_type": "Kunyhó",
+"customer_email": "info@mintafelujitas.hu",
+"final_deadline": "2025. szeptember 30.",
+"rooms_affected": [
+"Teljes ingatlan"
+],
+"budget_estimate": "5 000 000 Ft",
+"summary_comment": "A kunyhó felújításának célja a biztonságos, lakható és környezetbarát állapot megteremtése. A javaslat tartalmazza a főbb munkálatokat, ütemezést és költségbecslést. A pontos részletek tisztázása érdekében további információk szükségesek az ügyféltől.",
+"assumptions_made": [
+"A helyszíni felmérés során nem derülnek ki rejtett hibák.",
+"Az engedélyezési eljárás zökkenőmentesen zajlik.",
+"Az alapanyagok ára nem változik jelentősen a felújítás ideje alatt.",
+"A megrendelő időben biztosítja a szükséges információkat és döntéseket."
+],
+"total_net_amount": 4600000,
+"client_priorities": [
+"Biztonság",
+"Lakhatóság",
+"Környezetbarátság"
+],
+"total_gross_amount": 5842000,
+"risks_or_dependencies": [
+"Engedély kiadása"
+],
+"main_work_phases_and_tasks": [
+{
+"phase": "1. Fázis: Tervezés és Előkészítés",
+"tasks": [
+"Helyszíni felmérés és állapotfelmérés",
+"Pontos igények egyeztetése az ügyféllel (részleges vagy teljes felújítás)",
+"Tervek készítése (műszaki tervek, engedélyezési tervek)",
+"Költségvetés kidolgozása és jóváhagyása",
+"Engedélyek beszerzése",
+"Szerződéskötés"
+]
+},
+{
+"phase": "2. Fázis: Szerkezeti Munkák és Alapozás",
+"tasks": [
+"Tetőszerkezet megerősítése (mód meghatározása)",
+"Tetőszerkezet szigetelése (anyag kiválasztása)",
+"Külső és belső falak javítása (károk felmérése és javítási mód meghatározása)",
+"Alap szigetelés javítása",
+"Vízelvezetés javítása"
+]
+},
+{
+"phase": "3. Fázis: Gépészeti és Elektromos Munkák",
+"tasks": [
+"Nyílászárók cseréje (típus, anyag, szín kiválasztása)",
+"Villamos hálózat korszerűsítése (vezetékek, kapcsolók, konnektorok cseréje/bővítése)"
+]
+},
+{
+"phase": "4. Fázis: Befejező Munkák",
+"tasks": [
+"Falak vakolása (vakolat típusának és színének kiválasztása)",
+"Padlóburkolatok cseréje (típus, anyag, szín, mintázat kiválasztása)",
+"Festés, mázolás",
+"Takarítás"
+]
+},
+{
+"phase": "5. Fázis: Átadás",
+"tasks": [
+"Munkaterület átadása az ügyfélnek",
+"Átadás-átvételi jegyzőkönyv aláírása",
+"Garancia papírok átadása"
+]
 }
--------
+],
+"timeline_and_scheduling_details": [
+"A munkálatok kezdete: 2025. július 1.",
+"A munkálatok befejezése: 2025. szeptember 30.",
+"A fázisok időtartama a pontos tervek és az engedélyezési eljárás függvényében változhat.",
+"A részletes ütemterv a szerződéskötéskor kerül pontosításra."
+],
+"estimated_costs_per_phase_and_total": [
+{
+"cost": 500000,
+"phase": "Tervezés és Előkészítés"
+},
+{
+"cost": 1500000,
+"phase": "Szerkezeti Munkák és Alapozás"
+},
+{
+"cost": 1500000,
+"phase": "Gépészeti és Elektromos Munkák"
+},
+{
+"cost": 1000000,
+"phase": "Befejező Munkák"
+},
+{
+"cost": 100000,
+"phase": "Átadás"
+},
+{
+"cost": 4600000,
+"phase": "Total"
+}
+],
+"relevant_implementation_notes_or_recommendations": [
+"Javasoljuk a teljes felújítást a kunyhó hosszú távú biztonsága és lakhatósága érdekében.",
+"Érdemes energiatakarékos megoldásokat alkalmazni a fenntarthatóság érdekében (pl. hőszigetelt nyílászárók, LED világítás).",
+"A falak javításánál és vakolásánál a környezetbe illő, természetes anyagok használata javasolt.",
+"A villamos hálózat korszerűsítése során a legújabb szabványoknak való megfelelés kiemelten fontos."
+]
+},
+"timeline": "2025. július 1. - 2025. szeptember 30.",
+"project_type": "Kunyhó felújítás",
+"property_type": "Kunyhó",
+"rooms_affected": "Teljes ingatlan",
+"budget_estimate": "5 000 000 Ft"
+}
+
+---
+
 Tárgy: Lakásfelújítási ajánlatkérés – VIII. kerületi lakás
 
 Kedves Asszisztens!
@@ -231,7 +233,8 @@ Kovács Eszter
 +36 30 123 4567
 eszter.kovacs@pelda.hu
 
-----------------------------------------
+---
+
 Tárgy: Lakásfelújítási ajánlatkérés – XIII. kerületi társasházi lakás
 
 Kedves Asszisztens!
@@ -276,9 +279,10 @@ Szabó Bence
 +36 70 456 7890
 bence.szabo@pelda.hu
 
------
+---
+
 2. minta – Kispesti téglaépítésű lakás
-Tárgy: Lakásfelújítási ajánlatkérés – 30. kerületi tégla lakás
+   Tárgy: Lakásfelújítási ajánlatkérés – 30. kerületi tégla lakás
 
 Kedves Asszisztens!
 
@@ -314,16 +318,25 @@ Szilágyi Júlia
 régi neon: postgresql://neondb_owner:npg_k7pwgiyFJ5bR@ep-steep-frost-a8tawktk-pooler.eastus2.azure.neon.tech/neondb?sslmode=require
 
 # ha nem a mi árunkból van akkor jelöljük + eleje ! felkiáltójel a végén legyen ha nem a mi tételünk
+
 # mennyiség be van írva előre !
+
 # mobilos legyen az egész!
+
 # munkáink + számláink
+
 # erőforrásaink
+
 # követelmények
+
 # megosztások
+
 # kérdések
- 
---------
+
+---
+
 #
+
 Tárgy: Lakásfelújítási ajánlatkérés – IX. kerületi lakás Dienes utca 11 sz.
 
 Kedves Asszisztens!
@@ -373,7 +386,7 @@ Előre is köszönöm a segítségedet!
 Üdvözlettel:
 Kovács Eszter
 
----------
+---
 
 Tárgy: Lakásfelújítási ajánlatkérés – II. kerületi társasházi lakás
 
@@ -418,13 +431,15 @@ Előre is köszönöm a segítségedet!
 Szabó Bence
 +36 70 456 7890
 bence.szabo@pelda.hu
----- 
+
+---
+
 Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérjek ajánlatot
 
 Best Regards,
 
-Martin Retai
----
+## Martin Retai
+
 Tárgy: Lakásfelújítás kapcsán érdeklődöm – XIII. kerület, 2 szoba, extra igények
 
 Helló!
@@ -457,7 +472,9 @@ Köszi előre is,
 Varga Anna
 anna.varga@gmail.com
 +36 20 123 4567
------
+
+---
+
 Tárgy: Irodafelújítási ajánlatkérés – VI. kerület, Teréz körút 39.
 
 Tisztelt Cégvezetés!
@@ -494,7 +511,8 @@ Dr. Farkas Máté
 info@optisolve.hu
 +36 1 999 8877
 
-------
+---
+
 Tárgy: Üzlethelyiség modernizálása – VII. kerület, Rákóczi út 25.
 Tisztelt Kivitelező Cég!
 
@@ -531,7 +549,7 @@ info@optisolve.hu
 +36 1 999 8877
 
 2. Tárgy: Tárgyalóterem akusztikai és esztétikai átalakítása – XI. ker., Október huszonharmadika utca 8.
-Tisztelt Cégvezetés!
+   Tisztelt Cégvezetés!
 
 Az OptiSolve Kft. 25 fős tárgyalótermének felújítását tervezi egy XI. kerületi irodaházban (alapterület: 50 m²). A cél egy reprezentatív, ugyanakkor akusztikailag jól szigetelt tér kialakítása.
 
@@ -566,7 +584,7 @@ info@optisolve.hu
 +36 1 999 8877
 
 3. Tárgy: Konyhai és előtéri felújítás igény – XIII. ker., Váci út 92.
-Tisztelt Ajánlatadó!
+   Tisztelt Ajánlatadó!
 
 Irodánk XIII. kerületi telephelyén (Váci út 92.) szeretnénk a belső konyharészt és az előtér fogadórészt részben felújítani. Az érintett terület körülbelül 40 m².
 
@@ -600,17 +618,18 @@ Dr. Farkas István
 info@optisolve.hu
 +36 1 999 8877
 
-
-
 11 7 12 13 folyamatban ezzel foglalkozok mert beszerzés van!
 Napló elemek WorkDiary DiaryItem
 
-13 
+13
 ha bepipálolom a beszerzést , hogy megjött akkor megjött, ha viszont rákattintok akkor nem biztos,
------
+
+---
+
 BUG 1 ha felemelem a db ben a quantity-t de eltér a visszaküldött quantity -t akkor a régit fogja használni a kevesebbet, mivel szóbeli felemelést implementáltunk. És hiába db ben van változás a requirementsben nincs a DemendTextben tehát ujra az alacsonayabb értkkel fog számolni
 
 ---
+
 Budapest Sass u 1 Fürdőszoba felújítás, 12nm , szerelvénybontása, burkolat bontás, vízvezetekék feltárása, csatorna feltárása, új gépészet kiallakítása, vakolkás, betonozás, kenhető szigetelés elkészítése, burkkolás, szerelvényezés. Erre kérjek ajánlatot
 
 Best Regards,
@@ -622,12 +641,16 @@ Szedni a regi ko burkolatot es le kell tenni az ujat. Ezen kivul 200 nm en kene 
 
 Kerlek ird be az ajanlatba a regi ko burkolatnak a felszedesi koltseget valamint a sit elszallitasanak a koltseget
 
-
 # beszerzés kikattintja a folyamatban lévő munkát
+
 # navbar
+
 # készletezés
+
 # beszerzés + fogyás
+
 # kivételezés
+
 # munka
 
 11 7 12 13 folyamatban ezzel foglalkozok mert beszerzés van!
@@ -636,11 +659,14 @@ hiba van a követelmény ffeldolgozása során
 materials
 szerszámok
 szerkeszthető legyen
-+ anyag + szerszámok at tudjon felvenni
-törölni is kéne tudni supplyban
-todo lista szerűen
-tools
-----
+
+- anyag + szerszámok at tudjon felvenni
+  törölni is kéne tudni supplyban
+  todo lista szerűen
+  tools
+
+---
+
 melyik feladathoz + mennyiséget + checkbox
 
 jobb oldalt mennyiség
@@ -650,10 +676,10 @@ progress bar nál elég
 
 1. kérdés
 
-anyagok az egyes munkafázisra vonatkoznak 
+anyagok az egyes munkafázisra vonatkoznak
 dátum
 e-napló
-magyarázd el milyen sorai 
+magyarázd el milyen sorai
 külső hőm
 létszám adatok
 építési bontási hulladák
@@ -667,13 +693,15 @@ melyik feladat konkrétan
 mennyit csinált
 burkolás "csináltam hány nm" konkrétan mennyit csinált meg
 90 % csempézés + fugázás
-mennyiség max összesen % 
+mennyiség max összesen %
 hány órát foglalkoztam bele
 fénykép
 e-napló munka / mennyiség törvényi
 chatgpt
 hatékonyság ellenőrzése is legyen egy nap mennyit burkol Pista
-----
+
+---
+
 naptár formájú legyen
 múlt amit elfogadott
 terv
@@ -692,7 +720,9 @@ naplóelem az adott napon az adott ember hány órát foglalkozott egy embernek
 munkásnak azt kell rögzítenie, hogy az adott nap mit csinált
 és a naplót is az AI tölti
 azok a feladatok ami hozzá tartozik azokat látja
-----
+
+---
+
 kiválasztja a folyamatot a munkát és egy megjegyzésbe meg egy képet,
 az AI meghatározza hol tart a progress
 változtathatja a progress az vállalkozó
@@ -701,25 +731,29 @@ változtathatja a progress az vállalkozó
 próbálunk egy progresst csinálni naplóba ezt látja
 e-naplóban az adott munkát látja
 
-happy path - 
+happy path -
 
-----
+---
+
 e-napló:
+
 - munka
 - anyagok
 - eszközök
+
 ---
-kombo box
-----
+
+## kombo box
+
 kibontjuk
 mennyiség egység
 havi nézet
 ki dolgozott munkás
 munkás neve
 havi: + monogrammok + munkaidő
-heti:  neve + munkaidő
+heti: neve + munkaidő
 napi minden
-eltűnik az óra: 
+eltűnik az óra:
 item
 ki hány órában
 neve + munkaidő
@@ -729,13 +763,150 @@ név
 munkaidő
 mennyiség
 mennyiségi egység
-----
+
+---
+
 vállalkozó tudja szerkeszteni
 progress: mennyiséget alapján nézzük a progresset
-elfogadás: munkaóra kötelező, képek elfogadott  vagy nem a vállalkozó által
+elfogadás: munkaóra kötelező, képek elfogadott vagy nem a vállalkozó által
 elfogadott az egy színkép, a progress t az elfogadott változtatja
-progress változtatás 
+progress változtatás
 hogy állunk
 képek alapján
 héti a default
+
+---
+
+# Ajánlat Kiegészítés - Duplikáció Megelőzés
+
+## Probléma
+
+Amikor a felhasználó kiegészíti egy meglévő ajánlatot, az AI hajlamos duplikálni a tételeket más néven (pl. "WC felszerelés" → "WC (anyag)", "Zuhanyzó felszerelés" → "Zuhanyzó (anyag)").
+
+## Megoldás
+
+A `buildPromptWithItems` függvényben (ai-offer-letter-mobile/[recordid]/page.tsx) részletes szabályokat adtunk meg az AI-nak:
+
+### Kiegészítés Kezelési Szabályok
+
+**1️⃣ Meglévő tételre vonatkozó kiegészítés:**
+
+- NE hozzon létre új tételt
+- Módosítsa a meglévő tétel mennyiségét, árát vagy leírását
+- Példa: "2 db WC helyett 3 db" → meglévő "WC felszerelés" tétel frissítése 3 db-ra
+
+**2️⃣ Redundáns kiegészítés:**
+
+- NE hozzon létre duplikált tételt
+- Frissítse a releváns meglévő tételt az új információkkal
+- Példa: "Zuhanyzó (anyag)" → meglévő "Zuhanyzó felszerelés" tétel frissítése anyag információval
+
+**3️⃣ Teljesen új tétel:**
+
+- Csak akkor adjon hozzá új tételt, ha NEM kapcsolódik egyetlen meglévő tételhez sem
+- Ellenőrizze, hogy valóban új tétel-e, nem csak egy meglévő tétel pontosítása
+- Példa: "Kád felszerelés" (ha "Mosdó (anyag)" már létezik) → új tétel
+
+**4️⃣ Érintetlen tételek:**
+
+- Minden olyan meglévő tételt, amit a kiegészítés NEM érint, hagyja változatlanul
+- Ne módosítsa, ne törölje, ne duplikálja őket
+
+### Implementáció
+
+**Fájl:** `app/(routes)/ai-tools/ai-offer-letter-mobile/[recordid]/page.tsx`
+
+**Függvény:** `buildPromptWithItems(existingItemsText, newInfo, originalRequest)`
+
+**Prompt struktúra:**
+
+```
+⚠️ FONTOS: Ez egy KIEGÉSZÍTÉS egy meglévő ajánlathoz!
+
+SZIGORÚ SZABÁLYOK a kiegészítés kezeléséhez:
+[4 szabály részletesen]
+
+Eredeti ajánlatkérés: ${originalRequest}
+Meglévő tételek (NE duplikáld őket!): ${existingItemsText}
+Kiegészítő információk: ${newInfo}
+
+FELADATOD:
+1. Elemezd a kiegészítő információkat
+2. Döntsd el minden új információról, hogy melyik szabály vonatkozik rá
+3. Alkalmazd a megfelelő szabályt
+4. Add vissza a TELJES ajánlatot (módosított + érintetlen tételekkel együtt)
+```
+
+### Meglévő tételek formátuma
+
+```typescript
+const formattedItems = editableItems
+  .map(
+    (item) =>
+      `* ${item.name}: ${item.quantity} ${item.unit} × ${item.workUnitPrice} = ${item.workTotal}`
+  )
+  .join("\n");
+```
+
+### Tesztelés
+
+1. Hozz létre egy ajánlatot (pl. WC felszerelés, Zuhanyzó felszerelés)
+2. Kiegészítés: "WC (anyag)" vagy "2 db WC helyett 3 db"
+3. Ellenőrizd: NEM jön létre új "WC (anyag)" tétel, hanem a meglévő frissül
+
+### Kapcsolódó fájlok
+
+- `app/(routes)/ai-tools/ai-offer-letter-mobile/[recordid]/page.tsx` - Kiegészítés prompt
+- `inngest/functions.ts` - AI agent system prompt (AiOfferChatAgent)
+
+---
+
+# Kérdések Megválaszolása - Válaszok Felhasználása
+
+## Probléma
+
+Amikor a felhasználó megválaszolja az AI kérdéseit (pl. "30x30 as csempe"), az AI újragenerálja az ajánlatot, de **NEM veszi figyelembe a válaszokat** a tételek generálásakor.
+
+## Megoldás
+
+Az AI agent system promptjában (`inngest/functions.ts`) hozzáadtunk egy explicit instrukciót:
+
+### Új Instrukció
+
+```typescript
+**CRITICAL RULE FOR USING ANSWERS: If the input text contains a "Válaszok a kérdésekre:" section, you MUST use those answers to generate the offer items!**
+- Read ALL answers carefully (lines starting with "Válasz:")
+- Incorporate the answer information into the relevant offer items
+- Example: If answer says "30x30 as csempe", then the tile items MUST include "30×30 cm" in their description or use the appropriate catalog item for that size
+- Example: If answer says "prémium", then use premium-grade materials and prices
+- Example: If answer says "fehér", then specify white color in the item description
+- DO NOT ignore the answers - they are critical information for generating accurate offer items!
+```
+
+### Hogyan működik?
+
+1. **Kérdések feltevése**: AI generál kérdéseket (pl. "A padlócsempe mérete pontosan?")
+2. **Válaszok megadása**: User válaszol (pl. "Válasz: 30x30")
+3. **Válaszok beépítése**: AI újragenerálja az ajánlatot, de **most már figyelembe veszi a válaszokat**:
+   - "Padlócsempe ragasztása (30×30 cm)" helyett "Padlócsempe ragasztása (60×60–90×90 cm)"
+   - Vagy megkeresi a katalógusban a megfelelő 30×30-as csempe tételt
+
+### Implementáció
+
+**Fájl:** `inngest/functions.ts`
+
+**Módosított rész:** `AiOfferChatAgent` system prompt (169-178. sor)
+
+### Tesztelés
+
+1. Hozz létre egy ajánlatot fürdőszoba felújításra
+2. AI kérdést tesz fel: "A padlócsempe mérete pontosan?"
+3. Válaszolj: "30x30"
+4. Ellenőrizd: Az új ajánlatban a csempe tételek tartalmazzák a "30×30 cm" méretet vagy a megfelelő katalógus tételt használják
+
+### Kapcsolódó fájlok
+
+- `inngest/functions.ts` - AI agent system prompt (AiOfferChatAgent) - 169-178. sor
+- `app/(routes)/dashboard/_components/TextInputDialogQuestions.tsx` - Kérdések megválaszolása UI
+
 ---

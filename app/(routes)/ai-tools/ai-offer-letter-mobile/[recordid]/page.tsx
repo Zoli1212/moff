@@ -276,7 +276,6 @@ export default function OfferLetterResult() {
   const [isAlreadySaved, setIsAlreadySaved] = useState(false);
   const isSavingRef = useRef(false);
 
-
   useEffect(() => {
     const saveOfferIfNeeded = async () => {
       // Don't proceed if we're already saving, have already saved, or if it was saved before
@@ -389,20 +388,47 @@ export default function OfferLetterResult() {
     originalRequest: string
   ) {
     return `
-  Ez az ajánlatkérés kiegészítése.
+  ⚠️ FONTOS: Ez egy KIEGÉSZÍTÉS egy meglévő ajánlathoz!
   
-  Kérem, hogy az alábbi új információk és az eredeti ajánlatkérés alapján egészítsd ki az ajánlatot új tételekkel vagy pontosításokkal, de a lent felsorolt meglévő tételeket változatlanul tartsd meg!
+  SZIGORÚ SZABÁLYOK a kiegészítés kezeléséhez:
   
-  Ha korábban feltett kérdésekre nem érkezett válasz (pl. anyagminőség, kivitelezési részletek), kérlek az új információkkal együtt azokra is térj ki.
+  1️⃣ **Ha a kiegészítés egy MEGLÉVŐ tételre vonatkozik:**
+     - NE hozz létre új tételt!
+     - Módosítsd a meglévő tétel mennyiségét, árát vagy leírását
+     - Példa: Ha "WC felszerelés" már létezik és a kiegészítés "2 db WC helyett 3 db", akkor a meglévő tételt frissítsd 3 db-ra
+  
+  2️⃣ **Ha a kiegészítés REDUNDÁNS lenne egy meglévő tétellel:**
+     - NE hozz létre duplikált tételt!
+     - Frissítsd a releváns meglévő tételt az új információkkal
+     - Példa: Ha "Zuhanyzó felszerelés" már létezik és a kiegészítés "Zuhanyzó (anyag)", akkor a meglévő tételt frissítsd az anyag információval
+  
+  3️⃣ **Ha a kiegészítés TELJESEN ÚJ dologra vonatkozik:**
+     - Csak akkor adj hozzá új tételt, ha NEM kapcsolódik egyetlen meglévő tételhez sem
+     - Ellenőrizd, hogy valóban új tétel-e, nem csak egy meglévő tétel pontosítása
+     - Példa: Ha "Mosdó (anyag)" már létezik és a kiegészítés "Kád felszerelés", akkor ez új tétel
+  
+  4️⃣ **Érintetlen tételek:**
+     - Minden olyan meglévő tételt, amit a kiegészítés NEM érint, hagyd változatlanul!
+     - Ne módosítsd, ne töröld, ne duplikáld őket!
+  
+  ═══════════════════════════════════════════════════════════════
   
   Eredeti ajánlatkérés:
   ${originalRequest}
   
-  Meglévő tételek:
+  Meglévő tételek (NE duplikáld őket!):
   ${existingItemsText}
   
-  Kiegészítő információk:
+  Kiegészítő információk (elemezd, hogy melyik szabály vonatkozik rá):
   ${newInfo}
+  
+  ═══════════════════════════════════════════════════════════════
+  
+  FELADATOD:
+  1. Elemezd a kiegészítő információkat
+  2. Döntsd el minden új információról, hogy melyik szabály (1️⃣, 2️⃣, 3️⃣, 4️⃣) vonatkozik rá
+  3. Alkalmazd a megfelelő szabályt
+  4. Add vissza a TELJES ajánlatot (módosított + érintetlen tételekkel együtt)
   `;
   }
 

@@ -670,7 +670,7 @@ Ujteszt utca 5 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat 
 
 ---
 
-5. Ujteszt utca 2 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanzo 150000, a wc-e 50000, a zuhanyzo 160000.
+5. Ujteszt utca 14 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kell festeni, uj padlo burkolatot kell letenni, az oldalfalakat ki kell csempezni 3m magassagig, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: mosdó 150000, a wc-e 50000, a zuhanyzo 160000.
 
 MEGJEGYZÉS: Ez a követelmény garantáltan tartalmaz egyedi tételeket, mivel a "meglévő kőburkolat és csempe felszedése" és a "meglévő zuhanyzó, mosdó és WC eltávolítása" nem található a katalógusban. Az AI-nak fel kell vennie őket az ajánlatba és jelölje meg őket (egyedi tétel). Az egyedi tételek végén `!` jel jelenik meg, és a notes-ban szerepelnek a magyarázatai.
 
@@ -687,3 +687,8 @@ MEGJEGYZÉS: Ez a követelmény szintén tartalmaz egyedi tételeket, mivel a "m
 ---
 8. Teszt utca 403 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanyzó 150000, a wc-e 50000, a kád 160000.
 kérdések
+----
+Ajánlatoldalról, Igen munkához rendelem! nem lesznek összefésülve.
+Áj ajánlatnál hozzárendelem a tételeket a munkákhoz
+Új követelmények
+Munkához rendelés nem fésüli össze, Hozzáds
