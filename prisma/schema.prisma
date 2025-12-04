@@ -169,6 +169,7 @@ model Work {
   title             String      
   offerId           Int         @unique
   offer             Offer       @relation("OfferWork", fields: [offerId], references: [id], onDelete: Cascade)
+  linkedOfferIds    Int[]       @default([]) // Kapcsolt offer-ek ID-i (amikor több offer-t rendelünk egy munkához)
   offerDescription  String?     
   status            String      @default("pending") // e.g., pending, in_progress, completed, on_hold, cancelled
   startDate         DateTime?

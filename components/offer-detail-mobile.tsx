@@ -8,6 +8,8 @@ import {
   saveTenantPrice,
   saveGlobalPrice,
   removeAllQuestionsFromOffer,
+  assignOfferToExistingWork,
+  getActiveWorks,
 } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import { toast } from "sonner";
@@ -168,6 +170,16 @@ export function OfferDetailView({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [assignToExisting, setAssignToExisting] = useState(false); // Meglévő munkához rendelés mód
+  const [selectedWorkId, setSelectedWorkId] = useState<number | null>(null); // Kiválasztott munka ID
+  const [availableWorks, setAvailableWorks] = useState<
+    Array<{
+      id: number;
+      title: string;
+      status: string;
+      location: string | null;
+    }>
+  >([]); // Elérhető munkák listája
   const [isEmailExpanded, setIsEmailExpanded] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<number | null>(null);
@@ -791,10 +803,80 @@ export function OfferDetailView({
     }
   };
 
+  // Munkák lekérése amikor megnyílik a modal
+  const loadAvailableWorks = async () => {
+    const result = await getActiveWorks();
+    if (result.success && result.works) {
+      setAvailableWorks(result.works);
+    }
+  };
+
   // Handle status update - toggles between 'work' and 'draft' statuses
   const handleStatusUpdate = async () => {
     try {
       setIsUpdatingStatus(true);
+
+      // Ha meglévő munkához rendelés mód van bekapcsolva
+      if (assignToExisting && selectedWorkId) {
+        // 1. Offer status frissítése és linkedOfferIds hozzáadása
+        const result = await assignOfferToExistingWork(
+          offer.id,
+          selectedWorkId
+        );
+
+        if (!result.success) {
+          toast.error(result.message || "Hiba történt a hozzárendelés során");
+          setIsUpdatingStatus(false);
+          return;
+        }
+
+        // 2. AI feldolgozás indítása (merge-work endpoint)
+        toast.loading("AI feldolgozás folyamatban...", { id: "ai-merge" });
+
+        try {
+          const aiResponse = await fetch("/api/merge-work", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              workId: selectedWorkId,
+              location: offer.title || "",
+              offerDescription: offer.description || "",
+              estimatedDuration: "0",
+              offerItems: editableItems || [],
+            }),
+          });
+
+          const aiResult = await aiResponse.json();
+
+          if (aiResult && !aiResult.error) {
+            // 3. Meglévő munka frissítése az AI eredménnyel (mergeWorkWithAIResult)
+            const { mergeWorkWithAIResult } = await import(
+              "@/actions/work-actions"
+            );
+
+            await mergeWorkWithAIResult(selectedWorkId, aiResult);
+
+            toast.dismiss("ai-merge");
+            toast.success("Az ajánlat sikeresen hozzárendelve és feldolgozva!");
+            setIsStatusDialogOpen(false);
+            setAssignToExisting(false);
+            setSelectedWorkId(null);
+            window.location.reload();
+          } else {
+            toast.dismiss("ai-merge");
+            toast.error(aiResult.error || "AI feldolgozás sikertelen");
+          }
+        } catch (error) {
+          toast.dismiss("ai-merge");
+          toast.error("Hiba történt az AI feldolgozás során");
+          console.error("AI merge error:", error);
+        }
+
+        setIsUpdatingStatus(false);
+        return;
+      }
+
+      // Normál munkába állítás (új munka létrehozása)
       const newStatus = offer.status === "draft" ? "work" : "draft";
       const result = await updateOfferStatus(offer.id, newStatus);
 
@@ -2284,7 +2366,19 @@ export function OfferDetailView({
       </div>
 
       {/* Status Update Dialog */}
-      <Dialog open={isStatusDialogOpen} onOpenChange={setIsStatusDialogOpen}>
+      <Dialog
+        open={isStatusDialogOpen}
+        onOpenChange={(open) => {
+          setIsStatusDialogOpen(open);
+          if (open && offer.status === "draft") {
+            loadAvailableWorks();
+          }
+          if (!open) {
+            setAssignToExisting(false);
+            setSelectedWorkId(null);
+          }
+        }}
+      >
         <DialogContent className="max-w-sm rounded-lg mx-auto w-[calc(100%-3rem)]">
           <DialogHeader>
             <DialogTitle>
@@ -2294,14 +2388,65 @@ export function OfferDetailView({
             </DialogTitle>
             <DialogDescription className="pt-4">
               {offer.status === "draft"
-                ? 'Biztosan át szeretnéd állítani az ajánlatot "Munkában" állapotba?'
+                ? assignToExisting
+                  ? "Válaszd ki, melyik munkához szeretnéd hozzárendelni az ajánlatot:"
+                  : 'Biztosan át szeretnéd állítani az ajánlatot "Munkában" állapotba?'
                 : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col gap-3 pt-6">
+
+          <DialogFooter className="flex flex-col gap-3 pt-4">
+            {/* Meglévő munkához rendelés opció */}
+            {offer.status === "draft" && !assignToExisting && (
+              <Button
+                onClick={() => {
+                  setAssignToExisting(true);
+                  loadAvailableWorks();
+                }}
+                variant="outline"
+                className="w-full border-2 border-[#FE9C00] text-[#FE9C00] hover:bg-orange-50"
+              >
+                Meglévő munkához rendelés
+              </Button>
+            )}
+
+            {/* Munkák dropdown */}
+            {offer.status === "draft" && assignToExisting && (
+              <>
+                <div className="w-full">
+                  <Label htmlFor="work-select">Válassz munkát:</Label>
+                  <select
+                    id="work-select"
+                    className="w-full mt-2 p-2 border rounded-md max-h-40 overflow-y-auto text-sm"
+                    value={selectedWorkId || ""}
+                    onChange={(e) => setSelectedWorkId(Number(e.target.value))}
+                    size={Math.min(availableWorks.length + 1, 6)}
+                  >
+                    <option value="">-- Válassz --</option>
+                    {availableWorks.map((work) => (
+                      <option key={work.id} value={work.id}>
+                        {work.title} ({work.location})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <Button
+                  onClick={() => {
+                    setAssignToExisting(false);
+                    setSelectedWorkId(null);
+                  }}
+                  variant="ghost"
+                  className="w-full"
+                >
+                  Vissza
+                </Button>
+              </>
+            )}
             <Button
               onClick={handleStatusUpdate}
-              disabled={isUpdatingStatus}
+              disabled={
+                isUpdatingStatus || (assignToExisting && !selectedWorkId)
+              }
               className={
                 offer.status === "draft"
                   ? "bg-[#FE9C00] hover:bg-[#E58A00] w-full"
@@ -2311,7 +2456,9 @@ export function OfferDetailView({
               {isUpdatingStatus
                 ? "Feldolgozás..."
                 : offer.status === "draft"
-                  ? "Igen, munkába állítom"
+                  ? assignToExisting
+                    ? "Hozzárendelés a munkához"
+                    : "Igen, munkába állítom"
                   : "Igen, piszkozatba teszem"}
             </Button>
             <Button

@@ -910,3 +910,96 @@ Az AI agent system promptjában (`inngest/functions.ts`) hozzáadtunk egy explic
 - `app/(routes)/dashboard/_components/TextInputDialogQuestions.tsx` - Kérdések megválaszolása UI
 
 ---
+
+# Offer Meglévő Munkához Rendelése
+
+## Probléma
+
+Amikor egy új offer-t munkába állítasz, mindig új Work jön létre. De mi van akkor, ha egy meglévő munkához szeretnéd hozzáadni az új offer-t?
+
+## Megoldás
+
+Új funkció: **Meglévő munkához rendelés**
+
+### Adatbázis módosítás
+
+**Work modell bővítése** (`prisma/schema.prisma`):
+
+```prisma
+model Work {
+  offerId           Int         @unique  // Eredeti offer ID (kompatibilitás)
+  linkedOfferIds    Int[]       @default([]) // Kapcsolt offer-ek ID-i
+  ...
+}
+```
+
+**Előnyök:**
+
+- Kompatibilitás megmarad (offerId nem változik)
+- Több offer rendelhető egy munkához
+- linkedOfferIds tömb tárolja a kapcsolt offer-eket
+
+### Server Actions
+
+**1. assignOfferToExistingWork(offerId, workId)**
+
+- Offer status → "work"
+- Work.linkedOfferIds-hez hozzáadja az offerId-t
+- Work.totalMaterialCost növekszik
+- Offer WorkItem-jei → Work WorkItem-jeihez
+
+**2. getActiveWorks()**
+
+- Aktív munkák lekérése dropdown-hoz
+- Work.title és Work.location alapján
+
+### UI Módosítások
+
+**Munkába állítás modal** (`components/offer-detail-mobile.tsx`):
+
+1. **Új gomb**: "Meglévő munkához rendelés"
+2. **Dropdown**: Munkák listája (Work.title alapján)
+3. **Vissza gomb**: Visszalépés normál munkába állításhoz
+4. **Hozzárendelés gomb**: Offer hozzárendelése a kiválasztott munkához
+
+**Működés:**
+
+1. Kattints "Munkába állítás" gombra
+2. Kattints "Meglévő munkához rendelés" gombra
+3. Válaszd ki a munkát a dropdown-ból
+4. Kattints "Hozzárendelés a munkához" gombra
+5. Offer WorkItem-jei hozzáadódnak a Work-höz, total értékek növekednek
+
+### Implementáció
+
+**Fájlok:**
+
+- `prisma/schema.prisma` - Work modell (linkedOfferIds mező)
+- `actions/offer-actions.ts` - assignOfferToExistingWork, getActiveWorks
+- `components/offer-detail-mobile.tsx` - UI módosítások
+
+**State-ek:**
+
+```typescript
+const [assignToExisting, setAssignToExisting] = useState(false);
+const [selectedWorkId, setSelectedWorkId] = useState<number | null>(null);
+const [availableWorks, setAvailableWorks] = useState<any[]>([]);
+```
+
+### Tesztelés
+
+1. Hozz létre egy offer-t és állítsd munkába (normál módon)
+2. Hozz létre egy második offer-t
+3. Kattints "Munkába állítás" → "Meglévő munkához rendelés"
+4. Válaszd ki az első munkát
+5. Ellenőrizd:
+   - Második offer status = "work"
+   - Work.linkedOfferIds tartalmazza a második offer ID-t
+   - Work WorkItem-jei tartalmazzák a második offer tételeit
+   - Work.totalMaterialCost növekedett
+
+### Kapcsolódó fájlok
+
+- `prisma/schema.prisma` - Work modell (172. sor)
+- `actions/offer-actions.ts` - assignOfferToExistingWork (1735-1835. sor), getActiveWorks (1840-1872. sor)
+- `components/offer-detail-mobile.tsx` - UI (171-173, 799-805, 808-827, 2321-2419. sor)

@@ -1727,3 +1727,123 @@ export async function removeAllQuestionsFromOffer(offerId: number) {
     };
   }
 }
+
+/**
+ * Aktív munkák lekérése (meglévő munkához rendeléshez)
+ */
+export async function getActiveWorks() {
+  try {
+    const { tenantEmail } = await getTenantSafeAuth();
+
+    const works = await prisma.work.findMany({
+      where: {
+        tenantEmail: tenantEmail,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        location: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return { success: true, works };
+  } catch (error) {
+    console.error("Hiba a munkák lekérésekor:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt a munkák lekérésekor",
+      works: [],
+    };
+  }
+}
+
+/**
+ * Offer hozzárendelése egy meglévő munkához
+ * Az offer status-t "work"-re állítja és hozzáadja a linkedOfferIds-hoz
+ */
+export async function assignOfferToExistingWork(
+  offerId: number,
+  workId: number
+) {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // 1. Lekérjük az offer-t
+    const offer = await prisma.offer.findUnique({
+      where: { id: offerId },
+    });
+
+    if (!offer) {
+      return { success: false, message: "Az ajánlat nem található!" };
+    }
+
+    // 2. Lekérjük a work-öt
+    const work = await prisma.work.findUnique({
+      where: { id: workId },
+    });
+
+    if (!work) {
+      return { success: false, message: "A munka nem található!" };
+    }
+
+    // 3. Ellenőrizzük, hogy az offer már hozzá van-e rendelve
+    if (work.linkedOfferIds.includes(offerId)) {
+      return {
+        success: false,
+        message: "Ez az ajánlat már hozzá van rendelve ehhez a munkához!",
+      };
+    }
+
+    // 4. Tranzakció: frissítjük a Work-öt és az Offer-t
+    await prisma.$transaction(async (tx) => {
+      // 4.1. Offer status frissítése "work"-re
+      await tx.offer.update({
+        where: { id: offerId },
+        data: {
+          status: "work",
+          updatedAt: new Date(),
+        },
+      });
+
+      // 4.2. Work frissítése - linkedOfferIds hozzáadása
+      const newLinkedOfferIds = [...work.linkedOfferIds, offerId];
+
+      await tx.work.update({
+        where: { id: workId },
+        data: {
+          linkedOfferIds: newLinkedOfferIds,
+          updatedAt: new Date(),
+        },
+      });
+    });
+
+    // 5. Cache frissítése
+    revalidatePath(`/dashboard/offers/${offerId}`);
+    revalidatePath("/dashboard/offers");
+    revalidatePath("/works");
+    revalidatePath(`/works/${workId}`);
+
+    return {
+      success: true,
+      message: "Az ajánlat sikeresen hozzárendelve a munkához!",
+      workId: workId,
+    };
+  } catch (error) {
+    console.error("Hiba az offer munkához rendelésekor:", error);
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "Ismeretlen hiba történt az offer munkához rendelésekor",
+    };
+  }
+}

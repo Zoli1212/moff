@@ -106,28 +106,35 @@ export async function getUserWorks() {
     },
   });
 
-  const workerWorkIds = [...new Set(workerAssignments.map(a => a.workId).filter(id => id !== null))] as number[];
+  const workerWorkIds = [
+    ...new Set(
+      workerAssignments.map((a) => a.workId).filter((id) => id !== null)
+    ),
+  ] as number[];
 
-  const workerWorks = workerWorkIds.length > 0 ? await prisma.work.findMany({
-    where: {
-      id: { in: workerWorkIds },
-      isActive: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      workItems: {
-        select: {
-          quantity: true,
-        },
-      },
-    },
-  }) : [];
+  const workerWorks =
+    workerWorkIds.length > 0
+      ? await prisma.work.findMany({
+          where: {
+            id: { in: workerWorkIds },
+            isActive: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          include: {
+            workItems: {
+              select: {
+                quantity: true,
+              },
+            },
+          },
+        })
+      : [];
 
   // 3. Egyesítjük a két listát (duplikátumok kiszűrésével)
   const allWorksMap = new Map();
-  [...tenantWorks, ...workerWorks].forEach(work => {
+  [...tenantWorks, ...workerWorks].forEach((work) => {
     allWorksMap.set(work.id, work);
   });
   const works = Array.from(allWorksMap.values());
@@ -560,7 +567,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
         const createdWorkItem = await prisma.workItem.create({
           data: {
             workId,
-            name: item.name.replace(/^\*+\s*/, '').replace(/\s*\*+$/, ''),
+            name: item.name.replace(/^\*+\s*/, "").replace(/\s*\*+$/, ""),
             description: item.description,
             quantity: Number(item.quantity) || 1,
             unit: item.unit || "",
@@ -800,25 +807,27 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
 export async function getWorkItemsWithWorkers(workId: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
-  
+
   // Check if user is tenant or assigned worker
   const work = await prisma.work.findUnique({
     where: { id: workId },
     select: { tenantEmail: true },
   });
-  
+
   const isTenant = work?.tenantEmail === tenantEmail;
-  const isAssignedWorker = !isTenant ? await prisma.workItemWorker.findFirst({
-    where: {
-      workId: workId,
-      email: userEmail,
-    },
-  }) : null;
-  
+  const isAssignedWorker = !isTenant
+    ? await prisma.workItemWorker.findFirst({
+        where: {
+          workId: workId,
+          email: userEmail,
+        },
+      })
+    : null;
+
   if (!isTenant && !isAssignedWorker) {
     throw new Error("Unauthorized");
   }
-  
+
   return prisma.workItem.findMany({
     where: {
       workId,
@@ -896,15 +905,17 @@ export async function getWorkDiaryItemsByWorkId(workId: number) {
     where: { id: workId },
     select: { tenantEmail: true },
   });
-  
+
   const isTenant = work?.tenantEmail === tenantEmail;
-  const isAssignedWorker = !isTenant ? await prisma.workItemWorker.findFirst({
-    where: {
-      workId: workId,
-      email: userEmail,
-    },
-  }) : null;
-  
+  const isAssignedWorker = !isTenant
+    ? await prisma.workItemWorker.findFirst({
+        where: {
+          workId: workId,
+          email: userEmail,
+        },
+      })
+    : null;
+
   if (!isTenant && !isAssignedWorker) {
     throw new Error("Unauthorized");
   }
@@ -915,7 +926,7 @@ export async function getWorkDiaryItemsByWorkId(workId: number) {
       tenantEmail: work?.tenantEmail || tenantEmail,
     },
     orderBy: {
-      date: 'desc',
+      date: "desc",
     },
   });
 
@@ -1027,10 +1038,10 @@ export async function updateWorkItemCompletion(params: {
     where: { id: workItemId },
     data: { completedQuantity: clampedCompleted, progress },
   });
-  
+
   // Frissítjük a Work aggregált értékeit
   await recalculateWorkTotals(item.workId, email);
-  
+
   // Revalidate the Tasks page so progress bars update immediately
   try {
     if (item?.workId) revalidatePath(`/works/tasks/${item.workId}`);
@@ -1059,7 +1070,9 @@ export async function initializeAllWorkTotals() {
       },
     });
 
-    console.log(`🔄 [initializeAllWorkTotals] Initializing ${works.length} works...`);
+    console.log(
+      `🔄 [initializeAllWorkTotals] Initializing ${works.length} works...`
+    );
 
     // Minden munkára lefuttatjuk a recalculateWorkTotals függvényt
     let successCount = 0;
@@ -1070,12 +1083,17 @@ export async function initializeAllWorkTotals() {
         await recalculateWorkTotals(work.id, tenantEmail);
         successCount++;
       } catch (error) {
-        console.error(`❌ [initializeAllWorkTotals] Error for work ${work.id}:`, error);
+        console.error(
+          `❌ [initializeAllWorkTotals] Error for work ${work.id}:`,
+          error
+        );
         errorCount++;
       }
     }
 
-    console.log(`✅ [initializeAllWorkTotals] Success: ${successCount}, Errors: ${errorCount}`);
+    console.log(
+      `✅ [initializeAllWorkTotals] Success: ${successCount}, Errors: ${errorCount}`
+    );
 
     revalidatePath("/works");
     return {
@@ -1124,13 +1142,16 @@ export async function recalculateWorkTotals(
 
     for (const item of workItems) {
       totalCompleted += item.completedQuantity || 0;
-      
+
       // totalBilled = billedQuantity + paidQuantity (egyszerűség kedvéért)
       const itemBilled = (item.billedQuantity || 0) + (item.paidQuantity || 0);
       totalBilled += itemBilled;
-      
+
       // Számlázható = teljesített - már számlázott (billed + paid)
-      const itemBillable = Math.max(0, (item.completedQuantity || 0) - itemBilled);
+      const itemBillable = Math.max(
+        0,
+        (item.completedQuantity || 0) - itemBilled
+      );
       totalBillable += itemBillable;
     }
 
@@ -1153,7 +1174,10 @@ export async function recalculateWorkTotals(
       totalBillable,
     });
   } catch (error) {
-    console.error(`❌ Error recalculating work totals for work #${workId}:`, error);
+    console.error(
+      `❌ Error recalculating work totals for work #${workId}:`,
+      error
+    );
     // Ne dobjunk hibát - ne blokkoljuk a fő műveletet
   }
 }
@@ -1161,27 +1185,376 @@ export async function recalculateWorkTotals(
 /**
  * Set processingByAI flag for a work and revalidate the /works page
  */
-export async function setWorkProcessingFlag(workId: number, processing: boolean) {
+export async function setWorkProcessingFlag(
+  workId: number,
+  processing: boolean
+) {
   try {
     const { user, tenantEmail } = await getTenantSafeAuth();
-    
+
     await prisma.work.update({
-      where: { 
+      where: {
         id: workId,
         tenantEmail: tenantEmail,
       },
-      data: { 
+      data: {
         processingByAI: processing,
       },
     });
-    
+
     // Revalidate the /works page so the UI updates
     revalidatePath("/works");
-    
+
     console.log(`✅ Work #${workId} processingByAI set to ${processing}`);
     return { success: true };
   } catch (error) {
-    console.error(`❌ Error setting processingByAI for work #${workId}:`, error);
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    console.error(
+      `❌ Error setting processingByAI for work #${workId}:`,
+      error
+    );
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
+}
+
+/**
+ * MERGE MODE: Meglévő munkához új offer hozzáadása AI feldolgozással
+ * NE törölje a meglévő WorkItem-eket, Worker-eket, Material-okat, Tool-okat
+ * CSAK hozzáadja az újakat és frissíti az aggregált mezőket
+ */
+export async function mergeWorkWithAIResult(workId: number, aiResult: any) {
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const email = tenantEmail;
+
+  console.log("[mergeWorkWithAIResult] Starting merge for work:", workId);
+  console.log(
+    "[mergeWorkWithAIResult] AI Result:",
+    JSON.stringify(
+      aiResult,
+      (k, v) => (typeof v === "bigint" ? v.toString() : v),
+      2
+    )
+  );
+
+  // Ellenőrzés, hogy a work a felhasználóhoz tartozik
+  const work = await prisma.work.findUnique({
+    where: { id: workId },
+    select: { tenantEmail: true },
+  });
+  if (!work) {
+    console.error(`[mergeWorkWithAIResult] Work not found for id: ${workId}`);
+    return { success: false, error: `Work not found for id: ${workId}` };
+  }
+  if (work.tenantEmail !== email) {
+    console.error(
+      `[mergeWorkWithAIResult] Unauthorized: user ${email} does not own work ${workId}`
+    );
+    return {
+      success: false,
+      error: "Unauthorized: user does not own this work",
+    };
+  }
+
+  // MERGE MODE: NE töröljük a meglévő WorkItem-eket, csak adjuk hozzá az újakat
+  try {
+    if (Array.isArray(aiResult.workItems)) {
+      // --- segédfüggvények ---
+      const toNum = (v: unknown) =>
+        Number(
+          String(v ?? "0")
+            .replace(/[^0-9.,-]/g, "")
+            .replace(",", ".")
+        ) || 0;
+
+      const normalizeMaterials = (raw: unknown) => {
+        const out: Array<{
+          name: string;
+          unit: string;
+          quantity: number;
+          unitPrice: number;
+          totalPrice: number;
+        }> = [];
+
+        if (!raw) return out;
+
+        if (typeof raw === "string") {
+          raw
+            .split(/[;,]+/)
+            .map((t) => t.trim())
+            .filter(Boolean)
+            .forEach((name) => {
+              out.push({
+                name,
+                unit: "",
+                quantity: 1,
+                unitPrice: 0,
+                totalPrice: 0,
+              });
+            });
+          return out;
+        }
+
+        if (Array.isArray(raw)) {
+          for (const m of raw) {
+            if (typeof m === "string") {
+              const name = m.trim();
+              if (name)
+                out.push({
+                  name,
+                  unit: "",
+                  quantity: 1,
+                  unitPrice: 0,
+                  totalPrice: 0,
+                });
+              continue;
+            }
+            if (m && typeof m === "object") {
+              const name = String(
+                (m as any).type ?? (m as any).name ?? ""
+              ).trim();
+              if (!name) continue;
+              out.push({
+                name,
+                unit: String((m as any).unit ?? ""),
+                quantity: Number((m as any).quantity) || 1,
+                unitPrice: toNum((m as any).unitPrice),
+                totalPrice: toNum((m as any).totalPrice),
+              });
+            }
+          }
+        }
+
+        return out;
+      };
+      // --- /segédfüggvények ---
+
+      // Kiszámítjuk a roleTotals-t az új workItem-ek alapján
+      const roleTotals: Record<string, number> = {};
+      for (const wi of aiResult.workItems) {
+        if (Array.isArray(wi.requiredProfessionals)) {
+          for (const rp of wi.requiredProfessionals) {
+            const roleName = String(rp?.type || "")
+              .trim()
+              .toLowerCase();
+            const qty = Number(rp?.quantity) || 1;
+            if (!roleName || qty <= 0) continue;
+            roleTotals[roleName] = (roleTotals[roleName] || 0) + qty;
+          }
+        }
+      }
+
+      const normalizeRole = (s: string) => s.trim().toLowerCase();
+
+      for (const item of aiResult.workItems) {
+        console.log(
+          `[mergeWorkWithAIResult] Adding NEW workItem to work ${workId}:`,
+          item
+        );
+
+        // 1. Létrehozzuk az ÚJ WorkItem-et (meglévők MARADNAK)
+        const toolList =
+          typeof item.tools === "string"
+            ? item.tools
+                .split(/[;,]+/)
+                .map((t: string) => t.trim())
+                .filter(Boolean)
+            : Array.isArray(item.tools)
+              ? item.tools
+              : [];
+
+        const materialList = normalizeMaterials(item.materials);
+
+        const createdWorkItem = await prisma.workItem.create({
+          data: {
+            workId,
+            name: item.name.replace(/^\*+\s*/, "").replace(/\s*\*+$/, ""),
+            description: item.description,
+            quantity: Number(item.quantity) || 1,
+            unit: item.unit || "",
+            unitPrice: toNum(item.unitPrice || "0"),
+            materialUnitPrice: toNum(item.materialUnitPrice || "0"),
+            workTotal: toNum(item.workTotal || "0"),
+            materialTotal: toNum(item.materialTotal || "0"),
+            totalPrice: toNum(item.totalPrice || "0"),
+            tenantEmail: email,
+            tools: {
+              create: toolList.map((name: string) => ({
+                name,
+                workId,
+                workItemId: undefined,
+                tenantEmail: email,
+              })),
+            },
+            materials: {
+              create: materialList.map((m) => ({
+                name: m.name,
+                workId,
+                unit: m.unit,
+                unitPrice: m.unitPrice,
+                totalPrice: m.totalPrice,
+                quantity: m.quantity,
+                workItemId: undefined,
+                tenantEmail: email,
+              })),
+            },
+          },
+        });
+
+        // 2. Minden requiredProfessional-t mentünk
+        if (Array.isArray(item.requiredProfessionals)) {
+          for (const rp of item.requiredProfessionals) {
+            const roleNameRaw = String(rp?.type || "").trim();
+            const roleNorm = normalizeRole(roleNameRaw);
+            const roleKey = roleNameRaw.toLowerCase();
+            const qty = Number(rp?.quantity) || 1;
+            if (!roleNameRaw || qty <= 0) continue;
+
+            const maxRequiredForRole = roleTotals[roleKey] ?? qty;
+
+            // ÚJ Worker létrehozása
+            const newWorker = await prisma.worker.create({
+              data: {
+                name: roleNameRaw,
+                role: roleNameRaw,
+                workId: workId,
+                workItemId: createdWorkItem.id,
+                tenantEmail: email,
+                maxRequired: maxRequiredForRole,
+                hired: false,
+                hoursWorked: 0,
+              },
+            });
+
+            // Pivot
+            await prisma.workItemWorker.create({
+              data: {
+                tenantEmail: email,
+                workItemId: createdWorkItem.id,
+                workerId: newWorker.id,
+                quantity: qty,
+                role: roleNameRaw,
+              },
+            });
+
+            await prisma.tenantWorker.upsert({
+              where: {
+                tenantEmail_roleNormalized: {
+                  tenantEmail: email,
+                  roleNormalized: roleNorm,
+                },
+              },
+              update: {
+                lastSeenAt: new Date(),
+                totalAssigned: { increment: qty },
+                role: roleNameRaw,
+              },
+              create: {
+                tenantEmail: email,
+                role: roleNameRaw,
+                roleNormalized: roleNorm,
+                totalAssigned: qty,
+                lastSeenAt: new Date(),
+              },
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error(`[mergeWorkWithAIResult] Failed to add WorkItems:`, err);
+    return {
+      success: false,
+      error: "Failed to add WorkItems",
+      details: err instanceof Error ? err.message : String(err),
+    };
+  }
+
+  // --- Aggregált mezők újraszámítása (ÖSSZES WorkItem alapján, beleértve a meglévőket is) ---
+  try {
+    const workItems = await prisma.workItem.findMany({ where: { workId } });
+
+    const totalTools = Array.isArray(aiResult.workItems)
+      ? (aiResult.workItems as WorkItemAIResult[]).reduce(
+          (sum: number, item: WorkItemAIResult) => {
+            let toolList: string[] = [];
+            if (Array.isArray(item.tools)) {
+              toolList = item.tools;
+            } else if (typeof item.tools === "string") {
+              toolList = item.tools
+                .split(/[;,]+/)
+                .map((t: string) => t.trim())
+                .filter(Boolean);
+            }
+            return sum + toolList.length;
+          },
+          0
+        )
+      : 0;
+
+    const num = (v: any) =>
+      typeof v === "number"
+        ? v
+        : Number(
+            (v || "0")
+              .toString()
+              .replace(/[^0-9.,-]/g, "")
+              .replace(",", ".")
+          ) || 0;
+
+    const totalLaborCost = workItems.reduce(
+      (sum, wi) => sum + num(wi.workTotal),
+      0
+    );
+    const totalMaterials = await prisma.material.count({ where: { workId } });
+    const totalMaterialCost = workItems.reduce(
+      (sum, wi) => sum + num(wi.materialTotal),
+      0
+    );
+
+    const groupedByWorker = await prisma.workItemWorker.groupBy({
+      by: ["workerId"],
+      where: { workItem: { workId } },
+      _sum: { quantity: true },
+    });
+
+    const totalWorkers =
+      groupedByWorker.reduce((acc, g) => acc + (g._sum.quantity ?? 0), 0) || 0;
+
+    await prisma.work.update({
+      where: { id: workId },
+      data: {
+        totalWorkers,
+        totalLaborCost,
+        totalMaterials,
+        totalMaterialCost,
+        totalTools,
+        workSummary: aiResult.workSummary || null,
+        updatedByAI: true,
+        processingByAI: false,
+      },
+    });
+  } catch (aggErr) {
+    console.error(
+      "[mergeWorkWithAIResult] aggregált mezők számítása/mentése hiba:",
+      aggErr
+    );
+  }
+
+  // Visszaadjuk a teljes frissített Work-ot
+  const result = await prisma.work.findUnique({
+    where: { id: workId },
+    include: { workItems: true },
+  });
+
+  // RAG szinkronizáció
+  try {
+    await autoSyncWorkToRAG(workId);
+    console.log(`✅ RAG automatikusan szinkronizálva munkához: ${workId}`);
+  } catch (ragError) {
+    console.error(`❌ RAG szinkronizáció hiba munkához ${workId}:`, ragError);
+  }
+
+  return { success: true, data: result };
 }
