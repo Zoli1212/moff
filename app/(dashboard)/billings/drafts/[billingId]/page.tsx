@@ -11,13 +11,14 @@ import {
 } from "@/actions/billing-actions";
 
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Settings } from "lucide-react";
 import Link from "next/link";
 
 import { OfferItem } from "@/types/offer.types";
 import { toast } from "sonner";
 import { InvoiceItemsTable } from "./_components/InvoiceItemsTable";
 import { FinalizedInvoiceItems } from "./_components/FinalizedInvoiceItems";
+import { saveSzamlazzHuApiKey } from "@/actions/user-settings-actions";
 
 interface Billing {
   id: number;
@@ -51,14 +52,21 @@ export default function BillingDraftPage() {
   const [customerZip, setCustomerZip] = useState("");
   const [taxNumber, setTaxNumber] = useState("");
   const [euTaxNumber, setEuTaxNumber] = useState("");
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [apiKey, setApiKey] = useState("");
+  const [userHasApiKey, setUserHasApiKey] = useState(false);
+  const [shouldContinueFinalize, setShouldContinueFinalize] = useState(false);
 
-  // Check if user is tenant
+  // Check if user is tenant and has API key
   useEffect(() => {
     getCurrentUserData()
-      .then(data => {
+      .then((data) => {
         setIsTenant(data.isTenant ?? true);
+        const hasKey = !!(data as { szamlazzHuApiKey?: string })
+          .szamlazzHuApiKey;
+        setUserHasApiKey(hasKey);
         if (!data.isTenant) {
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
       })
       .catch(() => {
@@ -76,12 +84,39 @@ export default function BillingDraftPage() {
         if (data) {
           setBilling(data as Billing);
           setEditedTitle(data.title || "");
-          setCustomerName("");
-          setCustomerCity("");
-          setCustomerAddress("");
-          setCustomerZip("");
-          setTaxNumber(data.taxNumber || "");
-          setEuTaxNumber(data.euTaxNumber || "");
+
+          // Betöltjük a vevő adatokat a billing-ből vagy a Work-ből
+          const billingData = data as Billing & {
+            customerName?: string;
+            customerCity?: string;
+            customerAddress?: string;
+            customerZip?: string;
+            taxNumber?: string;
+            euTaxNumber?: string;
+            offer?: { work?: { customerData?: Record<string, unknown> } };
+          };
+          const workData = billingData.offer?.work;
+          const workCustomerData =
+            (workData?.customerData as Record<string, string>) || {};
+
+          // Prioritás: billing > work.customerData > üres
+          setCustomerName(
+            billingData.customerName || workCustomerData.name || ""
+          );
+          setCustomerCity(
+            billingData.customerCity || workCustomerData.city || ""
+          );
+          setCustomerAddress(
+            billingData.customerAddress || workCustomerData.address || ""
+          );
+          setCustomerZip(billingData.customerZip || workCustomerData.zip || "");
+          setTaxNumber(
+            billingData.taxNumber || workCustomerData.taxNumber || ""
+          );
+          setEuTaxNumber(
+            billingData.euTaxNumber || workCustomerData.euTaxNumber || ""
+          );
+
           setEditableItems(
             (data.items || []).map((item: OfferItem) => ({
               ...item,
@@ -210,8 +245,15 @@ export default function BillingDraftPage() {
     }
   };
 
-  const handleFinalize = async () => {
+  const handleFinalize = async (bypassApiKeyCheck = false) => {
     if (!billing) return;
+
+    // Ellenőrizzük, hogy van-e API key (csak ha nincs bypass)
+    if (!bypassApiKeyCheck && !userHasApiKey) {
+      setShouldContinueFinalize(true);
+      setShowApiKeyModal(true);
+      return;
+    }
 
     setIsFinalizing(true);
     try {
@@ -346,6 +388,29 @@ export default function BillingDraftPage() {
     }
   };
 
+  const handleSaveApiKey = async () => {
+    if (!apiKey || apiKey.trim() === "") {
+      toast.error("Az API kulcs nem lehet üres!");
+      return;
+    }
+
+    const result = await saveSzamlazzHuApiKey(apiKey);
+    if (result.success) {
+      toast.success("API kulcs sikeresen mentve!");
+      setUserHasApiKey(true);
+      setShowApiKeyModal(false);
+
+      // Csak akkor folytatjuk a véglegesítést, ha automatikusan nyílt a modal
+      if (shouldContinueFinalize) {
+        setShouldContinueFinalize(false);
+        // Bypass az API key ellenőrzést, mert most mentettük el
+        handleFinalize(true);
+      }
+    } else {
+      toast.error(result.error || "Hiba történt az API kulcs mentésekor.");
+    }
+  };
+
   if (loading) return <p>Betöltés...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
   if (!billing) return <p>Nincs megjeleníthető adat.</p>;
@@ -399,8 +464,18 @@ export default function BillingDraftPage() {
               <details className="mt-4 border border-gray-300 rounded-md">
                 <summary className="px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium text-gray-700 flex items-center justify-between">
                   <span>Vevő adatai</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </summary>
                 <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -515,7 +590,7 @@ export default function BillingDraftPage() {
                     {isSaving ? "Mentés..." : "Piszkozat mentése"}
                   </Button>
                   <Button
-                    onClick={handleFinalize}
+                    onClick={() => handleFinalize()}
                     disabled={isFinalizing}
                     size="sm"
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
@@ -531,6 +606,15 @@ export default function BillingDraftPage() {
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
                     {isMarkingPaid ? "Jelölés..." : "Pénzügyileg teljesítve"}
+                  </Button>
+                  <Button
+                    onClick={() => setShowApiKeyModal(true)}
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto font-semibold border-orange-500 text-orange-500 hover:bg-orange-50"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    API Beállítások
                   </Button>
                 </div>
               )}
@@ -572,6 +656,67 @@ export default function BillingDraftPage() {
             </span>
           </div>
         </div>
+
+        {/* API Key Modal */}
+        {showApiKeyModal && (
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowApiKeyModal(false)}
+          >
+            <div
+              className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="text-xl font-bold mb-4">
+                Számlázz.hu API Beállítás
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                A számla kiállításához szükséges a Számlázz.hu API kulcsod. Ezt
+                a{" "}
+                <a
+                  href="https://www.szamlazz.hu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  Számlázz.hu
+                </a>{" "}
+                fiókodban találod.
+              </p>
+              <div className="mb-4">
+                <label
+                  htmlFor="apiKey"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  API Kulcs
+                </label>
+                <input
+                  type="text"
+                  id="apiKey"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="Írd be az API kulcsod"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+              <div className="flex gap-3">
+                <Button
+                  onClick={handleSaveApiKey}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  Mentés és Folytatás
+                </Button>
+                <Button
+                  onClick={() => setShowApiKeyModal(false)}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  Mégse
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

@@ -35,7 +35,12 @@ interface WorkerAddModalProps {
   // If true, show all workItems instead of only in-progress ones
   showAllWorkItems?: boolean;
   // Current assignments to pre-select in the list
-  currentAssignments?: Array<{ id: number; name?: string | null; email?: string | null; workerId?: number }>;
+  currentAssignments?: Array<{
+    id: number;
+    name?: string | null;
+    email?: string | null;
+    workerId?: number;
+  }>;
 }
 
 // Lightweight custom dropdown (no external deps)
@@ -133,10 +138,12 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       avatarUrl?: string | null;
     }>
   >([]);
-  const [selectedExistingWorkers, setSelectedExistingWorkers] =
-    useState<string[]>([]);
-  const [initiallySelectedWorkers, setInitiallySelectedWorkers] =
-    useState<string[]>([]);
+  const [selectedExistingWorkers, setSelectedExistingWorkers] = useState<
+    string[]
+  >([]);
+  const [initiallySelectedWorkers, setInitiallySelectedWorkers] = useState<
+    string[]
+  >([]);
   const [selectedRole, setSelectedRole] = useState<string>(""); // New state for role selection
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -161,18 +168,23 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           // Load ALL workers from WorkforceRegistry (munkástár)
           const allWorkers = await getActiveWorkforce();
           setExistingWorkers(allWorkers);
-          
+
           // Pre-select workers that are already assigned to this work
           // Match by email OR name (csak az egyik kell hogy egyezzen)
           const assignedWorkerIds = allWorkers
-            .filter(worker => {
-              return currentAssignments.some(assignment => 
-                (assignment.email && worker.email && assignment.email === worker.email) ||
-                (assignment.name && worker.name && assignment.name === worker.name)
+            .filter((worker) => {
+              return currentAssignments.some(
+                (assignment) =>
+                  (assignment.email &&
+                    worker.email &&
+                    assignment.email === worker.email) ||
+                  (assignment.name &&
+                    worker.name &&
+                    assignment.name === worker.name)
               );
             })
-            .map(w => w.id.toString());
-          
+            .map((w) => w.id.toString());
+
           setSelectedExistingWorkers(assignedWorkerIds);
           setInitiallySelectedWorkers(assignedWorkerIds); // Save initial selection
         } catch (error) {
@@ -195,7 +207,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       try {
         // Find workers that were unchecked (initially selected but now not selected)
         const uncheckedWorkers = initiallySelectedWorkers.filter(
-          workerId => !selectedExistingWorkers.includes(workerId)
+          (workerId) => !selectedExistingWorkers.includes(workerId)
         );
 
         // Delete unchecked workers from workItemWorker table
@@ -203,7 +215,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           const { deleteWorkItemWorker } = await import(
             "@/actions/update-workitemworker"
           );
-          
+
           for (const workerId of uncheckedWorkers) {
             const worker = existingWorkers.find(
               (w) => w.id.toString() === workerId
@@ -211,9 +223,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             if (!worker) continue;
 
             // Find the workItemWorker record by matching worker details
-            const assignment = currentAssignments.find(a => 
-              (a.email && worker.email && a.email === worker.email) ||
-              (a.name && worker.name && a.name === worker.name)
+            const assignment = currentAssignments.find(
+              (a) =>
+                (a.email && worker.email && a.email === worker.email) ||
+                (a.name && worker.name && a.name === worker.name)
             );
 
             if (assignment && assignment.id) {
@@ -228,7 +241,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
 
         // Only add workers that are newly selected (not in initial selection)
         const newlySelectedWorkers = selectedExistingWorkers.filter(
-          workerId => !initiallySelectedWorkers.includes(workerId)
+          (workerId) => !initiallySelectedWorkers.includes(workerId)
         );
 
         // Process only newly selected workers
@@ -253,21 +266,18 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         }
 
         if (newlySelectedWorkers.length > 0) {
-          toast.success(`${newlySelectedWorkers.length} munkás sikeresen hozzáadva!`);
+          toast.success(
+            `${newlySelectedWorkers.length} munkás sikeresen hozzáadva!`
+          );
         }
 
         // Reset form on success
         setSelectedExistingWorkers([]);
         setInitiallySelectedWorkers([]);
         setSelectedRole("");
-        
-        // Force close and reopen to trigger refresh in parent component
+
+        // Close modal without reload - parent will refresh via React state
         onOpenChange(false);
-        
-        // Trigger a small delay to ensure parent component refreshes
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
       } catch (error) {
         console.error("Error assigning existing workers:", error);
         toast.error("Hiba történt a munkások hozzárendelése során.");
@@ -396,7 +406,15 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 className="w-10 h-10 rounded-full border-2 border-[#f97316] text-[#f97316] hover:bg-[#f97316] hover:text-white flex items-center justify-center transition-colors font-bold text-xl"
                 title="Új munkás hozzáadása"
               >
-                <span style={{ display: "block", lineHeight: 0, transform: "translateY(-2px)" }}>+</span>
+                <span
+                  style={{
+                    display: "block",
+                    lineHeight: 0,
+                    transform: "translateY(-2px)",
+                  }}
+                >
+                  +
+                </span>
               </button>
             </div>
           ) : (
@@ -457,7 +475,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">
-                  Válassz munkásokat ({selectedExistingWorkers.length} kiválasztva)
+                  Válassz munkásokat ({selectedExistingWorkers.length}{" "}
+                  kiválasztva)
                 </label>
                 <div className="mt-2 border rounded-md max-h-64 overflow-y-auto">
                   {loadingWorkers ? (
@@ -472,7 +491,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   ) : (
                     existingWorkers.map((worker) => {
                       const workerId = worker.id.toString();
-                      const isSelected = selectedExistingWorkers.includes(workerId);
+                      const isSelected =
+                        selectedExistingWorkers.includes(workerId);
                       return (
                         <label
                           key={worker.id}
@@ -485,7 +505,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                             checked={isSelected}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setSelectedExistingWorkers((prev) => [...prev, workerId]);
+                                setSelectedExistingWorkers((prev) => [
+                                  ...prev,
+                                  workerId,
+                                ]);
                               } else {
                                 setSelectedExistingWorkers((prev) =>
                                   prev.filter((id) => id !== workerId)
@@ -495,9 +518,13 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                             className="w-4 h-4 border-gray-300 rounded focus:ring-green-500 accent-green-600"
                           />
                           <div className="flex-1 text-sm">
-                            <div className="font-medium">{worker.name || "Névtelen"}</div>
+                            <div className="font-medium">
+                              {worker.name || "Névtelen"}
+                            </div>
                             <div className="text-gray-600">
-                              {worker.role || "Ismeretlen szakma"} • {worker.email || "Nincs email"} • {worker.phone || "Nincs telefon"}
+                              {worker.role || "Ismeretlen szakma"} •{" "}
+                              {worker.email || "Nincs email"} •{" "}
+                              {worker.phone || "Nincs telefon"}
                             </div>
                           </div>
                         </label>
@@ -725,7 +752,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                       isNaN(Number(dailyRate)) ||
                       Number(dailyRate) <= 0)) ||
                   (workerMode === "new" && !name) ||
-                  (workerMode === "existing" && selectedExistingWorkers.length === 0)
+                  (workerMode === "existing" &&
+                    selectedExistingWorkers.length === 0)
                 }
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white w-full"
               >

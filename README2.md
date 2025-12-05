@@ -691,4 +691,13 @@ kérdések
 Ajánlatoldalról, Igen munkához rendelem! nem lesznek összefésülve.
 Áj ajánlatnál hozzárendelem a tételeket a munkákhoz
 Új követelmények
-Munkához rendelés nem fésüli össze, Hozzáds
+Munkához rendelés nem fésüli össze, 
+Hétfő BUG Pénteki napi,
+Munkásokat nem tudtam hozzárendelni
+Munkásokat hozzárendelése
+
+
+Eszközök
+Vevő adatai
+API Beállításoknál API key + név
+-----

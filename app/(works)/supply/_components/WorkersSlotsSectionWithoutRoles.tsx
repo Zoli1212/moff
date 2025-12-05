@@ -132,7 +132,7 @@ function WorkersSlotsSectionWithoutRoles({
     null
   );
 
-  console.log(addLock)
+  console.log(addLock);
 
   // No automatic calculation - slots are manually managed
   // totalRequiredWorkers is always 0 (not calculated from workItems)
@@ -147,9 +147,9 @@ function WorkersSlotsSectionWithoutRoles({
     await removeWorkersFromWorkItem(workItemId, selectedRoleForRemoval);
     await refreshAssignments();
   };
-  console.log(maxRequiredWorkers)
+  console.log(maxRequiredWorkers);
 
-  console.log(setSelectedRoleForRemoval)
+  console.log(setSelectedRoleForRemoval);
 
   // Handle slot count changes
 
@@ -355,7 +355,24 @@ function WorkersSlotsSectionWithoutRoles({
     <div className="relative bg-white rounded-xl shadow-sm px-5 py-3 mb-5">
       <WorkerAddModal
         open={isAddOpen}
-        onOpenChange={setIsAddOpen}
+        onOpenChange={(open) => {
+          setIsAddOpen(open);
+          // Refresh assignments when modal closes
+          if (!open) {
+            const refreshData = async () => {
+              try {
+                const { getWorkItemWorkersForWork } = await import(
+                  "@/actions/get-workitemworkers-for-work"
+                );
+                const data = await getWorkItemWorkersForWork(workId);
+                setAssignments(data || []);
+              } catch (error) {
+                console.error("Error refreshing assignments:", error);
+              }
+            };
+            refreshData();
+          }
+        }}
         workId={workId}
         onSubmit={handleAdd}
         workItems={workItems}
@@ -466,7 +483,7 @@ function WorkersSlotsSectionWithoutRoles({
                           handleDeleteWorkItemWorkerOnly(w.id);
                         }}
                         className="hover:text-red-700 p-1 rounded hover:bg-red-50"
-                        style={{ color: '#FE9C00' }}
+                        style={{ color: "#FE9C00" }}
                         title="Munkás eltávolítása"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -483,7 +500,7 @@ function WorkersSlotsSectionWithoutRoles({
                   >
                     <button
                       className="flex-grow flex items-center justify-center rounded border bg-[#f5f5f5] hover:bg-[#ebebeb] px-3 py-2 h-full"
-                      style={{ borderColor: '#ddd', color: '#FE9C00' }}
+                      style={{ borderColor: "#ddd", color: "#FE9C00" }}
                       onClick={() => {
                         setAddLock(null); // No role lock - general assignment
                         setIsAddOpen(true);
@@ -495,7 +512,7 @@ function WorkersSlotsSectionWithoutRoles({
                     <button
                       onClick={() => setShowEmptySlot(false)}
                       className="flex items-center justify-center w-12 h-12 rounded border bg-white"
-                      style={{ color: '#FE9C00', borderColor: '#FE9C00' }}
+                      style={{ color: "#FE9C00", borderColor: "#FE9C00" }}
                       title="Üres slot elrejtése"
                     >
                       <Trash2 className="w-4 h-4" />

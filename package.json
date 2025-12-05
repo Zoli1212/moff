@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed:pricelist": "tsx prisma/seed-pricelist.ts"
+    "seed:pricelist": "tsx prisma/seed-pricelist.ts",
+    "inngest": "inngest-cli dev"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.20.0",
@@ -80,6 +81,7 @@
     "drizzle-kit": "^0.30.4",
     "eslint": "9.28.0",
     "eslint-config-next": "15.3.3",
+    "inngest-cli": "^1.14.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.19.2",

@@ -44,6 +44,7 @@ model User {
   stripeCustomerId String?        @unique
   invitedBy        String?        // SuperUser email aki meghívta
   trialEndsAt      DateTime?      // Trial lejárati dátum
+  szamlazzHuApiKey String?        // Számlázz.hu API kulcs (tenant-specifikus)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   subscription     Subscription?
@@ -217,6 +218,9 @@ model Work {
   performances  Performance[] // Kapcsolat a Performance táblához
   workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez
   billings      Billing[] // Kapcsolat a számlákhoz
+  
+  // Vevő adatai (számlázáshoz) - JSON objektumként
+  customerData Json?
 }
 
 model WorkItem {

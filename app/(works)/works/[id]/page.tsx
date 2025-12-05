@@ -131,13 +131,15 @@ export default function WorkDetailPage({
         const defaultStartDate = workData.startDate
           ? new Date(workData.startDate).toISOString().split("T")[0]
           : workData.createdAt
-          ? new Date(workData.createdAt).toISOString().split("T")[0]
-          : "";
-        
+            ? new Date(workData.createdAt).toISOString().split("T")[0]
+            : "";
+
         // Befejezés default: endDate vagy createdAt + estimatedDuration
         let defaultEndDate = "";
         if (workData.endDate) {
-          defaultEndDate = new Date(workData.endDate).toISOString().split("T")[0];
+          defaultEndDate = new Date(workData.endDate)
+            .toISOString()
+            .split("T")[0];
         } else if (workData.createdAt && workData.estimatedDuration) {
           const startDateObj = new Date(workData.createdAt);
           const durationMatch = workData.estimatedDuration.match(/(\d+)/);
@@ -148,7 +150,7 @@ export default function WorkDetailPage({
             defaultEndDate = endDateObj.toISOString().split("T")[0];
           }
         }
-        
+
         setEditStartDate(defaultStartDate);
         setEditEndDate(defaultEndDate);
 
@@ -415,11 +417,11 @@ export default function WorkDetailPage({
         (work as Record<string, unknown>).startDate as string
       ).toLocaleDateString()
     : (work as Record<string, unknown>).createdAt
-    ? new Date(
-        (work as Record<string, unknown>).createdAt as string
-      ).toLocaleDateString()
-    : "-";
-  
+      ? new Date(
+          (work as Record<string, unknown>).createdAt as string
+        ).toLocaleDateString()
+      : "-";
+
   // Befejezés: endDate vagy createdAt + estimatedDuration
   let endDate = "-";
   if ((work as Record<string, unknown>).endDate) {
@@ -598,7 +600,9 @@ export default function WorkDetailPage({
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={() => {
-                setEditTitle(((work as Record<string, unknown>).title as string) || "");
+                setEditTitle(
+                  ((work as Record<string, unknown>).title as string) || ""
+                );
                 setShowTitleModal(true);
               }}
               className="p-2 rounded-full hover:bg-orange-50 transition-colors text-[#FE9C00] hover:text-[#e68a00]"
@@ -713,8 +717,9 @@ export default function WorkDetailPage({
                   <button
                     onClick={() => {
                       // Extract number from duration string (e.g., "7-10 nap" -> 7, "11 nap" -> 11)
-                      const durationStr = ((work as Record<string, unknown>)
-                        .estimatedDuration as string) || "";
+                      const durationStr =
+                        ((work as Record<string, unknown>)
+                          .estimatedDuration as string) || "";
                       const match = durationStr.match(/\d+/);
                       const currentDays = match ? parseInt(match[0]) : 0;
                       setEditDuration(currentDays);
@@ -1212,11 +1217,11 @@ export default function WorkDetailPage({
       {/* Date Edit Modal */}
       {showDateModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
           onClick={() => setShowDateModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -1270,11 +1275,11 @@ export default function WorkDetailPage({
       {/* Duration Edit Modal */}
       {showDurationModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
           onClick={() => setShowDurationModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -1325,11 +1330,11 @@ export default function WorkDetailPage({
       {/* Title Edit Modal */}
       {showTitleModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
           onClick={() => setShowTitleModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -1375,11 +1380,11 @@ export default function WorkDetailPage({
       {/* Delete Confirm Modal */}
       {showDeleteModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto"
           onClick={() => setShowDeleteModal(false)}
         >
           <div
-            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full"
+            className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto my-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center gap-3 mb-4">

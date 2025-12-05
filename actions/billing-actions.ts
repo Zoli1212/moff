@@ -76,6 +76,7 @@ export async function getBillingById(id: number) {
               include: {
                 workItems: true,
               },
+              // Vevő adatok betöltése a Work-ből
             },
           },
         },
@@ -122,6 +123,21 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
   try {
     const { user, tenantEmail } = await getTenantSafeAuth();
 
+    // Lekérjük a bejelentkezett user API key-ét
+    const currentUser = await prisma.user.findUnique({
+      where: { email: tenantEmail },
+      select: { szamlazzHuApiKey: true },
+    });
+
+    const apiKey =
+      currentUser?.szamlazzHuApiKey || process.env.SZAMLAZZHU_API_KEY || "";
+
+    if (!apiKey) {
+      throw new Error(
+        "Számlázz.hu API kulcs hiányzik! Kérlek add meg a beállításokban."
+      );
+    }
+
     const billing = await prisma.billing.findFirst({
       where: {
         id: billingId,
@@ -157,12 +173,12 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     const billingAny = billing as any;
     const customerName = billingAny.customerName || customer.customerName;
     const city = billingAny.customerCity || "Budapest";
-    const street = billingAny.customerAddress || "";
+    const street = billingAny.customerAddress || "N/A"; // Számlázz.hu requires address
     const zip = billingAny.customerZip || "";
     const billingItems = JSON.parse(billing.items as string);
 
     const client = new Client({
-      key: process.env.SZAMLAZZHU_API_KEY || "",
+      key: apiKey,
     });
 
     const items = billingItems.flatMap((item: any) => {
@@ -244,22 +260,35 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       },
     };
 
-    console.log("📤 [szamlazz.hu] Sending invoice data:", JSON.stringify({
-      invoiceData,
-      items,
-      customerName,
-      city,
-      street,
-      zip
-    }, null, 2));
+    console.log(
+      "📤 [szamlazz.hu] Sending invoice data:",
+      JSON.stringify(
+        {
+          invoiceData,
+          items,
+          customerName,
+          city,
+          street,
+          zip,
+        },
+        null,
+        2
+      )
+    );
 
     let result;
     try {
       result = await client.generateInvoice(invoiceData, items);
-      console.log("✅ [szamlazz.hu] Invoice generated successfully:", JSON.stringify(result, null, 2));
+      console.log(
+        "✅ [szamlazz.hu] Invoice generated successfully:",
+        JSON.stringify(result, null, 2)
+      );
     } catch (error) {
       console.error("❌ [szamlazz.hu] Error generating invoice:", error);
-      console.error("❌ [szamlazz.hu] Error details:", JSON.stringify(error, null, 2));
+      console.error(
+        "❌ [szamlazz.hu] Error details:",
+        JSON.stringify(error, null, 2)
+      );
       return { success: false, error: `Failed to generate invoice: ${error}` };
     }
 
@@ -326,22 +355,27 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     // Frissítjük a Work aggregált értékeit, ha volt workItem frissítés
     if (workIdToRecalculate) {
       await recalculateWorkTotals(workIdToRecalculate, tenantEmail);
-      console.log(`✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totals recalculated`);
-      
+      console.log(
+        `✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totals recalculated`
+      );
+
       // Frissítjük a totalBilledAmount mezőt
       const currentWork = await prisma.work.findUnique({
         where: { id: workIdToRecalculate },
         select: { totalBilledAmount: true },
       });
-      
-      const newTotalBilledAmount = (currentWork?.totalBilledAmount || 0) + updatedBilling.totalPrice;
-      
+
+      const newTotalBilledAmount =
+        (currentWork?.totalBilledAmount || 0) + updatedBilling.totalPrice;
+
       await prisma.work.update({
         where: { id: workIdToRecalculate },
         data: { totalBilledAmount: newTotalBilledAmount },
       });
-      
-      console.log(`✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`);
+
+      console.log(
+        `✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`
+      );
     }
 
     // Update offer items with billed quantities
@@ -350,7 +384,8 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     });
 
     if (offer && offer.items) {
-      const offerItems = JSON.parse(offer.items as string);
+      const offerItems =
+        typeof offer.items === "string" ? JSON.parse(offer.items) : offer.items;
       const updatedOfferItems = offerItems.map((offerItem: any) => {
         // Find matching billing item by name
         const billingItem = billingItems.find(
@@ -406,18 +441,27 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
 
 export async function updateBilling(
   billingId: number,
-  data: { 
-    title: string; 
-    items: BillingItem[]; 
-    taxNumber?: string | null; 
-    euTaxNumber?: string | null; 
+  data: {
+    title: string;
+    items: BillingItem[];
+    taxNumber?: string | null;
+    euTaxNumber?: string | null;
     customerName?: string | null;
     customerCity?: string | null;
     customerAddress?: string | null;
     customerZip?: string | null;
   }
 ) {
-  const { items, title, taxNumber, euTaxNumber, customerName, customerCity, customerAddress, customerZip } = data;
+  const {
+    items,
+    title,
+    taxNumber,
+    euTaxNumber,
+    customerName,
+    customerCity,
+    customerAddress,
+    customerZip,
+  } = data;
 
   try {
     const { user, tenantEmail: userEmail } = await getTenantSafeAuth();
@@ -460,6 +504,35 @@ export async function updateBilling(
       },
     });
 
+    // Mentés a Work táblába is, ha van workId
+    if (existingBilling.workId) {
+      // Lekérjük a meglévő Work adatokat
+      const existingWork = await prisma.work.findUnique({
+        where: { id: existingBilling.workId },
+        select: { customerData: true },
+      });
+
+      const existingCustomerData = (existingWork?.customerData as any) || {};
+
+      // Merge: csak a kitöltött mezőket frissítjük, a többit megtartjuk
+      const mergedCustomerData = {
+        name: customerName || existingCustomerData.name || undefined,
+        city: customerCity || existingCustomerData.city || undefined,
+        address: customerAddress || existingCustomerData.address || undefined,
+        zip: customerZip || existingCustomerData.zip || undefined,
+        taxNumber: taxNumber || existingCustomerData.taxNumber || undefined,
+        euTaxNumber:
+          euTaxNumber || existingCustomerData.euTaxNumber || undefined,
+      };
+
+      await prisma.work.update({
+        where: { id: existingBilling.workId },
+        data: {
+          customerData: mergedCustomerData as any,
+        },
+      });
+    }
+
     revalidatePath(`/billings/drafts/${billingId}`);
     revalidatePath("/billings/my-invoices");
 
@@ -495,7 +568,9 @@ export async function markAsPaidCash(billingId: number) {
     }
 
     if (billing.status !== "draft") {
-      throw new Error("Csak piszkozat állapotú számlák jelölhetők pénzügyileg teljesítettnek.");
+      throw new Error(
+        "Csak piszkozat állapotú számlák jelölhetők pénzügyileg teljesítettnek."
+      );
     }
 
     const billingItems = JSON.parse(billing.items as string);
@@ -565,19 +640,24 @@ export async function markAsPaidCash(billingId: number) {
         where: { id: workIdToUpdate },
         select: { totalBilledAmount: true },
       });
-      
-      const newTotalBilledAmount = (currentWork?.totalBilledAmount || 0) + billing.totalPrice;
-      
+
+      const newTotalBilledAmount =
+        (currentWork?.totalBilledAmount || 0) + billing.totalPrice;
+
       await prisma.work.update({
         where: { id: workIdToUpdate },
         data: { totalBilledAmount: newTotalBilledAmount },
       });
-      
-      console.log(`✅ [markAsPaidCash] Work #${workIdToUpdate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`);
-      
+
+      console.log(
+        `✅ [markAsPaidCash] Work #${workIdToUpdate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`
+      );
+
       // Frissítjük a Work aggregált értékeit (totalCompleted, totalBilled, totalBillable)
       await recalculateWorkTotals(workIdToUpdate, tenantEmail);
-      console.log(`✅ [markAsPaidCash] Work #${workIdToUpdate} totals recalculated`);
+      console.log(
+        `✅ [markAsPaidCash] Work #${workIdToUpdate} totals recalculated`
+      );
     }
 
     return {

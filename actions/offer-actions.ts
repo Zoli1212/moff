@@ -456,26 +456,63 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
         let work;
 
-        if (existingWork) {
-          // Use existing work
+        // RÉGI LOGIKA - kikommentelve
+        // if (existingWork) {
+        //   // Use existing work
+        //   console.log(existingWork, "EXISTINGWORK");
+        //   work = existingWork;
+        // } else {
+        //   const finalTitle = title && title.trim() !== "" ? title : uuidv4();
+        //   // Create new work record if it doesn't exist
+        //   work = await tx.myWork.create({
+        //     data: {
+        //       title: finalTitle,
+        //       customerName,
+        //       date: new Date(),
+        //       location: title || parsedContent.location || "Nincs megadva",
+        //       time: estimatedTime,
+        //       totalPrice: parsedContent.totalPrice || 0,
+        //       tenantEmail: emailToUse,
+        //     } as Prisma.MyWorkCreateInput,
+        //   });
+        // }
 
-          console.log(existingWork, "EXISTINGWORK");
-          work = existingWork;
-        } else {
-          const finalTitle = title && title.trim() !== "" ? title : uuidv4();
-          // Create new work record if it doesn't exist
-          work = await tx.myWork.create({
-            data: {
-              title: finalTitle,
-              customerName,
-              date: new Date(),
-              location: title || parsedContent.location || "Nincs megadva",
-              time: estimatedTime,
-              totalPrice: parsedContent.totalPrice || 0,
-              tenantEmail: emailToUse,
-            } as Prisma.MyWorkCreateInput,
-          });
+        // ÚJ LOGIKA - mindig új munkát hoz létre, számozással ha már létezik
+        let finalTitle = title && title.trim() !== "" ? title : uuidv4();
+
+        if (existingWork) {
+          // Ha létezik már ilyen című munka, számozzuk meg
+          let counter = 2;
+          let uniqueTitle = `${title} (${counter})`;
+
+          // Keressünk szabad számot
+          while (
+            await tx.myWork.findFirst({
+              where: { title: uniqueTitle, tenantEmail: emailToUse },
+            })
+          ) {
+            counter++;
+            uniqueTitle = `${title} (${counter})`;
+          }
+
+          finalTitle = uniqueTitle;
+          console.log(
+            `Work with title "${title}" exists, creating new with title: ${finalTitle}`
+          );
         }
+
+        // Mindig CREATE (soha nem használja a meglévőt)
+        work = await tx.myWork.create({
+          data: {
+            title: finalTitle,
+            customerName,
+            date: new Date(),
+            location: title || parsedContent.location || "Nincs megadva",
+            time: estimatedTime,
+            totalPrice: parsedContent.totalPrice || 0,
+            tenantEmail: emailToUse,
+          } as Prisma.MyWorkCreateInput,
+        });
 
         // 2. Create or update Requirement with versioning
         const requirementTitle =
