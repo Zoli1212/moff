@@ -419,7 +419,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
         quantity: 1,
       });
 
-      toast.success("Munkás regisztrálva és hozzárendelve!");
+      // Toast message is shown in WorkerAddModal after all workers are added
 
       // Reload assignments from server using the new server action
       const { getWorkItemWorkersForWork } = await import(
@@ -733,7 +733,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                             handleRemoveRole(role);
                           }}
                           className="hover:text-red-700"
-                          style={{ color: '#FE9C00' }}
+                          style={{ color: "#FE9C00" }}
                           title={`${role} eltávolítása munkafázisból`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -799,7 +799,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                     handleDeleteWorkItemWorkerOnly(w.id);
                                   }}
                                   className="hover:text-red-700 p-1 rounded hover:bg-red-50"
-                                  style={{ color: '#FE9C00' }}
+                                  style={{ color: "#FE9C00" }}
                                   title="Munkás eltávolítása"
                                 >
                                   <Trash2 className="h-4 w-4" />
@@ -830,7 +830,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                 handleRemoveEmptySlot(role);
                               }}
                               className="hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
-                              style={{ color: '#FE9C00' }}
+                              style={{ color: "#FE9C00" }}
                               title="Üres slot eltávolítása"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -923,7 +923,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                 handleRemoveRole(role);
                               }}
                               className="hover:text-red-700"
-                              style={{ color: '#FE9C00' }}
+                              style={{ color: "#FE9C00" }}
                               title={`${role} eltávolítása munkafázisból`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -989,7 +989,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                         handleDeleteWorkItemWorkerOnly(w.id);
                                       }}
                                       className="hover:text-red-700 p-1 rounded hover:bg-red-50"
-                                      style={{ color: '#FE9C00' }}
+                                      style={{ color: "#FE9C00" }}
                                       title="Munkás eltávolítása"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -1020,7 +1020,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                     handleRemoveEmptySlot(role);
                                   }}
                                   className="hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#bbb] bg-[#f8f8f8] hover:bg-red-50"
-                                  style={{ color: '#FE9C00' }}
+                                  style={{ color: "#FE9C00" }}
                                   title="Üres slot eltávolítása"
                                 >
                                   <Trash2 className="h-4 w-4" />

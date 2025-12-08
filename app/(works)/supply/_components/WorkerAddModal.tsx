@@ -244,14 +244,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           (workerId) => !initiallySelectedWorkers.includes(workerId)
         );
 
-        // Process only newly selected workers
-        for (const workerId of newlySelectedWorkers) {
+        // Process only newly selected workers - collect all promises
+        const addPromises = newlySelectedWorkers.map(async (workerId) => {
           const worker = existingWorkers.find(
             (w) => w.id.toString() === workerId
           );
           if (!worker) {
             console.error(`Worker ${workerId} not found`);
-            continue;
+            return;
           }
 
           await onSubmit({
@@ -263,11 +263,15 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             avatarUrl: worker.avatarUrl || undefined,
             // dailyRate nincs megadva, mert meglévő munkásnak már van
           });
-        }
+        });
 
+        // Wait for all workers to be added
+        await Promise.all(addPromises);
+
+        // Show single toast after all workers are added
         if (newlySelectedWorkers.length > 0) {
           toast.success(
-            `${newlySelectedWorkers.length} munkás sikeresen hozzáadva!`
+            `${newlySelectedWorkers.length} munkás sikeresen hozzáadva a munkához!`
           );
         }
 

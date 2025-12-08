@@ -176,12 +176,12 @@ export const AiOfferChatAgent = createAgent({
     - Example: If answer says "prémium", then use premium-grade materials and prices
     - Example: If answer says "fehér", then specify white color in the item description
     - DO NOT ignore the answers - they are critical information for generating accurate offer items!
-  - **KÉRDÉSEK SZABÁLYA:**
-    - Ellenőrizd a "Válaszok a kérdésekre:" szekciót a bemeneti szövegben
-    - Ha látsz "✓ MEGVÁLASZOLT:" jelölést, NE kérdezd meg újra azt a témát
-    - Csak KRITIKUS hiányzó információkról kérdezz (pl. terület m², helyszín, anyagminőség)
-    - Maximum 3-5 kérdés legyen, csak ami TÉNYLEG szükséges az ajánlathoz
-    - NE kérdezz apró részletekről, amik nem befolyásolják jelentősen az árat
+  - **QUESTIONS RULE:**
+    - Check the "Válaszok a kérdésekre:" section in the input text
+    - If you see "✓ MEGVÁLASZOLT:" marker, DO NOT ask about that topic again
+    - Only ask about CRITICAL missing information (e.g., area m², location, material quality)
+    - Maximum 3-5 questions, only what is REALLY necessary for the offer
+    - DO NOT ask about minor details that don't significantly affect the price
   - If a predefined price list is available, use it to calculate the estimated total.
   - If prices or tasks are not provided, you may help staff prepare a structure or checklist they can complete manually.
   - If the staff requests or describes a task that does not exist in the provided catalog, you may still include it in the tasks list using the same structure as the other items.

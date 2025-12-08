@@ -226,7 +226,7 @@ function WorkersSlotsSectionWithoutRoles({
         quantity: 1,
       });
 
-      toast.success("Munkás regisztrálva és hozzárendelve!");
+      // Toast message is shown in WorkerAddModal after all workers are added
 
       // Show empty slot again when adding new worker
       setShowEmptySlot(true);
