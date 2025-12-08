@@ -342,3 +342,27 @@ Ha problémába ütközöl a tesztek futtatásakor:
 
 **A database testing rendszer teljes mértékben működőképes és production-ready!** 🎉
 
+Klíma- és fűtésszerelés ❄️🔥
+Hasonló munkafolyamat: kiszállás, felmérés, ajánlat, szerelés
+Katalógus: klímák, kazánok, radiátorok + munkadíjak
+Szezonális csúcsok kezelése
+2. Kertészet / Parkfenntartás 🌳
+Területmérés (m²) alapú árazás
+Ismétlődő munkák (havi karbantartás)
+Anyagköltség: növények, föld, műtrágya
+3. Takarítás / Facility Management 🧹
+m² alapú árazás
+Visszatérő munkák (heti/havi)
+Munkás beosztás fontos
+4. Villanyszerelés ⚡
+Hasonló katalógus rendszer
+Anyag + munkadíj kalkuláció
+Kiszállási díj kezelése
+5. Autószerelés / Szerviz 🚗
+Munkalapok = Work
+Alkatrészek = Materials
+Óradíj + alkatrész költség
+6. Festés / Mázolás 🎨
+m² alapú árazás
+Anyagköltség (festék, ecset)
+Előkészítés + festés külön tételek
