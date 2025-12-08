@@ -701,3 +701,7 @@ Eszközök
 Vevő adatai
 API Beállításoknál API key + név
 -----
+Számlára lehesssen kattintani
+Egy értelműen lehessen kattintani
+VILLOG mégis!
+optimalizálás

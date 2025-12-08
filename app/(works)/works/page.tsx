@@ -9,6 +9,8 @@ import WorksAutoUpdater from "./_components/WorksAutoUpdater";
 import WorksSkeletonLoader from "../_components/WorksSkeletonLoader";
 import { useRouter } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 // Minimal Work típus, hogy ne legyen 'any'
 export type Work = {
   id: string | number;
@@ -122,7 +124,7 @@ const WorkListPage = () => {
 
     const interval = setInterval(async () => {
       const elapsed = Date.now() - startTime;
-      
+
       // Stop after 5 minutes
       if (elapsed >= maxDuration) {
         console.log("⏱️ Auto-refresh stopped after 5 minutes");
@@ -131,17 +133,19 @@ const WorkListPage = () => {
       }
 
       console.log("🔄 Auto-refreshing works...");
-      
+
       // Check for stuck works every 30 seconds
       if (Math.floor(elapsed / 1000) % 30 === 0) {
         console.log("🔍 Checking for stuck works...");
         const checkResult = await checkStuckProcessingWorks();
         if (checkResult.success && checkResult.stuckWorkIds.length > 0) {
-          console.log(`⚠️ Found ${checkResult.stuckWorkIds.length} stuck work(s)`);
+          console.log(
+            `⚠️ Found ${checkResult.stuckWorkIds.length} stuck work(s)`
+          );
           setStuckWorkIds(checkResult.stuckWorkIds);
         }
       }
-      
+
       router.refresh();
       fetchWorks();
     }, 3000);
