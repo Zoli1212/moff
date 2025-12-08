@@ -216,17 +216,22 @@ export default function WorksLayoutClient({
             }}
           >
             {menu
-              .filter((item: { tenantOnly?: boolean; restrictedWorkerOnly?: boolean }) => {
-                // Hide tenant-only items for workers
-                if (!isTenant && item.tenantOnly) {
-                  return false;
+              .filter(
+                (item: {
+                  tenantOnly?: boolean;
+                  restrictedWorkerOnly?: boolean;
+                }) => {
+                  // Hide tenant-only items for workers
+                  if (!isTenant && item.tenantOnly) {
+                    return false;
+                  }
+                  // Hide diary for restricted workers
+                  if (!isTenant && isRestricted && item.restrictedWorkerOnly) {
+                    return false;
+                  }
+                  return true;
                 }
-                // Hide diary for restricted workers
-                if (!isTenant && isRestricted && item.restrictedWorkerOnly) {
-                  return false;
-                }
-                return true;
-              })
+              )
               .map(({ href, label, icon }) => {
                 // Use href directly, don't append id again
                 const isActive =
@@ -238,8 +243,11 @@ export default function WorksLayoutClient({
                     style={{ textDecoration: "none", color: "inherit" }}
                     onClick={(e) => {
                       // Ha nem ugyanarra az oldalra kattintunk
-                      console.log(e)
-                      if (pathname !== href && !pathname.startsWith(href + "/")) {
+                      console.log(e);
+                      if (
+                        pathname !== href &&
+                        !pathname.startsWith(href + "/")
+                      ) {
                         setIsNavigating(true);
                       }
                       window.scrollTo({ top: 0, behavior: "instant" });

@@ -156,19 +156,15 @@ export default function WorkDetailPage({
 
         if (workData && workData.id) {
           try {
-            const workItemsData = await getWorkItemsWithWorkers(workData.id);
-            // const assignedToolsData = await getAssignedToolsForWork(
-            //   workData.id
-            // );
-            const generalWorkersData = await getGeneralWorkersForWork(
-              workData.id
-            );
-            const workDiaryItemsData = await getWorkDiaryItemsByWorkId(
-              workData.id
-            );
+            // Párhuzamos lekérdezések a gyorsabb betöltésért
+            const [workItemsData, generalWorkersData, workDiaryItemsData] =
+              await Promise.all([
+                getWorkItemsWithWorkers(workData.id),
+                getGeneralWorkersForWork(workData.id),
+                getWorkDiaryItemsByWorkId(workData.id),
+              ]);
 
             setWorkItemsWithWorkers(workItemsData as unknown as WorkItem[]);
-            // setAssignedTools(assignedToolsData as unknown as Tool[]);
             setGeneralWorkersFromDB(generalWorkersData as unknown as Worker[]);
             setWorkDiaryItems(workDiaryItemsData);
 

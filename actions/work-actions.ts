@@ -194,19 +194,22 @@ import { normalizeWork } from "@/lib/normalize";
 
 export async function fetchWorkAndItems(workId: number) {
   try {
-    const rawWork = await getWorkById(workId);
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // Párhuzamos lekérdezések a gyorsabb betöltésért
+    const [rawWork, workItems] = await Promise.all([
+      getWorkById(workId),
+      getWorkItemsWithWorkers(workId),
+    ]);
+
     if (!rawWork) {
       throw new Error("Work not found");
     }
     const normWork = await normalizeWork(rawWork);
-    const workItems = await getWorkItemsWithWorkers(workId);
 
-    // Auto-refresh completedQuantity values for this work's items (only up to today)
-    const { user, tenantEmail } = await getTenantSafeAuth();
-    await refreshCompletedQuantitiesForWork(workId, tenantEmail);
-
-    // Re-fetch workItems to get updated completedQuantity values
-    const updatedWorkItems = await getWorkItemsWithWorkers(workId);
+    // Note: refreshCompletedQuantitiesForWork már meghívódott a getWorkById-ben,
+    // így a workItems már friss completedQuantity értékekkel rendelkezik
+    const updatedWorkItems = workItems;
 
     // Ellenőrizzük van-e workDiaryItem az adott munkához
     const workDiaryItems = await prisma.workDiaryItem.findMany({

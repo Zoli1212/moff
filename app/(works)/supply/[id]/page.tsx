@@ -59,10 +59,17 @@ export default async function SupplyPage({
   let assignedTools: AssignedTool[] = [];
   let maxRequiredWorkers: number | null = null;
   try {
-    const work = await getWorkById(workId) as Work;
+    // Párhuzamos lekérdezések a gyorsabb betöltésért
+    const [work, richItems, toolsRegistry, assignedToolsData] =
+      await Promise.all([
+        getWorkById(workId) as Promise<Work>,
+        getWorkItemsWithWorkers(workId),
+        getToolsRegistryByTenant(),
+        getAssignedToolsForWork(workId),
+      ]);
+
     materials = work.materials || [];
     maxRequiredWorkers = work.maxRequiredWorkers || null;
-    const richItems = await getWorkItemsWithWorkers(workId);
     workItems = (richItems || []).map((item: WorkItem) => ({
       ...item,
       tools: item.tools || [],
@@ -71,8 +78,8 @@ export default async function SupplyPage({
       workItemWorkers: item.workItemWorkers || [],
     }));
     workName = work.title || "";
-    tools = await getToolsRegistryByTenant();
-    assignedTools = (await getAssignedToolsForWork(workId)) as AssignedTool[];
+    tools = toolsRegistry;
+    assignedTools = assignedToolsData as AssignedTool[];
     workers = work.workers || [];
   } catch (e) {
     console.error(e);
@@ -83,7 +90,6 @@ export default async function SupplyPage({
     <div style={{ maxWidth: 450, margin: "0 auto", paddingBottom: 120 }}>
       <WorkHeader title={workName || "Beszerzés"} />
       <div style={{ padding: "0 8px" }}>
-
         {/* Toggle button for Anyagok/Szerszámok */}
         <div
           style={{
@@ -170,20 +176,24 @@ export default async function SupplyPage({
 
         {/* Description text for workers tab */}
         {(!tab || tab === "workers") && (
-          <div style={{
-            padding: "12px 16px",
-            marginBottom: "0px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "8px",
-            border: "1px solid #e9ecef"
-          }}>
-            <p style={{
-              margin: 0,
-              fontSize: "14px",
-              color: "#6c757d",
-              fontWeight: 500,
-              textAlign: "center"
-            }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              marginBottom: "0px",
+              backgroundColor: "#f8f9fa",
+              borderRadius: "8px",
+              border: "1px solid #e9ecef",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                color: "#6c757d",
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+            >
               Folyamatban lévő feladatokhoz rendelt munkaerő
             </p>
           </div>
@@ -191,20 +201,24 @@ export default async function SupplyPage({
 
         {/* Description text for tools tab */}
         {tab === "tools" && (
-          <div style={{
-            padding: "12px 16px",
-            marginBottom: "0px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "8px",
-            border: "1px solid #e9ecef"
-          }}>
-            <p style={{
-              margin: 0,
-              fontSize: "14px",
-              color: "#6c757d",
-              fontWeight: 500,
-              textAlign: "center"
-            }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              marginBottom: "0px",
+              backgroundColor: "#f8f9fa",
+              borderRadius: "8px",
+              border: "1px solid #e9ecef",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                color: "#6c757d",
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+            >
               Folyamatban lévő feladatokhoz szükséges eszközök
             </p>
           </div>
@@ -212,20 +226,24 @@ export default async function SupplyPage({
 
         {/* Description text for materials tab */}
         {tab === "materials" && (
-          <div style={{
-            padding: "12px 16px",
-            marginBottom: "0px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "8px",
-            border: "1px solid #e9ecef"
-          }}>
-            <p style={{
-              margin: 0,
-              fontSize: "14px",
-              color: "#6c757d",
-              fontWeight: 500,
-              textAlign: "center"
-            }}>
+          <div
+            style={{
+              padding: "12px 16px",
+              marginBottom: "0px",
+              backgroundColor: "#f8f9fa",
+              borderRadius: "8px",
+              border: "1px solid #e9ecef",
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                color: "#6c757d",
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+            >
               Folyamatban lévő feladatokhoz szükséges anyagok
             </p>
           </div>
