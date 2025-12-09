@@ -260,29 +260,9 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
       },
     };
 
-    console.log(
-      "📤 [szamlazz.hu] Sending invoice data:",
-      JSON.stringify(
-        {
-          invoiceData,
-          items,
-          customerName,
-          city,
-          street,
-          zip,
-        },
-        null,
-        2
-      )
-    );
-
     let result;
     try {
       result = await client.generateInvoice(invoiceData, items);
-      console.log(
-        "✅ [szamlazz.hu] Invoice generated successfully:",
-        JSON.stringify(result, null, 2)
-      );
     } catch (error) {
       console.error("❌ [szamlazz.hu] Error generating invoice:", error);
       console.error(
@@ -302,10 +282,6 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
     });
 
     // Update work items with billed quantities - DIRECTLY by workItemId
-    console.log(
-      "🔍 [finalizeAndGenerateInvoice] Updating WorkItems directly by workItemId"
-    );
-    console.log("🔍 [finalizeAndGenerateInvoice] BillingItems:", billingItems);
 
     let workIdToRecalculate: number | null = null;
 
@@ -324,10 +300,6 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
           const updatedBilledQuantity =
             currentBilledQuantity + newBilledQuantity;
 
-          console.log(
-            `✅ [finalizeAndGenerateInvoice] Updating WorkItem ${billingItem.workItemId} (${currentWorkItem.name}): ${currentBilledQuantity} + ${newBilledQuantity} = ${updatedBilledQuantity}`
-          );
-
           await prisma.workItem.update({
             where: { id: billingItem.workItemId },
             data: {
@@ -339,25 +311,13 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
           if (!workIdToRecalculate) {
             workIdToRecalculate = currentWorkItem.workId;
           }
-        } else {
-          console.log(
-            `❌ [finalizeAndGenerateInvoice] WorkItem not found: ${billingItem.workItemId}`
-          );
         }
-      } else {
-        console.log(
-          `⚠️ [finalizeAndGenerateInvoice] No workItemId in billingItem:`,
-          billingItem
-        );
       }
     }
 
     // Frissítjük a Work aggregált értékeit, ha volt workItem frissítés
     if (workIdToRecalculate) {
       await recalculateWorkTotals(workIdToRecalculate, tenantEmail);
-      console.log(
-        `✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totals recalculated`
-      );
 
       // Frissítjük a totalBilledAmount mezőt
       const currentWork = await prisma.work.findUnique({
@@ -372,10 +332,6 @@ export async function finalizeAndGenerateInvoice(billingId: number) {
         where: { id: workIdToRecalculate },
         data: { totalBilledAmount: newTotalBilledAmount },
       });
-
-      console.log(
-        `✅ [finalizeAndGenerateInvoice] Work #${workIdToRecalculate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`
-      );
     }
 
     // Update offer items with billed quantities
@@ -576,10 +532,6 @@ export async function markAsPaidCash(billingId: number) {
     const billingItems = JSON.parse(billing.items as string);
 
     // Update work items with paid quantities - DIRECTLY by workItemId
-    console.log(
-      "🔍 [markAsPaidCash] Updating WorkItems paidQuantity by workItemId"
-    );
-    console.log("🔍 [markAsPaidCash] BillingItems:", billingItems);
 
     let workIdToUpdate: number | null = null;
 
@@ -597,10 +549,6 @@ export async function markAsPaidCash(billingId: number) {
           const currentPaidQuantity = currentWorkItem.paidQuantity || 0;
           const updatedPaidQuantity = currentPaidQuantity + newPaidQuantity;
 
-          console.log(
-            `✅ [markAsPaidCash] Updating WorkItem ${billingItem.workItemId} (${currentWorkItem.name}): ${currentPaidQuantity} + ${newPaidQuantity} = ${updatedPaidQuantity}`
-          );
-
           await prisma.workItem.update({
             where: { id: billingItem.workItemId },
             data: {
@@ -612,16 +560,7 @@ export async function markAsPaidCash(billingId: number) {
           if (!workIdToUpdate) {
             workIdToUpdate = currentWorkItem.workId;
           }
-        } else {
-          console.log(
-            `❌ [markAsPaidCash] WorkItem not found: ${billingItem.workItemId}`
-          );
         }
-      } else {
-        console.log(
-          `⚠️ [markAsPaidCash] No workItemId in billingItem:`,
-          billingItem
-        );
       }
     }
 
@@ -649,15 +588,8 @@ export async function markAsPaidCash(billingId: number) {
         data: { totalBilledAmount: newTotalBilledAmount },
       });
 
-      console.log(
-        `✅ [markAsPaidCash] Work #${workIdToUpdate} totalBilledAmount updated: ${newTotalBilledAmount} Ft`
-      );
-
       // Frissítjük a Work aggregált értékeit (totalCompleted, totalBilled, totalBillable)
       await recalculateWorkTotals(workIdToUpdate, tenantEmail);
-      console.log(
-        `✅ [markAsPaidCash] Work #${workIdToUpdate} totals recalculated`
-      );
     }
 
     return {

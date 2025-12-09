@@ -10,7 +10,6 @@ export async function getWorkItemWorkersForWork(workId: number) {
   });
 
   if (!work) {
-    console.log(`[getWorkItemWorkersForWork] Work not found for workId ${workId}`);
     return [];
   }
 
@@ -22,8 +21,6 @@ export async function getWorkItemWorkersForWork(workId: number) {
       tenantEmail: work.tenantEmail,
     },
   });
-
-  console.log(`[getWorkItemWorkersForWork] workItemWorkers for workId ${workId}:`, workItemWorkers);
 
   return workItemWorkers;
 }

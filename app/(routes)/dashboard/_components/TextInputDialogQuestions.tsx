@@ -16,6 +16,7 @@ import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 import { OfferItemQuestion } from "@/types/offer.types";
 import { deleteOffer } from "@/actions/delete-offer";
 import { removeQuestionFromOffer } from "@/actions/offer-actions";
+import { useRequirementIdStore } from "@/store/requirement-id-store";
 
 interface TextInputDialogProps {
   open: boolean;
@@ -53,18 +54,11 @@ export default function TextInputDialogQuestions({
   // Get the setOfferItems function and current items from the store
   const { setOfferItemsQuestion, offerItemsQuestion, clearOfferItemsQuestion } =
     useOfferItemQuestionStore();
+  const { setRequirementId, clearRequirementId } = useRequirementIdStore();
   const prevItemsRef = useRef(currentItems);
   const questionsInitializedRef = useRef(false);
+  console.log(offerItemsQuestion)
 
-  // Log when offerItems are updated in the store
-  useEffect(() => {
-    if (offerItemsQuestion && offerItemsQuestion.length > 0) {
-      console.log(
-        "Items stored in offerItemsQuestionStore:",
-        offerItemsQuestion
-      );
-    }
-  }, [offerItemsQuestion]);
 
   // Initialize questions with unique IDs when dialog opens
   useEffect(() => {
@@ -109,61 +103,8 @@ export default function TextInputDialogQuestions({
     // Remove from local state immediately for better UX
     setQuestions((prev) => prev.filter((q) => q.id !== id));
 
-    // Mark as answered with "NEM releváns" in the background
-    if (requirementId && currentOfferId) {
-      try {
-        // Add the "answered" question to the requirement description
-        const answeredText = `\n✓ MEGVÁLASZOLT: ${questionToRemove.text}\n  Válasz: NEM releváns, hagyja figyelmen kívül\n`;
-
-        // Check if there's already a "Válaszok a kérdésekre:" section
-        let updatedDescription = "";
-        const answersMatch = requirementDescription.match(
-          /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
-        );
-
-        if (answersMatch) {
-          // If there's already an answers section, append the new answer to it
-          const existingAnswers = answersMatch[0];
-          updatedDescription = requirementDescription.replace(
-            existingAnswers,
-            `Válaszok a kérdésekre:${answersMatch[1]}${answeredText}`
-          );
-        } else {
-          // If no answers section exists, add it at the end
-          updatedDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answeredText}`;
-        }
-
-        // Update the requirement in the database
-        const updateResponse = await fetch("/api/update-requirement", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requirementId: requirementId,
-            data: {
-              description: updatedDescription,
-              updateCount: { increment: 1 },
-            },
-          }),
-        });
-
-        if (!updateResponse.ok) {
-          console.error("Failed to update requirement with skipped question");
-        }
-
-        // Also remove the question from the offer description
-        const result = await removeQuestionFromOffer(
-          currentOfferId,
-          questionToRemove.text
-        );
-
-        if (result.description && onOfferUpdated) {
-          onOfferUpdated(result.description);
-        }
-      } catch (error) {
-        console.error("Error marking question as not relevant:", error);
-      }
-    } else if (currentOfferId) {
-      // Fallback: just remove from offer if no requirementId
+    // Remove the question from the offer description (UI update only)
+    if (currentOfferId) {
       try {
         const result = await removeQuestionFromOffer(
           currentOfferId,
@@ -176,6 +117,9 @@ export default function TextInputDialogQuestions({
         console.error("Error removing question from offer:", error);
       }
     }
+
+    // NOTE: We do NOT update the old requirement in the database
+    // The removed question will simply not appear in the new offer
   };
 
   const onAnalyze = async () => {
@@ -200,64 +144,28 @@ export default function TextInputDialogQuestions({
         answersText += `\n✓ MEGVÁLASZOLT: ${text}\n  Válasz: ${answer}\n`;
       });
 
-      // If we have a requirementId, update the requirement description first
-      if (requirementId) {
-        // Check if there's already a "Válaszok a kérdésekre:" section
-        let updatedDescription = "";
-        const answersMatch = requirementDescription.match(
-          /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
-        );
-
-        if (answersMatch) {
-          // If there's already an answers section, append the new answers to it
-          const existingAnswers = answersMatch[0];
-          updatedDescription = requirementDescription.replace(
-            existingAnswers,
-            `Válaszok a kérdésekre:${answersMatch[1]}${answersText}`
-          );
-        } else {
-          // If no answers section exists, add it at the end
-          updatedDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answersText}`;
-        }
-
-        // Update the requirement in the database
-        const updateResponse = await fetch("/api/update-requirement", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requirementId: requirementId,
-            data: {
-              description: updatedDescription,
-              updateCount: { increment: 1 },
-            },
-          }),
-        });
-
-        if (!updateResponse.ok) {
-          throw new Error("Hiba történt a követelmény frissítése során");
-        }
-      }
+      // NOTE: We do NOT update the old requirement in the database
+      // We only prepare the description in memory with the answers
+      // The new requirement will be created by offer-actions.ts with updateCount=2, questionCount=1
 
       // Create a new record ID for the new offer
       const recordId = crypto.randomUUID();
 
-      // Prepare the combined text with original requirement and answers
-      // Use the UPDATED description that includes all previous answers
+      // Prepare the combined text with original requirement and answers (in memory only)
       let finalDescription = requirementDescription;
+      const answersMatch = requirementDescription.match(
+        /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
+      );
 
-      // If we updated the requirement, use the updated description
-      if (requirementId) {
-        const answersMatch = requirementDescription.match(
-          /Válaszok a kérdésekre:([\s\S]*?)(?=\n\n|$)/
+      if (answersMatch) {
+        // If there's already an answers section, append the new answers to it
+        finalDescription = requirementDescription.replace(
+          answersMatch[0],
+          `Válaszok a kérdésekre:${answersMatch[1]}${answersText}`
         );
-        if (answersMatch) {
-          finalDescription = requirementDescription.replace(
-            answersMatch[0],
-            `Válaszok a kérdésekre:${answersMatch[1]}${answersText}`
-          );
-        } else {
-          finalDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answersText}`;
-        }
+      } else {
+        // If no answers section exists, add it at the end
+        finalDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answersText}`;
       }
 
       // finalDescription már tartalmazza az eredeti követelményt + a "Válaszok a kérdésekre:" részt
@@ -284,24 +192,24 @@ export default function TextInputDialogQuestions({
         throw new Error("Hiba történt az újraküldés során");
       }
 
-      const result = await response.json();
-      console.log("Event queued:", result.eventId);
 
       // Delete the old offer if we have currentOfferId
       if (currentOfferId) {
         try {
-          console.log("Deleting old offer:", currentOfferId);
           const deleteResult = await deleteOffer(currentOfferId);
 
-          if (deleteResult.success) {
-            console.log("Old offer deleted successfully");
-          } else {
+          if (!deleteResult.success) {
             console.error("Failed to delete old offer:", deleteResult.error);
           }
         } catch (deleteErr) {
           console.error("Error deleting old offer:", deleteErr);
           // Don't block the flow if deletion fails
         }
+      }
+
+      // Set the requirementId in the store so the redirect page can use it
+      if (requirementId) {
+        setRequirementId(requirementId);
       }
 
       // Azonnal átirányítunk a redirect oldalra, ahol database polling fog történni
@@ -316,8 +224,16 @@ export default function TextInputDialogQuestions({
     }
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    // Clear store when dialog closes
+    if (!isOpen) {
+      clearRequirementId();
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px] h-[90vh] max-h-[800px] flex flex-col p-0 overflow-hidden">
         {loading ? (
           <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
@@ -440,6 +356,8 @@ export default function TextInputDialogQuestions({
                   disabled={loading}
                   onClick={() => {
                     setOpen(false);
+                    // Clear the requirementId from store
+                    clearRequirementId();
                     // Reset questions when closing
                     setQuestions(
                       initialQuestions.map((q) => ({

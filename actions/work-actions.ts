@@ -820,9 +820,7 @@ export async function getWorkById(id: number) {
   const { user, tenantEmail } = await getTenantSafeAuth();
   const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
 
-  // First refresh completed quantities from diary entries
-  await refreshCompletedQuantitiesForWork(id, tenantEmail);
-
+  // First get the work to find its tenantEmail
   const work = await prisma.work.findUnique({
     where: { id },
     include: {
@@ -851,6 +849,9 @@ export async function getWorkById(id: number) {
   if (!isTenant && !isAssignedWorker) {
     throw new Error("Unauthorized");
   }
+
+  // Refresh completed quantities using the WORK's tenantEmail, not the logged-in user's
+  await refreshCompletedQuantitiesForWork(id, work.tenantEmail);
 
   // Get expectedProfitPercent from the first performance record
   const expectedProfitPercent =

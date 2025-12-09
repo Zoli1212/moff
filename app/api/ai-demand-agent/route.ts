@@ -70,6 +70,7 @@ export async function POST(req: NextRequest) {
     const recordId = formData.get("recordId")?.toString();
     const textContent = formData.get("textContent")?.toString();
     const type = formData.get("type")?.toString() || "demand-analyzer";
+    const requirementId = formData.get("requirementId")?.toString();
 
     let existingItems = [];
     try {
@@ -139,6 +140,7 @@ export async function POST(req: NextRequest) {
     console.log("content (userInput):", content.substring(0, 200) + "...");
     console.log("existingItems to send:", existingItems);
     console.log("existingItems length:", existingItems.length);
+    console.log("requirementId:", requirementId);
     console.log("=======================================");
 
     const eventData = isOfferLetter
@@ -147,6 +149,7 @@ export async function POST(req: NextRequest) {
           recordId,
           userEmail: tenantEmail,
           existingItems: existingItems,
+          ...(requirementId && { requirementId }),
         }
       : {
           recordId,

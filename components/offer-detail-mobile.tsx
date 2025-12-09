@@ -68,12 +68,19 @@ import TextInputDialogQuestions from "@/app/(routes)/dashboard/_components/TextI
 import SocialShareButtonsExcel from "./SocialShareButtonsExcel";
 
 // Helper function to extract questions from description
-// Ha updateCount >= 3, akkor üres tömböt ad vissza (nem jelennek meg kérdések)
-function extractQuestions(description: string, updateCount?: number): string[] {
+// Ha updateCount >= 3 VAGY questionCount >= 1, akkor üres tömböt ad vissza
+function extractQuestions(
+  description: string,
+  updateCount?: number,
+  questionCount?: number
+): string[] {
   if (!description) return [];
 
-  // Ha updateCount >= 3, akkor ne jelenjenek meg kérdések
-  if (updateCount !== undefined && updateCount >= 3) {
+  // Ha updateCount >= 3 VAGY questionCount >= 1 (user már válaszolt), akkor ne jelenjenek meg kérdések
+  if (
+    (updateCount !== undefined && updateCount >= 3) ||
+    (questionCount !== undefined && questionCount >= 1)
+  ) {
     return [];
   }
 
@@ -759,8 +766,11 @@ export function OfferDetailView({
 
   // Check if there are unanswered questions
   const hasUnansweredQuestions =
-    extractQuestions(offer.description || "", offer.requirement?.updateCount)
-      .length > 0;
+    extractQuestions(
+      offer.description || "",
+      offer.requirement?.updateCount,
+      offer.requirement?.questionCount
+    ).length > 0;
 
   // Helper functions to extract name and email from title and description
   const extractName = (title?: string | null): string => {
@@ -1709,7 +1719,8 @@ export function OfferDetailView({
         {(() => {
           const questions = extractQuestions(
             offer.description || "",
-            offer.requirement?.updateCount
+            offer.requirement?.updateCount,
+            offer.requirement?.questionCount
           );
           if (!isDialogOpen && questions.length > 0) {
             return <div className="h-4"></div>;
@@ -1722,7 +1733,8 @@ export function OfferDetailView({
           {(() => {
             const questions = extractQuestions(
               offer.description || "",
-              offer.requirement?.updateCount
+              offer.requirement?.updateCount,
+              offer.requirement?.questionCount
             );
             if (!isDialogOpen && questions.length > 0) {
               return (
@@ -1757,7 +1769,8 @@ export function OfferDetailView({
             toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
             questions={extractQuestions(
               offer.description || "",
-              offer.requirement?.updateCount
+              offer.requirement?.updateCount,
+              offer.requirement?.questionCount
             )}
             requirementId={offer.requirement?.id}
             requirementDescription={

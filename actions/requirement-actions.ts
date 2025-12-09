@@ -215,6 +215,7 @@ export async function updateRequirement(
     description?: string;
     status?: string;
     updateCount?: { increment: number };
+    questionCount?: number;
   }
 ) {
   try {
@@ -249,6 +250,9 @@ export async function updateRequirement(
         ...(data.status && { status: data.status }),
         updatedAt: new Date(),
         ...(data.updateCount && { updateCount: data.updateCount }),
+        ...(data.questionCount !== undefined && {
+          questionCount: data.questionCount,
+        }),
       },
       include: {
         myWork: true,

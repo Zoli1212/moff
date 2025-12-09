@@ -1,4 +1,4 @@
-import { Offer as PrismaOffer } from '@prisma/client';
+import { Offer as PrismaOffer } from "@prisma/client";
 
 export interface OfferItem {
   id?: number;
@@ -30,7 +30,7 @@ export interface OfferItemQuestion {
   description?: string;
 }
 
-export interface OfferWithItems extends Omit<PrismaOffer, 'items' | 'notes'> {
+export interface OfferWithItems extends Omit<PrismaOffer, "items" | "notes"> {
   items: OfferItem[];
   notes: string[];
   requirement: {
@@ -39,6 +39,7 @@ export interface OfferWithItems extends Omit<PrismaOffer, 'items' | 'notes'> {
     description: string | null;
     status: string;
     updateCount?: number;
+    questionCount?: number;
     versionNumber?: number;
   } | null;
 }
@@ -54,4 +55,4 @@ export interface SimpleOfferItem {
   description?: string;
 }
 
-export type { Offer as PrismaOffer } from '@prisma/client';
+export type { Offer as PrismaOffer } from "@prisma/client";

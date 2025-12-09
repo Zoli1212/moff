@@ -283,8 +283,7 @@ export const adminCreateCredential: FormAction = async (prevState, formData) => 
     // const result = await prisma.googleOAuthCredential.create({ data: credentialData });
     
     // For now, we'll just log and return success
-    console.log('Credential data:', credentialData);
-    
+
     revalidatePath('/admin/credentials');
     return { 
       success: true, 

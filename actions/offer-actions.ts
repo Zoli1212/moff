@@ -149,11 +149,6 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
     // Timeout növelve 30 másodpercre (sok item esetén szükséges)
     return await prisma.$transaction(
       async (tx) => {
-        if (requirementId) {
-          console.log("Received requirementId from client:", requirementId);
-        }
-
-        console.log("OfferTitle", offerTitle);
 
         // ... rest of the code remains the same ...
         if (recordId) {
@@ -186,21 +181,9 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
         // Parse the offer content (could be JSON or raw text)
         let parsedContent: ParsedOfferContent;
-        console.log(
-          "OfferContent",
-          offerContent,
-          typeof offerContent,
-          "ENDRAW"
-        );
         try {
           parsedContent = JSON.parse(offerContent) as ParsedOfferContent;
         } catch (e) {
-          console.log(
-            "OfferContent",
-            offerContent,
-            typeof offerContent,
-            "ENDTEXT"
-          );
           // If not valid JSON, try to parse as raw text
           parsedContent = formatOfferForSave(parseOfferText(offerContent));
         }
@@ -266,15 +249,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
 
           // Combine the arrays (offerItemsQuestion first, then new items)
           parsedContent.items = [...normalizedOfferItems, ...newItems];
-
-          console.log(
-            `Merged ${normalizedOfferItems.length} existing items with ${newItems.length} new items`
-          );
-          console.log("NormalizedOfferItems", normalizedOfferItems);
         }
-
-        console.log("PARSED CONTENT", parsedContent);
-        console.log("ITEMS", parsedContent.items || parsedContent.notes);
 
         // Auth: ha providedUserEmail meg van adva (Inngest), akkor azt használjuk
         // Különben Clerk auth-ot használunk (frontend)
@@ -526,7 +501,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
         if (requirementId) {
           latestRequirement = await tx.requirement.findUnique({
             where: { id: requirementId },
-            select: { versionNumber: true, id: true, updateCount: true },
+            select: { versionNumber: true, id: true, updateCount: true, questionCount: true },
           });
         }
         if (!latestRequirement) {
@@ -536,7 +511,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
               myWorkId: work.id,
             },
             orderBy: { versionNumber: "desc" },
-            select: { versionNumber: true, id: true, updateCount: true },
+            select: { versionNumber: true, id: true, updateCount: true, questionCount: true },
           });
         }
 
@@ -544,17 +519,27 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
           ? latestRequirement.versionNumber + 1
           : 1;
 
-        // updateCount = ahány Requirement van az adott myWorkId-hez
-        const requirementCount = await tx.requirement.count({
-          where: { myWorkId: work.id },
-        });
-        const newUpdateCount = requirementCount + 1; // +1 mert most hozzuk létre az újat
+        // If we have a previous requirement (from requirementId), increment its values
+        // Otherwise, start from defaults
+        let newUpdateCount: number;
+        let newQuestionCount: number;
+
+        if (latestRequirement && requirementId) {
+          // We have a previous requirement, increment its values
+          newUpdateCount = latestRequirement.updateCount + 1;
+          newQuestionCount = 1; // User válaszolt a kérdésekre, így questionCount = 1
+        } else {
+          // First requirement, use defaults
+          newUpdateCount = 1;
+          newQuestionCount = 0; // Kérdések látszanak
+        }
 
         console.log("=== REQUIREMENT VERSION INFO ===");
         console.log("latestRequirement:", latestRequirement);
+        console.log("requirementId (provided):", requirementId);
         console.log("newVersionNumber:", newVersionNumber);
-        console.log("requirementCount:", requirementCount);
         console.log("newUpdateCount:", newUpdateCount);
+        console.log("newQuestionCount:", newQuestionCount);
         console.log("work.title:", work.title);
         console.log("================================");
 
@@ -568,6 +553,7 @@ export async function saveOfferWithRequirements(data: SaveOfferData) {
             connect: { id: work.id },
           },
           updateCount: newUpdateCount,
+          questionCount: newQuestionCount,
           // Link to previous version if it exists
           ...(latestRequirement && {
             previousVersion: {

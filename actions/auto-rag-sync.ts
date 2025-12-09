@@ -141,8 +141,6 @@ Projekt: ${work.title}
       }
     }
 
-    console.log(`✅ RAG szinkronizáció kész munkához (${workId}): ${syncedItems} elem`);
-    
     return {
       success: true,
       message: `Munka szinkronizálva RAG-be: ${syncedItems} elem`,
@@ -232,8 +230,6 @@ Ajánlat: ${offer.title || 'Nincs cím'}
       }
     }
 
-    console.log(`✅ RAG szinkronizáció kész ajánlathoz (${offerId}): ${syncedItems} elem`);
-    
     return {
       success: true,
       message: `Ajánlat szinkronizálva RAG-be: ${syncedItems} elem`,
@@ -253,9 +249,7 @@ Ajánlat: ${offer.title || 'Nincs cím'}
 export async function backgroundRAGSync() {
   try {
     const { tenantEmail } = await getTenantSafeAuth();
-    
-    console.log("🔄 Háttér RAG szinkronizáció kezdése...");
-    
+
     // Legutóbb módosított munkák és ajánlatok lekérése
     const recentWorks = await prisma.work.findMany({
       where: { 
@@ -295,8 +289,6 @@ export async function backgroundRAGSync() {
       }
     }
 
-    console.log(`✅ Háttér RAG szinkronizáció kész: ${totalSynced} elem szinkronizálva`);
-    
     return {
       success: true,
       message: `Háttér szinkronizáció kész: ${totalSynced} elem`,

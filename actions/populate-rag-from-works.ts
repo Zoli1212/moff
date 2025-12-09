@@ -8,9 +8,7 @@ import { addRAGContext } from "./rag-context-actions";
 export async function populateRAGFromWorks() {
   try {
     const { tenantEmail } = await getTenantSafeAuth();
-    
-    console.log("🔄 RAG feltöltés kezdése munkákból...");
-    
+
     // Munkák lekérése workItem-ekkel együtt
     const works = await prisma.work.findMany({
       where: { tenantEmail },
@@ -101,8 +99,6 @@ Projekt: ${work.title}
       }
     }
 
-    console.log(`✅ RAG feltöltés kész: ${addedCount} elem hozzáadva`);
-    
     return {
       success: true,
       message: `${addedCount} elem betöltve a RAG tudásbázisba`,
@@ -123,9 +119,7 @@ Projekt: ${work.title}
 export async function populateRAGFromOffers() {
   try {
     const { tenantEmail } = await getTenantSafeAuth();
-    
-    console.log("🔄 RAG feltöltés kezdése ajánlatokból...");
-    
+
     // Ajánlatok lekérése
     const offers = await prisma.myWork.findMany({
       where: { tenantEmail },
@@ -164,8 +158,6 @@ Létrehozva: ${offer.createdAt.toLocaleDateString()}
       // Ajánlat tételek - jelenleg nem elérhető
     }
 
-    console.log(`✅ RAG feltöltés kész: ${addedCount} elem hozzáadva`);
-    
     return {
       success: true,
       message: `${addedCount} elem betöltve a RAG tudásbázisba`,

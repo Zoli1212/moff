@@ -12,7 +12,6 @@ export async function addWorkItemAndOfferItem(workId: number, itemData?: {
   unitPrice: string;
 }) {
   try {
-    console.log("addWorkItemAndOfferItem called with:", { workId, itemData });
     const { user, tenantEmail } = await getTenantSafeAuth();
 
     // Verify the work belongs to the user
