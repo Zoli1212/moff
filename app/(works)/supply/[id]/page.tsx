@@ -10,6 +10,7 @@ import {
   getAssignedToolsForWork,
 } from "@/actions/tools-registry-actions";
 import WorkHeader from "@/components/WorkHeader";
+import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
 // Work interface with maxRequiredWorkers
 interface Work {
@@ -50,6 +51,9 @@ export default async function SupplyPage({
   if (!workId) return <div>Hibás workId</div>;
 
   const { tab } = await searchParams;
+
+  // Check if user is tenant or worker
+  const { isTenant } = await getTenantSafeAuth();
 
   let materials: Material[] = [];
   let workItems: WorkItem[] = [];
@@ -101,37 +105,39 @@ export default async function SupplyPage({
             justifyContent: "space-between",
           }}
         >
-          {/* Tab links */}
-          <a
-            href={`?tab=workers`}
-            style={{
-              flex: 1,
-              padding: "10px 0",
-              borderRadius: "22px 0 0 22px",
-              border: "none",
-              background: !tab || tab === "workers" ? "#ddd" : "#f7f7f7",
-              color: !tab || tab === "workers" ? "#222" : "#888",
-              fontWeight: 600,
-              fontSize: 15,
-              boxShadow: "0 1px 2px #eee",
-              outline: "none",
-              cursor: "pointer",
-              transition: "background .2s",
-              textDecoration: "none",
-              textAlign: "center",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            Munkaerő
-          </a>
+          {/* Tab links - Workers only see Tools tab */}
+          {isTenant && (
+            <a
+              href={`?tab=workers`}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: "22px 0 0 22px",
+                border: "none",
+                background: !tab || tab === "workers" ? "#ddd" : "#f7f7f7",
+                color: !tab || tab === "workers" ? "#222" : "#888",
+                fontWeight: 600,
+                fontSize: 15,
+                boxShadow: "0 1px 2px #eee",
+                outline: "none",
+                cursor: "pointer",
+                transition: "background .2s",
+                textDecoration: "none",
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Munkaerő
+            </a>
+          )}
           <a
             href={`?tab=tools`}
             style={{
               flex: 1,
               padding: "10px 0",
-              borderRadius: 0,
+              borderRadius: isTenant ? 0 : "22px",
               border: "none",
               background: tab === "tools" ? "#ddd" : "#f7f7f7",
               color: tab === "tools" ? "#222" : "#888",
@@ -149,29 +155,31 @@ export default async function SupplyPage({
           >
             Eszközök
           </a>
-          <a
-            href={`?tab=materials`}
-            style={{
-              flex: 1,
-              padding: "10px 0",
-              borderRadius: "0 22px 22px 0",
-              border: "none",
-              background: tab === "materials" ? "#ddd" : "#f7f7f7",
-              color: tab === "materials" ? "#222" : "#888",
-              fontWeight: 600,
-              fontSize: 15,
-              boxShadow: "0 1px 2px #eee",
-              outline: "none",
-              cursor: "pointer",
-              textDecoration: "none",
-              textAlign: "center",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            Anyagok
-          </a>
+          {isTenant && (
+            <a
+              href={`?tab=materials`}
+              style={{
+                flex: 1,
+                padding: "10px 0",
+                borderRadius: "0 22px 22px 0",
+                border: "none",
+                background: tab === "materials" ? "#ddd" : "#f7f7f7",
+                color: tab === "materials" ? "#222" : "#888",
+                fontWeight: 600,
+                fontSize: 15,
+                boxShadow: "0 1px 2px #eee",
+                outline: "none",
+                cursor: "pointer",
+                textDecoration: "none",
+                textAlign: "center",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Anyagok
+            </a>
+          )}
         </div>
 
         {/* Description text for workers tab */}
@@ -251,12 +259,22 @@ export default async function SupplyPage({
 
         {/* Tab content */}
         {!tab || tab === "workers" ? (
-          <WorkersSlotsSectionWithoutRoles
-            workId={workId}
-            workItems={workItems}
-            workers={workers}
-            maxRequiredWorkers={maxRequiredWorkers}
-          />
+          isTenant ? (
+            <WorkersSlotsSectionWithoutRoles
+              workId={workId}
+              workItems={workItems}
+              workers={workers}
+              maxRequiredWorkers={maxRequiredWorkers}
+            />
+          ) : (
+            // Workers see Tools by default
+            <ToolsSlotsSection
+              tools={tools}
+              workId={workId}
+              assignedTools={assignedTools}
+              workItems={workItems}
+            />
+          )
         ) : tab === "tools" ? (
           <ToolsSlotsSection
             tools={tools}
@@ -265,11 +283,13 @@ export default async function SupplyPage({
             workItems={workItems}
           />
         ) : (
-          <MaterialSlotsSection
-            materials={materials}
-            workId={workId}
-            workItems={workItems}
-          />
+          isTenant && (
+            <MaterialSlotsSection
+              materials={materials}
+              workId={workId}
+              workItems={workItems}
+            />
+          )
         )}
       </div>
     </div>

@@ -106,7 +106,6 @@ export default function WorksLayoutClient({
     {
       href: `/supply/${workId}`,
       label: "Erőforrás",
-      tenantOnly: true,
       icon: (
         <Image
           src="/worker3.png"
