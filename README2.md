@@ -686,22 +686,5 @@ MEGJEGYZÉS: Ez a követelmény szintén tartalmaz egyedi tételeket, mivel a "m
 
 ---
 8. Teszt utca 403 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanyzó 150000, a wc-e 50000, a kád 160000.
-kérdések
-----
-Ajánlatoldalról, Igen munkához rendelem! nem lesznek összefésülve.
-Áj ajánlatnál hozzárendelem a tételeket a munkákhoz
-Új követelmények
-Munkához rendelés nem fésüli össze, 
-Hétfő BUG Pénteki napi,
-Munkásokat nem tudtam hozzárendelni
-Munkásokat hozzárendelése
 
 
-Eszközök
-Vevő adatai
-API Beállításoknál API key + név
------
-Számlára lehesssen kattintani
-Egy értelműen lehessen kattintani
-VILLOG mégis!
-optimalizálás
