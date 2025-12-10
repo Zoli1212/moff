@@ -205,6 +205,9 @@ export function OfferDetailView({
   const [selectedCustomItem, setSelectedCustomItem] =
     useState<OfferItem | null>(null);
   const [isSavingGlobalPrice, setIsSavingGlobalPrice] = useState(false);
+  const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
+  const [refineInput, setRefineInput] = useState("");
+  const [isRefining, setIsRefining] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -739,6 +742,79 @@ export function OfferDetailView({
 
   const handleOfferDeleteCancel = () => {
     setShowOfferDeleteModal(false);
+  };
+
+  // Handle items refinement with AI
+  const handleRefineItems = async () => {
+    if (!refineInput.trim()) {
+      toast.error("Kérlek add meg a pontosítást!");
+      return;
+    }
+
+    setIsRefining(true);
+    try {
+      console.log("🔧 === TÉTELEK PONTOSÍTÁSA KEZDÉS ===");
+      console.log("📤 Beküldött tételek:", JSON.stringify(editableItems, null, 2));
+      console.log("📝 User pontosítási kérése:", refineInput);
+      console.log("📊 Tételek száma:", editableItems.length);
+
+      const response = await fetch("/api/ai-refine-items", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: editableItems,
+          userRefinement: refineInput,
+        }),
+      });
+
+      const data = await response.json();
+
+      console.log("📥 AI válasz:", JSON.stringify(data, null, 2));
+      console.log("✅ Pontosított tételek száma:", data.items?.length || 0);
+
+      if (!response.ok) {
+        console.error("❌ API hiba:", data);
+        throw new Error(data.error || "Hiba történt a pontosítás során");
+      }
+
+      if (data.success && data.items) {
+        // Update items with AI refined items
+        const refinedItems = data.items.map((item: OfferItem, index: number) => ({
+          ...item,
+          id: item.id || index,
+        }));
+
+        setEditableItems(refinedItems);
+
+        // Save to database
+        const result = await updateOfferItems(offer.id, refinedItems);
+
+        if (result.success) {
+          toast.success("Tételek sikeresen pontosítva!");
+          setIsRefineModalOpen(false);
+          setRefineInput("");
+
+          // Notify parent component
+          if (onOfferUpdated) {
+            onOfferUpdated({
+              items: refinedItems,
+              materialTotal: data.totals.materialTotal,
+              workTotal: data.totals.workTotal,
+              totalCost: data.totals.totalCost,
+            });
+          }
+        } else {
+          toast.error(result.error || "Hiba történt a mentés során");
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error refining items:", error);
+      toast.error((error as Error).message || "Hiba történt a pontosítás során");
+    } finally {
+      setIsRefining(false);
+    }
   };
 
   // Calculate totals
@@ -1834,6 +1910,19 @@ export function OfferDetailView({
           </div>
         )} */}
 
+        {/* Tételek pontosítása button */}
+        {editableItems.length > 0 && offer.status === "draft" && (
+          <div className="mt-6">
+            <Button
+              onClick={() => setIsRefineModalOpen(true)}
+              variant="outline"
+              className="w-full py-6 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:border-[#E58A00] active:bg-[#FE9C00] active:text-white font-medium text-lg transition-colors"
+            >
+              Tételek pontosítása
+            </Button>
+          </div>
+        )}
+
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
           <div className="mt-auto">
@@ -2554,6 +2643,87 @@ export function OfferDetailView({
               variant="outline"
               onClick={() => setShowCustomItemModal(false)}
               disabled={isSavingGlobalPrice}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
+            >
+              Mégse
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Refine Items Modal */}
+      <Dialog open={isRefineModalOpen} onOpenChange={setIsRefineModalOpen}>
+        <DialogContent className="sm:max-w-[calc(100%-32px)] max-w-[650px] max-h-[90vh] overflow-y-auto rounded-xl">
+          <DialogHeader>
+            <DialogTitle>Tételek pontosítása</DialogTitle>
+            <DialogDescription>
+              Írd le, hogyan szeretnéd módosítani a tételeket. Az AI csak azokat a tételeket módosítja, amelyekre vonatkozik a kérésed, a többit változatlanul hagyja.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="refine-input">Pontosítási kérés</Label>
+              <textarea
+                id="refine-input"
+                value={refineInput}
+                onChange={(e) => setRefineInput(e.target.value)}
+                placeholder="Pl: A burkolás mennyiségét növeld 50 m2-re, és add hozzá a fugázás tételét is."
+                className="w-full min-h-[120px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FE9C00] focus:border-transparent resize-none"
+                disabled={isRefining}
+              />
+            </div>
+
+            {editableItems.length > 0 && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Jelenlegi tételek ({editableItems.length} db)</Label>
+                <div className="max-h-[400px] overflow-y-auto border border-gray-200 rounded-md bg-gray-50">
+                  <div className="divide-y divide-gray-200">
+                    {editableItems.map((item, index) => (
+                      <div key={item.id || index} className="p-3 hover:bg-gray-100">
+                        <div className="font-medium text-sm text-gray-900 mb-1">
+                          {item.name}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                          <div>
+                            <span className="font-medium">Mennyiség:</span> {item.quantity} {item.unit}
+                          </div>
+                          <div>
+                            <span className="font-medium">Anyag ár:</span> {item.materialUnitPrice}
+                          </div>
+                          <div>
+                            <span className="font-medium">Munka ár:</span> {item.unitPrice}
+                          </div>
+                          <div>
+                            <span className="font-medium">Anyag össz:</span> {item.materialTotal}
+                          </div>
+                          <div className="col-span-2">
+                            <span className="font-medium">Munka össz:</span> {item.workTotal}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex flex-col gap-3 pt-4">
+            <Button
+              onClick={handleRefineItems}
+              disabled={isRefining || !refineInput.trim()}
+              className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
+            >
+              {isRefining ? "Pontosítás folyamatban..." : "Tételek pontosítása"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsRefineModalOpen(false);
+                setRefineInput("");
+              }}
+              disabled={isRefining}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
             >
               Mégse
