@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import { currentUser } from "@clerk/nextjs/server";
-import { OfferItem } from "@/types/offer.types";
+
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
