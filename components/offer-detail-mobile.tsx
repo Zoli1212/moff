@@ -802,7 +802,7 @@ export function OfferDetailView({
               items: refinedItems,
               materialTotal: data.totals.materialTotal,
               workTotal: data.totals.workTotal,
-              totalCost: data.totals.totalCost,
+              totalPrice: data.totals.totalCost,
             });
           }
         } else {
