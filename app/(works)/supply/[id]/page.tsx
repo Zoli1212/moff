@@ -10,7 +10,7 @@ import {
   getAssignedToolsForWork,
 } from "@/actions/tools-registry-actions";
 import WorkHeader from "@/components/WorkHeader";
-import { getTenantSafeAuth } from "@/lib/tenant-auth";
+import { getCurrentUserData } from "@/actions/user-actions";
 
 // Work interface with maxRequiredWorkers
 interface Work {
@@ -53,7 +53,8 @@ export default async function SupplyPage({
   const { tab } = await searchParams;
 
   // Check if user is tenant or worker
-  const { isTenant } = await getTenantSafeAuth();
+  const userData = await getCurrentUserData();
+  const isTenant = userData.isTenant ?? true;
 
   let materials: Material[] = [];
   let workItems: WorkItem[] = [];
