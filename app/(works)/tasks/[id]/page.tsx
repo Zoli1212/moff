@@ -1,11 +1,12 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary } from "@/actions/workdiary-actions";
 import { useParams } from "next/navigation";
 import {
-  fetchWorkAndItems,
+  fetchWorkAndItemsOptimized,
   updateWorkItemInProgress,
 } from "@/actions/work-actions";
 import { addWorkItemAndOfferItem } from "@/actions/add-work-item-actions";
@@ -41,29 +42,6 @@ export interface WorkItem {
   paidQuantity?: number;
 }
 
-interface Work {
-  id: number;
-  title: string;
-  offerId: number;
-  offerDescription?: string | null;
-  status: string;
-  startDate?: Date | null;
-  endDate?: Date | null;
-  location?: string | null;
-  totalWorkers: number;
-  totalLaborCost?: number | null;
-  totalTools: number;
-  totalToolCost?: number | null;
-  totalMaterials: number;
-  totalMaterialCost?: number | null;
-  estimatedDuration?: string | null;
-  progress?: number | null;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  tenantEmail: string;
-}
-
 const getMonogram = (name?: string): string => {
   if (!name) return "D"; // Default for 'Dolgozó'
   return name
@@ -77,13 +55,22 @@ const getMonogram = (name?: string): string => {
 export default function TasksPage() {
   const params = useParams();
   const workId = useMemo(() => Number(params.id), [params.id]);
+  const queryClient = useQueryClient();
 
-  const [work, setWork] = useState<Work | null>(null);
-  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+  // React Query: Fetch work and items with cache
+  const { data, isLoading: loading, error: queryError, refetch } = useQuery({
+    queryKey: ['work-tasks', workId],
+    queryFn: () => fetchWorkAndItemsOptimized(workId),
+    enabled: !isNaN(workId),
+    staleTime: 5 * 1000, // 5 seconds cache
+    retry: 1,
+  });
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [assigning, setAssigning] = useState<number | null>(null); // For loading spinner per task
+  const work = data?.work || null;
+  const workItems = data?.workItems || [];
+  const error = queryError ? "Nem sikerült betölteni a munkalapot. Kérjük, próbálja újra később." : null;
+
+  const [assigning, setAssigning] = useState<number | null>(null);
   const [assignError, setAssignError] = useState<string | null>(null);
   const [addingNewItem, setAddingNewItem] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -102,59 +89,11 @@ export default function TasksPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // const handleQuantityChange = async (
-  //   workItemId: number,
-  //   newQuantity: number
-  // ) => {
-  //   try {
-  //     const result = await updateWorkItemQuantity(workItemId, newQuantity);
-  //     if (result.success) {
-  //       // Update local state
-  //       setWorkItems((prev) =>
-  //         prev.map((item) =>
-  //           item.id === workItemId ? { ...item, quantity: newQuantity } : item
-  //         )
-  //       );
-  //       showToast("success", "Mennyiség sikeresen módosítva!");
-  //     } else {
-  //       showToast("error", result.error || "Hiba történt a módosítás során");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating quantity:", error);
-  //     showToast("error", "Hiba történt a módosítás során");
-  //   }
-  // };
-
-  const doFetchWorkAndItems = useCallback(async () => {
-    if (isNaN(workId)) {
-      setLoading(false);
-      setError("Érvénytelen munkalap azonosító");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { work, workItems } = await fetchWorkAndItems(workId);
-      setWork(work);
-      setWorkItems(workItems || []);
-    } catch (e) {
-      console.error("Error fetching work items:", e);
-      setError(
-        "Nem sikerült betölteni a munkalapot. Kérjük, próbálja újra később."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [workId]);
-
+  // Window focus and visibility refetch (with 5sec cache protection)
   useEffect(() => {
-    doFetchWorkAndItems();
-
-    const onFocus = () => doFetchWorkAndItems();
+    const onFocus = () => refetch();
     const onVisibility = () => {
-      if (document.visibilityState === "visible") doFetchWorkAndItems();
+      if (document.visibilityState === "visible") refetch();
     };
 
     window.addEventListener("focus", onFocus);
@@ -164,7 +103,7 @@ export default function TasksPage() {
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [doFetchWorkAndItems]);
+  }, [refetch]);
 
   // Toggle workItem inProgress status (checkbox)
   const handleAssignDiary = async (workItemId: number, checked: boolean) => {
@@ -186,6 +125,9 @@ export default function TasksPage() {
         return;
       }
 
+      // Force refetch immediately to refresh UI
+      await queryClient.refetchQueries({ queryKey: ['work-tasks', workId] });
+
       // Only create diary if checking and no diary exists for this work yet
       if (checked) {
         const hasExistingDiaryForWork = workItems.some(
@@ -195,56 +137,11 @@ export default function TasksPage() {
         if (!hasExistingDiaryForWork) {
           const result = await createWorkDiary({ workId, workItemId });
 
-          if (result.success) {
-            setWorkItems((prevItems) =>
-              prevItems.map((item) => {
-                if (item.id === workItemId) {
-                  return {
-                    ...item,
-                    inProgress: true,
-                    workDiaryEntries: [
-                      {
-                        id: result.data?.id || Date.now(),
-                        workItemId,
-                        workId,
-                      },
-                    ] as WorkDiary[],
-                  };
-                }
-                return item;
-              })
-            );
-          } else {
+          if (!result.success) {
             setAssignError("Nem sikerült naplót létrehozni.");
             return;
           }
-        } else {
-          // Just update inProgress status in UI
-          setWorkItems((prevItems) =>
-            prevItems.map((item) => {
-              if (item.id === workItemId) {
-                return {
-                  ...item,
-                  inProgress: true,
-                };
-              }
-              return item;
-            })
-          );
         }
-      } else {
-        // Just update inProgress status in UI - never delete diary
-        setWorkItems((prevItems) =>
-          prevItems.map((item) => {
-            if (item.id === workItemId) {
-              return {
-                ...item,
-                inProgress: false,
-              };
-            }
-            return item;
-          })
-        );
       }
     } catch (e) {
       setAssignError(
@@ -283,8 +180,8 @@ export default function TasksPage() {
       });
 
       if (result.success) {
-        // Refresh the work items to show the new item
-        await doFetchWorkAndItems();
+        // Force refetch immediately to refresh UI
+        await queryClient.refetchQueries({ queryKey: ['work-tasks', workId] });
         // Show success message
         showToast("success", "Új tétel sikeresen hozzáadva!");
       } else {
@@ -332,38 +229,8 @@ export default function TasksPage() {
       const result = await updateWorkItemDetails(workItemId, updatedData);
 
       if (result.success) {
-        // Update local state
-        setWorkItems((prev) =>
-          prev.map((item) =>
-            item.id === workItemId
-              ? {
-                  ...item,
-                  name: updatedData.name || item.name,
-                  description:
-                    updatedData.description !== undefined
-                      ? updatedData.description
-                      : item.description,
-                  quantity:
-                    updatedData.quantity !== undefined
-                      ? updatedData.quantity
-                      : item.quantity,
-                  unit: updatedData.unit || item.unit,
-                  unitPrice:
-                    updatedData.unitPrice !== undefined
-                      ? updatedData.unitPrice
-                      : item.unitPrice,
-                  materialUnitPrice:
-                    updatedData.materialUnitPrice !== undefined
-                      ? updatedData.materialUnitPrice
-                      : item.materialUnitPrice,
-                  totalPrice:
-                    updatedData.totalPrice !== undefined
-                      ? updatedData.totalPrice
-                      : item.totalPrice,
-                }
-              : item
-          )
-        );
+        // Force refetch immediately to refresh UI
+        await queryClient.refetchQueries({ queryKey: ['work-tasks', workId] });
         setShowEditModal(false);
         setEditingWorkItem(null);
       } else {

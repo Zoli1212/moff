@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getUserWorks, initializeAllWorkTotals } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
 import { checkStuckProcessingWorks } from "@/actions/work-cleanup-actions";
@@ -78,25 +79,26 @@ function toCardProps(
 
 const WorkListPage = () => {
   const router = useRouter();
-  const [works, setWorks] = useState<Work[]>([]);
   const [workStates, setWorkStates] = useState<Record<string | number, string>>(
     {}
   );
   const [stuckWorkIds, setStuckWorkIds] = useState<number[]>([]);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isTenant, setIsTenant] = useState<boolean>(true);
 
-  const fetchWorks = useCallback(async () => {
-    try {
-      const fetchedWorks = await getUserWorks();
-      setWorks(fetchedWorks);
-    } catch {
-      setWorks([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  // React Query: Fetch works with automatic caching
+  const { data: works = [], isLoading: loading, refetch: fetchWorks } = useQuery({
+    queryKey: ['works'],
+    queryFn: getUserWorks,
+    staleTime: 30 * 1000, // 30 seconds
+    refetchInterval: (query) => {
+      // Auto-refetch only if there are processing works
+      const hasProcessingWorks = query.state.data?.some(
+        (w: Work) => w.processingByAI === true || w.updatedByAI !== true
+      );
+      return hasProcessingWorks ? 3000 : false; // 3 seconds or disabled
+    },
+  });
 
   React.useEffect(() => {
     // Get user tenant status
@@ -107,11 +109,9 @@ const WorkListPage = () => {
       .catch(() => {
         setIsTenant(true);
       });
+  }, []);
 
-    fetchWorks();
-  }, [fetchWorks]);
-
-  // Auto-refresh every 3 seconds if there are works being processed
+  // Check for stuck works every 30 seconds
   useEffect(() => {
     const hasProcessingWorks = works.some(
       (w) => w.processingByAI === true || w.updatedByAI !== true
@@ -119,32 +119,15 @@ const WorkListPage = () => {
 
     if (!hasProcessingWorks) return;
 
-    const startTime = Date.now();
-    const maxDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
-
     const interval = setInterval(async () => {
-      const elapsed = Date.now() - startTime;
-
-      // Stop after 5 minutes
-      if (elapsed >= maxDuration) {
-        clearInterval(interval);
-        return;
+      const checkResult = await checkStuckProcessingWorks();
+      if (checkResult.success && checkResult.stuckWorkIds.length > 0) {
+        setStuckWorkIds(checkResult.stuckWorkIds);
       }
-
-      // Check for stuck works every 30 seconds
-      if (Math.floor(elapsed / 1000) % 30 === 0) {
-        const checkResult = await checkStuckProcessingWorks();
-        if (checkResult.success && checkResult.stuckWorkIds.length > 0) {
-          setStuckWorkIds(checkResult.stuckWorkIds);
-        }
-      }
-
-      router.refresh();
-      fetchWorks();
-    }, 3000);
+    }, 30000); // 30 seconds
 
     return () => clearInterval(interval);
-  }, [works, router, fetchWorks]);
+  }, [works]);
 
   const handleWorkStateChange = useCallback(
     (

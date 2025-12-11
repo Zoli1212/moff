@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Provider from "./provider";
+import { Providers } from "./providers";
 import { Toaster } from "@/components/ui/sonner";
 import FullscreenHandler from "./_components/FullscreenHandler";
 import { GlobalLoading } from "@/components/GlobalLoading";
@@ -55,15 +56,17 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className="h-full">
         <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
-          <Provider>
-            <TenantProvider>
-              <GlobalLoading />
-              <GlobalLoadingHandler />
-              <FullscreenHandler />
-              {children}
-              <Toaster position="top-center" />
-            </TenantProvider>
-          </Provider>
+          <Providers>
+            <Provider>
+              <TenantProvider>
+                <GlobalLoading />
+                <GlobalLoadingHandler />
+                <FullscreenHandler />
+                {children}
+                <Toaster position="top-center" />
+              </TenantProvider>
+            </Provider>
+          </Providers>
         </body>
       </html>
     </ClerkProvider>

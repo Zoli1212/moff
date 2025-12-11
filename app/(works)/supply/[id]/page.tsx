@@ -4,40 +4,13 @@ import ToolsSlotsSection from "../_components/ToolsSlotsSection";
 import WorkersSlotsSectionWithoutRoles from "../_components/WorkersSlotsSectionWithoutRoles";
 import type { WorkItem, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
-import { getWorkById, getWorkItemsWithWorkers } from "@/actions/work-actions";
+import { getWorkForSupply, getWorkItemsWithWorkers } from "@/actions/work-actions";
 import {
   getToolsRegistryByTenant,
   getAssignedToolsForWork,
 } from "@/actions/tools-registry-actions";
 import WorkHeader from "@/components/WorkHeader";
 import { getCurrentUserData } from "@/actions/user-actions";
-
-// Work interface with maxRequiredWorkers
-interface Work {
-  id: number;
-  title: string;
-  offerId: number;
-  offerDescription?: string | null;
-  status: string;
-  startDate?: Date | null;
-  endDate?: Date | null;
-  location?: string | null;
-  totalWorkers: number;
-  totalLaborCost?: number | null;
-  totalTools: number;
-  totalToolCost?: number | null;
-  totalMaterials: number;
-  totalMaterialCost?: number | null;
-  estimatedDuration?: string | null;
-  progress?: number | null;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  tenantEmail: string;
-  maxRequiredWorkers?: number | null;
-  materials?: Material[];
-  workers?: Worker[];
-}
 
 export default async function SupplyPage({
   params,
@@ -64,10 +37,10 @@ export default async function SupplyPage({
   let assignedTools: AssignedTool[] = [];
   let maxRequiredWorkers: number | null = null;
   try {
-    // Párhuzamos lekérdezések a gyorsabb betöltésért
+    // Párhuzamos lekérdezések a gyorsabb betöltésért (SELECT optimalizált verzió)
     const [work, richItems, toolsRegistry, assignedToolsData] =
       await Promise.all([
-        getWorkById(workId) as Promise<Work>,
+        getWorkForSupply(workId),
         getWorkItemsWithWorkers(workId),
         getToolsRegistryByTenant(),
         getAssignedToolsForWork(workId),

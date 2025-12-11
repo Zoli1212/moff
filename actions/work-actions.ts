@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { OfferItem } from "@/lib/offer-parser";
 import type { WorkItemAIResult } from "../types/work.types";
 import { prisma } from "@/lib/prisma";
@@ -253,6 +254,75 @@ export async function fetchWorkAndItems(workId: number) {
     throw error; // Re-throw to be caught by the component
   }
 }
+
+// Optimized version for Tasks page - SELECT only needed fields
+export const fetchWorkAndItemsOptimized = cache(async (workId: number) => {
+  try {
+    const { user, tenantEmail } = await getTenantSafeAuth();
+
+    // SELECT only what Tasks page needs (not full work with all relations)
+    const [work, workItems] = await Promise.all([
+      prisma.work.findUnique({
+        where: { id: workId },
+        select: {
+          id: true,
+          title: true,
+          tenantEmail: true,
+          offerId: true,
+          status: true,
+          // Tasks page only needs these basic fields
+        },
+      }),
+      getWorkItemsWithWorkers(workId),
+    ]);
+
+    if (!work) {
+      throw new Error("Work not found");
+    }
+
+    // Security check
+    const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
+    const isTenant = work.tenantEmail === tenantEmail;
+    const isAssignedWorker = await prisma.workItemWorker.findFirst({
+      where: { workId, email: userEmail },
+    });
+
+    if (!isTenant && !isAssignedWorker) {
+      throw new Error("Unauthorized");
+    }
+
+    // Check for workDiaryItems
+    const workDiaryItems = await prisma.workDiaryItem.findMany({
+      where: { workId, tenantEmail },
+    });
+
+    const hasWorkDiaryItems = workDiaryItems.length > 0;
+
+    const items = workItems.map((item: any) => ({
+      ...item,
+      description: item.description ?? undefined,
+      completedQuantity: hasWorkDiaryItems ? item.completedQuantity : 0,
+      workItemWorkers: item.workItemWorkers?.map((w: any) => ({
+        ...w,
+        name: w.name ?? undefined,
+        role: w.role ?? undefined,
+      })),
+    }));
+
+    // Update DB if no diary items
+    if (!hasWorkDiaryItems) {
+      await prisma.workItem.updateMany({
+        where: { workId, tenantEmail },
+        data: { completedQuantity: 0 },
+      });
+    }
+
+    return { work, workItems: items };
+  } catch (error) {
+    console.error("Error in fetchWorkAndItemsOptimized:", error);
+    throw error;
+  }
+});
 
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   const { user, tenantEmail } = await getTenantSafeAuth();
@@ -862,6 +932,44 @@ export async function getWorkById(id: number) {
     expectedProfitPercent,
   };
 }
+
+// Optimized version for Supply page - only fetches needed fields
+export const getWorkForSupply = cache(async (id: number) => {
+  const { user, tenantEmail } = await getTenantSafeAuth();
+  const userEmail = user?.emailAddresses?.[0]?.emailAddress || tenantEmail;
+
+  // SELECT only fields needed by supply page
+  const work = await prisma.work.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      tenantEmail: true,
+      maxRequiredWorkers: true,
+      materials: true,  // Supply page needs this
+      workers: true,    // Supply page needs this
+    },
+  });
+
+  if (!work) {
+    throw new Error("Unauthorized");
+  }
+
+  // Same security check as getWorkById
+  const isTenant = work.tenantEmail === tenantEmail;
+  const isAssignedWorker = await prisma.workItemWorker.findFirst({
+    where: {
+      workId: id,
+      email: userEmail,
+    },
+  });
+
+  if (!isTenant && !isAssignedWorker) {
+    throw new Error("Unauthorized");
+  }
+
+  return work;
+});
 
 // Get all workDiaryItems for a specific work
 export async function getWorkDiaryItemsByWorkId(workId: number) {
