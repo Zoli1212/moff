@@ -763,7 +763,6 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
   // Automatikus RAG szinkronizáció (háttérben, nem blokkolja a választ)
   try {
     await autoSyncWorkToRAG(workId);
-    console.log(`✅ RAG automatikusan szinkronizálva munkához: ${workId}`);
   } catch (ragError) {
     console.error(`❌ RAG szinkronizáció hiba munkához ${workId}:`, ragError);
     // Ne blokkoljuk a fő műveletet RAG hiba miatt
@@ -1039,10 +1038,6 @@ export async function initializeAllWorkTotals() {
       },
     });
 
-    console.log(
-      `🔄 [initializeAllWorkTotals] Initializing ${works.length} works...`
-    );
-
     // Minden munkára lefuttatjuk a recalculateWorkTotals függvényt
     let successCount = 0;
     let errorCount = 0;
@@ -1059,10 +1054,6 @@ export async function initializeAllWorkTotals() {
         errorCount++;
       }
     }
-
-    console.log(
-      `✅ [initializeAllWorkTotals] Success: ${successCount}, Errors: ${errorCount}`
-    );
 
     revalidatePath("/works");
     return {
@@ -1136,12 +1127,6 @@ export async function recalculateWorkTotals(
         totalBillable: totalBillable,
       },
     });
-
-    console.log(`✅ Work #${workId} totals recalculated:`, {
-      totalCompleted,
-      totalBilled,
-      totalBillable,
-    });
   } catch (error) {
     console.error(
       `❌ Error recalculating work totals for work #${workId}:`,
@@ -1179,7 +1164,6 @@ export async function setWorkProcessingFlag(
     // Revalidate the /works page so the UI updates
     revalidatePath("/works");
 
-    console.log(`✅ Work #${workId} processingByAI set to ${processing}`);
     return { success: true };
   } catch (error) {
     console.error(
@@ -1505,7 +1489,6 @@ export async function mergeWorkWithAIResult(workId: number, aiResult: any) {
   // RAG szinkronizáció
   try {
     await autoSyncWorkToRAG(workId);
-    console.log(`✅ RAG automatikusan szinkronizálva munkához: ${workId}`);
   } catch (ragError) {
     console.error(`❌ RAG szinkronizáció hiba munkához ${workId}:`, ragError);
   }

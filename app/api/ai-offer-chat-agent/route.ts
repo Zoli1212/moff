@@ -9,9 +9,6 @@ export async function POST(req: NextRequest) {
     // Generálunk egy egyedi recordId-t az ajánlathoz
     const recordId = uuidv4();
 
-    console.log("🚀 Sending event to Inngest...");
-    console.log("📝 Generated recordId:", recordId);
-
     // Elindítjuk az Inngest function-t
     await inngest.send({
       name: "AiOfferAgent",
@@ -20,8 +17,6 @@ export async function POST(req: NextRequest) {
         recordId: recordId,
       },
     });
-
-    console.log("✅ Event sent successfully");
 
     // Azonnal visszaadjuk a recordId-t
     // A frontend ezt használja majd a polling-hoz

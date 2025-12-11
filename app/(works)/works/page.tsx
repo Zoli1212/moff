@@ -127,21 +127,14 @@ const WorkListPage = () => {
 
       // Stop after 5 minutes
       if (elapsed >= maxDuration) {
-        console.log("⏱️ Auto-refresh stopped after 5 minutes");
         clearInterval(interval);
         return;
       }
 
-      console.log("🔄 Auto-refreshing works...");
-
       // Check for stuck works every 30 seconds
       if (Math.floor(elapsed / 1000) % 30 === 0) {
-        console.log("🔍 Checking for stuck works...");
         const checkResult = await checkStuckProcessingWorks();
         if (checkResult.success && checkResult.stuckWorkIds.length > 0) {
-          console.log(
-            `⚠️ Found ${checkResult.stuckWorkIds.length} stuck work(s)`
-          );
           setStuckWorkIds(checkResult.stuckWorkIds);
         }
       }

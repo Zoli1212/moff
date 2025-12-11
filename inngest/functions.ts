@@ -171,11 +171,16 @@ export const AiOfferChatAgent = createAgent({
   - **ALWAYS generate a complete offer based on available information, BUT if critical data is missing, you MUST add a "Tisztázandó kérdések:" (Questions to Clarify) section at the end with specific questions in Hungarian.**
   - **CRITICAL RULE FOR USING ANSWERS: If the input text contains a "Válaszok a kérdésekre:" section, you MUST use those answers to generate the offer items!**
     - Read ALL answers carefully (lines starting with "Válasz:")
-    - Incorporate the answer information into the relevant offer items
-    - Example: If answer says "30x30 as csempe", then the tile items MUST include "30×30 cm" in their description or use the appropriate catalog item for that size
-    - Example: If answer says "prémium", then use premium-grade materials and prices
-    - Example: If answer says "fehér", then specify white color in the item description
+    - **ONLY modify items that are EXPLICITLY mentioned in the answer - DO NOT change other similar items!**
+    - **PRECISION IS KEY: If the answer specifies "fali csempe" (wall tile), ONLY modify wall tile items, NOT floor tiles (padlócsempe)**
+    - **If the answer specifies "padlócsempe" (floor tile), ONLY modify floor tile items, NOT wall tiles (fali csempe)**
+    - **Match the answer to the specific item by analyzing keywords: "fali" = wall, "padló" = floor, "fürdőszoba" = bathroom, "konyha" = kitchen, etc.**
+    - Example: If answer says "30x30 as fali csempe", then ONLY the wall tile items (containing "fali" or "wall") MUST include "30×30 cm", NOT floor tiles
+    - Example: If answer says "prémium padlócsempe", then ONLY floor tile items should use premium-grade materials, NOT wall tiles
+    - Example: If answer says "fehér fali festés", then specify white color ONLY for wall painting items, NOT ceiling or other items
+    - **If an answer is ambiguous (doesn't specify wall/floor/location), apply it ONLY to items that clearly match the context**
     - DO NOT ignore the answers - they are critical information for generating accurate offer items!
+    - **NEVER apply changes to items that are NOT mentioned or implied in the answer!**
   - **QUESTIONS RULE:**
     - Check the "Válaszok a kérdésekre:" section in the input text
     - If you see "✓ MEGVÁLASZOLT:" marker, DO NOT ask about that topic again

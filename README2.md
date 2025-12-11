@@ -686,5 +686,8 @@ MEGJEGYZÉS: Ez a követelmény szintén tartalmaz egyedi tételeket, mivel a "m
 
 ---
 8. Teszt utca 403 ben szeretnek egy 3x5m alapteruletu, 3m belmagassagu furdoszobat felujitani az alabbiak szerint: a meglevo koburkolatot es csempet fel kell szedni, a meglevo zuhanyzot, mosdot es wc-t ki kell venni es a helyre szanitereket kell elhelyezni. A mennyezetet feher festekkel ki kel festeni, uj padlo burkolatot kell letenni, az oldaflakat ki kell csepezni 3m magassagog, az ajtot ujra kell mazolni. Az uj szaniterek anyag arai: Zuhanyzó 150000, a wc-e 50000, a kád 160000.
-
-
+-----
+Mely tételek e szeretnéd módosítani az árát?
+A munkadíjat emeld meg 10%
+pl: az anyagra adjál 10% kedvezményt a munkadíjra 15% ot kedvezményt
+Tételek vedd

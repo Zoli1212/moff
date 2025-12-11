@@ -75,23 +75,14 @@ export async function POST(req: NextRequest) {
     let existingItems = [];
     try {
       const existingItemsStr = formData.get("existingItems")?.toString();
-      console.log("=== API ROUTE - RECEIVED EXISTING ITEMS ===");
-      console.log("existingItemsStr:", existingItemsStr);
-      console.log("textContent:", textContent);
 
       if (existingItemsStr) {
         existingItems = JSON.parse(existingItemsStr);
-        console.log("Parsed existingItems:", existingItems);
-        console.log("existingItems length:", existingItems.length);
 
         if (!Array.isArray(existingItems)) {
-          console.log("⚠️ existingItems is not an array, resetting to []");
           existingItems = [];
         }
-      } else {
-        console.log("⚠️ No existingItems in formData");
       }
-      console.log("===========================================");
     } catch (error) {
       console.error(
         "❌ Error parsing existingItems:",
@@ -135,14 +126,6 @@ export async function POST(req: NextRequest) {
 
     const isOfferLetter = type === "offer-letter";
 
-    console.log("=== API ROUTE - SENDING TO INNGEST ===");
-    console.log("isOfferLetter:", isOfferLetter);
-    console.log("content (userInput):", content.substring(0, 200) + "...");
-    console.log("existingItems to send:", existingItems);
-    console.log("existingItems length:", existingItems.length);
-    console.log("requirementId:", requirementId);
-    console.log("=======================================");
-
     const eventData = isOfferLetter
       ? {
           userInput: content,
@@ -171,7 +154,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ status: "queued", eventId });
   } catch (error) {
-    console.log((error as Error).message);
+    console.error("❌ AI demand agent error:", error);
     return NextResponse.json(
       { error: "Hiba történt a fájl feldolgozása során" },
       { status: 500 }

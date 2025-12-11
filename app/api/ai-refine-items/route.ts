@@ -34,9 +34,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log("🔧 Refining items with user input:", userRefinement);
-    console.log("📋 Current items:", JSON.stringify(items, null, 2));
-
     // Build the prompt for GPT
     const systemPrompt = `Te egy építőipari árajánlat-készítő AI asszisztens vagy. A felhasználó egy meglévő árajánlat tételeit szeretné pontosítani.
 
@@ -110,8 +107,6 @@ ${userRefinement}`;
 
     const responseText = completion.choices[0]?.message?.content || "";
 
-    console.log("🤖 GPT response:", responseText);
-
     // Parse the JSON response
     let refinedData;
     try {
@@ -150,11 +145,6 @@ ${userRefinement}`;
     }
 
     const totalCost = materialTotal + workTotal;
-
-    console.log("✅ Refinement complete");
-    console.log("📊 Material total:", materialTotal);
-    console.log("📊 Work total:", workTotal);
-    console.log("📊 Total cost:", totalCost);
 
     return NextResponse.json({
       success: true,
