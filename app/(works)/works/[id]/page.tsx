@@ -95,6 +95,8 @@ export default function WorkDetailPage({
     profitMargin: 15.2,
   });
 
+  console.log(generalWorkersFromDB)
+
   function hasMessage(obj: unknown): obj is { message: string } {
     return (
       typeof obj === "object" &&
