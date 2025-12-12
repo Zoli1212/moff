@@ -8,7 +8,7 @@ import WorkCard, { WorkCardProps } from "./_components/WorkCard";
 import Link from "next/link";
 import WorksAutoUpdater from "./_components/WorksAutoUpdater";
 import WorksSkeletonLoader from "../_components/WorksSkeletonLoader";
-import { useRouter } from "next/navigation";
+
 
 export const dynamic = "force-dynamic";
 
@@ -78,7 +78,7 @@ function toCardProps(
 }
 
 const WorkListPage = () => {
-  const router = useRouter();
+
   const [workStates, setWorkStates] = useState<Record<string | number, string>>(
     {}
   );
@@ -147,9 +147,8 @@ const WorkListPage = () => {
     try {
       const result = await initializeAllWorkTotals();
       if (result.success) {
-        // Újratöltjük a munkákat
-        const fetchedWorks = await getUserWorks();
-        setWorks(fetchedWorks);
+        // Újratöltjük a munkákat React Query-vel
+        await fetchWorks();
         alert(result.message);
       } else {
         alert("Hiba: " + result.message);
