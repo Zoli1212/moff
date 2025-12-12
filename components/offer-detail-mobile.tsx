@@ -2007,21 +2007,21 @@ export function OfferDetailView({
                     className="p-4 hover:bg-gray-50"
                   >
                     {/* Item Header */}
-                    <div className="flex justify-between items-start">
+                    <div className="flex justify-between items-center">
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-black">
                           <div
                             onClick={() =>
                               !hasUnansweredQuestions && startEditing(index)
                             }
-                            className={`p-1 rounded flex items-center gap-2 ${hasUnansweredQuestions ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:bg-gray-100"}`}
+                            className={`p-1 rounded flex items-center gap-2 ${hasUnansweredQuestions ? "cursor-not-allowed" : "cursor-pointer hover:bg-gray-100"}`}
                             title={
                               hasUnansweredQuestions
                                 ? "Először válaszoljon meg a kérdéseket"
                                 : ""
                             }
                           >
-                            <span>
+                            <span style={{ color: 'black' }}>
                               {index + 1}. {item.name.replace(/^\*+\s*/, "")}
                               {item.new && (
                                 <span
@@ -2050,7 +2050,7 @@ export function OfferDetailView({
                           </div>
                         </div>
                       </div>
-                      <div className="flex space-x-4">
+                      <div className="flex space-x-6">
                         <button
                           onClick={() => startEditing(index)}
                           className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
