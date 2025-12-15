@@ -41,10 +41,10 @@ export default function WorkDetailPage() {
   const router = useRouter();
   const params = useParams();
   const workId = useMemo(() => Number(params.id), [params.id]);
-  const queryClient = useQueryClient();
+
 
   // React Query: Fetch work data with caching
-  const { data: work, isLoading: loading, error: queryError } = useQuery({
+  const { data: work, isLoading: loading, error: queryError, refetch: refetchWork } = useQuery({
     queryKey: ['work-detail', workId],
     queryFn: () => getWorkById(workId),
     enabled: !isNaN(workId),
@@ -102,15 +102,6 @@ export default function WorkDetailPage() {
   });
 
   console.log(generalWorkersFromDB)
-
-  function hasMessage(obj: unknown): obj is { message: string } {
-    return (
-      typeof obj === "object" &&
-      obj !== null &&
-      "message" in obj &&
-      typeof (obj as { message: unknown }).message === "string"
-    );
-  }
 
   // Load tenant status
   useEffect(() => {
@@ -175,7 +166,7 @@ export default function WorkDetailPage() {
 
             // Load profit calculation
             try {
-              const workItems = (workData.workItems || []).map(
+              const workItems = ((workData.workItems as Record<string, unknown>[]) || []).map(
                 (item: Record<string, unknown>) => ({
                   ...item,
                   description: item.description ?? null,
@@ -289,13 +280,8 @@ export default function WorkDetailPage() {
       );
 
       if (updateResult.success && updateResult.work) {
-        // Update the work object with new dates and calculated estimatedDuration
-        setWork((prev: Record<string, unknown> | null) => ({
-          ...prev,
-          startDate: updateResult.work.startDate,
-          endDate: updateResult.work.endDate,
-          estimatedDuration: updateResult.work.estimatedDuration,
-        }));
+        // Refetch work data to get updated dates and calculated estimatedDuration
+        await refetchWork();
         setShowDateModal(false);
       } else {
         console.error("Failed to update dates:", updateResult.error);
@@ -314,13 +300,8 @@ export default function WorkDetailPage() {
       const updateResult = await updateWorkDuration(workId, editDuration);
 
       if (updateResult.success && updateResult.work) {
-        // Update the work object with new duration, endDate, and potentially startDate
-        setWork((prev: Record<string, unknown> | null) => ({
-          ...prev,
-          estimatedDuration: `${editDuration} nap`,
-          startDate: updateResult.work.startDate,
-          endDate: updateResult.work.endDate,
-        }));
+        // Refetch work data to get updated duration, endDate, and potentially startDate
+        await refetchWork();
         setShowDurationModal(false);
       } else {
         console.error("Failed to update duration:", updateResult.error);
@@ -341,10 +322,8 @@ export default function WorkDetailPage() {
       const updateResult = await updateWorkTitle(workId, editTitle);
 
       if (updateResult.success && updateResult.work) {
-        setWork((prev: Record<string, unknown> | null) => ({
-          ...prev,
-          title: updateResult.work.title,
-        }));
+        // Refetch work data to get updated title
+        await refetchWork();
         setShowTitleModal(false);
       } else {
         console.error("Failed to update title:", updateResult.error);

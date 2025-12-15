@@ -291,9 +291,12 @@ export const fetchWorkAndItemsOptimized = cache(async (workId: number) => {
       throw new Error("Unauthorized");
     }
 
-    // Check for workDiaryItems
+    // Refresh completed quantities using work.tenantEmail (so workers see same data as tenant)
+    await refreshCompletedQuantitiesForWork(workId, work.tenantEmail);
+
+    // Check for workDiaryItems using work.tenantEmail (not logged-in user's tenantEmail)
     const workDiaryItems = await prisma.workDiaryItem.findMany({
-      where: { workId, tenantEmail },
+      where: { workId, tenantEmail: work.tenantEmail },
     });
 
     const hasWorkDiaryItems = workDiaryItems.length > 0;
@@ -309,10 +312,10 @@ export const fetchWorkAndItemsOptimized = cache(async (workId: number) => {
       })),
     }));
 
-    // Update DB if no diary items
+    // Update DB if no diary items - use work.tenantEmail
     if (!hasWorkDiaryItems) {
       await prisma.workItem.updateMany({
-        where: { workId, tenantEmail },
+        where: { workId, tenantEmail: work.tenantEmail },
         data: { completedQuantity: 0 },
       });
     }
