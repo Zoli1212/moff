@@ -691,3 +691,31 @@ Mely tételek e szeretnéd módosítani az árát?
 A munkadíjat emeld meg 10%
 pl: az anyagra adjál 10% kedvezményt a munkadíjra 15% ot kedvezményt
 Tételek vedd
+
+villanykörte jobb ár 
+beszerzés az anyagok alján
+Beszerzési segéd
+Nagykereskede Beszerzés
+Tudja megadni a saját adatait
+Cégnév név 
+Fejlécnél szerepeljen a neve
+Ezekre az anyagokra ilyen mennyiségben szeretnék kérni árat
+Akarod e, hogy ezeket
+1. Körte Ennyirét veszed és 
+2. Beszerzés kérjek ajánlatot ezekre
+3 . Csak azokra amelyek olcsóbbak
+4. Csak azokra kérek ajánlatot amelyek olcsóbbak
+5. Amikor rámész a munkára az anyagra
+nincs beszerezve és nincs kipipálva és egy héten belül van
+6. háttérben minden anyagra keres
+7. meg kell nézni jók e az árak
+8. ! ennyit spórolnál
+elküldés
+ajánlatot kérés
+- 200.000
+az összesre kérsz vagy arra amelyik kell vagy amelyik nincs kipipálva vagy keresett a mennyiség
+egy service_emailre 
+megmaradnak anyagok
+piactérre megmarad
+el akarod adni?
+maradék és ára

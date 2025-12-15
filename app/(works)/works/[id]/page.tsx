@@ -1,5 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Pencil } from "lucide-react";
 
 import {
@@ -31,22 +32,27 @@ import {
   checkWorkHasDiaries,
   deleteWorkWithRelatedData,
 } from "@/actions/delete-work-actions";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { getCurrentUserData } from "@/actions/user-actions";
 import WorksSkeletonLoader from "../../_components/WorksSkeletonLoader";
 
-export default function WorkDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  // Router
+export default function WorkDetailPage() {
+  // Router & Params
   const router = useRouter();
+  const params = useParams();
+  const workId = useMemo(() => Number(params.id), [params.id]);
+  const queryClient = useQueryClient();
 
-  // State for data
-  const [work, setWork] = useState<Record<string, unknown> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // React Query: Fetch work data with caching
+  const { data: work, isLoading: loading, error: queryError } = useQuery({
+    queryKey: ['work-detail', workId],
+    queryFn: () => getWorkById(workId),
+    enabled: !isNaN(workId),
+    staleTime: 30 * 1000, // 30 seconds cache
+    retry: 1,
+  });
+
+  const error = queryError ? "Hiba a munka lekérdezésekor" : null;
 
   // State for delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -117,32 +123,31 @@ export default function WorkDetailPage({
       });
   }, []);
 
-  // Load work data
+  // Initialize states when work data is loaded
   useEffect(() => {
-    const loadWorkData = async () => {
+    if (!work) return;
+
+    const loadAdditionalData = async () => {
       try {
-        const resolvedParams = await params;
-        const workData = await getWorkById(Number(resolvedParams.id));
-        setWork(workData);
-        setWorkImage(workData.workImageUrl || null);
+        setWorkImage((work as Record<string, unknown>).workImageUrl as string || null);
 
         // Initialize date states
-        // Kezdés default: startDate vagy createdAt
+        const workData = work as Record<string, unknown>;
         const defaultStartDate = workData.startDate
-          ? new Date(workData.startDate).toISOString().split("T")[0]
+          ? new Date(workData.startDate as string).toISOString().split("T")[0]
           : workData.createdAt
-            ? new Date(workData.createdAt).toISOString().split("T")[0]
+            ? new Date(workData.createdAt as string).toISOString().split("T")[0]
             : "";
 
-        // Befejezés default: endDate vagy createdAt + estimatedDuration
+        // Befejezés default: endDate || createdAt + estimatedDuration
         let defaultEndDate = "";
         if (workData.endDate) {
-          defaultEndDate = new Date(workData.endDate)
+          defaultEndDate = new Date(workData.endDate as string)
             .toISOString()
             .split("T")[0];
         } else if (workData.createdAt && workData.estimatedDuration) {
-          const startDateObj = new Date(workData.createdAt);
-          const durationMatch = workData.estimatedDuration.match(/(\d+)/);
+          const startDateObj = new Date(workData.createdAt as string);
+          const durationMatch = (workData.estimatedDuration as string).match(/(\d+)/);
           if (durationMatch) {
             const days = parseInt(durationMatch[1], 10);
             const endDateObj = new Date(startDateObj);
@@ -159,9 +164,9 @@ export default function WorkDetailPage({
             // Párhuzamos lekérdezések a gyorsabb betöltésért
             const [workItemsData, generalWorkersData, workDiaryItemsData] =
               await Promise.all([
-                getWorkItemsWithWorkers(workData.id),
-                getGeneralWorkersForWork(workData.id),
-                getWorkDiaryItemsByWorkId(workData.id),
+                getWorkItemsWithWorkers(workData.id as number),
+                getGeneralWorkersForWork(workData.id as number),
+                getWorkDiaryItemsByWorkId(workData.id as number),
               ]);
 
             setWorkItemsWithWorkers(workItemsData as unknown as WorkItem[]);
@@ -185,7 +190,7 @@ export default function WorkDetailPage({
               );
 
               const profitResult = await calculateWorkProfitAction(
-                workData.id,
+                workData.id as number,
                 workItems as unknown as WorkItem[]
               );
               setDynamicProfit(profitResult);
@@ -207,25 +212,16 @@ export default function WorkDetailPage({
             setWorkItemsWithWorkers(
               (workData.workItems as unknown as WorkItem[]) || []
             );
-            // setAssignedTools([]);
             setGeneralWorkersFromDB([]);
           }
         }
       } catch (e: unknown) {
-        let msg = "Hiba a munka lekérdezésekor";
-        if (hasMessage(e)) {
-          msg = e.message;
-        } else if (typeof e === "string") {
-          msg = e;
-        }
-        setError(msg);
-      } finally {
-        setLoading(false);
+        console.error("Error loading additional data:", e);
       }
     };
 
-    loadWorkData();
-  }, [params]);
+    loadAdditionalData();
+  }, [work]);
 
   // Handle image upload
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
