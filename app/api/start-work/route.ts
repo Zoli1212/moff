@@ -146,9 +146,9 @@ export async function POST(req: NextRequest) {
         }
       );
       clearTimeout(timeoutId); // Clear timeout if request completes
-    } catch (fetchError: any) {
+    } catch (fetchError: unknown) {
       clearTimeout(timeoutId);
-      if (fetchError?.name === "AbortError") {
+      if (fetchError instanceof Error && fetchError.name === "AbortError") {
         console.log("⏱️ [start-work] Request aborted due to 120s timeout");
         return NextResponse.json(
           { error: "A kérés túllépte a 120 másodperces időkorlátot." },
