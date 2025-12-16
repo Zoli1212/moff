@@ -111,30 +111,52 @@ export async function POST(req: NextRequest) {
     - NE írj magyarázatot, NE használj markdown-t, CSAK ÉRVÉNYES JSON-t adj vissza!
     - Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabályok betartásával! description-t mindig generálj!`;
 
+    // Server-side timeout: 120 seconds (independent of client)
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log("⏱️ [start-work] 120 second server timeout - aborting OpenAI request");
+      abortController.abort();
+    }, 120000); // 120 seconds
+
     // Make the OpenAI API request
     console.log("🤖 [start-work] Calling OpenAI API...");
-    const openaiResponse = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        },
-        body: JSON.stringify({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: "Te egy profi magyar építési projektmenedzser vagy.",
-            },
-            { role: "user", content: prompt },
-          ],
-          max_tokens: 10000, // LIMITÁLT, hogy ne legyen túl hosszú a válasz
-          temperature: 0.2,
-        }),
+    let openaiResponse;
+    try {
+      openaiResponse = await fetch(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: "Te egy profi magyar építési projektmenedzser vagy.",
+              },
+              { role: "user", content: prompt },
+            ],
+            max_tokens: 10000, // LIMITÁLT, hogy ne legyen túl hosszú a válasz
+            temperature: 0.2,
+          }),
+          signal: abortController.signal,
+        }
+      );
+      clearTimeout(timeoutId); // Clear timeout if request completes
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+      if (fetchError?.name === "AbortError") {
+        console.log("⏱️ [start-work] Request aborted due to 120s timeout");
+        return NextResponse.json(
+          { error: "A kérés túllépte a 120 másodperces időkorlátot." },
+          { status: 408 }
+        );
       }
-    );
+      throw fetchError; // Re-throw other errors
+    }
 
     // Extract the response data
     console.log(

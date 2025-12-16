@@ -1025,7 +1025,8 @@ export function OfferDetailView({
       }
     } catch (error) {
       console.error("Error updating status:", error);
-      toast.error("Hiba történt az állapot frissítésekor");
+      const errorMessage = error instanceof Error ? error.message : "Hiba történt az állapot frissítésekor";
+      toast.error(errorMessage);
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -2542,11 +2543,7 @@ export function OfferDetailView({
               disabled={
                 isUpdatingStatus || (assignToExisting && !selectedWorkId)
               }
-              className={
-                offer.status === "draft"
-                  ? "bg-[#FE9C00] hover:bg-[#E58A00] w-full"
-                  : "bg-blue-600 hover:bg-blue-700 w-full"
-              }
+              className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
             >
               {isUpdatingStatus
                 ? "Feldolgozás..."
@@ -2560,7 +2557,7 @@ export function OfferDetailView({
               variant="outline"
               onClick={() => setIsStatusDialogOpen(false)}
               disabled={isUpdatingStatus}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
+              className="w-full mt-2"
             >
               Mégse
             </Button>
