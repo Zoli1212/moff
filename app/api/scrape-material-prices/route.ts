@@ -281,6 +281,7 @@ async function processTenantWorks(tenantEmail: string) {
         status: { in: ["pending", "in_progress"] },
         isActive: true,
       },
+      materialUnitPrice: { gt: 0 }, // Csak ahol van anyagköltség
       OR: [
         { lastPriceCheck: null },
         { lastPriceCheck: { lt: threeDaysAgo } },

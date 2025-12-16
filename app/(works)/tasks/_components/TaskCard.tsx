@@ -61,6 +61,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
   const [newQuantity, setNewQuantity] = useState<string>("");
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
   const [showPriceDetails, setShowPriceDetails] = useState(false);
+  const [localMarketPrice, setLocalMarketPrice] = useState<MarketPrice | null>(currentMarketPrice || null);
 
   const handleQuantitySubmit = () => {
     if (onQuantityChange) {
@@ -99,6 +100,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
       });
 
       if (response.ok) {
+        const data = await response.json();
+
         toast.dismiss("fetch-price");
         toast.success("Piaci ár frissítve!", {
           duration: 3000,
@@ -110,8 +113,12 @@ const TaskCard: React.FC<TaskCardProps> = ({
             borderRadius: 8,
           },
         });
-        // Trigger parent refetch
-        window.location.reload();
+
+        // Frissítjük a local state-et az új árral
+        if (data.currentMarketPrice) {
+          setLocalMarketPrice(data.currentMarketPrice);
+          setShowPriceDetails(true); // Automatikusan megnyitjuk a részleteket
+        }
       } else {
         toast.dismiss("fetch-price");
         toast.error("Hiba történt az árfrissítés során", {
@@ -128,8 +135,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
-  // Price indicator renderer - MINDEN kártyán megjelenik
+  // Price indicator renderer - MINDEN kártyán megjelenik (kivéve ahol materialUnitPrice === 0)
   const renderPriceIndicator = () => {
+    // Ha nincs anyagköltség (materialUnitPrice === 0 vagy null), ne jelenjen meg semmi
+    if (!materialUnitPrice || materialUnitPrice === 0) {
+      return null;
+    }
+
     // Fetching state
     if (isFetchingPrice) {
       return (
@@ -141,7 +153,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
 
     // No price data - red alert (MINDEN kártyán megjelenik)
-    if (!currentMarketPrice) {
+    if (!localMarketPrice) {
       return (
         <button
           onClick={(e) => {
@@ -157,10 +169,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
       );
     }
 
-    const savingsAmount = (currentMarketPrice.savings || 0) * (quantity || 0);
+    const savingsAmount = (localMarketPrice.savings || 0) * (quantity || 0);
 
     // Has savings - green checkmark with amount and product name
-    if (currentMarketPrice.savings > 0) {
+    if (localMarketPrice.savings > 0) {
       return (
         <button
           onClick={(e) => {
@@ -168,16 +180,16 @@ const TaskCard: React.FC<TaskCardProps> = ({
             handleFetchPrice();
           }}
           className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors max-w-[70%]"
-          title={`${currentMarketPrice.productName || 'Termék'}\nSpórolás: -${savingsAmount.toLocaleString("hu-HU")} Ft\n${currentMarketPrice.supplier}`}
+          title={`${localMarketPrice.productName || 'Termék'}\nSpórolás: -${savingsAmount.toLocaleString("hu-HU")} Ft\n${localMarketPrice.supplier}`}
         >
           <CheckCircle className="h-4 w-4 flex-shrink-0" />
           <div className="flex flex-col items-start">
             <span className="text-xs font-semibold">
               -{savingsAmount.toLocaleString("hu-HU")} Ft
             </span>
-            {currentMarketPrice.productName && (
+            {localMarketPrice.productName && (
               <span className="text-xs text-gray-600 truncate max-w-full">
-                {currentMarketPrice.productName}
+                {localMarketPrice.productName}
               </span>
             )}
           </div>
@@ -193,14 +205,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
           handleFetchPrice();
         }}
         className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors max-w-[70%]"
-        title={currentMarketPrice.productName ? `${currentMarketPrice.productName}\n${currentMarketPrice.supplier}` : "Nincs jobb ajánlat"}
+        title={localMarketPrice.productName ? `${localMarketPrice.productName}\n${localMarketPrice.supplier}` : "Nincs jobb ajánlat"}
       >
         <CheckCircle className="h-4 w-4 flex-shrink-0" />
         <div className="flex flex-col items-start">
           <span className="text-xs">Árinfó OK</span>
-          {currentMarketPrice.productName && (
+          {localMarketPrice.productName && (
             <span className="text-xs text-gray-600 truncate max-w-full">
-              {currentMarketPrice.productName}
+              {localMarketPrice.productName}
             </span>
           )}
         </div>
@@ -257,7 +269,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           {/* Price indicator and quantity button row */}
           <div className="flex justify-between items-center mt-2">
             <div className="flex items-center gap-2">
-              {currentMarketPrice && !isFetchingPrice && (
+              {localMarketPrice && !isFetchingPrice && materialUnitPrice && materialUnitPrice > 0 && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -292,20 +304,20 @@ const TaskCard: React.FC<TaskCardProps> = ({
         </div>
 
         {/* Market price detailed info - csak ha showPriceDetails === true */}
-        {showPriceDetails && currentMarketPrice && !isFetchingPrice && (
+        {showPriceDetails && localMarketPrice && !isFetchingPrice && (
           <div
             className={`mt-3 p-3 rounded-lg border overflow-hidden max-w-full ${
-              currentMarketPrice.savings > 0
+              localMarketPrice.savings > 0
                 ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
                 : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200"
             }`}
           >
             <div
               className={`text-xs font-semibold mb-2 ${
-                currentMarketPrice.savings > 0 ? "text-green-700" : "text-gray-700"
+                localMarketPrice.savings > 0 ? "text-green-700" : "text-gray-700"
               }`}
             >
-              {currentMarketPrice.savings > 0
+              {localMarketPrice.savings > 0
                 ? "💰 Jobb ajánlat elérhető"
                 : "ℹ️ Piaci ár információ"}
             </div>
@@ -320,36 +332,36 @@ const TaskCard: React.FC<TaskCardProps> = ({
               )}
               <div className="break-words">
                 <span className="font-medium text-gray-700">
-                  {currentMarketPrice.savings > 0 ? "Legjobb ajánlat: " : "Talált ár: "}
+                  {localMarketPrice.savings > 0 ? "Legjobb ajánlat: " : "Talált ár: "}
                 </span>
                 <span
                   className={`font-semibold ${
-                    currentMarketPrice.savings > 0 ? "text-green-600" : "text-gray-900"
+                    localMarketPrice.savings > 0 ? "text-green-600" : "text-gray-900"
                   }`}
                 >
-                  {currentMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/
+                  {localMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/
                   {unit || "db"}
                 </span>
               </div>
-              {currentMarketPrice.savings > 0 && (
+              {localMarketPrice.savings > 0 && (
                 <div className="break-words">
                   <span className="font-medium text-gray-700">Megtakarítás: </span>
                   <span className="text-green-600 font-semibold">
-                    -{currentMarketPrice.savings.toLocaleString("hu-HU")} Ft/{unit || "db"}
+                    -{localMarketPrice.savings.toLocaleString("hu-HU")} Ft/{unit || "db"}
                   </span>
                 </div>
               )}
               <div className="text-xs text-gray-600 mt-1 break-words">
-                📍 {currentMarketPrice.supplier}
+                📍 {localMarketPrice.supplier}
               </div>
-              {currentMarketPrice.productName && (
+              {localMarketPrice.productName && (
                 <div className="text-xs text-gray-600 break-words">
-                  📦 {currentMarketPrice.productName}
+                  📦 {localMarketPrice.productName}
                 </div>
               )}
-              {currentMarketPrice.url && (
+              {localMarketPrice.url && (
                 <a
-                  href={currentMarketPrice.url}
+                  href={localMarketPrice.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
@@ -358,9 +370,9 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   🔗 Megtekintés webshopban
                 </a>
               )}
-              {currentMarketPrice.lastRun && (
+              {localMarketPrice.lastRun && (
                 <div className="text-xs text-gray-500 mt-1">
-                  📅 Frissítve: {new Date(currentMarketPrice.lastRun).toLocaleDateString("hu-HU")}
+                  📅 Frissítve: {new Date(localMarketPrice.lastRun).toLocaleDateString("hu-HU")}
                 </div>
               )}
             </div>
