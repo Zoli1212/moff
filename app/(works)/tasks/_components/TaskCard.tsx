@@ -1,7 +1,17 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { Plus } from "lucide-react";
+import { Plus, AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+
+interface MarketPrice {
+  bestPrice: number;
+  supplier: string;
+  url: string;
+  productName: string;
+  savings: number;
+  checkedAt: string;
+  lastRun?: string;
+}
 
 interface TaskCardProps {
   id: number;
@@ -22,6 +32,9 @@ interface TaskCardProps {
   // New billing-related props
   billedQuantity?: number;
   paidQuantity?: number;
+  // Market price tracking props
+  currentMarketPrice?: MarketPrice | null;
+  materialUnitPrice?: number;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
@@ -41,9 +54,13 @@ const TaskCard: React.FC<TaskCardProps> = ({
   className = "",
   billedQuantity,
   paidQuantity,
+  currentMarketPrice,
+  materialUnitPrice,
 }) => {
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [newQuantity, setNewQuantity] = useState<string>("");
+  const [isFetchingPrice, setIsFetchingPrice] = useState(false);
+  const [showPriceDetails, setShowPriceDetails] = useState(false);
 
   const handleQuantitySubmit = () => {
     if (onQuantityChange) {
@@ -56,6 +73,141 @@ const TaskCard: React.FC<TaskCardProps> = ({
     }
   };
 
+  // Manual price fetch handler
+  const handleFetchPrice = async () => {
+    if (isFetchingPrice) return;
+
+    setIsFetchingPrice(true);
+    toast("Piaci árak lekérdezése...", {
+      id: "fetch-price",
+      duration: 50000,
+      style: {
+        background: "#dbeafe",
+        color: "#1e40af",
+        fontSize: 13,
+        padding: "6px 18px",
+        borderRadius: 8,
+        minHeight: 0,
+      },
+    });
+
+    try {
+      const response = await fetch("/api/scrape-material-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ workItemId: id, forceRefresh: true }),
+      });
+
+      if (response.ok) {
+        toast.dismiss("fetch-price");
+        toast.success("Piaci ár frissítve!", {
+          duration: 3000,
+          style: {
+            background: "#d1fae5",
+            color: "#065f46",
+            fontSize: 13,
+            padding: "6px 18px",
+            borderRadius: 8,
+          },
+        });
+        // Trigger parent refetch
+        window.location.reload();
+      } else {
+        toast.dismiss("fetch-price");
+        toast.error("Hiba történt az árfrissítés során", {
+          duration: 3000,
+        });
+      }
+    } catch (error) {
+      toast.dismiss("fetch-price");
+      toast.error("Hiba történt az árfrissítés során", {
+        duration: 3000,
+      });
+    } finally {
+      setIsFetchingPrice(false);
+    }
+  };
+
+  // Price indicator renderer - MINDEN kártyán megjelenik
+  const renderPriceIndicator = () => {
+    // Fetching state
+    if (isFetchingPrice) {
+      return (
+        <div className="flex items-center gap-1 text-blue-500">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-xs">Frissítés...</span>
+        </div>
+      );
+    }
+
+    // No price data - red alert (MINDEN kártyán megjelenik)
+    if (!currentMarketPrice) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFetchPrice();
+          }}
+          className="flex items-center gap-1 text-red-500 hover:text-red-700 transition-colors"
+          title="Kattints a piaci ár lekérdezéséhez"
+        >
+          <AlertCircle className="h-4 w-4" />
+          <span className="text-xs font-medium">Nincs árinfó</span>
+        </button>
+      );
+    }
+
+    const savingsAmount = (currentMarketPrice.savings || 0) * (quantity || 0);
+
+    // Has savings - green checkmark with amount and product name
+    if (currentMarketPrice.savings > 0) {
+      return (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleFetchPrice();
+          }}
+          className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors max-w-[70%]"
+          title={`${currentMarketPrice.productName || 'Termék'}\nSpórolás: -${savingsAmount.toLocaleString("hu-HU")} Ft\n${currentMarketPrice.supplier}`}
+        >
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          <div className="flex flex-col items-start">
+            <span className="text-xs font-semibold">
+              -{savingsAmount.toLocaleString("hu-HU")} Ft
+            </span>
+            {currentMarketPrice.productName && (
+              <span className="text-xs text-gray-600 truncate max-w-full">
+                {currentMarketPrice.productName}
+              </span>
+            )}
+          </div>
+        </button>
+      );
+    }
+
+    // No better price - green checkmark with product name if available
+    return (
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleFetchPrice();
+        }}
+        className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors max-w-[70%]"
+        title={currentMarketPrice.productName ? `${currentMarketPrice.productName}\n${currentMarketPrice.supplier}` : "Nincs jobb ajánlat"}
+      >
+        <CheckCircle className="h-4 w-4 flex-shrink-0" />
+        <div className="flex flex-col items-start">
+          <span className="text-xs">Árinfó OK</span>
+          {currentMarketPrice.productName && (
+            <span className="text-xs text-gray-600 truncate max-w-full">
+              {currentMarketPrice.productName}
+            </span>
+          )}
+        </div>
+      </button>
+    );
+  };
+
   const effectiveQuantity = quantity;
 
   return (
@@ -63,7 +215,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       className={`w-full max-w-full flex items-start rounded-xl mb-4 p-4 ${checked ? "border-2 border-blue-500 bg-blue-50" : "border border-gray-200 bg-white"} ${className} ${onEdit ? "cursor-pointer hover:shadow-md transition-shadow" : ""}`}
       onClick={() => onEdit && onEdit(id)}
     >
-      <div className="flex-1">
+      <div className="flex-1 min-w-0 overflow-hidden">
         <div className="font-bold text-lg" style={{ color: "#FE9C00" }}>
           {title.replace(/^\*\s*/, "")}
         </div>
@@ -101,8 +253,29 @@ const TaskCard: React.FC<TaskCardProps> = ({
             unit={unit || "db"}
             color="bg-yellow-500"
           />
-          {onQuantityChange && (
-            <div className="flex justify-end">
+
+          {/* Price indicator and quantity button row */}
+          <div className="flex justify-between items-center mt-2">
+            <div className="flex items-center gap-2">
+              {currentMarketPrice && !isFetchingPrice && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPriceDetails(!showPriceDetails);
+                  }}
+                  className="text-green-600 hover:text-green-700 transition-colors"
+                  title={showPriceDetails ? "Részletek elrejtése" : "Részletek megjelenítése"}
+                >
+                  {showPriceDetails ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </button>
+              )}
+              {renderPriceIndicator()}
+            </div>
+            {onQuantityChange && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
@@ -114,9 +287,86 @@ const TaskCard: React.FC<TaskCardProps> = ({
               >
                 <Plus className="h-3 w-3" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* Market price detailed info - csak ha showPriceDetails === true */}
+        {showPriceDetails && currentMarketPrice && !isFetchingPrice && (
+          <div
+            className={`mt-3 p-3 rounded-lg border overflow-hidden max-w-full ${
+              currentMarketPrice.savings > 0
+                ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-200"
+                : "bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200"
+            }`}
+          >
+            <div
+              className={`text-xs font-semibold mb-2 ${
+                currentMarketPrice.savings > 0 ? "text-green-700" : "text-gray-700"
+              }`}
+            >
+              {currentMarketPrice.savings > 0
+                ? "💰 Jobb ajánlat elérhető"
+                : "ℹ️ Piaci ár információ"}
+            </div>
+            <div className="text-sm space-y-1 overflow-hidden max-w-full">
+              {materialUnitPrice && (
+                <div className="break-words">
+                  <span className="font-medium text-gray-700">Jelenlegi ár: </span>
+                  <span className="text-gray-900">
+                    {materialUnitPrice.toLocaleString("hu-HU")} Ft/{unit || "db"}
+                  </span>
+                </div>
+              )}
+              <div className="break-words">
+                <span className="font-medium text-gray-700">
+                  {currentMarketPrice.savings > 0 ? "Legjobb ajánlat: " : "Talált ár: "}
+                </span>
+                <span
+                  className={`font-semibold ${
+                    currentMarketPrice.savings > 0 ? "text-green-600" : "text-gray-900"
+                  }`}
+                >
+                  {currentMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/
+                  {unit || "db"}
+                </span>
+              </div>
+              {currentMarketPrice.savings > 0 && (
+                <div className="break-words">
+                  <span className="font-medium text-gray-700">Megtakarítás: </span>
+                  <span className="text-green-600 font-semibold">
+                    -{currentMarketPrice.savings.toLocaleString("hu-HU")} Ft/{unit || "db"}
+                  </span>
+                </div>
+              )}
+              <div className="text-xs text-gray-600 mt-1 break-words">
+                📍 {currentMarketPrice.supplier}
+              </div>
+              {currentMarketPrice.productName && (
+                <div className="text-xs text-gray-600 break-words">
+                  📦 {currentMarketPrice.productName}
+                </div>
+              )}
+              {currentMarketPrice.url && (
+                <a
+                  href={currentMarketPrice.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-blue-600 hover:underline inline-block mt-1 break-all"
+                >
+                  🔗 Megtekintés webshopban
+                </a>
+              )}
+              {currentMarketPrice.lastRun && (
+                <div className="text-xs text-gray-500 mt-1">
+                  📅 Frissítve: {new Date(currentMarketPrice.lastRun).toLocaleDateString("hu-HU")}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Render children below progress bar */}
         {children}
       </div>

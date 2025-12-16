@@ -249,6 +249,8 @@ model WorkItem {
   progress       Int?      @default(0)
   inProgress     Boolean   @default(false)
   modifiedQuantity Float?  // Tenant által módosított mennyiség
+  currentMarketPrice Json?  // AI által frissített piaci árak { bestPrice: number, supplier: string, url: string, checkedAt: string }
+  lastPriceCheck   DateTime?  // Utolsó árfrissítés időpontja
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
