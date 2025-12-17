@@ -719,3 +719,4 @@ megmaradnak anyagok
 piactérre megmarad
 el akarod adni?
 maradék és ára
+Hiányzó workItem

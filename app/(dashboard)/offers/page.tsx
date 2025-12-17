@@ -128,6 +128,57 @@ export default function OffersPage() {
     loadOffers();
   }, []);
 
+  // Auto-refresh when there are offers being processed by AI
+  useEffect(() => {
+    const hasProcessingOffers = offers.some(
+      (offer) => offer.work?.processingByAI === true
+    );
+
+    if (!hasProcessingOffers) return;
+
+    // Poll every 3 seconds when there are processing offers
+    const intervalId = setInterval(async () => {
+      try {
+        const data = await getUserOffers();
+        const transformedData = data
+          .map((offer) => ({
+            ...offer,
+            notes: offer.notes?.map((note) =>
+              typeof note === "string" ? { content: note } : note
+            ) as Note[],
+            description: offer.description || undefined,
+            createdAt: offer.createdAt
+              ? new Date(offer.createdAt)
+              : new Date(0),
+          }))
+          .sort((a, b) => {
+            const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return dateB - dateA;
+          })
+          .filter(
+            (() => {
+              const seen = new Set();
+              return (offer: Offer) => {
+                if (!offer.title) return true;
+                if (seen.has(offer.title)) {
+                  return false;
+                } else {
+                  seen.add(offer.title);
+                  return true;
+                }
+              };
+            })()
+          );
+        setOffers(transformedData);
+      } catch (error) {
+        console.error("Error refreshing offers:", error);
+      }
+    }, 3000); // 3 seconds
+
+    return () => clearInterval(intervalId);
+  }, [offers]);
+
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case "draft":

@@ -40,7 +40,15 @@ export interface WorkItem {
   billableQuantity?: number;
   billedQuantity?: number;
   paidQuantity?: number;
-  currentMarketPrice?: any;
+  currentMarketPrice?: {
+    bestPrice: number;
+    supplier: string;
+    url: string;
+    productName: string;
+    savings: number;
+    checkedAt: string;
+    lastRun?: string;
+  } | null;
   lastPriceCheck?: Date;
 }
 

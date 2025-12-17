@@ -1374,63 +1374,14 @@ export async function updateOfferStatus(offerId: number, status: string) {
 
         if (status === "work") {
           if (existingWork) {
-            // Ellenőrizzük, hogy folyamatban van-e az AI feldolgozás
-            if (existingWork.processingByAI) {
-              console.log(`[updateOfferStatus] Work ${existingWork.id} is already being processed by AI`);
-              throw new Error("Az AI feldolgozás még folyamatban van. Kérjük várjon néhány másodpercet!");
-            }
-
-            // Ellenőrizzük, hogy vannak-e naplóbejegyzések
-            const hasDiaryEntries = await tx.workDiary.count({
-              where: { workId: existingWork.id },
-            }) > 0;
-
-            if (hasDiaryEntries) {
-              // HA VAN NAPLÓ → NEM törölhetjük! Csak aktiváljuk és NEM hívjuk újra az AI-t
-              console.log(`[updateOfferStatus] Work ${existingWork.id} has diary entries - keeping existing work`);
-              await tx.work.update({
-                where: { id: existingWork.id },
-                data: { isActive: true, processingByAI: false },
-              });
-              workIdToProcess = existingWork.id;
-            } else {
-              // NINCS NAPLÓ → Töröljük és újat hozunk létre (mert az offer item-ek változhattak)
-              console.log(`[updateOfferStatus] Work ${existingWork.id} has no diary entries - deleting and recreating`);
-              await tx.work.delete({
-                where: { id: existingWork.id },
-              });
-
-              // Új work létrehozása
-              const workTitle = offer.title || "Új munka";
-              const newWork = await tx.work.create({
-                data: {
-                  offerId: updatedOffer.id,
-                  status: "pending",
-                  title: workTitle,
-                  offerDescription: offer.description || null,
-                  location: offer.title || "N/A",
-                  totalWorkers: 0,
-                  totalLaborCost: 0,
-                  totalTools: 0,
-                  totalToolCost: 0,
-                  totalMaterials: 0,
-                  totalMaterialCost: offer.materialTotal
-                    ? Number(offer.materialTotal)
-                    : 0,
-                  estimatedDuration: "0",
-                  progress: 0,
-                  tenantEmail: tenantEmail,
-                  offerItems: offer.items
-                    ? JSON.parse(JSON.stringify(offer.items))
-                    : null,
-                  isActive: true,
-                  processingByAI: true,
-                },
-              });
-              workIdToProcess = newWork.id;
-            }
+            // Ha már van work, csak aktiváljuk és beállítjuk a processingByAI-t
+            await tx.work.update({
+              where: { id: existingWork.id },
+              data: { isActive: true, processingByAI: true },
+            });
+            workIdToProcess = existingWork.id;
           } else {
-            // Ha nincs work, mindig létrehozzuk
+            // Ha nincs, mindig létrehozzuk
             const workTitle = offer.title || "Új munka";
             const newWork = await tx.work.create({
               data: {
@@ -1469,13 +1420,13 @@ export async function updateOfferStatus(offerId: number, status: string) {
             // HA VAN NAPLÓ → NEM lehet draft-ra állítani! (munka már folyamatban)
             console.log(`[updateOfferStatus] Work ${existingWork.id} has diary entries - cannot convert to draft`);
             throw new Error("Nem állítható vissza draft-ra, mert már vannak naplóbejegyzések! A munka folyamatban van.");
-          } else {
-            // NINCS NAPLÓ → Törölhetjük
-            console.log(`[updateOfferStatus] Work ${existingWork.id} has no diary entries - deleting`);
-            await tx.work.delete({
-              where: { id: existingWork.id },
-            });
           }
+
+          // Ha nincs napló, akkor inaktiválhatjuk
+          await tx.work.update({
+            where: { id: existingWork.id },
+            data: { isActive: false },
+          });
         }
 
         return { updatedOffer, workIdToProcess };

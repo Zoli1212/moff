@@ -126,6 +126,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         });
       }
     } catch (error) {
+      console.log(error);
       toast.dismiss("fetch-price");
       toast.error("Hiba történt az árfrissítés során", {
         duration: 3000,

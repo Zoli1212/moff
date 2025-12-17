@@ -841,6 +841,11 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
     // Ne blokkoljuk a fő műveletet RAG hiba miatt
   }
 
+  // Revalidate paths so the offers list updates automatically
+  revalidatePath("/offers");
+  revalidatePath("/dashboard/offers");
+  revalidatePath("/works");
+
   return { success: true, data: result };
 }
 
