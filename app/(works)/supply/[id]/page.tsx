@@ -206,29 +206,27 @@ export default async function SupplyPage({
           </div>
         )}
 
-        {/* Description text for materials tab */}
+        {/* Button for materials procurement */}
         {tab === "materials" && (
-          <div
+          <a
+            href={`/supply/${workId}/procurement`}
             style={{
-              padding: "12px 16px",
-              marginBottom: "0px",
-              backgroundColor: "#f8f9fa",
+              display: "block",
+              padding: "14px 20px",
+              marginBottom: "16px",
+              backgroundColor: "#FFF5E6",
+              color: "#FE9C00",
               borderRadius: "8px",
-              border: "1px solid #e9ecef",
+              border: "2px solid #FE9C00",
+              fontWeight: 600,
+              fontSize: "15px",
+              textAlign: "center",
+              textDecoration: "none",
+              cursor: "pointer",
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                fontSize: "14px",
-                color: "#6c757d",
-                fontWeight: 500,
-                textAlign: "center",
-              }}
-            >
-              Folyamatban lévő feladatokhoz szükséges anyagok
-            </p>
-          </div>
+            Folyamatban lévő feladatokhoz szükséges anyagok beszerzése
+          </a>
         )}
 
         {/* Tab content */}
