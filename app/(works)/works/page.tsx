@@ -9,9 +9,6 @@ import Link from "next/link";
 import WorksAutoUpdater from "./_components/WorksAutoUpdater";
 import WorksSkeletonLoader from "../_components/WorksSkeletonLoader";
 
-
-export const dynamic = "force-dynamic";
-
 // Minimal Work típus, hogy ne legyen 'any'
 export type Work = {
   id: string | number;

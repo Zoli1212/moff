@@ -2,9 +2,6 @@ import React from 'react'
 import WorkHeader from "@/components/WorkHeader"
 import AidClient from './_components/AidClient'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-
 export default async function SegedPage() {
   return (
     <div className="container mx-auto">

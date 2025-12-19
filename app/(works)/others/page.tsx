@@ -3,10 +3,6 @@ import { getAllWorkforceRegistry } from '@/actions/workforce-registry-actions'
 import WorkforceRegistryClient from './_components/WorkforceRegistryClient'
 import WorkHeader from "@/components/WorkHeader"
 
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-
 export default async function OthersPage() {
   const workforceRegistry = await getAllWorkforceRegistry()
 

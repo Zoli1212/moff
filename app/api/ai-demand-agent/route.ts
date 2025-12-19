@@ -5,7 +5,6 @@ import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import * as mammoth from "mammoth";
 import * as XLSX from "xlsx";
 
-export const dynamic = 'force-dynamic';
 // import { Readable } from 'stream';
 
 // async function bufferToStream(buffer: Buffer): Promise<Readable> {

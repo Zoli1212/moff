@@ -2,6 +2,8 @@ import React from "react";
 import { getCurrentUserData } from "@/actions/user-actions";
 import WorksLayoutClient from "./_components/WorksLayoutClient";
 
+export const dynamic = 'force-dynamic';
+
 export default async function WorksLayout({
   children,
 }: {
