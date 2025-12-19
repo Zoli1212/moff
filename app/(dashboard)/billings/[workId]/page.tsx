@@ -14,12 +14,13 @@ import { WorkItem, Tool, Material, Worker, WorkItemWorker } from "@/types/work";
 // Database WorkItem type (without nested relations)
 type WorkItemFromDb = Omit<
   WorkItem,
-  "tools" | "materials" | "workers" | "workItemWorkers"
+  "tools" | "materials" | "workers" | "workItemWorkers" | "currentMarketPrice"
 > & {
   tools?: Tool[] | null;
   materials?: Material[] | null;
   workers?: Worker[] | null;
   workItemWorkers?: WorkItemWorker[] | null;
+  currentMarketPrice?: unknown; // Prisma returns JsonValue which can be any JSON
 };
 
 // Extended WorkItem for billing with additional properties
