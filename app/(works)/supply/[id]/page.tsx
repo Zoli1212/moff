@@ -13,6 +13,17 @@ import {
 import WorkHeader from "@/components/WorkHeader";
 import { getCurrentUserData } from "@/actions/user-actions";
 
+// MarketPrice type for type casting
+type MarketPrice = {
+  bestPrice: number;
+  supplier: string;
+  url: string;
+  productName: string;
+  savings: number;
+  checkedAt: string;
+  lastRun?: string;
+} | null | undefined;
+
 export default async function SupplyPage({
   params,
   searchParams,
@@ -49,12 +60,13 @@ export default async function SupplyPage({
 
     materials = work.materials || [];
     maxRequiredWorkers = work.maxRequiredWorkers || null;
-    workItems = (richItems || []).map((item: WorkItem) => ({
+    workItems = (richItems || []).map((item) => ({
       ...item,
       tools: item.tools || [],
       materials: item.materials || [],
       workers: item.workers || [],
       workItemWorkers: item.workItemWorkers || [],
+      currentMarketPrice: item.currentMarketPrice as MarketPrice,
     }));
     workName = work.title || "";
     tools = toolsRegistry;

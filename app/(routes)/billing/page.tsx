@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import BillingNotifications from "./_components/BillingNotifications";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Billing() {
   const subscription = await getUserSubscription();
 

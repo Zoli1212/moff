@@ -23,6 +23,17 @@ import type {
 // import type { AssignedTool } from "@/types/tools.types";
 
 type Tool = BaseTool & { quantity?: number };
+
+// MarketPrice type for type casting
+type MarketPrice = {
+  bestPrice: number;
+  supplier: string;
+  url: string;
+  productName: string;
+  savings: number;
+  checkedAt: string;
+  lastRun?: string;
+} | null | undefined;
 import TechnicalButton from "./_components/TechnicalButton";
 import CollapsibleSection from "../_components/CollapsibleSection";
 
@@ -160,7 +171,12 @@ export default function WorkDetailPage() {
                 getWorkDiaryItemsByWorkId(workData.id as number),
               ]);
 
-            setWorkItemsWithWorkers(workItemsData as unknown as WorkItem[]);
+            setWorkItemsWithWorkers(
+              workItemsData.map((item) => ({
+                ...item,
+                currentMarketPrice: item.currentMarketPrice as MarketPrice,
+              })) as WorkItem[]
+            );
             setGeneralWorkersFromDB(generalWorkersData as unknown as Worker[]);
             setWorkDiaryItems(workDiaryItemsData);
 

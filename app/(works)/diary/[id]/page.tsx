@@ -10,6 +10,17 @@ import { WorkItem, Worker } from "@/types/work"; // Importáljuk a hiányzó tí
 import DiaryPageClient from "./DiaryPageClient";
 import { Work } from "../../works/page";
 
+// MarketPrice type for type casting
+type MarketPrice = {
+  bestPrice: number;
+  supplier: string;
+  url: string;
+  productName: string;
+  savings: number;
+  checkedAt: string;
+  lastRun?: string;
+} | null | undefined;
+
 interface DiaryPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ diaryType?: string }>;
@@ -51,7 +62,10 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
     }
 
     work = workData as (Work & { workers: Worker[], expectedProfitPercent: number | null });
-    items = itemData;
+    items = itemData.map((item) => ({
+      ...item,
+      currentMarketPrice: item.currentMarketPrice as MarketPrice,
+    }));
     diaries = diaryData;
     workforceRegistry = workforceData || [];
 
