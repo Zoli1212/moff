@@ -45,6 +45,16 @@ export interface WorkItem {
   updatedAt: Date;
   tenantEmail: string;
   workDiaryEntries?: WorkDiary[];
+  currentMarketPrice?: {
+    bestPrice: number;
+    supplier: string;
+    url: string;
+    productName: string;
+    savings: number;
+    checkedAt: string;
+    lastRun?: string;
+  } | null;
+  lastPriceCheck?: Date | null;
 }
 
 export interface Tool {

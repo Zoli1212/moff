@@ -331,20 +331,22 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   </span>
                 </div>
               )}
-              <div className="break-words">
-                <span className="font-medium text-gray-700">
-                  {localMarketPrice.savings > 0 ? "Legjobb ajánlat: " : "Talált ár: "}
-                </span>
-                <span
-                  className={`font-semibold ${
-                    localMarketPrice.savings > 0 ? "text-green-600" : "text-gray-900"
-                  }`}
-                >
-                  {localMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/
-                  {unit || "db"}
-                </span>
-              </div>
-              {localMarketPrice.savings > 0 && (
+              {localMarketPrice.bestPrice != null && (
+                <div className="break-words">
+                  <span className="font-medium text-gray-700">
+                    {localMarketPrice.savings > 0 ? "Legjobb ajánlat: " : "Talált ár: "}
+                  </span>
+                  <span
+                    className={`font-semibold ${
+                      localMarketPrice.savings > 0 ? "text-green-600" : "text-gray-900"
+                    }`}
+                  >
+                    {localMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/
+                    {unit || "db"}
+                  </span>
+                </div>
+              )}
+              {localMarketPrice.savings > 0 && localMarketPrice.savings != null && (
                 <div className="break-words">
                   <span className="font-medium text-gray-700">Megtakarítás: </span>
                   <span className="text-green-600 font-semibold">

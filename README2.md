@@ -720,3 +720,19 @@ piactérre megmarad
 el akarod adni?
 maradék és ára
 Hiányzó workItem
+----
+Anyagokhoz kerüljön
+Gomb formája legyen !
+Beszerzés Gomb Sticky
+Összes kijelölése
+-------
+Ajánlatkérés
+Intelligens beszerés
+------
+modal
+----
+default tételel azok vannak kiválasztva amelyikből még kell
+mindent kipipálok összes kijelölése
+AJánlatkérő letöltése - cégnév - szállítási cim excel word pdf
+
+ajanlatkerő elküldése - milyen email cim , megosztás

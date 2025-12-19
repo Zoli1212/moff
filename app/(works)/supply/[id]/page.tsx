@@ -2,6 +2,7 @@ import React from "react";
 import MaterialSlotsSection from "../_components/MaterialSlotsSection";
 import ToolsSlotsSection from "../_components/ToolsSlotsSection";
 import WorkersSlotsSectionWithoutRoles from "../_components/WorkersSlotsSectionWithoutRoles";
+import ProcurementButton from "./_components/ProcurementButton";
 import type { WorkItem, Material, Tool, Worker } from "@/types/work";
 import type { AssignedTool } from "@/types/tools.types";
 import { getWorkForSupply, getWorkItemsWithWorkers } from "@/actions/work-actions";
@@ -65,7 +66,7 @@ export default async function SupplyPage({
   }
 
   return (
-    <div style={{ maxWidth: 450, margin: "0 auto", paddingBottom: 120 }}>
+    <div style={{ maxWidth: 450, margin: "0 auto", paddingBottom: 120, position: "relative" }}>
       <WorkHeader title={workName || "Beszerzés"} />
       <div style={{ padding: "0 8px" }}>
         {/* Toggle button for Anyagok/Szerszámok */}
@@ -206,27 +207,29 @@ export default async function SupplyPage({
           </div>
         )}
 
-        {/* Button for materials procurement */}
+        {/* Description text for materials tab */}
         {tab === "materials" && (
-          <a
-            href={`/supply/${workId}/procurement`}
+          <div
             style={{
-              display: "block",
-              padding: "14px 20px",
-              marginBottom: "16px",
-              backgroundColor: "#FFF5E6",
-              color: "#FE9C00",
+              padding: "12px 16px",
+              marginBottom: "0px",
+              backgroundColor: "#f8f9fa",
               borderRadius: "8px",
-              border: "2px solid #FE9C00",
-              fontWeight: 600,
-              fontSize: "15px",
-              textAlign: "center",
-              textDecoration: "none",
-              cursor: "pointer",
+              border: "1px solid #e9ecef",
             }}
           >
-            Folyamatban lévő feladatokhoz szükséges anyagok beszerzése
-          </a>
+            <p
+              style={{
+                margin: 0,
+                fontSize: "14px",
+                color: "#6c757d",
+                fontWeight: 500,
+                textAlign: "center",
+              }}
+            >
+              Folyamatban lévő feladatokhoz szükséges anyagok
+            </p>
+          </div>
         )}
 
         {/* Tab content */}
@@ -264,6 +267,9 @@ export default async function SupplyPage({
           )
         )}
       </div>
+
+      {/* Sticky procurement button for materials tab */}
+      {tab === "materials" && <ProcurementButton workId={workId} />}
     </div>
   );
 }

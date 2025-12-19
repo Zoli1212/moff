@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     const tvly = tavily({ apiKey: process.env.TAVILY_API_KEY });
 
     // Build search query for Hungarian construction material webshops
-    const searchQuery = `${workItem.name} ${workItem.unit} ár site:obi.hu OR site:praktiker.hu OR site:bauhaus.hu OR site:leroymerlin.hu OR site:epitkereso.hu OR site:baumax.hu`;
+    const searchQuery = `${workItem.name} ${workItem.unit} ár`;
 
     console.log("🔎 [scrape-material-prices] Search query:", searchQuery);
 
@@ -83,19 +83,29 @@ export async function POST(req: NextRequest) {
     try {
       searchResults = await tvly.search(searchQuery, {
         searchDepth: "advanced",
-        maxResults: 10,
+        maxResults: 15,
         includeDomains: [
           "obi.hu",
           "praktiker.hu",
           "bauhaus.hu",
           "leroymerlin.hu",
           "epitkereso.hu",
-          "baumax.hu"
+          "baumax.hu",
+          "emag.hu",
+          "extreme-digital.hu",
+          "aquacity.hu",
+          "furdoszobashop.hu",
+          "burkolat-market.hu"
         ],
       });
 
       console.log("✅ [scrape-material-prices] Tavily search completed");
       console.log(`📊 [scrape-material-prices] Found ${searchResults.results?.length || 0} results`);
+
+      // Log the actual results for debugging
+      if (searchResults.results && searchResults.results.length > 0) {
+        console.log("🔍 [scrape-material-prices] First result:", JSON.stringify(searchResults.results[0], null, 2));
+      }
     } catch (tavilyError) {
       console.error("❌ [scrape-material-prices] Tavily error:", tavilyError);
       return NextResponse.json(
@@ -150,23 +160,30 @@ Mennyiség: ${workItem.quantity} ${workItem.unit}
 Jelenlegi ár: ${workItem.materialUnitPrice ? `${workItem.materialUnitPrice} Ft/${workItem.unit}` : 'nincs megadva'}
 
 Keresési eredmények:
-${JSON.stringify(searchResults.results.slice(0, 5), null, 2)}
+${JSON.stringify(searchResults.results.slice(0, 10), null, 2)}
 
 Add vissza CSAK ÉRVÉNYES JSON formátumban a LEGOLCSÓBB ajánlatot:
 
 {
   "bestPrice": <szám, Ft/${workItem.unit} egységben>,
-  "supplier": "Kereskedő neve",
+  "supplier": "Kereskedő neve (pl. OBI, Praktiker, Bauhaus)",
   "url": "https://teljes-url",
   "productName": "Pontos terméknév és kiszerelés",
-  "savings": <szám, mennyit spórolunk>,
+  "savings": <szám, mennyit spórolunk a jelenlegi árhoz képest>,
   "checkedAt": "${new Date().toISOString()}"
 }
 
-SZABÁLYOK:
-- Ha nem találsz pontos árat az eredményekben, becsüld meg a szöveg alapján
-- A savings = (jelenlegi ár - talált ár), ha pozitív akkor spórolunk
-- Használd a results[].url mezőt a valódi URL-hez`;
+KRITIKUS SZABÁLYOK:
+- CSAK és KIZÁRÓLAG webshopok és online áruházak termékeit használd (OBI, Praktiker, Bauhaus, Leroy Merlin, eMAG, Aquacity, stb.)
+- NE használj híreket, cikkeket, blogokat vagy általános információs oldalakat
+- Ha az URL nem termékoldal (nem tartalmaz termék részleteket és árat), IGNORÁLD
+- Ha egy eredmény csak hír vagy cikk egy termékről (nem vásárlási lehetőség), IGNORÁLD
+- Az ár MINDIG legyen számérték (pl. 50000, ne legyen "50 000 Ft" vagy egyéb szöveges formátum)
+- A bestPrice mező KÖTELEZŐ - ha nem találsz árat, becsülj meg egy reális piaci árat a termék alapján
+- A savings = (jelenlegi ár - talált ár), ha pozitív akkor spórolunk, ha negatív vagy nincs jelenlegi ár akkor 0
+- Használd a results[].url mezőt a valódi URL-hez
+- A supplier mező a webshop nevét tartalmazza (pl. "OBI", "Praktiker", "Bauhaus")
+- Ha találsz terméket de nincs pontos ár, becsüld meg a piaci átlagár alapján`;
 
     let openaiResponse;
     try {

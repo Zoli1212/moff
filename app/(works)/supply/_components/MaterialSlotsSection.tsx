@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import MaterialAddModal from "./MaterialAddModal";
 import MaterialEditModal from "./MaterialEditModal";
+import MaterialPriceIndicator from "./MaterialPriceIndicator";
 import {
   addMaterial,
   updateMaterial,
@@ -304,7 +305,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2.5 pr-12">
                   <input
                     type="checkbox"
                     checked={selected.includes(mat.id)}
@@ -316,9 +317,9 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                     className="mr-2.5 w-[18px] h-[18px] accent-green-600"
                     onClick={(e) => e.stopPropagation()}
                   />
-                  <div className="flex-1 font-semibold flex items-center gap-3">
-                    <span>{mat.name.charAt(0).toUpperCase() + mat.name.slice(1)}</span>
-                    <div className="font-semibold text-[14px] text-[#222] flex items-center">
+                  <div className="flex-1 font-semibold flex items-center gap-3 overflow-hidden">
+                    <span className="truncate">{mat.name.charAt(0).toUpperCase() + mat.name.slice(1)}</span>
+                    <div className="font-semibold text-[14px] text-[#222] flex items-center flex-shrink-0">
                       {typeof mat.quantity !== "undefined" &&
                       mat.quantity !== null ? (
                         <>
@@ -331,9 +332,6 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                         <span>-</span>
                       )}
                     </div>
-                  </div>
-                  <div className="ml-auto pr-16">
-                    {/* Placeholder for future content */}
                   </div>
                 </div>
                 <div className="w-2/3 mt-2">
@@ -351,6 +349,27 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                     />
                   </div>
                 </div>
+
+                {/* Price indicator for each material */}
+                {(() => {
+                  // Find the first workItem that has this material
+                  const relatedWorkItem = workItems.find(
+                    (wi) => mat.workItemIds?.includes(wi.id) || wi.id === mat.workItemId
+                  );
+
+                  if (relatedWorkItem) {
+                    return (
+                      <MaterialPriceIndicator
+                        workItemId={relatedWorkItem.id}
+                        quantity={mat.quantity}
+                        unit={mat.unit}
+                        materialUnitPrice={relatedWorkItem.materialUnitPrice || undefined}
+                        currentMarketPrice={relatedWorkItem.currentMarketPrice || null}
+                      />
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             </div>
           ))}
