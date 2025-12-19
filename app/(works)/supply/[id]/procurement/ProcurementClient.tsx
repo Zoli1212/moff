@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
 
@@ -16,12 +16,15 @@ interface Material {
 
 export default function ProcurementClient({ workId }: { workId: number }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<Set<number>>(
     new Set()
   );
   const [isLoading, setIsLoading] = useState(true);
-  const [requestType, setRequestType] = useState<"quote" | "order">("quote");
+
+  // Get request type from URL param (quote or order)
+  const requestType = (searchParams.get("type") as "quote" | "order") || "quote";
 
   useEffect(() => {
     // TODO: Fetch materials that are in progress (inProgress: true workItems)
@@ -113,59 +116,6 @@ export default function ProcurementClient({ workId }: { workId: number }) {
         >
           <X size={24} color="#666" />
         </button>
-
-        {/* Request type selector */}
-        <div style={{ marginBottom: 24 }}>
-          <label
-            style={{
-              display: "block",
-              fontSize: 14,
-              fontWeight: 600,
-              marginBottom: 8,
-              color: "#333",
-            }}
-          >
-            Kérés típusa
-          </label>
-          <div style={{ display: "flex", gap: 12 }}>
-            <button
-              onClick={() => setRequestType("quote")}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                border: `2px solid ${requestType === "quote" ? "#FE9C00" : "#ddd"}`,
-                borderRadius: 8,
-                backgroundColor:
-                  requestType === "quote" ? "#FFF5E6" : "#fff",
-                color: requestType === "quote" ? "#FE9C00" : "#666",
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              Ajánlatkérés
-            </button>
-            <button
-              onClick={() => setRequestType("order")}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                border: `2px solid ${requestType === "order" ? "#FE9C00" : "#ddd"}`,
-                borderRadius: 8,
-                backgroundColor:
-                  requestType === "order" ? "#FFF5E6" : "#fff",
-                color: requestType === "order" ? "#FE9C00" : "#666",
-                fontWeight: 600,
-                fontSize: 14,
-                cursor: "pointer",
-                transition: "all 0.2s",
-              }}
-            >
-              Megrendelés
-            </button>
-          </div>
-        </div>
 
         {/* Materials list */}
         <div style={{ marginBottom: 24 }}>

@@ -25,7 +25,7 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         zIndex: 1000,
       }}
     >
-      {/* Ajánlatkérés button */}
+      {/* Ajánlatkérés button - Always opens as quote */}
       <a
         href={`/supply/${workId}/procurement?type=quote`}
         onMouseEnter={() => setIsHoveredQuote(true)}
@@ -50,9 +50,9 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         Ajánlatkérés
       </a>
 
-      {/* Intelligens beszerzés button */}
+      {/* Intelligens beszerzés button - Always opens as order */}
       <a
-        href={`/supply/${workId}/procurement`}
+        href={`/supply/${workId}/procurement?type=order`}
         onMouseEnter={() => setIsHoveredProcurement(true)}
         onMouseLeave={() => setIsHoveredProcurement(false)}
         style={{
