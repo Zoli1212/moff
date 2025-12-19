@@ -91,6 +91,7 @@ export default function BillingsDetailPage() {
               materials: item.materials || [],
               workers: item.workers || [],
               workItemWorkers: item.workItemWorkers || [],
+              currentMarketPrice: item.currentMarketPrice as any,
             })) ?? [];
           setWork({ ...data, workItems: itemsWithIds });
         } else {
@@ -128,6 +129,7 @@ export default function BillingsDetailPage() {
             materials: item.materials || [],
             workers: item.workers || [],
             workItemWorkers: item.workItemWorkers || [],
+            currentMarketPrice: item.currentMarketPrice as any, // Cast unknown to any for type compatibility
           };
         })
       );
@@ -155,6 +157,7 @@ export default function BillingsDetailPage() {
                   materials: item.materials || [],
                   workers: item.workers || [],
                   workItemWorkers: item.workItemWorkers || [],
+                  currentMarketPrice: item.currentMarketPrice as any,
                 })) ?? [];
               setWork({ ...data, workItems: itemsWithIds });
             }
