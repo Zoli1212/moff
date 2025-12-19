@@ -11,6 +11,17 @@ import { Button } from "@/components/ui/button";
 import { BillingItems } from "./_components/BillingItems";
 import { WorkItem, Tool, Material, Worker, WorkItemWorker } from "@/types/work";
 
+// MarketPrice type for type casting
+type MarketPrice = {
+  bestPrice: number;
+  supplier: string;
+  url: string;
+  productName: string;
+  savings: number;
+  checkedAt: string;
+  lastRun?: string;
+} | null | undefined;
+
 // Database WorkItem type (without nested relations)
 type WorkItemFromDb = Omit<
   WorkItem,
@@ -91,7 +102,7 @@ export default function BillingsDetailPage() {
               materials: item.materials || [],
               workers: item.workers || [],
               workItemWorkers: item.workItemWorkers || [],
-              currentMarketPrice: item.currentMarketPrice as any,
+              currentMarketPrice: item.currentMarketPrice as MarketPrice,
             })) ?? [];
           setWork({ ...data, workItems: itemsWithIds });
         } else {
@@ -129,7 +140,7 @@ export default function BillingsDetailPage() {
             materials: item.materials || [],
             workers: item.workers || [],
             workItemWorkers: item.workItemWorkers || [],
-            currentMarketPrice: item.currentMarketPrice as any, // Cast unknown to any for type compatibility
+            currentMarketPrice: item.currentMarketPrice as MarketPrice,
           };
         })
       );
@@ -157,7 +168,7 @@ export default function BillingsDetailPage() {
                   materials: item.materials || [],
                   workers: item.workers || [],
                   workItemWorkers: item.workItemWorkers || [],
-                  currentMarketPrice: item.currentMarketPrice as any,
+                  currentMarketPrice: item.currentMarketPrice as MarketPrice,
                 })) ?? [];
               setWork({ ...data, workItems: itemsWithIds });
             }
