@@ -1335,32 +1335,40 @@ export async function updateOfferTitle(offerId: number, title: string) {
 }
 
 export async function updateOfferStatus(offerId: number, status: string) {
-  console.log(offerId, "OFFERID");
+  console.log("\n💾 [DB - updateOfferStatus] 1. Kezdés - offerId:", offerId, "status:", status);
   try {
+    console.log("💾 [DB - updateOfferStatus] 2. Auth ellenőrzés...");
     const { user, tenantEmail } = await getTenantSafeAuth();
+    console.log("💾 [DB - updateOfferStatus] 3. Tenant email:", tenantEmail);
 
     // 1. Ellenőrizzük, hogy létezik-e már work ehhez az ajánlathoz
+    console.log("💾 [DB - updateOfferStatus] 4. Meglévő work keresése...");
     const existingWork = await prisma.work.findFirst({
       where: { offerId },
     });
+    console.log("💾 [DB - updateOfferStatus] 5. Meglévő work:", existingWork ? `ID: ${existingWork.id}` : "nincs");
 
     // 2. Lekérjük az ajánlatot a requirementtel együtt
+    console.log("💾 [DB - updateOfferStatus] 6. Offer lekérése...");
     const offer = await prisma.offer.findUnique({
       where: { id: offerId },
       include: {
         requirement: {},
       },
     });
+    console.log("💾 [DB - updateOfferStatus] 7. Offer lekérve:", offer ? `Title: ${offer.title}` : "nincs");
 
     if (!offer) {
+      console.error("❌ [DB - updateOfferStatus] 8. Offer nem található!");
       return { success: false, message: "Az ajánlat nem található!" };
     }
 
     // 4. Tranzakció kezdete
-    // Timeout növelve 30 másodpercre
+    console.log("💾 [DB - updateOfferStatus] 9. TRANZAKCIÓ KEZDÉSE...");
     const result = await prisma.$transaction(
       async (tx) => {
         // 4.1. Frissítjük az ajánlat státuszát
+        console.log("💾 [DB - updateOfferStatus] 10. Offer status frissítése...");
         const updatedOffer = await tx.offer.update({
           where: { id: offerId },
           data: {
@@ -1368,21 +1376,27 @@ export async function updateOfferStatus(offerId: number, status: string) {
             updatedAt: new Date(),
           },
         });
+        console.log("💾 [DB - updateOfferStatus] 11. Offer status frissítve:", updatedOffer.status);
 
         // 4.2. Munka státusz logika (logikai törlés/aktiválás)
         let workIdToProcess: number | null = null;
 
         if (status === "work") {
+          console.log("💾 [DB - updateOfferStatus] 12. Work létrehozás/aktiválás...");
           if (existingWork) {
+            console.log("💾 [DB - updateOfferStatus] 13. Meglévő work aktiválása:", existingWork.id);
             // Ha már van work, csak aktiváljuk és beállítjuk a processingByAI-t
             await tx.work.update({
               where: { id: existingWork.id },
               data: { isActive: true, processingByAI: true },
             });
             workIdToProcess = existingWork.id;
+            console.log("💾 [DB - updateOfferStatus] 14. Work aktiválva, processingByAI=true");
           } else {
+            console.log("💾 [DB - updateOfferStatus] 13. Új work létrehozása...");
             // Ha nincs, mindig létrehozzuk
             const workTitle = offer.title || "Új munka";
+            console.log("💾 [DB - updateOfferStatus] 14. Work adatok előkészítése:", { workTitle, tenantEmail });
             const newWork = await tx.work.create({
               data: {
                 offerId: updatedOffer.id,
@@ -1409,8 +1423,10 @@ export async function updateOfferStatus(offerId: number, status: string) {
               },
             });
             workIdToProcess = newWork.id;
+            console.log("💾 [DB - updateOfferStatus] 15. Új work létrehozva, ID:", newWork.id);
           }
         } else if (status === "draft" && existingWork) {
+          console.log("💾 [DB - updateOfferStatus] 12. Draft-ra állítás, work inaktiválása...");
           // Ellenőrizzük, hogy vannak-e naplóbejegyzések
           const hasDiaryEntries = await tx.workDiary.count({
             where: { workId: existingWork.id },
@@ -1418,7 +1434,7 @@ export async function updateOfferStatus(offerId: number, status: string) {
 
           if (hasDiaryEntries) {
             // HA VAN NAPLÓ → NEM lehet draft-ra állítani! (munka már folyamatban)
-            console.log(`[updateOfferStatus] Work ${existingWork.id} has diary entries - cannot convert to draft`);
+            console.error("❌ [DB - updateOfferStatus] 13. Work-nak vannak napló bejegyzései!");
             throw new Error("Nem állítható vissza draft-ra, mert már vannak naplóbejegyzések! A munka folyamatban van.");
           }
 
@@ -1427,23 +1443,29 @@ export async function updateOfferStatus(offerId: number, status: string) {
             where: { id: existingWork.id },
             data: { isActive: false },
           });
+          console.log("💾 [DB - updateOfferStatus] 13. Work inaktiválva");
         }
 
+        console.log("💾 [DB - updateOfferStatus] 16. Tranzakció return, workIdToProcess:", workIdToProcess);
         return { updatedOffer, workIdToProcess };
       },
       {
         timeout: 8000, // 8 másodperc timeout (Vercel Hobby limit: 10s)
       }
     );
+    console.log("💾 [DB - updateOfferStatus] 17. TRANZAKCIÓ SIKERES!");
 
     // 5. processingByAI flag már be van állítva a tranzakcióban
     // A kliens oldal fogja meghívni az /api/start-work endpoint-ot
 
     // 6. Cache frissítése
+    console.log("💾 [DB - updateOfferStatus] 18. Cache frissítése...");
     revalidatePath(`/dashboard/offers/${offerId}`);
     revalidatePath("/dashboard/offers");
     revalidatePath("/works");
+    console.log("💾 [DB - updateOfferStatus] 19. Cache frissítve");
 
+    console.log("💾 [DB - updateOfferStatus] 20. ✅ SIKERES BEFEJEZÉS, workId:", result.workIdToProcess);
     return {
       success: true,
       message: `Az ajánlat sikeresen ${status === "work" ? "munkába állítva" : "frissítve"}!`,

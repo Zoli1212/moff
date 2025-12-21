@@ -328,33 +328,39 @@ export const fetchWorkAndItemsOptimized = cache(async (workId: number) => {
 });
 
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {
+  console.log("\n🔄 [WORK UPDATE] 1. updateWorkWithAIResult kezdés, workId:", workId);
+  console.log("🔄 [WORK UPDATE] 2. AI Result workItems count:", aiResult?.workItems?.length);
+
   const { user, tenantEmail } = await getTenantSafeAuth();
   const email = tenantEmail;
+  console.log("🔄 [WORK UPDATE] 3. Tenant email:", email);
 
   // Ellenőrzés, hogy a work a felhasználóhoz tartozik
+  console.log("🔄 [WORK UPDATE] 4. Work jogosultság ellenőrzése...");
   const work = await prisma.work.findUnique({
     where: { id: workId },
     select: { tenantEmail: true },
   });
   if (!work) {
-    console.error(`[updateWorkWithAIResult] Work not found for id: ${workId}`);
+    console.error(`❌ [WORK UPDATE] 5. Work not found for id: ${workId}`);
     return { success: false, error: `Work not found for id: ${workId}` };
   }
   if (work.tenantEmail !== email) {
     console.error(
-      `[updateWorkWithAIResult] Unauthorized: user ${email} does not own work ${workId}`
+      `❌ [WORK UPDATE] 5. Unauthorized: user ${email} does not own work ${workId}`
     );
     return {
       success: false,
       error: "Unauthorized: user does not own this work",
     };
   }
+  console.log("🔄 [WORK UPDATE] 5. Jogosultság OK");
 
   // Work mezők frissítése
-
   let updatedWork = null;
 
   try {
+    console.log("🔄 [WORK UPDATE] 6. Work frissítése AI eredménnyel...");
     updatedWork = await prisma.work.update({
       where: { id: workId },
       data: {
@@ -377,8 +383,9 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
       },
       include: { workItems: true },
     });
+    console.log("🔄 [WORK UPDATE] 7. Work frissítve sikeresen!");
   } catch (err) {
-    console.error(`[updateWorkWithAIResult] Failed to update Work:`, err);
+    console.error(`❌ [WORK UPDATE] 7. Failed to update Work:`, err);
     return {
       success: false,
       error: "Failed to update Work",
@@ -1286,9 +1293,12 @@ export async function setWorkProcessingFlag(
   workId: number,
   processing: boolean
 ) {
+  console.log(`\n🏁 [PROCESSING FLAG] 1. setWorkProcessingFlag kezdés, workId: ${workId}, processing: ${processing}`);
   try {
     const { user, tenantEmail } = await getTenantSafeAuth();
+    console.log(`🏁 [PROCESSING FLAG] 2. Tenant email: ${tenantEmail}`);
 
+    console.log(`🏁 [PROCESSING FLAG] 3. Work processingByAI flag frissítése...`);
     await prisma.work.update({
       where: {
         id: workId,
@@ -1298,14 +1308,17 @@ export async function setWorkProcessingFlag(
         processingByAI: processing,
       },
     });
+    console.log(`🏁 [PROCESSING FLAG] 4. Flag frissítve: processingByAI=${processing}`);
 
     // Revalidate the /works page so the UI updates
+    console.log(`🏁 [PROCESSING FLAG] 5. Cache revalidálása...`);
     revalidatePath("/works");
+    console.log(`🏁 [PROCESSING FLAG] 6. ✅ Sikeres befejezés`);
 
     return { success: true };
   } catch (error) {
     console.error(
-      `❌ Error setting processingByAI for work #${workId}:`,
+      `❌ [PROCESSING FLAG] Error setting processingByAI for work #${workId}:`,
       error
     );
     return {

@@ -954,8 +954,12 @@ export function OfferDetailView({
       }
 
       // Normál munkába állítás (új munka létrehozása)
+      console.log("📋 [MUNKÁBA ÁLLÍTÁS] 1. Állapot váltás kezdése...");
       const newStatus = offer.status === "draft" ? "work" : "draft";
+      console.log(`📋 [MUNKÁBA ÁLLÍTÁS] 2. Új állapot: ${newStatus}`);
+
       const result = await updateOfferStatus(offer.id, newStatus);
+      console.log("📋 [MUNKÁBA ÁLLÍTÁS] 3. updateOfferStatus eredmény:", result);
 
       if (result.success) {
         toast.success(
@@ -964,7 +968,15 @@ export function OfferDetailView({
 
         // Ha munkába állítottuk, indítsuk el az AI feldolgozást
         if (newStatus === "work" && result.workId) {
-          console.log("🚀 AI feldolgozás indítása munkába állítás után...");
+          console.log("🚀 [AI FELDOLGOZÁS] 1. Indítás munkába állítás után...");
+          console.log("🚀 [AI FELDOLGOZÁS] 2. WorkId:", result.workId);
+          console.log("🚀 [AI FELDOLGOZÁS] 3. Request data:", {
+            location: offer.title || "",
+            offerDescription: offer.description || "",
+            estimatedDuration: "0",
+            offerItems: editableItems || [],
+          });
+
           // Háttérben futtatjuk, nem várunk rá
           fetch("/api/start-work", {
             method: "POST",
@@ -976,40 +988,49 @@ export function OfferDetailView({
               offerItems: editableItems || [],
             }),
           })
-            .then((res) => res.json())
+            .then((res) => {
+              console.log("🚀 [AI FELDOLGOZÁS] 4. Válasz státusz:", res.status);
+              return res.json();
+            })
             .then(async (aiResult) => {
+              console.log("🚀 [AI FELDOLGOZÁS] 5. AI válasz:", aiResult);
+
               if (aiResult && !aiResult.error) {
+                console.log("✅ [AI FELDOLGOZÁS] 6. Sikeres AI válasz, work frissítése...");
                 // Frissítjük a work-öt az AI eredménnyel
                 const { updateWorkWithAIResult } = await import(
                   "@/actions/work-actions"
                 );
                 await updateWorkWithAIResult(result.workId!, aiResult);
-                console.log("✅ AI feldolgozás sikeres");
+                console.log("✅ [AI FELDOLGOZÁS] 7. Work frissítve AI eredménnyel");
 
                 // Frissítjük a processingByAI flag-et false-ra server action-nel
                 const { setWorkProcessingFlag } = await import(
                   "@/actions/work-actions"
                 );
                 await setWorkProcessingFlag(result.workId!, false);
+                console.log("✅ [AI FELDOLGOZÁS] 8. processingByAI flag false-ra állítva");
               } else {
-                console.error("❌ AI feldolgozási hiba:", aiResult?.error);
+                console.error("❌ [AI FELDOLGOZÁS] 6. AI feldolgozási hiba:", aiResult?.error);
                 // Hiba esetén is állítsuk false-ra a flag-et
                 const { setWorkProcessingFlag } = await import(
                   "@/actions/work-actions"
                 );
                 await setWorkProcessingFlag(result.workId!, false);
+                console.log("⚠️ [AI FELDOLGOZÁS] 7. processingByAI flag false-ra állítva (hiba után)");
               }
             })
             .catch(async (err) => {
-              console.error("❌ AI feldolgozási hiba:", err);
+              console.error("❌ [AI FELDOLGOZÁS] FETCH ERROR:", err);
               // Hiba esetén is állítsuk false-ra a flag-et
               try {
                 const { setWorkProcessingFlag } = await import(
                   "@/actions/work-actions"
                 );
                 await setWorkProcessingFlag(result.workId!, false);
+                console.log("⚠️ [AI FELDOLGOZÁS] processingByAI flag false-ra állítva (catch block)");
               } catch (dbErr) {
-                console.error("❌ DB frissítési hiba:", dbErr);
+                console.error("❌ [AI FELDOLGOZÁS] DB frissítési hiba:", dbErr);
               }
             });
         }
@@ -1513,6 +1534,26 @@ export function OfferDetailView({
                 ? "Munkába állítás"
                 : "Kivétel munkából"}
             </Button>
+            <a
+              href="http://localhost:3000"
+              style={{
+                backgroundColor: "#FEF3E6",
+                color: "#FE9C00",
+                borderColor: "#FE9C00",
+                border: "1px solid",
+                padding: "0.5rem 1rem",
+                borderRadius: "0.375rem",
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontWeight: 500,
+                fontSize: "0.875rem",
+              }}
+              className="hover:bg-orange-100"
+            >
+              Vissza
+            </a>
           </div>
 
           {/* Offer Header */}
