@@ -890,11 +890,19 @@ export function OfferDetailView({
 
   // Handle status update - toggles between 'work' and 'draft' statuses
   const handleStatusUpdate = async () => {
+    console.log("\n🔵 [HANDLE STATUS UPDATE] 1. FÜGGVÉNY MEGHÍVVA!");
+    console.log("🔵 [HANDLE STATUS UPDATE] 2. Offer ID:", offer.id);
+    console.log("🔵 [HANDLE STATUS UPDATE] 3. Current status:", offer.status);
+    console.log("🔵 [HANDLE STATUS UPDATE] 4. assignToExisting:", assignToExisting);
+    console.log("🔵 [HANDLE STATUS UPDATE] 5. selectedWorkId:", selectedWorkId);
+
     try {
+      console.log("🔵 [HANDLE STATUS UPDATE] 6. setIsUpdatingStatus(true)");
       setIsUpdatingStatus(true);
 
       // Ha meglévő munkához rendelés mód van bekapcsolva
       if (assignToExisting && selectedWorkId) {
+        console.log("🔵 [HANDLE STATUS UPDATE] 7. MEGLÉVŐ MUNKÁHOZ RENDELÉS mód...");
         // 1. Offer status frissítése és linkedOfferIds hozzáadása
         const result = await assignOfferToExistingWork(
           offer.id,
@@ -970,85 +978,51 @@ export function OfferDetailView({
         if (newStatus === "work" && result.workId) {
           console.log("🚀 [AI FELDOLGOZÁS] 1. Indítás munkába állítás után...");
           console.log("🚀 [AI FELDOLGOZÁS] 2. WorkId:", result.workId);
-          console.log("🚀 [AI FELDOLGOZÁS] 3. Request data:", {
-            location: offer.title || "",
-            offerDescription: offer.description || "",
-            estimatedDuration: "0",
-            offerItems: editableItems || [],
-          });
 
-          // Háttérben futtatjuk, nem várunk rá
+          // ✅ Elküldjük a kérést, VÁRUNK a request body elküldésére,
+          // de a backend maga fogja frissíteni a work-öt és a processingByAI flag-et
+          // Ha megszakad a kapcsolat, a backend már megkapta az adatokat
           fetch("/api/start-work", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              workId: result.workId,
               location: offer.title || "",
               offerDescription: offer.description || "",
               estimatedDuration: "0",
               offerItems: editableItems || [],
             }),
+            // ⚠️ keepalive: biztosítja hogy a request elküldjön még akkor is ha a komponens unmount-ol
+            keepalive: true,
           })
-            .then((res) => {
-              console.log("🚀 [AI FELDOLGOZÁS] 4. Válasz státusz:", res.status);
-              return res.json();
+            .then(() => {
+              console.log("✅ [AI FELDOLGOZÁS] 3. Kérés sikeresen elküldve a backend-nek");
             })
-            .then(async (aiResult) => {
-              console.log("🚀 [AI FELDOLGOZÁS] 5. AI válasz:", aiResult);
-
-              if (aiResult && !aiResult.error) {
-                console.log("✅ [AI FELDOLGOZÁS] 6. Sikeres AI válasz, work frissítése...");
-                // Frissítjük a work-öt az AI eredménnyel
-                const { updateWorkWithAIResult } = await import(
-                  "@/actions/work-actions"
-                );
-                await updateWorkWithAIResult(result.workId!, aiResult);
-                console.log("✅ [AI FELDOLGOZÁS] 7. Work frissítve AI eredménnyel");
-
-                // Frissítjük a processingByAI flag-et false-ra server action-nel
-                const { setWorkProcessingFlag } = await import(
-                  "@/actions/work-actions"
-                );
-                await setWorkProcessingFlag(result.workId!, false);
-                console.log("✅ [AI FELDOLGOZÁS] 8. processingByAI flag false-ra állítva");
-              } else {
-                console.error("❌ [AI FELDOLGOZÁS] 6. AI feldolgozási hiba:", aiResult?.error);
-                // Hiba esetén is állítsuk false-ra a flag-et
-                const { setWorkProcessingFlag } = await import(
-                  "@/actions/work-actions"
-                );
-                await setWorkProcessingFlag(result.workId!, false);
-                console.log("⚠️ [AI FELDOLGOZÁS] 7. processingByAI flag false-ra állítva (hiba után)");
-              }
-            })
-            .catch(async (err) => {
-              console.error("❌ [AI FELDOLGOZÁS] FETCH ERROR:", err);
-              // Hiba esetén is állítsuk false-ra a flag-et
-              try {
-                const { setWorkProcessingFlag } = await import(
-                  "@/actions/work-actions"
-                );
-                await setWorkProcessingFlag(result.workId!, false);
-                console.log("⚠️ [AI FELDOLGOZÁS] processingByAI flag false-ra állítva (catch block)");
-              } catch (dbErr) {
-                console.error("❌ [AI FELDOLGOZÁS] DB frissítési hiba:", dbErr);
-              }
+            .catch((err) => {
+              console.error("❌ [AI FELDOLGOZÁS] Fetch error:", err);
             });
         }
 
         // Notify parent component about the status change
+        console.log("📋 [MUNKÁBA ÁLLÍTÁS] 4. onStatusChange callback...");
         if (onStatusChange) {
           onStatusChange(newStatus);
         }
         // Close the dialog after successful update
+        console.log("📋 [MUNKÁBA ÁLLÍTÁS] 5. Dialog bezárása...");
         setIsStatusDialogOpen(false);
+        console.log("📋 [MUNKÁBA ÁLLÍTÁS] 6. ✅ BEFEJEZVE!");
       } else {
+        console.error("❌ [MUNKÁBA ÁLLÍTÁS] updateOfferStatus sikertelen:", result);
         toast.error(result.message || "Hiba történt az állapot frissítésekor");
       }
     } catch (error) {
-      console.error("Error updating status:", error);
+      console.error("❌ [HANDLE STATUS UPDATE] CATCH BLOCK - Error updating status:", error);
+      console.error("❌ [HANDLE STATUS UPDATE] Error stack:", error instanceof Error ? error.stack : "No stack");
       const errorMessage = error instanceof Error ? error.message : "Hiba történt az állapot frissítésekor";
       toast.error(errorMessage);
     } finally {
+      console.log("🔵 [HANDLE STATUS UPDATE] FINALLY BLOCK - setIsUpdatingStatus(false)");
       setIsUpdatingStatus(false);
     }
   };
@@ -2580,7 +2554,14 @@ export function OfferDetailView({
               </>
             )}
             <Button
-              onClick={handleStatusUpdate}
+              onClick={() => {
+                console.log("🟢 [GOMB KATTINTÁS] Munkába állítás gomb megnyomva!");
+                console.log("🟢 [GOMB KATTINTÁS] isUpdatingStatus:", isUpdatingStatus);
+                console.log("🟢 [GOMB KATTINTÁS] assignToExisting:", assignToExisting);
+                console.log("🟢 [GOMB KATTINTÁS] selectedWorkId:", selectedWorkId);
+                console.log("🟢 [GOMB KATTINTÁS] handleStatusUpdate függvény meghívása...");
+                handleStatusUpdate();
+              }}
               disabled={
                 isUpdatingStatus || (assignToExisting && !selectedWorkId)
               }

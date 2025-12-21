@@ -4,6 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 
 export async function POST(req: NextRequest) {
   console.log("\n🚀 [start-work] API endpoint called");
+  let workId: number | undefined;
   try {
     // ✅ SECURITY: Check authentication
     const user = await currentUser();
@@ -20,7 +21,9 @@ export async function POST(req: NextRequest) {
     );
 
     const body = await req.json();
-    const { location, offerDescription, estimatedDuration, offerItems } = body;
+    const parsedBody = body as { workId?: number; location: string; offerDescription: string; estimatedDuration: string; offerItems: WorkItem[] };
+    workId = parsedBody.workId;
+    const { location, offerDescription, estimatedDuration, offerItems } = parsedBody;
     console.log("📦 [start-work] Request body:", {
       location,
       offerDescription: offerDescription?.substring(0, 100) + "...",
@@ -307,11 +310,38 @@ export async function POST(req: NextRequest) {
       }
     }
     // --- /Szigorú validáció ---
-    console.log("✅ [start-work] Validation complete, returning parsed result");
+    console.log("✅ [start-work] Validation complete");
     console.log(
       "📤 [start-work] Response workItems count:",
       parsed?.workItems?.length
     );
+
+    // ✅ BACKEND WORK FRISSÍTÉS: Frissítjük a work-öt az AI eredménnyel
+    if (workId && parsed) {
+      console.log("💾 [start-work] Work frissítése workId-vel:", workId);
+      try {
+        const { updateWorkWithAIResult, setWorkProcessingFlag } = await import(
+          "@/actions/work-actions"
+        );
+
+        await updateWorkWithAIResult(workId, parsed);
+        console.log("✅ [start-work] Work frissítve AI eredménnyel");
+
+        await setWorkProcessingFlag(workId, false);
+        console.log("✅ [start-work] processingByAI flag false-ra állítva");
+      } catch (updateErr) {
+        console.error("❌ [start-work] Work frissítési hiba:", updateErr);
+        // Mindenképp állítsuk false-ra a flag-et még hiba esetén is
+        try {
+          const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+          await setWorkProcessingFlag(workId, false);
+          console.log("⚠️ [start-work] processingByAI flag false-ra állítva (hiba után)");
+        } catch (flagErr) {
+          console.error("❌ [start-work] Flag frissítési hiba:", flagErr);
+        }
+      }
+    }
+
     return NextResponse.json(parsed);
   } catch (err) {
     console.error("❌ [start-work] Fatal error:", err);
@@ -319,6 +349,18 @@ export async function POST(req: NextRequest) {
       "❌ [start-work] Error stack:",
       err instanceof Error ? err.stack : "No stack"
     );
+
+    // ⚠️ Hiba esetén is állítsuk false-ra a processingByAI flag-et
+    if (workId) {
+      try {
+        const { setWorkProcessingFlag } = await import("@/actions/work-actions");
+        await setWorkProcessingFlag(workId, false);
+        console.log("⚠️ [start-work] processingByAI flag false-ra állítva (fatal error után)");
+      } catch (flagErr) {
+        console.error("❌ [start-work] Flag frissítési hiba (catch block):", flagErr);
+      }
+    }
+
     return NextResponse.json(
       {
         error: "OpenAI válasz nem volt JSON.",
