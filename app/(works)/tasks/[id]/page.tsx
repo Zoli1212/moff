@@ -337,9 +337,6 @@ export default function TasksPage() {
                       // Add billing-related props with default values
                       billedQuantity={item.billedQuantity || 0}
                       paidQuantity={item.paidQuantity || 0}
-                      // Market price tracking props
-                      currentMarketPrice={item.currentMarketPrice}
-                      materialUnitPrice={item.materialUnitPrice || undefined}
                     >
                       {item.workItemWorkers &&
                         item.workItemWorkers.length > 0 && (

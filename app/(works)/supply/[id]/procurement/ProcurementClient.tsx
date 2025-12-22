@@ -5,14 +5,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
 
-interface MarketPrice {
+interface MarketOffer {
   bestPrice: number;
   supplier: string;
   url: string;
   productName: string;
   savings: number;
   checkedAt: string;
+}
+
+interface MarketPrice {
+  offers?: MarketOffer[];
   lastRun?: string;
+  // Legacy format
+  bestPrice?: number;
+  supplier?: string;
+  url?: string;
+  productName?: string;
+  savings?: number;
+  checkedAt?: string;
 }
 
 interface Material {
@@ -206,46 +217,93 @@ export default function ProcurementClient({ workId }: { workId: number }) {
                             ` • ${material.materialUnitPrice.toLocaleString("hu-HU")} Ft/${material.unit}`}
                         </div>
 
-                        {/* Show current market price if available */}
-                        {material.currentMarketPrice && material.currentMarketPrice.savings > 0 && (
-                          <div
-                            style={{
-                              marginTop: 8,
-                              padding: 8,
-                              backgroundColor: "#d1fae5",
-                              borderRadius: 6,
-                              border: "1px solid #10b981",
-                            }}
-                          >
-                            <div style={{ fontSize: 11, fontWeight: 600, color: "#065f46", marginBottom: 4 }}>
-                              💰 Jobb ajánlat elérhető
+                        {/* Show best market offer if available */}
+                        {(() => {
+                          const price = material.currentMarketPrice;
+                          if (!price) return null;
+
+                          // Get best offer (handles both new and legacy formats)
+                          let bestOffer: MarketOffer | null = null;
+                          if (price.offers && price.offers.length > 0) {
+                            bestOffer = price.offers[0];
+                          } else if (price.bestPrice !== undefined) {
+                            bestOffer = {
+                              bestPrice: price.bestPrice,
+                              supplier: price.supplier || '',
+                              url: price.url || '',
+                              productName: price.productName || '',
+                              savings: price.savings || 0,
+                              checkedAt: price.checkedAt || '',
+                            };
+                          }
+
+                          if (!bestOffer || bestOffer.savings <= 0) return null;
+
+                          const offerCount = price.offers?.length || 1;
+
+                          return (
+                            <div
+                              style={{
+                                marginTop: 8,
+                                padding: 8,
+                                backgroundColor: "#d1fae5",
+                                borderRadius: 6,
+                                border: "1px solid #10b981",
+                              }}
+                            >
+                              <div style={{ fontSize: 11, fontWeight: 600, color: "#065f46", marginBottom: 4 }}>
+                                💰 {offerCount > 1 ? `${offerCount} jobb ajánlat` : 'Jobb ajánlat elérhető'}
+                              </div>
+                              <div style={{ fontSize: 11, color: "#065f46" }}>
+                                <div>
+                                  <span style={{ fontWeight: 500 }}>Jelenlegi ár: </span>
+                                  {material.materialUnitPrice?.toLocaleString("hu-HU")} Ft/{material.unit}
+                                </div>
+                                <div>
+                                  <span style={{ fontWeight: 500 }}>Legjobb ajánlat: </span>
+                                  <span style={{ fontWeight: 700, color: "#047857" }}>
+                                    {bestOffer.bestPrice.toLocaleString("hu-HU")} Ft/{material.unit}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span style={{ fontWeight: 500 }}>Megtakarítás: </span>
+                                  <span style={{ fontWeight: 700, color: "#047857" }}>
+                                    -{bestOffer.savings.toLocaleString("hu-HU")} Ft/{material.unit}
+                                  </span>
+                                </div>
+                                <div style={{ marginTop: 4 }}>
+                                  📍 {bestOffer.supplier}
+                                </div>
+                                <div>
+                                  📦 {bestOffer.productName}
+                                </div>
+                                {bestOffer.url && (
+                                  <a
+                                    href={bestOffer.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{
+                                      display: "inline-block",
+                                      marginTop: 6,
+                                      fontSize: 11,
+                                      color: "#2563eb",
+                                      textDecoration: "underline",
+                                      fontWeight: 500,
+                                    }}
+                                  >
+                                    🔗 Megtekintés webshopban
+                                  </a>
+                                )}
+                                {offerCount > 1 && (
+                                  <div style={{ marginTop: 6, fontSize: 10, color: "#047857", fontStyle: 'italic' }}>
+                                    +{offerCount - 1} további ajánlat elérhető
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <div style={{ fontSize: 11, color: "#065f46" }}>
-                              <div>
-                                <span style={{ fontWeight: 500 }}>Jelenlegi ár: </span>
-                                {material.materialUnitPrice?.toLocaleString("hu-HU")} Ft/{material.unit}
-                              </div>
-                              <div>
-                                <span style={{ fontWeight: 500 }}>Legjobb ajánlat: </span>
-                                <span style={{ fontWeight: 700, color: "#047857" }}>
-                                  {material.currentMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/{material.unit}
-                                </span>
-                              </div>
-                              <div>
-                                <span style={{ fontWeight: 500 }}>Megtakarítás: </span>
-                                <span style={{ fontWeight: 700, color: "#047857" }}>
-                                  -{material.currentMarketPrice.savings.toLocaleString("hu-HU")} Ft/{material.unit}
-                                </span>
-                              </div>
-                              <div style={{ marginTop: 4 }}>
-                                📍 {material.currentMarketPrice.supplier}
-                              </div>
-                              <div>
-                                📦 {material.currentMarketPrice.productName}
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                       <div
                         style={{
