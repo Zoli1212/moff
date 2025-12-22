@@ -736,3 +736,7 @@ mindent kipipálok összes kijelölése
 AJánlatkérő letöltése - cégnév - szállítási cim excel word pdf
 
 ajanlatkerő elküldése - milyen email cim , megosztás
+Azt találja meg amit kell, ne konyhabútort
+Azoknál kell beixelve lenne ami még kell,
+azokból ami nincs elég, ő megcsinálja amit akar,
+ajánlatokat ad, szar a találat

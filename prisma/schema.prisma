@@ -45,6 +45,13 @@ model User {
   invitedBy        String?        // SuperUser email aki meghívta
   trialEndsAt      DateTime?      // Trial lejárati dátum
   szamlazzHuApiKey String?        // Számlázz.hu API kulcs (tenant-specifikus)
+
+  // Cím (számlázási és rendelési címként is használva, tenant-ek számára)
+  address          String?        // Utca, házszám
+  city             String?        // Város
+  zip              String?        // Irányítószám
+  country          String?        // Ország
+
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   subscription     Subscription?

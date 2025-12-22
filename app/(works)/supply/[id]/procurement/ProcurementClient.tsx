@@ -5,13 +5,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
 
+interface MarketPrice {
+  bestPrice: number;
+  supplier: string;
+  url: string;
+  productName: string;
+  savings: number;
+  checkedAt: string;
+  lastRun?: string;
+}
+
 interface Material {
   id: number;
   name: string;
   quantity: number;
   unit: string;
   unitPrice?: number;
+  materialUnitPrice?: number;
   workItemId?: number;
+  currentMarketPrice?: MarketPrice | null;
 }
 
 export default function ProcurementClient({ workId }: { workId: number }) {
@@ -27,27 +39,33 @@ export default function ProcurementClient({ workId }: { workId: number }) {
   const requestType = (searchParams.get("type") as "quote" | "order") || "quote";
 
   useEffect(() => {
-    // TODO: Fetch materials that are in progress (inProgress: true workItems)
     const fetchMaterials = async () => {
       try {
-        // Mock data for now
-        setMaterials([
-          {
-            id: 1,
-            name: "Mennyezetfesték",
-            quantity: 5,
-            unit: "l",
-            unitPrice: 3500,
-          },
-          { id: 2, name: "WC", quantity: 1, unit: "db", unitPrice: 50000 },
-          {
-            id: 3,
-            name: "Zuhanyzó",
-            quantity: 1,
-            unit: "db",
-            unitPrice: 160000,
-          },
-        ]);
+        // Fetch workItems with currentMarketPrice
+        const response = await fetch(`/api/work-items?workId=${workId}`);
+        if (!response.ok) throw new Error("Failed to fetch work items");
+
+        const data = await response.json();
+        const workItems = data.workItems || [];
+
+        // Filter only items that have materials (materialUnitPrice > 0) and are in progress
+        const materialsWithPrices: Material[] = workItems
+          .filter((item: any) =>
+            item.materialUnitPrice &&
+            item.materialUnitPrice > 0 &&
+            item.inProgress === true
+          )
+          .map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            materialUnitPrice: item.materialUnitPrice,
+            currentMarketPrice: item.currentMarketPrice,
+            workItemId: item.id,
+          }));
+
+        setMaterials(materialsWithPrices);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching materials:", error);
@@ -184,9 +202,50 @@ export default function ProcurementClient({ workId }: { workId: number }) {
                         </div>
                         <div style={{ fontSize: 13, color: "#666" }}>
                           {material.quantity} {material.unit}
-                          {material.unitPrice &&
-                            ` • ${material.unitPrice.toLocaleString("hu-HU")} Ft/${material.unit}`}
+                          {material.materialUnitPrice &&
+                            ` • ${material.materialUnitPrice.toLocaleString("hu-HU")} Ft/${material.unit}`}
                         </div>
+
+                        {/* Show current market price if available */}
+                        {material.currentMarketPrice && material.currentMarketPrice.savings > 0 && (
+                          <div
+                            style={{
+                              marginTop: 8,
+                              padding: 8,
+                              backgroundColor: "#d1fae5",
+                              borderRadius: 6,
+                              border: "1px solid #10b981",
+                            }}
+                          >
+                            <div style={{ fontSize: 11, fontWeight: 600, color: "#065f46", marginBottom: 4 }}>
+                              💰 Jobb ajánlat elérhető
+                            </div>
+                            <div style={{ fontSize: 11, color: "#065f46" }}>
+                              <div>
+                                <span style={{ fontWeight: 500 }}>Jelenlegi ár: </span>
+                                {material.materialUnitPrice?.toLocaleString("hu-HU")} Ft/{material.unit}
+                              </div>
+                              <div>
+                                <span style={{ fontWeight: 500 }}>Legjobb ajánlat: </span>
+                                <span style={{ fontWeight: 700, color: "#047857" }}>
+                                  {material.currentMarketPrice.bestPrice.toLocaleString("hu-HU")} Ft/{material.unit}
+                                </span>
+                              </div>
+                              <div>
+                                <span style={{ fontWeight: 500 }}>Megtakarítás: </span>
+                                <span style={{ fontWeight: 700, color: "#047857" }}>
+                                  -{material.currentMarketPrice.savings.toLocaleString("hu-HU")} Ft/{material.unit}
+                                </span>
+                              </div>
+                              <div style={{ marginTop: 4 }}>
+                                📍 {material.currentMarketPrice.supplier}
+                              </div>
+                              <div>
+                                📦 {material.currentMarketPrice.productName}
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div
                         style={{
