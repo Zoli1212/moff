@@ -2,6 +2,49 @@ import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { tavily } from "@tavily/core";
+import * as cheerio from "cheerio";
+
+// Helper function to fetch and parse HTML from a URL
+async function fetchAndParseHTML(url: string): Promise<{ html: string; schema: any | null }> {
+  try {
+    console.log(`🌐 [fetchAndParseHTML] Fetching URL: ${url}`);
+
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      },
+      next: { revalidate: 0 } // Don't cache
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    // Try to extract JSON-LD schema
+    let schema = null;
+    $('script[type="application/ld+json"]').each((_, element) => {
+      try {
+        const jsonData = JSON.parse($(element).html() || '');
+        // Look for Product schema
+        if (jsonData['@type'] === 'Product' || (Array.isArray(jsonData['@graph']) && jsonData['@graph'].some((item: any) => item['@type'] === 'Product'))) {
+          schema = jsonData;
+          console.log(`✅ [fetchAndParseHTML] Found Product schema`);
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    });
+
+    console.log(`✅ [fetchAndParseHTML] HTML fetched successfully, schema: ${schema ? 'found' : 'not found'}`);
+    return { html, schema };
+  } catch (error) {
+    console.error(`❌ [fetchAndParseHTML] Error fetching ${url}:`, error);
+    throw error;
+  }
+}
 
 export async function POST(req: NextRequest) {
   console.log("\n🚀 [scrape-material-prices] API endpoint called");
@@ -77,7 +120,9 @@ export async function POST(req: NextRequest) {
     // Build search query for Hungarian construction material webshops
     // Use materialName if provided, otherwise fall back to workItem.name
     const searchTerm = materialName || workItem.name;
-    const searchQuery = `${searchTerm} ${workItem.unit} ár`;
+    // Add specific product indicators to avoid category pages
+    // Using "buy", brand names, and specific size/package info helps find actual products
+    const searchQuery = `${searchTerm} ${workItem.unit} termék vásárlás webshop bolt rendelés`;
 
     console.log("🔎 [scrape-material-prices] Search query:", searchQuery);
     if (materialName) {
@@ -88,7 +133,7 @@ export async function POST(req: NextRequest) {
     try {
       searchResults = await tvly.search(searchQuery, {
         searchDepth: "advanced",
-        maxResults: 15,
+        maxResults: 30,
         includeDomains: [
           "obi.hu",
           "praktiker.hu",
@@ -164,124 +209,146 @@ export async function POST(req: NextRequest) {
     }
 
     // ==========================================
+    // 🌐 BRIGHT DATA / HTML FETCH LÉPÉS
+    // ==========================================
+    console.log("🌐 [scrape-material-prices] Fetching HTML from top URLs...");
+
+    // Fetch HTML and extract schema for TOP 10 results (increased from 5 to find more products)
+    const enrichedResults = await Promise.all(
+      searchResults.results.slice(0, 10).map(async (result: any, idx: number) => {
+        try {
+          const { schema } = await fetchAndParseHTML(result.url);
+          return {
+            ...result,
+            index: idx,
+            schema: schema,
+            priceFromSchema: schema?.offers?.price || schema?.offers?.[0]?.price || null
+          };
+        } catch (error) {
+          console.log(`⚠️ [scrape-material-prices] Failed to fetch ${result.url}:`, error);
+          return {
+            ...result,
+            index: idx,
+            schema: null,
+            priceFromSchema: null
+          };
+        }
+      })
+    );
+
+    console.log(`✅ [scrape-material-prices] Enriched ${enrichedResults.length} results with HTML/Schema data`);
+
+    // Log enriched results with schema prices
+    enrichedResults.forEach((r: any) => {
+      console.log(`\n  ${r.index}. ${r.title}`);
+      console.log(`     URL: ${r.url}`);
+      console.log(`     Schema Price: ${r.priceFromSchema || 'N/A'}`);
+    });
+
+    // ==========================================
     // 🎯 KÉTLÉPCSŐS AI FELDOLGOZÁS
     // ==========================================
     console.log("🤖 [scrape-material-prices] Starting TWO-STEP AI processing...");
 
     // ==========================================
-    // ELSŐ LÉPÉS: Kiválasztja a 2 legjobb terméket ahol az ár kinyerhető (NÉV + ÁR + INDEX)
+    // ELSŐ LÉPÉS: Kiválasztja a legjobb terméket ahol az ár kinyerhető (NÉV + ÁR + INDEX)
     // ==========================================
-    console.log("🤖 [scrape-material-prices] STEP 1: Selecting top 2 products with extractable prices...");
+    console.log("🤖 [scrape-material-prices] STEP 1: Selecting best product with extractable price...");
 
-    // DEBUG: Log MINDEN mező minden találathoz
-    console.log("\n📦 [DEBUG] TELJES TAVILY RESULT OBJEKTUM:");
-    searchResults.results.slice(0, 15).forEach((r: any, idx: number) => {
-      console.log(`\n========== INDEX ${idx} ==========`);
-      console.log('TELJES OBJEKTUM:', JSON.stringify(r, null, 2));
-      console.log(`========== VÉGE INDEX ${idx} ==========\n`);
+    // DEBUG: Log MINDEN mező minden találathoz (most már schema árral együtt!)
+    console.log("\n📦 [DEBUG] ENRICHED RESULT OBJEKTUM (Schema árral):");
+    enrichedResults.forEach((r: any) => {
+      console.log(`\n========== INDEX ${r.index} ==========`);
+      console.log('TITLE:', r.title);
+      console.log('URL:', r.url);
+      console.log('PRICE FROM SCHEMA:', r.priceFromSchema);
+      console.log('SCHEMA:', r.schema ? JSON.stringify(r.schema, null, 2).substring(0, 500) + '...' : 'null');
+      console.log(`========== VÉGE INDEX ${r.index} ==========\n`);
     });
 
     const selectionPrompt = `🎯 ELSŐ LÉPÉS: TERMÉK KIVÁLASZTÁS
 
-FELADATOD: Találd meg a TOP 2 LEGJOBB ajánlatot a keresési eredmények közül, ahol az ár KINYERHETŐ a content-ből.
+FELADATOD: Találd meg a LEGJOBB 1 ajánlatot a keresési eredmények közül. Az árak már ki vannak nyerve a Schema/HTML-ből.
 
 🔍 KERESETT TERMÉK: "${searchTerm}"
 Mennyiség: ${workItem.quantity} ${workItem.unit}
 Jelenlegi ár: ${workItem.materialUnitPrice ? `${workItem.materialUnitPrice} Ft/${workItem.unit}` : 'nincs megadva'}
 
-📦 KERESÉSI EREDMÉNYEK (15 találat indexelve 0-14-ig):
-${JSON.stringify(searchResults.results.slice(0, 15).map((r: any, idx: number) => ({
-  index: idx,
+📦 KERESÉSI EREDMÉNYEK (TOP 10 enriched találat):
+${JSON.stringify(enrichedResults.map((r: any) => ({
+  index: r.index,
   title: r.title,
-  content: r.content || 'Nincs tartalom' // TELJES content, ne vágjuk le!
+  priceFromSchema: r.priceFromSchema,
+  url: r.url,
+  hasSchema: !!r.schema
 })), null, 2)}
 
 ⚠️ KRITIKUS SZABÁLYOK:
 
-1. ⚠️⚠️⚠️ CSAK AHOL ÁR KINYERHETŐ - LEGFONTOSABB SZABÁLY! ⚠️⚠️⚠️
-   - CSAK ÉS KIZÁRÓLAG olyan találatokat válassz, ahol az árat KI TUDOD NYERNI a content mezőből!
-   - ⚠️⚠️⚠️ KRITIKUS: CSAK az lehet ár, ahol "Ft" vagy "forint" szó VAN a szám mellett/után! ⚠️⚠️⚠️
-   - Ha a content-ben NEM találsz számot "Ft" vagy "forint" közelében, HAGYD KI azt a terméket!
-   - ÉRVÉNYES ár formátumok (ahol "Ft" szerepel!):
-     * "2 499 Ft" ✅
-     * "4 399 Ft" ✅
-     * "1.990 Ft" ✅
-     * "2499 Ft" ✅
-     * "8.857 Ft-tól" ✅
-     * "8857 Ft/kg" ✅
-     * "Ár: 3490 Ft" ✅
-   - ÉRVÉNYTELEN formátumok (nincs "Ft"):
-     * "1990,-" ❌ (nincs "Ft"!)
-     * "Ár: 3490" ❌ (nincs "Ft"!)
-     * "2499" ❌ (csak szám, nincs "Ft"!)
-   - Az ár lehet bárhol a content-ben: elején, közepén vagy végén!
-   - ⚠️ KRITIKUS ÁR KIVÁLASZTÁS:
-     * Ha TÖBB ár van (pl. régi ár, akciós ár, különböző kiszerelések), válaszd az ÉRVÉNYES/AKTUÁLIS árat
-     * Figyelj oda az egységre: ha "Ft/kg" vagy "Ft/m²" van, azt használd!
-     * NE keverd össze a "csomag ár"-at és az "egységár"-at!
-     * Például: "25 kg-os csomag 8857 Ft" de keresünk "Ft/kg" árat → 8857/25 = 354 Ft/kg
-   - ⚠️ Ha NEM találsz árat "Ft" szóval a content-ben, HAGYD KI azt a terméket! SOHA NE ADJ VISSZA 0 Ft-ot!
-   - ⚠️ DUPLIKÁTUMOK ELKERÜLÉSE: Ha már kiválasztottál egy terméket egy indexről, NE válaszd ki újra!
+1. ⚠️⚠️⚠️ KÖTELEZŐ: CSAK ÁR-RAL RENDELKEZŐ TERMÉKEK! ⚠️⚠️⚠️
+   - ⚠️ KRITIKUS: CSAK olyan terméket válassz, ahol "priceFromSchema" NEM NULL!
+   - Ha MINDEN termék priceFromSchema értéke NULL, NE válassz ki semmit! (index: -1)
+   - A "priceFromSchema" a strukturált Schema.org adatokból lett kinyerve, ezért MEGBÍZHATÓ!
+   - ⚠️ KATEGÓRIA OLDALAK KIZÁRÁSA:
+     * Ha a title tartalmazza: "Ár 50.000 - 100.000" vagy hasonló ár tartományt → SKIP!
+     * Ha a title tartalmazza: "Csaptelepek", "Bútorok", "Anyagok" (többes szám) → SKIP!
+     * Csak KONKRÉT termék lehet (pl. "GROHE Eurosmart csaptelep" ✅, "Csaptelepek 50.000-100.000" ❌)
 
 2. TERMÉK KATEGÓRIA EGYEZÉS:
    - A keresett termék: "${searchTerm}"
    - CSAK hasonló termékeket válassz UGYANABBÓL a kategóriából!
    - Például: "Hulladékgyűjtő zsák" → "Törmelékgyűjtő zsák" ✅
    - Például: "Hulladékgyűjtő zsák" → "Kazettás álmennyezet" ❌ (TELJESEN más!)
+   - Például: "Bútorlap" → "Konyhabútor" ❌ (NE keverj össze hasonló nevű, de KÜLÖNBÖZŐ termékeket!)
 
-3. VÁLASSZ PONTOSAN 2 LEGJOBB TERMÉKET:
-   - MINIMUM: Ha csak 1 jó találat van ÁRAKKAL, adj vissza csak azt az 1-et
-   - MAXIMUM: Legfeljebb 2 ajánlatot (NEM 3!)
-   - Rendezd ár szerint NÖVEKVŐ sorrendben (legolcsóbb először)
-   - ⚠️ KRITIKUS: Minden terméknek KÜLÖNBÖZŐ indexe legyen! (pl. index: 2, 5 - NE 2, 2!)
-   - Próbálj különböző webshopokból/gyártóktól választani (diverzitás)
+3. VÁLASSZ PONTOSAN 1 LEGJOBB TERMÉKET:
+   - Válaszd a LEGOLCSÓBB releváns KONKRÉT terméket ahol van priceFromSchema
+   - ⚠️ Ha NINCS olyan termék ahol priceFromSchema NEM null, adj vissza index: -1
 
 ADD VISSZA CSAK ÉRVÉNYES JSON formátumban:
 
 {
   "selectedProducts": [
     {
-      "index": <number, 0-14 között, az eredeti results[] index>,
-      "productName": "<string, a termék neve results[index].title-ből>",
-      "bestPrice": <number, az ár számként, Ft/${workItem.unit} egységben>,
+      "index": <number, 0-9 között, az eredeti enrichedResults[] index>,
+      "productName": "<string, a termék neve title-ből>",
+      "bestPrice": <number, KÖTELEZŐ hogy priceFromSchema-ból jöjjön!>,
       "reasoning": "<string, rövid indoklás: miért ezt választottad>"
     }
-    // ... még max 1 termék (összesen 2 maximum!)
   ]
 }
 
-PÉLDA ÁR KERESÉSRE:
+PÉLDA KIVÁLASZTÁSRA:
 
-PÉLDA 1 - Egyszerű ár:
-results[2].content = "KNAUF UNIGLETT gipszkarton 20kg. Kiváló minőség. Ár: 2 499 Ft. Azonnal átvehető."
-→ Az ár: 2499 (eltávolítjuk a szóközöket és Ft-ot)
-✅ HELYES: {"index": 2, "productName": "KNAUF UNIGLETT gipszkarton", "bestPrice": 2499}
+PÉLDA 1 - Schema ár elérhető (HELYES):
+enrichedResults[1] = {index: 1, title: "KNAUF bútorlap 18mm", priceFromSchema: 2499, hasSchema: true}
+✅ HELYES:
+{
+  "selectedProducts": [
+    {"index": 1, "productName": "KNAUF bútorlap 18mm", "bestPrice": 2499, "reasoning": "Legolcsóbb konkrét termék, schema ár elérhető"}
+  ]
+}
 
-PÉLDA 2 - Ár "-tól" formátumban:
-results[7].content = "Weber glettanyag professzionális használatra. Kiváló tapadás. 8.857 Ft-tól 25 kg-os zsákban."
-→ Az ár: 8857 (a "-tól" azt jelzi, hogy ez a minimum ár)
-✅ HELYES: {"index": 7, "productName": "Weber glettanyag", "bestPrice": 8857}
+PÉLDA 2 - Minden termék priceFromSchema: null (SKIP):
+enrichedResults = [
+  {index: 0, title: "Csaptelepek Ár 50.000-100.000", priceFromSchema: null},
+  {index: 1, title: "Fürdőszobai csaptelepek", priceFromSchema: null},
+  ...mind null...
+]
+✅ HELYES:
+{
+  "selectedProducts": [
+    {"index": -1, "productName": "Nincs online ajánlat", "bestPrice": ${workItem.materialUnitPrice || 0}, "reasoning": "Nincs konkrét termék árral, csak kategória oldalak"}
+  ]
+}
 
-PÉLDA 3 - Egységár (Ft/kg):
-results[5].content = "Weber kos glett. 25 kg-os zsák. Kiszerelés: 25 kg. Ár: 8857 Ft. Egységár: 354 Ft/kg."
-Keresett egység: kg
-→ Az ár: 354 (az egységár Ft/kg-ban, NEM a csomag ára!)
-✅ HELYES: {"index": 5, "productName": "Weber kos glett", "bestPrice": 354}
-❌ ROSSZ: {"index": 5, "productName": "Weber kos glett", "bestPrice": 8857}
-→ Ez a CSOMAG ára, nem az egységár!
+PÉLDA 3 - Kategória oldal ÁRAK nélkül (SKIP):
+enrichedResults[2] = {index: 2, title: "Csaptelepek Ár 50.000 - 100.000 Ferro", priceFromSchema: null}
+❌ ROSSZ: {"index": 2, ...} ← Ez kategória oldal, NE válaszd!
+✅ HELYES: Keress tovább, vagy ha nincs jobb, adj vissza index: -1
 
-PÉLDA 4 - Duplikátumok elkerülése:
-Ha már kiválasztottad results[3]-at:
-❌ ROSSZ: [{"index": 3, ...}, {"index": 3, ...}]  ← UGYANAZ kétszer!
-✅ HELYES: [{"index": 3, ...}, {"index": 7, ...}]  ← Különböző indexek, maximum 2 db
-
-PÉLDA 5 - Nincs ár (HAGYD KI!):
-results[10].content = "Glett termék információ. Részletes leírás. Kapcsolat."
-→ NINCS ár a content-ben!
-✅ HELYES: NE válaszd ki ezt a terméket, keress másikat ahol VAN ár!
-
-⚠️ Ha NEM találsz legalább 1 terméket ahol az ár KINYERHETŐ a content-ből:
-{"selectedProducts": [{"index": -1, "productName": "Nincs online ajánlat", "bestPrice": ${workItem.materialUnitPrice || 0}, "reasoning": "Nem található megfelelő termék kinyerhető árral"}]}
+⚠️ Ha NEM találsz legalább 1 KONKRÉT TERMÉKET ÁR-RAL:
+{"selectedProducts": [{"index": -1, "productName": "Nincs online ajánlat", "bestPrice": ${workItem.materialUnitPrice || 0}, "reasoning": "Nem található konkrét termék árral"}]}
 
 Csak JSON-t adj vissza, semmi mást!`;
 
@@ -300,7 +367,7 @@ Csak JSON-t adj vissza, semmi mást!`;
             messages: [
               {
                 role: "system",
-                content: "Te egy termékválasztó szakértő vagy. Elemezd a keresési eredményeket és válaszd ki a TOP 2 legjobb terméket ahol az ár KINYERHETŐ a content-ből. KRITIKUS: CSAK az lehet ár, ahol 'Ft' vagy 'forint' szó VAN a szám mellett/után! CSAK olyan termékeket válassz ahol az ár egyértelműen megtalálható 'Ft' szóval a content-ben! Ha nem találsz 'Ft' szót a szám mellett, HAGYD KI azt a terméket! Csak JSON-t adj vissza.",
+                content: "Te egy termékválasztó szakértő vagy. Elemezd a keresési eredményeket és válaszd ki a LEGJOBB 1 KONKRÉT terméket. KRITIKUS: CSAK olyan terméket válassz ahol priceFromSchema NEM null! Ha MINDEN termék priceFromSchema értéke null, adj vissza index: -1! SKIP kategória oldalakat (pl. 'Csaptelepek Ár 50.000-100.000')! NE keverj össze hasonló nevű, de különböző termékeket (pl. 'bútorlap' vs 'konyhabútor')! Csak JSON-t adj vissza.",
               },
               { role: "user", content: selectionPrompt },
             ],
@@ -379,45 +446,62 @@ Csak JSON-t adj vissza, semmi mást!`;
     // ==========================================
     console.log("🤖 [scrape-material-prices] STEP 2: Adding URLs to selected products...");
 
-    const urlMappingPrompt = `🎯 MÁSODIK LÉPÉS: URL HOZZÁADÁS
+    const urlMappingPrompt = `🎯 MÁSODIK LÉPÉS: URL HOZZÁADÁS ÉS ÁR FINOMÍTÁS
 
-Az első lépésben kiválasztottuk a TOP 2 terméket. Most add hozzá a PONTOS URL-eket!
+Az első lépésben kiválasztottuk a LEGJOBB terméket. Most add hozzá a PONTOS URL-t és finomítsd az árat!
 
-📦 KIVÁLASZTOTT TERMÉKEK (1. lépésből):
+📦 KIVÁLASZTOTT TERMÉK (1. lépésből):
 ${JSON.stringify(selectedProducts.selectedProducts, null, 2)}
 
-📦 TELJES KERESÉSI EREDMÉNYEK (title + url):
-${JSON.stringify(searchResults.results.slice(0, 15).map((r: any, idx: number) => ({
-  index: idx,
+📦 ENRICHED KERESÉSI EREDMÉNYEK (title + url + priceFromSchema):
+${JSON.stringify(enrichedResults.map((r: any) => ({
+  index: r.index,
   title: r.title,
-  url: r.url
+  url: r.url,
+  priceFromSchema: r.priceFromSchema
 })), null, 2)}
 
-⚠️ KRITIKUS SZABÁLY - URL PÁROSÍTÁS:
+⚠️ KRITIKUS SZABÁLYOK:
 
-A kiválasztott termékek mindegyikéhez:
-1. Nézd meg a termék "index" mezőjét (pl. index: 2)
-2. Használd a results[2].url-t az URL mezőhöz!
-3. Használd a results[2].url domain-jét a supplier meghatározásához (pl. "obi.hu" → "OBI")
+1. URL PÁROSÍTÁS:
+   - Nézd meg a termék "index" mezőjét (pl. index: 2)
+   - Használd az enrichedResults[2].url-t az URL mezőhöz!
+   - Használd a domain-t a supplier meghatározásához (pl. "obi.hu" → "OBI")
 
-PÉLDA:
-Ha selectedProducts[0] = {"index": 2, "productName": "Törmelékgyűjtő zsák", "bestPrice": 1990}
-És results[2] = {"title": "Törmelékgyűjtő zsák", "url": "https://www.obi.hu/zsak/tormelek/p/123"}
-✅ HELYES: {"productName": "Törmelékgyűjtő zsák", "bestPrice": 1990, "url": "https://www.obi.hu/zsak/tormelek/p/123", "supplier": "OBI"}
+2. ÁR FINOMÍTÁS:
+   - Ha az 1. lépésben a bestPrice NULL volt:
+     * Nézd meg az enrichedResults[index].priceFromSchema mezőt
+     * Ha NEM null, használd azt az árat
+     * Ha NULL, akkor használd a jelenlegi árat (${workItem.materialUnitPrice || 0})
+   - Ha az 1. lépésben már volt bestPrice, használd azt!
+
+PÉLDA 1 - Már van ár:
+selectedProducts[0] = {"index": 1, "productName": "KNAUF bútorlap", "bestPrice": 2499}
+enrichedResults[1] = {"index": 1, "url": "https://obi.hu/...", "priceFromSchema": 2499}
+✅ HELYES: {"productName": "KNAUF bútorlap", "bestPrice": 2499, "url": "https://obi.hu/...", "supplier": "OBI"}
+
+PÉLDA 2 - Ár null volt, schema-ból vegyük:
+selectedProducts[0] = {"index": 2, "productName": "Profi bútorlap", "bestPrice": null}
+enrichedResults[2] = {"index": 2, "url": "https://praktiker.hu/...", "priceFromSchema": 3200}
+✅ HELYES: {"productName": "Profi bútorlap", "bestPrice": 3200, "url": "https://praktiker.hu/...", "supplier": "Praktiker"}
+
+PÉLDA 3 - Ár null, schema-ban sincs:
+selectedProducts[0] = {"index": 3, "productName": "Budget bútorlap", "bestPrice": null}
+enrichedResults[3] = {"index": 3, "url": "https://bauhaus.hu/...", "priceFromSchema": null}
+✅ HELYES: {"productName": "Budget bútorlap", "bestPrice": ${workItem.materialUnitPrice || 0}, "url": "https://bauhaus.hu/...", "supplier": "Bauhaus"}
 
 ADD VISSZA CSAK ÉRVÉNYES JSON formátumban:
 
 {
   "offers": [
     {
-      "bestPrice": <number, az 1. lépésből>,
+      "bestPrice": <number, finomított ár a fenti szabályok szerint>,
       "supplier": "<string, pl. OBI, Praktiker, Bauhaus - a domain alapján>",
-      "url": "<string, PONTOSAN results[index].url>",
+      "url": "<string, PONTOSAN enrichedResults[index].url>",
       "productName": "<string, az 1. lépésből>",
       "savings": <number, ${workItem.materialUnitPrice || 0} - bestPrice, ha pozitív, különben 0>,
       "checkedAt": "${new Date().toISOString()}"
     }
-    // ... még max 1 ajánlat (összesen maximum 2!)
   ]
 }
 
@@ -438,7 +522,7 @@ Csak JSON-t adj vissza, semmi mást!`;
             messages: [
               {
                 role: "system",
-                content: "Te egy URL párosító szakértő vagy. A kiválasztott termékekhez add hozzá a PONTOS URL-eket a megfelelő index alapján. SOHA ne keverd össze az indexeket! Csak JSON-t adj vissza.",
+                content: "Te egy URL párosító és ár-finomító szakértő vagy. A kiválasztott termékekhez add hozzá a PONTOS URL-eket az enrichedResults alapján. Ha az 1. lépésben bestPrice null volt, próbáld meg priceFromSchema-ból kinyerni! SOHA ne keverd össze az indexeket! Csak JSON-t adj vissza.",
               },
               { role: "user", content: urlMappingPrompt },
             ],

@@ -14,7 +14,7 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
     <div
       style={{
         position: "fixed",
-        bottom: 80,
+        bottom: 65,
         left: "50%",
         transform: "translateX(-50%)",
         maxWidth: 434,
