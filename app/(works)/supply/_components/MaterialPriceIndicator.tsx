@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, Save } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, Save, RefreshCw } from "lucide-react";
 import { saveMarketPrice } from "../_actions/save-market-price";
 
 interface MarketOffer {
@@ -284,18 +284,18 @@ export default function MaterialPriceIndicator({
 
   return (
     <div className="mt-2">
-      {/* Refresh button - always visible when not fetching */}
-      {!isFetchingPrice && materialUnitPrice && materialUnitPrice > 0 && (
+      {/* Refresh icon - only spins when fetching */}
+      {materialUnitPrice && materialUnitPrice > 0 && (
         <button
           onClick={(e) => {
             e.stopPropagation();
             handleFetchPrice();
           }}
-          className="mb-2 px-3 py-1.5 text-xs font-medium text-[#FF9900] bg-white border border-[#FF9900] hover:bg-[#FF9900]/10 rounded-md transition-colors flex items-center gap-1.5"
+          className="mb-2 text-[#FF9900] hover:text-[#e68a00] transition-colors"
           title="Árak frissítése"
+          disabled={isFetchingPrice}
         >
-          <span>🔄</span>
-          <span>Árak frissítése</span>
+          <RefreshCw className={`h-4 w-4 ${isFetchingPrice ? 'animate-spin' : ''}`} />
         </button>
       )}
 

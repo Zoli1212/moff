@@ -23,6 +23,10 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         flexDirection: "column",
         gap: "12px",
         zIndex: 1000,
+        backgroundColor: "#fff",
+        padding: "16px",
+        borderRadius: "12px",
+        boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.15)",
       }}
     >
       {/* Ajánlatkérés button - Always opens as quote */}
@@ -57,6 +61,7 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         onMouseLeave={() => setIsHoveredProcurement(false)}
         style={{
           padding: "12px 16px",
+          marginBottom: "8px",
           backgroundColor: isHoveredProcurement ? "#FFF5E6" : "#fff",
           color: "#FE9C00",
           borderRadius: "8px",
