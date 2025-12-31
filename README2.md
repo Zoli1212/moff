@@ -740,3 +740,5 @@ Azt találja meg amit kell, ne konyhabútort
 Azoknál kell beixelve lenne ami még kell,
 azokból ami nincs elég, ő megcsinálja amit akar,
 ajánlatokat ad, szar a találat
+Vásárlási lista legyen
+3D

@@ -26,7 +26,6 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         backgroundColor: "#fff",
         padding: "16px",
         borderRadius: "12px",
-        boxShadow: "0 -4px 20px rgba(0, 0, 0, 0.15)",
       }}
     >
       {/* Ajánlatkérés button - Always opens as quote */}
@@ -45,9 +44,6 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
           textAlign: "center",
           textDecoration: "none",
           cursor: "pointer",
-          boxShadow: isHoveredQuote
-            ? "0 4px 12px rgba(254, 156, 0, 0.3)"
-            : "0 2px 8px rgba(0, 0, 0, 0.1)",
           transition: "all 0.2s ease-in-out",
         }}
       >
@@ -71,9 +67,6 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
           textAlign: "center",
           textDecoration: "none",
           cursor: "pointer",
-          boxShadow: isHoveredProcurement
-            ? "0 4px 12px rgba(254, 156, 0, 0.3)"
-            : "0 2px 8px rgba(0, 0, 0, 0.1)",
           transition: "all 0.2s ease-in-out",
         }}
       >

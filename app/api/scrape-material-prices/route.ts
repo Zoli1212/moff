@@ -4,8 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { tavily } from "@tavily/core";
 import * as cheerio from "cheerio";
 
+// Types for Schema.org structured data
+interface SchemaOrgProduct {
+  '@type': string;
+  '@graph'?: Array<{ '@type': string; [key: string]: unknown }>;
+  offers?: {
+    price?: number;
+    [key: string]: unknown;
+  } | Array<{ price?: number; [key: string]: unknown }>;
+  [key: string]: unknown;
+}
+
 // Helper function to fetch and parse HTML from a URL
-async function fetchAndParseHTML(url: string): Promise<{ html: string; schema: any | null }> {
+async function fetchAndParseHTML(url: string): Promise<{ html: string; schema: SchemaOrgProduct | null }> {
   try {
     console.log(`🌐 [fetchAndParseHTML] Fetching URL: ${url}`);
 
@@ -17,26 +28,69 @@ async function fetchAndParseHTML(url: string): Promise<{ html: string; schema: a
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
+      // Don't throw error for blocked sites (403), just log and return null
+      console.log(`⚠️ [fetchAndParseHTML] HTTP ${response.status} - Site blocked or unavailable`);
+      return { html: '', schema: null };
     }
 
     const html = await response.text();
     const $ = cheerio.load(html);
 
     // Try to extract JSON-LD schema
-    let schema = null;
+    let schema: SchemaOrgProduct | null = null;
     $('script[type="application/ld+json"]').each((_, element) => {
       try {
-        const jsonData = JSON.parse($(element).html() || '');
+        const jsonData = JSON.parse($(element).html() || '') as SchemaOrgProduct;
         // Look for Product schema
-        if (jsonData['@type'] === 'Product' || (Array.isArray(jsonData['@graph']) && jsonData['@graph'].some((item: any) => item['@type'] === 'Product'))) {
+        if (jsonData['@type'] === 'Product' || (Array.isArray(jsonData['@graph']) && jsonData['@graph'].some((item) => item['@type'] === 'Product'))) {
           schema = jsonData;
           console.log(`✅ [fetchAndParseHTML] Found Product schema`);
         }
-      } catch (e) {
+      } catch {
         // Ignore parse errors
       }
     });
+
+    // Fallback: If no schema found, try to extract price from HTML (OBI, Praktiker, etc.)
+    if (!schema) {
+      console.log(`⚠️ [fetchAndParseHTML] No schema found, trying HTML price extraction...`);
+      let priceFromHTML: number | null = null;
+
+      // Try various price selectors for different sites
+      const priceSelectors = [
+        '.overview-sticky-header__price',  // OBI
+        '.product-price .price-value',      // Generic
+        '[itemprop="price"]',               // Microdata
+        '.price',                           // Fallback
+      ];
+
+      for (const selector of priceSelectors) {
+        const priceText = $(selector).first().text().trim();
+        if (priceText) {
+          // Extract numbers from price text (e.g., "6 199  Ft*" -> 6199)
+          const priceMatch = priceText.match(/[\d\s]+/);
+          if (priceMatch) {
+            const cleanPrice = priceMatch[0].replace(/\s/g, '');
+            priceFromHTML = parseInt(cleanPrice, 10);
+            if (!isNaN(priceFromHTML) && priceFromHTML > 0) {
+              console.log(`✅ [fetchAndParseHTML] Extracted price from HTML (${selector}): ${priceFromHTML} Ft`);
+              // Create a minimal schema-like object with the price
+              schema = {
+                '@type': 'Product',
+                offers: {
+                  price: priceFromHTML
+                }
+              };
+              break;
+            }
+          }
+        }
+      }
+
+      if (!priceFromHTML) {
+        console.log(`⚠️ [fetchAndParseHTML] No price found in HTML either`);
+      }
+    }
 
     console.log(`✅ [fetchAndParseHTML] HTML fetched successfully, schema: ${schema ? 'found' : 'not found'}`);
     return { html, schema };
@@ -122,7 +176,8 @@ export async function POST(req: NextRequest) {
     const searchTerm = materialName || workItem.name;
     // Add specific product indicators to avoid category pages
     // Using "buy", brand names, and specific size/package info helps find actual products
-    const searchQuery = `${searchTerm} ${workItem.unit} termék vásárlás webshop bolt rendelés`;
+    // IMPORTANT: Add "-kategória" to exclude category pages, add "kosárba" (add to cart) to find only product pages
+    const searchQuery = `${searchTerm} ${workItem.unit} kosárba ár Ft -kategória -cp -cc -/sp`;
 
     console.log("🔎 [scrape-material-prices] Search query:", searchQuery);
     if (materialName) {
@@ -155,7 +210,7 @@ export async function POST(req: NextRequest) {
       // Log all found results with title, URL, and content
       if (searchResults.results && searchResults.results.length > 0) {
         console.log("\n🔍 [scrape-material-prices] TALÁLATOK:");
-        searchResults.results.forEach((result: any, index: number) => {
+        (searchResults.results as Array<{ title?: string; url?: string; content?: string }>).forEach((result, index: number) => {
           console.log(`\n  ${index + 1}. ${result.title || 'Nincs cím'}`);
           console.log(`     URL: ${result.url || 'Nincs URL'}`);
           if (result.content) {
@@ -214,15 +269,24 @@ export async function POST(req: NextRequest) {
     console.log("🌐 [scrape-material-prices] Fetching HTML from top URLs...");
 
     // Fetch HTML and extract schema for TOP 10 results (increased from 5 to find more products)
+    type TavilyResult = { url: string; title?: string; content?: string; [key: string]: unknown };
     const enrichedResults = await Promise.all(
-      searchResults.results.slice(0, 10).map(async (result: any, idx: number) => {
+      (searchResults.results as TavilyResult[]).slice(0, 10).map(async (result, idx: number) => {
         try {
           const { schema } = await fetchAndParseHTML(result.url);
+          let priceFromSchema: number | null = null;
+          if (schema?.offers) {
+            if (Array.isArray(schema.offers)) {
+              priceFromSchema = schema.offers[0]?.price ?? null;
+            } else {
+              priceFromSchema = schema.offers.price ?? null;
+            }
+          }
           return {
             ...result,
             index: idx,
             schema: schema,
-            priceFromSchema: schema?.offers?.price || schema?.offers?.[0]?.price || null
+            priceFromSchema
           };
         } catch (error) {
           console.log(`⚠️ [scrape-material-prices] Failed to fetch ${result.url}:`, error);
@@ -239,8 +303,8 @@ export async function POST(req: NextRequest) {
     console.log(`✅ [scrape-material-prices] Enriched ${enrichedResults.length} results with HTML/Schema data`);
 
     // Log enriched results with schema prices
-    enrichedResults.forEach((r: any) => {
-      console.log(`\n  ${r.index}. ${r.title}`);
+    enrichedResults.forEach((r) => {
+      console.log(`\n  ${r.index}. ${r.title || 'Nincs cím'}`);
       console.log(`     URL: ${r.url}`);
       console.log(`     Schema Price: ${r.priceFromSchema || 'N/A'}`);
     });
@@ -257,9 +321,9 @@ export async function POST(req: NextRequest) {
 
     // DEBUG: Log MINDEN mező minden találathoz (most már schema árral együtt!)
     console.log("\n📦 [DEBUG] ENRICHED RESULT OBJEKTUM (Schema árral):");
-    enrichedResults.forEach((r: any) => {
+    enrichedResults.forEach((r) => {
       console.log(`\n========== INDEX ${r.index} ==========`);
-      console.log('TITLE:', r.title);
+      console.log('TITLE:', r.title || 'Nincs cím');
       console.log('URL:', r.url);
       console.log('PRICE FROM SCHEMA:', r.priceFromSchema);
       console.log('SCHEMA:', r.schema ? JSON.stringify(r.schema, null, 2).substring(0, 500) + '...' : 'null');
@@ -275,7 +339,7 @@ Mennyiség: ${workItem.quantity} ${workItem.unit}
 Jelenlegi ár: ${workItem.materialUnitPrice ? `${workItem.materialUnitPrice} Ft/${workItem.unit}` : 'nincs megadva'}
 
 📦 KERESÉSI EREDMÉNYEK (TOP 10 enriched találat):
-${JSON.stringify(enrichedResults.map((r: any) => ({
+${JSON.stringify(enrichedResults.map((r) => ({
   index: r.index,
   title: r.title,
   priceFromSchema: r.priceFromSchema,
@@ -454,7 +518,7 @@ Az első lépésben kiválasztottuk a LEGJOBB terméket. Most add hozzá a PONTO
 ${JSON.stringify(selectedProducts.selectedProducts, null, 2)}
 
 📦 ENRICHED KERESÉSI EREDMÉNYEK (title + url + priceFromSchema):
-${JSON.stringify(enrichedResults.map((r: any) => ({
+${JSON.stringify(enrichedResults.map((r) => ({
   index: r.index,
   title: r.title,
   url: r.url,

@@ -68,7 +68,12 @@ export async function POST(req: NextRequest) {
     - A "type" mezőbe KIZÁRÓLAG az alábbi lista szakmáit használd: 'kőműves', 'burkoló', 'villanyszerelő', 'vízvezetékszerelő', 'gázszerelő', 'festő', 'ács', 'asztalos', 'gipszkartonozó', 'földmunkagép-kezelő', 'építésvezető', 'építőmérnök', 'statikus', 'hegesztő', 'bádogos', 'tetőfedő', 'szigetelő', 'kertépítő', 'díszburkoló', 'lakatos', 'homlokzati-szakember', 'belsőépítész', 'gépszerelő', 'Darukezelő', 'kőfaragó', 'takarító', 'segédmunkás', 'tartószerkezet-tervező mérnök', 'gépészmérnök', 'villamosmérnök'. TILOS bármilyen más, a listán nem szereplő szakmát megadni.
     - tools: részletes eszközlista szövegként (nem üres)
     - materials: objektumok tömbje, MIND: { "type": string!=üres, "quantity": number>0, "unit": string!=üres }
-    
+    - ⚠️ KRITIKUS SZABÁLY - MATERIALS MEZŐHÖZ:
+      * A materials[].type mezőben KIZÁRÓLAG BESZERZÉSI/WEBSHOPOS TERMÉKNEVEKET használj!
+      * HELYES példák: "cement", "homok", "tégla", "csempe", "festék", "alapozó", "szigetelő lemez", "PVC cső", "gipszkarton lap", "csavar", "betonacél"
+      * TILOS példák: "bontási hulladék", "törmelék", "sitt", "munkaerő", "szállítás", "hulladékgyűjtő zsák" - ezek NEM beszerezhető építőanyagok!
+      * Ha egy workItem-hez nincs beszerezhető anyag (pl. takarítás, bontás, hulladékszállítás), akkor NE adj hozzá materials elemet, vagy adj hozzá üres tömböt: []
+
     Kimeneti formátum:
     - CSAK ÉRVÉNYES JSON, semmi magyarázat, semmi markdown.
     
@@ -109,7 +114,8 @@ export async function POST(req: NextRequest) {
     }
     
     Megjegyzés:
-    - MINDEN workItem-hez legalább 1 szakember és legalább 1 anyag kötelező. A tools NEM lehet üres.
+    - MINDEN workItem-hez legalább 1 szakember kötelező. A tools NEM lehet üres.
+    - Materials: CSAK beszerezhető építőanyagokat adj meg! Ha nincs beszerezhető anyag (pl. bontás, takarítás), akkor üres tömb: []
     - A fenti átvett mezők értékeinek pontosan egyezniük kell az offerItem megfelelő értékeivel.
     - NE írj magyarázatot, NE használj markdown-t, CSAK ÉRVÉNYES JSON-t adj vissza!
     - Minden workItem a hozzá tartozó offerItem-ből jöjjön létre, a fenti szabályok betartásával! description-t mindig generálj!`;

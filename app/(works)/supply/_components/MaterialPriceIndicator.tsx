@@ -77,16 +77,19 @@ export default function MaterialPriceIndicator({
     if (isFetchingPrice) return;
 
     setIsFetchingPrice(true);
-    toast("Piaci árak lekérdezése...", {
+    toast("🔍 Piaci árak lekérdezése...", {
       id: `fetch-price-${workItemId}`,
       duration: 50000,
+      icon: <Loader2 className="h-4 w-4 animate-spin" />,
       style: {
-        background: "#dbeafe",
-        color: "#1e40af",
-        fontSize: 13,
-        padding: "6px 18px",
-        borderRadius: 8,
+        background: "linear-gradient(135deg, #a7f3d0 0%, #6ee7b7 100%)",
+        color: "#ffffff",
+        fontSize: 14,
+        fontWeight: 500,
+        padding: "12px 20px",
+        borderRadius: 12,
         minHeight: 0,
+        boxShadow: "0 4px 12px rgba(167, 243, 208, 0.5)",
       },
     });
 
