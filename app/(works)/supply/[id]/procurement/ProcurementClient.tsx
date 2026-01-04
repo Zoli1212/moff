@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
+import MaterialShareButtons from "../../_components/MaterialShareButtons";
 
 interface MarketOffer {
   bestPrice: number;
@@ -61,12 +62,22 @@ export default function ProcurementClient({ workId }: { workId: number }) {
 
         // Filter only items that have materials (materialUnitPrice > 0) and are in progress
         const materialsWithPrices: Material[] = workItems
-          .filter((item: any) =>
+          .filter((item: {
+            materialUnitPrice?: number;
+            inProgress?: boolean;
+          }) =>
             item.materialUnitPrice &&
             item.materialUnitPrice > 0 &&
             item.inProgress === true
           )
-          .map((item: any) => ({
+          .map((item: {
+            id: number;
+            name: string;
+            quantity: number;
+            unit: string;
+            materialUnitPrice: number;
+            currentMarketPrice?: MarketPrice | null;
+          }) => ({
             id: item.id,
             name: item.name,
             quantity: item.quantity,
@@ -97,24 +108,9 @@ export default function ProcurementClient({ workId }: { workId: number }) {
     setSelectedMaterials(newSelected);
   };
 
-  const handleSubmit = async () => {
-    if (selectedMaterials.size === 0) {
-      alert("Válassz ki legalább egy anyagot!");
-      return;
-    }
-
-    const selectedItems = materials.filter((m) =>
-      selectedMaterials.has(m.id)
-    );
-
-    // TODO: API call to send quote/order request
-    console.log("Request type:", requestType);
-    console.log("Selected materials:", selectedItems);
-
-    alert(
-      `${requestType === "quote" ? "Ajánlatkérés" : "Megrendelés"} elküldve!`
-    );
-    router.back();
+  // Get selected materials for export
+  const getSelectedMaterials = () => {
+    return materials.filter((m) => selectedMaterials.has(m.id));
   };
 
   return (
@@ -375,27 +371,37 @@ export default function ProcurementClient({ workId }: { workId: number }) {
           </div>
         )}
 
-        {/* Action buttons */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <button
-            onClick={handleSubmit}
-            disabled={selectedMaterials.size === 0}
+        {/* Share and Download Section */}
+        {selectedMaterials.size > 0 && (
+          <div
             style={{
-              width: "100%",
-              padding: "14px 20px",
-              border: "none",
+              padding: 20,
+              backgroundColor: "#fff",
               borderRadius: 8,
-              backgroundColor: "#FE9C00",
-              color: "#fff",
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: selectedMaterials.size === 0 ? "not-allowed" : "pointer",
-              opacity: selectedMaterials.size === 0 ? 0.5 : 1,
-              transition: "all 0.2s",
+              border: "1px solid #e9ecef",
+              marginBottom: 24,
             }}
           >
-            {requestType === "quote" ? "Ajánlat kérése" : "Megrendelés leadása"}
-          </button>
+            <h3
+              style={{
+                fontSize: 16,
+                fontWeight: 600,
+                color: "#333",
+                marginBottom: 16,
+                textAlign: "center",
+              }}
+            >
+              Megosztás és export
+            </h3>
+            <MaterialShareButtons
+              materials={getSelectedMaterials()}
+              workId={workId}
+            />
+          </div>
+        )}
+
+        {/* Back button */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <button
             onClick={() => router.back()}
             style={{
@@ -411,7 +417,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
               transition: "all 0.2s",
             }}
           >
-            Mégse
+            Vissza
           </button>
         </div>
       </div>

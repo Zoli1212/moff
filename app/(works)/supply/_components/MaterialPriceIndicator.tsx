@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp, Save, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle, Loader2, Save, RefreshCw } from "lucide-react";
 import { saveMarketPrice } from "../_actions/save-market-price";
 
 interface MarketOffer {
@@ -44,7 +44,6 @@ export default function MaterialPriceIndicator({
   materialName,
 }: MaterialPriceIndicatorProps) {
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
-  const [showPriceDetails, setShowPriceDetails] = useState(false);
   const [localMarketPrice, setLocalMarketPrice] = useState<MarketPrice | null>(
     initialMarketPrice || null
   );
@@ -122,7 +121,6 @@ export default function MaterialPriceIndicator({
         // Tároljuk az ajánlatokat ideiglenesen (NEM mentjük automatikusan!)
         if (data.currentMarketPrice?.offers) {
           setFetchedOffers(data.currentMarketPrice.offers);
-          setShowPriceDetails(true);
         }
       } else {
         toast.dismiss(`fetch-price-${workItemId}`);
