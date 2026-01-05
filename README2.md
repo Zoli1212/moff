@@ -733,12 +733,21 @@ modal
 ----
 default tételel azok vannak kiválasztva amelyikből még kell
 mindent kipipálok összes kijelölése
-AJánlatkérő letöltése - cégnév - szállítási cim excel word pdf
+AJánlatbekérő letöltése - cégnév - szállítási cim excel word pdf
 
-ajanlatkerő elküldése - milyen email cim , megosztás
+ajanlatbekerő küldése - milyen email cim , megosztás
 Azt találja meg amit kell, ne konyhabútort
 Azoknál kell beixelve lenne ami még kell,
 azokból ami nincs elég, ő megcsinálja amit akar,
 ajánlatokat ad, szar a találat
 Vásárlási lista legyen
 3D
+Mi nevünk és címünk
+Ajánlatot szeretnék kérni az alábbi anyagokra a cég neve,
+anyag mennyiség
+anyagok
+ezek taskok csak az anyag jelnjen meg
+Anyagoknál anyagok kerüljen
+1. Ajánlatbekérő működjön
+2. Legjobb árat mutassa
+3. Ahol összehasonlító legyen

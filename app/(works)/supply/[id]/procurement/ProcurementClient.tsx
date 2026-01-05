@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
-import MaterialShareButtons from "../../_components/MaterialShareButtons";
+import ProcurementModal from "./_components/ProcurementModal";
 
 interface MarketOffer {
   bestPrice: number;
@@ -36,6 +36,8 @@ interface Material {
   materialUnitPrice?: number;
   workItemId?: number;
   currentMarketPrice?: MarketPrice | null;
+  availableFull?: boolean;
+  availableQuantity?: number;
 }
 
 export default function ProcurementClient({ workId }: { workId: number }) {
@@ -46,6 +48,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
     new Set()
   );
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Get request type from URL param (quote or order)
   const requestType = (searchParams.get("type") as "quote" | "order") || "quote";
@@ -53,41 +56,28 @@ export default function ProcurementClient({ workId }: { workId: number }) {
   useEffect(() => {
     const fetchMaterials = async () => {
       try {
-        // Fetch workItems with currentMarketPrice
-        const response = await fetch(`/api/work-items?workId=${workId}`);
-        if (!response.ok) throw new Error("Failed to fetch work items");
+        // Fetch materials from new API endpoint
+        const response = await fetch(`/api/materials?workId=${workId}`);
+        if (!response.ok) throw new Error("Failed to fetch materials");
 
         const data = await response.json();
-        const workItems = data.workItems || [];
+        const fetchedMaterials = data.materials || [];
 
-        // Filter only items that have materials (materialUnitPrice > 0) and are in progress
-        const materialsWithPrices: Material[] = workItems
-          .filter((item: {
-            materialUnitPrice?: number;
-            inProgress?: boolean;
-          }) =>
-            item.materialUnitPrice &&
-            item.materialUnitPrice > 0 &&
-            item.inProgress === true
-          )
-          .map((item: {
-            id: number;
-            name: string;
-            quantity: number;
-            unit: string;
-            materialUnitPrice: number;
-            currentMarketPrice?: MarketPrice | null;
-          }) => ({
-            id: item.id,
-            name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            materialUnitPrice: item.materialUnitPrice,
-            currentMarketPrice: item.currentMarketPrice,
-            workItemId: item.id,
-          }));
+        setMaterials(fetchedMaterials);
 
-        setMaterials(materialsWithPrices);
+        // Auto-select materials that are not fully procured
+        const notProcuredIds = new Set(
+          fetchedMaterials
+            .filter(
+              (material: Material) =>
+                !material.availableFull ||
+                (material.availableQuantity !== undefined &&
+                  material.availableQuantity < material.quantity)
+            )
+            .map((material: Material) => material.id)
+        );
+
+        setSelectedMaterials(notProcuredIds);
         setIsLoading(false);
       } catch (error) {
         console.error("Error fetching materials:", error);
@@ -371,37 +361,27 @@ export default function ProcurementClient({ workId }: { workId: number }) {
           </div>
         )}
 
-        {/* Share and Download Section */}
-        {selectedMaterials.size > 0 && (
-          <div
+        {/* Action buttons */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            disabled={selectedMaterials.size === 0}
             style={{
-              padding: 20,
-              backgroundColor: "#fff",
+              width: "100%",
+              padding: "14px 20px",
+              border: "none",
               borderRadius: 8,
-              border: "1px solid #e9ecef",
-              marginBottom: 24,
+              backgroundColor: "#FE9C00",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: 15,
+              cursor: selectedMaterials.size === 0 ? "not-allowed" : "pointer",
+              opacity: selectedMaterials.size === 0 ? 0.5 : 1,
+              transition: "all 0.2s",
             }}
           >
-            <h3
-              style={{
-                fontSize: 16,
-                fontWeight: 600,
-                color: "#333",
-                marginBottom: 16,
-                textAlign: "center",
-              }}
-            >
-              Megosztás és export
-            </h3>
-            <MaterialShareButtons
-              materials={getSelectedMaterials()}
-              workId={workId}
-            />
-          </div>
-        )}
-
-        {/* Back button */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            Ajánlatbekérő küldése
+          </button>
           <button
             onClick={() => router.back()}
             style={{
@@ -421,6 +401,14 @@ export default function ProcurementClient({ workId }: { workId: number }) {
           </button>
         </div>
       </div>
+
+      {/* Procurement Modal */}
+      <ProcurementModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        materials={getSelectedMaterials()}
+        workId={workId}
+      />
     </div>
   );
 }

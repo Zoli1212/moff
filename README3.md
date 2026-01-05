@@ -326,3 +326,4 @@ WHERE "createdAt" < NOW() - INTERVAL '6 months';
 - Production-ready biztonsági intézkedésekkel
 
 FF9900
+Ajánlat bekérő
