@@ -330,29 +330,11 @@ export default function MaterialPriceIndicator({
                       {hasSavings ? "Jobb ajánlat" : "Piaci ár"}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {hasSavings && (
-                      <span className="text-green-700 font-bold text-xs whitespace-nowrap">
-                        -{savingsAmount.toLocaleString("hu-HU")} Ft
-                      </span>
-                    )}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSaveOffer(offer, index);
-                      }}
-                      disabled={isSaving}
-                      className="flex items-center gap-1 px-2 py-1 bg-[#FF9900] hover:bg-[#FF9900]/90 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
-                      title="Ajánlat mentése"
-                    >
-                      {isSaving ? (
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                      ) : (
-                        <Save className="h-3 w-3" />
-                      )}
-                      <span>{isSaving ? "Mentés..." : "Mentés"}</span>
-                    </button>
-                  </div>
+                  {hasSavings && (
+                    <span className="text-green-700 font-bold text-xs whitespace-nowrap">
+                      -{savingsAmount.toLocaleString("hu-HU")} Ft
+                    </span>
+                  )}
                 </div>
 
                 <div className="text-xs space-y-1">
@@ -386,7 +368,7 @@ export default function MaterialPriceIndicator({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="text-blue-600 hover:text-blue-800 text-[11px] underline block mt-1"
+                      className="inline-block mt-2 px-3 py-1.5 bg-[#FF9900] hover:bg-[#e68a00] text-white text-xs font-medium rounded transition-colors"
                     >
                       🔗 Termék megtekintése
                     </a>
