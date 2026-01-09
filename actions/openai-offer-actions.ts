@@ -139,13 +139,22 @@ export async function createOfferFromText({
 8. Ha "ügyfél által biztosított" szerepel, akkor azt az anyagot NEM kell beletenni az ajánlatba
 9. Csempék esetén is hozz létre külön tételeket az anyagra és a ragasztásra
 
+**IDŐBECSLÉS SZABÁLYOK:**
+10. Az "estimatedTime" értéket a munka TÉNYLEGES mennyisége alapján becsüld meg:
+    - Kis munka (1-5 m2 burkolás, 1-2 ajtó): "1-2 nap"
+    - Közepes munka (10-20 m2 burkolás, 1 fürdőszoba): "3-5 nap"
+    - Nagyobb munka (30-50 m2 burkolás, komplett fürdőszoba): "7-10 nap"
+    - Nagy munka (teljes lakás felújítás, 60+ m2): "14-21 nap"
+    - Számítsd bele a szárítási, száradási időket is!
+11. NE használj fix "10 nap" értéket minden munkára - MINDIG a munka mennyiségét vedd figyelembe!
+
 **VÁLASZ FORMÁTUM (szigorúan JSON):**
 {
   "offer": {
     "title": "Rövid összefoglaló cím",
     "location": "Helyszín",
     "customerName": "Ügyfél neve (ha van)",
-    "estimatedTime": "Becsült idő napokban",
+    "estimatedTime": "Becsült idő napokban (pl. '3-5 nap', '7-10 nap', '14-21 nap')",
     "offerSummary": "4 mondatos összefoglaló",
     "items": [
       {

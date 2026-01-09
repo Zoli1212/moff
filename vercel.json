@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/scrape-material-prices",
-      "schedule": "0 2 */3 * *"
+      "path": "/api/scrape-materials-batch",
+      "schedule": "0 6 * * *"
     }
   ]
 }

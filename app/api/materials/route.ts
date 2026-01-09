@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getTenantSafeAuth } from "@/lib/tenant-auth";
 
+interface AggregatedMaterial {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: string;
+  availableFull: boolean;
+  availableQuantity: number | null;
+  workItemId: string;
+  materialUnitPrice: number;
+  currentMarketPrice: number | null;
+  workItemIds: string[];
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -162,7 +175,7 @@ export async function GET(req: NextRequest) {
       }
 
       return acc;
-    }, [] as any[]);
+    }, [] as AggregatedMaterial[]);
 
     return NextResponse.json({ materials: aggregatedMaterials }, { status: 200 });
   } catch (error) {

@@ -16,13 +16,10 @@ import { useOfferTitleStore } from "@/store/offer-title-store";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { getOfferById } from "@/actions/offer-actions";
 import { getRequirementBlocks } from "@/actions/requirement-block-actions";
-import { Loader2, X, Send, Trash2 } from "lucide-react";
+import { X, Trash2 } from "lucide-react";
 import BackButton from "@/app/(works)/others/_components/BackButton";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import revalidatePath from "@/lib/revalidate-path";
 import {
   parseRequirementLines,
   isLineDeletable,
@@ -43,16 +40,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-interface TableItem {
-  name: string;
-  quantity: string;
-  unit: string;
-  materialUnitPrice: string;
-  workUnitPrice: string;
-  materialTotal: string;
-  workTotal: string;
-}
 
 interface Requirement {
   id: number;
@@ -78,32 +65,18 @@ export function RequirementDetail({
   onRequirementUpdated,
   onBlockIdsChange,
 }: RequirementDetailProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const {
-    storedItems,
-    setStoredItems,
-    setDemandText,
-    isGlobalLoading,
-    setGlobalLoading,
-  } = useDemandStore();
+  const { setStoredItems, setDemandText, isGlobalLoading } = useDemandStore();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newText, setNewText] = useState("");
-  const [error, setError] = useState("");
   const [lines, setLines] = useState<RequirementLine[]>([]);
   const [currentDescription, setCurrentDescription] = useState(
     requirement?.description || ""
   );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
-  const [isLineRemoved, setIsLineRemoved] = useState(false);
   const [blocks, setBlocks] = useState<RequirementBlock[]>([]);
-  const [initialTableItems, setInitialTableItems] = useState<TableItem[]>([]);
-
-  // Zustand extraRequirementText setter
-  const { setExtraRequirementText } = useDemandStore();
 
   console.log(JSON.stringify(requirement), "REQ");
 
@@ -214,7 +187,6 @@ export function RequirementDetail({
             );
 
             console.log("Initial table items set:", tableItems);
-            setInitialTableItems(tableItems);
             setStoredItems(tableItems);
             // Store offer.items in OfferItemCheckStore
             if (offer.items) {
@@ -233,276 +205,7 @@ export function RequirementDetail({
     };
 
     fetchOffer();
-  }, [searchParams, setStoredItems]);
-
-  const handleSubmit = async () => {
-    if (!newText.trim()) {
-      setError("Kérjük adj meg szöveget a kiegészítéshez!");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setError("");
-
-    try {
-      // Combine the existing description with the new text
-      // Replace single newlines with double newlines, except where already double
-      const normalizedNewText = newText.replace(
-        /([^\n])\n([^\n])/g,
-        "$1\n\n$2"
-      );
-      const updatedDescription = `${currentDescription ? currentDescription + "\n\n" : ""}${normalizedNewText}`;
-
-      // Update the requirement in the database
-      const response = await fetch("/api/update-requirement", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          requirementId: requirement.id,
-          data: {
-            description: updatedDescription,
-            updateCount: { increment: 1 },
-          },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.error || "Hiba történt a követelmény frissítése során"
-        );
-      }
-
-      // Update the local state
-      setCurrentDescription(updatedDescription);
-      setNewText("");
-
-      // Save the updated description as demandText in the store
-      setDemandText(updatedDescription);
-
-      // Notify parent component about the update
-      if (onRequirementUpdated) {
-        onRequirementUpdated({
-          ...requirement,
-          description: updatedDescription,
-        });
-      }
-
-      // Log the offerTitle after save
-      console.log(
-        "[handleSubmit] offerTitle:",
-        useOfferTitleStore.getState().offerTitle
-      );
-
-      toast.success("Követelmény sikeresen frissítve!");
-
-      // Return the updated description so handleResubmit can use it
-      return updatedDescription;
-    } catch (error) {
-      console.error("Error updating requirement:", error);
-      setError(
-        "Hiba történt a követelmény frissítése közben. Kérjük próbáld újra később."
-      );
-      toast.error("Hiba történt a követelmény frissítése közben");
-      return null;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const setRequirementId = useRequirementIdStore(
-    (state) => state.setRequirementId
-  );
-
-  const handleResubmit = async () => {
-    // Save newText as a new block if present
-    if (newText.trim()) {
-      setExtraRequirementText(newText.trim());
-      setNewText("");
-      toast.success("Kiegészítő szöveg elmentve a store-ba!");
-    }
-    if (!newText.trim() && !isLineRemoved) {
-      const errorMsg =
-        "Kérjük adj meg egy szöveget az elemzéshez, vagy távolíts el egy elemet!";
-      console.log("Validation error:", errorMsg);
-      setError(errorMsg);
-      return;
-    }
-
-    // Set global loading state
-    setGlobalLoading(true);
-    setError("");
-
-    // Store loading state in session storage to persist across navigation
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem("isGlobalLoading", "true");
-    }
-
-    // Clean up function to ensure loading state is reset
-    const cleanup = () => {
-      if (typeof window !== "undefined") {
-        sessionStorage.removeItem("isGlobalLoading");
-      }
-      setGlobalLoading(false);
-    };
-
-    // Set up cleanup on page unload
-    const cleanupOnUnload = () => {
-      if (typeof window === "undefined") return () => {};
-
-      const handleBeforeUnload = () => {
-        // Keep the loading state in session storage
-        sessionStorage.setItem("isGlobalLoading", "true");
-      };
-
-      window.addEventListener("beforeunload", handleBeforeUnload);
-      return () => {
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-      };
-    };
-
-    // Set up cleanup
-    const removeUnloadListener = cleanupOnUnload();
-
-    // Also clean up when component unmounts
-    const cleanupOnUnmount = () => {
-      return () => {
-        removeUnloadListener();
-        // Don't clean up if we're navigating away
-        const currentUrl =
-          typeof window !== "undefined" ? window.location.href : "";
-        const isNavigatingAway = !currentUrl.includes("requirement");
-
-        if (!isNavigatingAway) {
-          cleanup();
-        }
-      };
-    };
-
-    const finalCleanup = cleanupOnUnmount();
-
-    try {
-      let finalDescription = currentDescription;
-
-      // First save the updated description if there are changes
-      if (newText.trim() && newText !== currentDescription) {
-        console.log("=== BEFORE handleSubmit ===");
-        console.log("currentDescription:", currentDescription);
-        console.log("newText:", newText);
-
-        const updatedDesc = await handleSubmit();
-
-        if (updatedDesc) {
-          finalDescription = updatedDesc;
-          console.log("=== AFTER handleSubmit ===");
-          console.log("updatedDesc from handleSubmit:", updatedDesc);
-        } else {
-          console.log(
-            "⚠️ handleSubmit returned null, using currentDescription"
-          );
-        }
-      }
-
-      // Create a new record ID
-      const recordId = crypto.randomUUID();
-
-      // Prepare the combined text - use the finalDescription
-      const combinedText = finalDescription;
-      console.log("=== FINAL combinedText ===");
-      console.log("combinedText:", combinedText);
-
-      // Create form data for the API
-      const formData = new FormData();
-      formData.append("recordId", recordId);
-      formData.append("textContent", combinedText);
-      formData.append("type", "offer-letter");
-      formData.append("requirementId", requirement.id.toString());
-
-      // Küldjük el a meglévő tételeket is, ha vannak
-      console.log("=== REQUIREMENT DETAIL - SENDING EXISTING ITEMS ===");
-      console.log("storedItems:", storedItems);
-      console.log("storedItems length:", storedItems?.length || 0);
-      console.log("initialTableItems:", initialTableItems);
-      console.log("initialTableItems length:", initialTableItems?.length || 0);
-      console.log("newText (kiegészítés):", newText);
-      console.log("combinedText:", combinedText);
-      console.log("=================================================");
-
-      if (storedItems && storedItems.length > 0) {
-        formData.append("existingItems", JSON.stringify(storedItems));
-        console.log("✅ Appended existingItems to formData");
-      } else {
-        console.log("⚠️ No storedItems to append");
-      }
-      if (storedItems.length === 0 && initialTableItems.length > 0) {
-        setStoredItems(initialTableItems);
-        console.log(
-          "[useDemandStore] storedItems elmentve:",
-          useDemandStore.getState().storedItems
-        );
-      }
-
-      // Call the API
-      const response = await fetch("/api/ai-demand-agent", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Hiba történt az újraküldés során");
-      }
-
-      const result = await response.json();
-      console.log("Event queued:", result.eventId);
-      toast.success("Követelmény sikeresen újraküldve! Folyamatban...");
-
-      let attempts = 0;
-      const maxAttempts = 60;
-
-      const poll = async () => {
-        try {
-          const statusRes = await fetch(
-            `/api/ai-demand-agent/status?eventId=${result.eventId}`
-          );
-          const { status } = await statusRes.json();
-          console.log("Status:", status);
-
-          if (status === "Completed") {
-            setGlobalLoading(false);
-            revalidatePath("/offer");
-            toast.success("Sikeresen feldolgozva!");
-            // Redirect to the new offer page
-            router.push(
-              `/ai-tools/ai-offer-letter-mobile-redirect/${recordId}`
-            );
-            return;
-          }
-
-          if (status === "Cancelled" || attempts >= maxAttempts) {
-            setGlobalLoading(false);
-            setError("A feldolgozás nem sikerült vagy túl sokáig tartott.");
-            return;
-          }
-
-          attempts++;
-          setTimeout(poll, 2000);
-        } catch (err) {
-          console.error("Error polling status:", err);
-          setGlobalLoading(false);
-          setError("Hiba történt az állapot lekérdezése során.");
-        }
-      };
-
-      setRequirementId(requirement.id);
-      poll();
-    } catch (error) {
-      console.error("Error in handleResubmit:", error);
-      setError("Hiba történt a feldolgozás során. Kérjük próbálja újra.");
-      toast.error("Hiba történt a feldolgozás során");
-      finalCleanup();
-    }
-  };
+  }, [searchParams, setStoredItems, clearOfferTitle, setOfferTitle]);
 
   // Parse the description into lines when it changes and check for matching blocks
   useEffect(() => {
