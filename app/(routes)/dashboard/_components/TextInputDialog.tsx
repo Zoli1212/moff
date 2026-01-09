@@ -68,7 +68,7 @@ export default function TextInputDialog({
 
         // Átirányítás az offer részletekhez
         setLoading(false);
-        router.push(`/offers/${offerId}`);
+        router.push(`/offers/${requirementId}?offerId=${offerId}`);
         setOpen(false);
       } else {
         throw new Error("Offer creation failed");

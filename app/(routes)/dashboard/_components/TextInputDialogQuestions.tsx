@@ -57,8 +57,7 @@ export default function TextInputDialogQuestions({
   const { setRequirementId, clearRequirementId } = useRequirementIdStore();
   const prevItemsRef = useRef(currentItems);
   const questionsInitializedRef = useRef(false);
-  console.log(offerItemsQuestion)
-
+  console.log(offerItemsQuestion);
 
   // Initialize questions with unique IDs when dialog opens
   useEffect(() => {
@@ -169,37 +168,65 @@ export default function TextInputDialogQuestions({
       }
 
       // finalDescription már tartalmazza az eredeti követelményt + a "Válaszok a kérdésekre:" részt
-      // Nem kell plusz szöveg, az AI agent tudja, hogy mit kell tennie
       const combinedText = finalDescription;
 
-      // Create form data for the API
-      const formData = new FormData();
-      formData.append("recordId", recordId);
-      formData.append("textContent", combinedText);
-      formData.append("type", "offer-letter");
-
-      if (requirementId) {
-        formData.append("requirementId", requirementId.toString());
+      // Validate required parameters
+      if (!requirementId) {
+        throw new Error("RequirementId is missing");
+      }
+      if (!currentOfferId) {
+        throw new Error("CurrentOfferId is missing");
       }
 
-      // Call the API
-      const response = await fetch("/api/ai-demand-agent", {
+      console.log("📤 Sending API request with:", {
+        requirementId,
+        currentOfferId,
+        itemsCount: currentItems?.length || 0,
+      });
+
+      // Call the new OpenAI offer update API
+      const response = await fetch("/api/openai-offer-update", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userInput: combinedText,
+          existingItems: currentItems || [],
+          answeredQuestions: answeredQuestions.map((q) => q.text),
+          requirementId: requirementId,
+          currentOfferId: currentOfferId,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Hiba történt az újraküldés során");
+        throw new Error("Hiba történt az ajánlat frissítése során");
       }
 
+      const result = await response.json();
+      console.log("✅ API Response:", result);
+
+      if (!result.success) {
+        throw new Error(
+          result.error || "Hiba történt az ajánlat frissítése során"
+        );
+      }
+
+      console.log("📋 Result data:", {
+        requirementId: result.requirementId,
+        offerId: result.offerId,
+      });
 
       // Delete the old offer if we have currentOfferId
       if (currentOfferId) {
+        console.log("🗑️ Deleting old offer:", currentOfferId);
         try {
           const deleteResult = await deleteOffer(currentOfferId);
 
           if (!deleteResult.success) {
             console.error("Failed to delete old offer:", deleteResult.error);
+          } else {
+            console.log("✅ Old offer deleted");
           }
         } catch (deleteErr) {
           console.error("Error deleting old offer:", deleteErr);
@@ -207,19 +234,26 @@ export default function TextInputDialogQuestions({
         }
       }
 
-      // Set the requirementId in the store so the redirect page can use it
-      if (requirementId) {
-        setRequirementId(requirementId);
-      }
+      // Redirect to the new offer
+      const redirectUrl = `/offers/${result.requirementId}?offerId=${result.offerId}`;
+      console.log("🔀 Redirecting to:", redirectUrl);
 
-      // Azonnal átirányítunk a redirect oldalra, ahol database polling fog történni
       setLoading(false);
       setOpen(false);
-      const encodedDemandText = encodeURIComponent(finalDescription);
-      router.push(`${toolPath}/${recordId}?demandText=${encodedDemandText}`);
+
+      console.log("🚀 Calling router.push...");
+      router.push(redirectUrl);
+      console.log("✅ router.push called");
     } catch (err) {
-      console.error("Error processing text:", err);
+      console.error("❌ Error processing text:", err);
+      console.error(
+        "❌ Error details:",
+        err instanceof Error ? err.message : String(err)
+      );
       setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
+      setLoading(false);
+    } finally {
+      console.log("🏁 Finally block - ensuring loading is false");
       setLoading(false);
     }
   };

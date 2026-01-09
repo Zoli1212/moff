@@ -801,51 +801,13 @@ export function RequirementDetail({
           </div>
         )}
 
-        {/* Additional Info Section */}
-        <div className="p-4 border-t border-gray-200">
-          <h3 className="text-md font-medium text-gray-900 mb-2">
-            Kiegészítő információk
-          </h3>
-          <Textarea
-            value={newText}
-            onChange={(e) => setNewText(e.target.value)}
-            className="min-h-[80px] bg-white text-sm"
-            placeholder="Írd ide a további követelményeket vagy módosításokat..."
-          />
-          {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-        </div>
-
         {/* Footer Actions */}
         <div className="p-4 bg-gray-50 border-t border-gray-100">
           <div className="flex flex-col gap-3">
             <Button
-              onClick={handleResubmit}
-              disabled={
-                isSubmitting ||
-                isGlobalLoading ||
-                (!newText.trim() && !isLineRemoved)
-              }
-              className="w-full bg-[#FF9900] hover:bg-[#e68a00] text-white h-12 relative"
-            >
-              <span
-                className={`flex items-center ${isGlobalLoading ? "invisible" : "visible"}`}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                Ajánlat frissítése
-              </span>
-              {isGlobalLoading && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                </div>
-              )}
-            </Button>
-
-            <Button
               type="button"
               variant="outline"
               onClick={() => {
-                setNewText("");
-                setError("");
                 onBack();
               }}
               disabled={isSubmitting || isGlobalLoading}

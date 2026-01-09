@@ -208,6 +208,9 @@ export function OfferDetailView({
   const [isRefineModalOpen, setIsRefineModalOpen] = useState(false);
   const [refineInput, setRefineInput] = useState("");
   const [isRefining, setIsRefining] = useState(false);
+  const [isSupplementModalOpen, setIsSupplementModalOpen] = useState(false);
+  const [supplementInput, setSupplementInput] = useState("");
+  const [isSupplementing, setIsSupplementing] = useState(false);
   const { setDemandText } = useDemandStore();
   const { setOfferItems } = useOfferItemCheckStore();
 
@@ -222,17 +225,34 @@ export function OfferDetailView({
       const items = Array.isArray(offer.items) ? offer.items : [];
       // Ensure all items have the required fields
 
-      const validatedItems = items.map((item, index) => ({
-        id: index, // Add unique id for each item
-        name: item.name || "",
-        quantity: item.quantity || "1",
-        unit: item.unit || "db",
-        materialUnitPrice: item.materialUnitPrice || "0 Ft",
-        unitPrice: item.unitPrice || "0 Ft",
-        materialTotal: item.materialTotal || "0 Ft",
-        workTotal: item.workTotal || "0 Ft",
-        new: item.new || false, // Preserve the new field for custom items
-      }));
+      const validatedItems = items.map((item, index) => {
+        // Parse quantity and prices
+        const quantity =
+          parseFloat(String(item.quantity).replace(/[^\d.-]/g, "")) || 0;
+        const materialUnitPrice =
+          parseFloat(
+            String(item.materialUnitPrice || "0").replace(/[^\d.-]/g, "")
+          ) || 0;
+        const workUnitPrice =
+          parseFloat(String(item.unitPrice || "0").replace(/[^\d.-]/g, "")) ||
+          0;
+
+        // Calculate totals
+        const materialTotal = quantity * materialUnitPrice;
+        const workTotal = quantity * workUnitPrice;
+
+        return {
+          id: index, // Add unique id for each item
+          name: item.name || "",
+          quantity: item.quantity || "1",
+          unit: item.unit || "db",
+          materialUnitPrice: item.materialUnitPrice || "0 Ft",
+          unitPrice: item.unitPrice || "0 Ft",
+          materialTotal: `${materialTotal} Ft`,
+          workTotal: `${workTotal} Ft`,
+          new: item.new || false, // Preserve the new field for custom items
+        };
+      });
       setEditableItems(validatedItems);
       // Store original items with their indices
       setOriginalItems(validatedItems);
@@ -753,14 +773,24 @@ export function OfferDetailView({
 
     setIsRefining(true);
     try {
-      const response = await fetch("/api/ai-refine-items", {
+      console.log("🔧 Calling /api/openai-offer-refine...");
+
+      const response = await fetch("/api/openai-offer-refine", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          items: editableItems,
-          userRefinement: refineInput,
+          refinementRequest: refineInput,
+          offerId: offer.id,
+          requirementId: offer.requirement?.id,
+          existingItems: editableItems.map((item) => ({
+            name: item.name || "",
+            quantity: item.quantity || "1",
+            unit: item.unit || "db",
+            materialUnitPrice: item.materialUnitPrice || "0 Ft",
+            workUnitPrice: item.unitPrice || "0 Ft",
+          })),
         }),
       });
 
@@ -770,41 +800,70 @@ export function OfferDetailView({
         throw new Error(data.error || "Hiba történt a pontosítás során");
       }
 
-      if (data.success && data.items) {
-        // Update items with AI refined items
-        const refinedItems = data.items.map((item: OfferItem, index: number) => ({
-          ...item,
-          id: item.id || index,
-        }));
+      if (data.success) {
+        console.log("✅ Offer items refined successfully");
+        toast.success("Tételek sikeresen pontosítva!");
+        setIsRefineModalOpen(false);
+        setRefineInput("");
 
-        setEditableItems(refinedItems);
-
-        // Save to database
-        const result = await updateOfferItems(offer.id, refinedItems);
-
-        if (result.success) {
-          toast.success("Tételek sikeresen pontosítva!");
-          setIsRefineModalOpen(false);
-          setRefineInput("");
-
-          // Notify parent component
-          if (onOfferUpdated) {
-            onOfferUpdated({
-              items: refinedItems,
-              materialTotal: data.totals.materialTotal,
-              workTotal: data.totals.workTotal,
-              totalPrice: data.totals.totalCost,
-            });
-          }
-        } else {
-          toast.error(result.error || "Hiba történt a mentés során");
-        }
+        // Reload the page to show updated offer
+        window.location.reload();
       }
     } catch (error) {
       console.error("❌ Error refining items:", error);
-      toast.error((error as Error).message || "Hiba történt a pontosítás során");
+      toast.error(
+        (error as Error).message || "Hiba történt a pontosítás során"
+      );
     } finally {
       setIsRefining(false);
+    }
+  };
+
+  // Handle supplement info with AI
+  const handleSupplementInfo = async () => {
+    if (!supplementInput.trim()) {
+      toast.error("Kérlek add meg a kiegészítő információt!");
+      return;
+    }
+
+    setIsSupplementing(true);
+    try {
+      console.log("📝 Calling /api/openai-offer-supplement...");
+
+      const response = await fetch("/api/openai-offer-supplement", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          supplementInfo: supplementInput,
+          offerId: offer.id,
+          requirementId: offer.requirement?.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Hiba történt a kiegészítés során");
+      }
+
+      if (data.success) {
+        console.log("✅ Offer supplemented successfully");
+        toast.success("Ajánlat sikeresen kiegészítve!");
+        setIsSupplementModalOpen(false);
+        setSupplementInput("");
+
+        // Redirect to new offer
+        window.location.href = `/offers/${data.requirementId}?offerId=${data.offerId}`;
+      }
+    } catch (error) {
+      console.error("❌ Error supplementing offer:", error);
+      toast.error(
+        (error as Error).message || "Hiba történt a kiegészítés során"
+      );
+    } finally {
+      setIsSupplementing(false);
     }
   };
 
@@ -893,7 +952,10 @@ export function OfferDetailView({
     console.log("\n🔵 [HANDLE STATUS UPDATE] 1. FÜGGVÉNY MEGHÍVVA!");
     console.log("🔵 [HANDLE STATUS UPDATE] 2. Offer ID:", offer.id);
     console.log("🔵 [HANDLE STATUS UPDATE] 3. Current status:", offer.status);
-    console.log("🔵 [HANDLE STATUS UPDATE] 4. assignToExisting:", assignToExisting);
+    console.log(
+      "🔵 [HANDLE STATUS UPDATE] 4. assignToExisting:",
+      assignToExisting
+    );
     console.log("🔵 [HANDLE STATUS UPDATE] 5. selectedWorkId:", selectedWorkId);
 
     try {
@@ -902,7 +964,9 @@ export function OfferDetailView({
 
       // Ha meglévő munkához rendelés mód van bekapcsolva
       if (assignToExisting && selectedWorkId) {
-        console.log("🔵 [HANDLE STATUS UPDATE] 7. MEGLÉVŐ MUNKÁHOZ RENDELÉS mód...");
+        console.log(
+          "🔵 [HANDLE STATUS UPDATE] 7. MEGLÉVŐ MUNKÁHOZ RENDELÉS mód..."
+        );
         // 1. Offer status frissítése és linkedOfferIds hozzáadása
         const result = await assignOfferToExistingWork(
           offer.id,
@@ -967,7 +1031,10 @@ export function OfferDetailView({
       console.log(`📋 [MUNKÁBA ÁLLÍTÁS] 2. Új állapot: ${newStatus}`);
 
       const result = await updateOfferStatus(offer.id, newStatus);
-      console.log("📋 [MUNKÁBA ÁLLÍTÁS] 3. updateOfferStatus eredmény:", result);
+      console.log(
+        "📋 [MUNKÁBA ÁLLÍTÁS] 3. updateOfferStatus eredmény:",
+        result
+      );
 
       if (result.success) {
         toast.success(
@@ -996,7 +1063,9 @@ export function OfferDetailView({
             keepalive: true,
           })
             .then(() => {
-              console.log("✅ [AI FELDOLGOZÁS] 3. Kérés sikeresen elküldve a backend-nek");
+              console.log(
+                "✅ [AI FELDOLGOZÁS] 3. Kérés sikeresen elküldve a backend-nek"
+              );
             })
             .catch((err) => {
               console.error("❌ [AI FELDOLGOZÁS] Fetch error:", err);
@@ -1013,16 +1082,30 @@ export function OfferDetailView({
         setIsStatusDialogOpen(false);
         console.log("📋 [MUNKÁBA ÁLLÍTÁS] 6. ✅ BEFEJEZVE!");
       } else {
-        console.error("❌ [MUNKÁBA ÁLLÍTÁS] updateOfferStatus sikertelen:", result);
+        console.error(
+          "❌ [MUNKÁBA ÁLLÍTÁS] updateOfferStatus sikertelen:",
+          result
+        );
         toast.error(result.message || "Hiba történt az állapot frissítésekor");
       }
     } catch (error) {
-      console.error("❌ [HANDLE STATUS UPDATE] CATCH BLOCK - Error updating status:", error);
-      console.error("❌ [HANDLE STATUS UPDATE] Error stack:", error instanceof Error ? error.stack : "No stack");
-      const errorMessage = error instanceof Error ? error.message : "Hiba történt az állapot frissítésekor";
+      console.error(
+        "❌ [HANDLE STATUS UPDATE] CATCH BLOCK - Error updating status:",
+        error
+      );
+      console.error(
+        "❌ [HANDLE STATUS UPDATE] Error stack:",
+        error instanceof Error ? error.stack : "No stack"
+      );
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Hiba történt az állapot frissítésekor";
       toast.error(errorMessage);
     } finally {
-      console.log("🔵 [HANDLE STATUS UPDATE] FINALLY BLOCK - setIsUpdatingStatus(false)");
+      console.log(
+        "🔵 [HANDLE STATUS UPDATE] FINALLY BLOCK - setIsUpdatingStatus(false)"
+      );
       setIsUpdatingStatus(false);
     }
   };
@@ -1722,20 +1805,33 @@ export function OfferDetailView({
 
           {/* Requirements Section */}
           {offer.requirement && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <button
-                onClick={() => setShowRequirementDetail(true)}
-                className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
-              >
-                <h2 className="text-lg font-medium text-gray-900 flex items-center">
-                  <List className="h-5 w-5 mr-2 text-gray-500" />
-                  Követelmény
-                  <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                    {offer?.requirement?.updateCount || "1"}
-                  </span>
-                </h2>
-                <ChevronRight className="h-6 w-6 text-[#FE9C00]" />
-              </button>
+            <div className="space-y-3">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => setShowRequirementDetail(true)}
+                  className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                >
+                  <h2 className="text-lg font-medium text-gray-900 flex items-center">
+                    <List className="h-5 w-5 mr-2 text-gray-500" />
+                    Követelmény
+                    <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                      {offer?.requirement?.updateCount || "1"}
+                    </span>
+                  </h2>
+                  <ChevronRight className="h-6 w-6 text-[#FE9C00]" />
+                </button>
+              </div>
+
+              {/* Kiegészítő információ button */}
+              {offer.status === "draft" && (
+                <Button
+                  onClick={() => setIsSupplementModalOpen(true)}
+                  variant="outline"
+                  className="w-full py-6 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00] hover:border-[#E58A00] active:bg-[#FE9C00] active:text-white font-medium text-lg transition-colors"
+                >
+                  Kiegészítő információ
+                </Button>
+              )}
             </div>
           )}
 
@@ -2037,7 +2133,7 @@ export function OfferDetailView({
                                 : ""
                             }
                           >
-                            <span style={{ color: 'black' }}>
+                            <span style={{ color: "black" }}>
                               {index + 1}. {item.name.replace(/^\*+\s*/, "")}
                               {item.new && (
                                 <span
@@ -2555,11 +2651,24 @@ export function OfferDetailView({
             )}
             <Button
               onClick={() => {
-                console.log("🟢 [GOMB KATTINTÁS] Munkába állítás gomb megnyomva!");
-                console.log("🟢 [GOMB KATTINTÁS] isUpdatingStatus:", isUpdatingStatus);
-                console.log("🟢 [GOMB KATTINTÁS] assignToExisting:", assignToExisting);
-                console.log("🟢 [GOMB KATTINTÁS] selectedWorkId:", selectedWorkId);
-                console.log("🟢 [GOMB KATTINTÁS] handleStatusUpdate függvény meghívása...");
+                console.log(
+                  "🟢 [GOMB KATTINTÁS] Munkába állítás gomb megnyomva!"
+                );
+                console.log(
+                  "🟢 [GOMB KATTINTÁS] isUpdatingStatus:",
+                  isUpdatingStatus
+                );
+                console.log(
+                  "🟢 [GOMB KATTINTÁS] assignToExisting:",
+                  assignToExisting
+                );
+                console.log(
+                  "🟢 [GOMB KATTINTÁS] selectedWorkId:",
+                  selectedWorkId
+                );
+                console.log(
+                  "🟢 [GOMB KATTINTÁS] handleStatusUpdate függvény meghívása..."
+                );
                 handleStatusUpdate();
               }}
               disabled={
@@ -2669,7 +2778,9 @@ export function OfferDetailView({
           <DialogHeader>
             <DialogTitle>Tételek pontosítása</DialogTitle>
             <DialogDescription>
-              Írd le, hogyan szeretnéd módosítani a tételeket. Az AI csak azokat a tételeket módosítja, amelyekre vonatkozik a kérésed, a többit változatlanul hagyja.
+              Írd le, hogyan szeretnéd módosítani a tételeket. Az AI csak azokat
+              a tételeket módosítja, amelyekre vonatkozik a kérésed, a többit
+              változatlanul hagyja.
             </DialogDescription>
           </DialogHeader>
 
@@ -2702,6 +2813,56 @@ export function OfferDetailView({
                 setRefineInput("");
               }}
               disabled={isRefining}
+              className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
+            >
+              Mégse
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Supplement Info Modal */}
+      <Dialog
+        open={isSupplementModalOpen}
+        onOpenChange={setIsSupplementModalOpen}
+      >
+        <DialogContent className="w-[calc(100%-48px)] sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-xl flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Kiegészítő információ</DialogTitle>
+            <DialogDescription>
+              Írd le a további követelményeket vagy módosításokat.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="supplement-input">Kiegészítő információ</Label>
+              <textarea
+                id="supplement-input"
+                value={supplementInput}
+                onChange={(e) => setSupplementInput(e.target.value)}
+                placeholder="Pl: minden anyagdíjat növelj meg 10%-al"
+                className="w-full min-h-[120px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FE9C00] focus:border-transparent resize-none"
+                disabled={isSupplementing}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-col gap-3 pt-4">
+            <Button
+              onClick={handleSupplementInfo}
+              disabled={isSupplementing || !supplementInput.trim()}
+              className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
+            >
+              {isSupplementing ? "Ajánlat frissítése..." : "Ajánlat frissítése"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsSupplementModalOpen(false);
+                setSupplementInput("");
+              }}
+              disabled={isSupplementing}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
             >
               Mégse

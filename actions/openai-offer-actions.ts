@@ -79,6 +79,21 @@ export async function createOfferFromText({
       console.log("⏭️  [STEP 2] RAG disabled, skipping");
     }
 
+    console.log("\n📚 [STEP 2.5] Loading task catalog for AI (no prices)...");
+    const taskCatalog = await prisma.priceList.findMany({
+      where: { tenantEmail: "" },
+      select: {
+        category: true,
+        task: true,
+        unit: true,
+      },
+      orderBy: [{ category: "asc" }, { task: "asc" }],
+    });
+    console.log(`✅ [STEP 2.5] Loaded ${taskCatalog.length} tasks`);
+
+    const taskCatalogString = JSON.stringify(taskCatalog, null, 2);
+    finalInput = `${finalInput}\n\n===AVAILABLE TASKS (válassz ezek közül)===\n${taskCatalogString}`;
+
     console.log("\n🤖 [STEP 3] Calling OpenAI API (gpt-4o) - Initial pass...");
 
     if (!process.env.OPENAI_API_KEY) {
@@ -114,8 +129,15 @@ export async function createOfferFromText({
 2. Ha valami nem tisztázott, adj vissza becslést ÉS add hozzá a "questions" részhez
 3. SOHA ne add vissza: "További információ szükséges" - helyette MINDIG generálj ajánlatot a rendelkezésre álló adatok alapján
 4. A "questions" rész KÖTELEZŐ, ha bármilyen információ hiányzik
-5. Az árak (laborCost, materialCost) legyenek 0, mert később töltjük be őket
-6. Az "offerSummary" KÖTELEZŐ - pontosan 4 mondat magyarul: 1) Mi szerepel az ajánlatban 2) Milyen munkafázisok 3) Mennyi időbe telik 4) Becsült költség
+5. Az "offerSummary" KÖTELEZŐ - pontosan 4 mondat magyarul
+6. CSAK a PRICE CATALOG-ból válassz task-okat! Ha valami nincs benne, jelöld meg "customTask": true-val
+
+**ANYAGÁRAK KEZELÉSE:**
+7. Ha a követelményben szerepelnek anyagárak (pl. "Zuhanyzó 150000 Ft", "WC 50000 Ft", "Kád 160000 Ft"), akkor KÖTELEZŐEN:
+   - Hozz létre KÜLÖN tételeket az ANYAGOKRA (pl. "Zuhanyzó", "WC", "Kád") - ezek legyenek customTask: true
+   - Hozz létre KÜLÖN tételeket a MUNKÁKRA (pl. "Zuhanyzó felszerelése", "WC bekötése") - ezeket a PRICE CATALOG-ból válaszd
+8. Ha "ügyfél által biztosított" szerepel, akkor azt az anyagot NEM kell beletenni az ajánlatba
+9. Csempék esetén is hozz létre külön tételeket az anyagra és a ragasztásra
 
 **VÁLASZ FORMÁTUM (szigorúan JSON):**
 {
@@ -124,18 +146,15 @@ export async function createOfferFromText({
     "location": "Helyszín",
     "customerName": "Ügyfél neve (ha van)",
     "estimatedTime": "Becsült idő napokban",
-    "offerSummary": "4 mondatos összefoglaló: 1) Mi szerepel az ajánlatban 2) Milyen munkafázisok 3) Mennyi időbe telik 4) Teljes költség",
+    "offerSummary": "4 mondatos összefoglaló",
     "items": [
       {
-        "category": "Kategória (pl. Burkolás, Festés)",
-        "task": "Feladat neve",
-        "technology": "Technológia/módszer",
+        "task": "Pontos task név a PRICE CATALOG-ból",
+        "category": "Kategória",
+        "unit": "egység",
         "quantity": 0,
-        "unit": "egység (m2, db, stb.)",
-        "laborCost": 0,
-        "materialCost": 0,
-        "laborDays": 0,
-        "notes": "Megjegyzés vagy egyedi tétel indoklás"
+        "customTask": false,
+        "customReason": "Indoklás ha customTask=true"
       }
     ],
     "questions": [
@@ -212,66 +231,101 @@ Válaszolj CSAK érvényes JSON-nal, semmi mással!`,
     }
 
     const offerData = parsedOffer.offer || parsedOffer;
-    const items = offerData.items || [];
+    const aiItems = offerData.items || [];
     const questions = offerData.questions || [];
     const offerSummary = offerData.offerSummary || null;
 
     console.log("✅ [STEP 4] JSON parsed successfully");
-    console.log("  ├─ Items:", items.length);
+    console.log("  ├─ AI Items:", aiItems.length);
     console.log("  ├─ Questions:", questions.length);
     console.log("  └─ Has offerSummary:", !!offerSummary);
 
-    console.log("\n📚 [STEP 5] Loading prices for categories...");
+    console.log("\n📚 [STEP 5] Loading prices for AI selected tasks...");
     const categories = [
-      ...new Set(
-        offerData.items.map((item: any) => item.category).filter(Boolean)
-      ),
+      ...new Set(aiItems.map((item: any) => item.category).filter(Boolean)),
     ] as string[];
     console.log("  ├─ Categories:", categories);
 
     const priceList = await getPriceListForCategories(categories);
     console.log("  └─ Loaded", priceList.length, "price items");
 
-    console.log("\n💰 [STEP 6] Matching prices to items...");
-    const itemsWithoutPrice: any[] = [];
+    console.log("\n💰 [STEP 6] Building final items with prices...");
+    const finalItems: any[] = [];
+    const customItems: any[] = [];
 
-    offerData.items.forEach((item: any) => {
+    aiItems.forEach((aiItem: any) => {
       const match = priceList.find(
-        (p) => p.category === item.category && p.task === item.task
+        (p) => p.category === aiItem.category && p.task === aiItem.task
       );
+
       if (match) {
-        item.laborCost = match.laborCost;
-        item.materialCost = match.materialCost;
+        // Found in pricelist - use those prices
+        const laborCost = match.laborCost || 0;
+        const materialCost = match.materialCost || 0;
+        const quantity = aiItem.quantity || 0;
+        const unitPrice = laborCost;
+        const materialUnitPrice = materialCost;
+        const workTotal = laborCost * quantity;
+        const materialTotal = materialCost * quantity;
+        const totalPrice = workTotal + materialTotal;
+
+        finalItems.push({
+          new: false,
+          name: `*${aiItem.task}`,
+          unit: aiItem.unit,
+          quantity: String(quantity),
+          unitPrice: String(unitPrice),
+          workTotal: String(workTotal),
+          totalPrice: String(totalPrice),
+          materialTotal: String(materialTotal),
+          materialUnitPrice: String(materialUnitPrice),
+        });
+
         console.log(
-          `  ├─ Matched: ${item.task} (${match.laborCost} + ${match.materialCost})`
+          `  ├─ Matched: ${aiItem.task} (${laborCost} + ${materialCost})`
         );
       } else {
-        console.log(`  ⚠️ No match: ${item.task}`);
-        itemsWithoutPrice.push(item);
+        // Not found in pricelist - need AI estimation
+        customItems.push(aiItem);
+        console.log(`  ⚠️ Not in pricelist, needs AI pricing: ${aiItem.task}`);
       }
     });
-    console.log("✅ [STEP 6] Price matching complete");
+    console.log(
+      "✅ [STEP 6] Items built:",
+      finalItems.length,
+      "standard,",
+      customItems.length,
+      "custom"
+    );
 
-    // If there are items without prices, ask AI to estimate
-    if (itemsWithoutPrice.length > 0) {
+    // If there are custom items, ask AI to estimate
+    if (customItems.length > 0) {
       console.log(
-        `\n🤖 [STEP 6.5] AI price estimation for ${itemsWithoutPrice.length} items...`
+        `\n🤖 [STEP 6.5] AI price estimation for ${customItems.length} custom items...`
       );
 
       try {
-        const priceEstimationPrompt = `Adj meg 2025-ös reális budapesti felújítási árakat az alábbi tételekhez. Válaszolj CSAK JSON formátumban:
+        const priceEstimationPrompt = `Adj meg 2025-ös reális budapesti felújítási árakat az alábbi egyedi tételekhez. Válaszolj CSAK JSON formátumban:
 
 ${JSON.stringify(
-  itemsWithoutPrice.map((item) => ({
-    category: item.category,
+  customItems.map((item) => ({
     task: item.task,
-    technology: item.technology,
     unit: item.unit,
     quantity: item.quantity,
+    reason: item.customReason,
   })),
   null,
   2
 )}
+
+FONTOS SZABÁLYOK:
+1. Ha a task nevében szerepel ár (pl. "Zuhanyzó 150000", "WC 50000"), akkor:
+   - A materialCost legyen a megadott ár
+   - A laborCost legyen 0 (mivel ez csak az anyag beszerzése)
+2. Ha a task egy anyag (pl. "Zuhanyzó", "WC", "Kád", "Csempe") és nincs ár megadva:
+   - Becsüld meg a materialCost-ot
+   - A laborCost legyen 0
+3. Egyéb custom tételek esetén adj meg reális munkadíjat és anyagköltséget
 
 Válasz formátum:
 {
@@ -321,16 +375,35 @@ Válasz formátum:
 
           const parsedPrices = JSON.parse(cleanedPriceResult);
 
-          // Apply AI-estimated prices
-          itemsWithoutPrice.forEach((item) => {
+          // Apply AI-estimated prices and add to finalItems
+          customItems.forEach((customItem: any) => {
             const priceMatch = parsedPrices.prices?.find(
-              (p: any) => p.task === item.task
+              (p: any) => p.task === customItem.task
             );
             if (priceMatch) {
-              item.laborCost = priceMatch.laborCost;
-              item.materialCost = priceMatch.materialCost;
+              const laborCost = priceMatch.laborCost || 0;
+              const materialCost = priceMatch.materialCost || 0;
+              const quantity = customItem.quantity || 0;
+              const unitPrice = laborCost;
+              const materialUnitPrice = materialCost;
+              const workTotal = laborCost * quantity;
+              const materialTotal = materialCost * quantity;
+              const totalPrice = workTotal + materialTotal;
+
+              finalItems.push({
+                new: true,
+                name: `*${customItem.task}`,
+                unit: customItem.unit,
+                quantity: String(quantity),
+                unitPrice: String(unitPrice),
+                workTotal: String(workTotal),
+                totalPrice: String(totalPrice),
+                materialTotal: String(materialTotal),
+                materialUnitPrice: String(materialUnitPrice),
+              });
+
               console.log(
-                `  ├─ AI estimated: ${item.task} (${priceMatch.laborCost} + ${priceMatch.materialCost})`
+                `  ├─ AI estimated: ${customItem.task} (${laborCost} + ${materialCost})`
               );
             }
           });
@@ -343,22 +416,10 @@ Válasz formátum:
       }
     }
 
-    console.log("\n💾 [STEP 7] Saving to database...");
-
-    // Calculate totals
-    let materialTotal = 0;
-    let workTotal = 0;
-
-    offerData.items.forEach((item: any) => {
-      const qty = item.quantity || 0;
-      materialTotal += (item.materialCost || 0) * qty;
-      workTotal += (item.laborCost || 0) * qty;
-    });
-
-    const totalPrice = materialTotal + workTotal;
+    console.log("\n💾 [STEP 7] Preparing offer data...");
 
     const title = offerData.title || "Új ajánlat";
-    const location = offerData.location || title;
+    const location = offerData.location || "Helyszín nincs megadva";
     const customerName = offerData.customerName || "Új ügyfél";
 
     // Ensure estimatedTime is a string
@@ -370,7 +431,41 @@ Válasz formátum:
           : String(offerData.estimatedTime);
     }
 
+    // Calculate totals from finalItems
+    let materialTotalCalc = 0;
+    let workTotalCalc = 0;
+
+    finalItems.forEach((item: any) => {
+      materialTotalCalc += parseFloat(item.materialTotal) || 0;
+      workTotalCalc += parseFloat(item.workTotal) || 0;
+    });
+
+    const totalPrice = materialTotalCalc + workTotalCalc;
+    console.log("  ├─ Material Total:", materialTotalCalc);
+    console.log("  ├─ Work Total:", workTotalCalc);
+    console.log("  └─ Total Price:", totalPrice);
+
+    console.log("\n📝 [STEP 8] Building notes with custom items...");
+    let notesContent = `${location}\n\n${userInput}\n\n`;
+
+    if (customItems.length > 0) {
+      notesContent += "További információ:\n\n";
+      customItems.forEach((customItem: any) => {
+        notesContent += `A következő tétel nem volt az adatbázisban: '${customItem.task} (egyedi tétel)'.\n\n`;
+        notesContent += `Indoklás: ${customItem.customReason || "Egyedi tétel"}\n\n`;
+      });
+    }
+
+    if (questions.length > 0) {
+      notesContent += "Tisztázandó kérdések:\n\n";
+      questions.forEach((q: string, i: number) => {
+        notesContent += `${i + 1}. ${q}\n\n`;
+      });
+    }
+    console.log("✅ [STEP 8] Notes built");
+
     // Transaction to save Work → Requirement → Offer
+    console.log("\n💾 [STEP 9] Saving to database...");
     const savedData = await prisma.$transaction(async (tx) => {
       // 1. Create MyWork
       console.log("  ├─ Creating MyWork...");
@@ -407,22 +502,17 @@ Válasz formátum:
       // 3. Create Offer
       console.log("  ├─ Creating Offer for Requirement ID:", requirement.id);
 
-      const formattedNotes =
-        questions.length > 0
-          ? "Tisztázandó kérdések:\n" +
-            questions.map((q: string, i: number) => `${i + 1}. ${q}`).join("\n")
-          : null;
-
       const offer = await tx.offer.create({
         data: {
           title,
-          description: formattedNotes,
+          description: notesContent,
+          location: location,
           totalPrice,
-          materialTotal,
-          workTotal,
+          materialTotal: materialTotalCalc,
+          workTotal: workTotalCalc,
           status: "draft",
           requirementId: requirement.id,
-          items: offerData,
+          items: finalItems,
           recordId: uuidv4(),
           tenantEmail,
           offerSummary: offerSummary,

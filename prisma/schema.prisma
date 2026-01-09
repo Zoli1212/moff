@@ -151,6 +151,7 @@ model Offer {
   id             Int         @id @default(autoincrement())
   title          String
   description    String?
+  location       String?
   totalPrice     Float
   materialTotal  Float?      @default(0)
   workTotal      Float?      @default(0)

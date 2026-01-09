@@ -99,24 +99,7 @@ export default function OffersPage() {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             return dateB - dateA; // Descending order
-          })
-          .filter(
-            (() => {
-              const seen = new Set();
-              return (offer: Offer) => {
-                if (!offer.title) {
-                  // Keep offers without a title as they are unique
-                  return true;
-                }
-                if (seen.has(offer.title)) {
-                  return false;
-                } else {
-                  seen.add(offer.title);
-                  return true;
-                }
-              };
-            })()
-          );
+          });
         setOffers(transformedData);
       } catch (error) {
         console.error("Error loading offers:", error);
@@ -155,21 +138,7 @@ export default function OffersPage() {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
             return dateB - dateA;
-          })
-          .filter(
-            (() => {
-              const seen = new Set();
-              return (offer: Offer) => {
-                if (!offer.title) return true;
-                if (seen.has(offer.title)) {
-                  return false;
-                } else {
-                  seen.add(offer.title);
-                  return true;
-                }
-              };
-            })()
-          );
+          });
         setOffers(transformedData);
       } catch (error) {
         console.error("Error refreshing offers:", error);
