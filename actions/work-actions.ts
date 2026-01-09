@@ -328,8 +328,14 @@ export const fetchWorkAndItemsOptimized = cache(async (workId: number) => {
 });
 
 export async function updateWorkWithAIResult(workId: number, aiResult: any) {
-  console.log("\n🔄 [WORK UPDATE] 1. updateWorkWithAIResult kezdés, workId:", workId);
-  console.log("🔄 [WORK UPDATE] 2. AI Result workItems count:", aiResult?.workItems?.length);
+  console.log(
+    "\n🔄 [WORK UPDATE] 1. updateWorkWithAIResult kezdés, workId:",
+    workId
+  );
+  console.log(
+    "🔄 [WORK UPDATE] 2. AI Result workItems count:",
+    aiResult?.workItems?.length
+  );
 
   const { user, tenantEmail } = await getTenantSafeAuth();
   const email = tenantEmail;
@@ -375,7 +381,7 @@ export async function updateWorkWithAIResult(workId: number, aiResult: any) {
           ? aiResult.totalMaterials.length
           : Number(aiResult.totalMaterials) || 0,
         totalMaterialCost: aiResult.totalMaterialCost,
-        estimatedDuration: aiResult.estimatedDuration,
+        // estimatedDuration NEM írjuk felül - már helyesen be van állítva az Offer-ből
         workSummary: aiResult.workSummary || null, // AI által generált 4 mondatos összefoglaló
         updatedByAI: true,
         processingByAI: false, // Feldolgozás befejeződött
@@ -983,8 +989,8 @@ export const getWorkForSupply = cache(async (id: number) => {
       title: true,
       tenantEmail: true,
       maxRequiredWorkers: true,
-      materials: true,  // Supply page needs this
-      workers: true,    // Supply page needs this
+      materials: true, // Supply page needs this
+      workers: true, // Supply page needs this
     },
   });
 
@@ -1293,12 +1299,16 @@ export async function setWorkProcessingFlag(
   workId: number,
   processing: boolean
 ) {
-  console.log(`\n🏁 [PROCESSING FLAG] 1. setWorkProcessingFlag kezdés, workId: ${workId}, processing: ${processing}`);
+  console.log(
+    `\n🏁 [PROCESSING FLAG] 1. setWorkProcessingFlag kezdés, workId: ${workId}, processing: ${processing}`
+  );
   try {
     const { user, tenantEmail } = await getTenantSafeAuth();
     console.log(`🏁 [PROCESSING FLAG] 2. Tenant email: ${tenantEmail}`);
 
-    console.log(`🏁 [PROCESSING FLAG] 3. Work processingByAI flag frissítése...`);
+    console.log(
+      `🏁 [PROCESSING FLAG] 3. Work processingByAI flag frissítése...`
+    );
     await prisma.work.update({
       where: {
         id: workId,
@@ -1308,7 +1318,9 @@ export async function setWorkProcessingFlag(
         processingByAI: processing,
       },
     });
-    console.log(`🏁 [PROCESSING FLAG] 4. Flag frissítve: processingByAI=${processing}`);
+    console.log(
+      `🏁 [PROCESSING FLAG] 4. Flag frissítve: processingByAI=${processing}`
+    );
 
     // Revalidate the /works page so the UI updates
     console.log(`🏁 [PROCESSING FLAG] 5. Cache revalidálása...`);

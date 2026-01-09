@@ -148,28 +148,29 @@ model RequirementItemsBlock {
 }
 
 model Offer {
-  id             Int         @id @default(autoincrement())
-  title          String
-  description    String?
-  location       String?
-  totalPrice     Float
-  materialTotal  Float?      @default(0)
-  workTotal      Float?      @default(0)
-  status         String      @default("draft")
-  requirementId  Int
-  requirement    Requirement @relation(fields: [requirementId], references: [id])
-  items          Json?
-  recordId       String?     @unique(map: "unique_offer_record_id")
-  validUntil     DateTime?
-  notes          String?
-  offerSummary   String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  createdBy      String?
-  tenantEmail    String      @default("")
-  work           Work?       @relation("OfferWork")
-  billings       Billing[]   // Kapcsolat az új Billing modellhez
-  performances   Performance[] // Kapcsolat a Performance táblához
+  id                Int         @id @default(autoincrement())
+  title             String
+  description       String?
+  location          String?
+  totalPrice        Float
+  materialTotal     Float?      @default(0)
+  workTotal         Float?      @default(0)
+  status            String      @default("draft")
+  requirementId     Int
+  requirement       Requirement @relation(fields: [requirementId], references: [id])
+  items             Json?
+  recordId          String?     @unique(map: "unique_offer_record_id")
+  validUntil        DateTime?
+  notes             String?
+  offerSummary      String?
+  estimatedDuration String?     // AI becslés az időtartamra (pl. "7-10 nap")
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  createdBy         String?
+  tenantEmail       String      @default("")
+  work              Work?       @relation("OfferWork")
+  billings          Billing[]   // Kapcsolat az új Billing modellhez
+  performances      Performance[] // Kapcsolat a Performance táblához
   
   @@unique([recordId])
 }

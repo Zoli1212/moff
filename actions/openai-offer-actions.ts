@@ -501,6 +501,7 @@ Válasz formátum:
 
       // 3. Create Offer
       console.log("  ├─ Creating Offer for Requirement ID:", requirement.id);
+      console.log("  ├─ estimatedTime value:", estimatedTime);
 
       const offer = await tx.offer.create({
         data: {
@@ -516,9 +517,15 @@ Válasz formátum:
           recordId: uuidv4(),
           tenantEmail,
           offerSummary: offerSummary,
+          estimatedDuration: estimatedTime, // AI becslés az időtartamra
           validUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
         },
       });
+
+      console.log(
+        "  ├─ Offer created with estimatedDuration:",
+        offer.estimatedDuration
+      );
 
       console.log("  └─ Offer created:", offer.id);
 
