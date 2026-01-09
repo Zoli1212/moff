@@ -55,20 +55,24 @@ export default function TextInputDialog({
     setError("");
 
     try {
-      const recordId = uuidv4();
-      const formData = new FormData();
-      formData.append("recordId", recordId);
-      formData.append("textContent", demandText);
-      formData.append("type", "offer-letter");
+      // Új OpenAI endpoint használata (nincs Inngest, History)
+      const result = await axios.post("/api/openai-offer", {
+        userInput: demandText,
+        existingItems: [],
+      });
 
-      const result = await axios.post("/api/ai-demand-agent", formData);
-      const { eventId } = result.data;
-      console.log("Event queued:", eventId);
+      const { success, workId, requirementId, offerId } = result.data;
 
-      // Azonnal átirányítunk a redirect oldalra, ahol database polling fog történni
-      setLoading(false);
-      router.push(`${toolPath}/${recordId}`);
-      setOpen(false);
+      if (success) {
+        console.log("Offer created:", { workId, requirementId, offerId });
+
+        // Átirányítás az offer részletekhez
+        setLoading(false);
+        router.push(`/offers/${offerId}`);
+        setOpen(false);
+      } else {
+        throw new Error("Offer creation failed");
+      }
     } catch (err) {
       console.error("Error processing text:", err);
       setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
