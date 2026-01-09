@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle, Loader2, Save, RefreshCw } from "lucide-react";
-import { saveMarketPrice } from "../_actions/save-market-price";
+import { AlertCircle, CheckCircle, Loader2, RefreshCw } from "lucide-react";
 
 interface MarketOffer {
   bestPrice: number;
@@ -44,10 +43,9 @@ export default function MaterialPriceIndicator({
   materialName,
 }: MaterialPriceIndicatorProps) {
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
-  const [localMarketPrice, setLocalMarketPrice] = useState<MarketPrice | null>(
+  const [localMarketPrice] = useState<MarketPrice | null>(
     initialMarketPrice || null
   );
-  const [savingOfferId, setSavingOfferId] = useState<number | null>(null);
   const [fetchedOffers, setFetchedOffers] = useState<MarketOffer[]>([]); // Ideiglenesen tároljuk a lekért ajánlatokat
 
   // Helper to get offers array (handles both new and legacy formats)
@@ -139,53 +137,6 @@ export default function MaterialPriceIndicator({
     }
   };
 
-  // Handler az ajánlat mentésére
-  const handleSaveOffer = async (offer: MarketOffer, index: number) => {
-    setSavingOfferId(index);
-
-    toast("Ajánlat mentése...", {
-      id: `save-offer-${workItemId}-${index}`,
-      duration: 5000,
-    });
-
-    try {
-      const result = await saveMarketPrice({ workItemId, offer });
-
-      if (result.success) {
-        toast.dismiss(`save-offer-${workItemId}-${index}`);
-        toast.success("Ajánlat sikeresen mentve! 💾", {
-          duration: 3000,
-          style: {
-            background: "#d1fae5",
-            color: "#065f46",
-            fontSize: 13,
-            padding: "6px 18px",
-            borderRadius: 8,
-          },
-        });
-
-        // Frissítjük a local state-et a mentett ajánlattal
-        setLocalMarketPrice({
-          offers: [offer],
-          lastRun: new Date().toISOString(),
-        });
-        setFetchedOffers([]); // Töröljük az ideiglenes ajánlatokat
-      } else {
-        toast.dismiss(`save-offer-${workItemId}-${index}`);
-        toast.error("Hiba történt a mentés során", {
-          duration: 3000,
-        });
-      }
-    } catch (error) {
-      console.error(error);
-      toast.dismiss(`save-offer-${workItemId}-${index}`);
-      toast.error("Hiba történt a mentés során", {
-        duration: 3000,
-      });
-    } finally {
-      setSavingOfferId(null);
-    }
-  };
 
   // Price indicator renderer
   const renderPriceIndicator = () => {
@@ -304,12 +255,11 @@ export default function MaterialPriceIndicator({
       {!isFetchingPrice && fetchedOffers.length > 0 ? (
         <div className="space-y-2">
           <div className="text-xs font-semibold text-blue-600 mb-2">
-            💡 Válaszd ki, melyik ajánlatot szeretnéd menteni:
+            💡 Jobb ajánlat:
           </div>
-          {fetchedOffers.slice(0, 3).map((offer, index) => {
+          {fetchedOffers.slice(0, 1).map((offer, index) => {
             const savingsAmount = (offer.savings || 0) * (quantity || 0);
             const hasSavings = offer.savings > 0;
-            const isSaving = savingOfferId === index;
 
             return (
               <div
@@ -323,11 +273,8 @@ export default function MaterialPriceIndicator({
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <div className="flex items-center gap-1">
-                    <span className="text-sm">
-                      {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
-                    </span>
                     <span className={`text-xs font-semibold ${hasSavings ? "text-green-700" : "text-gray-700"}`}>
-                      {hasSavings ? "Jobb ajánlat" : "Piaci ár"}
+                      {hasSavings ? "🎯 Legjobb ár" : "📊 Piaci ár"}
                     </span>
                   </div>
                   {hasSavings && (
@@ -343,7 +290,7 @@ export default function MaterialPriceIndicator({
                       {hasSavings ? "Ajánlati ár:" : "Talált ár:"}
                     </span>
                     <span className={`font-semibold ${hasSavings ? "text-green-600" : "text-gray-900"}`}>
-                      {offer.bestPrice.toLocaleString("hu-HU")} Ft/{unit || "db"}
+                      {offer.bestPrice?.toLocaleString("hu-HU")} Ft/{unit || "db"}
                     </span>
                   </div>
 
@@ -424,7 +371,7 @@ export default function MaterialPriceIndicator({
                       {hasSavings ? "Ajánlati ár:" : "Talált ár:"}
                     </span>
                     <span className={`font-semibold ${hasSavings ? "text-green-600" : "text-gray-900"}`}>
-                      {offer.bestPrice.toLocaleString("hu-HU")} Ft/{unit || "db"}
+                      {offer.bestPrice?.toLocaleString("hu-HU")} Ft/{unit || "db"}
                     </span>
                   </div>
 

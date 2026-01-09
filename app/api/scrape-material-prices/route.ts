@@ -190,17 +190,21 @@ export async function POST(req: NextRequest) {
         searchDepth: "advanced",
         maxResults: 30,
         includeDomains: [
+          "bauhaus.hu",
           "obi.hu",
           "praktiker.hu",
-          "bauhaus.hu",
-          "leroymerlin.hu",
-          "epitkereso.hu",
-          "baumax.hu",
-          "emag.hu",
-          "extreme-digital.hu",
-          "aquacity.hu",
-          "furdoszobashop.hu",
-          "burkolat-market.hu"
+          "leroymerlin.ro",
+          "epitoanyag.hu",
+          "tuzepgo.hu",
+          "epitoanyag-online.hu",
+          "winklertuzep.hu",
+          "ujhaz.hu",
+          "szerelvenybolt.hu",
+          "netkazan.hu",
+          "hu.elmarkstore.eu",
+          "lampak.hu",
+          "mesterekfutara.hu",
+          "anda.hu"
         ],
       });
 
@@ -276,10 +280,36 @@ export async function POST(req: NextRequest) {
           const { schema } = await fetchAndParseHTML(result.url);
           let priceFromSchema: number | null = null;
           if (schema?.offers) {
+            let rawPrice: number | null = null;
             if (Array.isArray(schema.offers)) {
-              priceFromSchema = schema.offers[0]?.price ?? null;
+              rawPrice = schema.offers[0]?.price ?? null;
             } else {
-              priceFromSchema = schema.offers.price ?? null;
+              rawPrice = schema.offers.price ?? null;
+            }
+
+            // Handle Hungarian price format where . is thousands separator
+            // Schema.org stores "73.990" as number 73.990, but it means 73990 Ft in Hungarian
+            if (rawPrice) {
+              const priceStr = rawPrice.toString();
+
+              // If price has decimal point AND the decimal part has 3 digits (Hungarian thousands separator)
+              // Example: 73.990 -> 73990 Ft
+              if (priceStr.includes('.')) {
+                const parts = priceStr.split('.');
+                if (parts[1] && parts[1].length === 3) {
+                  // Hungarian format: . is thousands separator
+                  priceFromSchema = Math.round(parseFloat(parts[0] + parts[1]));
+                  console.log(`🔄 [scrape-material-prices] Converted Hungarian price ${rawPrice} -> ${priceFromSchema} Ft`);
+                } else {
+                  // Might be actual decimal (e.g., 73.99 EUR) - multiply by 100
+                  priceFromSchema = Math.round(rawPrice * 100);
+                  console.log(`🔄 [scrape-material-prices] Converted decimal price ${rawPrice} -> ${priceFromSchema} Ft`);
+                }
+              } else {
+                priceFromSchema = rawPrice;
+              }
+            } else {
+              priceFromSchema = null;
             }
           }
           return {
@@ -332,7 +362,7 @@ export async function POST(req: NextRequest) {
 
     const selectionPrompt = `🎯 ELSŐ LÉPÉS: TERMÉK KIVÁLASZTÁS
 
-FELADATOD: Találd meg a LEGJOBB 1 ajánlatot a keresési eredmények közül. Az árak már ki vannak nyerve a Schema/HTML-ből.
+FELADATOD: Találd meg a LEGJOBB TOP 3 ajánlatot a keresési eredmények közül. Az árak már ki vannak nyerve a Schema/HTML-ből.
 
 🔍 KERESETT TERMÉK: "${searchTerm}"
 Mennyiség: ${workItem.quantity} ${workItem.unit}
@@ -365,9 +395,10 @@ ${JSON.stringify(enrichedResults.map((r) => ({
    - Például: "Hulladékgyűjtő zsák" → "Kazettás álmennyezet" ❌ (TELJESEN más!)
    - Például: "Bútorlap" → "Konyhabútor" ❌ (NE keverj össze hasonló nevű, de KÜLÖNBÖZŐ termékeket!)
 
-3. VÁLASSZ PONTOSAN 1 LEGJOBB TERMÉKET:
-   - Válaszd a LEGOLCSÓBB releváns KONKRÉT terméket ahol van priceFromSchema
-   - ⚠️ Ha NINCS olyan termék ahol priceFromSchema NEM null, adj vissza index: -1
+3. VÁLASSZ PONTOSAN TOP 3 LEGJOBB TERMÉKET:
+   - Válaszd a 3 LEGOLCSÓBB releváns KONKRÉT terméket ahol van priceFromSchema
+   - Rendezd ÁR SZERINT NÖVEKVŐ sorrendbe (legolcsóbb az első!)
+   - ⚠️ Ha NINCS legalább 1 termék ahol priceFromSchema NEM null, adj vissza üres tömböt
 
 ADD VISSZA CSAK ÉRVÉNYES JSON formátumban:
 
@@ -377,7 +408,25 @@ ADD VISSZA CSAK ÉRVÉNYES JSON formátumban:
       "index": <number, 0-9 között, az eredeti enrichedResults[] index>,
       "productName": "<string, a termék neve title-ből>",
       "bestPrice": <number, KÖTELEZŐ hogy priceFromSchema-ból jöjjön!>,
+      "unit": "<string, kiszerelés/egység pl. 'db', 'kg', 'm', stb.>",
+      "packageSize": "<string, csomag méret pl. '10 db', '2.5 kg', stb.>",
       "reasoning": "<string, rövid indoklás: miért ezt választottad>"
+    },
+    {
+      "index": <második legolcsóbb termék indexe>,
+      "productName": "<második legolcsóbb termék neve>",
+      "bestPrice": <második legolcsóbb ár>,
+      "unit": "<egység>",
+      "packageSize": "<csomag méret>",
+      "reasoning": "<indoklás>"
+    },
+    {
+      "index": <harmadik legolcsóbb termék indexe>,
+      "productName": "<harmadik legolcsóbb termék neve>",
+      "bestPrice": <harmadik legolcsóbb ár>,
+      "unit": "<egység>",
+      "packageSize": "<csomag méret>",
+      "reasoning": "<indoklás>"
     }
   ]
 }
@@ -512,7 +561,7 @@ Csak JSON-t adj vissza, semmi mást!`;
 
     const urlMappingPrompt = `🎯 MÁSODIK LÉPÉS: URL HOZZÁADÁS ÉS ÁR FINOMÍTÁS
 
-Az első lépésben kiválasztottuk a LEGJOBB terméket. Most add hozzá a PONTOS URL-t és finomítsd az árat!
+Az első lépésben kiválasztottuk a TOP 3 LEGJOBB terméket. Most add hozzá mindháromhoz a PONTOS URL-t és finomítsd az árakat!
 
 📦 KIVÁLASZTOTT TERMÉK (1. lépésből):
 ${JSON.stringify(selectedProducts.selectedProducts, null, 2)}
@@ -554,7 +603,7 @@ selectedProducts[0] = {"index": 3, "productName": "Budget bútorlap", "bestPrice
 enrichedResults[3] = {"index": 3, "url": "https://bauhaus.hu/...", "priceFromSchema": null}
 ✅ HELYES: {"productName": "Budget bútorlap", "bestPrice": ${workItem.materialUnitPrice || 0}, "url": "https://bauhaus.hu/...", "supplier": "Bauhaus"}
 
-ADD VISSZA CSAK ÉRVÉNYES JSON formátumban:
+ADD VISSZA CSAK ÉRVÉNYES JSON formátumban (MIND A 3 TERMÉKHEZ):
 
 {
   "offers": [
@@ -563,12 +612,32 @@ ADD VISSZA CSAK ÉRVÉNYES JSON formátumban:
       "supplier": "<string, pl. OBI, Praktiker, Bauhaus - a domain alapján>",
       "url": "<string, PONTOSAN enrichedResults[index].url>",
       "productName": "<string, az 1. lépésből>",
-      "savings": <number, ${workItem.materialUnitPrice || 0} - bestPrice, ha pozitív, különben 0>,
-      "checkedAt": "${new Date().toISOString()}"
+      "unit": "<string, egység az 1. lépésből>",
+      "packageSize": "<string, csomag méret az 1. lépésből>",
+      "savings": <number, ${workItem.materialUnitPrice || 0} - bestPrice, ha pozitív, különben 0>
+    },
+    {
+      "bestPrice": <második termék finomított ára>,
+      "supplier": "<második termék supplier-je>",
+      "url": "<második termék URL-je>",
+      "productName": "<második termék neve>",
+      "unit": "<második termék egysége>",
+      "packageSize": "<második termék csomag mérete>",
+      "savings": <második termék megtakarítása>
+    },
+    {
+      "bestPrice": <harmadik termék finomított ára>,
+      "supplier": "<harmadik termék supplier-je>",
+      "url": "<harmadik termék URL-je>",
+      "productName": "<harmadik termék neve>",
+      "unit": "<harmadik termék egysége>",
+      "packageSize": "<harmadik termék csomag mérete>",
+      "savings": <harmadik termék megtakarítása>
     }
   ]
 }
 
+⚠️ FONTOS: Rendezd az offers tömböt ÁR SZERINT NÖVEKVŐ sorrendbe (legolcsóbb az első)!
 Csak JSON-t adj vissza, semmi mást!`;
 
     let step2Response;
@@ -643,7 +712,47 @@ Csak JSON-t adj vissza, semmi mást!`;
       lastRun: new Date().toISOString(),
     };
 
-    console.log("✅ [scrape-material-prices] Offers found, returning without saving");
+    console.log("✅ [scrape-material-prices] Offers found, updating lastPriceCheck timestamp and saving bestOffer to materials");
+
+    // Update lastPriceCheck field to track when this workItem was last scraped
+    await prisma.workItem.update({
+      where: { id: workItemId },
+      data: {
+        lastPriceCheck: new Date(),
+      },
+    });
+
+    // Find the best (cheapest) offer and save it to the Material table
+    if (priceData.offers && priceData.offers.length > 0) {
+      const bestOffer = priceData.offers[0]; // Already sorted by price (cheapest first)
+
+      const bestOfferData = {
+        supplier: bestOffer.supplier || "Ismeretlen",
+        price: bestOffer.price,
+        unit: bestOffer.unit || materialName, // Use material name as fallback
+        packageSize: bestOffer.packageSize || "N/A",
+        url: bestOffer.url || "",
+        checkedAt: new Date().toISOString(),
+      };
+
+      // Update all materials with this name for this workItem
+      await prisma.material.updateMany({
+        where: {
+          workItemId: workItemId,
+          name: {
+            equals: materialName,
+            mode: 'insensitive', // Case-insensitive match
+          },
+        },
+        data: {
+          bestOffer: bestOfferData,
+        },
+      });
+
+      console.log(`✅ [scrape-material-prices] bestOffer saved to Material table: ${bestOffer.supplier} - ${bestOffer.price} Ft`);
+    }
+
+    console.log("✅ [scrape-material-prices] lastPriceCheck updated successfully");
 
     // NEM mentjük automatikusan - a frontend majd külön API híváson keresztül menti
     return NextResponse.json({

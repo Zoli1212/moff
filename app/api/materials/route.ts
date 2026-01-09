@@ -6,7 +6,54 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const workId = searchParams.get("workId");
+    const needsPriceCheck = searchParams.get("needsPriceCheck");
 
+    // BATCH SCRAPE MODE: Return all workItems that need price check (tenant-agnostic)
+    if (needsPriceCheck === "true") {
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      console.log(`📊 [materials API] Fetching workItems that need price check (older than ${threeDaysAgo.toISOString()})`);
+
+      const workItemsToUpdate = await prisma.workItem.findMany({
+        where: {
+          work: {
+            status: { in: ["pending", "in_progress"] },
+            isActive: true,
+          },
+          materialUnitPrice: { gt: 0 }, // Only where there is material cost
+          OR: [
+            { lastPriceCheck: null },
+            { lastPriceCheck: { lt: threeDaysAgo } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          tenantEmail: true,
+          lastPriceCheck: true,
+        },
+        take: 100, // Limit to 100 items per batch to avoid timeout
+        orderBy: {
+          lastPriceCheck: 'asc', // Oldest first (null values first)
+        }
+      });
+
+      console.log(`📊 [materials API] Found ${workItemsToUpdate.length} workItems that need price check`);
+
+      return NextResponse.json({
+        success: true,
+        materials: workItemsToUpdate.map(item => ({
+          workItemId: item.id,
+          name: item.name,
+          tenantEmail: item.tenantEmail,
+          lastPriceCheck: item.lastPriceCheck,
+        })),
+        total: workItemsToUpdate.length,
+      });
+    }
+
+    // NORMAL MODE: workId is required for work-specific material fetching
     if (!workId) {
       return NextResponse.json({ error: "workId is required" }, { status: 400 });
     }

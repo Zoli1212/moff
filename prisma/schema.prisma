@@ -316,6 +316,7 @@ model Material {
   totalPrice     Float
   supplierInfo   String?
   deliveryDate   DateTime?
+  bestOffer      Json?       // Legolcsóbb ajánlat: { supplier: string, price: number, unit: string, packageSize: string, url: string, checkedAt: string }
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
   tenantEmail    String      @default("")
