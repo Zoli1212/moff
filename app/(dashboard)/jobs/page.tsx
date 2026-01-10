@@ -196,7 +196,6 @@ export default function OffersPage() {
           <TextInputDialog
             open={isDialogOpen}
             setOpen={setIsDialogOpen}
-            toolPath="/ai-tools/ai-offer-letter"
           />
           <div className="mt-4 relative">
             <input

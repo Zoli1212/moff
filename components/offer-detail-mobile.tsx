@@ -1947,7 +1947,6 @@ export function OfferDetailView({
           <TextInputDialogQuestions
             open={isDialogOpen}
             setOpen={setIsDialogOpen}
-            toolPath="/ai-tools/ai-offer-letter-mobile-redirect"
             questions={extractQuestions(
               offer.description || "",
               offer.requirement?.updateCount,

@@ -75,10 +75,9 @@ function AiToolCard({ tool }: AIToolProps) {
         openDialog={openOfferDialog}
         setOpenDialog={setOpenOfferDialog}
       />
-      <TextInputDialog 
-        open={openTextInput} 
-        setOpen={setOpenTextInput} 
-        toolPath="/ai-tools/ai-offer-letter"
+      <TextInputDialog
+        open={openTextInput}
+        setOpen={setOpenTextInput}
       />
     </div>
   );
