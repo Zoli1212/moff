@@ -91,3 +91,45 @@ export async function getCurrentUserData() {
     };
   }
 }
+
+export async function getProcurementEmailTemplate() {
+  try {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+      throw new Error("Unauthorized");
+    }
+
+    const tenantEmail = user.emailAddresses[0].emailAddress;
+
+    const userData = await prisma.user.findUnique({
+      where: { email: tenantEmail },
+      select: { procurementEmailTemplate: true },
+    });
+
+    return userData?.procurementEmailTemplate || "";
+  } catch (error) {
+    console.error("Error getting procurement email template:", error);
+    throw error;
+  }
+}
+
+export async function saveProcurementEmailTemplate(template: string) {
+  try {
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+      throw new Error("Unauthorized");
+    }
+
+    const tenantEmail = user.emailAddresses[0].emailAddress;
+
+    await prisma.user.update({
+      where: { email: tenantEmail },
+      data: { procurementEmailTemplate: template },
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error saving procurement email template:", error);
+    throw error;
+  }
+}

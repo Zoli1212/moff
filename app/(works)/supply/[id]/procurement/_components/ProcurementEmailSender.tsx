@@ -70,8 +70,8 @@ export default function ProcurementEmailSender({
 
   // Set email template when data loads
   useEffect(() => {
-    if (templateData?.success && templateData.template) {
-      setEmailTemplate(templateData.template);
+    if (templateData && templateData.length > 0) {
+      setEmailTemplate(templateData);
     } else {
       // Generate default template
       const deliveryAddressText = `${addressData.zip} ${addressData.city}, ${addressData.address}${addressData.country ? `, ${addressData.country}` : ''}`;

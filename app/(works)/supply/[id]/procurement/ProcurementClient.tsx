@@ -62,7 +62,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
         setMaterials(fetchedMaterials);
 
         // Auto-select materials that are not fully procured
-        const notProcuredIds = new Set(
+        const notProcuredIds = new Set<number>(
           fetchedMaterials
             .filter(
               (material: Material) =>

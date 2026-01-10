@@ -52,6 +52,9 @@ model User {
   zip              String?        // Irányítószám
   country          String?        // Ország
 
+  // Procurement email template
+  procurementEmailTemplate String?  @db.Text
+
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
   subscription     Subscription?

@@ -364,13 +364,11 @@ export function RequirementDetail({
       // Update the local state
       const data = await response.json();
       if (data.success) {
-        setCurrentDescription(updatedDescription);
         setLines((prevLines) =>
           prevLines.filter((line) => line.id !== lineToDelete)
         );
         setLineToDelete(null);
         setIsDeleteDialogOpen(false);
-        setIsLineRemoved(true);
         toast.success("A követelmény sor eltávolítva");
       } else {
         throw new Error(data.error || "Ismeretlen hiba történt");

@@ -11,7 +11,7 @@ interface AggregatedMaterial {
   availableQuantity: number | null;
   workItemId: string;
   materialUnitPrice: number;
-  currentMarketPrice: number | null;
+  currentMarketPrice: unknown;
   workItemIds: string[];
 }
 
@@ -130,13 +130,13 @@ export async function GET(req: NextRequest) {
         // Get the workItem's price data
         const workItem = work.workItems.find((wi) => wi.id === mat.workItemId);
         return {
-          id: mat.id,
+          id: String(mat.id),
           name: mat.name,
           quantity: mat.quantity,
           unit: mat.unit,
           availableFull: mat.availableFull,
           availableQuantity: mat.availableQuantity,
-          workItemId: mat.workItemId,
+          workItemId: String(mat.workItemId),
           materialUnitPrice: workItem?.materialUnitPrice || 0,
           currentMarketPrice: workItem?.currentMarketPrice,
         };
@@ -157,10 +157,9 @@ export async function GET(req: NextRequest) {
             (acc[existingIndex].availableQuantity ?? 0) +
             (mat.availableQuantity ?? 0),
           // Keep track of all workItemIds
-          workItemIds: [
-            ...(acc[existingIndex].workItemIds || [acc[existingIndex].workItemId]),
-            mat.workItemId,
-          ],
+          workItemIds: acc[existingIndex].workItemIds
+            ? [...acc[existingIndex].workItemIds, mat.workItemId]
+            : [acc[existingIndex].workItemId, mat.workItemId],
           availableFull:
             (acc[existingIndex].availableQuantity ?? 0) +
               (mat.availableQuantity ?? 0) >=
