@@ -50,9 +50,6 @@ export default function ProcurementClient({ workId }: { workId: number }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Get request type from URL param (quote or order)
-  const requestType = (searchParams.get("type") as "quote" | "order") || "quote";
-
   useEffect(() => {
     const fetchMaterials = async () => {
       try {

@@ -6,6 +6,7 @@ interface BatchScrapeResult {
   success: boolean;
   message: string;
   tenantEmail?: string;
+  duration?: string;
   results?: {
     total: number;
     success: number;
@@ -18,23 +19,15 @@ export default function TestBatchScrapePage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BatchScrapeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [progress, setProgress] = useState<{
-    current: number;
-    total: number;
-    currentName: string;
-  } | null>(null);
 
   const handleRunBatchScrape = async () => {
     setLoading(true);
     setError(null);
     setResult(null);
-    setProgress(null);
 
     try {
       console.log("🚀 Starting batch scraping via /api/scrape-materials-batch");
 
-      // Start a polling mechanism to track progress (optional - if backend supports it)
-      // For now, we'll just show loading state
       const startTime = Date.now();
 
       // Call the new batch endpoint (GET)
@@ -53,13 +46,12 @@ export default function TestBatchScrapePage() {
       console.log("✅ Batch scraping complete:", data);
       console.log(`⏱️ Duration: ${duration}s`);
 
-      setResult({ ...data, duration } as any);
+      setResult({ ...data, duration });
     } catch (err) {
       console.error("❌ Error running batch scrape:", err);
       setError(err instanceof Error ? err.message : "Ismeretlen hiba");
     } finally {
       setLoading(false);
-      setProgress(null);
     }
   };
 
@@ -168,9 +160,9 @@ export default function TestBatchScrapePage() {
                   <span className="font-medium">Tenant:</span> {result.tenantEmail}
                 </div>
               )}
-              {(result as any).duration && (
+              {result.duration && (
                 <div className="text-sm text-purple-700">
-                  <span className="font-medium">⏱️ Futási idő:</span> {(result as any).duration}s
+                  <span className="font-medium">⏱️ Futási idő:</span> {result.duration}s
                 </div>
               )}
             </div>

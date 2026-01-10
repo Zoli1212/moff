@@ -751,3 +751,9 @@ Anyagoknál anyagok kerüljen
 1. Ajánlatbekérő működjön
 2. Legjobb árat mutassa
 3. Ahol összehasonlító legyen
+4. Csináljon eg előszűrést - alapanyagokat keressen 
+Eleve zárjon ki hülyeségeket pl.: "foo1"
+csak ott legyen árfissítés , építőanyag, nyersanyag, segédanyagot keressen
+(ne mikrohullámú sütőt, CSAK ezeknél legyen árfissítés)
+nyersanyag, segédanyagot keressen
+5. manuálisnál csak az építőanyagnál lehessen árat frissíteni

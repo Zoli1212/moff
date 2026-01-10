@@ -11,7 +11,6 @@ type RequirementBlock = {
   createdAt: string | Date;
 };
 import { useRequirementBlockStore } from "@/store/requirementBlockStore";
-import { useRequirementIdStore } from "@/store/requirement-id-store";
 import { useOfferTitleStore } from "@/store/offer-title-store";
 import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 import { getOfferById } from "@/actions/offer-actions";
@@ -62,18 +61,13 @@ interface RequirementDetailProps {
 export function RequirementDetail({
   requirement,
   onBack,
-  onRequirementUpdated,
   onBlockIdsChange,
 }: RequirementDetailProps) {
   const searchParams = useSearchParams();
-  const { setStoredItems, setDemandText, isGlobalLoading } = useDemandStore();
+  const { setStoredItems, isGlobalLoading } = useDemandStore();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [newText, setNewText] = useState("");
   const [lines, setLines] = useState<RequirementLine[]>([]);
-  const [currentDescription, setCurrentDescription] = useState(
-    requirement?.description || ""
-  );
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lineToDelete, setLineToDelete] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<RequirementBlock[]>([]);
@@ -513,7 +507,7 @@ export function RequirementDetail({
               onClick={() => {
                 onBack();
               }}
-              disabled={isSubmitting || isGlobalLoading}
+              disabled={isGlobalLoading}
               className="w-full h-12 bg-gray-100 hover:bg-gray-200"
             >
               Mégse
