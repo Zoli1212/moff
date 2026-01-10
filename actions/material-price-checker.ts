@@ -186,17 +186,17 @@ export async function runDailyMaterialPriceCheck() {
               await prisma.material.update({
                 where: { id: material.id },
                 data: {
-                  bestMarketOffer: offer as any,
-                  lastPriceCheck: new Date(),
+                  bestOffer: offer,
+                  updatedAt: new Date(),
                 },
               });
               successCount++;
             } else {
-              // Update lastPriceCheck even if no offer found
+              // Update timestamp even if no offer found
               await prisma.material.update({
                 where: { id: material.id },
                 data: {
-                  lastPriceCheck: new Date(),
+                  updatedAt: new Date(),
                 },
               });
               failCount++;
