@@ -186,7 +186,7 @@ export async function runDailyMaterialPriceCheck() {
               await prisma.material.update({
                 where: { id: material.id },
                 data: {
-                  bestOffer: offer as unknown as Record<string, unknown>,
+                  bestOffer: JSON.parse(JSON.stringify(offer)),
                   updatedAt: new Date(),
                 },
               });
