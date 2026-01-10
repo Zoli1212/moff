@@ -12,7 +12,6 @@ import {
 import { Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
@@ -22,13 +21,11 @@ import { useOfferItemCheckStore } from "@/store/offerItemCheckStore";
 interface TextInputDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  toolPath: string;
 }
 
 export default function TextInputDialog({
   open,
   setOpen,
-  toolPath,
 }: TextInputDialogProps) {
   const { demandText, setDemandText } = useDemandStore();
   const [loading, setLoading] = useState(false);

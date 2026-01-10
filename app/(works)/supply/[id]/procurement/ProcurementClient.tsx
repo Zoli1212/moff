@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
 import ProcurementModal from "./_components/ProcurementModal";
@@ -42,7 +42,6 @@ interface Material {
 
 export default function ProcurementClient({ workId }: { workId: number }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<Set<number>>(
     new Set()

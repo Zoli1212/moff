@@ -21,7 +21,6 @@ import { useRequirementIdStore } from "@/store/requirement-id-store";
 interface TextInputDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  toolPath: string;
   questions?: string[];
   requirementId?: number;
   requirementDescription?: string;
@@ -38,7 +37,6 @@ interface QuestionWithAnswer {
 export default function TextInputDialogQuestions({
   open,
   setOpen,
-  toolPath,
   questions: initialQuestions = [],
   currentItems = [],
   requirementId,
@@ -54,7 +52,7 @@ export default function TextInputDialogQuestions({
   // Get the setOfferItems function and current items from the store
   const { setOfferItemsQuestion, offerItemsQuestion, clearOfferItemsQuestion } =
     useOfferItemQuestionStore();
-  const { setRequirementId, clearRequirementId } = useRequirementIdStore();
+  const { clearRequirementId } = useRequirementIdStore();
   const prevItemsRef = useRef(currentItems);
   const questionsInitializedRef = useRef(false);
   console.log(offerItemsQuestion);
@@ -146,9 +144,6 @@ export default function TextInputDialogQuestions({
       // NOTE: We do NOT update the old requirement in the database
       // We only prepare the description in memory with the answers
       // The new requirement will be created by offer-actions.ts with updateCount=2, questionCount=1
-
-      // Create a new record ID for the new offer
-      const recordId = crypto.randomUUID();
 
       // Prepare the combined text with original requirement and answers (in memory only)
       let finalDescription = requirementDescription;
