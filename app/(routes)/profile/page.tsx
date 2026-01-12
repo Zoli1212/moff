@@ -4,6 +4,8 @@ import { getCurrentUserData } from '@/actions/user-actions'
 import AddressForm from './_components/AddressForm'
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic';
+
 async function Profile() {
   const userData = await getCurrentUserData();
   const isTenant = userData.isTenant ?? true;

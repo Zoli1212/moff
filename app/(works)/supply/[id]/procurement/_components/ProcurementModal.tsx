@@ -16,14 +16,12 @@ interface ProcurementModalProps {
   isOpen: boolean;
   onClose: () => void;
   materials: Material[];
-  workId: number;
 }
 
 export default function ProcurementModal({
   isOpen,
   onClose,
   materials,
-  workId,
 }: ProcurementModalProps) {
   if (!isOpen) return null;
 
@@ -115,7 +113,7 @@ export default function ProcurementModal({
               marginBottom: 16,
             }}
           >
-            <MaterialShareButtons materials={materials} workId={workId} />
+            <MaterialShareButtons materials={materials} />
           </div>
 
           {/* Selected materials list */}

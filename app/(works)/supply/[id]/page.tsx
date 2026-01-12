@@ -58,12 +58,18 @@ export default async function SupplyPage({
         getAssignedToolsForWork(workId),
       ]);
 
-    materials = work.materials || [];
+    materials = (work.materials || []).map((material) => ({
+      ...material,
+      bestOffer: material.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined,
+    }));
     maxRequiredWorkers = work.maxRequiredWorkers || null;
     workItems = (richItems || []).map((item) => ({
       ...item,
       tools: item.tools || [],
-      materials: item.materials || [],
+      materials: (item.materials || []).map((material) => ({
+        ...material,
+        bestOffer: material.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined,
+      })),
       workers: item.workers || [],
       workItemWorkers: item.workItemWorkers || [],
       currentMarketPrice: item.currentMarketPrice as MarketPrice,

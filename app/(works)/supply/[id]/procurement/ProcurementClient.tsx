@@ -403,7 +403,6 @@ export default function ProcurementClient({ workId }: { workId: number }) {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         materials={getSelectedMaterials()}
-        workId={workId}
       />
     </div>
   );

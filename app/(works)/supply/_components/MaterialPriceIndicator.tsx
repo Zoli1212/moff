@@ -60,7 +60,7 @@ export default function MaterialPriceIndicator({
   const [fetchedOffers, setFetchedOffers] = useState<MarketOffer[]>([]); // Ideiglenesen tároljuk a lekért ajánlatokat
 
   // Helper: Convert Material bestOffer to MarketOffer format
-  const convertMaterialBestOffer = (offer: MaterialBestOffer | null): MarketOffer | null => {
+  const convertMaterialBestOffer = (offer: MaterialBestOffer | null | undefined): MarketOffer | null => {
     if (!offer) return null;
     return {
       bestPrice: offer.price,

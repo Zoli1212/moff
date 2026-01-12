@@ -103,7 +103,11 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
           // Egyszerű eset - egy workItem-hez tartozó anyag
           const updated = await setMaterialAvailableFull(id);
           setMaterials((prev) =>
-            prev.map((m) => (m.id === id ? { ...m, ...updated } : m))
+            prev.map((m) => (m.id === id ? {
+              ...m,
+              ...updated,
+              bestOffer: updated.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined
+            } : m))
           );
         }
         setSelected((prev) => [...prev, id]);
@@ -141,7 +145,11 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
             availableFull: false,
           });
           setMaterials((prev) =>
-            prev.map((m) => (m.id === id ? { ...m, ...updated } : m))
+            prev.map((m) => (m.id === id ? {
+              ...m,
+              ...updated,
+              bestOffer: updated.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined
+            } : m))
           );
         }
         setSelected((prev) => prev.filter((mid) => mid !== id));
@@ -175,7 +183,10 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
     try {
       const newMat = await addMaterial({ ...data, workId });
       toast.success("Anyag sikeresen hozzáadva!");
-      setMaterials((prev) => [...prev, newMat]);
+      setMaterials((prev) => [...prev, {
+        ...newMat,
+        bestOffer: newMat.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined
+      }]);
     } catch (err) {
       console.error("Anyag hozzáadása sikertelen:", err);
       toast.error("Hiba történt az anyag hozzáadásakor!");
@@ -196,7 +207,11 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
       setEditMaterial(null);
       setMaterials((prev) =>
         prev.map((mat) =>
-          mat.id === updated.id ? { ...mat, ...updated } : mat
+          mat.id === updated.id ? {
+            ...mat,
+            ...updated,
+            bestOffer: updated.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined
+          } : mat
         )
       );
     } catch (err) {
