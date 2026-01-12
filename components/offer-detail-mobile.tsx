@@ -44,6 +44,7 @@ import {
   Mail,
   ChevronDown,
   ChevronUp,
+  Home,
 } from "lucide-react";
 import { AddOfferItemModal } from "./AddOfferItemModal";
 import {
@@ -1555,7 +1556,7 @@ export function OfferDetailView({
         )}
 
         <div className="space-y-6 flex-grow">
-          {/* Header with back button */}
+          {/* Header with back button and home icon */}
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={onBack}
@@ -1593,23 +1594,10 @@ export function OfferDetailView({
             </Button>
             <a
               href="http://localhost:3000"
-              style={{
-                backgroundColor: "#FEF3E6",
-                color: "#FE9C00",
-                borderColor: "#FE9C00",
-                border: "1px solid",
-                padding: "0.5rem 1rem",
-                borderRadius: "0.375rem",
-                textDecoration: "none",
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontWeight: 500,
-                fontSize: "0.875rem",
-              }}
-              className="hover:bg-orange-100"
+              className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+              aria-label="Főoldal"
             >
-              Vissza
+              <Home className="h-7 w-7" />
             </a>
           </div>
 

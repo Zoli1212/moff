@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 import { WorkItem } from "@/types/work";
+import { updateWorkItemDetails } from "@/actions/update-workitem-details";
 
 // Extended WorkItem for billing with additional properties
 interface BillingWorkItem extends WorkItem {
@@ -138,7 +139,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     setEditingItem({ ...editingItem, item: updatedItem });
   };
 
-  const saveItem = () => {
+  const saveItem = async () => {
     if (!editingItem) return;
 
     const { index, item } = editingItem;
@@ -146,6 +147,28 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     if (!item.name || !item.quantity || !item.unit) {
       toast.error("Kérem töltse ki az összes kötelező mezőt");
       return;
+    }
+
+    // Save to database if item has an id (existing workItem)
+    if (item.id) {
+      const result = await updateWorkItemDetails(item.id, {
+        name: item.name,
+        quantity: item.quantity,
+        unit: item.unit,
+        unitPrice:
+          typeof item.unitPrice === "number"
+            ? item.unitPrice
+            : parseCurrency(String(item.unitPrice || 0)),
+        materialUnitPrice:
+          typeof item.materialUnitPrice === "number"
+            ? item.materialUnitPrice
+            : parseCurrency(String(item.materialUnitPrice || 0)),
+      });
+
+      if (!result.success) {
+        toast.error(result.error || "Hiba történt a mentés során");
+        return;
+      }
     }
 
     const newItems = [...items];
@@ -476,14 +499,18 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                         <tr>
                           <td className="px-2 py-1 text-sm font-normal text-gray-900">
                             <div className="text-xs text-black leading-tight">
-                              Számlázható<br />mennyiség
+                              Számlázható
+                              <br />
+                              mennyiség
                             </div>
                             <div className="text-sm font-bold text-black">
                               {Math.max(
                                 0,
                                 (item.completedQuantity || 0) -
-                                  ((item.billedQuantity || 0) + (item.paidQuantity || 0))
-                              )} {item.unit}
+                                  ((item.billedQuantity || 0) +
+                                    (item.paidQuantity || 0))
+                              )}{" "}
+                              {item.unit}
                             </div>
                           </td>
                           <td className="px-2 py-1 text-right">
@@ -492,15 +519,20 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                                 const billableQty = Math.max(
                                   0,
                                   (item.completedQuantity || 0) -
-                                    ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                                    ((item.billedQuantity || 0) +
+                                      (item.paidQuantity || 0))
                                 );
                                 const materialUnitPrice =
                                   typeof item.materialUnitPrice === "number"
                                     ? item.materialUnitPrice
-                                    : parseCurrency(String(item.materialUnitPrice || 0));
-                                const billableMaterialTotal = billableQty * materialUnitPrice;
+                                    : parseCurrency(
+                                        String(item.materialUnitPrice || 0)
+                                      );
+                                const billableMaterialTotal =
+                                  billableQty * materialUnitPrice;
                                 return (
-                                  formatNumberWithSpace(billableMaterialTotal) + " Ft"
+                                  formatNumberWithSpace(billableMaterialTotal) +
+                                  " Ft"
                                 );
                               })()}
                             </div>
@@ -511,15 +543,20 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                                 const billableQty = Math.max(
                                   0,
                                   (item.completedQuantity || 0) -
-                                    ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                                    ((item.billedQuantity || 0) +
+                                      (item.paidQuantity || 0))
                                 );
                                 const workUnitPrice =
                                   typeof item.unitPrice === "number"
                                     ? item.unitPrice
-                                    : parseCurrency(String(item.unitPrice || 0));
-                                const billableWorkTotal = billableQty * workUnitPrice;
+                                    : parseCurrency(
+                                        String(item.unitPrice || 0)
+                                      );
+                                const billableWorkTotal =
+                                  billableQty * workUnitPrice;
                                 return (
-                                  formatNumberWithSpace(billableWorkTotal) + " Ft"
+                                  formatNumberWithSpace(billableWorkTotal) +
+                                  " Ft"
                                 );
                               })()}
                             </div>
@@ -534,22 +571,28 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                                 const billableQty = Math.max(
                                   0,
                                   (item.completedQuantity || 0) -
-                                    ((item.billedQuantity || 0) + (item.paidQuantity || 0))
+                                    ((item.billedQuantity || 0) +
+                                      (item.paidQuantity || 0))
                                 );
                                 const materialUnitPrice =
                                   typeof item.materialUnitPrice === "number"
                                     ? item.materialUnitPrice
-                                    : parseCurrency(String(item.materialUnitPrice || 0));
+                                    : parseCurrency(
+                                        String(item.materialUnitPrice || 0)
+                                      );
                                 const workUnitPrice =
                                   typeof item.unitPrice === "number"
                                     ? item.unitPrice
-                                    : parseCurrency(String(item.unitPrice || 0));
-                                const billableMaterialTotal = billableQty * materialUnitPrice;
-                                const billableWorkTotal = billableQty * workUnitPrice;
-                                const total = billableMaterialTotal + billableWorkTotal;
-                                return (
-                                  formatNumberWithSpace(total) + " Ft"
-                                );
+                                    : parseCurrency(
+                                        String(item.unitPrice || 0)
+                                      );
+                                const billableMaterialTotal =
+                                  billableQty * materialUnitPrice;
+                                const billableWorkTotal =
+                                  billableQty * workUnitPrice;
+                                const total =
+                                  billableMaterialTotal + billableWorkTotal;
+                                return formatNumberWithSpace(total) + " Ft";
                               })()}
                             </div>
                           </td>

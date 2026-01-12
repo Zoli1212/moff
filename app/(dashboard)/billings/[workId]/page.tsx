@@ -12,15 +12,18 @@ import { BillingItems } from "./_components/BillingItems";
 import { WorkItem, Tool, Material, Worker, WorkItemWorker } from "@/types/work";
 
 // MarketPrice type for type casting
-type MarketPrice = {
-  bestPrice: number;
-  supplier: string;
-  url: string;
-  productName: string;
-  savings: number;
-  checkedAt: string;
-  lastRun?: string;
-} | null | undefined;
+type MarketPrice =
+  | {
+      bestPrice: number;
+      supplier: string;
+      url: string;
+      productName: string;
+      savings: number;
+      checkedAt: string;
+      lastRun?: string;
+    }
+  | null
+  | undefined;
 
 // Database WorkItem type (without nested relations)
 type WorkItemFromDb = Omit<
@@ -284,11 +287,12 @@ export default function BillingsDetailPage() {
             </div>
 
             {/* Mobile view - floating bottom center button */}
-            <div className="sm:hidden fixed bottom-6 left-1/2 transform -translate-x-1/2 pointer-events-auto z-50">
+            <div className="sm:hidden fixed bottom-20 left-1/2 transform -translate-x-1/2 pointer-events-auto z-50">
               <Button
                 onClick={handleCreateBilling}
                 size="lg"
-                className="bg-orange-500 hover:bg-orange-600 text-white shadow-lg px-8 py-4 text-lg font-semibold rounded-full"
+                className="bg-white hover:bg-orange-50 shadow-lg px-8 py-4 text-lg font-semibold rounded-md border-2"
+                style={{ borderColor: "#FE9C00", color: "#FE9C00" }}
               >
                 Számla létrehozása
               </Button>

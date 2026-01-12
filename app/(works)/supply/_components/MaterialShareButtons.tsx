@@ -32,7 +32,6 @@ interface MaterialItem {
 
 interface MaterialShareButtonsProps {
   materials: MaterialItem[];
-  workId: number;
 }
 
 const sanitizeForPdf = (text: string | null | undefined): string => {
@@ -45,7 +44,6 @@ const sanitizeForPdf = (text: string | null | undefined): string => {
 
 export default function MaterialShareButtons({
   materials,
-  workId,
 }: MaterialShareButtonsProps) {
   const { user } = useUser();
 
