@@ -366,6 +366,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                         materialUnitPrice={relatedWorkItem.materialUnitPrice || undefined}
                         currentMarketPrice={relatedWorkItem.currentMarketPrice || null}
                         materialName={mat.name}
+                        materialBestOffer={mat.bestOffer || null}
                       />
                     );
                   }

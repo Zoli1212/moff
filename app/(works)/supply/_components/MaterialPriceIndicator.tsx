@@ -25,6 +25,15 @@ interface MarketPrice {
   checkedAt?: string;
 }
 
+interface MaterialBestOffer {
+  url: string;
+  unit: string;
+  price: number;
+  supplier: string;
+  checkedAt: string;
+  packageSize: string;
+}
+
 interface MaterialPriceIndicatorProps {
   workItemId: number;
   quantity: number;
@@ -32,6 +41,7 @@ interface MaterialPriceIndicatorProps {
   materialUnitPrice?: number;
   currentMarketPrice?: MarketPrice | null;
   materialName?: string;
+  materialBestOffer?: MaterialBestOffer | null; // NEW: Material táblából lescrapelt ár
 }
 
 export default function MaterialPriceIndicator({
@@ -41,12 +51,26 @@ export default function MaterialPriceIndicator({
   materialUnitPrice,
   currentMarketPrice: initialMarketPrice,
   materialName,
+  materialBestOffer, // NEW
 }: MaterialPriceIndicatorProps) {
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
   const [localMarketPrice] = useState<MarketPrice | null>(
     initialMarketPrice || null
   );
   const [fetchedOffers, setFetchedOffers] = useState<MarketOffer[]>([]); // Ideiglenesen tároljuk a lekért ajánlatokat
+
+  // Helper: Convert Material bestOffer to MarketOffer format
+  const convertMaterialBestOffer = (offer: MaterialBestOffer | null): MarketOffer | null => {
+    if (!offer) return null;
+    return {
+      bestPrice: offer.price,
+      supplier: offer.supplier,
+      url: offer.url,
+      productName: '', // Material bestOffer doesn't have productName
+      savings: materialUnitPrice ? Math.max(0, materialUnitPrice - offer.price) : 0,
+      checkedAt: offer.checkedAt,
+    };
+  };
 
   // Helper to get offers array (handles both new and legacy formats)
   const getOffers = (price: MarketPrice | null): MarketOffer[] => {
@@ -66,7 +90,9 @@ export default function MaterialPriceIndicator({
     return [];
   };
 
-  const offers = getOffers(localMarketPrice);
+  // PRIORITY: 1) materialBestOffer, 2) currentMarketPrice
+  const materialOffer = convertMaterialBestOffer(materialBestOffer);
+  const offers = materialOffer ? [materialOffer] : getOffers(localMarketPrice);
   const bestOffer = offers.length > 0 ? offers[0] : null;
 
   // Manual price fetch handler

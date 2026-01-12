@@ -73,6 +73,14 @@ export interface Material {
   availableFull?: boolean;
   availableQuantity?: number;
   workItemId: number; // Added for filtering and type safety
+  bestOffer?: {
+    url: string;
+    unit: string;
+    price: number;
+    supplier: string;
+    checkedAt: string;
+    packageSize: string;
+  } | null;
 }
 
 export interface Worker {
