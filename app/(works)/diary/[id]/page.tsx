@@ -65,6 +65,10 @@ export default async function DiaryPage({ params, searchParams }: DiaryPageProps
     items = itemData.map((item) => ({
       ...item,
       currentMarketPrice: item.currentMarketPrice as MarketPrice,
+      materials: item.materials.map((material) => ({
+        ...material,
+        bestOffer: material.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined,
+      })),
     }));
     diaries = diaryData;
     workforceRegistry = workforceData || [];
