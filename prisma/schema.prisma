@@ -47,6 +47,7 @@ model User {
   szamlazzHuApiKey String?        // Számlázz.hu API kulcs (tenant-specifikus)
 
   // Cím (számlázási és rendelési címként is használva, tenant-ek számára)
+  companyName      String?        // Cégnév (opcionális)
   address          String?        // Utca, házszám
   city             String?        // Város
   zip              String?        // Irányítószám

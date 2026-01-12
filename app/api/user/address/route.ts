@@ -24,6 +24,7 @@ export async function GET() {
     const userData = await prisma.user.findUnique({
       where: { email: userEmail },
       select: {
+        companyName: true,
         address: true,
         city: true,
         zip: true,
@@ -68,11 +69,12 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { address, city, zip, country } = body;
+    const { companyName, address, city, zip, country } = body;
 
     const updatedUser = await prisma.user.update({
       where: { email: userEmail },
       data: {
+        companyName: companyName || null,
         address: address || null,
         city: city || null,
         zip: zip || null,
@@ -82,6 +84,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      companyName: updatedUser.companyName,
       address: updatedUser.address,
       city: updatedUser.city,
       zip: updatedUser.zip,

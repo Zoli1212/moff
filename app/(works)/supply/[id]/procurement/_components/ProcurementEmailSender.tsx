@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getProcurementEmailTemplate, saveProcurementEmailTemplate } from "@/actions/user-actions";
 
 interface AddressData {
+  companyName?: string;
   address: string;
   city: string;
   zip: string;
@@ -89,17 +90,28 @@ Köszönjük!`;
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
 
+    // Get current date in Hungarian format
+    const currentDate = new Date().toLocaleDateString('hu-HU', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+
     // 1. Request details sheet
     const requestDetails = [
-      [requestType === "quote" ? "Ajánlatkérés" : "Megrendelés"],
+      ["T. címzett!"],
       [""],
-      ["Szállítási cím:"],
+      [`Kérek ajánlatot a következő tételekre:`],
+      [""],
+      ["Kérelmező adatai:"],
+      ["Név:", user?.fullName || ""],
+      ...(addressData.companyName ? [["Cégnév:", addressData.companyName]] : []),
       ["Irányítószám:", addressData.zip],
       ["Város:", addressData.city],
       ["Utca, házszám:", addressData.address],
       ["Ország:", addressData.country],
       [""],
-      ["Létrehozva:", new Date().toLocaleString('hu-HU')],
+      ["Dátum:", currentDate],
     ];
 
     const wsRequest = XLSX.utils.aoa_to_sheet(requestDetails);
@@ -107,15 +119,18 @@ Köszönjük!`;
     if (!wsRequest['!merges']) wsRequest['!merges'] = [];
     wsRequest['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });
 
-    // 2. Materials sheet
+    // 2. Materials sheet with empty columns for supplier to fill
     const materialsData = [
-      ["Anyag megnevezése", "Mennyiség", "Egység", "Egységár"],
+      ["Anyag megnevezése", "Mennyiség", "Egység", "Egységár", "Összesen"],
       ...materials.map(item => [
         item.name,
         item.quantity,
         item.unit,
-        item.unitPrice ? `${item.unitPrice.toLocaleString("hu-HU")} Ft` : ""
-      ])
+        "", // Empty for supplier to fill
+        ""  // Empty for supplier to fill
+      ]),
+      ["", "", "", "", ""], // Empty row
+      ["", "", "", "Teljes anyagköltség:", ""] // Total row with empty value
     ];
 
     const wsMaterials = XLSX.utils.aoa_to_sheet(materialsData);
@@ -124,7 +139,8 @@ Köszönjük!`;
       { wch: 40 }, // Anyag megnevezése
       { wch: 10 }, // Mennyiség
       { wch: 10 }, // Egység
-      { wch: 15 }, // Egységár
+      { wch: 15 }, // Egységár (empty)
+      { wch: 15 }, // Összesen (empty)
     ];
 
     wsMaterials['!cols'] = colWidths;

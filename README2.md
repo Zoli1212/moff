@@ -755,3 +755,7 @@ Anyagoknál anyagok kerüljen
 5. Hozzáadást a tétel
 6. Ai mód hozzáadás
 7. Tesztelünk 
+----
+Prod release
+Vissza gomb
+Cégnév nagyon fontos

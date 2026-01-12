@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { UserOptions } from "jspdf-autotable";
+import { useUser } from "@clerk/nextjs";
 
 declare module "jspdf" {
   interface jsPDF {
@@ -46,53 +47,77 @@ export default function MaterialShareButtons({
   materials,
   workId,
 }: MaterialShareButtonsProps) {
+  const { user } = useUser();
+
   const generatePdf = async (): Promise<Blob | null> => {
     if (!materials || materials.length === 0) return null;
 
     try {
+      // Fetch user address data
+      const addressResponse = await fetch('/api/user/address');
+      const addressData = addressResponse.ok ? await addressResponse.json() : {};
+
       const doc = new jsPDF({
         orientation: "portrait",
         unit: "mm",
         format: "a4",
       });
 
-      // Add title
-      doc.setFontSize(18);
-      doc.text(sanitizeForPdf("Anyagbeszerzési lista"), 14, 22);
+      // Add greeting
+      doc.setFontSize(14);
+      doc.text(sanitizeForPdf("T. címzett!"), 14, 22);
+
+      // Add request text
+      doc.setFontSize(11);
+      doc.text(sanitizeForPdf("Kérek ajánlatot a következő tételekre:"), 14, 32);
 
       // Add metadata
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(
-        sanitizeForPdf(`Létrehozva: ${new Date().toLocaleDateString("hu-HU")}`),
-        14,
-        30
-      );
-      doc.text(sanitizeForPdf(`Munka azonosító: ${workId}`), 14, 36);
+      let yPos = 42;
 
-      let finalY = 50;
+      // User info section
+      doc.text(sanitizeForPdf("Kérelmező adatai:"), 14, yPos);
+      yPos += 6;
 
-      // Calculate total
-      const totalMaterialCost = materials.reduce(
-        (sum, item) =>
-          sum + (item.materialUnitPrice || 0) * item.quantity,
-        0
-      );
+      if (user?.fullName) {
+        doc.text(sanitizeForPdf(`Név: ${user.fullName}`), 14, yPos);
+        yPos += 5;
+      }
 
-      // Prepare table data
+      if (user?.primaryEmailAddress?.emailAddress) {
+        doc.text(sanitizeForPdf(`Email: ${user.primaryEmailAddress.emailAddress}`), 14, yPos);
+        yPos += 5;
+      }
+
+      if (addressData.companyName) {
+        doc.text(sanitizeForPdf(`Cégnév: ${addressData.companyName}`), 14, yPos);
+        yPos += 5;
+      }
+
+      if (addressData.address) {
+        doc.text(sanitizeForPdf(`Cím: ${addressData.zip} ${addressData.city}, ${addressData.address}`), 14, yPos);
+        yPos += 5;
+      }
+
+      if (addressData.country) {
+        doc.text(sanitizeForPdf(`Ország: ${addressData.country}`), 14, yPos);
+        yPos += 5;
+      }
+
+      doc.text(sanitizeForPdf(`Dátum: ${new Date().toLocaleDateString("hu-HU")}`), 14, yPos);
+      yPos += 10;
+
+      let finalY = yPos;
+
+      // Prepare table data with empty price columns (for supplier to fill)
       const itemsData = materials.map((item, index) => [
         (index + 1).toString(),
         sanitizeForPdf(item.name),
         item.quantity.toString(),
         sanitizeForPdf(item.unit),
-        sanitizeForPdf(
-          (item.materialUnitPrice || 0).toLocaleString("hu-HU") + " Ft"
-        ),
-        sanitizeForPdf(
-          ((item.materialUnitPrice || 0) * item.quantity).toLocaleString(
-            "hu-HU"
-          ) + " Ft"
-        ),
+        "", // Empty unit price
+        "", // Empty total
       ]);
 
       const autoTableTyped: AutoTableWithPrevious = autoTable;
@@ -140,31 +165,35 @@ export default function MaterialShareButtons({
         },
       });
 
-      // Add summary box
+      // Add summary box for total material cost (empty for supplier to fill)
       const boxWidth = 100;
       const boxY = finalY + 10;
-      const boxHeight = 25;
+      const boxHeight = 15;
       const boxX = 190 - boxWidth;
 
+      // Orange/yellow background
       doc.setFillColor(255, 245, 230);
-      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, "F");
+      doc.rect(boxX, boxY, boxWidth, boxHeight, "F");
 
+      // Orange border
       doc.setDrawColor(254, 156, 0);
-      doc.setLineWidth(0.5);
-      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 3, 3, "S");
+      doc.setLineWidth(0.8);
+      doc.rect(boxX, boxY, boxWidth, boxHeight, "S");
 
-      doc.setFontSize(12);
+      // Add text
+      doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(0, 0, 0);
 
-      const textY = boxY + 16;
-      doc.text(sanitizeForPdf("Teljes anyagköltség:"), boxX + 10, textY);
-      doc.text(
-        sanitizeForPdf(`${totalMaterialCost.toLocaleString("hu-HU")} Ft`),
-        boxX + boxWidth - 10,
-        textY,
-        { align: "right" }
-      );
+      const textY = boxY + 10;
+      doc.text(sanitizeForPdf("Összesített anyagár:"), boxX + 5, textY);
+
+      // Empty space for supplier to fill in
+      doc.setDrawColor(150, 150, 150);
+      doc.setLineWidth(0.3);
+      const lineStartX = boxX + 55;
+      const lineEndX = boxX + boxWidth - 5;
+      doc.line(lineStartX, textY + 1, lineEndX, textY + 1);
 
       return doc.output("blob");
     } catch (error) {
@@ -227,74 +256,63 @@ export default function MaterialShareButtons({
     try {
       if (!materials || materials.length === 0) return;
 
+      // Fetch user address data
+      const addressResponse = await fetch('/api/user/address');
+      const addressData = addressResponse.ok ? await addressResponse.json() : {};
+
       const wb = XLSX.utils.book_new();
 
-      // Project details sheet
-      const projectDetails = [
-        ["Anyagbeszerzési lista"],
-        [""],
-        ["Munka azonosító:", workId],
-        ["Létrehozva:", new Date().toLocaleString("hu-HU")],
-        ["Tételek száma:", materials.length],
-        [""],
-      ];
-
-      const totalMaterialCost = materials.reduce(
-        (sum, item) =>
-          sum + (item.materialUnitPrice || 0) * item.quantity,
-        0
-      );
-
-      projectDetails.push([
-        "Teljes anyagköltség:",
-        totalMaterialCost.toLocaleString("hu-HU") + " Ft",
-      ]);
-
-      const wsProject = XLSX.utils.aoa_to_sheet(projectDetails);
-      if (!wsProject["!merges"]) wsProject["!merges"] = [];
-      wsProject["!merges"].push({
-        s: { r: 0, c: 0 },
-        e: { r: 0, c: 5 },
+      // Get current date in Hungarian format
+      const currentDate = new Date().toLocaleDateString('hu-HU', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
       });
 
-      // Materials sheet
+      // Request details sheet
+      const requestDetails = [
+        ["T. címzett!"],
+        [""],
+        ["Kérek ajánlatot a következő tételekre:"],
+        [""],
+        ["Kérelmező adatai:"],
+        ...(user?.fullName ? [["Név:", user.fullName]] : []),
+        ...(user?.primaryEmailAddress?.emailAddress ? [["Email:", user.primaryEmailAddress.emailAddress]] : []),
+        ...(addressData.companyName ? [["Cégnév:", addressData.companyName]] : []),
+        ...(addressData.zip && addressData.city && addressData.address ? [["Cím:", `${addressData.zip} ${addressData.city}, ${addressData.address}`]] : []),
+        ...(addressData.country ? [["Ország:", addressData.country]] : []),
+        [""],
+        ["Dátum:", currentDate],
+      ];
+
+      const wsRequest = XLSX.utils.aoa_to_sheet(requestDetails);
+      if (!wsRequest['!merges']) wsRequest['!merges'] = [];
+      wsRequest['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } });
+
+      // Materials sheet with empty columns for supplier to fill
       const materialsData = [
-        [
-          "Anyag megnevezése",
-          "Mennyiség",
-          "Egység",
-          "Egységár (Ft)",
-          "Összesen (Ft)",
-        ],
-        ...materials.map((item) => [
+        ["Anyag megnevezése", "Mennyiség", "Egység", "Egységár", "Összesen"],
+        ...materials.map(item => [
           item.name,
           item.quantity,
           item.unit,
-          (item.materialUnitPrice || 0).toLocaleString("hu-HU"),
-          ((item.materialUnitPrice || 0) * item.quantity).toLocaleString(
-            "hu-HU"
-          ),
+          "", // Empty for supplier to fill
+          ""  // Empty for supplier to fill
         ]),
+        ["", "", "", "", ""], // Empty row
+        ["", "", "", "Teljes anyagköltség:", ""] // Total row with empty value
       ];
-
-      materialsData.push([
-        "",
-        "",
-        "",
-        "Összesen:",
-        totalMaterialCost.toLocaleString("hu-HU") + " Ft",
-      ]);
 
       const wsMaterials = XLSX.utils.aoa_to_sheet(materialsData);
       wsMaterials["!cols"] = [
-        { wch: 50 },
-        { wch: 12 },
-        { wch: 10 },
-        { wch: 15 },
-        { wch: 15 },
+        { wch: 40 }, // Anyag megnevezése
+        { wch: 10 }, // Mennyiség
+        { wch: 10 }, // Egység
+        { wch: 15 }, // Egységár (empty)
+        { wch: 15 }, // Összesen (empty)
       ];
 
-      XLSX.utils.book_append_sheet(wb, wsProject, "Projekt adatok");
+      XLSX.utils.book_append_sheet(wb, wsRequest, "Adatok");
       XLSX.utils.book_append_sheet(wb, wsMaterials, "Anyagok");
 
       const excelBuffer = XLSX.write(wb, {

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 interface AddressData {
+  companyName: string;
   address: string;
   city: string;
   zip: string;
@@ -12,6 +13,7 @@ interface AddressData {
 
 export default function AddressForm() {
   const [formData, setFormData] = useState<AddressData>({
+    companyName: "",
     address: "",
     city: "",
     zip: "",
@@ -27,8 +29,9 @@ export default function AddressForm() {
         const response = await fetch("/api/user/address");
         if (response.ok) {
           const data = await response.json();
-          if (data.address || data.city || data.zip || data.country) {
+          if (data.companyName || data.address || data.city || data.zip || data.country) {
             setFormData({
+              companyName: data.companyName || "",
               address: data.address || "",
               city: data.city || "",
               zip: data.zip || "",
@@ -96,6 +99,37 @@ export default function AddressForm() {
       </p>
 
       <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: "16px" }}>
+          <label
+            htmlFor="companyName"
+            style={{
+              display: "block",
+              fontSize: "14px",
+              fontWeight: "500",
+              marginBottom: "6px",
+            }}
+          >
+            Cégnév
+          </label>
+          <input
+            type="text"
+            id="companyName"
+            value={formData.companyName}
+            onChange={(e) =>
+              setFormData({ ...formData, companyName: e.target.value })
+            }
+            required
+            style={{
+              width: "100%",
+              padding: "8px 12px",
+              border: "1px solid #d1d5db",
+              borderRadius: "6px",
+              fontSize: "14px",
+            }}
+            placeholder="Példa Kft."
+          />
+        </div>
+
         <div style={{ marginBottom: "16px" }}>
           <label
             htmlFor="address"
