@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
@@ -30,6 +30,8 @@ export default function TextInputDialog({
   const { demandText, setDemandText } = useDemandStore();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const router = useRouter();
 
   const { clearOfferItemsQuestion } = useOfferItemQuestionStore();
@@ -41,6 +43,63 @@ export default function TextInputDialog({
     clearOfferItems();
     clearExtraRequirementText();
   }, [clearOfferItemsQuestion, clearOfferItems, clearExtraRequirementText]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const fileName = file.name.toLowerCase();
+      if (
+        fileName.endsWith(".xlsx") ||
+        fileName.endsWith(".xls") ||
+        fileName.endsWith(".pdf")
+      ) {
+        setSelectedFile(file);
+        setError("");
+      } else {
+        setError("Csak Excel (.xlsx, .xls) és PDF fájlokat fogadunk el.");
+      }
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) return;
+
+    setUploadingFile(true);
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+
+      const response = await axios.post("/api/parse-file", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.data.success) {
+        setDemandText(response.data.extractedText);
+        setSelectedFile(null);
+      } else {
+        setError(
+          response.data.error || "Hiba történt a fájl feldolgozása során."
+        );
+      }
+    } catch (err: any) {
+      console.error("File upload error:", err);
+      setError(
+        err.response?.data?.error ||
+          "Hiba történt a fájl feldolgozása során. Kérjük próbáld újra."
+      );
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setError("");
+  };
 
   const onAnalyze = async () => {
     if (!demandText.trim()) {
@@ -104,6 +163,61 @@ export default function TextInputDialog({
 
             <div className="flex-1 mt-4 overflow-hidden">
               <div className="h-full flex flex-col">
+                {/* Fájl feltöltés gomb */}
+                <div className="mb-4">
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="file"
+                      id="file-upload"
+                      className="hidden"
+                      accept=".xlsx,.xls,.pdf"
+                      onChange={handleFileSelect}
+                      disabled={uploadingFile || loading}
+                    />
+                    <label
+                      htmlFor="file-upload"
+                      className="flex-1 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 px-4 py-3 bg-white border border-[#FF9900] rounded-lg hover:bg-orange-50 transition-colors">
+                        <Upload className="w-5 h-5 text-[#FF9900]" />
+                        <span className="text-sm font-medium text-gray-700">
+                          {selectedFile
+                            ? selectedFile.name
+                            : "Fájl feltöltése (Excel/PDF)"}
+                        </span>
+                      </div>
+                    </label>
+                    {selectedFile && (
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={handleFileUpload}
+                          disabled={uploadingFile}
+                          className="bg-[#FF9900] hover:bg-[#e68a00] text-white"
+                        >
+                          {uploadingFile ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                              Feldolgozás...
+                            </>
+                          ) : (
+                            "Feldolgozás"
+                          )}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={clearFile}
+                          disabled={uploadingFile}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
                 <Textarea
                   placeholder="Például: 50m²-es lakás felújítása, burkolással, festéssel és villanyszereléssel..."
                   className="flex-1 min-h-[200px] text-base p-4 resize-none"
