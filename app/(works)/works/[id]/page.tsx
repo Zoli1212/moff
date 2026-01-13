@@ -108,8 +108,8 @@ export default function WorkDetailPage() {
   const [dynamicProfit, setDynamicProfit] = useState({
     totalRevenue: 0,
     totalCost: 0,
-    totalProfit: 450000,
-    profitMargin: 15.2,
+    totalProfit: 0,
+    profitMargin: 0,
   });
 
   console.log(generalWorkersFromDB)

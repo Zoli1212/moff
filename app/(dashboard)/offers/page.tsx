@@ -5,8 +5,9 @@ import { getUserOffers } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload } from "lucide-react";
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
+import UploadOfferDialog from "@/app/(routes)/dashboard/_components/UploadOfferDialog";
 import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useRequirementIdStore } from "@/store/requirement-id-store";
@@ -61,6 +62,7 @@ export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [offerToDelete, setOfferToDelete] = useState<Offer | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -206,7 +208,7 @@ export default function OffersPage() {
       <main className="flex-grow w-full mx-auto px-4 max-w-7xl pb-24">
         <div className="w-full mx-auto px-4 max-w-7xl">
           <div className="mb-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between relative">
               <div className="flex items-center space-x-2">
                 <Link
                   href="/dashboard"
@@ -230,6 +232,15 @@ export default function OffersPage() {
                 </Link>
                 <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
               </div>
+              <Button
+                onClick={() => setIsUploadDialogOpen(true)}
+                variant="outline"
+                className="border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 text-sm absolute left-1/2 transform -translate-x-1/2"
+                aria-label="Meglévő ajánlat feltöltése"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Meglévő ajánlat feltöltése
+              </Button>
               <Button
                 onClick={() => setIsDialogOpen(true)}
                 variant="outline"
@@ -424,6 +435,11 @@ export default function OffersPage() {
       <TextInputDialog
         open={isDialogOpen}
         setOpen={setIsDialogOpen}
+      />
+
+      <UploadOfferDialog
+        open={isUploadDialogOpen}
+        setOpen={setIsUploadDialogOpen}
       />
 
       <DeleteConfirmModal
