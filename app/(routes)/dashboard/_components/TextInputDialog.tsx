@@ -85,10 +85,11 @@ export default function TextInputDialog({
           response.data.error || "Hiba történt a fájl feldolgozása során."
         );
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("File upload error:", err);
+      const axiosError = err as { response?: { data?: { error?: string } } };
       setError(
-        err.response?.data?.error ||
+        axiosError.response?.data?.error ||
           "Hiba történt a fájl feldolgozása során. Kérjük próbáld újra."
       );
     } finally {

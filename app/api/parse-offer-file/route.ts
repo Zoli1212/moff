@@ -96,7 +96,7 @@ async function parseExcel(file: File): Promise<string> {
     allText += `\n\n=== ${sheetName} ===\n`;
 
     // Convert array data to text
-    sheetData.forEach((row: any) => {
+    sheetData.forEach((row: unknown) => {
       if (Array.isArray(row) && row.length > 0) {
         const rowText = row.filter(cell => cell != null && cell !== '').join(' | ');
         if (rowText.trim()) {
@@ -129,7 +129,7 @@ async function parsePDF(file: File): Promise<string> {
       const textContent = await page.getTextContent();
 
       const pageText = textContent.items
-        .map((item: any) => item.str)
+        .map((item: { str: string }) => item.str)
         .join(' ');
 
       fullText += pageText + '\n';

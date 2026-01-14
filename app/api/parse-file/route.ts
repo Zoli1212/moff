@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
           extractedText += `\n=== ${sheetName} ===\n`;
           extractedText += sheetData
-            .map((row: any) => (row as any[]).join(" | "))
+            .map((row: unknown) => (row as (string | number | boolean | null)[]).join(" | "))
             .join("\n");
         }
         console.log(
@@ -141,14 +141,15 @@ Strukturált ajánlatkérés:`;
       extractedText: structuredText,
       originalText: extractedText,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as Error;
     console.error("[parse-file] Main error:", error);
-    console.error("[parse-file] Error message:", error?.message);
-    console.error("[parse-file] Error stack:", error?.stack);
+    console.error("[parse-file] Error message:", err?.message);
+    console.error("[parse-file] Error stack:", err?.stack);
     return NextResponse.json(
       {
         error: "Hiba történt a fájl feldolgozása során. Kérjük próbáld újra.",
-        details: error?.message || "Unknown error",
+        details: err?.message || "Unknown error",
       },
       { status: 500 }
     );
