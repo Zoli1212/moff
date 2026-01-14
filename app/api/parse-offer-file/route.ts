@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUserData } from '@/actions/user-actions';
 import OpenAI from 'openai';
 import * as XLSX from 'xlsx';
+import { WebPDFLoader } from '@langchain/community/document_loaders/web/pdf';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
@@ -111,30 +112,9 @@ async function parseExcel(file: File): Promise<string> {
 
 async function parsePDF(file: File): Promise<string> {
   try {
-    const arrayBuffer = await file.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-
-    // Use pdfjs-dist for PDF parsing
-    const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
-
-    // Load the PDF document
-    const loadingTask = pdfjsLib.getDocument({ data: uint8Array });
-    const pdfDocument = await loadingTask.promise;
-
-    let fullText = '';
-
-    // Extract text from each page
-    for (let pageNum = 1; pageNum <= pdfDocument.numPages; pageNum++) {
-      const page = await pdfDocument.getPage(pageNum);
-      const textContent = await page.getTextContent();
-
-      const pageText = textContent.items
-        .map((item: { str: string }) => item.str)
-        .join(' ');
-
-      fullText += pageText + '\n';
-    }
-
+    const loader = new WebPDFLoader(file);
+    const docs = await loader.load();
+    const fullText = docs.map((doc) => doc.pageContent).join('\n\n');
     return fullText.trim();
   } catch (error) {
     console.error('PDF parsing error:', error);
