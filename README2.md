@@ -759,3 +759,4 @@ Anyagoknál anyagok kerüljen
 Prod release
 Vissza gomb
 Cégnév nagyon fontos
+menteni lehessen + tételek

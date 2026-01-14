@@ -208,7 +208,8 @@ export default function OffersPage() {
       <main className="flex-grow w-full mx-auto px-4 max-w-7xl pb-24">
         <div className="w-full mx-auto px-4 max-w-7xl">
           <div className="mb-6">
-            <div className="flex items-center justify-between relative">
+            {/* Desktop header */}
+            <div className="hidden md:flex items-center justify-between relative">
               <div className="flex items-center space-x-2">
                 <Link
                   href="/dashboard"
@@ -248,6 +249,52 @@ export default function OffersPage() {
                 aria-label="Új ajánlat létrehozása"
               >
                 <Plus className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Mobile header */}
+            <div className="md:hidden">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Link
+                    href="/dashboard"
+                    className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
+                    aria-label="Vissza a főoldalra"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 19l-7-7 7-7"
+                      />
+                    </svg>
+                  </Link>
+                  <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+                </div>
+                <Button
+                  onClick={() => setIsDialogOpen(true)}
+                  variant="outline"
+                  className="ml-auto p-2 rounded-full border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10"
+                  aria-label="Új ajánlat létrehozása"
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </div>
+              <Button
+                onClick={() => setIsUploadDialogOpen(true)}
+                variant="outline"
+                className="w-full border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 text-sm"
+                aria-label="Meglévő ajánlat feltöltése"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Meglévő ajánlat feltöltése
               </Button>
             </div>
 
