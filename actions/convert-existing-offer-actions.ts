@@ -38,10 +38,10 @@ export async function convertExistingOfferToMyWork(params: ConvertOfferParams) {
     const myWork = await prisma.myWork.create({
       data: {
         title: myWorkTitle,
-        location: params.location || '',
-        customerName: params.customerName || 'Új ügyfél',
+        location: params.location || "",
+        customerName: params.customerName || "Új ügyfél",
         date: new Date(),
-        time: params.estimatedTime || '1-2 nap',
+        time: params.estimatedTime || "1-2 nap",
         totalPrice: params.totalPrice || 0,
         tenantEmail,
       },
@@ -52,7 +52,7 @@ export async function convertExistingOfferToMyWork(params: ConvertOfferParams) {
     console.log("\n💾 [STEP 2] Creating Requirement...");
 
     // Requirement description tartalmazza, hogy meglévő offerből lett konvertálva
-    const requirementDescription = `Meglévő ajánlatból konvertálva.\n\n${params.description || ''}`;
+    const requirementDescription = `Meglévő ajánlatból konvertálva.\n\n${params.description || ""}`;
 
     const requirement = await prisma.requirement.create({
       data: {
@@ -67,24 +67,74 @@ export async function convertExistingOfferToMyWork(params: ConvertOfferParams) {
 
     console.log("  ├─ Requirement created:", requirement.id);
 
-    console.log("\n💾 [STEP 3] Creating Offer with items...");
+    console.log("\n💾 [STEP 3] Checking items against TenantPriceList...");
+
+    // Ellenőrizzük, mely tételek NEM találhatók a TenantPriceList-ben
+    const newItemNames: string[] = [];
+    const itemsWithMarking = [];
+
+    for (const item of params.items) {
+      const cleanedTask = item.name.replace(/^\*+\s*/, "").trim();
+
+      // Ellenőrizzük, hogy létezik-e már a TenantPriceList-ben
+      const existingPrice = await prisma.tenantPriceList.findUnique({
+        where: {
+          tenant_task_unique: {
+            task: cleanedTask,
+            tenantEmail,
+          },
+        },
+      });
+
+      if (!existingPrice) {
+        // Új tétel - jelöljük meg new: true flag-gel
+        newItemNames.push(cleanedTask);
+        itemsWithMarking.push({
+          ...item,
+          name: cleanedTask,
+          new: true,
+        });
+        console.log(`  ├─ Új tétel: ${cleanedTask}`);
+      } else {
+        // Meglévő tétel - nem jelöljük
+        itemsWithMarking.push(item);
+      }
+    }
+
+    console.log(
+      `  └─ ${newItemNames.length} új tétel találva ${params.items.length}-ból`
+    );
+
+    console.log("\n💾 [STEP 4] Creating Offer with marked items...");
+
+    // Notes-hoz hozzáadjuk az új tételek listáját
+    const notesArray = params.notes || [];
+    if (newItemNames.length > 0) {
+      notesArray.push(
+        "\n=== Új tételek (még nincsenek a vállalkozói árlistában) ==="
+      );
+      newItemNames.forEach((name) => {
+        notesArray.push(`- ${name}`);
+      });
+    }
 
     const offer = await prisma.offer.create({
       data: {
         title: params.title,
-        status: 'draft',
+        status: "draft",
         requirementId: requirement.id,
         tenantEmail,
         totalPrice: params.totalPrice || 0,
-        description: params.description || '',
+        description: params.description || "",
         offerSummary: params.offerSummary || null,
-        notes: params.notes && params.notes.length > 0 ? params.notes.join("\n\n") : null,
-        items: params.items as any, // Store items as JSON
+        notes: notesArray.length > 0 ? notesArray.join("\n") : null,
+        items: itemsWithMarking as any, // Store items with marking as JSON
+        isConvertedFromExisting: true, // Meglévő ajánlatból konvertálva
       },
     });
 
     console.log("  ├─ Offer created:", offer.id);
-    console.log("  └─ Items created:", params.items.length);
+    console.log("  └─ Items created:", itemsWithMarking.length);
 
     console.log("\n✅ [convertExistingOfferToMyWork] SUCCESS");
 

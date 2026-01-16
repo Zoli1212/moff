@@ -760,3 +760,8 @@ Prod release
 Vissza gomb
 Cégnév nagyon fontos
 menteni lehessen + tételek
+
+megjelenik a háttér
+legyen egy gomb csak a tenantPriceListbe
+Kiegészítő információk vissza
+nyersanyagok

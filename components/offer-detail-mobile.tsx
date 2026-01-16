@@ -2292,7 +2292,7 @@ export function OfferDetailView({
                               htmlFor="saveNewItemsGlobally"
                               className="text-sm font-medium text-gray-700 cursor-pointer"
                             >
-                              Mentés globálisan is (minden vállalkozó látja)
+                              Mentés globálisan is
                             </label>
                           </div>
                         )}

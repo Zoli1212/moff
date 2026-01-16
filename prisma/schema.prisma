@@ -168,6 +168,7 @@ model Offer {
   notes             String?
   offerSummary      String?
   estimatedDuration String?     // AI becslés az időtartamra (pl. "7-10 nap")
+  isConvertedFromExisting Boolean @default(false) // Meglévő ajánlatból konvertálva-e
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   createdBy         String?
