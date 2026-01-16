@@ -56,12 +56,16 @@ interface RequirementDetailProps {
   }) => void;
   onBlocksLoaded?: (blockIds: number[]) => void;
   onBlockIdsChange?: (blockIds: number[]) => void;
+  offerStatus?: string;
+  onSupplementClick?: () => void;
 }
 
 export function RequirementDetail({
   requirement,
   onBack,
   onBlockIdsChange,
+  offerStatus,
+  onSupplementClick,
 }: RequirementDetailProps) {
   const searchParams = useSearchParams();
   const { setStoredItems, isGlobalLoading } = useDemandStore();
@@ -499,6 +503,17 @@ export function RequirementDetail({
         {/* Footer Actions */}
         <div className="p-4 bg-gray-50 border-t border-gray-100">
           <div className="flex flex-col gap-3">
+            {offerStatus === "draft" && onSupplementClick && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={onSupplementClick}
+                disabled={isGlobalLoading}
+                className="w-full h-12 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00] hover:border-[#E58A00] active:bg-[#FE9C00] active:text-white font-medium transition-colors"
+              >
+                Kiegészítő információ
+              </Button>
+            )}
             <Button
               type="button"
               variant="outline"

@@ -1127,10 +1127,63 @@ export function OfferDetailView({
 
   if (showRequirementDetail && offer.requirement) {
     return (
-      <RequirementDetail
-        requirement={offer.requirement}
-        onBack={() => setShowRequirementDetail(false)}
-      />
+      <>
+        <RequirementDetail
+          requirement={offer.requirement}
+          onBack={() => setShowRequirementDetail(false)}
+          offerStatus={offer.status}
+          onSupplementClick={() => setIsSupplementModalOpen(true)}
+        />
+        {/* Supplement Info Modal - also rendered in RequirementDetail view */}
+        <Dialog
+          open={isSupplementModalOpen}
+          onOpenChange={setIsSupplementModalOpen}
+        >
+          <DialogContent className="w-[calc(100%-48px)] sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-xl flex flex-col">
+            <DialogHeader>
+              <DialogTitle>Kiegészítő információ</DialogTitle>
+              <DialogDescription>
+                Írd le a további követelményeket vagy módosításokat.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="supplement-input-req">Kiegészítő információ</Label>
+                <textarea
+                  id="supplement-input-req"
+                  value={supplementInput}
+                  onChange={(e) => setSupplementInput(e.target.value)}
+                  placeholder="Pl: minden anyagdíjat növelj meg 10%-al"
+                  className="w-full min-h-[120px] px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#FE9C00] focus:border-transparent resize-none"
+                  disabled={isSupplementing}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex flex-col gap-3 pt-4">
+              <Button
+                onClick={handleSupplementInfo}
+                disabled={isSupplementing || !supplementInput.trim()}
+                className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
+              >
+                {isSupplementing ? "Ajánlat frissítése..." : "Ajánlat frissítése"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsSupplementModalOpen(false);
+                  setSupplementInput("");
+                }}
+                disabled={isSupplementing}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
+              >
+                Mégse
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </>
     );
   }
 
@@ -1809,17 +1862,6 @@ export function OfferDetailView({
                   <ChevronRight className="h-6 w-6 text-[#FE9C00]" />
                 </button>
               </div>
-
-              {/* Kiegészítő információ button */}
-              {offer.status === "draft" && (
-                <Button
-                  onClick={() => setIsSupplementModalOpen(true)}
-                  variant="outline"
-                  className="w-full py-6 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00] hover:border-[#E58A00] active:bg-[#FE9C00] active:text-white font-medium text-lg transition-colors"
-                >
-                  Kiegészítő információ
-                </Button>
-              )}
             </div>
           )}
 
