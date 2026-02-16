@@ -473,33 +473,39 @@ export default function StatisticsPage() {
               {/* User Info */}
               <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-3">Felhasználó adatai</h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="space-y-3 text-sm">
                   <div>
                     <span className="text-gray-500">Email:</span>
-                    <p className="font-medium">{selectedUser.email}</p>
+                    <p className="font-medium break-all">{selectedUser.email}</p>
                   </div>
                   <div>
                     <span className="text-gray-500">Típus:</span>
                     <div className="mt-1">{getRoleBadge(selectedUser)}</div>
                   </div>
-                  <div>
-                    <span className="text-gray-500">Regisztráció:</span>
-                    <p className="font-medium">{formatDate(selectedUser.createdAt)}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500">Utolsó aktivitás:</span>
-                    <p className="font-medium">{formatDate(selectedUser.lastActivity)}</p>
-                  </div>
-                  {selectedUser.invitedBy && (
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <span className="text-gray-500">Meghívó:</span>
-                      <p className="font-medium">{selectedUser.invitedBy}</p>
+                      <span className="text-gray-500">Regisztráció:</span>
+                      <p className="font-medium">{formatDate(selectedUser.createdAt)}</p>
                     </div>
-                  )}
-                  {selectedUser.trialEndsAt && (
                     <div>
-                      <span className="text-gray-500">Trial lejárat:</span>
-                      <p className="font-medium">{formatDate(selectedUser.trialEndsAt)}</p>
+                      <span className="text-gray-500">Utolsó aktivitás:</span>
+                      <p className="font-medium">{formatDate(selectedUser.lastActivity)}</p>
+                    </div>
+                  </div>
+                  {(selectedUser.invitedBy || selectedUser.trialEndsAt) && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {selectedUser.invitedBy && (
+                        <div>
+                          <span className="text-gray-500">Meghívó:</span>
+                          <p className="font-medium break-all">{selectedUser.invitedBy}</p>
+                        </div>
+                      )}
+                      {selectedUser.trialEndsAt && (
+                        <div>
+                          <span className="text-gray-500">Trial lejárat:</span>
+                          <p className="font-medium">{formatDate(selectedUser.trialEndsAt)}</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

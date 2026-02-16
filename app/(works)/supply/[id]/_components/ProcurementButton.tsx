@@ -14,18 +14,17 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
     <div
       style={{
         position: "fixed",
-        bottom: 65,
+        bottom: 68,
         left: "50%",
         transform: "translateX(-50%)",
         maxWidth: 434,
-        width: "calc(100% - 16px)",
+        width: "calc(100% - 32px)",
         display: "flex",
-        flexDirection: "column",
-        gap: "12px",
-        zIndex: 1000,
+        flexDirection: "row",
+        gap: "10px",
+        padding: "8px 0",
         backgroundColor: "#fff",
-        padding: "16px",
-        borderRadius: "12px",
+        zIndex: 1000,
       }}
     >
       {/* Ajánlatkérés button - Always opens as quote */}
@@ -34,13 +33,14 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         onMouseEnter={() => setIsHoveredQuote(true)}
         onMouseLeave={() => setIsHoveredQuote(false)}
         style={{
-          padding: "12px 16px",
+          flex: 1,
+          padding: "10px 8px",
           backgroundColor: isHoveredQuote ? "#FFF5E6" : "#fff",
           color: "#FE9C00",
           borderRadius: "8px",
           border: "2px solid #FE9C00",
           fontWeight: 600,
-          fontSize: "15px",
+          fontSize: "13px",
           textAlign: "center",
           textDecoration: "none",
           cursor: "pointer",
@@ -56,21 +56,21 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
         onMouseEnter={() => setIsHoveredProcurement(true)}
         onMouseLeave={() => setIsHoveredProcurement(false)}
         style={{
-          padding: "12px 16px",
-          marginBottom: "8px",
+          flex: 1,
+          padding: "10px 8px",
           backgroundColor: isHoveredProcurement ? "#FFF5E6" : "#fff",
           color: "#FE9C00",
           borderRadius: "8px",
           border: "2px solid #FE9C00",
           fontWeight: 600,
-          fontSize: "15px",
+          fontSize: "13px",
           textAlign: "center",
           textDecoration: "none",
           cursor: "pointer",
           transition: "all 0.2s ease-in-out",
         }}
       >
-        + Intelligens beszerzés
+        + Int. beszerzés
       </a>
     </div>
   );

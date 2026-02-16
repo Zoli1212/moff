@@ -284,10 +284,10 @@ export default async function SupplyPage({
             />
           )
         )}
-      </div>
 
-      {/* Sticky procurement button for materials tab */}
-      {tab === "materials" && <ProcurementButton workId={workId} />}
+        {/* Procurement buttons for materials tab */}
+        {tab === "materials" && <ProcurementButton workId={workId} />}
+      </div>
     </div>
   );
 }

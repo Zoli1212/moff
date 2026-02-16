@@ -756,16 +756,12 @@ Anyagoknál anyagok kerüljen
 6. Ai mód hozzáadás
 7. Tesztelünk 
 ----
-Prod release
-Vissza gomb
-Cégnév nagyon fontos
-menteni lehessen + tételek
-
-megjelenik a háttér
-legyen egy gomb csak a tenantPriceListbe
-Kiegészítő információk vissza
-nyersanyagok
+GitHub előfizetés Github 
+----
+Amazon ra költözés
+Amazon db bekerül
 -----
-importnál a végösszeget jól számolja ki!,
-Beérkezett ajanlatkérés feltöltése
-Tenant legyen erősebb! 
+feature flag
+-----
+
+
