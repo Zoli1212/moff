@@ -40,13 +40,20 @@ export default function Home() {
           <div className="absolute inset-0 bg-black/30"></div>
         </div>
 
-        {/* Login Button */}
+        {/* Login Buttons */}
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <SignInButton mode="modal">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-12 rounded-full shadow-lg transform hover:scale-105 transition-all text-lg">
-              Bejelentkezés
-            </button>
-          </SignInButton>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <SignInButton mode="modal" forceRedirectUrl="/quote-request">
+              <button className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-10 rounded-lg shadow-lg transform hover:scale-105 transition-all text-lg min-w-[240px]">
+                Bejelentkezés ügyfélként
+              </button>
+            </SignInButton>
+            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+              <button className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-10 rounded-lg shadow-lg transform hover:scale-105 transition-all text-lg min-w-[240px]">
+                Bejelentkezés vállalkozóként
+              </button>
+            </SignInButton>
+          </div>
         </div>
       </main>
     </div>

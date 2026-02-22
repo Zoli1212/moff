@@ -366,3 +366,6 @@ Alkatrészek = Materials
 m² alapú árazás
 Anyagköltség (festék, ecset)
 Előkészítés + festés külön tételek
+PopUp nem működik  BUG
+betöltés isActive, 
+választót uj regisztráció
