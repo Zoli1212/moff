@@ -16,7 +16,12 @@ export default async function QuoteChatPage({ params }: Props) {
   const session = await getClientQuoteSession(sessionId);
   if (!session) redirect("/quote-request");
 
-  const initialMessages = (session.content as { role: string; content: string }[]) ?? [];
+  const initialMessages = (
+    (session.content as { role: string; content: string }[]) ?? []
+  ).map((m) => ({
+    role: m.role as "user" | "assistant",
+    content: m.content,
+  }));
 
   return (
     <QuoteChatClient sessionId={sessionId} initialMessages={initialMessages} />
