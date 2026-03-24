@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, FileText, Table2, ChevronDown } from "lucide-react";
+import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X } from "lucide-react";
 import { exportToPDF, exportToExcel } from "./export-utils";
 
 interface Message {
@@ -13,6 +13,9 @@ interface Props {
   sessionId: string;
   initialMessages: Message[];
 }
+
+const ACCEPTED_FILE_TYPES = ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png,.dwg";
+const MAX_FILE_SIZE_MB = 10;
 
 function parseEstimate(content: string): string | null {
   const start = content.indexOf("---AJÁNLAT_KEZDET---");
@@ -32,11 +35,20 @@ function cleanContent(content: string): string {
 
 function cleanMarkdown(text: string): string {
   return text
-    .replace(/\*\*/g, "")   // bold jelölők
-    .replace(/\[/g, "")     // nyitó szögletes zárójel
-    .replace(/\]/g, "")     // záró szögletes zárójel
-    .replace(/^\*\s?/, "")  // sor eleji csillag (dőlt)
-    .replace(/\*$/, "");    // sor végi csillag
+    .replace(/\*\*/g, "")
+    .replace(/\[/g, "")
+    .replace(/\]/g, "")
+    .replace(/^\*\s?/, "")
+    .replace(/\*$/, "");
+}
+
+function FileBubble({ fileName }: { fileName: string }) {
+  return (
+    <div className="flex items-center gap-2 bg-orange-400 text-white text-xs px-3 py-2 rounded-xl rounded-br-sm w-fit">
+      <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+      <span className="truncate max-w-[200px]">{fileName}</span>
+    </div>
+  );
 }
 
 function EstimateCard({
@@ -146,11 +158,14 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isParsingFile, setIsParsingFile] = useState(false);
+  const [fileError, setFileError] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const hasAutoSent = useRef(false);
 
-  // Auto-send the first user message to kick off the AI
   useEffect(() => {
     if (!hasAutoSent.current && messages.length === 1 && messages[0].role === "user") {
       hasAutoSent.current = true;
@@ -187,7 +202,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
 
   const handleSend = async () => {
     const text = input.trim();
-    if (!text || isLoading) return;
+    if (!text || isLoading || isParsingFile) return;
     const newMessages: Message[] = [
       ...messages,
       { role: "user", content: text },
@@ -211,8 +226,94 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
   };
 
+  const processFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
+
+    setFileError("");
+
+    const oversized = fileArray.find(
+      (f) => f.size > MAX_FILE_SIZE_MB * 1024 * 1024
+    );
+    if (oversized) {
+      setFileError(
+        `"${oversized.name}" mérete meghaladja a ${MAX_FILE_SIZE_MB} MB-os limitet.`
+      );
+      return;
+    }
+
+    setIsParsingFile(true);
+    try {
+      const results = await Promise.all(
+        fileArray.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/parse-file", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(
+              `"${file.name}": ${data.error || "Feldolgozási hiba"}`
+            );
+          }
+          return `📎 Feltöltött dokumentum (${file.name}):\n\n${data.extractedText}`;
+        })
+      );
+
+      const combined = results.join("\n\n---\n\n");
+      const newMessages: Message[] = [
+        ...messages,
+        { role: "user", content: combined },
+      ];
+      setMessages(newMessages);
+      await sendToAI(newMessages);
+    } catch (err: unknown) {
+      setFileError(
+        err instanceof Error ? err.message : "Hiba történt a feltöltés során."
+      );
+    } finally {
+      setIsParsingFile(false);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    if (fileInputRef.current) fileInputRef.current.value = "";
+    await processFiles(files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isDisabled) setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (isDisabled) return;
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) await processFiles(files);
+  };
+
+  const isDisabled = isLoading || isParsingFile;
+
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 80px)" }}>
+    <div
+      className="relative flex flex-col"
+      style={{ height: "calc(100vh - 80px)" }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       {/* Header */}
       <div className="bg-white border-b px-6 py-4 flex items-center gap-3 rounded-t-xl">
         <Sparkles className="w-5 h-5 text-orange-500" />
@@ -224,13 +325,36 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
         </div>
       </div>
 
+      {/* Drag overlay */}
+      {isDragging && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-orange-50/90 border-2 border-dashed border-orange-400 rounded-xl pointer-events-none">
+          <Paperclip className="w-10 h-10 text-orange-400 mb-3" />
+          <p className="text-orange-600 font-semibold text-sm">
+            Húzza ide a fájlokat
+          </p>
+          <p className="text-orange-400 text-xs mt-1">
+            PDF, DWG, JPG, PNG, DOCX
+          </p>
+        </div>
+      )}
+
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gray-50">
+      <div className="relative flex-1 overflow-y-auto px-4 py-6 space-y-4 bg-gray-50">
         {messages.map((msg, i) => {
           const estimate =
             msg.role === "assistant" ? parseEstimate(msg.content) : null;
           const displayContent =
             msg.role === "assistant" ? cleanContent(msg.content) : msg.content;
+
+          const isFileMessage =
+            msg.role === "user" && msg.content.startsWith("📎 Feltöltött dokumentum");
+          const fileNameMatch = isFileMessage
+            ? msg.content.match(/📎 Feltöltött dokumentum \((.+?)\)/)
+            : null;
+          const fileDisplayName = fileNameMatch?.[1] ?? null;
+          const fileTextContent = isFileMessage
+            ? msg.content.replace(/^📎 Feltöltött dokumentum \(.+?\):\n\n/, "")
+            : null;
 
           return (
             <div
@@ -245,19 +369,33 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                 </div>
               )}
 
-              <div className="max-w-[75%] space-y-3">
-                {displayContent && (
-                  <div
-                    className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-orange-500 text-white rounded-br-sm"
-                        : "bg-white text-gray-800 shadow-sm rounded-bl-sm"
-                    }`}
-                  >
-                    {msg.role === "assistant"
-                      ? cleanMarkdown(displayContent)
-                      : displayContent}
-                  </div>
+              <div className="max-w-[75%] space-y-2">
+                {isFileMessage && fileDisplayName ? (
+                  <>
+                    <FileBubble fileName={fileDisplayName} />
+                    {fileTextContent && (
+                      <div className="px-4 py-3 rounded-2xl rounded-br-sm text-xs whitespace-pre-wrap leading-relaxed bg-orange-500 text-white max-h-32 overflow-y-auto">
+                        {fileTextContent.substring(0, 300)}
+                        {fileTextContent.length > 300 && "…"}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {displayContent && (
+                      <div
+                        className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-orange-500 text-white rounded-br-sm"
+                            : "bg-white text-gray-800 shadow-sm rounded-bl-sm"
+                        }`}
+                      >
+                        {msg.role === "assistant"
+                          ? cleanMarkdown(displayContent)
+                          : displayContent}
+                      </div>
+                    )}
+                  </>
                 )}
                 {estimate && (
                   <EstimateCard
@@ -278,13 +416,49 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
           );
         })}
 
+        {isParsingFile && (
+          <div className="flex justify-end">
+            <div className="flex items-center gap-2 bg-orange-100 text-orange-600 text-xs px-4 py-2 rounded-xl">
+              <div className="w-3 h-3 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
+              Fájl feldolgozása...
+            </div>
+          </div>
+        )}
+
         {isLoading && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 
       {/* Input */}
       <div className="bg-white border-t px-4 py-4 rounded-b-xl">
-        <div className="flex gap-3 items-end">
+        {fileError && (
+          <div className="flex items-center justify-between bg-red-50 border border-red-200 text-red-600 text-xs px-3 py-2 rounded-lg mb-3">
+            <span>{fileError}</span>
+            <button onClick={() => setFileError("")}>
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        <div className="flex gap-2 items-end">
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_FILE_TYPES}
+            multiple
+            className="hidden"
+            onChange={handleFileSelect}
+            disabled={isDisabled}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isDisabled}
+            title="Fájl feltöltése (PDF, Excel, DOCX, JPG, PNG)"
+            className="text-gray-400 hover:text-orange-500 disabled:text-gray-200 disabled:cursor-not-allowed p-3 rounded-xl border border-gray-200 hover:border-orange-300 transition-all flex-shrink-0"
+          >
+            <Paperclip className="w-5 h-5" />
+          </button>
+
           <textarea
             ref={textareaRef}
             className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"
@@ -293,18 +467,18 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
             rows={1}
-            disabled={isLoading}
+            disabled={isDisabled}
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || isDisabled}
             className="bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all flex-shrink-0"
           >
             <Send className="w-5 h-5" />
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-2 text-center">
-          Enter = küldés &nbsp;•&nbsp; Shift+Enter = új sor
+          Enter = küldés &nbsp;•&nbsp; Shift+Enter = új sor &nbsp;•&nbsp; 📎 PDF, DWG, DOCX, JPG, PNG – húzd ide vagy kattints
         </p>
       </div>
     </div>

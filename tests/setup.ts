@@ -38,6 +38,13 @@ beforeEach(async () => {
   await cleanupTestData();
 });
 
+// Client quote test emails – az összes teszt fájl által használt
+export const TEST_CLIENT_EMAIL = "client-test@offerflow-test.com";
+export const TEST_OTHER_EMAIL = "other-client@offerflow-test.com";
+export const TEST_PRICE_TENANT_A = "price-context-tenant-a@offerflow-test.com";
+export const TEST_PRICE_TENANT_B = "price-context-tenant-b@offerflow-test.com";
+export const TEST_ROUTE_EMAIL = "route-test@offerflow-test.com";
+
 /**
  * Clean up all test data
  */
@@ -78,6 +85,43 @@ export async function cleanupTestData() {
 
     await testPrisma.workforceRegistry.deleteMany({
       where: { tenantEmail: TEST_TENANT_EMAIL },
+    });
+
+    // Client quote test data cleanup
+    await testPrisma.history.deleteMany({
+      where: {
+        userEmail: {
+          in: [
+            TEST_CLIENT_EMAIL,
+            TEST_OTHER_EMAIL,
+            TEST_ROUTE_EMAIL,
+            "completely-different@test.com",
+            "other@test.com",
+          ],
+        },
+      },
+    });
+
+    await testPrisma.user.deleteMany({
+      where: {
+        email: {
+          in: [TEST_CLIENT_EMAIL, TEST_OTHER_EMAIL, TEST_ROUTE_EMAIL],
+        },
+      },
+    });
+
+    // Price context test data cleanup
+    await testPrisma.tenantPriceList.deleteMany({
+      where: {
+        tenantEmail: { in: [TEST_PRICE_TENANT_A, TEST_PRICE_TENANT_B] },
+      },
+    });
+
+    await testPrisma.priceList.deleteMany({
+      where: {
+        tenantEmail: "",
+        task: { startsWith: "[PCTX-TEST]" },
+      },
     });
 
     console.log("🧹 Test data cleaned up");
