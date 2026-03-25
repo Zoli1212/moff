@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X } from "lucide-react";
+import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X, Trash2, Download } from "lucide-react";
 import { exportToPDF, exportToExcel } from "./export-utils";
+import { deleteClientQuoteData, exportClientQuoteData } from "@/actions/client-quote-actions";
 
 interface Message {
   role: "user" | "assistant";
@@ -315,13 +316,48 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
       onDrop={handleDrop}
     >
       {/* Header */}
-      <div className="bg-white border-b px-6 py-4 flex items-center gap-3 rounded-t-xl">
-        <Sparkles className="w-5 h-5 text-orange-500" />
-        <div>
-          <h2 className="font-semibold text-gray-800 text-sm">AI Ajánlatkérő</h2>
-          <p className="text-xs text-gray-400">
-            Válaszoljon az AI kérdéseire az ajánlat elkészítéséhez
-          </p>
+      <div className="bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-xl">
+        <div className="flex items-center gap-3">
+          <Sparkles className="w-5 h-5 text-orange-500" />
+          <div>
+            <h2 className="font-semibold text-gray-800 text-sm">AI Ajánlatkérő</h2>
+            <p className="text-xs text-gray-400">
+              Válaszoljon az AI kérdéseire az ajánlat elkészítéséhez
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1">
+          <button
+            title="Adataim exportálása (GDPR)"
+            onClick={async () => {
+              try {
+                const data = await exportClientQuoteData(sessionId);
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `ajanlatkeres-${sessionId.slice(0, 8)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              } catch { /* ignore */ }
+            }}
+            className="p-2 text-gray-400 hover:text-orange-500 transition-colors rounded-lg hover:bg-gray-100"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <button
+            title="Adataim törlése (GDPR)"
+            onClick={async () => {
+              if (!confirm("Biztosan törölni szeretné az összes adatát ehhez az ajánlatkéréshez? Ez a művelet nem visszavonható.")) return;
+              try {
+                await deleteClientQuoteData(sessionId);
+                window.location.href = "/quote-request";
+              } catch { /* ignore */ }
+            }}
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-gray-100"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

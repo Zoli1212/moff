@@ -3,7 +3,8 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClientQuoteSession } from "@/actions/client-quote-actions";
-import { Sparkles, Paperclip, X, FileText } from "lucide-react";
+import { Sparkles, Paperclip, X, FileText, Shield } from "lucide-react";
+import { Turnstile } from "@marsidev/react-turnstile";
 
 const ACCEPTED_FILE_TYPES = ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png,.dwg";
 const MAX_FILE_SIZE_MB = 10;
@@ -17,9 +18,19 @@ export default function QuoteRequestPage() {
   const [fileError, setFileError] = useState("");
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleStart = async () => {
+    if (!turnstileToken) {
+      setError("Kérjük igazolja, hogy nem robot.");
+      return;
+    }
+    if (!gdprConsent) {
+      setError("Az adatkezelési tájékoztató elfogadása szükséges.");
+      return;
+    }
     if (description.trim().length < 10) {
       setError("Kérjük írjon legalább 10 karaktert a projekt leírásához.");
       return;
@@ -200,10 +211,44 @@ export default function QuoteRequestPage() {
           </span>
         </div>
 
+        {/* GDPR Consent */}
+        <label className="flex items-start gap-2 mb-6 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={gdprConsent}
+            onChange={(e) => {
+              setGdprConsent(e.target.checked);
+              if (e.target.checked) setError("");
+            }}
+            className="mt-0.5 w-4 h-4 accent-orange-500 rounded"
+            disabled={isDisabled}
+          />
+          <span className="text-xs text-gray-500">
+            <Shield className="w-3 h-3 inline-block mr-1 text-orange-500" />
+            Elfogadom az{" "}
+            <a href="/adatkezelesi-tajekoztato" target="_blank" className="text-orange-500 underline hover:text-orange-600">
+              adatkezelési tájékoztatót
+            </a>
+            . Tudomásul veszem, hogy megadott adataimat a rendszer kizárólag az ajánlatkérés feldolgozásához
+            tárolja, és bármikor kérhetem azok törlését.
+          </span>
+        </label>
+
+        {/* Cloudflare Turnstile */}
+        <div className="mb-6">
+          <Turnstile
+            siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || "1x00000000000000000000AA"}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+            options={{ theme: "light", size: "normal", language: "hu" }}
+          />
+        </div>
+
         <div className="flex justify-end">
           <button
             onClick={handleStart}
-            disabled={isDisabled || description.trim().length < 10}
+            disabled={isDisabled || !gdprConsent || !turnstileToken || description.trim().length < 10}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-all"
           >
             <Sparkles className="w-4 h-4" />

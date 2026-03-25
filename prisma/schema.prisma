@@ -88,6 +88,15 @@ model History {
   tenantEmail String
 }
 
+model QuoteAuditLog {
+  id        Int      @id @default(autoincrement())
+  sessionId String
+  userEmail String
+  action    String   // "session_created" | "file_uploaded" | "message_sent" | "gdpr_consent" | "data_deleted" | "data_exported"
+  details   Json?
+  createdAt DateTime @default(now())
+}
+
 model Client {
   id           String   @id @default(uuid())
   companyName  String

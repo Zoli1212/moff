@@ -52,6 +52,8 @@ export async function createClientQuoteSession(initialDescription: string) {
     },
   });
 
+  await logQuoteEvent(sessionId, email, "session_created", { hasFile: false });
+
   return { success: true, sessionId };
 }
 
@@ -74,4 +76,78 @@ export async function getClientQuoteSession(sessionId: string) {
   });
 
   return session;
+}
+
+// ─── Audit Log ───────────────────────────────────────────────
+
+export async function logQuoteEvent(
+  sessionId: string,
+  userEmail: string,
+  action: string,
+  details?: Record<string, unknown>
+) {
+  try {
+    await prisma.quoteAuditLog.create({
+      data: { sessionId, userEmail, action, details: details ?? undefined },
+    });
+  } catch (e) {
+    console.error("AuditLog write failed:", e);
+  }
+}
+
+// ─── GDPR: Adattörlés ───────────────────────────────────────
+
+export async function deleteClientQuoteData(sessionId: string) {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const email = user.emailAddresses[0]?.emailAddress;
+  if (!email) throw new Error("No email found");
+
+  const session = await prisma.history.findFirst({
+    where: { recordId: sessionId, userEmail: email, aiAgentType: "client-quote" },
+  });
+  if (!session) throw new Error("Session not found");
+
+  await prisma.history.delete({ where: { id: session.id } });
+
+  await logQuoteEvent(sessionId, email, "data_deleted");
+
+  return { success: true };
+}
+
+// ─── GDPR: Adatexport ───────────────────────────────────────
+
+export async function exportClientQuoteData(sessionId: string) {
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const email = user.emailAddresses[0]?.emailAddress;
+  if (!email) throw new Error("No email found");
+
+  const session = await prisma.history.findFirst({
+    where: { recordId: sessionId, userEmail: email, aiAgentType: "client-quote" },
+  });
+  if (!session) throw new Error("Session not found");
+
+  const auditLogs = await prisma.quoteAuditLog.findMany({
+    where: { sessionId, userEmail: email },
+    orderBy: { createdAt: "asc" },
+  });
+
+  await logQuoteEvent(sessionId, email, "data_exported");
+
+  return {
+    session: {
+      id: session.recordId,
+      content: session.content,
+      createdAt: session.createdAt,
+      fileName: session.fileName,
+    },
+    auditLog: auditLogs.map((l) => ({
+      action: l.action,
+      details: l.details,
+      createdAt: l.createdAt,
+    })),
+  };
 }
