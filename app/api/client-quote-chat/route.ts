@@ -36,6 +36,58 @@ async function searchInternetPrices(
   }
 }
 
+/**
+ * AI-based category recognition — asks GPT to match user text to available categories.
+ * Returns matched category names from the database.
+ */
+async function recognizeCategories(
+  userText: string,
+  allCategories: string[]
+): Promise<string[]> {
+  if (!userText.trim() || !allCategories.length) return [];
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a Hungarian construction industry classifier. Given a user's free-text description and a list of available work type categories, identify ALL relevant categories that match the user's needs.
+
+AVAILABLE CATEGORIES:
+${allCategories.map((c) => `- ${c}`).join("\n")}
+
+RULES:
+- Return ONLY category names from the list above, one per line
+- Match broadly: "festés" should match painting-related categories, "villany" should match electrical categories
+- Include related categories the user might need but didn't explicitly mention (e.g. "lakásfelújítás" implies multiple categories)
+- If the text is too vague to determine any category, return "NONE"
+- Do NOT invent categories — only use exact names from the list
+- Return the Hungarian category names exactly as they appear in the list`,
+        },
+        {
+          role: "user",
+          content: userText,
+        },
+      ],
+      temperature: 0.3,
+      max_tokens: 300,
+    });
+
+    const result = response.choices[0]?.message?.content || "";
+    if (result.trim() === "NONE") return [];
+
+    const matched = result
+      .split("\n")
+      .map((line) => line.replace(/^[-•*]\s*/, "").trim())
+      .filter((line) => allCategories.includes(line));
+
+    return matched;
+  } catch {
+    return [];
+  }
+}
+
 function buildSystemPrompt(
   priceContext: string,
   internetPrices: string,
@@ -43,61 +95,63 @@ function buildSystemPrompt(
   allCategories?: string[]
 ): string {
   const dbSection = priceContext
-    ? `\nADATBÁZIS ÁRAK (elsősorban ezeket használd az ajánlathoz):\n${priceContext}`
+    ? `\nDATABASE PRICES (use these primarily for the quote):\n${priceContext}`
     : "";
 
   const webSection = internetPrices
-    ? `\nINTERNETES ÁRFRISSÍTÉS (ha az adatbázisban nincs adat, ezekre támaszkodj):\n${internetPrices}\n`
+    ? `\nINTERNET PRICE UPDATE (use these if no database data available):\n${internetPrices}\n`
     : "";
 
   const categorySection = allCategories?.length
-    ? `\nELÉRHETŐ MUNKANEMEK AZ ADATBÁZISBAN:\n${allCategories.map((c) => `- ${c}`).join("\n")}\n`
+    ? `\nAVAILABLE WORK TYPES IN DATABASE:\n${allCategories.map((c) => `- ${c}`).join("\n")}\n`
     : "";
 
   const matchedSection = matchedCategories?.length
-    ? `\nFELISMERT MUNKANEMEK (a megrendelő szövege alapján):\n${matchedCategories.map((c) => `- ${c}`).join("\n")}\n`
+    ? `\nRECOGNIZED WORK TYPES (matched from user's description):\n${matchedCategories.map((c) => `- ${c}`).join("\n")}\n`
     : "";
 
-  return `Te egy tapasztalt magyar építőipari ajánlatkérő asszisztens vagy az Offerflow platformon.
-Feladatod, hogy a megrendelőtől összegyűjtsd az ajánlathoz szükséges összes fontos információt, majd egy hozzávetőleges árbecslést adj.
+  return `You are an experienced Hungarian construction industry quote assistant on the Offerflow platform.
+Your job is to collect all necessary information from the client for a quote, then provide an estimated price.
+IMPORTANT: Always respond in Hungarian regardless of this system prompt being in English.
 ${categorySection}${matchedSection}${dbSection}${webSection}
-MUNKANEM FELISMERÉS:
-- A megrendelő szabad szövegéből azonosítsd be, melyik munkanemek relevánsak a fenti listából
-- Ha több munkanem is szóba jöhet, mindegyiket kezeld párhuzamosan
-- Ha nem egyértelmű, kérdezz vissza: "Jól értem, hogy [munkanem1] és [munkanem2] munkákra gondol?"
-- Az adatbázis tételeit (ADATBÁZIS ÁRAK) használd az árazáshoz — ezek a felismert munkanemekhez tartoznak
+WORK TYPE RECOGNITION:
+- Identify relevant work types from the user's free text based on the available list above
+- If multiple work types apply, handle all of them in parallel
+- If ambiguous, ask a clarifying question: "Jól értem, hogy [work type 1] és [work type 2] munkákra gondol?"
+- Use the database items (DATABASE PRICES) for pricing — these belong to the recognized work types
+- If the user mentions work that doesn't match any category, use internet prices or general market knowledge
 
-FOLYAMAT:
-1. Üdvözöld a felhasználót és értsd meg a leírt projektet
-2. Kérdezz rá a hiányzó kritikus adatokra (egyszerre max 2-3 kérdés):
-   - Helyszín (település / irányítószám)
-   - Ingatlan típusa (lakás, ház, iroda, stb.)
-   - Becsült területek / méretek (m², fm, db a munkanemtől függően)
-   - Helyiségek száma (ha releváns)
-   - Anyagbeszerzés (megrendelő / kivitelező / vegyes)
-   - Tervezett időzítés (mikor kell)
-3. Ha elég adat gyűlt össze, foglald össze amit értettél ("Jól értem, hogy...?")
-4. Megerősítés után generálj BECSÜLT ajánlatot az alábbi formátumban
+PROCESS:
+1. Greet the user and understand the described project
+2. Ask about missing critical data (max 2-3 questions at a time):
+   - Location (city / postal code)
+   - Property type (apartment, house, office, etc.)
+   - Estimated dimensions (m², linear meters, pieces depending on work type)
+   - Number of rooms (if relevant)
+   - Material procurement (client / contractor / mixed)
+   - Planned timeline (when needed)
+3. When enough data collected, summarize what you understood ("Jól értem, hogy...?")
+4. After confirmation, generate an ESTIMATED quote in the format below
 
-BECSÜLT AJÁNLAT FORMÁTUM (csak ha már van: munkanem + helyszín + méretek):
+ESTIMATED QUOTE FORMAT (only when you have: work type + location + dimensions):
 
 ---AJÁNLAT_KEZDET---
-**Projekt összefoglaló:** [rövid leírás]
-**Helyszín:** [helyszín]
+**Projekt összefoglaló:** [short description]
+**Helyszín:** [location]
 **Munkanemek és becsült árak:**
-- [Munkanem 1]: [mennyiség] × [egységár] Ft = [összeg] Ft
-- [Munkanem 2]: [mennyiség] × [egységár] Ft = [összeg] Ft
-**Becsült nettó összeg:** [összeg] Ft
-**Becsült bruttó összeg (27% ÁFA):** [összeg] Ft
+- [Work type 1]: [quantity] × [unit price] Ft = [total] Ft
+- [Work type 2]: [quantity] × [unit price] Ft = [total] Ft
+**Becsült nettó összeg:** [amount] Ft
+**Becsült bruttó összeg (27% ÁFA):** [amount] Ft
 *Ez egy tájékoztató jellegű becslés. A pontos ár helyszíni felmérés után határozható meg.*
 ---AJÁNLAT_VÉGE---
 
-FONTOS SZABÁLYOK:
-- Mindig magyarul válaszolj
-- Elsősorban az adatbázisban szereplő árakat használd (ADATBÁZIS ÁRAK szekció)
-- Ha az adatbázisban nincs releváns tétel, az internetes adatokat vagy általános piaci árat adj meg
-- Légy barátságos és segítőkész
-- Ne generálj ajánlatot, amíg nincs meg: munkanem, helyszín, méretek`;
+IMPORTANT RULES:
+- Always respond in Hungarian
+- Primarily use database prices (DATABASE PRICES section)
+- If no relevant item in database, use internet data or general market prices
+- Be friendly and helpful
+- Do not generate a quote until you have: work type, location, dimensions`;
 }
 
 export async function POST(req: NextRequest) {
@@ -133,23 +187,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1. Elérhető kategóriák lekérése
+    // 1. Get available categories
     const allCategories = await getAvailableCategories();
 
-    // 2. User szövegéből releváns kategóriák matchelése
+    // 2. AI-based category recognition from user text
     const userText = messages
       .filter((m: { role: string }) => m.role === "user")
       .map((m: { content: string }) => m.content)
-      .join(" ")
-      .toLowerCase();
+      .join(" ");
 
-    const matchedCategories = allCategories.filter((cat) => {
-      const catLower = cat.toLowerCase();
-      const keywords = catLower.split(/[,\s]+/).filter((w: string) => w.length > 3);
-      return keywords.some((kw: string) => userText.includes(kw));
-    });
+    const matchedCategories = await recognizeCategories(userText, allCategories);
 
-    // 3. Ha nincs match, az AI fogja felismerni — üres filter = összes tétel (eredeti viselkedés)
+    // 3. Load filtered price context + internet prices in parallel
     const [priceContext, internetPrices] = await Promise.all([
       buildPriceContext(matchedCategories.length > 0 ? matchedCategories : undefined),
       searchInternetPrices(messages),
