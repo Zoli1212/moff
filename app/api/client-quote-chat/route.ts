@@ -3,7 +3,7 @@ import OpenAI from "openai";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/prisma";
 import { tavily } from "@tavily/core";
-import { buildPriceContext } from "@/lib/price-context";
+import { buildPriceContext, getAvailableCategories } from "@/lib/price-context";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -36,7 +36,12 @@ async function searchInternetPrices(
   }
 }
 
-function buildSystemPrompt(priceContext: string, internetPrices: string): string {
+function buildSystemPrompt(
+  priceContext: string,
+  internetPrices: string,
+  matchedCategories?: string[],
+  allCategories?: string[]
+): string {
   const dbSection = priceContext
     ? `\nADATBÁZIS ÁRAK (elsősorban ezeket használd az ajánlathoz):\n${priceContext}`
     : "";
@@ -45,9 +50,23 @@ function buildSystemPrompt(priceContext: string, internetPrices: string): string
     ? `\nINTERNETES ÁRFRISSÍTÉS (ha az adatbázisban nincs adat, ezekre támaszkodj):\n${internetPrices}\n`
     : "";
 
+  const categorySection = allCategories?.length
+    ? `\nELÉRHETŐ MUNKANEMEK AZ ADATBÁZISBAN:\n${allCategories.map((c) => `- ${c}`).join("\n")}\n`
+    : "";
+
+  const matchedSection = matchedCategories?.length
+    ? `\nFELISMERT MUNKANEMEK (a megrendelő szövege alapján):\n${matchedCategories.map((c) => `- ${c}`).join("\n")}\n`
+    : "";
+
   return `Te egy tapasztalt magyar építőipari ajánlatkérő asszisztens vagy az Offerflow platformon.
 Feladatod, hogy a megrendelőtől összegyűjtsd az ajánlathoz szükséges összes fontos információt, majd egy hozzávetőleges árbecslést adj.
-${dbSection}${webSection}
+${categorySection}${matchedSection}${dbSection}${webSection}
+MUNKANEM FELISMERÉS:
+- A megrendelő szabad szövegéből azonosítsd be, melyik munkanemek relevánsak a fenti listából
+- Ha több munkanem is szóba jöhet, mindegyiket kezeld párhuzamosan
+- Ha nem egyértelmű, kérdezz vissza: "Jól értem, hogy [munkanem1] és [munkanem2] munkákra gondol?"
+- Az adatbázis tételeit (ADATBÁZIS ÁRAK) használd az árazáshoz — ezek a felismert munkanemekhez tartoznak
+
 FOLYAMAT:
 1. Üdvözöld a felhasználót és értsd meg a leírt projektet
 2. Kérdezz rá a hiányzó kritikus adatokra (egyszerre max 2-3 kérdés):
@@ -114,13 +133,34 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Load price context and internet prices in parallel
+    // 1. Elérhető kategóriák lekérése
+    const allCategories = await getAvailableCategories();
+
+    // 2. User szövegéből releváns kategóriák matchelése
+    const userText = messages
+      .filter((m: { role: string }) => m.role === "user")
+      .map((m: { content: string }) => m.content)
+      .join(" ")
+      .toLowerCase();
+
+    const matchedCategories = allCategories.filter((cat) => {
+      const catLower = cat.toLowerCase();
+      const keywords = catLower.split(/[,\s]+/).filter((w: string) => w.length > 3);
+      return keywords.some((kw: string) => userText.includes(kw));
+    });
+
+    // 3. Ha nincs match, az AI fogja felismerni — üres filter = összes tétel (eredeti viselkedés)
     const [priceContext, internetPrices] = await Promise.all([
-      buildPriceContext(),
+      buildPriceContext(matchedCategories.length > 0 ? matchedCategories : undefined),
       searchInternetPrices(messages),
     ]);
 
-    const systemPrompt = buildSystemPrompt(priceContext, internetPrices);
+    const systemPrompt = buildSystemPrompt(
+      priceContext,
+      internetPrices,
+      matchedCategories.length > 0 ? matchedCategories : undefined,
+      allCategories
+    );
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

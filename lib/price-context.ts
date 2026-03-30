@@ -1,9 +1,31 @@
 import { prisma } from "@/lib/prisma";
 
-export async function buildPriceContext(): Promise<string> {
+/**
+ * Elérhető munkanem kategóriák lekérése (DISTINCT category).
+ * A kliens chat AI ezeket használja a szabad szöveg felismeréséhez.
+ */
+export async function getAvailableCategories(): Promise<string[]> {
+  const results = await prisma.priceList.findMany({
+    where: { tenantEmail: "" },
+    select: { category: true },
+    distinct: ["category"],
+    orderBy: { category: "asc" },
+  });
+  return results.map((r) => r.category).filter(Boolean);
+}
+
+/**
+ * Adott kategóriákhoz tartozó tételek betöltése.
+ * Ha nincs megadva kategória, az összes tételt betölti (eredeti viselkedés).
+ */
+export async function buildPriceContext(matchedCategories?: string[]): Promise<string> {
+  const categoryFilter = matchedCategories?.length
+    ? { category: { in: matchedCategories } }
+    : {};
+
   const [globalPrices, tenantPrices] = await Promise.all([
     prisma.priceList.findMany({
-      where: { tenantEmail: "" },
+      where: { tenantEmail: "", ...categoryFilter },
       select: {
         category: true,
         task: true,
@@ -13,9 +35,10 @@ export async function buildPriceContext(): Promise<string> {
         materialCost: true,
       },
       orderBy: { category: "asc" },
-      take: 150,
+      take: matchedCategories?.length ? 500 : 150,
     }),
     prisma.tenantPriceList.findMany({
+      where: categoryFilter,
       select: {
         task: true,
         category: true,
@@ -25,7 +48,7 @@ export async function buildPriceContext(): Promise<string> {
         materialCost: true,
       },
       orderBy: { task: "asc" },
-      take: 150,
+      take: matchedCategories?.length ? 500 : 150,
     }),
   ]);
 
