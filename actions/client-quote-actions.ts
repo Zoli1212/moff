@@ -88,7 +88,7 @@ export async function logQuoteEvent(
 ) {
   try {
     await prisma.quoteAuditLog.create({
-      data: { sessionId, userEmail, action, details: details ?? undefined },
+      data: { sessionId, userEmail, action, details: details ? JSON.parse(JSON.stringify(details)) : undefined },
     });
   } catch (e) {
     console.error("AuditLog write failed:", e);
