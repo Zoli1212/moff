@@ -227,9 +227,21 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 128)}px`;
   };
 
+  // Rate limiting for file uploads
+  const lastUploadTime = useRef<number>(0);
+  const UPLOAD_COOLDOWN = 2000; // 2 seconds between uploads
+
   const processFiles = async (files: FileList | File[]) => {
     const fileArray = Array.from(files);
     if (fileArray.length === 0) return;
+
+    // Rate limiting check
+    const now = Date.now();
+    if (now - lastUploadTime.current < UPLOAD_COOLDOWN) {
+      setFileError("Túl gyakori feltöltés. Kérjük várjon 2 másodpercet.");
+      return;
+    }
+    lastUploadTime.current = now;
 
     setFileError("");
 
