@@ -88,6 +88,81 @@ RULES:
   }
 }
 
+/**
+ * Extract structured project data from the full conversation after a quote is generated.
+ * Single call per quote — not per message.
+ */
+async function extractProjectData(
+  messages: { role: string; content: string }[]
+): Promise<Record<string, unknown> | null> {
+  try {
+    const conversation = messages
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n\n");
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: `You are a data extraction assistant. Extract structured project data from a Hungarian construction quote conversation.
+
+Return ONLY valid JSON with these fields (use null for unknown/not mentioned):
+{
+  "location": "city or address string",
+  "postalCode": "string or null",
+  "propertyType": "apartment | house | office | commercial | other",
+  "workTypes": ["array of identified work type strings"],
+  "dimensions": {
+    "totalArea": "number in m² or null",
+    "rooms": "number or null",
+    "ceilingHeight": "number in meters or null",
+    "details": { "room/area name": "m² or fm or db" }
+  },
+  "materialProcurement": "client | contractor | mixed | null",
+  "timeline": {
+    "startDate": "string or null",
+    "endDate": "string or null",
+    "urgency": "normal | urgent | flexible"
+  },
+  "accessInfo": "string about logistics/access or null",
+  "estimatedBudget": {
+    "netTotal": "number in Ft or null",
+    "grossTotal": "number in Ft or null",
+    "breakdown": [{"workType": "string", "amount": "number in Ft"}]
+  },
+  "clientNotes": "any special requests or notes from the client"
+}
+
+RULES:
+- Extract ONLY what was explicitly mentioned in the conversation
+- Use null for anything not discussed
+- Numbers should be actual numbers, not strings
+- Keep workTypes in Hungarian as mentioned`,
+        },
+        {
+          role: "user",
+          content: conversation,
+        },
+      ],
+      temperature: 0.1,
+      max_tokens: 800,
+    });
+
+    const text = response.choices[0]?.message?.content || "";
+    const jsonStr = text.includes("```json")
+      ? text.split("```json")[1].split("```")[0]
+      : text.includes("```")
+      ? text.split("```")[1].split("```")[0]
+      : text;
+
+    return JSON.parse(jsonStr.trim());
+  } catch (e) {
+    console.error("[extractProjectData] Failed:", e);
+    return null;
+  }
+}
+
 function buildSystemPrompt(
   priceContext: string,
   internetPrices: string,
@@ -230,6 +305,15 @@ export async function POST(req: NextRequest) {
       { role: "assistant", content: reply },
     ];
 
+    // Extract structured project data when a quote is generated
+    let metaDataUpdate = {};
+    if (reply.includes("---AJÁNLAT_KEZDET---")) {
+      const projectData = await extractProjectData(updatedMessages);
+      if (projectData) {
+        metaDataUpdate = { metaData: JSON.parse(JSON.stringify(projectData)) };
+      }
+    }
+
     await prisma.history.updateMany({
       where: {
         recordId: sessionId,
@@ -238,6 +322,7 @@ export async function POST(req: NextRequest) {
       },
       data: {
         content: updatedMessages,
+        ...metaDataUpdate,
       },
     });
 
