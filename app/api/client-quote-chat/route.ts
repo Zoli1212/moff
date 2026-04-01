@@ -131,7 +131,13 @@ Return ONLY valid JSON with these fields (use null for unknown/not mentioned):
     "grossTotal": "number in Ft or null",
     "breakdown": [{"workType": "string", "amount": "number in Ft"}]
   },
-  "clientNotes": "any special requests or notes from the client"
+  "clientNotes": "any special requests or notes from the client",
+  "contact": {
+    "name": "full name or null",
+    "phone": "phone number or null",
+    "email": "email address or null",
+    "contactSkipped": "boolean — true if user chose download-only"
+  }
 }
 
 RULES:
@@ -196,6 +202,36 @@ WORK TYPE RECOGNITION:
 - Use the database items (DATABASE PRICES) for pricing — these belong to the recognized work types
 - If the user mentions work that doesn't match any category, use internet prices or general market knowledge
 
+MINIMUM DATA REQUIREMENTS:
+Before generating a quote, ALL critical fields must be collected. Optional fields improve accuracy but are not blocking.
+
+CRITICAL (must have before quote):
+  ✅ Work types — at least one identified work type (e.g. festés, burkolás)
+  ✅ Location — city or district (e.g. Budapest XIII. kerület)
+  ✅ Dimensions — area in m², linear meters, or piece count relevant to the work type
+  ✅ Contact — name + phone + email, OR user explicitly chose "letöltés" (download-only)
+
+OPTIONAL (ask if not mentioned, but don't block quote):
+  ◻ Property type (apartment, house, office)
+  ◻ Number of rooms
+  ◻ Ceiling height
+  ◻ Access / logistics info
+  ◻ Material procurement (client / contractor / mixed)
+  ◻ Timeline / urgency
+
+PROGRESS TRACKING:
+At the END of every response (until the quote is generated), add a short one-line progress summary in this format:
+
+**Ajánlat készültség: [X/4]** — [list what's still missing in natural Hungarian]
+
+Examples:
+- "**Ajánlat készültség: 1/4** — Még szükségem van a helyszínre, méretekre és az elérhetőségére."
+- "**Ajánlat készültség: 3/4** — Már csak az elérhetőségei hiányoznak (vagy írja hogy 'letöltés')."
+- "**Ajánlat készültség: 4/4** — Minden megvan, készítem az ajánlatot!"
+
+The 4 items tracked: munkanem, helyszín, méretek, elérhetőség/letöltés.
+Keep it short and conversational — NOT a table, NOT a checklist, just one bold line + one sentence.
+
 PROCESS:
 1. Greet the user and understand the described project
 2. Ask about missing critical data (max 2-3 questions at a time):
@@ -206,7 +242,19 @@ PROCESS:
    - Material procurement (client / contractor / mixed)
    - Planned timeline (when needed)
 3. When enough data collected, summarize what you understood ("Jól értem, hogy...?")
-4. After confirmation, generate an ESTIMATED quote in the format below
+4. After confirmation, ask for contact details BEFORE generating the quote:
+   "Az ajánlat elkészítéséhez kérem adja meg az elérhetőségeit:
+   - Teljes név
+   - Telefonszám
+   - Email cím
+   Ha csak le szeretné tölteni az ajánlatot, írja hogy 'letöltés' és nem szükséges megadnia az adatait."
+5. VALIDATE the contact details:
+   - Email: must contain @ and a domain (e.g. valami@email.hu)
+   - Phone: Hungarian format accepted (06, +36, or standard digits, 9+ digits)
+   - Name: at least 2 words (first name + last name)
+   If validation fails, politely ask to correct: "Az email cím formátuma nem megfelelő, kérem ellenőrizze."
+   If the user says "letöltés" or "download", skip contact details and proceed to quote.
+6. After contact details received (or skipped), generate an ESTIMATED quote in the format below
 
 ESTIMATED QUOTE FORMAT (only when you have: work type + location + dimensions):
 
@@ -226,7 +274,10 @@ IMPORTANT RULES:
 - Primarily use database prices (DATABASE PRICES section)
 - If no relevant item in database, use internet data or general market prices
 - Be friendly and helpful
-- Do not generate a quote until you have: work type, location, dimensions`;
+- NEVER generate a quote if ANY critical field is missing (work type, location, dimensions, contact/download choice)
+- If the user asks for a quote but critical data is missing, show what's missing in the status block and ask for it
+- When asking for contact details, remind the user: "Az adatokat kizárólag az ajánlattal kapcsolatos kommunikációra használjuk, és bármikor kérheti azok törlését."
+- Never ask for contact details more than once per session`;
 }
 
 export async function POST(req: NextRequest) {
