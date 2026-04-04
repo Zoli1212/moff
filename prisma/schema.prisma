@@ -847,3 +847,17 @@ model InviteToken {
   @@index([token])
   @@index([createdBy])
 }
+
+model Notification {
+  id           Int      @id @default(autoincrement())
+  recipientEmail String // kivitelező email
+  type         String   // "quote_request" | "system" | etc.
+  title        String
+  body         String
+  sessionId    String?  // client quote session reference
+  isRead       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  @@index([recipientEmail])
+  @@index([recipientEmail, isRead])
+}

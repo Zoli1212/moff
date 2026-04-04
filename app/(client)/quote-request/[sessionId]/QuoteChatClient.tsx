@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X, Trash2, Download } from "lucide-react";
+import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X, Trash2, Download, Mail, Check } from "lucide-react";
 import { exportToPDF, exportToExcel } from "./export-utils";
 import { deleteClientQuoteData, exportClientQuoteData } from "@/actions/client-quote-actions";
+import { sendQuoteRequest } from "@/actions/quote-request-actions";
 
 interface Message {
   role: "user" | "assistant";
@@ -55,11 +56,24 @@ function FileBubble({ fileName }: { fileName: string }) {
 function EstimateCard({
   estimate,
   onRefine,
+  onDecline,
+  onSendEmail,
+  emailSending,
+  emailSent,
+  emailResult,
 }: {
   estimate: string;
   onRefine: () => void;
+  onDecline: () => void;
+  onSendEmail: (recipientEmail: string, includesPrices: boolean) => void;
+  emailSending: boolean;
+  emailSent: boolean;
+  emailResult: string;
 }) {
   const [exportOpen, setExportOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const lines = estimate.split("\n").filter(Boolean);
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-gray-700">
@@ -99,13 +113,91 @@ function EstimateCard({
           );
         })}
       </div>
-      <div className="mt-4 pt-3 border-t border-orange-200 flex flex-col sm:flex-row gap-2">
-        <button
-          onClick={onRefine}
-          className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-2 px-3 rounded-lg transition-all"
-        >
-          Kérem az ajánlat pontosítását
-        </button>
+      <div className="mt-4 pt-3 border-t border-orange-200 flex flex-col gap-2">
+        {/* Email küldés kivitelezőnek */}
+        {emailSent ? (
+          <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg">
+            <Check className="w-4 h-4" />
+            {emailResult}
+          </div>
+        ) : sendOpen ? (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="email"
+                placeholder="Kivitelező email címe"
+                value={recipientEmail}
+                onChange={(e) => { setRecipientEmail(e.target.value); setEmailError(""); }}
+                className="flex-1 text-xs px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-400"
+                autoFocus
+              />
+              <button
+                onClick={() => { setSendOpen(false); setRecipientEmail(""); setEmailError(""); }}
+                className="text-gray-400 hover:text-gray-600 p-1"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {emailError && (
+              <p className="text-xs text-red-500">{emailError}</p>
+            )}
+            {recipientEmail && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    if (!recipientEmail.includes("@")) { setEmailError("Érvénytelen email cím"); return; }
+                    onSendEmail(recipientEmail, true);
+                  }}
+                  disabled={emailSending}
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
+                >
+                  {emailSending ? (
+                    <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <FileText className="w-3.5 h-3.5" />
+                  )}
+                  Tételek + árak
+                </button>
+                <button
+                  onClick={() => {
+                    if (!recipientEmail.includes("@")) { setEmailError("Érvénytelen email cím"); return; }
+                    onSendEmail(recipientEmail, false);
+                  }}
+                  disabled={emailSending}
+                  className="flex-1 bg-white hover:bg-orange-50 disabled:bg-gray-100 text-orange-600 text-xs font-medium py-2 px-3 rounded-lg border border-orange-200 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <Table2 className="w-3.5 h-3.5" />
+                  Csak tételek
+                </button>
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <div className="flex flex-col sm:flex-row gap-2">
+          {!emailSent && !sendOpen && (
+            <button
+              onClick={() => setSendOpen(true)}
+              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            >
+              <Mail className="w-3.5 h-3.5" />
+              Küldés emailben kivitelezőnek
+            </button>
+          )}
+          <button
+            onClick={onRefine}
+            className="flex-1 bg-white hover:bg-orange-50 text-orange-600 text-xs font-medium py-2 px-3 rounded-lg border border-orange-200 transition-all"
+          >
+            Ajánlat pontosítása a chatben
+          </button>
+          <button
+            onClick={onDecline}
+            className="flex-1 bg-white hover:bg-gray-50 text-gray-500 text-xs font-medium py-2 px-3 rounded-lg border border-gray-200 transition-all"
+          >
+            Nem kérem, köszönöm
+          </button>
+        </div>
+
         <div className="relative flex-1">
           <button
             onClick={() => setExportOpen((v) => !v)}
@@ -162,6 +254,9 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [fileError, setFileError] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailResult, setEmailResult] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -457,6 +552,46 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                       setMessages(newMessages);
                       sendToAI(newMessages);
                     }}
+                    onDecline={() => {
+                      const declineMsg = "Köszönöm, nem kérem az ajánlat pontosítását.";
+                      const newMessages: Message[] = [
+                        ...messages,
+                        { role: "user", content: declineMsg },
+                      ];
+                      setMessages(newMessages);
+                      sendToAI(newMessages);
+                    }}
+                    onSendEmail={async (recipientEmail: string, includesPrices: boolean) => {
+                      setEmailSending(true);
+                      try {
+                        // Extract work types from conversation
+                        const allText = messages.map((m) => m.content).join(" ");
+                        const workTypes = allText.match(/festés|burkolás|villanyszerelés|vízszerelés|gipszkarton|tetőfedés|asztalos|kőműves|bádogos|vakolás|szigetelés|laminált|padló|ajtó/gi) || ["általános felújítás"];
+                        const uniqueWorkTypes = [...new Set(workTypes.map((w) => w.toLowerCase()))];
+
+                        // Extract client name from messages
+                        const clientName = messages.find((m) => m.role === "user" && /vagyok|nevem/i.test(m.content))?.content.match(/([A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+\s[A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+)/)?.[1] || "Megrendelő";
+
+                        const result = await sendQuoteRequest(
+                          sessionId,
+                          recipientEmail,
+                          clientName,
+                          includesPrices ? estimate : estimate.replace(/[\d.,]+\s*Ft/g, "—"),
+                          uniqueWorkTypes,
+                          includesPrices
+                        );
+                        setEmailResult(result.message);
+                        setEmailSent(true);
+                      } catch {
+                        setEmailResult("Hiba történt a küldés során. Kérjük próbálja újra.");
+                        setEmailSent(true);
+                      } finally {
+                        setEmailSending(false);
+                      }
+                    }}
+                    emailSending={emailSending}
+                    emailSent={emailSent}
+                    emailResult={emailResult}
                   />
                 )}
               </div>

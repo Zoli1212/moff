@@ -7,6 +7,9 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_EXTENSIONS = ["pdf", "xlsx", "xls", "docx", "jpg", "jpeg", "png", "dwg"];
+
 export async function POST(req: NextRequest) {
   try {
     console.log("[parse-file] Request received");
@@ -14,7 +17,6 @@ export async function POST(req: NextRequest) {
     const file = formData.get("file") as File;
 
     if (!file) {
-      console.log("[parse-file] No file in request");
       return NextResponse.json(
         { error: "Nincs fájl feltöltve" },
         { status: 400 }
@@ -22,7 +24,32 @@ export async function POST(req: NextRequest) {
     }
 
     const fileName = file.name.toLowerCase();
-    console.log("[parse-file] Processing file:", fileName, "Size:", file.size);
+    const ext = fileName.split(".").pop() || "";
+
+    // File type whitelist validation
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return NextResponse.json(
+        { error: `Nem támogatott fájlformátum (.${ext}). Elfogadott: PDF, DOCX, XLSX, JPG, PNG, DWG.` },
+        { status: 400 }
+      );
+    }
+
+    // File size limit
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `A fájl mérete (${Math.round(file.size / 1024 / 1024)}MB) meghaladja a megengedett 10MB-ot.` },
+        { status: 400 }
+      );
+    }
+
+    if (file.size === 0) {
+      return NextResponse.json(
+        { error: "A fájl üres." },
+        { status: 400 }
+      );
+    }
+
+    console.log("[parse-file] Processing:", fileName, "Size:", file.size);
 
     let extractedText = "";
 
@@ -74,15 +101,29 @@ export async function POST(req: NextRequest) {
           { status: 500 }
         );
       }
-    } else {
-      console.log("[parse-file] Unsupported file format");
-      return NextResponse.json(
-        {
-          error:
-            "Nem támogatott fájlformátum. Csak Excel (.xlsx, .xls) és PDF fájlokat fogadunk el.",
-        },
-        { status: 400 }
-      );
+    }
+    // DOCX feldolgozás
+    else if (fileName.endsWith(".docx")) {
+      try {
+        const mammoth = await import("mammoth");
+        const fileBuffer = Buffer.from(await file.arrayBuffer());
+        const result = await mammoth.extractRawText({ buffer: fileBuffer });
+        extractedText = result.value;
+      } catch (error) {
+        console.error("[parse-file] DOCX parsing error:", error);
+        return NextResponse.json(
+          { error: "Hiba a DOCX fájl feldolgozása során" },
+          { status: 500 }
+        );
+      }
+    }
+    // Image files — note: text extraction not possible, just acknowledge
+    else if (["jpg", "jpeg", "png"].includes(ext)) {
+      extractedText = `[Kép feltöltve: ${file.name}, méret: ${Math.round(file.size / 1024)}KB. Kérem írja le szövegesen a kép tartalmát vagy a kívánt munkálatokat.]`;
+    }
+    // DWG — acknowledge, no parsing
+    else if (ext === "dwg") {
+      extractedText = `[DWG tervrajz feltöltve: ${file.name}, méret: ${Math.round(file.size / 1024)}KB. Kérem írja le szövegesen a tervrajzon szereplő munkálatokat és méreteket.]`;
     }
 
     if (!extractedText.trim()) {

@@ -362,6 +362,23 @@ export async function POST(req: NextRequest) {
       const projectData = await extractProjectData(updatedMessages);
       if (projectData) {
         metaDataUpdate = { metaData: JSON.parse(JSON.stringify(projectData)) };
+
+        // Audit log: contact details provided or skipped
+        const contact = (projectData as Record<string, unknown>).contact as Record<string, unknown> | undefined;
+        if (contact) {
+          await prisma.quoteAuditLog.create({
+            data: {
+              sessionId,
+              userEmail: email,
+              action: contact.contactSkipped ? "contact_skipped" : "contact_provided",
+              details: JSON.parse(JSON.stringify({
+                name: contact.name || null,
+                hasPhone: !!contact.phone,
+                hasEmail: !!contact.email,
+              })),
+            },
+          }).catch((e) => console.error("[audit] contact log failed:", e));
+        }
       }
     }
 
