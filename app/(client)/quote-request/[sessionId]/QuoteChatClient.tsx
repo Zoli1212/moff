@@ -65,7 +65,7 @@ function EstimateCard({
   estimate: string;
   onRefine: () => void;
   onDecline: () => void;
-  onSendEmail: (recipientEmail: string, includesPrices: boolean) => void;
+  onSendEmail: (recipientEmail: string, includesPrices: boolean, message?: string) => void;
   emailSending: boolean;
   emailSent: boolean;
   emailResult: string;
@@ -74,6 +74,7 @@ function EstimateCard({
   const [sendOpen, setSendOpen] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
   const lines = estimate.split("\n").filter(Boolean);
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-gray-700">
@@ -141,12 +142,20 @@ function EstimateCard({
             {emailError && (
               <p className="text-xs text-red-500">{emailError}</p>
             )}
+            <textarea
+              placeholder="Üzenet a kivitelezőnek (opcionális)"
+              value={emailMessage}
+              onChange={(e) => setEmailMessage(e.target.value)}
+              rows={2}
+              maxLength={500}
+              className="w-full text-xs px-3 py-2 border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
             {recipientEmail && (
               <div className="flex gap-2">
                 <button
                   onClick={() => {
                     if (!recipientEmail.includes("@")) { setEmailError("Érvénytelen email cím"); return; }
-                    onSendEmail(recipientEmail, true);
+                    onSendEmail(recipientEmail, true, emailMessage);
                   }}
                   disabled={emailSending}
                   className="flex-1 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
@@ -161,7 +170,7 @@ function EstimateCard({
                 <button
                   onClick={() => {
                     if (!recipientEmail.includes("@")) { setEmailError("Érvénytelen email cím"); return; }
-                    onSendEmail(recipientEmail, false);
+                    onSendEmail(recipientEmail, false, emailMessage);
                   }}
                   disabled={emailSending}
                   className="flex-1 bg-white hover:bg-orange-50 disabled:bg-gray-100 text-orange-600 text-xs font-medium py-2 px-3 rounded-lg border border-orange-200 transition-all flex items-center justify-center gap-1.5"
@@ -207,19 +216,35 @@ function EstimateCard({
             Exportálás
           </button>
           {exportOpen && (
-            <div className="absolute bottom-full mb-1 right-0 w-44 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10">
+            <div className="absolute bottom-full mb-1 right-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10">
+              <div className="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Tételek + árak</div>
               <button
-                onClick={() => { exportToPDF(estimate); setExportOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+                onClick={() => { exportToPDF(estimate, true); setExportOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
               >
                 <FileText className="w-4 h-4 text-orange-400" />
                 PDF letöltés
               </button>
               <button
-                onClick={() => { exportToExcel(estimate); setExportOpen(false); }}
-                className="w-full flex items-center gap-2.5 px-4 py-3 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors border-t border-gray-100"
+                onClick={() => { exportToExcel(estimate, true); setExportOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors border-t border-gray-100"
               >
                 <Table2 className="w-4 h-4 text-orange-400" />
+                Excel letöltés
+              </button>
+              <div className="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase tracking-wide border-t">Csak tételek (ár nélkül)</div>
+              <button
+                onClick={() => { exportToPDF(estimate, false); setExportOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
+              >
+                <FileText className="w-4 h-4 text-gray-400" />
+                PDF letöltés
+              </button>
+              <button
+                onClick={() => { exportToExcel(estimate, false); setExportOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors border-t border-gray-100"
+              >
+                <Table2 className="w-4 h-4 text-gray-400" />
                 Excel letöltés
               </button>
             </div>
@@ -579,7 +604,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                       setMessages(newMessages);
                       sendToAI(newMessages);
                     }}
-                    onSendEmail={async (recipientEmail: string, includesPrices: boolean) => {
+                    onSendEmail={async (recipientEmail: string, includesPrices: boolean, message?: string) => {
                       setEmailSending(true);
                       try {
                         // Extract work types from conversation
@@ -596,7 +621,8 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                           clientName,
                           includesPrices ? estimate : estimate.replace(/[\d.,]+\s*Ft/g, "—"),
                           uniqueWorkTypes,
-                          includesPrices
+                          includesPrices,
+                          message
                         );
                         setEmailResult(result.message);
                         setEmailSent(true);

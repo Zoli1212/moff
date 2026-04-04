@@ -47,7 +47,8 @@ export async function sendQuoteRequest(
   clientName: string,
   estimate: string,
   workTypes: string[],
-  includesPrices: boolean
+  includesPrices: boolean,
+  clientMessage?: string
 ) {
   let sentCount = 0;
   let notifiedCount = 0;
@@ -58,7 +59,7 @@ export async function sendQuoteRequest(
       from: "OfferFlow <onboarding@resend.dev>",
       to: [recipientEmail],
       subject: `Új ajánlatkérés — ${workTypes.join(", ")}`,
-      html: buildQuoteRequestEmail(clientName, recipientEmail, estimate, workTypes, includesPrices),
+      html: buildQuoteRequestEmail(clientName, recipientEmail, estimate, workTypes, includesPrices, clientMessage),
     });
     sentCount++;
   } catch (e) {
@@ -159,7 +160,8 @@ function buildQuoteRequestEmail(
   clientEmail: string,
   estimate: string,
   workTypes: string[],
-  includesPrices: boolean
+  includesPrices: boolean,
+  clientMessage?: string
 ): string {
   const cleanEstimate = estimate
     .replace(/\*\*/g, "")
@@ -175,6 +177,10 @@ function buildQuoteRequestEmail(
       <div style="border: 1px solid #e5e7eb; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
         <p><strong>Megrendelő:</strong> ${clientName} (${clientEmail})</p>
         <p><strong>Munkanemek:</strong> ${workTypes.join(", ")}</p>
+        ${clientMessage ? `<div style="background: #fffbeb; border-left: 3px solid #f97316; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0;">
+          <p style="margin: 0; font-size: 13px; color: #92400e;"><strong>Megrendelő üzenete:</strong></p>
+          <p style="margin: 6px 0 0; font-size: 13px; color: #78350f;">${clientMessage}</p>
+        </div>` : ""}
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;">
         <h3 style="color: #f97316;">Előzetes ${includesPrices ? "árajánlat" : "tétellista"}</h3>
         <pre style="background: #f9fafb; padding: 16px; border-radius: 8px; font-size: 13px; white-space: pre-wrap;">${cleanEstimate}</pre>

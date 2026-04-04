@@ -63,7 +63,7 @@ function parseEstimateData(raw: string): ParsedEstimate {
   return { summary, location, items, netTotal, grossTotal };
 }
 
-export function exportToPDF(raw: string) {
+export function exportToPDF(raw: string, withPrices = true, clientName = "") {
   const data = parseEstimateData(raw);
   const date = new Date().toLocaleDateString("hu-HU");
 
@@ -73,8 +73,8 @@ export function exportToPDF(raw: string) {
       <tr>
         <td style="padding:9px 8px;border-bottom:1px solid #f0f0f0;">${item.description}</td>
         <td style="padding:9px 8px;border-bottom:1px solid #f0f0f0;text-align:center;">${item.quantity}</td>
-        <td style="padding:9px 8px;border-bottom:1px solid #f0f0f0;text-align:right;">${item.unitPrice}</td>
-        <td style="padding:9px 8px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">${item.total}</td>
+        ${withPrices ? `<td style="padding:9px 8px;border-bottom:1px solid #f0f0f0;text-align:right;">${item.unitPrice}</td>
+        <td style="padding:9px 8px;border-bottom:1px solid #f0f0f0;text-align:right;font-weight:600;">${item.total}</td>` : ""}
       </tr>`
     )
     .join("");
@@ -133,6 +133,10 @@ export function exportToPDF(raw: string) {
       <div class="label">Helyszín</div>
       <div class="value">${data.location}</div>
     </div>` : ""}
+    ${clientName ? `<div class="info-block">
+      <div class="label">Megrendelő</div>
+      <div class="value">${clientName}</div>
+    </div>` : ""}
   </div>
 
   <table>
@@ -140,17 +144,17 @@ export function exportToPDF(raw: string) {
       <tr>
         <th>Munkanem</th>
         <th style="text-align:center;">Mennyiség</th>
-        <th style="text-align:right;">Egységár</th>
-        <th style="text-align:right;">Összeg</th>
+        ${withPrices ? `<th style="text-align:right;">Egységár</th>
+        <th style="text-align:right;">Összeg</th>` : ""}
       </tr>
     </thead>
     <tbody>${itemRows}</tbody>
   </table>
 
-  <div class="totals">
+  ${withPrices ? `<div class="totals">
     <div class="net">Becsült nettó összeg: <strong>${data.netTotal}</strong></div>
     <div class="gross">Becsült bruttó összeg (27% ÁFA): ${data.grossTotal}</div>
-  </div>
+  </div>` : ""}
 
   <div class="disclaimer">
     Ez egy tájékoztató jellegű becslés. A pontos ár helyszíni felmérés után határozható meg.
@@ -167,27 +171,33 @@ export function exportToPDF(raw: string) {
   setTimeout(() => win.print(), 400);
 }
 
-export function exportToExcel(raw: string) {
+export function exportToExcel(raw: string, withPrices = true, clientName = "") {
   const data = parseEstimateData(raw);
   const date = new Date().toLocaleDateString("hu-HU");
 
   const rows: (string | number)[][] = [
     ["BECSÜLT AJÁNLAT – OFFERFLOW"],
     [`Kelt: ${date}`],
+    ...(clientName ? [["Megrendelő:", clientName]] : []),
     [],
     ["Projekt összefoglaló:", data.summary],
     ...(data.location ? [["Helyszín:", data.location]] : []),
     [],
-    ["Munkanem", "Mennyiség", "Egységár", "Összeg"],
-    ...data.items.map((item) => [
-      item.description,
-      item.quantity,
-      item.unitPrice,
-      item.total,
-    ]),
+    withPrices
+      ? ["Munkanem", "Mennyiség", "Egységár", "Összeg"]
+      : ["Munkanem", "Mennyiség"],
+    ...data.items.map((item) =>
+      withPrices
+        ? [item.description, item.quantity, item.unitPrice, item.total]
+        : [item.description, item.quantity]
+    ),
     [],
-    ["", "", "Becsült nettó összeg:", data.netTotal],
-    ["", "", "Becsült bruttó összeg (27% ÁFA):", data.grossTotal],
+    ...(withPrices
+      ? [
+          ["", "", "Becsült nettó összeg:", data.netTotal],
+          ["", "", "Becsült bruttó összeg (27% ÁFA):", data.grossTotal],
+        ]
+      : []),
     [],
     [
       "Ez egy tájékoztató jellegű becslés. A pontos ár helyszíni felmérés után határozható meg.",
