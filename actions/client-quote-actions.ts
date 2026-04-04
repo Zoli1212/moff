@@ -48,6 +48,7 @@ export async function createClientQuoteSession(initialDescription: string) {
       tenantEmail: email,
       content: [{ role: "user", content: initialDescription }],
       aiAgentType: "client-quote",
+      status: "draft",
       createdAt: new Date().toISOString(),
     },
   });

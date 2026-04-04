@@ -86,6 +86,8 @@ model History {
   fileName    String?
   fileUrl     String?
   tenantEmail String
+  status      String  @default("draft") // draft | active | completed | declined
+  updatedAt   DateTime @default(now()) @updatedAt
 }
 
 model QuoteAuditLog {

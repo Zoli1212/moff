@@ -274,7 +274,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  async function sendToAI(currentMessages: Message[]) {
+  async function sendToAI(currentMessages: Message[], retryCount = 0) {
     setIsLoading(true);
     try {
       const res = await fetch("/api/client-quote-chat", {
@@ -282,15 +282,33 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: currentMessages, sessionId }),
       });
+      if (!res.ok && retryCount < 2) {
+        console.warn(`[QuoteChatClient] retry ${retryCount + 1}/2`);
+        await new Promise((r) => setTimeout(r, 1000 * (retryCount + 1)));
+        return sendToAI(currentMessages, retryCount + 1);
+      }
       const data = await res.json();
       if (data.reply) {
         setMessages([
           ...currentMessages,
           { role: "assistant", content: data.reply },
         ]);
+      } else if (data.error) {
+        setMessages([
+          ...currentMessages,
+          { role: "assistant", content: "Hiba történt, kérjük próbálja újra." },
+        ]);
       }
     } catch (e) {
       console.error("[QuoteChatClient] fetch error:", e);
+      if (retryCount < 2) {
+        await new Promise((r) => setTimeout(r, 1000 * (retryCount + 1)));
+        return sendToAI(currentMessages, retryCount + 1);
+      }
+      setMessages([
+        ...currentMessages,
+        { role: "assistant", content: "Nem sikerült kapcsolódni a szerverhez. Kérjük próbálja újra." },
+      ]);
     } finally {
       setIsLoading(false);
     }

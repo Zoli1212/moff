@@ -382,6 +382,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Determine session status
+    const hasQuote = reply.includes("---AJÁNLAT_KEZDET---");
+    const isDeclined = updatedMessages.some(
+      (m: { role: string; content: string }) =>
+        m.role === "user" && /nem kérem|not interested/i.test(m.content)
+    );
+    const status = isDeclined ? "declined" : hasQuote ? "completed" : "active";
+
     await prisma.history.updateMany({
       where: {
         recordId: sessionId,
@@ -390,6 +398,7 @@ export async function POST(req: NextRequest) {
       },
       data: {
         content: updatedMessages,
+        status,
         ...metaDataUpdate,
       },
     });
