@@ -97,14 +97,14 @@ export function AppHeader() {
           />
           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
             {/* Notification bell */}
-            <div className="relative">
+            <div className="relative flex items-center">
               <button
                 onClick={() => setBellOpen((v) => !v)}
                 className="text-[#FF9900] hover:text-[#FF9900] p-1 relative"
               >
                 <Bell className="h-6 w-6" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                  <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
