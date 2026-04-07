@@ -116,6 +116,90 @@ export async function sendQuoteRequest(
 }
 
 /**
+ * Notify ALL registered contractors (tenants) in the system.
+ * Every tenant gets an email + in-app notification.
+ */
+export async function notifyAllContractors(
+  sessionId: string,
+  clientName: string,
+  estimate: string,
+  workTypes: string[],
+  includesPrices: boolean
+) {
+  // Get all tenant emails
+  const tenants = await prisma.user.findMany({
+    where: { isTenant: true },
+    select: { email: true },
+  });
+
+  if (tenants.length === 0) {
+    return {
+      success: false,
+      message: "Jelenleg nincs regisztrált kivitelező a rendszerben.",
+      sentCount: 0,
+      notifiedCount: 0,
+    };
+  }
+
+  let sentCount = 0;
+  let notifiedCount = 0;
+
+  for (const tenant of tenants) {
+    // Email
+    try {
+      await resend.emails.send({
+        from: "OfferFlow <onboarding@resend.dev>",
+        to: [tenant.email],
+        subject: `Új ajánlatkérés — ${workTypes.join(", ")}`,
+        html: buildQuoteRequestEmail(clientName, tenant.email, estimate, workTypes, includesPrices),
+      });
+      sentCount++;
+    } catch (e) {
+      console.error(`[notify-all] Email failed to ${tenant.email}:`, e);
+    }
+
+    // Notification
+    try {
+      await prisma.notification.create({
+        data: {
+          recipientEmail: tenant.email,
+          type: "quote_request",
+          title: "Új ajánlatkérés érkezett",
+          body: `${clientName} ajánlatot kér: ${workTypes.join(", ")}`,
+          sessionId,
+        },
+      });
+      notifiedCount++;
+    } catch (e) {
+      console.error(`[notify-all] Notification failed for ${tenant.email}:`, e);
+    }
+  }
+
+  // Audit log
+  await prisma.quoteAuditLog.create({
+    data: {
+      sessionId,
+      userEmail: "system",
+      action: "notify_all_contractors",
+      details: JSON.parse(JSON.stringify({
+        totalTenants: tenants.length,
+        emailsSent: sentCount,
+        notificationsSent: notifiedCount,
+        workTypes,
+        includesPrices,
+      })),
+    },
+  }).catch((e) => console.error("[audit] notify_all log failed:", e));
+
+  return {
+    success: true,
+    message: `Az ajánlatkérést elküldtük ${sentCount} kivitelezőnek. ${notifiedCount} értesítést is kapott a rendszerben.`,
+    sentCount,
+    notifiedCount,
+  };
+}
+
+/**
  * Get unread notification count for a user.
  */
 export async function getUnreadNotificationCount(email: string): Promise<number> {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X, Trash2, Download, Mail, Check } from "lucide-react";
+import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X, Trash2, Download, Mail, Check, Bell } from "lucide-react";
 import { exportToPDF, exportToExcel } from "./export-utils";
 import { deleteClientQuoteData, exportClientQuoteData } from "@/actions/client-quote-actions";
 import { sendQuoteRequest } from "@/actions/quote-request-actions";
@@ -58,6 +58,7 @@ function EstimateCard({
   onRefine,
   onDecline,
   onSendEmail,
+  onNotifyAll,
   emailSending,
   emailSent,
   emailResult,
@@ -66,6 +67,7 @@ function EstimateCard({
   onRefine: () => void;
   onDecline: () => void;
   onSendEmail: (recipientEmail: string, includesPrices: boolean, message?: string) => void;
+  onNotifyAll: (includesPrices: boolean) => void;
   emailSending: boolean;
   emailSent: boolean;
   emailResult: string;
@@ -75,6 +77,7 @@ function EstimateCard({
   const [recipientEmail, setRecipientEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [emailMessage, setEmailMessage] = useState("");
+  const [notifyAllOpen, setNotifyAllOpen] = useState(false);
   const lines = estimate.split("\n").filter(Boolean);
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-gray-700">
@@ -183,6 +186,34 @@ function EstimateCard({
           </div>
         ) : null}
 
+        {/* Notify all contractors */}
+        {!emailSent && !sendOpen && notifyAllOpen && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { onNotifyAll(true); setNotifyAllOpen(false); }}
+              disabled={emailSending}
+              className="flex-1 bg-orange-600 hover:bg-orange-700 disabled:bg-orange-300 text-white text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Tételek + árak
+            </button>
+            <button
+              onClick={() => { onNotifyAll(false); setNotifyAllOpen(false); }}
+              disabled={emailSending}
+              className="flex-1 bg-white hover:bg-orange-50 disabled:bg-gray-100 text-orange-600 text-xs font-medium py-2 px-3 rounded-lg border border-orange-200 transition-all flex items-center justify-center gap-1.5"
+            >
+              <Table2 className="w-3.5 h-3.5" />
+              Csak tételek
+            </button>
+            <button
+              onClick={() => setNotifyAllOpen(false)}
+              className="text-gray-400 hover:text-gray-600 p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-2">
           {!emailSent && !sendOpen && (
             <button
@@ -191,6 +222,15 @@ function EstimateCard({
             >
               <Mail className="w-3.5 h-3.5" />
               Küldés emailben kivitelezőnek
+            </button>
+          )}
+          {!emailSent && !sendOpen && !notifyAllOpen && (
+            <button
+              onClick={() => setNotifyAllOpen(true)}
+              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium py-2 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
+            >
+              <Bell className="w-3.5 h-3.5" />
+              Értesítés a kivitelezőknek
             </button>
           )}
           <button
@@ -623,6 +663,31 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                           uniqueWorkTypes,
                           includesPrices,
                           message
+                        );
+                        setEmailResult(result.message);
+                        setEmailSent(true);
+                      } catch {
+                        setEmailResult("Hiba történt a küldés során. Kérjük próbálja újra.");
+                        setEmailSent(true);
+                      } finally {
+                        setEmailSending(false);
+                      }
+                    }}
+                    onNotifyAll={async (includesPrices: boolean) => {
+                      setEmailSending(true);
+                      try {
+                        const allText = messages.map((m) => m.content).join(" ");
+                        const workTypes = allText.match(/festés|burkolás|villanyszerelés|vízszerelés|gipszkarton|tetőfedés|asztalos|kőműves|bádogos|vakolás|szigetelés|laminált|padló|ajtó/gi) || ["általános felújítás"];
+                        const uniqueWorkTypes = [...new Set(workTypes.map((w) => w.toLowerCase()))];
+                        const clientName = messages.find((m) => m.role === "user" && /vagyok|nevem/i.test(m.content))?.content.match(/([A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+\s[A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+)/)?.[1] || "Megrendelő";
+
+                        const { notifyAllContractors } = await import("@/actions/quote-request-actions");
+                        const result = await notifyAllContractors(
+                          sessionId,
+                          clientName,
+                          includesPrices ? estimate : estimate.replace(/[\d.,]+\s*Ft/g, "—"),
+                          uniqueWorkTypes,
+                          includesPrices
                         );
                         setEmailResult(result.message);
                         setEmailSent(true);

@@ -22,7 +22,7 @@ After all tests are done, create test-results/REPORT.md with:
 
 ---
 
-## Test 0: Start Dev Server & Login
+## Test 0: Start Dev Server
 
 Copy this into the Antigravity agent:
 
@@ -31,9 +31,7 @@ Run the following in the terminal:
 cd "c:/Users/mzolt/Desktop/Mobile/off" && npm run dev
 
 Wait until you see "Ready" or "started server on" in the terminal output before proceeding.
-Then open http://localhost:3000 in the browser.
-Click "Bejelentkezés ügyfélként" and sign in with Google.
-After login, navigate to http://localhost:3000/quote-request and confirm the page loads.
+Then open http://localhost:3000/quote-request in the browser and confirm the page loads.
 ```
 
 ---
@@ -41,7 +39,7 @@ After login, navigate to http://localhost:3000/quote-request and confirm the pag
 ## Test 1: Quote Request Entry Page
 
 ```
-Open http://localhost:3000/quote-request in the browser (must be logged in first — see Test 0).
+Open http://localhost:3000/quote-request in the browser.
 
 Verify:
 1. "Új ajánlatkérés" heading is visible
