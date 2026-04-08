@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react";
 import { getUserOffers } from "@/actions/offer-actions";
 import { deleteOffer } from "@/actions/delete-offer";
+import { getIncomingQuoteRequests } from "@/actions/quote-request-actions";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Trash2, Upload, Bell, MapPin, ArrowRight, ChevronDown } from "lucide-react";
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
 import UploadOfferDialog from "@/app/(routes)/dashboard/_components/UploadOfferDialog";
 import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
@@ -13,6 +15,7 @@ import { useDemandStore } from "@/store/offerLetterStore";
 import { useRequirementIdStore } from "@/store/requirement-id-store";
 import { useOfferTitleStore } from "@/store/offer-title-store";
 import { toast } from "sonner";
+import { useUser } from "@clerk/nextjs";
 
 interface OfferItem {
   id?: number;
@@ -58,17 +61,34 @@ interface Offer {
   } | null;
 }
 
+interface IncomingRequest {
+  notificationId: number;
+  sessionId: string;
+  title: string;
+  body: string;
+  isRead: boolean;
+  createdAt: Date;
+  clientName: string;
+  workTypes: string[];
+  location: string;
+}
+
 export default function OffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
+  const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [offerToDelete, setOfferToDelete] = useState<Offer | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [requestsOpen, setRequestsOpen] = useState(false);
   const { clearDemandText, clearStoredItems } = useDemandStore();
   const { clearRequirementId } = useRequirementIdStore();
   const { clearOfferTitle } = useOfferTitleStore();
+  const { user } = useUser();
+  const router = useRouter();
+  const userEmail = user?.emailAddresses[0]?.emailAddress || "";
 
   // Clear the store when the component mounts
   useEffect(() => {
@@ -78,29 +98,26 @@ export default function OffersPage() {
     clearOfferTitle();
   }, [clearDemandText, clearStoredItems, clearRequirementId, clearOfferTitle]);
 
-  // Load offers on component mount
+  // Load offers and incoming requests on component mount
   useEffect(() => {
     const loadOffers = async () => {
       try {
         const data = await getUserOffers();
-        // Transform and sort data
         const transformedData = data
           .map((offer) => ({
             ...offer,
             notes: offer.notes?.map((note) =>
               typeof note === "string" ? { content: note } : note
             ) as Note[],
-            description: offer.description || undefined, // Convert null to undefined
-            // Ensure createdAt is a Date object for consistent sorting
+            description: offer.description || undefined,
             createdAt: offer.createdAt
               ? new Date(offer.createdAt)
               : new Date(0),
           }))
-          // Sort by createdAt in descending order (newest first)
           .sort((a, b) => {
             const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
             const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-            return dateB - dateA; // Descending order
+            return dateB - dateA;
           });
         setOffers(transformedData);
       } catch (error) {
@@ -112,6 +129,20 @@ export default function OffersPage() {
 
     loadOffers();
   }, []);
+
+  // Load incoming quote requests
+  useEffect(() => {
+    if (!userEmail) return;
+    const loadRequests = async () => {
+      try {
+        const data = await getIncomingQuoteRequests(userEmail);
+        setIncomingRequests(data as IncomingRequest[]);
+      } catch (error) {
+        console.error("Error loading incoming requests:", error);
+      }
+    };
+    loadRequests();
+  }, [userEmail]);
 
   // Auto-refresh when there are offers being processed by AI
   useEffect(() => {
@@ -297,6 +328,85 @@ export default function OffersPage() {
                 Meglévő ajánlat feltöltése
               </Button>
             </div>
+
+            {/* Incoming quote requests — collapsible */}
+            {incomingRequests.length > 0 && (
+              <div className="mt-6 mb-6">
+                <button
+                  onClick={() => setRequestsOpen((v) => !v)}
+                  className="w-full flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg hover:bg-orange-50 transition-colors"
+                >
+                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                    <Bell className="w-4 h-4 text-orange-500" />
+                    Beérkezett ajánlatkérések
+                    <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                      {incomingRequests.length}
+                    </span>
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${requestsOpen ? "rotate-180" : ""}`} />
+                </button>
+                {requestsOpen && <div className="space-y-3 mt-3">
+                  {incomingRequests.map((req) => (
+                    <button
+                      key={req.notificationId}
+                      onClick={() => router.push(`/offers/from-request/${req.sessionId}`)}
+                      className={`w-full text-left bg-white border rounded-lg p-4 transition-all hover:shadow-md ${
+                        !req.isRead
+                          ? "border-orange-300 bg-orange-50/50"
+                          : "border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {!req.isRead && (
+                              <span className="w-2 h-2 bg-orange-500 rounded-full flex-shrink-0" />
+                            )}
+                            <p className="text-sm font-medium text-gray-800 truncate">
+                              {req.clientName} — ajánlatkérés
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5">
+                            {req.workTypes.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {req.workTypes.slice(0, 3).map((wt, i) => (
+                                  <span
+                                    key={i}
+                                    className="px-2 py-0.5 bg-orange-50 text-orange-700 text-xs rounded-full border border-orange-200"
+                                  >
+                                    {wt}
+                                  </span>
+                                ))}
+                                {req.workTypes.length > 3 && (
+                                  <span className="text-xs text-gray-400">
+                                    +{req.workTypes.length - 3}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {req.location && (
+                              <span className="flex items-center gap-1 text-xs text-gray-400">
+                                <MapPin className="w-3 h-3" />
+                                {req.location}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {new Date(req.createdAt).toLocaleDateString("hu-HU", {
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                        <ArrowRight className="w-5 h-5 text-orange-400 flex-shrink-0 ml-3" />
+                      </div>
+                    </button>
+                  ))}
+                </div>}
+              </div>
+            )}
 
             <div className="mt-6 space-y-4">
               {isLoading ? (

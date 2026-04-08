@@ -46,9 +46,7 @@ export async function sendQuoteRequest(
   recipientEmail: string,
   clientName: string,
   estimate: string,
-  workTypes: string[],
-  includesPrices: boolean,
-  clientMessage?: string
+  workTypes: string[]
 ) {
   let sentCount = 0;
   let notifiedCount = 0;
@@ -59,7 +57,7 @@ export async function sendQuoteRequest(
       from: "OfferFlow <onboarding@resend.dev>",
       to: [recipientEmail],
       subject: `Új ajánlatkérés — ${workTypes.join(", ")}`,
-      html: buildQuoteRequestEmail(clientName, recipientEmail, estimate, workTypes, includesPrices, clientMessage),
+      html: buildQuoteRequestEmail(clientName, estimate, workTypes, sessionId),
     });
     sentCount++;
   } catch (e) {
@@ -102,14 +100,13 @@ export async function sendQuoteRequest(
         notificationsSent: notifiedCount,
         isRegisteredTenant: notifiedCount > 0,
         workTypes,
-        includesPrices,
       })),
     },
   }).catch((e) => console.error("[audit] quote_request_sent log failed:", e));
 
   return {
     success: true,
-    message: `Az ajánlatkérést elküldtük a(z) ${recipientEmail} címre.${notifiedCount > 0 ? " A kivitelező értesítést is kapott a rendszerben." : ""}`,
+    message: `Ajánlatkérést elküldtük a kivitelezőnek.`,
     sentCount,
     notifiedCount,
   };
@@ -123,8 +120,7 @@ export async function notifyAllContractors(
   sessionId: string,
   clientName: string,
   estimate: string,
-  workTypes: string[],
-  includesPrices: boolean
+  workTypes: string[]
 ) {
   // Get all tenant emails
   const tenants = await prisma.user.findMany({
@@ -151,7 +147,7 @@ export async function notifyAllContractors(
         from: "OfferFlow <onboarding@resend.dev>",
         to: [tenant.email],
         subject: `Új ajánlatkérés — ${workTypes.join(", ")}`,
-        html: buildQuoteRequestEmail(clientName, tenant.email, estimate, workTypes, includesPrices),
+        html: buildQuoteRequestEmail(clientName, estimate, workTypes, sessionId),
       });
       sentCount++;
     } catch (e) {
@@ -186,17 +182,141 @@ export async function notifyAllContractors(
         emailsSent: sentCount,
         notificationsSent: notifiedCount,
         workTypes,
-        includesPrices,
       })),
     },
   }).catch((e) => console.error("[audit] notify_all log failed:", e));
 
   return {
     success: true,
-    message: `Az ajánlatkérést elküldtük ${sentCount} kivitelezőnek. ${notifiedCount} értesítést is kapott a rendszerben.`,
+    message: `Ajánlatkérést elküldtük a kivitelezőknek.`,
     sentCount,
     notifiedCount,
   };
+}
+
+/**
+ * Get client quote session data by sessionId — used by contractors to view the request.
+ */
+export async function getClientQuoteSession(sessionId: string) {
+  const session = await prisma.history.findFirst({
+    where: {
+      recordId: sessionId,
+      aiAgentType: "client-quote",
+    },
+    select: {
+      recordId: true,
+      content: true,
+      metaData: true,
+      status: true,
+      userEmail: true,
+      createdAt: true,
+    },
+  });
+
+  if (!session) return null;
+
+  // Extract the user's original description from the first message
+  const messages = (session.content as { role: string; content: string }[]) || [];
+  const userMessages = messages.filter((m) => m.role === "user");
+  const firstUserMessage = userMessages[0]?.content || "";
+
+  // Extract the AI-generated estimate if available
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m.content.includes("---AJÁNLAT_KEZDET---"));
+  let estimate = "";
+  if (lastAssistant) {
+    const start = lastAssistant.content.indexOf("---AJÁNLAT_KEZDET---");
+    const end = lastAssistant.content.indexOf("---AJÁNLAT_VÉGE---");
+    if (start !== -1 && end !== -1) {
+      estimate = lastAssistant.content.slice(start + "---AJÁNLAT_KEZDET---".length, end).trim();
+    }
+  }
+
+  const meta = session.metaData as Record<string, unknown> | null;
+
+  return {
+    sessionId: session.recordId,
+    clientEmail: session.userEmail,
+    clientName: (meta?.contact as Record<string, unknown>)?.name as string || "Megrendelő",
+    description: firstUserMessage,
+    estimate,
+    workTypes: (meta?.workTypes as string[]) || [],
+    location: (meta?.location as string) || "",
+    dimensions: meta?.dimensions || null,
+    status: session.status,
+    createdAt: session.createdAt,
+  };
+}
+
+/**
+ * Get incoming quote requests for a contractor — based on their notifications.
+ */
+export async function getIncomingQuoteRequests(email: string) {
+  // Get all quote_request notifications for this contractor
+  const notifications = await prisma.notification.findMany({
+    where: {
+      recipientEmail: email,
+      type: "quote_request",
+      sessionId: { not: null },
+      status: "pending",
+    },
+    orderBy: { createdAt: "desc" },
+    take: 20,
+  });
+
+  if (notifications.length === 0) return [];
+
+  // Fetch session data for each notification
+  const sessionIds = notifications.map((n) => n.sessionId).filter(Boolean) as string[];
+  const sessions = await prisma.history.findMany({
+    where: {
+      recordId: { in: sessionIds },
+      aiAgentType: "client-quote",
+    },
+    select: {
+      recordId: true,
+      metaData: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+
+  const sessionMap = new Map(sessions.map((s) => [s.recordId, s]));
+
+  return notifications.map((n) => {
+    const session = sessionMap.get(n.sessionId!);
+    const meta = session?.metaData as Record<string, unknown> | null;
+    return {
+      notificationId: n.id,
+      sessionId: n.sessionId!,
+      title: n.title,
+      body: n.body,
+      isRead: n.isRead,
+      createdAt: n.createdAt,
+      clientName: (meta?.contact as Record<string, unknown>)?.name as string || "Megrendelő",
+      workTypes: (meta?.workTypes as string[]) || [],
+      location: (meta?.location as string) || "",
+    };
+  });
+}
+
+/**
+ * Decline a quote request — hides it permanently from the contractor's list.
+ */
+export async function declineQuoteRequest(notificationId: number, email: string) {
+  await prisma.notification.updateMany({
+    where: { id: notificationId, recipientEmail: email },
+    data: { status: "declined", isRead: true },
+  });
+}
+
+/**
+ * Accept a quote request — marks it so it won't show in the incoming list.
+ */
+export async function acceptQuoteRequest(notificationId: number, email: string) {
+  await prisma.notification.updateMany({
+    where: { id: notificationId, recipientEmail: email },
+    data: { status: "accepted", isRead: true },
+  });
 }
 
 /**
@@ -241,16 +361,18 @@ export async function markAllNotificationsRead(email: string) {
 
 function buildQuoteRequestEmail(
   clientName: string,
-  clientEmail: string,
   estimate: string,
   workTypes: string[],
-  includesPrices: boolean,
-  clientMessage?: string
+  sessionId?: string
 ): string {
   const cleanEstimate = estimate
     .replace(/\*\*/g, "")
     .replace(/---AJÁNLAT_KEZDET---|---AJÁNLAT_VÉGE---/g, "")
+    .replace(/[\d.,]+\s*Ft/g, "—")
     .trim();
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.offerflow.hu";
+  const acceptLink = sessionId ? `${appUrl}/offers/from-request/${sessionId}` : appUrl;
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -259,19 +381,19 @@ function buildQuoteRequestEmail(
         <p style="margin: 5px 0 0; opacity: 0.9;">OfferFlow platform</p>
       </div>
       <div style="border: 1px solid #e5e7eb; border-top: none; padding: 24px; border-radius: 0 0 8px 8px;">
-        <p><strong>Megrendelő:</strong> ${clientName} (${clientEmail})</p>
+        <p><strong>Megrendelő:</strong> ${clientName}</p>
         <p><strong>Munkanemek:</strong> ${workTypes.join(", ")}</p>
-        ${clientMessage ? `<div style="background: #fffbeb; border-left: 3px solid #f97316; padding: 12px 16px; margin: 12px 0; border-radius: 0 6px 6px 0;">
-          <p style="margin: 0; font-size: 13px; color: #92400e;"><strong>Megrendelő üzenete:</strong></p>
-          <p style="margin: 6px 0 0; font-size: 13px; color: #78350f;">${clientMessage}</p>
-        </div>` : ""}
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;">
-        <h3 style="color: #f97316;">Előzetes ${includesPrices ? "árajánlat" : "tétellista"}</h3>
+        <h3 style="color: #f97316;">Tétellista</h3>
         <pre style="background: #f9fafb; padding: 16px; border-radius: 8px; font-size: 13px; white-space: pre-wrap;">${cleanEstimate}</pre>
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 16px 0;">
-        <p style="color: #6b7280; font-size: 13px;">
-          A megrendelő az OfferFlow platformon keresztül kéri az ajánlat pontosítását.
-          Kérjük, vegye fel a kapcsolatot a megrendelővel a fenti elérhetőségeken.
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${acceptLink}" style="display: inline-block; background: #f97316; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 15px;">
+            Ajánlatkérés megtekintése
+          </a>
+        </div>
+        <p style="color: #6b7280; font-size: 13px; text-align: center;">
+          Jelentkezzen be az OfferFlow rendszerbe az ajánlat elkészítéséhez.
         </p>
       </div>
     </div>

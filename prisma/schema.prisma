@@ -858,6 +858,7 @@ model Notification {
   body         String
   sessionId    String?  // client quote session reference
   isRead       Boolean  @default(false)
+  status       String   @default("pending") // "pending" | "accepted" | "declined"
   createdAt    DateTime @default(now())
 
   @@index([recipientEmail])

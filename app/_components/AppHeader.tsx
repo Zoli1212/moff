@@ -7,6 +7,7 @@ import { AssistantChatModal } from "./AssistantChatModal";
 import { getAssistantContext } from "@/actions/assistant-context-actions";
 import { getUnreadNotificationCount, getNotifications, markNotificationRead, markAllNotificationsRead } from "@/actions/quote-request-actions";
 import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
 
 interface Notification {
   id: number;
@@ -21,6 +22,7 @@ interface Notification {
 export function AppHeader() {
   const { toggleSidebar } = useSidebar();
   const { user } = useUser();
+  const router = useRouter();
   const userEmail = user?.emailAddresses[0]?.emailAddress || "";
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [context, setContext] = useState("");
@@ -70,12 +72,18 @@ export function AppHeader() {
     return () => clearInterval(interval);
   }, [loadNotifications]);
 
-  const handleMarkRead = async (id: number) => {
-    await markNotificationRead(id, userEmail);
+  const handleNotificationClick = async (n: Notification) => {
+    await markNotificationRead(n.id, userEmail);
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      prev.map((item) => (item.id === n.id ? { ...item, isRead: true } : item))
     );
     setUnreadCount((prev) => Math.max(0, prev - 1));
+
+    // Navigate to quote request acceptance page if it has a sessionId
+    if (n.type === "quote_request" && n.sessionId) {
+      setBellOpen(false);
+      router.push(`/offers/from-request/${n.sessionId}`);
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -129,7 +137,7 @@ export function AppHeader() {
                       notifications.map((n) => (
                         <button
                           key={n.id}
-                          onClick={() => handleMarkRead(n.id)}
+                          onClick={() => handleNotificationClick(n)}
                           className={`w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-orange-50 transition-colors ${
                             !n.isRead ? "bg-orange-50/50" : ""
                           }`}

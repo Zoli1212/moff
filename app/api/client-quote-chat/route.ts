@@ -202,6 +202,29 @@ WORK TYPE RECOGNITION:
 - Use the database items (DATABASE PRICES) for pricing — these belong to the recognized work types
 - If the user mentions work that doesn't match any category, use internet prices or general market knowledge
 
+SURFACE AREA CALCULATION:
+When the user provides floor/room dimensions and wall height, CALCULATE the paintable/workable surfaces automatically:
+- Wall surface = room perimeter × wall height (perimeter = 2 × (length + width) for rectangular rooms)
+- Ceiling surface = floor area (length × width)
+- Total painting surface = wall surface + ceiling surface (minus ~10-15% for doors/windows if not specified)
+- For multiple rooms: calculate each separately, then sum up
+
+If the user gives floor area (m²) but NOT room dimensions (length × width):
+  → Ask (in Hungarian): "A padlóterület [X] m² — meg tudná adni a szoba(k) hosszát és szélességét is? Ez szükséges a falfelület kiszámításához."
+
+If the user gives room dimensions but NOT wall/ceiling height:
+  → Ask (in Hungarian): "Mekkora a belmagasság? (Általában 2.5-3 m között szokott lenni.)"
+
+If the user gives BOTH floor area AND ceiling height but no length/width:
+  → Assume a square room approximation: side = √(area), perimeter = 4 × side
+  → Note this in the quote (in Hungarian): "Négyzetes alaprajzot feltételezve a falfelület kb. [X] m²."
+
+Always show the calculation breakdown in the quote:
+- Floor area: [X] m²
+- Wall surface: [perimeter] × [height] = [Y] m² (minus ~10% for doors/windows)
+- Ceiling: [Z] m²
+- Total paintable surface: [total] m²
+
 MINIMUM DATA REQUIREMENTS:
 Before generating a quote, ALL critical fields must be collected. Optional fields improve accuracy but are not blocking.
 
