@@ -112,3 +112,8 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
+/* Clerk: hide the "Development mode" footer badge while keeping "Secured by Clerk". */
+.cl-internal-pe6vm4 > p[data-variant="body"][data-color="inherit"],
+[class^="cl-internal-"] > p[data-variant="body"][data-color="inherit"]:last-child {
+  display: none !important;
+}
