@@ -41,7 +41,7 @@ model User {
   isSuperUser      Boolean        @default(false)
   isTenant         Boolean        @default(true)
   isClient         Boolean        @default(false) // Használta az ügyfél ajánlatkérő flow-t
-  theme            String         @default("landing")
+  theme            String         @default("corporate")
   stripeCustomerId String?        @unique
   invitedBy        String?        // SuperUser email aki meghívta
   trialEndsAt      DateTime?      // Trial lejárati dátum

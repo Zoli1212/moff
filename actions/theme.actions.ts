@@ -9,7 +9,7 @@ type Theme = 'landing' | 'corporate' | 'common';
 
 export async function getTheme(): Promise<Theme> {
   const user = await currentUser();
-  if (!user || !user.emailAddresses?.[0]?.emailAddress) return 'landing';
+  if (!user || !user.emailAddresses?.[0]?.emailAddress) return 'corporate';
 
   const email = user.emailAddresses[0].emailAddress;
 
@@ -19,10 +19,10 @@ export async function getTheme(): Promise<Theme> {
       select: { theme: true }
     });
 
-    return (dbUser?.theme as Theme) || 'landing';
+    return (dbUser?.theme as Theme) || 'corporate';
   } catch (error) {
     console.error('Error getting theme:', error);
-    return 'landing';
+    return 'corporate';
   }
 }
 

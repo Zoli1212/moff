@@ -13,7 +13,7 @@ interface ThemeState {
 }
 
 // Initialize with default theme
-const DEFAULT_THEME: Theme = 'landing';
+const DEFAULT_THEME: Theme = 'corporate';
 
 // Map theme names to their file extensions
 const THEME_EXTENSIONS: Record<Theme, string> = {
