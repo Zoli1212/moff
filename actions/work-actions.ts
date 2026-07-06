@@ -870,6 +870,7 @@ export async function getWorkItemsWithWorkers(workId: number) {
   const work = await prisma.work.findUnique({
     where: { id: workId },
     select: { tenantEmail: true },
+    
   });
 
   const isTenant = work?.tenantEmail === tenantEmail;

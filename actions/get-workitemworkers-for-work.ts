@@ -20,6 +20,9 @@ export async function getWorkItemWorkersForWork(workId: number) {
       workId: workId,
       tenantEmail: work.tenantEmail,
     },
+    orderBy: {
+      name: 'desc'
+    }
   });
 
   return workItemWorkers;
