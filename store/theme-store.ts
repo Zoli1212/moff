@@ -58,10 +58,21 @@ export const useThemeStore = create<ThemeState>()(
     {
       name: 'theme-storage',
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ 
-        theme: state.theme, 
-        isInitialized: state.isInitialized 
+      partialize: (state) => ({
+        theme: state.theme,
+        isInitialized: state.isInitialized
       }),
+      migrate: (persistedState: any, version: number) => {
+        // Version 0 (initial): migrate landing -> corporate
+        if (version === 0) {
+          return {
+            ...persistedState,
+            theme: persistedState.theme === 'landing' ? 'corporate' : persistedState.theme,
+          };
+        }
+        return persistedState;
+      },
+      version: 1,
     }
   )
 );
