@@ -4,6 +4,7 @@ import { SignInButton, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useThemeStore } from "@/store/theme-store";
+import { getThemeImagePath } from "@/store/theme-store";
 
 export default function Home() {
   const { user, isLoaded } = useUser();
@@ -28,7 +29,7 @@ export default function Home() {
         <div className="absolute inset-0 w-full h-full">
           <div className="fixed inset-0 -z-10">
             <Image
-              src={`/${currentTheme || "landing"}.jpg`}
+              src={getThemeImagePath(currentTheme || "corporate")}
               alt="Background image"
               fill
               priority
