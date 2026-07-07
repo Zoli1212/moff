@@ -99,7 +99,7 @@ export function AppHeader() {
           <input
             type="text"
             className="w-full pl-4 pr-20 py-2 rounded-lg bg-white/70 border-0 focus:ring-2 focus:ring-orange-500 focus:outline-none text-base placeholder-gray-500 cursor-pointer"
-            placeholder="Mit parancsolsz?"
+            placeholder="Miben segíthetek?"
             onClick={handleOpenChat}
             readOnly
           />
