@@ -5,7 +5,7 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-type Theme = 'landing' | 'corporate' | 'common';
+type Theme = 'company' | 'corporate' | 'common';
 
 export async function getTheme(): Promise<Theme> {
   const user = await currentUser();
@@ -19,7 +19,9 @@ export async function getTheme(): Promise<Theme> {
       select: { theme: true }
     });
 
-    return (dbUser?.theme as Theme) || 'corporate';
+    const dbTheme = dbUser?.theme;
+    if (dbTheme === 'landing') return 'company';
+    return (dbTheme as Theme) || 'corporate';
   } catch (error) {
     console.error('Error getting theme:', error);
     return 'corporate';

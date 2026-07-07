@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { FileText, Wrench, DollarSign } from "lucide-react";
 import Link from "next/link";
-import { useThemeStore } from "@/store/theme-store";
+import { useThemeStore, getThemeImagePath } from "@/store/theme-store";
 import { usePositionStore } from "@/store/position-store";
 import DraggableIcon from "@/components/DraggableIcon";
 import { InviteTokenHandler } from "./InviteTokenHandler";
@@ -23,7 +23,7 @@ export default function DashboardIcons({ isTenant }: DashboardIconsProps) {
       {/* Háttérkép */}
       <div className="fixed inset-0 -z-10">
         <Image
-          src={`/${theme || "landing"}.jpg`}
+          src={getThemeImagePath(theme || "corporate")}
           alt="Background image"
           fill
           priority

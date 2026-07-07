@@ -408,7 +408,7 @@ export function AppSidebar() {
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {(["landing", "corporate", "common"] as const).map((theme) => (
+                {(["company", "corporate", "common"] as const).map((theme) => (
                   <button
                     key={theme}
                     onClick={() => {

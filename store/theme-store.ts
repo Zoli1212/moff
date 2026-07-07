@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { setTheme as saveThemeToDb } from '@/actions/theme.actions';
 
-type Theme = 'landing' | 'corporate' | 'common';
+type Theme = 'company' | 'corporate' | 'common';
 
 interface ThemeState {
   theme: Theme;
@@ -17,7 +17,7 @@ const DEFAULT_THEME: Theme = 'corporate';
 
 // Map theme names to their file extensions
 const THEME_EXTENSIONS: Record<Theme, string> = {
-  landing: 'jpg',
+  company: 'jpg',
   corporate: 'png',
   common: 'png'
 };
@@ -63,16 +63,24 @@ export const useThemeStore = create<ThemeState>()(
         isInitialized: state.isInitialized
       }),
       migrate: (persistedState: any, version: number) => {
-        // Version 0 (initial): migrate landing -> corporate
-        if (version === 0) {
-          return {
-            ...persistedState,
-            theme: persistedState.theme === 'landing' ? 'corporate' : persistedState.theme,
+        let state = persistedState;
+        // Version 0: migrate landing -> corporate
+        if (version < 1) {
+          state = {
+            ...state,
+            theme: state.theme === 'landing' ? 'corporate' : state.theme,
           };
         }
-        return persistedState;
+        // Version 1: migrate any leftover landing -> company
+        if (version < 2) {
+          state = {
+            ...state,
+            theme: state.theme === 'landing' ? 'company' : state.theme,
+          };
+        }
+        return state;
       },
-      version: 1,
+      version: 2,
     }
   )
 );
