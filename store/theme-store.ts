@@ -18,13 +18,14 @@ const DEFAULT_THEME: Theme = 'corporate';
 // Map theme names to their file extensions
 const THEME_EXTENSIONS: Record<Theme, string> = {
   company: 'jpg',
-  corporate: 'png',
-  common: 'png'
+  corporate: 'jpg',
+  common: 'jpg'
 };
 
 // Get the full theme file path with extension
 export const getThemeImagePath = (theme: Theme): string => {
-  return `/${theme}.${THEME_EXTENSIONS[theme]}`;
+  const validTheme = THEME_EXTENSIONS[theme] ? theme : DEFAULT_THEME;
+  return `/${validTheme}.${THEME_EXTENSIONS[validTheme]}`;
 };
 
 export const useThemeStore = create<ThemeState>()(
