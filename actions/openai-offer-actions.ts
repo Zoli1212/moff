@@ -290,9 +290,13 @@ Válaszolj CSAK érvényes JSON-nal, semmi mással!`,
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          throw new Error(
+          const apiError: any = new Error(
             `OpenAI API error: ${response.status} - ${JSON.stringify(errorData)}`,
           );
+          apiError.status = response.status;
+          apiError.openaiType = errorData?.error?.type;
+          apiError.openaiCode = errorData?.error?.code;
+          throw apiError;
         }
 
         const data = await response.json();
@@ -308,11 +312,20 @@ Válaszolj CSAK érvényes JSON-nal, semmi mással!`,
         lastError = error;
         console.error("  ❌ Request failed:", error?.message);
 
-        const is429 =
-          error?.message?.includes("429") ||
-          error?.message?.includes("rate limit");
+        // A kredithiány is 429-cel jön, de a várakozás nem oldja meg — azonnal bukjunk.
+        if (
+          error?.openaiType === "insufficient_quota" ||
+          error?.openaiCode === "credit_balance_exhausted"
+        ) {
+          throw new Error(
+            "Az OpenAI fiók kreditje elfogyott, ezért az ajánlat most nem generálható. Töltsd fel az egyenleget az OpenAI billing oldalán.",
+          );
+        }
 
-        if (is429 && retries > 1) {
+        const isRateLimit =
+          error?.status === 429 || /rate limit/i.test(error?.message ?? "");
+
+        if (isRateLimit && retries > 1) {
           console.log(`  ⚠️ Rate limit, waiting 120s...`);
           await new Promise((resolve) => setTimeout(resolve, 120 * 1000));
           retries--;
