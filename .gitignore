@@ -31,7 +31,13 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
+# Ignore every .env variant, then re-allow the committed templates. A bare ".env" line
+# only matches that exact name, so copies like ".env.bak-openai-swap" or ".env.local"
+# stayed trackable and a "git add ." would have committed real secrets.
 .env
+.env.*
+!.env.example
+!.env.*.example
 
 # vercel
 .vercel

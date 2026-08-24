@@ -245,6 +245,7 @@ model Work {
   performances  Performance[] // Kapcsolat a Performance táblához
   workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez
   billings      Billing[] // Kapcsolat a számlákhoz
+  workTasks     WorkTask[] // Schedule tasks (Gantt/Kanban)
   
   // Vevő adatai (számlázáshoz) - JSON objektumként
   customerData Json?
@@ -269,6 +270,7 @@ model WorkItem {
   workDiaryEntries WorkDiary[]
   workItemWorkers WorkItemWorker[]
   workDiaryItems WorkDiaryItem[]
+  workTasks      WorkTask[]
   completedQuantity Float?   @default(0)
   billedQuantity    Float?   @default(0)  // Már kiszámlázott mennyiség
   paidQuantity      Float?   @default(0)  // Pénzügyileg teljesített mennyiség (készpénzes fizetés)
@@ -552,6 +554,7 @@ model WorkforceRegistry {
   performances       WorkforceRegistryPerformance[]
   salaryHistory      WorkforceRegistrySalaryHistory[]
   workDiaryItems     WorkDiaryItem[]
+  workTasks          WorkTask[]
 }
 
 model WorkforceRegistrySalaryHistory {
@@ -863,4 +866,51 @@ model Notification {
 
   @@index([recipientEmail])
   @@index([recipientEmail, isRead])
+}
+
+/// Schedule task backing the Gantt/Kanban views.
+/// Deliberately decoupled from WorkItem progress: WorkTask.progress is NOT written back
+/// to WorkItem.progress, so the existing diary and completion flow stays untouched.
+model WorkTask {
+  id          Int      @id @default(autoincrement())
+  workId      Int
+  work        Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  /// Subtask hierarchy. The schema allows arbitrary depth; the UI limits it to two levels.
+  parentId    Int?
+  parent      WorkTask?  @relation("WorkTaskTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    WorkTask[] @relation("WorkTaskTree")
+
+  /// Optional link to the offer line item. Deleting the item only nulls the link,
+  /// it never deletes the task.
+  workItemId  Int?
+  workItem    WorkItem?  @relation(fields: [workItemId], references: [id], onDelete: SetNull)
+
+  title       String
+  description String?
+  /// Trade (e.g. "villanyszerelo"). Filled by AI generation, editable by hand.
+  trade       String
+  /// todo | in_progress | blocked | done
+  status      String    @default("todo")
+  order       Int       @default(0)
+
+  startDate   DateTime?
+  endDate     DateTime?
+  /// 0-100
+  progress    Int       @default(0)
+
+  workforceRegistryId Int?
+  workforceRegistry   WorkforceRegistry? @relation(fields: [workforceRegistryId], references: [id], onDelete: SetNull)
+
+  /// True while AI-generated and untouched. Flips to false on manual edit, after which
+  /// regeneration will not delete the task.
+  aiGenerated Boolean   @default(false)
+
+  tenantEmail String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workId, status])
+  @@index([workId, parentId])
+  @@index([tenantEmail])
 }

@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import TaskCard from "../_components/TaskCard";
 import { createWorkDiary } from "@/actions/workdiary-actions";
@@ -279,6 +280,27 @@ export default function TasksPage() {
             fogom kiszámolni a szükséges erőforrás és eszköz igényt!
           </div>
         </div>
+        <Link
+          href={`/tasks/${workId}/plan`}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 8,
+            marginBottom: 16,
+            padding: "12px 16px",
+            background: "#fff",
+            border: "1px solid #eee",
+            borderRadius: 8,
+            textDecoration: "none",
+            color: "#333",
+          }}
+        >
+          <span style={{ fontSize: 14, fontWeight: 600 }}>
+            Ütemterv — Gantt és Kanban
+          </span>
+          <span style={{ fontSize: 18, color: "#FE9C00", lineHeight: 1 }}>›</span>
+        </Link>
         <div style={{ marginBottom: 8 }}></div>
         {loading ? (
           <WorksSkeletonLoader />
