@@ -16,7 +16,10 @@ import {
   getAssignableWorkforce,
   getWorkPlan,
 } from "@/actions/work-plan-actions";
-import type { WorkTaskDto } from "@/lib/work-plan/schema";
+import type {
+  WorkTaskDependencyDto,
+  WorkTaskDto,
+} from "@/lib/work-plan/schema";
 import KanbanBoard from "./KanbanBoard";
 import GanttChart from "./GanttChart";
 import TaskEditDialog, { type TaskDraft } from "./TaskEditDialog";
@@ -48,6 +51,11 @@ export default function PlanClient({ workId }: { workId: number }) {
 
   const tasks: WorkTaskDto[] = useMemo(
     () => planQuery.data?.tasks ?? [],
+    [planQuery.data]
+  );
+
+  const dependencies: WorkTaskDependencyDto[] = useMemo(
+    () => planQuery.data?.dependencies ?? [],
     [planQuery.data]
   );
 
@@ -211,6 +219,7 @@ export default function PlanClient({ workId }: { workId: number }) {
       ) : (
         <GanttChart
           tasks={tasks}
+          dependencies={dependencies}
           baseDate={planQuery.data?.workStartDate ?? null}
           onSelect={(task) => setDraft({ mode: "edit", workId, task })}
         />
@@ -220,6 +229,9 @@ export default function PlanClient({ workId }: { workId: number }) {
         <TaskEditDialog
           draft={draft}
           workforce={workforceQuery.data?.workforce ?? []}
+          allTasks={tasks}
+          dependencies={dependencies}
+          onDependencyChanged={refresh}
           onClose={() => setDraft(null)}
           onSaved={() => {
             setDraft(null);

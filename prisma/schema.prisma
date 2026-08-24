@@ -246,6 +246,7 @@ model Work {
   workforcePerformances WorkforceRegistryPerformance[] // Kapcsolat a munkás teljesítményekhez
   billings      Billing[] // Kapcsolat a számlákhoz
   workTasks     WorkTask[] // Schedule tasks (Gantt/Kanban)
+  workTaskDependencies WorkTaskDependency[] // Gantt dependency arrows
   
   // Vevő adatai (számlázáshoz) - JSON objektumként
   customerData Json?
@@ -910,7 +911,36 @@ model WorkTask {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  dependenciesAsPredecessor WorkTaskDependency[] @relation("DependencyPredecessor")
+  dependenciesAsSuccessor   WorkTaskDependency[] @relation("DependencySuccessor")
+
   @@index([workId, status])
   @@index([workId, parentId])
+  @@index([tenantEmail])
+}
+
+/// Finish-to-start dependency between two tasks of the same work.
+///
+/// Purely descriptive: an arrow never moves a date. Rescheduling stays manual, so a
+/// generated or mistaken link cannot silently rewrite a schedule set by hand.
+model WorkTaskDependency {
+  id            Int      @id @default(autoincrement())
+
+  /// Denormalised so the whole graph for one work loads without joining through tasks.
+  workId        Int
+  work          Work     @relation(fields: [workId], references: [id], onDelete: Cascade)
+
+  predecessorId Int
+  predecessor   WorkTask @relation("DependencyPredecessor", fields: [predecessorId], references: [id], onDelete: Cascade)
+
+  successorId   Int
+  successor     WorkTask @relation("DependencySuccessor", fields: [successorId], references: [id], onDelete: Cascade)
+
+  tenantEmail   String
+  createdAt     DateTime @default(now())
+
+  /// The same arrow cannot exist twice.
+  @@unique([predecessorId, successorId])
+  @@index([workId])
   @@index([tenantEmail])
 }

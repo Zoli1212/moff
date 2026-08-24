@@ -1,15 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { GitBranch } from "lucide-react";
 import {
   addDays,
   daysBetween,
   startOfUtcDay,
+  type WorkTaskDependencyDto,
   type WorkTaskDto,
 } from "@/lib/work-plan/schema";
 
 const DAY_WIDTH = 28;
 const ROW_HEIGHT = 34;
+/** Horizontal stub an arrow leaves before turning, so lines do not touch the bar ends. */
+const ELBOW = 10;
 
 /**
  * Stable colour per trade. Derived from the name rather than assigned by position, so a
@@ -60,14 +64,37 @@ function flattenRows(tasks: WorkTaskDto[]): GanttRow[] {
   return rows;
 }
 
+interface BarGeometry {
+  left: number;
+  right: number;
+  centerY: number;
+}
+
 interface Props {
   tasks: WorkTaskDto[];
+  dependencies: WorkTaskDependencyDto[];
   baseDate: string | null;
   onSelect: (task: WorkTaskDto) => void;
 }
 
-export default function GanttChart({ tasks, baseDate, onSelect }: Props) {
+export default function GanttChart({
+  tasks,
+  dependencies,
+  baseDate,
+  onSelect,
+}: Props) {
   const rows = useMemo(() => flattenRows(tasks), [tasks]);
+
+  /**
+   * Arrows start hidden and switch on for wide viewports only. At 28px per day a phone
+   * shows about ten days, and dependency lines across that many overlapping trades turn
+   * the chart into noise. The toggle stays available either way.
+   */
+  const [showArrows, setShowArrows] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setShowArrows(window.matchMedia("(min-width: 768px)").matches);
+  }, []);
 
   const range = useMemo(() => {
     const stamps: number[] = [];
@@ -83,6 +110,60 @@ export default function GanttChart({ tasks, baseDate, onSelect }: Props) {
     const end = addDays(startOfUtcDay(new Date(Math.max(...stamps))), 1);
     return { start, totalDays: daysBetween(start, end) + 1 };
   }, [rows, baseDate]);
+
+  // One geometry pass feeds both the bars and the arrows, so a line can never point at
+  // coordinates the bar it targets does not actually occupy.
+  const geometry = useMemo(() => {
+    const map = new Map<number, BarGeometry>();
+    if (!range) return map;
+
+    rows.forEach(({ task }, rowIndex) => {
+      if (!task.startDate || !task.endDate) return;
+      const offset = daysBetween(range.start, new Date(task.startDate));
+      const span = Math.max(
+        1,
+        daysBetween(new Date(task.startDate), new Date(task.endDate)) + 1
+      );
+      const left = offset * DAY_WIDTH + 2;
+      map.set(task.id, {
+        left,
+        right: left + Math.max(span * DAY_WIDTH - 4, 8),
+        centerY: rowIndex * ROW_HEIGHT + ROW_HEIGHT / 2,
+      });
+    });
+
+    return map;
+  }, [rows, range]);
+
+  const taskById = useMemo(() => {
+    const map = new Map<number, WorkTaskDto>();
+    for (const { task } of rows) map.set(task.id, task);
+    return map;
+  }, [rows]);
+
+  const arrows = useMemo(() => {
+    if (!showArrows) return [];
+
+    return dependencies.flatMap((dependency) => {
+      const from = geometry.get(dependency.predecessorId);
+      const to = geometry.get(dependency.successorId);
+      if (!from || !to) return [];
+
+      const predecessor = taskById.get(dependency.predecessorId);
+      const successor = taskById.get(dependency.successorId);
+
+      // Nothing reschedules automatically, so a successor starting before its
+      // predecessor finishes is a real state the plan can be in. Flagging it is the
+      // main thing the arrows buy: the conflict is visible instead of silent.
+      const violated = Boolean(
+        predecessor?.endDate &&
+          successor?.startDate &&
+          new Date(successor.startDate) < new Date(predecessor.endDate)
+      );
+
+      return [{ id: dependency.id, path: elbowPath(from, to), violated }];
+    });
+  }, [dependencies, geometry, showArrows, taskById]);
 
   if (!range) {
     return (
@@ -113,9 +194,37 @@ export default function GanttChart({ tasks, baseDate, onSelect }: Props) {
   }
 
   const gridWidth = range.totalDays * DAY_WIDTH;
+  const gridHeight = rows.length * ROW_HEIGHT;
+  const violatedCount = arrows.filter((arrow) => arrow.violated).length;
 
   return (
     <div className="mt-4 px-4">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setShowArrows((value) => !value)}
+          aria-pressed={showArrows}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+            showArrows
+              ? "border-[#FE9C00] bg-orange-50 text-[#B36E00]"
+              : "border-gray-200 text-gray-600"
+          }`}
+        >
+          <GitBranch className="h-3.5 w-3.5" />
+          Függőségek
+          {dependencies.length > 0 && (
+            <span className="text-gray-400">{dependencies.length}</span>
+          )}
+        </button>
+
+        {showArrows && violatedCount > 0 && (
+          <span className="text-xs text-red-600">
+            {violatedCount} ütközés: a feladat előbb indul, mint ahogy az előzménye
+            befejeződne.
+          </span>
+        )}
+      </div>
+
       <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
         <div className="flex min-w-max">
           {/* Sticky name column: the labels must stay readable while the bars scroll. */}
@@ -196,19 +305,7 @@ export default function GanttChart({ tasks, baseDate, onSelect }: Props) {
               )}
 
               {rows.map(({ task, depth }) => {
-                const hasDates = Boolean(task.startDate && task.endDate);
-                const offset = task.startDate
-                  ? daysBetween(range.start, new Date(task.startDate))
-                  : 0;
-                const span = hasDates
-                  ? Math.max(
-                      1,
-                      daysBetween(
-                        new Date(task.startDate as string),
-                        new Date(task.endDate as string)
-                      ) + 1
-                    )
-                  : 0;
+                const bar = geometry.get(task.id);
 
                 return (
                   <div
@@ -216,15 +313,15 @@ export default function GanttChart({ tasks, baseDate, onSelect }: Props) {
                     style={{ height: ROW_HEIGHT }}
                     className="relative border-b border-gray-100 last:border-b-0"
                   >
-                    {hasDates && (
+                    {bar && (
                       <button
                         type="button"
                         onClick={() => onSelect(task)}
                         title={`${task.title} — ${task.trade}`}
                         className="absolute top-1/2 -translate-y-1/2 rounded-full text-left"
                         style={{
-                          left: offset * DAY_WIDTH + 2,
-                          width: Math.max(span * DAY_WIDTH - 4, 8),
+                          left: bar.left,
+                          width: bar.right - bar.left,
                           height: depth > 0 ? 10 : 14,
                           background: tradeColor(task.trade),
                           opacity: task.status === "done" ? 0.45 : 1,
@@ -236,15 +333,94 @@ export default function GanttChart({ tasks, baseDate, onSelect }: Props) {
                   </div>
                 );
               })}
+
+              {/* Arrows sit above the bars but never intercept a tap on one. */}
+              {arrows.length > 0 && (
+                <svg
+                  className="pointer-events-none absolute left-0 top-0 z-[15]"
+                  width={gridWidth}
+                  height={gridHeight}
+                  aria-hidden
+                >
+                  <defs>
+                    <marker
+                      id="gantt-arrow"
+                      markerWidth="6"
+                      markerHeight="6"
+                      refX="5"
+                      refY="3"
+                      orient="auto"
+                    >
+                      <path d="M0,0 L6,3 L0,6 Z" fill="#9CA3AF" />
+                    </marker>
+                    <marker
+                      id="gantt-arrow-violated"
+                      markerWidth="6"
+                      markerHeight="6"
+                      refX="5"
+                      refY="3"
+                      orient="auto"
+                    >
+                      <path d="M0,0 L6,3 L0,6 Z" fill="#EF4444" />
+                    </marker>
+                  </defs>
+                  {arrows.map((arrow) => (
+                    <path
+                      key={arrow.id}
+                      d={arrow.path}
+                      fill="none"
+                      stroke={arrow.violated ? "#EF4444" : "#9CA3AF"}
+                      strokeWidth={arrow.violated ? 1.6 : 1.2}
+                      strokeDasharray={arrow.violated ? "4 3" : undefined}
+                      markerEnd={`url(#${
+                        arrow.violated ? "gantt-arrow-violated" : "gantt-arrow"
+                      })`}
+                    />
+                  ))}
+                </svg>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       <p className="mt-2 text-xs text-gray-400">
-        Az idővonal csak megjelenít. Átütemezni a feladatra koppintva, a dátum mezőkben
-        lehet.
+        Az idővonal csak megjelenít. A nyilak a szakmai sorrendet mutatják, de nem
+        ütemeznek át semmit — átütemezni a feladatra koppintva, a dátum mezőkben lehet.
       </p>
     </div>
   );
+}
+
+/**
+ * Elbow route from the end of one bar to the start of another.
+ *
+ * When the successor starts far enough to the right, a single step down suffices. When
+ * it starts earlier — which happens because nothing reschedules automatically — the line
+ * has to double back, so it drops into the gap between the rows before returning.
+ */
+function elbowPath(from: BarGeometry, to: BarGeometry): string {
+  const startX = from.right;
+  const startY = from.centerY;
+  const endX = to.left;
+  const endY = to.centerY;
+
+  if (endX >= startX + ELBOW * 2) {
+    const midX = endX - ELBOW;
+    return `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
+  }
+
+  const gapY =
+    endY > startY
+      ? startY + ROW_HEIGHT / 2
+      : startY - ROW_HEIGHT / 2;
+
+  return [
+    `M ${startX} ${startY}`,
+    `H ${startX + ELBOW}`,
+    `V ${gapY}`,
+    `H ${endX - ELBOW}`,
+    `V ${endY}`,
+    `H ${endX}`,
+  ].join(" ");
 }

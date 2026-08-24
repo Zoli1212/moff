@@ -61,6 +61,11 @@ const aiTaskSchema = aiSubTaskSchema.extend({
    */
   workItemName: z.string().trim().max(500).nullish(),
   subtasks: z.array(aiSubTaskSchema).max(MAX_SUBTASKS).optional(),
+  /**
+   * Titles of tasks that must finish first. Names again, not ids, for the same reason:
+   * the model has no way to know a real id and would have to invent one.
+   */
+  dependsOn: z.array(z.string().trim().min(1).max(200)).max(10).optional(),
 });
 
 export const aiPlanSchema = z.object({
@@ -270,6 +275,84 @@ export function mapRowsToTaskTree(
       aiGenerated: row.aiGenerated,
     }))
   );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Dependency graph                                                            */
+/* -------------------------------------------------------------------------- */
+
+export interface WorkTaskDependencyDto {
+  id: number;
+  predecessorId: number;
+  successorId: number;
+}
+
+export interface DependencyEdge {
+  predecessorId: number;
+  successorId: number;
+}
+
+/**
+ * Would adding predecessor -> successor close a loop?
+ *
+ * An edge P -> S means P finishes before S, so the graph only becomes cyclic if S can
+ * already reach P. A cycle is not merely invalid data: the arrow renderer walks these
+ * edges, so one loop would hang the Gantt view rather than just look wrong.
+ */
+export function wouldCreateCycle(
+  edges: ReadonlyArray<DependencyEdge>,
+  predecessorId: number,
+  successorId: number
+): boolean {
+  if (predecessorId === successorId) return true;
+
+  const outgoing = new Map<number, number[]>();
+  for (const edge of edges) {
+    const existing = outgoing.get(edge.predecessorId);
+    if (existing) existing.push(edge.successorId);
+    else outgoing.set(edge.predecessorId, [edge.successorId]);
+  }
+
+  const seen = new Set<number>();
+  const stack: number[] = [successorId];
+
+  while (stack.length) {
+    const current = stack.pop() as number;
+    if (current === predecessorId) return true;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    for (const next of outgoing.get(current) ?? []) stack.push(next);
+  }
+
+  return false;
+}
+
+/**
+ * Keeps the edges of a proposed batch that can coexist, dropping duplicates and any
+ * edge that would close a loop.
+ *
+ * Used for generated dependencies, where dropping the offending arrow is far better
+ * than rejecting an otherwise good schedule over one bad link.
+ */
+export function filterAcyclicEdges(
+  candidates: ReadonlyArray<DependencyEdge>
+): DependencyEdge[] {
+  const accepted: DependencyEdge[] = [];
+  const seen = new Set<string>();
+
+  for (const candidate of candidates) {
+    const key = `${candidate.predecessorId}->${candidate.successorId}`;
+    if (seen.has(key)) continue;
+    if (
+      wouldCreateCycle(accepted, candidate.predecessorId, candidate.successorId)
+    ) {
+      continue;
+    }
+    seen.add(key);
+    accepted.push(candidate);
+  }
+
+  return accepted;
 }
 
 /** Rolls a parent's completion up from its children, falling back to its own value. */

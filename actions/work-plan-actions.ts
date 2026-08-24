@@ -14,10 +14,15 @@ import {
   aiPlanSchema,
   buildPlanCreateInputs,
   buildWorkItemIndex,
+  filterAcyclicEdges,
   isTaskStatus,
   mapRowsToTaskTree,
+  normalizeItemName,
   resolvePlanBaseDate,
+  wouldCreateCycle,
+  type DependencyEdge,
   type TaskStatus,
+  type WorkTaskDependencyDto,
   type WorkTaskDto,
 } from "@/lib/work-plan/schema";
 import {
@@ -125,6 +130,7 @@ export async function getWorkPlan(workId: number): Promise<{
   workTitle?: string;
   workStartDate?: string | null;
   tasks?: WorkTaskDto[];
+  dependencies?: WorkTaskDependencyDto[];
 }> {
   try {
     const { tenantEmail } = await requireTenant();
@@ -151,11 +157,17 @@ export async function getWorkPlan(workId: number): Promise<{
       },
     });
 
+    const dependencies = await prisma.workTaskDependency.findMany({
+      where: { workId, tenantEmail },
+      select: { id: true, predecessorId: true, successorId: true },
+    });
+
     return {
       success: true,
       workTitle: work.title,
       workStartDate: work.startDate ? work.startDate.toISOString() : null,
       tasks: mapRowsToTaskTree(rows),
+      dependencies,
     };
   } catch (error) {
     return {
@@ -181,6 +193,7 @@ KÖTELEZŐ SZABÁLYOK:
 7. A párhuzamosan végezhető szakmák időintervalluma átfedhet — ne fűzz mindent sorba feleslegesen.
 8. Számold bele a technológiai várakozásokat (kötés, száradás) külön feladatként vagy a durationDays-be.
 9. Legfeljebb 100 fő feladat.
+10. A "dependsOn" tömbbe azoknak a feladatoknak a NEVÉT írd, amiknek KÖTELEZŐEN be kell fejeződniük az adott feladat megkezdése előtt. A nevet karakterre egyezően másold be egy másik feladat "title" mezőjéből. Csak valódi szakmai függőséget adj meg (pl. a festés függ a vakolástól), ne fűzz össze mindent láncba. Ha nincs valódi előzmény, hagyd ki a mezőt. Körkörös hivatkozás TILOS.
 
 VÁLASZ FORMÁTUM:
 {
@@ -192,6 +205,7 @@ VÁLASZ FORMÁTUM:
       "offsetDays": 0,
       "durationDays": 3,
       "workItemName": "A tétel pontos neve vagy null",
+      "dependsOn": ["Egy másik feladat pontos title-je"],
       "subtasks": [
         { "title": "Alfeladat", "trade": "szakma", "offsetDays": 0, "durationDays": 1 }
       ]
@@ -204,6 +218,7 @@ export async function generateWorkPlan(workId: number): Promise<{
   error?: string;
   createdTasks?: number;
   replacedTasks?: number;
+  createdDependencies?: number;
   usedFallbackDate?: boolean;
 }> {
   try {
@@ -378,9 +393,41 @@ Készíts ütemtervet a fenti szabályok szerint.`;
           await tx.workTask.createMany({ data: childRows });
         }
 
+        // Dependencies resolve last, because only now do the tasks have ids. Titles are
+        // matched the same way item names are: normalised, first match wins, anything
+        // unmatched is dropped rather than guessed at.
+        const idByTitle = new Map<string, number>();
+        parsed.data.tasks.forEach((task, index) => {
+          const id = parentIdByOrder.get(index);
+          const key = normalizeItemName(task.title);
+          if (id != null && key && !idByTitle.has(key)) idByTitle.set(key, id);
+        });
+
+        const candidateEdges: DependencyEdge[] = [];
+        parsed.data.tasks.forEach((task, index) => {
+          const successorId = parentIdByOrder.get(index);
+          if (successorId == null || !task.dependsOn?.length) return;
+          for (const name of task.dependsOn) {
+            const predecessorId = idByTitle.get(normalizeItemName(name));
+            if (predecessorId == null || predecessorId === successorId) continue;
+            candidateEdges.push({ predecessorId, successorId });
+          }
+        });
+
+        // A single bad arrow must not cost an otherwise good schedule, so loops and
+        // duplicates are dropped here instead of failing the whole generation.
+        const edges = filterAcyclicEdges(candidateEdges);
+
+        if (edges.length) {
+          await tx.workTaskDependency.createMany({
+            data: edges.map((edge) => ({ ...edge, workId, tenantEmail })),
+          });
+        }
+
         return {
           replaced: aiTaskIds.size,
           created: createdParents.length + childRows.length,
+          dependencies: edges.length,
         };
       },
       // The default 5s interactive-transaction budget is tight for a large plan.
@@ -393,6 +440,7 @@ Készíts ütemtervet a fenti szabályok szerint.`;
       success: true,
       createdTasks: result.created,
       replacedTasks: result.replaced,
+      createdDependencies: result.dependencies,
       usedFallbackDate: usedFallback,
     };
   } catch (error) {
@@ -578,6 +626,85 @@ export async function deleteWorkTask(
       success: false,
       error: toUserFacingMessage(error),
     };
+  }
+}
+
+export async function createTaskDependency(
+  predecessorId: number,
+  successorId: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { tenantEmail } = await requireTenant();
+
+    if (predecessorId === successorId) {
+      return { success: false, error: "Egy feladat nem függhet önmagától." };
+    }
+
+    const predecessor = await assertTaskOwned(predecessorId, tenantEmail);
+    const successor = await assertTaskOwned(successorId, tenantEmail);
+
+    if (predecessor.workId !== successor.workId) {
+      return {
+        success: false,
+        error: "Csak ugyanahhoz a munkához tartozó feladatok köthetők össze.",
+      };
+    }
+
+    const existing = await prisma.workTaskDependency.findMany({
+      where: { workId: successor.workId, tenantEmail },
+      select: { predecessorId: true, successorId: true },
+    });
+
+    // Checked before writing rather than after: a loop would hang the arrow renderer,
+    // so it must never reach the database in the first place.
+    if (wouldCreateCycle(existing, predecessorId, successorId)) {
+      return {
+        success: false,
+        error: "Ez a kapcsolat körkörös függőséget hozna létre.",
+      };
+    }
+
+    await prisma.workTaskDependency.create({
+      data: {
+        workId: successor.workId,
+        predecessorId,
+        successorId,
+        tenantEmail,
+      },
+    });
+
+    revalidatePlan(successor.workId);
+    return { success: true };
+  } catch (error) {
+    // The unique index is the last line of defence against a double submit.
+    if ((error as { code?: string })?.code === "P2002") {
+      return { success: false, error: "Ez a kapcsolat már létezik." };
+    }
+    return { success: false, error: toUserFacingMessage(error) };
+  }
+}
+
+export async function deleteTaskDependency(
+  dependencyId: number
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { tenantEmail } = await requireTenant();
+
+    const dependency = await prisma.workTaskDependency.findUnique({
+      where: { id: dependencyId },
+      select: { id: true, workId: true, tenantEmail: true },
+    });
+
+    if (!dependency || dependency.tenantEmail !== tenantEmail) {
+      return { success: false, error: "A kapcsolat nem található." };
+    }
+
+    await prisma.workTaskDependency.delete({ where: { id: dependencyId } });
+
+    revalidatePlan(dependency.workId);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: toUserFacingMessage(error) };
   }
 }
 

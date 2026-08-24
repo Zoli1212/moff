@@ -9,12 +9,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 import {
   TASK_STATUSES,
   TASK_STATUS_LABELS,
+  type WorkTaskDependencyDto,
   type WorkTaskDto,
 } from "@/lib/work-plan/schema";
-import { createWorkTask, updateWorkTask } from "@/actions/work-plan-actions";
+import {
+  createTaskDependency,
+  createWorkTask,
+  deleteTaskDependency,
+  updateWorkTask,
+} from "@/actions/work-plan-actions";
 
 export type TaskDraft =
   | { mode: "create"; workId: number; parentId: number | null }
@@ -40,6 +47,10 @@ function fromDateInput(value: string): string | null {
 interface Props {
   draft: TaskDraft;
   workforce: WorkforceOption[];
+  /** Top-level tasks of this work, used as dependency candidates. */
+  allTasks: WorkTaskDto[];
+  dependencies: WorkTaskDependencyDto[];
+  onDependencyChanged: () => void;
   onClose: () => void;
   onSaved: () => void;
 }
@@ -47,6 +58,9 @@ interface Props {
 export default function TaskEditDialog({
   draft,
   workforce,
+  allTasks,
+  dependencies,
+  onDependencyChanged,
   onClose,
   onSaved,
 }: Props) {
@@ -207,6 +221,15 @@ export default function TaskEditDialog({
             </select>
           </Field>
 
+          {existing && (
+            <PredecessorPicker
+              task={existing}
+              allTasks={allTasks}
+              dependencies={dependencies}
+              onChanged={onDependencyChanged}
+            />
+          )}
+
           {draft.mode === "edit" && (
             <div className="grid grid-cols-2 gap-3">
               <Field label="Státusz">
@@ -259,6 +282,111 @@ export default function TaskEditDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Dependencies apply immediately rather than on save, because they are relationships
+ * between two rows that already exist — there is nothing to roll back if the dialog is
+ * closed with Cancel, and deferring them would make Cancel ambiguous.
+ */
+function PredecessorPicker({
+  task,
+  allTasks,
+  dependencies,
+  onChanged,
+}: {
+  task: WorkTaskDto;
+  allTasks: WorkTaskDto[];
+  dependencies: WorkTaskDependencyDto[];
+  onChanged: () => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  const current = dependencies.filter((edge) => edge.successorId === task.id);
+  const currentIds = new Set(current.map((edge) => edge.predecessorId));
+  const byId = new Map(allTasks.map((candidate) => [candidate.id, candidate]));
+
+  const candidates = allTasks.filter(
+    (candidate) => candidate.id !== task.id && !currentIds.has(candidate.id)
+  );
+
+  const add = (predecessorId: number) => {
+    startTransition(async () => {
+      const result = await createTaskDependency(predecessorId, task.id);
+      if (!result.success) {
+        toast.error(result.error ?? "A kapcsolat létrehozása nem sikerült.");
+        return;
+      }
+      onChanged();
+    });
+  };
+
+  const remove = (dependencyId: number) => {
+    startTransition(async () => {
+      const result = await deleteTaskDependency(dependencyId);
+      if (!result.success) {
+        toast.error(result.error ?? "A kapcsolat törlése nem sikerült.");
+        return;
+      }
+      onChanged();
+    });
+  };
+
+  return (
+    <div>
+      <span className="mb-1 block text-xs font-medium text-gray-700">
+        Előzmények — ezeknek előbb kell befejeződniük
+      </span>
+
+      {current.length > 0 && (
+        <ul className="mb-2 space-y-1">
+          {current.map((edge) => (
+            <li
+              key={edge.id}
+              className="flex items-center gap-2 rounded-md bg-gray-50 px-2 py-1.5"
+            >
+              <span className="min-w-0 flex-1 truncate text-xs text-gray-700">
+                {byId.get(edge.predecessorId)?.title ?? "Ismeretlen feladat"}
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(edge.id)}
+                disabled={isPending}
+                aria-label="Kapcsolat törlése"
+                className="text-gray-400 hover:text-red-600 disabled:opacity-50"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <select
+        value=""
+        disabled={isPending || candidates.length === 0}
+        onChange={(event) => {
+          if (event.target.value) add(Number(event.target.value));
+        }}
+        className={inputClass}
+      >
+        <option value="">
+          {candidates.length === 0
+            ? "Nincs több választható feladat"
+            : "Előzmény hozzáadása…"}
+        </option>
+        {candidates.map((candidate) => (
+          <option key={candidate.id} value={candidate.id}>
+            {candidate.title}
+          </option>
+        ))}
+      </select>
+
+      <p className="mt-1 text-[11px] text-gray-400">
+        A nyíl csak jelzi az összefüggést — a dátumokat nem tolja el automatikusan.
+      </p>
+    </div>
   );
 }
 
