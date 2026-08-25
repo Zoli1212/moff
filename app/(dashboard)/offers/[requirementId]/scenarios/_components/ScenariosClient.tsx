@@ -45,6 +45,11 @@ export default function ScenariosClient({
   requirementId: string;
 }) {
   const queryClient = useQueryClient();
+
+  // Back to the offer that was open, not to the offer list. The detail view is what the
+  // user came from, and it only renders with the offerId in the query string.
+  const backHref = `/offers/${requirementId}?offerId=${offerId}`;
+
   const [constraint, setConstraint] = useState("");
   const [deleting, setDeleting] = useState<OfferScenarioDto | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -97,7 +102,7 @@ export default function ScenariosClient({
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5">
           <p className="text-sm text-amber-900">{query.data.error}</p>
           <Link
-            href={`/offers/${requirementId}`}
+            href={backHref}
             className="mt-3 inline-block text-sm font-medium"
             style={{ color: BRAND }}
           >
@@ -112,7 +117,7 @@ export default function ScenariosClient({
     <div className="mx-auto w-full max-w-[900px] px-4 pb-24">
       <header className="flex items-center gap-3 pt-6">
         <Link
-          href={`/offers/${requirementId}`}
+          href={backHref}
           aria-label="Vissza az ajánlatokhoz"
           className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
           style={{ color: BRAND }}
