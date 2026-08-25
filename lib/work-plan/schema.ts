@@ -75,6 +75,61 @@ export const aiPlanSchema = z.object({
 export type AiPlan = z.infer<typeof aiPlanSchema>;
 export type AiTask = z.infer<typeof aiTaskSchema>;
 
+/**
+ * Drops tasks whose title repeats one already seen, and subtasks repeating a sibling.
+ *
+ * The model does emit the same title twice in one response, with different dates. Two
+ * things go wrong when it does: the board shows what look like duplicate cards, and
+ * dependency resolution — which matches on title — becomes ambiguous, producing arrows
+ * that appear to point a task at itself.
+ *
+ * Deduplication happens here rather than by asking the model not to repeat itself,
+ * because a prompt is a request and this is a guarantee. First occurrence wins, so the
+ * surviving task keeps the earliest position in the plan.
+ */
+export function dedupeAiPlanTasks(plan: AiPlan): {
+  plan: AiPlan;
+  droppedTasks: number;
+  droppedSubtasks: number;
+} {
+  const seenTitles = new Set<string>();
+  let droppedTasks = 0;
+  let droppedSubtasks = 0;
+
+  const tasks: AiTask[] = [];
+
+  for (const task of plan.tasks) {
+    const key = normalizeItemName(task.title);
+    if (!key || seenTitles.has(key)) {
+      droppedTasks += 1;
+      continue;
+    }
+    seenTitles.add(key);
+
+    if (!task.subtasks?.length) {
+      tasks.push(task);
+      continue;
+    }
+
+    // Subtask titles only need to be unique among their siblings: the same step name
+    // under two different parents is perfectly normal ("fugázás" under several trades).
+    const seenSubtasks = new Set<string>();
+    const subtasks = task.subtasks.filter((subtask) => {
+      const subKey = normalizeItemName(subtask.title);
+      if (!subKey || seenSubtasks.has(subKey)) {
+        droppedSubtasks += 1;
+        return false;
+      }
+      seenSubtasks.add(subKey);
+      return true;
+    });
+
+    tasks.push({ ...task, subtasks });
+  }
+
+  return { plan: { tasks }, droppedTasks, droppedSubtasks };
+}
+
 /* -------------------------------------------------------------------------- */
 /* Date arithmetic                                                             */
 /* -------------------------------------------------------------------------- */

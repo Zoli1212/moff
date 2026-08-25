@@ -903,8 +903,9 @@ model WorkTask {
   workforceRegistryId Int?
   workforceRegistry   WorkforceRegistry? @relation(fields: [workforceRegistryId], references: [id], onDelete: SetNull)
 
-  /// True while AI-generated and untouched. Flips to false on manual edit, after which
-  /// regeneration will not delete the task.
+  /// Origin marker, not an "edited" marker: true for anything a generation run produced,
+  /// false for tasks created by hand. Never changes after insert. Regeneration replaces
+  /// every true row - including edited ones - and leaves every false row alone.
   aiGenerated Boolean   @default(false)
 
   tenantEmail String

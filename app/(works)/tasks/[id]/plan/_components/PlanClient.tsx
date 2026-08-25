@@ -165,8 +165,13 @@ export default function PlanClient({ workId }: { workId: number }) {
         </div>
       </header>
 
-      <div className="flex items-center gap-2 px-4 pt-4">
-        <div className="flex rounded-full bg-gray-100 p-1">
+      {/*
+        Wraps on narrow screens: the view toggle takes the first line and the actions
+        drop to a second, right-aligned line. Forcing all four controls onto one row is
+        what made the "AI ütemterv" label break across two lines on a phone.
+      */}
+      <div className="flex flex-wrap items-center gap-2 px-4 pt-4">
+        <div className="flex shrink-0 rounded-full bg-gray-100 p-1">
           <ViewTab
             active={view === "kanban"}
             onClick={() => setView("kanban")}
@@ -187,7 +192,7 @@ export default function PlanClient({ workId }: { workId: number }) {
             onClick={() =>
               setDraft({ mode: "create", workId, parentId: null })
             }
-            className="flex items-center gap-1 rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+            className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Plus className="h-4 w-4" />
             Feladat
@@ -259,7 +264,7 @@ function ViewTab({
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
         active ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"
       }`}
     >

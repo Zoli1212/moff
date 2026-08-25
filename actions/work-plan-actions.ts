@@ -14,6 +14,7 @@ import {
   aiPlanSchema,
   buildPlanCreateInputs,
   buildWorkItemIndex,
+  dedupeAiPlanTasks,
   filterAcyclicEdges,
   isTaskStatus,
   mapRowsToTaskTree,
@@ -324,12 +325,34 @@ Készíts ütemtervet a fenti szabályok szerint.`;
       };
     }
 
+    // Deduplicate before anything else consumes the plan: dates, row order and
+    // dependency resolution all key off array position, so they must all see the
+    // same filtered list.
+    const {
+      plan: dedupedPlan,
+      droppedTasks,
+      droppedSubtasks,
+    } = dedupeAiPlanTasks(parsed.data);
+
+    if (droppedTasks || droppedSubtasks) {
+      console.warn(
+        `[work-plan] dropped duplicate titles from AI plan: ${droppedTasks} tasks, ${droppedSubtasks} subtasks`
+      );
+    }
+
+    if (!dedupedPlan.tasks.length) {
+      return {
+        success: false,
+        error: "Az AI csak ismétlődő feladatokat adott vissza. Az eddigi ütemterv változatlan maradt.",
+      };
+    }
+
     const { baseDate, usedFallback } = resolvePlanBaseDate(
       work.startDate,
       new Date()
     );
 
-    const inputs = buildPlanCreateInputs(parsed.data, {
+    const inputs = buildPlanCreateInputs(dedupedPlan, {
       workId,
       tenantEmail,
       baseDate,
@@ -397,14 +420,14 @@ Készíts ütemtervet a fenti szabályok szerint.`;
         // matched the same way item names are: normalised, first match wins, anything
         // unmatched is dropped rather than guessed at.
         const idByTitle = new Map<string, number>();
-        parsed.data.tasks.forEach((task, index) => {
+        dedupedPlan.tasks.forEach((task, index) => {
           const id = parentIdByOrder.get(index);
           const key = normalizeItemName(task.title);
           if (id != null && key && !idByTitle.has(key)) idByTitle.set(key, id);
         });
 
         const candidateEdges: DependencyEdge[] = [];
-        parsed.data.tasks.forEach((task, index) => {
+        dedupedPlan.tasks.forEach((task, index) => {
           const successorId = parentIdByOrder.get(index);
           if (successorId == null || !task.dependsOn?.length) return;
           for (const name of task.dependsOn) {
@@ -586,9 +609,9 @@ export async function updateWorkTask(
         ...(patch.workforceRegistryId !== undefined
           ? { workforceRegistryId: patch.workforceRegistryId }
           : {}),
-        // Touching a task makes it the user's. Regeneration only clears untouched
-        // AI output, so edits survive it.
-        aiGenerated: false,
+        // aiGenerated is deliberately not touched here. It records where a task came
+        // from, not whether anyone has edited it, so regeneration replaces the whole
+        // generated plan even where it was tweaked. Only hand-created tasks survive.
       },
     });
 

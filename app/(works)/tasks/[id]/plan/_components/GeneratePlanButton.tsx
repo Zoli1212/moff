@@ -8,7 +8,7 @@ import { generateWorkPlan } from "@/actions/work-plan-actions";
 
 interface Props {
   workId: number;
-  /** Untouched AI tasks, i.e. exactly what a regeneration would replace. */
+  /** Generated tasks, i.e. exactly what a regeneration would replace. */
   existingAiTaskCount: number;
   onGenerated: (message: string) => void;
 }
@@ -49,7 +49,7 @@ export default function GeneratePlanButton({
         type="button"
         disabled={isPending}
         onClick={() => (existingAiTaskCount > 0 ? setConfirming(true) : run())}
-        className="flex items-center gap-1.5 rounded-full bg-[#FE9C00] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#FE9C00]/90 disabled:opacity-60"
+        className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-[#FE9C00] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#FE9C00]/90 disabled:opacity-60"
       >
         {isPending ? (
           <Loader2 className="h-4 w-4 animate-spin" />
@@ -66,7 +66,7 @@ export default function GeneratePlanButton({
         isLoading={isPending}
         confirmText="Újragenerálás"
         title="Ütemterv újragenerálása"
-        message={`${existingAiTaskCount} érintetlen, AI által generált feladat cserélődik le. Amit kézzel szerkesztettél, az megmarad.`}
+        message={`${existingAiTaskCount} AI által generált feladat cserélődik le — azok is, amiket közben szerkesztettél. Csak a kézzel felvett saját feladataid maradnak meg.`}
       />
     </>
   );
