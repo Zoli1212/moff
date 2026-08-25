@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   ChevronDown,
   ChevronRight,
+  GripHorizontal,
   MoreVertical,
   Pencil,
   Plus,
@@ -59,10 +60,12 @@ function formatRange(start: string | null, end: string | null): string | null {
 }
 
 /**
- * Stops a press on an interactive child from becoming a drag. Without it, opening the
- * action menu or the status dropdown would start dragging the card instead.
+ * Stops a press on an interactive child from becoming a drag, and from bubbling up to
+ * the card's own tap-to-edit handler. Without it, opening the action menu would both
+ * start a drag and open the edit dialog.
  */
 const stopDrag = (event: React.PointerEvent) => event.stopPropagation();
+const stopClick = (event: React.MouseEvent) => event.stopPropagation();
 
 interface Props {
   task: WorkTaskDto;
@@ -81,9 +84,13 @@ export default function KanbanCard({
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: task.id,
-  });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    isDragging,
+  } = useDraggable({ id: task.id });
 
   const progress = effectiveProgress(task);
   const range = formatRange(task.startDate, task.endDate);
@@ -117,17 +124,34 @@ export default function KanbanCard({
   return (
     <article
       ref={setNodeRef}
-      {...listeners}
       aria-roledescription={attributes["aria-roledescription"]}
-      // touch-action stays "manipulation" so vertical scrolling still works: the touch
-      // sensor only claims the gesture after a short hold.
-      style={{ touchAction: "manipulation" }}
-      className={`cursor-grab rounded-lg border border-gray-200 bg-white p-3 shadow-sm transition-opacity active:cursor-grabbing ${
+      // Tapping the body opens the editor. Dragging lives on the grip below, so the two
+      // gestures never compete for the same touch.
+      onClick={() => onEdit(task)}
+      className={`rounded-md border border-gray-200 bg-white p-1.5 shadow-sm transition-opacity md:rounded-lg md:p-3 ${
         isDragging ? "opacity-40" : ""
       } ${isPending ? "opacity-60" : ""}`}
     >
-      <div className="flex items-start gap-2">
-        <h3 className="min-w-0 flex-1 text-sm font-medium leading-snug text-gray-900">
+      {/*
+        Dedicated drag handle. dnd-kit's TouchSensor needs `touch-action: none` on the
+        element that starts the drag, and putting that on the whole card would kill
+        vertical scrolling - in a four-column grid the cards cover most of the screen,
+        leaving nowhere to scroll from. Confining it to the grip keeps both gestures.
+      */}
+      <div
+        ref={setActivatorNodeRef}
+        {...listeners}
+        role="button"
+        aria-label={`${task.title} áthelyezése`}
+        onClick={stopClick}
+        style={{ touchAction: "none" }}
+        className="-mt-0.5 mb-0.5 flex cursor-grab touch-none items-center justify-center rounded py-1 text-gray-300 hover:bg-gray-50 hover:text-gray-400 active:cursor-grabbing md:-mt-1 md:mb-1"
+      >
+        <GripHorizontal className="h-3 w-3 md:h-4 md:w-4" />
+      </div>
+
+      <div className="flex items-start gap-1 md:gap-2">
+        <h3 className="min-w-0 flex-1 text-[11px] font-medium leading-tight text-gray-900 md:text-sm md:leading-snug">
           {task.title}
         </h3>
 
@@ -137,12 +161,13 @@ export default function KanbanCard({
               type="button"
               aria-label="Műveletek"
               onPointerDown={stopDrag}
-              className="-mr-1 -mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100"
+              onClick={stopClick}
+              className="-mr-0.5 -mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 md:-mr-1 md:-mt-1 md:h-7 md:w-7"
             >
-              <MoreVertical className="h-4 w-4" />
+              <MoreVertical className="h-3 w-3 md:h-4 md:w-4" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" onClick={stopClick}>
             <DropdownMenuItem onSelect={() => onEdit(task)}>
               <Pencil className="mr-2 h-4 w-4" />
               Szerkesztés
@@ -163,8 +188,13 @@ export default function KanbanCard({
         </DropdownMenu>
       </div>
 
-      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <span className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700">
+      {/*
+        Below md only the trade survives, truncated. The status chip is dropped there
+        because the column already states the status, and the date range and assignee
+        do not survive an 88px column legibly - they are one tap away in the editor.
+      */}
+      <div className="mt-1 flex flex-wrap items-center gap-1 md:mt-2 md:gap-1.5">
+        <span className="max-w-full truncate rounded bg-blue-50 px-1 py-0.5 text-[9px] font-medium text-blue-700 md:px-1.5 md:text-[11px]">
           {task.trade}
         </span>
 
@@ -178,12 +208,13 @@ export default function KanbanCard({
               type="button"
               disabled={isPending}
               onPointerDown={stopDrag}
-              className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${STATUS_CHIP[task.status]}`}
+              onClick={stopClick}
+              className={`hidden rounded px-1.5 py-0.5 text-[11px] font-medium md:inline-block ${STATUS_CHIP[task.status]}`}
             >
               {TASK_STATUS_LABELS[task.status]}
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
+          <DropdownMenuContent align="start" onClick={stopClick}>
             {TASK_STATUSES.map((status) => (
               <DropdownMenuItem
                 key={status}
@@ -195,18 +226,22 @@ export default function KanbanCard({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {range && <span className="text-[11px] text-gray-500">{range}</span>}
+        {range && (
+          <span className="hidden text-[11px] text-gray-500 md:inline">
+            {range}
+          </span>
+        )}
       </div>
 
       {task.workforceName && (
-        <p className="mt-2 truncate text-xs text-gray-600">
+        <p className="mt-2 hidden truncate text-xs text-gray-600 md:block">
           {task.workforceName}
         </p>
       )}
 
       {progress > 0 && (
-        <div className="mt-2">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+        <div className="mt-1 md:mt-2">
+          <div className="h-1 w-full overflow-hidden rounded-full bg-gray-100 md:h-1.5">
             <div
               className="h-full rounded-full bg-[#FE9C00]"
               style={{ width: `${Math.min(100, progress)}%` }}
@@ -216,36 +251,43 @@ export default function KanbanCard({
       )}
 
       {task.children.length > 0 && (
-        <div className="mt-2">
+        <div className="mt-1 md:mt-2">
           <button
             type="button"
             onPointerDown={stopDrag}
-            onClick={() => setExpanded((value) => !value)}
-            className="flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700"
+            onClick={(event) => {
+              stopClick(event);
+              setExpanded((value) => !value);
+            }}
+            className="flex items-center gap-0.5 text-[9px] font-medium text-gray-500 hover:text-gray-700 md:gap-1 md:text-xs"
             aria-expanded={expanded}
           >
             {expanded ? (
-              <ChevronDown className="h-3.5 w-3.5" />
+              <ChevronDown className="h-2.5 w-2.5 md:h-3.5 md:w-3.5" />
             ) : (
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-2.5 w-2.5 md:h-3.5 md:w-3.5" />
             )}
-            Alfeladatok {doneChildren}/{task.children.length}
+            <span className="hidden md:inline">Alfeladatok </span>
+            {doneChildren}/{task.children.length}
           </button>
 
           {expanded && (
-            <ul className="mt-1.5 space-y-1 border-l border-gray-200 pl-3">
+            <ul className="mt-1 space-y-0.5 border-l border-gray-200 pl-1.5 md:mt-1.5 md:space-y-1 md:pl-3">
               {task.children.map((child) => (
-                <li key={child.id} className="flex items-center gap-2">
+                <li key={child.id} className="flex items-center gap-1 md:gap-2">
                   <button
                     type="button"
                     onPointerDown={stopDrag}
-                    onClick={() => onEdit(child)}
-                    className="min-w-0 flex-1 truncate text-left text-xs text-gray-700 hover:underline"
+                    onClick={(event) => {
+                      stopClick(event);
+                      onEdit(child);
+                    }}
+                    className="min-w-0 flex-1 truncate text-left text-[9px] text-gray-700 hover:underline md:text-xs"
                   >
                     {child.title}
                   </button>
                   <span
-                    className={`shrink-0 rounded px-1 py-0.5 text-[10px] font-medium ${STATUS_CHIP[child.status]}`}
+                    className={`hidden shrink-0 rounded px-1 py-0.5 text-[10px] font-medium md:inline ${STATUS_CHIP[child.status]}`}
                   >
                     {TASK_STATUS_LABELS[child.status]}
                   </span>
@@ -256,18 +298,22 @@ export default function KanbanCard({
         </div>
       )}
 
-      <DeleteConfirmModal
-        isOpen={confirmingDelete}
-        onClose={() => setConfirmingDelete(false)}
-        onConfirm={remove}
-        isLoading={isPending}
-        title="Feladat törlése"
-        message={
-          task.children.length > 0
-            ? `A(z) „${task.title}" feladat és ${task.children.length} alfeladata is törlődik. Ez nem vonható vissza.`
-            : `A(z) „${task.title}" feladat törlődik. Ez nem vonható vissza.`
-        }
-      />
+      {/* Wrapped because the modal is a child of the card in the React tree, so its
+          clicks would otherwise bubble into the card's tap-to-edit handler. */}
+      <div onClick={stopClick} onPointerDown={stopDrag}>
+        <DeleteConfirmModal
+          isOpen={confirmingDelete}
+          onClose={() => setConfirmingDelete(false)}
+          onConfirm={remove}
+          isLoading={isPending}
+          title="Feladat törlése"
+          message={
+            task.children.length > 0
+              ? `A(z) „${task.title}" feladat és ${task.children.length} alfeladata is törlődik. Ez nem vonható vissza.`
+              : `A(z) „${task.title}" feladat törlődik. Ez nem vonható vissza.`
+          }
+        />
+      </div>
     </article>
   );
 }

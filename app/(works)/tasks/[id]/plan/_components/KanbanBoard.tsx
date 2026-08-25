@@ -141,7 +141,12 @@ export default function KanbanBoard({
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveTask(null)}
     >
-      <div className="mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 md:grid md:grid-cols-4 md:snap-none md:overflow-visible">
+      {/*
+        Four columns at every width. On a phone that leaves roughly 88px per column,
+        so the cards switch to a compact layout rather than the board scrolling
+        sideways - seeing all four states at once is the point of the board.
+      */}
+      <div className="mt-4 grid grid-cols-4 gap-1.5 px-2 pb-4 md:gap-3 md:px-4">
         {TASK_STATUSES.map((status) => (
           <DroppableColumn
             key={status}
@@ -149,8 +154,9 @@ export default function KanbanBoard({
             count={columns[status].length}
           >
             {columns[status].length === 0 ? (
-              <p className="px-2 py-6 text-center text-xs text-gray-400">
-                Húzz ide egy feladatot
+              <p className="py-4 text-center text-[10px] text-gray-400 md:py-6 md:text-xs">
+                <span className="hidden md:inline">Húzz ide egy feladatot</span>
+                <span className="md:hidden">—</span>
               </p>
             ) : (
               columns[status].map((task) => (
@@ -187,22 +193,24 @@ function DroppableColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <section className="w-[85vw] shrink-0 snap-start md:w-auto">
-      <header className="mb-2 flex items-center gap-2 px-1">
+    <section className="min-w-0">
+      <header className="mb-1.5 flex items-center gap-1 px-0.5 md:mb-2 md:gap-2 md:px-1">
         <span
-          className="h-2.5 w-2.5 rounded-full"
+          className="h-1.5 w-1.5 shrink-0 rounded-full md:h-2.5 md:w-2.5"
           style={{ background: COLUMN_ACCENT[status] }}
           aria-hidden
         />
-        <h2 className="text-sm font-semibold text-gray-900">
+        <h2 className="truncate text-[10px] font-semibold text-gray-900 md:text-sm">
           {TASK_STATUS_LABELS[status]}
         </h2>
-        <span className="text-xs text-gray-400">{count}</span>
+        <span className="shrink-0 text-[10px] text-gray-400 md:text-xs">
+          {count}
+        </span>
       </header>
 
       <div
         ref={setNodeRef}
-        className={`min-h-[140px] space-y-2 rounded-xl p-2 transition-colors ${
+        className={`min-h-[120px] space-y-1.5 rounded-lg p-1 transition-colors md:min-h-[140px] md:space-y-2 md:rounded-xl md:p-2 ${
           isOver
             ? "bg-orange-50 ring-2 ring-[#FE9C00]/40"
             : "bg-gray-50 ring-2 ring-transparent"
