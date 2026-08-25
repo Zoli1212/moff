@@ -31,11 +31,19 @@ const itemNameSchema = z.string().trim().min(1).max(300);
 export const scenarioAnalysisSchema = z.object({
   summary: z.string().trim().min(1).max(2000),
 
-  durationImpact: z.object({
-    originalDays: z.number().int().min(0).max(3650).nullish(),
-    adjustedDays: z.number().int().min(0).max(3650),
-    explanation: z.string().trim().max(1500),
-  }),
+  /**
+   * Optional as a whole, and nullable inside. A model asked for a day count will happily
+   * answer "3-5 nap" or null when it cannot ground the estimate, and losing an otherwise
+   * good analysis over that is a worse outcome than showing it without a number.
+   * `normalizeRawAnalysis` coerces what it can before this runs.
+   */
+  durationImpact: z
+    .object({
+      originalDays: z.number().int().min(0).max(3650).nullish(),
+      adjustedDays: z.number().int().min(0).max(3650).nullish(),
+      explanation: z.string().trim().max(1500).default(""),
+    })
+    .optional(),
 
   phases: z
     .array(
@@ -52,10 +60,10 @@ export const scenarioAnalysisSchema = z.object({
     .array(
       z.object({
         itemName: itemNameSchema,
-        action: z.enum(["drop", "defer"]),
+        action: z.enum(["drop", "defer"]).default("defer"),
         /** Money freed up. Null when the model cannot ground it in the offer. */
         savedAmount: z.number().min(0).nullish(),
-        rationale: z.string().trim().max(1000),
+        rationale: z.string().trim().max(1000).default(""),
       })
     )
     .max(MAX_CUTS)
@@ -66,7 +74,7 @@ export const scenarioAnalysisSchema = z.object({
       z.object({
         itemName: itemNameSchema,
         proposal: z.string().trim().min(1).max(1000),
-        tradeoff: z.string().trim().max(1000),
+        tradeoff: z.string().trim().max(1000).default(""),
       })
     )
     .max(MAX_ALTERNATIVES)
@@ -76,6 +84,181 @@ export const scenarioAnalysisSchema = z.object({
 });
 
 export type ScenarioAnalysis = z.infer<typeof scenarioAnalysisSchema>;
+
+/* -------------------------------------------------------------------------- */
+/* Normalisation of the raw model response                                     */
+/* -------------------------------------------------------------------------- */
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+/** First present, non-empty value among a set of alias keys. */
+function pick(source: Record<string, unknown>, ...keys: string[]): unknown {
+  for (const key of keys) {
+    const value = source[key];
+    if (value === undefined || value === null) continue;
+    if (typeof value === "string" && !value.trim()) continue;
+    return value;
+  }
+  return undefined;
+}
+
+function asText(value: unknown): string | undefined {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
+}
+
+/**
+ * Turns a day count into a number.
+ *
+ * A model asked for days answers with whatever the source said - "3-5 nap", "kb. 7",
+ * "7-10". The first integer is taken, which for a range is its lower bound: the
+ * optimistic end of an estimate the user is about to compare against a constrained one.
+ */
+export function coerceDays(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.max(0, Math.round(value));
+  }
+  if (typeof value === "string") {
+    const match = value.match(/\d+/);
+    if (match) return Math.max(0, Number(match[0]));
+  }
+  return null;
+}
+
+function asAmount(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return Math.max(0, value);
+  if (typeof value === "string") {
+    const cleaned = value.replace(/[^\d.,-]/g, "").replace(/\s/g, "").replace(",", ".");
+    const parsed = Number(cleaned);
+    if (Number.isFinite(parsed)) return Math.max(0, parsed);
+  }
+  return null;
+}
+
+/**
+ * Reshapes a raw model response into what the schema expects.
+ *
+ * Written because the first live run failed validation on five fields at once: day
+ * counts came back as strings and nulls, and the entries inside scopeCuts and
+ * alternatives used different key names than the prompt asked for. Prompts are requests;
+ * this is where the guarantee lives.
+ *
+ * Entries that cannot be salvaged - no item name, no proposal - are dropped rather than
+ * failing the whole analysis, so one malformed row cannot cost the other nine.
+ */
+export function normalizeRawAnalysis(raw: unknown): unknown {
+  const source = asRecord(raw);
+  if (!source) return raw;
+
+  const result: Record<string, unknown> = {};
+
+  const summary = asText(pick(source, "summary", "osszefoglalo", "overview"));
+  if (summary) result.summary = summary;
+
+  const durationRaw = asRecord(
+    pick(source, "durationImpact", "duration", "idotartam")
+  );
+  if (durationRaw) {
+    result.durationImpact = {
+      originalDays: coerceDays(
+        pick(durationRaw, "originalDays", "original", "eredeti")
+      ),
+      adjustedDays: coerceDays(
+        pick(durationRaw, "adjustedDays", "adjusted", "modositott", "newDays")
+      ),
+      explanation:
+        asText(pick(durationRaw, "explanation", "indoklas", "reason")) ?? "",
+    };
+  }
+
+  const phasesRaw = pick(source, "phases", "utemek", "stages");
+  if (Array.isArray(phasesRaw)) {
+    result.phases = phasesRaw
+      .map((entry) => {
+        const phase = asRecord(entry);
+        if (!phase) return null;
+        const name = asText(pick(phase, "name", "title", "nev"));
+        if (!name) return null;
+        const itemNames = pick(phase, "itemNames", "items", "tetelek");
+        return {
+          name,
+          itemNames: Array.isArray(itemNames)
+            ? itemNames.map(asText).filter((value): value is string => Boolean(value))
+            : undefined,
+          rationale:
+            asText(pick(phase, "rationale", "reason", "indoklas")) ?? "",
+        };
+      })
+      .filter(Boolean);
+  }
+
+  const cutsRaw = pick(source, "scopeCuts", "cuts", "elhagyhato");
+  if (Array.isArray(cutsRaw)) {
+    result.scopeCuts = cutsRaw
+      .map((entry) => {
+        const cut = asRecord(entry);
+        if (!cut) return null;
+        const itemName = asText(
+          pick(cut, "itemName", "item", "name", "title", "tetel")
+        );
+        if (!itemName) return null;
+
+        const rawAction = asText(pick(cut, "action", "type", "muvelet"))?.toLowerCase();
+        const action =
+          rawAction === "drop" || rawAction === "elhagy" || rawAction === "remove"
+            ? "drop"
+            : "defer";
+
+        return {
+          itemName,
+          action,
+          savedAmount: asAmount(
+            pick(cut, "savedAmount", "saving", "savings", "megtakaritas", "amount")
+          ),
+          rationale:
+            asText(pick(cut, "rationale", "reason", "indoklas", "explanation")) ?? "",
+        };
+      })
+      .filter(Boolean);
+  }
+
+  const altsRaw = pick(source, "alternatives", "alternativak", "options");
+  if (Array.isArray(altsRaw)) {
+    result.alternatives = altsRaw
+      .map((entry) => {
+        const alternative = asRecord(entry);
+        if (!alternative) return null;
+        const itemName = asText(
+          pick(alternative, "itemName", "item", "name", "title", "tetel")
+        );
+        const proposal = asText(
+          pick(alternative, "proposal", "suggestion", "javaslat", "description")
+        );
+        if (!itemName || !proposal) return null;
+        return {
+          itemName,
+          proposal,
+          tradeoff:
+            asText(pick(alternative, "tradeoff", "tradeOff", "cost", "cserebe")) ?? "",
+        };
+      })
+      .filter(Boolean);
+  }
+
+  const risksRaw = pick(source, "risks", "kockazatok", "warnings");
+  if (Array.isArray(risksRaw)) {
+    result.risks = risksRaw
+      .map(asText)
+      .filter((value): value is string => Boolean(value));
+  }
+
+  return result;
+}
 
 /* -------------------------------------------------------------------------- */
 /* Offer item matching                                                         */

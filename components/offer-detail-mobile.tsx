@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import {
   updateOfferItems,
   updateOfferStatus,
@@ -2099,6 +2100,22 @@ export function OfferDetailView({
             >
               Tételek pontosítása
             </Button>
+          </div>
+        )}
+
+        {/*
+          Read-only what-if analysis. Unlike "Tételek pontosítása" this never edits the
+          offer, so it stays available after the offer leaves draft - that is exactly
+          when someone asks what happens with fewer people or less money.
+        */}
+        {items.length > 0 && offer.requirement?.id && (
+          <div className="mt-3">
+            <Link
+              href={`/offers/${offer.requirement.id}/scenarios?offerId=${offer.id}`}
+              className="flex w-full items-center justify-center rounded-md border border-gray-300 py-4 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              Mi lenne, ha… — alternatívák
+            </Link>
           </div>
         )}
 

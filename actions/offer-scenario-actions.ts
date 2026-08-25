@@ -16,6 +16,7 @@ import { getTenantSafeAuth } from "@/lib/tenant-auth";
 import { revalidatePath } from "next/cache";
 import {
   extractOfferItems,
+  normalizeRawAnalysis,
   scenarioAnalysisSchema,
   type OfferScenarioDto,
   type ScenarioAnalysis,
@@ -263,11 +264,18 @@ Elemezd a fenti szabályok szerint.`;
       return { success: false, error: "Az AI válasza nem értelmezhető. Próbáld újra." };
     }
 
-    const parsed = scenarioAnalysisSchema.safeParse(parsedJson);
+    // Normalise before validating. The model varies its key names and answers day counts
+    // with text like "3-5 nap", and rejecting the whole analysis over that throws away
+    // work that is mostly fine.
+    const parsed = scenarioAnalysisSchema.safeParse(
+      normalizeRawAnalysis(parsedJson)
+    );
     if (!parsed.success) {
       console.error(
-        "[offer-scenario] Validation failed:",
-        parsed.error.issues.slice(0, 5)
+        "[offer-scenario] Validation failed after normalisation:",
+        parsed.error.issues.slice(0, 5),
+        "| raw keys:",
+        Object.keys((parsedJson as Record<string, unknown>) ?? {})
       );
       return {
         success: false,

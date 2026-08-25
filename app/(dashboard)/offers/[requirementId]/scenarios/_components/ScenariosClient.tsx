@@ -221,9 +221,12 @@ function ScenarioCard({
 }) {
   const { analysis } = scenario;
   const savings = totalClaimedSavings(analysis);
-  const originalDays = analysis.durationImpact.originalDays;
+  const duration = analysis.durationImpact;
+  const originalDays = duration?.originalDays ?? null;
+  const adjustedDays = duration?.adjustedDays ?? null;
+  // Only meaningful when both ends are known; the model often grounds one and not the other.
   const dayDelta =
-    originalDays != null ? analysis.durationImpact.adjustedDays - originalDays : null;
+    originalDays != null && adjustedDays != null ? adjustedDays - originalDays : null;
 
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4">
@@ -260,15 +263,17 @@ function ScenarioCard({
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <Stat
-          icon={<CalendarClock className="h-3.5 w-3.5" />}
-          label="Átfutás"
-          value={
-            dayDelta != null
-              ? `${originalDays} → ${analysis.durationImpact.adjustedDays} nap (${dayDelta >= 0 ? "+" : ""}${dayDelta})`
-              : `${analysis.durationImpact.adjustedDays} nap`
-          }
-        />
+        {adjustedDays != null && (
+          <Stat
+            icon={<CalendarClock className="h-3.5 w-3.5" />}
+            label="Átfutás"
+            value={
+              dayDelta != null
+                ? `${originalDays} → ${adjustedDays} nap (${dayDelta >= 0 ? "+" : ""}${dayDelta})`
+                : `${adjustedDays} nap`
+            }
+          />
+        )}
         {savings > 0 && (
           <Stat
             icon={<Scissors className="h-3.5 w-3.5" />}
@@ -278,9 +283,9 @@ function ScenarioCard({
         )}
       </div>
 
-      {analysis.durationImpact.explanation && (
+      {duration?.explanation && (
         <p className="mt-2 text-xs leading-relaxed text-gray-600">
-          {analysis.durationImpact.explanation}
+          {duration.explanation}
         </p>
       )}
 
