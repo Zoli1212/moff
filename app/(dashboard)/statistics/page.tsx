@@ -214,6 +214,12 @@ export default function StatisticsPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
             Statisztika
           </h1>
+          <button
+            onClick={() => router.push("/statistics/workforce")}
+            className="ml-auto rounded-full bg-[#FE9C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#FE9C00]/90"
+          >
+            Teljesítmény-rangsor
+          </button>
         </div>
 
         {/* Summary Cards */}
