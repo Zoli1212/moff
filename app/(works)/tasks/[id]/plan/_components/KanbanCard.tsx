@@ -145,9 +145,9 @@ export default function KanbanCard({
         aria-label={`${task.title} áthelyezése`}
         onClick={stopClick}
         style={{ touchAction: "none" }}
-        className="-mt-0.5 mb-0.5 flex cursor-grab touch-none items-center justify-center rounded py-1 text-gray-300 hover:bg-gray-50 hover:text-gray-400 active:cursor-grabbing md:-mt-1 md:mb-1"
+        className="-mx-0.5 -mt-0.5 mb-1 flex cursor-grab touch-none items-center justify-center rounded bg-gray-100 py-1.5 text-gray-400 hover:bg-gray-200 hover:text-gray-600 active:cursor-grabbing md:-mx-1 md:-mt-1"
       >
-        <GripHorizontal className="h-3 w-3 md:h-4 md:w-4" />
+        <GripHorizontal className="h-3.5 w-3.5 md:h-4 md:w-4" />
       </div>
 
       <div className="flex items-start gap-1 md:gap-2">

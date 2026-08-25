@@ -50,14 +50,13 @@ export default function KanbanBoard({
   const [optimistic, setOptimistic] = useState<Record<number, TaskStatus>>({});
   const [activeTask, setActiveTask] = useState<WorkTaskDto | null>(null);
 
-  // Two sensors rather than PointerSensor, because touch and mouse need opposite
-  // behaviour: on a phone an immediate drag would hijack column scrolling, so touch
-  // requires a short press-and-hold, while a mouse starts dragging after a few pixels.
+  // Both sensors activate on a few pixels of movement. Touch used to require a
+  // press-and-hold to tell a drag apart from a scroll, but that ambiguity disappeared
+  // once dragging moved to a dedicated grip: a touch starting there can only be a drag.
+  // Keeping the hold just made the board feel broken to anyone who dragged straight away.
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, {
-      activationConstraint: { delay: 220, tolerance: 8 },
-    })
+    useSensor(TouchSensor, { activationConstraint: { distance: 5 } })
   );
 
   const effectiveTasks = useMemo(
