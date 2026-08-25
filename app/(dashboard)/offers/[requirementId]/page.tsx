@@ -90,7 +90,13 @@ function OfferDetailsModal({
             </div>
           </div>
 
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex justify-end gap-2">
+            <Link
+              href={`/offers/${offer.requirementId}/scenarios?offerId=${offer.id}`}
+              className="px-4 py-2 rounded-md bg-[#FE9C00] text-white hover:bg-[#FE9C00]/90"
+            >
+              Alternatívák
+            </Link>
             <button
               type="button"
               onClick={onClose}

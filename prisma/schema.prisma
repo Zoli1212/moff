@@ -188,6 +188,7 @@ model Offer {
   work              Work?       @relation("OfferWork")
   billings          Billing[]   // Kapcsolat az új Billing modellhez
   performances      Performance[] // Kapcsolat a Performance táblához
+  scenarios         OfferScenario[] // Read-only what-if analyses
   
   @@unique([recordId])
 }
@@ -917,6 +918,37 @@ model WorkTask {
 
   @@index([workId, status])
   @@index([workId, parentId])
+  @@index([tenantEmail])
+}
+
+/// A saved "what if" analysis of an existing offer under a stated constraint,
+/// e.g. "only two people available" or "half the budget".
+///
+/// Advice, never a revision: nothing here is written back to the Offer, and the offer
+/// is only ever read. Producing a scenario cannot change what was quoted.
+model OfferScenario {
+  id      Int   @id @default(autoincrement())
+  offerId Int
+  offer   Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+
+  /// The constraint as the user phrased it. Free text on purpose - "csak 2 lapatom van"
+  /// does not decompose into fields without losing what was meant.
+  constraint String
+
+  /// The structured analysis, validated against a zod schema before it is stored.
+  analysis Json
+
+  /// What the offer looked like when this scenario was produced. Snapshotted because the
+  /// offer keeps changing through the refine/supplement/update actions, and comparing a
+  /// saved scenario against a since-altered offer would show a difference that was never
+  /// analysed.
+  baseTotalPrice   Float
+  baseDurationText String?
+
+  tenantEmail String
+  createdAt   DateTime @default(now())
+
+  @@index([offerId])
   @@index([tenantEmail])
 }
 
