@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { OfferWithItems } from "@/types/offer.types";
 import {
@@ -25,6 +26,8 @@ function OfferDetailsModal({
   onClose: () => void;
   offer: OfferWithItems;
 }) {
+  const { t } = useLocale();
+
   if (!isOpen) return null;
 
   return (
@@ -33,12 +36,12 @@ function OfferDetailsModal({
         <div className="p-6">
           <div className="flex justify-between items-start">
             <h3 className="text-xl font-semibold text-gray-900">
-              {offer.title || "Ajánlat részletei"}
+              {offer.title || t("offers.detailsTitle")}
             </h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500"
-              aria-label="Bezárás"
+              aria-label={t("common.close")}
             >
               <svg
                 className="h-6 w-6"
@@ -70,18 +73,18 @@ function OfferDetailsModal({
                 <p>{offer.totalPrice?.toLocaleString("hu-HU")} Ft</p>
               </div>
               <div>
-                <p className="font-medium">Státusz:</p>
+                <p className="font-medium">{t("od.status")}</p>
                 <p>{getStatusDisplay(offer.status)}</p>
               </div>
               <div>
-                <p className="font-medium">Létrehozva:</p>
+                <p className="font-medium">{t("od.createdAt")}</p>
                 <p>
                   {format(new Date(offer.createdAt), "PPP", { locale: hu })}
                 </p>
               </div>
               {offer.validUntil && (
                 <div>
-                  <p className="font-medium">Érvényes:</p>
+                  <p className="font-medium">{t("od.validUntil")}</p>
                   <p>
                     {format(new Date(offer.validUntil), "PPP", { locale: hu })}
                   </p>
@@ -96,7 +99,7 @@ function OfferDetailsModal({
               onClick={onClose}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Bezárás
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -106,6 +109,8 @@ function OfferDetailsModal({
 }
 
 export default function RequirementOffersPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -356,7 +361,7 @@ export default function RequirementOffersPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{t("offers.title")}</h1>
           </div>
           <p className="text-gray-600 mt-1">{requirement.title}</p>
         </div>
@@ -391,7 +396,7 @@ export default function RequirementOffersPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-medium text-gray-900">
-                        {offer.title || "Névtelen ajánlat"}
+                        {offer.title || t("offers.list.untitled")}
                       </h3>
                       {offer.description && (
                         <p className="mt-1 text-sm text-gray-600">

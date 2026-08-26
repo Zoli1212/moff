@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useRouter } from "next/navigation";
 import { checkIsSuperUser } from "@/actions/user-management-actions";
 import {
@@ -29,6 +30,8 @@ interface EditingItem extends PriceItem {
 }
 
 export default function PricesPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [isSuperUser, setIsSuperUser] = useState(false);
   const [globalPrices, setGlobalPrices] = useState<PriceItem[]>([]);
@@ -107,7 +110,7 @@ export default function PricesPage() {
       : editingItem.materialCost;
 
     if (!task || laborCost === undefined || materialCost === undefined) {
-      toast.error("Kérem töltse ki az összes kötelező mezőt");
+      toast.error(t("od.fillRequired"));
       return;
     }
 
@@ -290,7 +293,7 @@ export default function PricesPage() {
                       Technológia
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                      Egység
+                      {t("od.unit")}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
                       Munkaköltség
@@ -311,7 +314,7 @@ export default function PricesPage() {
                         className="px-6 py-4 text-center text-gray-500"
                       >
                         {searchTerm
-                          ? "Nincs találat"
+                          ? t("stats.noResults")
                           : "Nincsenek vállalkozói Áraim"}
                       </td>
                     </tr>
@@ -349,7 +352,7 @@ export default function PricesPage() {
                             <button
                               onClick={() => handleDelete(price.id, "tenant")}
                               className="text-red-600 hover:text-red-800 transition-colors"
-                              title="Törlés"
+                              title={t("common.delete")}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -367,7 +370,7 @@ export default function PricesPage() {
           <div className="md:hidden space-y-3">
             {filteredTenantPrices.length === 0 ? (
               <div className="bg-white rounded-lg p-4 text-center text-gray-500">
-                {searchTerm ? "Nincs találat" : "Nincsenek vállalkozói Áraim"}
+                {searchTerm ? t("stats.noResults") : "Nincsenek vállalkozói Áraim"}
               </div>
             ) : (
               filteredTenantPrices.map((price) => (
@@ -392,7 +395,7 @@ export default function PricesPage() {
                       <button
                         onClick={() => handleDelete(price.id, "tenant")}
                         className="p-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors"
-                        title="Törlés"
+                        title={t("common.delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -490,7 +493,7 @@ export default function PricesPage() {
                         Technológia
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                        Egység
+                        {t("od.unit")}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
                         Munka Díj
@@ -511,7 +514,7 @@ export default function PricesPage() {
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           {searchTerm
-                            ? "Nincs találat"
+                            ? t("stats.noResults")
                             : "Nincsenek globális Áraim"}
                         </td>
                       </tr>
@@ -549,7 +552,7 @@ export default function PricesPage() {
                               <button
                                 onClick={() => handleDelete(price.id, "global")}
                                 className="text-red-600 hover:text-red-800 transition-colors"
-                                title="Törlés"
+                                title={t("common.delete")}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -567,7 +570,7 @@ export default function PricesPage() {
             <div className="md:hidden space-y-3">
               {filteredGlobalPrices.length === 0 ? (
                 <div className="bg-white rounded-lg p-4 text-center text-gray-500">
-                  {searchTerm ? "Nincs találat" : "Nincsenek globális Áraim"}
+                  {searchTerm ? t("stats.noResults") : "Nincsenek globális Áraim"}
                 </div>
               ) : (
                 filteredGlobalPrices.map((price) => (
@@ -592,7 +595,7 @@ export default function PricesPage() {
                         <button
                           onClick={() => handleDelete(price.id, "global")}
                           className="p-1.5 rounded-md hover:bg-red-50 text-red-600 transition-colors"
-                          title="Törlés"
+                          title={t("common.delete")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -831,7 +834,7 @@ export default function PricesPage() {
                 className="w-full px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50"
                 style={{ backgroundColor: "#FE9C00" }}
               >
-                {isSaving ? "Mentés..." : "Mentés"}
+                {isSaving ? t("od.saving") : t("common.save")}
               </button>
               <button
                 onClick={() => {
@@ -841,7 +844,7 @@ export default function PricesPage() {
                 disabled={isSaving}
                 className="w-full px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors disabled:opacity-50"
               >
-                Mégse
+                {t("common.cancel")}
               </button>
             </div>
           </div>
@@ -895,7 +898,7 @@ export default function PricesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Egység
+                  {t("od.unit")}
                 </label>
                 <input
                   ref={unitRef}
@@ -937,7 +940,7 @@ export default function PricesPage() {
                 className="w-full px-4 py-2 text-white rounded-md transition-colors disabled:opacity-50"
                 style={{ backgroundColor: "#FE9C00" }}
               >
-                {isSaving ? "Mentés..." : "Mentés"}
+                {isSaving ? t("od.saving") : t("common.save")}
               </button>
               <button
                 onClick={() => {
@@ -947,7 +950,7 @@ export default function PricesPage() {
                 disabled={isSaving}
                 className="w-full px-4 py-2 text-gray-700 bg-gray-300 rounded-md hover:bg-gray-400 transition-colors disabled:opacity-50"
               >
-                Mégse
+                {t("common.cancel")}
               </button>
             </div>
           </div>

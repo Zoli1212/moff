@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Loader2, ArrowLeft, Edit, Save, X, Download } from "lucide-react";
@@ -101,6 +102,8 @@ const parseOfferTable = (text: string) => {
 };
 
 export default function OfferLetterResult() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [offer, setOffer] = useState<OfferData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -532,7 +535,7 @@ export default function OfferLetterResult() {
                 disabled={isSending}
               >
                 <X className="mr-2 h-4 w-4" />
-                Mégse
+                {t("common.cancel")}
               </Button>
               <Button
                 variant="default"
@@ -560,13 +563,13 @@ export default function OfferLetterResult() {
                   // Create data for the items sheet
                   const itemsData = [
                     [
-                      "Tétel megnevezése",
-                      "Mennyiség",
-                      "Egység",
-                      "Anyag egységár",
-                      "Díj egységár",
-                      "Anyag összesen",
-                      "Díj összesen",
+                      t("od.itemLabel"),
+                      t("od.quantity"),
+                      t("od.unit"),
+                      t("od.materialUnitPrice"),
+                      t("od.feeUnitPrice"),
+                      t("od.materialTotal"),
+                      t("od.feeTotal"),
                     ],
                     ...editableItems.map((item) => [
                       item.name,
@@ -586,7 +589,7 @@ export default function OfferLetterResult() {
                     "",
                     "",
                     "",
-                    "Munkadíj összesen:",
+                    t("od.labourCostTotal"),
                     formattedWorkTotal,
                   ]);
                   itemsData.push([
@@ -595,7 +598,7 @@ export default function OfferLetterResult() {
                     "",
                     "",
                     "",
-                    "Anyagköltség összesen:",
+                    t("od.materialCostTotal"),
                     formattedMaterialTotal,
                   ]);
                   itemsData.push([
@@ -604,7 +607,7 @@ export default function OfferLetterResult() {
                     "",
                     "",
                     "",
-                    "Összesített nettó költség:",
+                    t("od.netTotal"),
                     formattedTotal,
                   ]);
 
@@ -636,7 +639,7 @@ export default function OfferLetterResult() {
                   wsItems["!cols"] = colWidths;
 
                   // Add worksheet to workbook
-                  XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat");
+                  XLSX.utils.book_append_sheet(wb, wsItems, t("od.offer"));
 
                   // Generate Excel file
                   XLSX.writeFile(
@@ -669,7 +672,7 @@ export default function OfferLetterResult() {
           <div className="max-w-4xl mx-auto">
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="border-b pb-4 mb-6">
-                <h1 className="text-xl font-semibold">Ajánlat</h1>
+                <h1 className="text-xl font-semibold">{t("od.offer")}</h1>
                 {offer.metaData?.description && (
                   <p className="text-gray-600 mt-1 truncate">
                     Tárgy: {offer.metaData.description}
@@ -697,13 +700,13 @@ export default function OfferLetterResult() {
               <table className="w-full text-sm border">
                 <thead className="bg-gray-100">
                   <tr>
-                    <th className="text-left p-2 border">Tétel megnevezése</th>
-                    <th className="text-left p-2 border">Mennyiség</th>
-                    <th className="text-left p-2 border">Egység</th>
-                    <th className="text-left p-2 border">Anyag egységár</th>
-                    <th className="text-left p-2 border">Díj egységár</th>
-                    <th className="text-left p-2 border">Anyag összesen</th>
-                    <th className="text-left p-2 border">Díj összesen</th>
+                    <th className="text-left p-2 border">{t("od.itemLabel")}</th>
+                    <th className="text-left p-2 border">{t("od.quantity")}</th>
+                    <th className="text-left p-2 border">{t("od.unit")}</th>
+                    <th className="text-left p-2 border">{t("od.materialUnitPrice")}</th>
+                    <th className="text-left p-2 border">{t("od.feeUnitPrice")}</th>
+                    <th className="text-left p-2 border">{t("od.materialTotal")}</th>
+                    <th className="text-left p-2 border">{t("od.feeTotal")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -828,15 +831,15 @@ export default function OfferLetterResult() {
 
               <div className="mt-4 space-y-1">
                 <p className="text-base">
-                  <span className="font-medium">Munkadíj összesen:</span>{" "}
+                  <span className="font-medium">{t("od.labourCostTotal")}</span>{" "}
                   {formattedWorkTotal}
                 </p>
                 <p className="text-base">
-                  <span className="font-medium">Anyagköltség összesen:</span>{" "}
+                  <span className="font-medium">{t("od.materialCostTotal")}</span>{" "}
                   {formattedMaterialTotal}
                 </p>
                 <p className="text-base font-medium pt-2 border-t border-gray-200 ">
-                  <strong>Összesített nettó költség:</strong> {formattedTotal}
+                  <strong>{t("od.netTotal")}</strong> {formattedTotal}
                 </p>
               </div>
               {timeMatch && (
