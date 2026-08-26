@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import { getStatistics, getUserActivityDetails, updateUserRole, UserStatistics, UserRoleType } from "@/actions/statistics-actions";
 import { toast } from "sonner";
 import { ChevronLeft, Users, Crown, Building2, HardHat, Eye, X } from "lucide-react";
@@ -21,6 +23,7 @@ interface ActivityDetails {
 }
 
 export default function StatisticsPage() {
+  const { t } = useLocale();
   const router = useRouter();
   const [users, setUsers] = useState<UserStatistics[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,12 +54,12 @@ export default function StatisticsPage() {
             totalWorkers: result.data.totalWorkers,
           });
         } else {
-          toast.error(result.error || "Hiba a statisztikák betöltésekor");
+          toast.error(result.error || t("stats.loadFailed"));
           router.push("/works");
         }
       } catch (error) {
         console.error("Hiba a statisztikák betöltésekor:", error);
-        toast.error("Hiba a statisztikák betöltésekor");
+        toast.error(t("stats.loadFailed"));
         router.push("/works");
       } finally {
         setIsLoading(false);
@@ -75,11 +78,11 @@ export default function StatisticsPage() {
       if (result.success && result.data) {
         setActivityDetails(result.data);
       } else {
-        toast.error(result.error || "Hiba az aktivitás betöltésekor");
+        toast.error(result.error || t("stats.activityLoadFailed"));
       }
     } catch (error) {
       console.error("Error loading activity details:", error);
-      toast.error("Hiba az aktivitás betöltésekor");
+      toast.error(t("stats.activityLoadFailed"));
     } finally {
       setLoadingDetails(false);
     }
@@ -126,13 +129,13 @@ export default function StatisticsPage() {
           totalTenants: updatedUsers.filter((u) => u.isTenant).length,
           totalWorkers: updatedUsers.filter((u) => !u.isTenant).length,
         });
-        toast.success("Szerepkör sikeresen módosítva");
+        toast.success(t("stats.roleChanged"));
       } else {
-        toast.error(result.error || "Hiba a szerepkör módosításakor");
+        toast.error(result.error || t("stats.roleChangeFailed"));
       }
     } catch (error) {
       console.error("Error updating role:", error);
-      toast.error("Hiba a szerepkör módosításakor");
+      toast.error(t("stats.roleChangeFailed"));
     } finally {
       setUpdatingRoleId(null);
     }
@@ -195,7 +198,7 @@ export default function StatisticsPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-600">Statisztikák betöltése...</div>
+        <div className="text-lg text-gray-600">{t("stats.loading")}</div>
       </div>
     );
   }
@@ -207,18 +210,19 @@ export default function StatisticsPage() {
           <button
             onClick={() => router.push("/works")}
             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-            title="Vissza"
+            title={t("common.back")}
           >
             <ChevronLeft className="h-6 w-6" style={{ color: "#FE9C00" }} />
           </button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Statisztika
+            {t("stats.title")}
           </h1>
+          <LocaleSwitcher className="ml-3" />
           <button
             onClick={() => router.push("/statistics/workforce")}
             className="ml-auto rounded-full bg-[#FE9C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#FE9C00]/90"
           >
-            Teljesítmény-rangsor
+            {t("stats.ranking")}
           </button>
         </div>
 
@@ -277,7 +281,7 @@ export default function StatisticsPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="Keresés név vagy email alapján..."
+            placeholder={t("stats.search")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
@@ -312,7 +316,7 @@ export default function StatisticsPage() {
                     Meghívó
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-                    Részletek
+                    {t("common.details")}
                   </th>
                 </tr>
               </thead>
@@ -320,7 +324,7 @@ export default function StatisticsPage() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                      {searchTerm ? "Nincs találat" : "Nincsenek felhasználók"}
+                      {searchTerm ? t("stats.noResults") : t("stats.noUsers")}
                     </td>
                   </tr>
                 ) : (
@@ -368,7 +372,7 @@ export default function StatisticsPage() {
                           onClick={() => handleViewDetails(user)}
                           className="p-1.5 rounded-md hover:bg-orange-50 transition-colors"
                           style={{ color: "#FE9C00" }}
-                          title="Részletek"
+                          title={t("common.details")}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -385,7 +389,7 @@ export default function StatisticsPage() {
         <div className="md:hidden space-y-3">
           {filteredUsers.length === 0 ? (
             <div className="bg-white rounded-lg p-4 text-center text-gray-500">
-              {searchTerm ? "Nincs találat" : "Nincsenek felhasználók"}
+              {searchTerm ? t("stats.noResults") : t("stats.noUsers")}
             </div>
           ) : (
             filteredUsers.map((user) => (
@@ -404,7 +408,7 @@ export default function StatisticsPage() {
                     onClick={() => handleViewDetails(user)}
                     className="p-1.5 rounded-md hover:bg-orange-50 transition-colors"
                     style={{ color: "#FE9C00" }}
-                    title="Részletek"
+                    title={t("common.details")}
                   >
                     <Eye className="h-5 w-5" />
                   </button>
@@ -412,20 +416,20 @@ export default function StatisticsPage() {
 
                 <div className="space-y-1.5 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Regisztráció:</span>
+                    <span className="text-gray-500">{t("stats.registration")}:</span>
                     <span className="text-gray-700">{formatDate(user.createdAt)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Utolsó aktivitás:</span>
+                    <span className="text-gray-500">{t("stats.lastActivity")}:</span>
                     <span className="text-gray-700">{formatDate(user.lastActivity)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Aktivitás:</span>
+                    <span className="text-gray-500">{t("stats.activity")}:</span>
                     <span className="text-gray-700 font-medium">{user.activityCount}</span>
                   </div>
                   {user.invitedBy && (
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Meghívó:</span>
+                      <span className="text-gray-500">{t("stats.invitedBy")}:</span>
                       <span className="text-gray-700">{user.invitedBy}</span>
                     </div>
                   )}
@@ -478,23 +482,23 @@ export default function StatisticsPage() {
             <div className="p-4">
               {/* User Info */}
               <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Felhasználó adatai</h4>
+                <h4 className="font-medium text-gray-900 mb-3">{t("stats.userData")}</h4>
                 <div className="space-y-3 text-sm">
                   <div>
-                    <span className="text-gray-500">Email:</span>
+                    <span className="text-gray-500">{t("stats.email")}:</span>
                     <p className="font-medium break-all">{selectedUser.email}</p>
                   </div>
                   <div>
-                    <span className="text-gray-500">Típus:</span>
+                    <span className="text-gray-500">{t("stats.type")}:</span>
                     <div className="mt-1">{getRoleBadge(selectedUser)}</div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <span className="text-gray-500">Regisztráció:</span>
+                      <span className="text-gray-500">{t("stats.registration")}:</span>
                       <p className="font-medium">{formatDate(selectedUser.createdAt)}</p>
                     </div>
                     <div>
-                      <span className="text-gray-500">Utolsó aktivitás:</span>
+                      <span className="text-gray-500">{t("stats.lastActivity")}:</span>
                       <p className="font-medium">{formatDate(selectedUser.lastActivity)}</p>
                     </div>
                   </div>
@@ -502,13 +506,13 @@ export default function StatisticsPage() {
                     <div className="grid grid-cols-2 gap-3">
                       {selectedUser.invitedBy && (
                         <div>
-                          <span className="text-gray-500">Meghívó:</span>
+                          <span className="text-gray-500">{t("stats.invitedBy")}:</span>
                           <p className="font-medium break-all">{selectedUser.invitedBy}</p>
                         </div>
                       )}
                       {selectedUser.trialEndsAt && (
                         <div>
-                          <span className="text-gray-500">Trial lejárat:</span>
+                          <span className="text-gray-500">{t("stats.trialEnds")}:</span>
                           <p className="font-medium">{formatDate(selectedUser.trialEndsAt)}</p>
                         </div>
                       )}
@@ -525,7 +529,7 @@ export default function StatisticsPage() {
                 <>
                   {/* Activity Summary */}
                   <div className="mb-6">
-                    <h4 className="font-medium text-gray-900 mb-3">Aktivitás összesítés</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t("stats.activitySummary")}</h4>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="bg-gray-50 rounded-lg p-3 text-center">
                         <p className="text-2xl font-bold" style={{ color: "#FE9C00" }}>
@@ -550,9 +554,9 @@ export default function StatisticsPage() {
 
                   {/* Recent Activity */}
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Utolsó aktivitások</h4>
+                    <h4 className="font-medium text-gray-900 mb-3">{t("stats.recentActivity")}</h4>
                     {activityDetails.recentActivity.length === 0 ? (
-                      <p className="text-gray-500 text-sm">Nincs rögzített aktivitás</p>
+                      <p className="text-gray-500 text-sm">{t("stats.noActivity")}</p>
                     ) : (
                       <div className="space-y-2 max-h-60 overflow-y-auto">
                         {activityDetails.recentActivity.map((activity) => (
@@ -574,7 +578,7 @@ export default function StatisticsPage() {
                                 )}
                                 {activity.fileType && (
                                   <p className="text-gray-500 text-xs">
-                                    Típus: {activity.fileType}
+                                    {t("stats.type")}: {activity.fileType}
                                   </p>
                                 )}
                               </div>
@@ -600,7 +604,7 @@ export default function StatisticsPage() {
                 className="w-full px-4 py-2 text-white rounded-md transition-colors"
                 style={{ backgroundColor: "#FE9C00" }}
               >
-                Bezárás
+                {t("common.close")}
               </button>
             </div>
           </div>
