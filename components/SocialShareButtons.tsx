@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { MessageCircle, Share2, FileText } from "lucide-react";
 
 import jsPDF from "jspdf";
@@ -81,13 +82,15 @@ const getStatusDisplay = (status: string): string => {
 };
 
 export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
+  const { t } = useLocale();
+
   const pathname = usePathname();
   const pageUrl = `${window.location.origin}${pathname}`;
 
   const getShareText = () => {
     if (!offer) return "";
 
-    let text = `*${offer.title || "Ajánlat"}*\n\n`;
+    let text = `*${offer.title || t("od.offer")}*\n\n`;
 
     if (offer.description) {
       text += `${offer.description}\n\n`;
@@ -164,7 +167,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
 
       // Add title
       doc.setFontSize(18);
-      doc.text(offer.title || "Ajánlat", 14, 22);
+      doc.text(offer.title || t("od.offer"), 14, 22);
 
       // Add metadata
       doc.setFontSize(10);
@@ -222,13 +225,13 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         // Prepare table headers for all 7 columns
         const head = [
           "#",
-          "Tétel megnevezése",
-          "Mennyiség",
-          "Egység",
-          "Anyag egységár",
-          "Díj egységár",
-          "Anyag összesen",
-          "Díj összesen",
+          t("od.itemLabel"),
+          t("od.quantity"),
+          t("od.unit"),
+          t("od.materialUnitPrice"),
+          t("od.feeUnitPrice"),
+          t("od.materialTotal"),
+          t("od.feeTotal"),
         ];
 
         // Add the main table
@@ -294,7 +297,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         const textY3 = boxY + 36;
 
         // Work total
-        doc.text("Munkadíj összesen:", boxX + 10, textY1);
+        doc.text(t("od.labourCostTotal"), boxX + 10, textY1);
         doc.text(
           `${totals.work.toLocaleString("hu-HU")} Ft`,
           boxX + boxWidth - 10,
@@ -303,7 +306,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         );
 
         // Material cost
-        doc.text("Anyagköltség összesen:", boxX + 10, textY2);
+        doc.text(t("od.materialCostTotal"), boxX + 10, textY2);
         doc.text(
           `${totals.material.toLocaleString("hu-HU")} Ft`,
           boxX + boxWidth - 10,
@@ -314,7 +317,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         // Total cost
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text("Összesített nettó költség:", boxX + 10, textY3);
+        doc.text(t("od.netTotal"), boxX + 10, textY3);
         doc.text(
           `${(totals.work + totals.material).toLocaleString("hu-HU")} Ft`,
           boxX + boxWidth - 10,
@@ -367,7 +370,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
       if (navigator.share) {
         try {
           const shareData: ShareData & { files?: File[] } = {
-            title: offer.title || "Ajánlat",
+            title: offer.title || t("od.offer"),
             text: "Itt az ajánlatod PDF formátumban",
             files: [pdfFile],
           };

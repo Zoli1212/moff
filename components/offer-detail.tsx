@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { updateOfferItems } from "@/actions/offer-actions";
 import { toast } from "sonner";
 import SocialShareButtons from "./SocialShareButtons";
@@ -40,6 +41,7 @@ interface OfferDetailViewProps {
 }
 
 export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
+  const { t } = useLocale();
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItemId, setEditingItemId] = useState<number | null>(null);
@@ -156,7 +158,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
     const item = editableItems[index];
     if (!item.name || !item.quantity || !item.unit) {
-      toast.error("Kérem töltse ki az összes kötelező mezőt");
+      toast.error(t("od.fillRequired"));
       return;
     }
 
@@ -168,18 +170,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       );
 
       if (result.success) {
-        toast.success("A tétel sikeresen mentve");
+        toast.success(t("od.itemSaved"));
         setEditingItemId(null);
         // Update original items with the saved data
         if (result.offer?.items) {
           setOriginalItems([...result.offer.items]);
         }
       } else {
-        toast.error(result.error || "Hiba történt a mentés során");
+        toast.error(result.error || t("od.errSave"));
       }
     } catch (error) {
       console.error("Error saving item:", error);
-      toast.error("Hiba történt a mentés során");
+      toast.error(t("od.errSave"));
     } finally {
       setIsSaving(false);
     }
@@ -238,7 +240,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
     try {
       const date = new Date(dateString);
       return isNaN(date.getTime())
-        ? "Érvénytelen dátum"
+        ? t("od.invalidDate")
         : format(date, "PPP", { locale: hu });
     } catch (e) {
       return `Érvénytelen dátum: ${(e as Error).message}`;
@@ -248,10 +250,10 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
   function getStatusDisplay(status: string) {
     const statusMap: Record<string, string> = {
       draft: "Piszkozat",
-      sent: "Elküldve",
+      sent: t("offers.status.sent"),
       accepted: "Elfogadva",
-      rejected: "Elutasítva",
-      expired: "Lejárt",
+      rejected: t("offers.status.rejected"),
+      expired: t("od.expired"),
     };
 
     return statusMap[status] || status;
@@ -350,18 +352,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${offer.title || "Ajánlat"}</title>
+        <title>${offer.title || t("od.offer")}</title>
         <meta charset="utf-8">
         <style>${printStyles}</style>
       </head>
       <body>
         <div id="printable-area">
           <div class="print-header">
-            <div class="print-title">${offer.title || "Ajánlat"}</div>
+            <div class="print-title">${offer.title || t("od.offer")}</div>
             <div class="print-meta">
-              <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || "draft")}</div>
-              <div><strong>Létrehozva:</strong> ${formatDate(offer.createdAt)}</div>
-              ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ""}
+              <div><strong>{t("od.status")}</strong> ${getStatusDisplay(offer.status || "draft")}</div>
+              <div><strong>{t("od.createdAt")}</strong> ${formatDate(offer.createdAt)}</div>
+              ${offer.validUntil ? `<div><strong>{t("od.validUntil")}</strong> ${formatDate(offer.validUntil)}</div>` : ""}
             </div>
           </div>
           
@@ -369,7 +371,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             offer.description
               ? `
             <div class="print-section">
-              <div class="print-section-title">Leírás</div>
+              <div class="print-section-title">{t("od.description")}</div>
               <div>${offer.description.replace(/\n/g, "<br>")}</div>
             </div>
           `
@@ -380,18 +382,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             items.length > 0
               ? `
             <div class="print-section">
-              <div class="print-section-title">Tételek</div>
+              <div class="print-section-title">{t("offers.items")}</div>
               <table class="print-table">
                 <thead>
                   <tr>
                     <th style="width: 5%;">#</th>
-                    <th style="width: 25%;">Tétel megnevezése</th>
-                    <th style="width: 8%;">Mennyiség</th>
-                    <th style="width: 8%;">Egység</th>
-                    <th style="width: 15%;">Anyag egységár</th>
-                    <th style="width: 15%;">Díj egységár</th>
-                    <th style="width: 12%;">Anyag összesen</th>
-                    <th style="width: 12%;">Díj összesen</th>
+                    <th style="width: 25%;">{t("od.itemLabel")}</th>
+                    <th style="width: 8%;">{t("od.quantity")}</th>
+                    <th style="width: 8%;">{t("od.unit")}</th>
+                    <th style="width: 15%;">{t("od.materialUnitPrice")}</th>
+                    <th style="width: 15%;">{t("od.feeUnitPrice")}</th>
+                    <th style="width: 12%;">{t("od.materialTotal")}</th>
+                    <th style="width: 12%;">{t("od.feeTotal")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -412,15 +414,15 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                     )
                     .join("")}
                   <tr>
-                    <td colspan="4" class="text-right font-bold">Munkadíj összesen:</td>
+                    <td colspan="4" class="text-right font-bold">{t("od.labourCostTotal")}</td>
                     <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString("hu-HU")} Ft</td>
                   </tr>
                   <tr>
-                    <td colspan="4" class="text-right font-bold">Anyagköltség összesen:</td>
+                    <td colspan="4" class="text-right font-bold">{t("od.materialCostTotal")}</td>
                     <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString("hu-HU")} Ft</td>
                   </tr>
                   <tr>
-                    <td colspan="4" class="text-right font-bold">Összesített nettó költség:</td>
+                    <td colspan="4" class="text-right font-bold">{t("od.netTotal")}</td>
                     <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString("hu-HU")} Ft</td>
                   </tr>
                 </tbody>
@@ -434,7 +436,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             notes.length > 0
               ? `
             <div class="print-section">
-              <div class="print-section-title">Megjegyzések</div>
+              <div class="print-section-title">{t("od.notes")}</div>
               <ul>
                 ${notes.map((note) => `<li>• ${note}</li>`).join("")}
               </ul>
@@ -480,7 +482,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-start mb-4">
               <h1 className="text-2xl font-bold text-gray-900">
-                {offer.title || "Ajánlat részletei"}
+                {offer.title || t("offers.detailsTitle")}
               </h1>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -497,18 +499,18 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                     }}
                   >
                     <Printer className="mr-2 h-4 w-4" />
-                    <span>Nyomtatás</span>
+                    <span>{t("od.print")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onSelect={(e: Event) => {
                       e.preventDefault();
                       navigator.clipboard.writeText(window.location.href);
-                      toast.success("Link a vágólapra másolva");
+                      toast.success(t("od.linkCopied"));
                     }}
                   >
                     <Copy className="mr-2 h-4 w-4" />
-                    <span>Link másolása</span>
+                    <span>{t("od.copyLink")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <div className="px-2 py-1.5">
@@ -546,7 +548,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             <div className="flex flex-wrap gap-6 mt-4">
               <div className="flex items-center text-gray-600">
                 <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Státusz: </span>
+                <span>{t("od.status")} </span>
                 <span className="ml-1 font-medium">
                   {getStatusDisplay(offer.status || "draft")}
                 </span>
@@ -554,7 +556,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
 
               <div className="flex items-center text-gray-600">
                 <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Létrehozva: </span>
+                <span>{t("od.createdAt")} </span>
                 <span className="ml-1 font-medium">
                   {formatDate(offer.createdAt)}
                 </span>
@@ -563,7 +565,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               {offer.validUntil && (
                 <div className="flex items-center text-gray-600">
                   <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                  <span>Érvényes: </span>
+                  <span>{t("od.validUntil")} </span>
                   <span className="ml-1 font-medium">
                     {formatDate(offer.validUntil)}
                   </span>
@@ -597,7 +599,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center">
                   <FileText className="h-5 w-5 mr-2 text-gray-500" />
-                  Leírás
+                  {t("od.description")}
                 </h2>
               </div>
               <div className="p-6">
@@ -614,7 +616,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
-                Megjegyzések
+                {t("od.notes")}
               </h2>
             </div>
             <div className="p-6">
@@ -639,7 +641,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
             >
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <List className="h-5 w-5 mr-2 text-gray-500" />
-                Követelmény
+                {t("offers.requirement")}
                 <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
                   1
                 </span>
@@ -657,7 +659,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 <div className="flex items-center space-x-4">
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <List className="h-5 w-5 mr-2 text-gray-500" />
-                    Tételek
+                    {t("offers.items")}
                   </h2>
                 </div>
                 <div className="flex space-x-2">
@@ -665,7 +667,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                     onClick={handleAddItem}
                     className="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                   >
-                    <Plus className="h-4 w-4 mr-1" /> Új tétel
+                    <Plus className="h-4 w-4 mr-1" /> {t("offers.newItem")}
                   </button>
                 </div>
               </div>
@@ -683,43 +685,43 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         scope="col"
                         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
-                        Tétel megnevezése
+                        {t("od.itemLabel")}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
                       >
-                        Mennyiség
+                        {t("od.quantity")}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16"
                       >
-                        Egység
+                        {t("od.unit")}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
                       >
-                        Anyag egységár
+                        {t("od.materialUnitPrice")}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
                       >
-                        Díj egységár
+                        {t("od.feeUnitPrice")}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
                       >
-                        Anyag összesen
+                        {t("od.materialTotal")}
                       </th>
                       <th
                         scope="col"
                         className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
                       >
-                        Díj összesen
+                        {t("od.feeTotal")}
                       </th>
                     </tr>
                   </thead>
@@ -919,14 +921,14 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                 className="px-2 py-1 text-sm text-gray-700 bg-gray-100 rounded hover:bg-gray-200"
                                 disabled={isSaving}
                               >
-                                Mégse
+                                {t("common.cancel")}
                               </button>
                               <button
                                 onClick={() => saveItem(index)}
                                 className="px-2 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700"
                                 disabled={isSaving}
                               >
-                                {isSaving ? "Mentés..." : "Mentés"}
+                                {isSaving ? t("od.saving") : t("common.save")}
                               </button>
                             </div>
                           ) : (
@@ -950,7 +952,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                   }
                                 }}
                                 className="p-1 text-red-600 rounded-full hover:bg-red-50"
-                                title="Törlés"
+                                title={t("common.delete")}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </button>
@@ -966,7 +968,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         colSpan={8}
                         className="px-4 py-3 text-right text-sm font-medium text-gray-700"
                       >
-                        Munkadíj összesen:
+                        {t("od.labourCostTotal")}
                       </td>
                       <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
                         {workTotal.toLocaleString("hu-HU")} Ft
@@ -977,7 +979,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         colSpan={8}
                         className="px-4 py-3 text-right text-sm font-medium text-gray-700"
                       >
-                        Anyagköltség összesen:
+                        {t("od.materialCostTotal")}
                       </td>
                       <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
                         {materialTotal.toLocaleString("hu-HU")} Ft
@@ -988,7 +990,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                         colSpan={8}
                         className="px-4 py-3 text-right text-sm font-bold text-gray-900"
                       >
-                        Összesített nettó költség:
+                        {t("od.netTotal")}
                       </td>
                       <td className="px-4 py-3 text-right text-sm font-bold text-gray-900">
                         {grandTotal.toLocaleString("hu-HU")} Ft

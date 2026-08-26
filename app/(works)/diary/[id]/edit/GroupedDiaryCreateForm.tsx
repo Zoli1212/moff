@@ -4,6 +4,7 @@ import {
   createWorkDiaryItem,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,8 @@ export default function GroupedDiaryForm({
   onSave,
   onCancel,
 }: GroupedDiaryFormProps) {
+  const { t } = useLocale();
+
   const { user } = useUser();
   const [date, setDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -1230,7 +1233,7 @@ export default function GroupedDiaryForm({
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description">Leírás</Label>
+          <Label htmlFor="description">{t("od.description")}</Label>
           <Textarea
             id="description"
             value={description}

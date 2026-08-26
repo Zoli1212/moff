@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   updateWorkDiaryItem,
   createWorkDiaryItem,
@@ -49,6 +50,8 @@ export default function WorkerDiaryEditForm({
   onCancel,
   editingItem,
 }: WorkerDiaryEditFormProps) {
+  const { t } = useLocale();
+
   const { user } = useUser();
   const currentEmail = useMemo(
     () =>
@@ -606,7 +609,7 @@ export default function WorkerDiaryEditForm({
         />
       </div>
       <div>
-        <Label htmlFor="diary-description">Leírás</Label>
+        <Label htmlFor="diary-description">{t("od.description")}</Label>
         <Textarea
           id="diary-description"
           value={description}
@@ -628,7 +631,7 @@ export default function WorkerDiaryEditForm({
         />
       </div>
       <div>
-        <Label>Mennyiség</Label>
+        <Label>{t("od.quantity")}</Label>
         <Input
           type="number"
           value={quantity}
@@ -802,7 +805,7 @@ export default function WorkerDiaryEditForm({
               selectedWorkerToken === ""
             }
           >
-            Mentés
+            {t("common.save")}
           </Button>
         </div>
       </div>
@@ -901,7 +904,7 @@ export default function WorkerDiaryEditForm({
                 }
               }}
             >
-              Mentés
+              {t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -967,7 +970,7 @@ export default function WorkerDiaryEditForm({
                 }
               }}
             >
-              Törlés
+              {t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

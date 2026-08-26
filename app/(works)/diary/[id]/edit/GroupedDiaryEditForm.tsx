@@ -5,6 +5,7 @@ import {
   deleteWorkDiaryItemsByGroup,
 } from "@/actions/workdiary-actions";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,6 +46,8 @@ export default function GroupedDiaryEditForm({
   onSave,
   onCancel,
 }: GroupedDiaryEditFormProps) {
+  const { t } = useLocale();
+
   const { user } = useUser();
   const [date, setDate] = useState<string>("");
   const [description, setDescription] = useState<string>("");
@@ -1370,7 +1373,7 @@ export default function GroupedDiaryEditForm({
 
         {/* Description */}
         <div className="space-y-2">
-          <Label htmlFor="description">Leírás</Label>
+          <Label htmlFor="description">{t("od.description")}</Label>
           <Textarea
             id="description"
             value={description}
@@ -1479,7 +1482,7 @@ export default function GroupedDiaryEditForm({
                 ) : (
                   <div className="flex items-center gap-2">
                     <Trash2 className="h-4 w-4 text-red-600" />
-                    Törlés
+                    {t("common.delete")}
                   </div>
                 )}
               </Button>
@@ -1508,7 +1511,7 @@ export default function GroupedDiaryEditForm({
                   Frissítés...
                 </div>
               ) : (
-                "Mentés"
+                t("common.save")
               )}
             </Button>
           </div>
@@ -1524,7 +1527,7 @@ export default function GroupedDiaryEditForm({
                 </div>
                 <div>
                   <h3 className="text-lg font-medium text-gray-900">
-                    Törlés
+                    {t("common.delete")}
                   </h3>
                   <p className="text-sm text-gray-500">
                     Biztosan törölni szeretné ezt a napló bejegyzést?
@@ -1561,7 +1564,7 @@ export default function GroupedDiaryEditForm({
                   disabled={isDeleting}
                   className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>

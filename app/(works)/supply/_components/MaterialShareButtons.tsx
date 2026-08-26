@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { FileDigit, Sheet } from "lucide-react";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
@@ -45,6 +46,8 @@ const sanitizeForPdf = (text: string | null | undefined): string => {
 export default function MaterialShareButtons({
   materials,
 }: MaterialShareButtonsProps) {
+  const { t } = useLocale();
+
   const { user } = useUser();
 
   const generatePdf = async (): Promise<Blob | null> => {
@@ -123,9 +126,9 @@ export default function MaterialShareButtons({
       const head = [
         "#",
         sanitizeForPdf("Anyag megnevezése"),
-        sanitizeForPdf("Mennyiség"),
-        sanitizeForPdf("Egység"),
-        sanitizeForPdf("Egységár"),
+        sanitizeForPdf(t("od.quantity")),
+        sanitizeForPdf(t("od.unit")),
+        sanitizeForPdf(t("offers.unitPrice")),
         sanitizeForPdf("Összesen"),
       ];
 
@@ -289,7 +292,7 @@ export default function MaterialShareButtons({
 
       // Materials sheet with empty columns for supplier to fill
       const materialsData = [
-        ["Anyag megnevezése", "Mennyiség", "Egység", "Egységár", "Összesen"],
+        ["Anyag megnevezése", t("od.quantity"), t("od.unit"), t("offers.unitPrice"), "Összesen"],
         ...materials.map(item => [
           item.name,
           item.quantity,

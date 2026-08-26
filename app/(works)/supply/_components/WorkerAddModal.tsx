@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -127,6 +128,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   lockedProfession,
   currentAssignments = [],
 }) => {
+  const { t } = useLocale();
+
   const [workerMode, setWorkerMode] = useState<"existing" | "new">("existing");
   const [existingWorkers, setExistingWorkers] = useState<
     Array<{
@@ -761,7 +764,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 }
                 className="bg-[#FF9900] hover:bg-[#e68a00] text-white w-full"
               >
-                {loading ? "Mentés..." : "Mentés"}
+                {loading ? t("od.saving") : t("common.save")}
               </Button>
               <Button
                 type="button"
@@ -770,7 +773,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 disabled={loading}
                 className="w-full"
               >
-                Mégse
+                {t("common.cancel")}
               </Button>
             </div>
           </DialogFooter>

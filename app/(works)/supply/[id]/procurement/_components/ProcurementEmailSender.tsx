@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 import * as XLSX from "xlsx";
 import { useUser } from "@clerk/nextjs";
@@ -33,6 +34,8 @@ export default function ProcurementEmailSender({
   requestType: "quote" | "order";
   supplierEmail: string;
 }) {
+  const { t } = useLocale();
+
   const [recipientEmail, setRecipientEmail] = useState(supplierEmail || "");
   const [isSending, setIsSending] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState("");
@@ -121,7 +124,7 @@ Köszönjük!`;
 
     // 2. Materials sheet with empty columns for supplier to fill
     const materialsData = [
-      ["Anyag megnevezése", "Mennyiség", "Egység", "Egységár", "Összesen"],
+      ["Anyag megnevezése", t("od.quantity"), t("od.unit"), t("offers.unitPrice"), "Összesen"],
       ...materials.map(item => [
         item.name,
         item.quantity,

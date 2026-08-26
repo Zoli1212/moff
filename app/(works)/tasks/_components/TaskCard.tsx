@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 import { Plus, AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -57,6 +58,8 @@ const TaskCard: React.FC<TaskCardProps> = ({
   currentMarketPrice,
   materialUnitPrice,
 }) => {
+  const { t } = useLocale();
+
   const [showQuantityModal, setShowQuantityModal] = useState(false);
   const [newQuantity, setNewQuantity] = useState<string>("");
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
@@ -479,7 +482,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 }}
                 className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-md transition-colors"
               >
-                Mégse
+                {t("common.cancel")}
               </button>
             </div>
           </div>

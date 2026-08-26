@@ -5,6 +5,7 @@ import { FileDigit, Sheet } from "lucide-react"; // Ikonok frissítve PDF-hez é
 import * as XLSX from "xlsx"; // Excel export
 
 import jsPDF from "jspdf";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import autoTable from "jspdf-autotable";
 // stabil regisztráció
 
@@ -93,13 +94,15 @@ const sanitizeForPdf = (text: string | null | undefined): string => {
 export default function SocialShareButtonsExcel({
   offer,
 }: SocialShareButtonsProps) {
+  const { t } = useLocale();
+
   // const pathname = usePathname();
   // const pageUrl = `${window.location.origin}${pathname}`;
 
   // const getShareText = () => {
   //   if (!offer) return "";
 
-  //   let text = `*${offer.title || "Ajánlat"}*\n\n`;
+  //   let text = `*${offer.title || t("od.offer")}*\n\n`;
 
   //   if (offer.description) {
   //     text += `${offer.description}\n\n`;
@@ -176,7 +179,7 @@ export default function SocialShareButtonsExcel({
 
       // Add title
       doc.setFontSize(18);
-      doc.text(sanitizeForPdf(offer.title || "Ajánlat"), 14, 22);
+      doc.text(sanitizeForPdf(offer.title || t("od.offer")), 14, 22);
 
       // Add metadata
       doc.setFontSize(10);
@@ -234,13 +237,13 @@ export default function SocialShareButtonsExcel({
         // Prepare table headers for all 7 columns
         const head = [
           "#",
-          sanitizeForPdf("Tétel megnevezése"),
-          sanitizeForPdf("Mennyiség"),
-          sanitizeForPdf("Egység"),
-          sanitizeForPdf("Anyag egységár"),
-          sanitizeForPdf("Díj egységár"),
-          sanitizeForPdf("Anyag összesen"),
-          sanitizeForPdf("Díj összesen"),
+          sanitizeForPdf(t("od.itemLabel")),
+          sanitizeForPdf(t("od.quantity")),
+          sanitizeForPdf(t("od.unit")),
+          sanitizeForPdf(t("od.materialUnitPrice")),
+          sanitizeForPdf(t("od.feeUnitPrice")),
+          sanitizeForPdf(t("od.materialTotal")),
+          sanitizeForPdf(t("od.feeTotal")),
         ];
 
         // Add the main table
@@ -306,7 +309,7 @@ export default function SocialShareButtonsExcel({
         const textY3 = boxY + 36;
 
         // Work total
-        doc.text(sanitizeForPdf("Munkadíj összesen:"), boxX + 10, textY1);
+        doc.text(sanitizeForPdf(t("od.labourCostTotal")), boxX + 10, textY1);
         doc.text(
           sanitizeForPdf(`${totals.work.toLocaleString("hu-HU")} Ft`),
           boxX + boxWidth - 10,
@@ -315,7 +318,7 @@ export default function SocialShareButtonsExcel({
         );
 
         // Material cost
-        doc.text(sanitizeForPdf("Anyagköltség összesen:"), boxX + 10, textY2);
+        doc.text(sanitizeForPdf(t("od.materialCostTotal")), boxX + 10, textY2);
         doc.text(
           sanitizeForPdf(`${totals.material.toLocaleString("hu-HU")} Ft`),
           boxX + boxWidth - 10,
@@ -326,7 +329,7 @@ export default function SocialShareButtonsExcel({
         // Total cost
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
-        doc.text(sanitizeForPdf("Összesített nettó költség:"), boxX + 10, textY3);
+        doc.text(sanitizeForPdf(t("od.netTotal")), boxX + 10, textY3);
         doc.text(
           sanitizeForPdf(`${(totals.work + totals.material).toLocaleString("hu-HU")} Ft`),
           boxX + boxWidth - 10,
@@ -379,7 +382,7 @@ export default function SocialShareButtonsExcel({
       if (navigator.share) {
         try {
           const shareData: ShareData & { files?: File[] } = {
-            title: offer.title || "Ajánlat",
+            title: offer.title || t("od.offer"),
             text: "Itt az ajánlatod PDF formátumban",
             files: [pdfFile],
           };
@@ -485,11 +488,11 @@ export default function SocialShareButtonsExcel({
               const projectDetails = [
                 ["Projekt adatok"],
                 [""],
-                ["Ajánlat", offer?.title || ""],
-                ["Leírás", offer?.description || ""],
-                ["Státusz", offer?.status || ""],
+                [t("od.offer"), offer?.title || ""],
+                [t("od.description"), offer?.description || ""],
+                [t("offers.status"), offer?.status || ""],
                 [
-                  "Létrehozva",
+                  t("offers.createdAt"),
                   offer?.createdAt
                     ? new Date(offer.createdAt).toLocaleString("hu-HU")
                     : "",
@@ -504,7 +507,7 @@ export default function SocialShareButtonsExcel({
               ];
               if (offer?.totalPrice) {
                 projectDetails.push([
-                  "Összesített nettó költség:",
+                  t("od.netTotal"),
                   offer.totalPrice.toLocaleString("hu-HU") + " Ft",
                 ]);
               }
@@ -518,13 +521,13 @@ export default function SocialShareButtonsExcel({
               // 3. Tételek sheet
               const offerItemsData = [
                 [
-                  "Tétel megnevezése",
-                  "Mennyiség",
-                  "Egység",
-                  "Anyag egységár",
-                  "Díj egységár",
-                  "Anyag összesen",
-                  "Díj összesen",
+                  t("od.itemLabel"),
+                  t("od.quantity"),
+                  t("od.unit"),
+                  t("od.materialUnitPrice"),
+                  t("od.feeUnitPrice"),
+                  t("od.materialTotal"),
+                  t("od.feeTotal"),
                 ],
                 ...(offer?.items || []).map((item) => [
                   item.name,
@@ -543,7 +546,7 @@ export default function SocialShareButtonsExcel({
                   "",
                   "",
                   "",
-                  "Összesen:",
+                  t("od.total"),
                   offer.totalPrice.toLocaleString("hu-HU") + " Ft",
                 ]);
               }
