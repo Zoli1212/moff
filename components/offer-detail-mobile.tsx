@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
+import OfferCurrencyControl from "@/components/i18n/OfferCurrencyControl";
 import { convertFromHuf, resolveCurrency } from "@/lib/i18n/config";
 import {
   updateOfferItems,
@@ -2138,16 +2139,19 @@ export function OfferDetailView({
 
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
           <LocaleSwitcher />
-          <span className="text-xs text-gray-600">
-            {t("offers.currency.label")}:{" "}
-            <strong className="text-gray-900">{offerCurrency}</strong>
-            {offerCurrency !== "HUF" && offerRate ? (
-              <span className="ml-1 text-gray-400">
-                (1 EUR = {offerRate} Ft — {t("offers.currency.converted")})
-              </span>
-            ) : null}
-          </span>
+          {offerCurrency !== "HUF" && offerRate ? (
+            <span className="text-xs text-gray-500">
+              1 EUR = {offerRate} Ft — {t("offers.currency.converted")}
+            </span>
+          ) : null}
         </div>
+
+        <OfferCurrencyControl
+          offerId={Number(offer.id)}
+          currency={offerCurrency}
+          exchangeRate={offerRate}
+          totalPriceHuf={Number(offer.totalPrice) || 0}
+        />
 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (
