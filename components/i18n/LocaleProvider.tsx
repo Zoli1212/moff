@@ -22,7 +22,7 @@ import { translate, type MessageKey } from "@/lib/i18n/messages";
 interface LocaleContextValue {
   locale: Locale;
   setLocale: (next: Locale) => void;
-  t: (key: MessageKey) => string;
+  t: (key: MessageKey, params?: Record<string, string | number>) => string;
   /** Formats an amount in its own currency, using the active locale for digits. */
   money: (amount: number | null | undefined, currency?: Currency) => string;
 }
@@ -74,7 +74,7 @@ export function LocaleProvider({
     () => ({
       locale,
       setLocale,
-      t: (key) => translate(locale, key),
+      t: (key, params) => translate(locale, key, params),
       money: (amount, currency) => formatMoney(amount, currency, locale),
     }),
     [locale, setLocale]
@@ -97,7 +97,7 @@ export function useLocale(): LocaleContextValue {
   return {
     locale: DEFAULT_LOCALE,
     setLocale: () => {},
-    t: (key) => translate(DEFAULT_LOCALE, key),
+    t: (key, params) => translate(DEFAULT_LOCALE, key, params),
     money: (amount, currency) => formatMoney(amount, currency, DEFAULT_LOCALE),
   };
 }

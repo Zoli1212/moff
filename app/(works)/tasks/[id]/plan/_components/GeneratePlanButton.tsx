@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Sparkles } from "lucide-react";
 import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
 import { generateWorkPlan } from "@/actions/work-plan-actions";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface Props {
   workId: number;
@@ -18,6 +19,7 @@ export default function GeneratePlanButton({
   existingAiTaskCount,
   onGenerated,
 }: Props) {
+  const { t } = useLocale();
   const [confirming, setConfirming] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -56,7 +58,7 @@ export default function GeneratePlanButton({
         ) : (
           <Sparkles className="h-4 w-4" />
         )}
-        {isPending ? "Generálás…" : "AI ütemterv"}
+        {isPending ? t("plan.generating") : t("plan.aiPlan")}
       </button>
 
       <DeleteConfirmModal

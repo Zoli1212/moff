@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { GitBranch } from "lucide-react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   addDays,
   daysBetween,
@@ -83,6 +84,7 @@ export default function GanttChart({
   baseDate,
   onSelect,
 }: Props) {
+  const { t } = useLocale();
   const rows = useMemo(() => flattenRows(tasks), [tasks]);
 
   /**
@@ -211,7 +213,7 @@ export default function GanttChart({
           }`}
         >
           <GitBranch className="h-3.5 w-3.5" />
-          Függőségek
+          {t("plan.dependencies")}
           {dependencies.length > 0 && (
             <span className="text-gray-400">{dependencies.length}</span>
           )}
@@ -385,8 +387,7 @@ export default function GanttChart({
       </div>
 
       <p className="mt-2 text-xs text-gray-400">
-        Az idővonal csak megjelenít. A nyilak a szakmai sorrendet mutatják, de nem
-        ütemeznek át semmit — átütemezni a feladatra koppintva, a dátum mezőkben lehet.
+        {t("plan.ganttReadOnly")}
       </p>
     </div>
   );

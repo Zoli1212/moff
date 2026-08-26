@@ -20,9 +20,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   TASK_STATUSES,
-  TASK_STATUS_LABELS,
   effectiveProgress,
   type TaskStatus,
   type WorkTaskDto,
@@ -80,6 +80,7 @@ export default function KanbanCard({
   onAddSubtask,
   onChanged,
 }: Props) {
+  const { t } = useLocale();
   const [expanded, setExpanded] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -211,7 +212,7 @@ export default function KanbanCard({
               onClick={stopClick}
               className={`hidden rounded px-1.5 py-0.5 text-[11px] font-medium md:inline-block ${STATUS_CHIP[task.status]}`}
             >
-              {TASK_STATUS_LABELS[task.status]}
+              {t(`status.${task.status}`)}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" onClick={stopClick}>
@@ -220,7 +221,7 @@ export default function KanbanCard({
                 key={status}
                 onSelect={() => changeStatus(status)}
               >
-                {TASK_STATUS_LABELS[status]}
+                {t(`status.${status}`)}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -267,7 +268,7 @@ export default function KanbanCard({
             ) : (
               <ChevronRight className="h-2.5 w-2.5 md:h-3.5 md:w-3.5" />
             )}
-            <span className="hidden md:inline">Alfeladatok </span>
+            <span className="hidden md:inline">{t("plan.subtasks")} </span>
             {doneChildren}/{task.children.length}
           </button>
 
@@ -289,7 +290,7 @@ export default function KanbanCard({
                   <span
                     className={`hidden shrink-0 rounded px-1 py-0.5 text-[10px] font-medium md:inline ${STATUS_CHIP[child.status]}`}
                   >
-                    {TASK_STATUS_LABELS[child.status]}
+                    {t(`status.${child.status}`)}
                   </span>
                 </li>
               ))}

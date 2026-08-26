@@ -15,13 +15,13 @@ import {
 import { toast } from "sonner";
 import {
   TASK_STATUSES,
-  TASK_STATUS_LABELS,
   isTaskStatus,
   type TaskStatus,
   type WorkTaskDto,
 } from "@/lib/work-plan/schema";
 import { updateWorkTaskStatus } from "@/actions/work-plan-actions";
 import KanbanCard from "./KanbanCard";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 const COLUMN_ACCENT: Record<TaskStatus, string> = {
   todo: "#9CA3AF",
@@ -43,6 +43,8 @@ export default function KanbanBoard({
   onAddSubtask,
   onChanged,
 }: Props) {
+  const { t } = useLocale();
+
   /**
    * Statuses applied locally the moment a card is dropped. Without this the card snaps
    * back to its old column until the refetch lands, which reads as a failed drag.
@@ -126,7 +128,7 @@ export default function KanbanBoard({
         // Put the card back where it came from rather than leaving the board showing
         // a move that never reached the database.
         setOptimistic((current) => ({ ...current, [taskId]: previous }));
-        toast.error(result.error ?? "A státusz módosítása nem sikerült.");
+        toast.error(result.error ?? t("plan.statusFailed"));
         return;
       }
       onChanged();
@@ -150,11 +152,12 @@ export default function KanbanBoard({
           <DroppableColumn
             key={status}
             status={status}
+            label={t(`status.${status}`)}
             count={columns[status].length}
           >
             {columns[status].length === 0 ? (
               <p className="py-4 text-center text-[10px] text-gray-400 md:py-6 md:text-xs">
-                <span className="hidden md:inline">Húzz ide egy feladatot</span>
+                <span className="hidden md:inline">{t("plan.dropHere")}</span>
                 <span className="md:hidden">—</span>
               </p>
             ) : (
@@ -182,10 +185,12 @@ export default function KanbanBoard({
 
 function DroppableColumn({
   status,
+  label,
   count,
   children,
 }: {
   status: TaskStatus;
+  label: string;
   count: number;
   children: React.ReactNode;
 }) {
@@ -200,7 +205,7 @@ function DroppableColumn({
           aria-hidden
         />
         <h2 className="truncate text-[10px] font-semibold text-gray-900 md:text-sm">
-          {TASK_STATUS_LABELS[status]}
+          {label}
         </h2>
         <span className="shrink-0 text-[10px] text-gray-400 md:text-xs">
           {count}

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Info, Medal, TrendingDown, Users } from "lucide-react";
 import { getWorkforceRanking } from "@/actions/workforce-ranking-actions";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import {
-  METRIC_LABELS,
   RANKING_METRICS,
   flattenRanking,
   type RankingMetric,
@@ -15,14 +16,10 @@ import {
 
 const BRAND = "#FE9C00";
 
-const PERIODS: Array<{ value: string; label: string }> = [
-  { value: "30", label: "30 nap" },
-  { value: "90", label: "90 nap" },
-  { value: "365", label: "1 év" },
-  { value: "all", label: "Teljes" },
-];
+const PERIODS = ["30", "90", "365", "all"] as const;
 
 export default function WorkforceRankingClient() {
+  const { t } = useLocale();
   const [metric, setMetric] = useState<RankingMetric>("hours");
   const [period, setPeriod] = useState("90");
 
@@ -57,12 +54,13 @@ export default function WorkforceRankingClient() {
         </Link>
         <div>
           <h1 className="text-lg font-semibold text-gray-900">
-            Teljesítmény-rangsor
+            {t("ranking.title")}
           </h1>
           <p className="text-xs text-gray-500">
-            A napló bejegyzéseiből számolva
+            {t("ranking.subtitle")}
           </p>
         </div>
+        <LocaleSwitcher className="ml-auto" />
       </header>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -73,24 +71,24 @@ export default function WorkforceRankingClient() {
         >
           {RANKING_METRICS.map((value) => (
             <option key={value} value={value}>
-              {METRIC_LABELS[value]}
+              {t(`ranking.${value}`)}
             </option>
           ))}
         </select>
 
         <div className="flex rounded-full bg-gray-100 p-1">
-          {PERIODS.map((option) => (
+          {PERIODS.map((value) => (
             <button
-              key={option.value}
+              key={value}
               type="button"
-              onClick={() => setPeriod(option.value)}
+              onClick={() => setPeriod(value)}
               className={`rounded-full px-3 py-1 text-xs font-medium ${
-                period === option.value
+                period === value
                   ? "bg-white text-gray-900 shadow-sm"
                   : "text-gray-500"
               }`}
             >
-              {option.label}
+              {t(`ranking.period.${value}`)}
             </button>
           ))}
         </div>
@@ -104,9 +102,11 @@ export default function WorkforceRankingClient() {
         <p className="mt-3 flex items-start gap-2 rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-900">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           <span>
-            {coverage.totalEntries} naplóbejegyzésből {coverage.attributedEntries}{" "}
-            köthető nevesített dolgozóhoz ({coverage.attributedPercent}%). A többi
-            munka megtörtént, de nem szerepel ebben a rangsorban.
+            {t("ranking.coverage", {
+              total: coverage.totalEntries,
+              attributed: coverage.attributedEntries,
+              percent: coverage.attributedPercent,
+            })}
           </span>
         </p>
       )}
@@ -119,7 +119,7 @@ export default function WorkforceRankingClient() {
         </p>
       ) : active.length === 0 ? (
         <p className="mt-10 text-center text-sm text-gray-500">
-          Ebben az időszakban nincs nevesített dolgozóhoz kötött naplóbejegyzés.
+          {t("ranking.empty")}
         </p>
       ) : (
         <>
@@ -127,24 +127,20 @@ export default function WorkforceRankingClient() {
             <Highlight
               tone="good"
               icon={<Medal className="h-4 w-4" />}
-              title="Legjobban teljesítők"
+              title={t("ranking.best")}
               metric={metric}
               people={best}
             />
             <Highlight
               tone="weak"
               icon={<TrendingDown className="h-4 w-4" />}
-              title="Leggyengébben teljesítők"
+              title={t("ranking.weakest")}
               metric={metric}
               people={weakest}
             />
           </div>
 
-          <p className="mt-4 text-xs text-gray-500">
-            Az egyéni sorrend <strong>szakmán belül</strong> értendő. A naplóban
-            szereplő mennyiségek szakmánként más mértékegységben vannak, ezért
-            azokból nem képezhető összehasonlítható teljesítmény.
-          </p>
+          <p className="mt-4 text-xs text-gray-500">{t("ranking.withinTrade")}</p>
 
           <div className="mt-4 space-y-4">
             {groups.map((group) => (
@@ -158,14 +154,14 @@ export default function WorkforceRankingClient() {
                     {group.role}
                   </h2>
                   <span className="text-xs text-gray-500">
-                    {group.headcount} fő
+                    {group.headcount} {t("ranking.headcount")}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {group.totalHours} óra
+                    {group.totalHours} {t("ranking.hoursShort")}
                   </span>
                   {group.acceptanceRate != null && (
                     <span className="text-xs text-gray-500">
-                      {group.acceptanceRate}% elfogadva
+                      {group.acceptanceRate}% {t("ranking.acceptedShort")}
                     </span>
                   )}
                 </header>
@@ -185,8 +181,9 @@ export default function WorkforceRankingClient() {
                         {member.worker.name}
                       </span>
                       <span className="shrink-0 text-xs text-gray-500">
-                        {member.hours} óra · {member.activeDays} nap ·{" "}
-                        {member.worksCount} munka
+                        {member.hours} {t("ranking.hoursShort")} · {member.activeDays}{" "}
+                        {t("ranking.daysShort")} · {member.worksCount}{" "}
+                        {t("ranking.jobsShort")}
                       </span>
                       <span className="w-12 shrink-0 text-right text-sm font-medium text-gray-900">
                         {formatMetric(member, metric)}
@@ -230,6 +227,9 @@ function Highlight({
   metric: RankingMetric;
   people: WorkerStats[];
 }) {
+  const { t } = useLocale();
+  const label = t(`ranking.${metric}`);
+
   return (
     <div
       className={`rounded-xl border p-4 ${
@@ -246,7 +246,7 @@ function Highlight({
         {icon}
         {title}
         <span className="font-normal opacity-70">
-          — {METRIC_LABELS[metric].toLowerCase()}
+          — {label.toLowerCase()}
         </span>
       </h2>
       <ol className="space-y-1">

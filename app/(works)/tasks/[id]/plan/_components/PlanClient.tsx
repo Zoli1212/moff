@@ -20,6 +20,8 @@ import type {
   WorkTaskDependencyDto,
   WorkTaskDto,
 } from "@/lib/work-plan/schema";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import KanbanBoard from "./KanbanBoard";
 import GanttChart from "./GanttChart";
 import TaskEditDialog, { type TaskDraft } from "./TaskEditDialog";
@@ -30,6 +32,7 @@ type PlanView = "kanban" | "gantt";
 const BRAND = "#FE9C00";
 
 export default function PlanClient({ workId }: { workId: number }) {
+  const { t } = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
@@ -87,7 +90,7 @@ export default function PlanClient({ workId }: { workId: number }) {
   }, [tasks]);
 
   const loadError = planQuery.isError
-    ? "Az ütemterv betöltése nem sikerült. Ellenőrizd a kapcsolatot, és próbáld újra."
+    ? t("plan.unavailable")
     : planQuery.data && !planQuery.data.success
       ? planQuery.data.error
       : null;
@@ -104,7 +107,7 @@ export default function PlanClient({ workId }: { workId: number }) {
           >
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h1 className="text-lg font-semibold text-gray-900">Ütemterv</h1>
+          <h1 className="text-lg font-semibold text-gray-900">{t("plan.title")}</h1>
         </header>
 
         <div className="mt-8 rounded-xl border border-amber-200 bg-amber-50 p-5">
@@ -115,7 +118,7 @@ export default function PlanClient({ workId }: { workId: number }) {
             />
             <div className="min-w-0">
               <p className="text-sm font-medium text-amber-900">
-                Az ütemterv most nem érhető el
+                {t("plan.unavailable")}
               </p>
               <p className="mt-1 text-sm text-amber-800">{loadError}</p>
             </div>
@@ -128,13 +131,13 @@ export default function PlanClient({ workId }: { workId: number }) {
               disabled={planQuery.isFetching}
               className="rounded-md bg-[#FE9C00] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#FE9C00]/90 disabled:opacity-60"
             >
-              {planQuery.isFetching ? "Újrapróbálás…" : "Újrapróbálás"}
+              {t("plan.retry")}
             </button>
             <Link
               href={`/tasks/${workId}`}
               className="rounded-md bg-white px-3 py-1.5 text-sm font-medium text-gray-700 ring-1 ring-gray-200 hover:bg-gray-50"
             >
-              Vissza a feladatokhoz
+              {t("plan.backToTasks")}
             </Link>
           </div>
         </div>
@@ -155,7 +158,7 @@ export default function PlanClient({ workId }: { workId: number }) {
         </Link>
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-lg font-semibold text-gray-900">
-            Ütemterv
+            {t("plan.title")}
           </h1>
           {planQuery.data?.workTitle && (
             <p className="truncate text-xs text-gray-500">
@@ -163,6 +166,7 @@ export default function PlanClient({ workId }: { workId: number }) {
             </p>
           )}
         </div>
+        <LocaleSwitcher className="shrink-0" />
       </header>
 
       {/*
@@ -176,13 +180,13 @@ export default function PlanClient({ workId }: { workId: number }) {
             active={view === "kanban"}
             onClick={() => setView("kanban")}
             icon={<Columns3 className="h-4 w-4" />}
-            label="Kanban"
+            label={t("plan.kanban")}
           />
           <ViewTab
             active={view === "gantt"}
             onClick={() => setView("gantt")}
             icon={<GanttChartSquare className="h-4 w-4" />}
-            label="Gantt"
+            label={t("plan.gantt")}
           />
         </div>
 
@@ -195,7 +199,7 @@ export default function PlanClient({ workId }: { workId: number }) {
             className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             <Plus className="h-4 w-4" />
-            Feladat
+            {t("plan.newTask")}
           </button>
           <GeneratePlanButton
             workId={workId}
@@ -285,14 +289,14 @@ function PlanSkeleton() {
 }
 
 function EmptyState() {
+  const { t } = useLocale();
   return (
     <div className="mx-4 mt-8 rounded-xl border border-dashed border-gray-300 px-6 py-12 text-center">
       <p className="text-sm font-medium text-gray-900">
-        Még nincs ütemterv ehhez a munkához.
+        {t("plan.empty")}
       </p>
       <p className="mt-2 text-sm text-gray-500">
-        Generáltasd az AI-jal a munka tételeiből, vagy vegyél fel feladatot kézzel.
-        Az AI által javasolt ütemterv utána szabadon szerkeszthető.
+        {t("plan.emptyHint")}
       </p>
     </div>
   );
