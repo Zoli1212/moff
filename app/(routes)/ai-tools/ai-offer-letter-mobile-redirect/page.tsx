@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +11,8 @@ import { v4 as uuidv4 } from "uuid";
 import { useDemandStore } from "@/store/offerLetterStore";
 
 export default function OfferLetterGenerator() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const { demandText, setDemandText } = useDemandStore();
   const [isLoading, setIsLoading] = useState(false);
@@ -18,7 +21,7 @@ export default function OfferLetterGenerator() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!demandText.trim()) {
-      setError("Kérjük adj meg egy szöveget az elemzéshez!");
+      setError(t("letter.needText"));
       return;
     }
 

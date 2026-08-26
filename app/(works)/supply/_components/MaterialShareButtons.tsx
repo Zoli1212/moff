@@ -66,11 +66,11 @@ export default function MaterialShareButtons({
 
       // Add greeting
       doc.setFontSize(14);
-      doc.text(sanitizeForPdf("T. címzett!"), 14, 22);
+      doc.text(sanitizeForPdf(t("proc.dear")), 14, 22);
 
       // Add request text
       doc.setFontSize(11);
-      doc.text(sanitizeForPdf("Kérek ajánlatot a következő tételekre:"), 14, 32);
+      doc.text(sanitizeForPdf(t("share.quoteFor")), 14, 32);
 
       // Add metadata
       doc.setFontSize(10);
@@ -78,7 +78,7 @@ export default function MaterialShareButtons({
       let yPos = 42;
 
       // User info section
-      doc.text(sanitizeForPdf("Kérelmező adatai:"), 14, yPos);
+      doc.text(sanitizeForPdf(t("proc.requesterData")), 14, yPos);
       yPos += 6;
 
       if (user?.fullName) {
@@ -125,11 +125,11 @@ export default function MaterialShareButtons({
 
       const head = [
         "#",
-        sanitizeForPdf("Anyag megnevezése"),
+        sanitizeForPdf(t("proc.materialName")),
         sanitizeForPdf(t("od.quantity")),
         sanitizeForPdf(t("od.unit")),
         sanitizeForPdf(t("offers.unitPrice")),
-        sanitizeForPdf("Összesen"),
+        sanitizeForPdf(t("proc.sum")),
       ];
 
       autoTableTyped(doc, {
@@ -187,7 +187,7 @@ export default function MaterialShareButtons({
       doc.setTextColor(0, 0, 0);
 
       const textY = boxY + 10;
-      doc.text(sanitizeForPdf("Összesített anyagár:"), boxX + 5, textY);
+      doc.text(sanitizeForPdf(t("share.materialTotal")), boxX + 5, textY);
 
       // Empty space for supplier to fill in
       doc.setDrawColor(150, 150, 150);
@@ -199,7 +199,7 @@ export default function MaterialShareButtons({
       return doc.output("blob");
     } catch (error) {
       console.error("Hiba a PDF generálása közben:", error);
-      alert("Hiba történt a PDF generálása közben.");
+      alert(t("share.pdfGenerateError"));
       return null;
     }
   };
@@ -210,7 +210,7 @@ export default function MaterialShareButtons({
     try {
       const pdfBlob = await generatePdf();
       if (!pdfBlob) {
-        console.error("Nem sikerült létrehozni a PDF-t");
+        console.error(t("share.pdfCreateFailed"));
         return;
       }
 
@@ -221,8 +221,8 @@ export default function MaterialShareButtons({
       if (navigator.share) {
         try {
           const shareData: ShareData & { files?: File[] } = {
-            title: "Anyagbeszerzési lista",
-            text: "Anyagbeszerzési lista PDF formátumban",
+            title: t("share.materialList"),
+            text: t("share.materialListPdf"),
             files: [pdfFile],
           };
 
@@ -249,7 +249,7 @@ export default function MaterialShareButtons({
       }, 100);
     } catch (error) {
       console.error("Hiba történt a megosztás során:", error);
-      alert("Hiba történt a megosztás során.");
+      alert(t("share.shareError"));
     }
   };
 
@@ -272,18 +272,18 @@ export default function MaterialShareButtons({
 
       // Request details sheet
       const requestDetails = [
-        ["T. címzett!"],
+        [t("proc.dear")],
         [""],
-        ["Kérek ajánlatot a következő tételekre:"],
+        [t("share.quoteFor")],
         [""],
-        ["Kérelmező adatai:"],
-        ...(user?.fullName ? [["Név:", user.fullName]] : []),
+        [t("proc.requesterData")],
+        ...(user?.fullName ? [[t("proc.name"), user.fullName]] : []),
         ...(user?.primaryEmailAddress?.emailAddress ? [["Email:", user.primaryEmailAddress.emailAddress]] : []),
-        ...(addressData.companyName ? [["Cégnév:", addressData.companyName]] : []),
-        ...(addressData.zip && addressData.city && addressData.address ? [["Cím:", `${addressData.zip} ${addressData.city}, ${addressData.address}`]] : []),
-        ...(addressData.country ? [["Ország:", addressData.country]] : []),
+        ...(addressData.companyName ? [[t("proc.companyName"), addressData.companyName]] : []),
+        ...(addressData.zip && addressData.city && addressData.address ? [[t("share.address"), `${addressData.zip} ${addressData.city}, ${addressData.address}`]] : []),
+        ...(addressData.country ? [[t("proc.country"), addressData.country]] : []),
         [""],
-        ["Dátum:", currentDate],
+        [t("proc.date"), currentDate],
       ];
 
       const wsRequest = XLSX.utils.aoa_to_sheet(requestDetails);
@@ -292,7 +292,7 @@ export default function MaterialShareButtons({
 
       // Materials sheet with empty columns for supplier to fill
       const materialsData = [
-        ["Anyag megnevezése", t("od.quantity"), t("od.unit"), t("offers.unitPrice"), "Összesen"],
+        [t("proc.materialName"), t("od.quantity"), t("od.unit"), t("offers.unitPrice"), t("proc.sum")],
         ...materials.map(item => [
           item.name,
           item.quantity,
@@ -301,7 +301,7 @@ export default function MaterialShareButtons({
           ""  // Empty for supplier to fill
         ]),
         ["", "", "", "", ""], // Empty row
-        ["", "", "", "Teljes anyagköltség:", ""] // Total row with empty value
+        ["", "", "", t("proc.materialTotal"), ""] // Total row with empty value
       ];
 
       const wsMaterials = XLSX.utils.aoa_to_sheet(materialsData);
@@ -333,7 +333,7 @@ export default function MaterialShareButtons({
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error("Hiba az Excel letöltése közben:", error);
-      alert("Hiba történt az Excel letöltése közben.");
+      alert(t("share.excelDownloadError"));
     }
   };
 
@@ -345,12 +345,12 @@ export default function MaterialShareButtons({
     <div className="flex flex-col items-center">
       {/* Megosztás */}
       <div className="text-xs font-medium text-gray-500 mb-1 text-center">
-        Megosztás
+        {t("share.share")}
       </div>
       <div className="flex gap-1.5 mb-1 justify-center">
         <button
           onClick={handleShare}
-          aria-label="Megosztás"
+          aria-label={t("share.share")}
           className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
         >
           <svg
@@ -371,7 +371,7 @@ export default function MaterialShareButtons({
       </div>
       {/* Letöltés */}
       <div className="text-xs font-medium text-gray-500 mb-1 text-center">
-        Letöltés
+        {t("share.download")}
       </div>
       <div className="flex gap-1.5 justify-center">
         {/* PDF */}
@@ -391,10 +391,10 @@ export default function MaterialShareButtons({
               }
             } catch (error) {
               console.error("Hiba a PDF letöltése közben:", error);
-              alert("Hiba történt a PDF letöltése közben.");
+              alert(t("share.pdfDownloadError"));
             }
           }}
-          aria-label="PDF letöltése"
+          aria-label={t("share.downloadPdf")}
           className="bg-[#FE9C00] text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-[#e68a00] px-3 py-1 text-sm font-semibold"
         >
           <FileDigit className="w-4 h-4 mr-2" />
@@ -403,7 +403,7 @@ export default function MaterialShareButtons({
         {/* Excel */}
         <button
           onClick={handleExcelDownload}
-          aria-label="Excel letöltése"
+          aria-label={t("letter.downloadExcel")}
           className="bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700 px-3 py-1 text-sm font-semibold"
         >
           <Sheet className="w-4 h-4 mr-2" />

@@ -267,9 +267,9 @@ export default function OfferLetterResult() {
         setOffer(response.data);
       } catch (error) {
         console.error("Error fetching offer:", error);
-        toast.error("Hiba történt az ajánlat betöltésekor");
+        toast.error(t("letter.loadError"));
         setError(
-          "Nem sikerült betölteni az ajánlatot. Kérjük próbáld újra később."
+          t("letter.loadRetry")
         );
       } finally {
         setIsLoading(false);
@@ -351,7 +351,7 @@ export default function OfferLetterResult() {
           toast.error(
             "error" in result
               ? result.error
-              : "Hiba történt az ajánlat mentésekor"
+              : t("letter.saveError")
           );
           router.push("/offers");
           return;
@@ -366,11 +366,11 @@ export default function OfferLetterResult() {
         hasSavedRef.current = true;
         setHasSaved(true);
         setIsAlreadySaved(true);
-        toast.success("Ajánlat sikeresen mentve!");
+        toast.success(t("letter.saved"));
       } catch (error) {
         console.error("❌ Error during save:", error);
         isSavingRef.current = false;
-        toast.error("Váratlan hiba történt");
+        toast.error(t("letter.unexpected"));
         router.push("/offers");
       }
     };
@@ -428,7 +428,7 @@ export default function OfferLetterResult() {
 
   const handleResend = async () => {
     if (!newText.trim()) {
-      const errorMsg = "Kérjük adj meg egy szöveget az elemzéshez!";
+      const errorMsg = t("letter.needText");
       console.log("Validation error:", errorMsg);
       setError(errorMsg);
       return;
@@ -490,7 +490,7 @@ export default function OfferLetterResult() {
 
           if (status === "Cancelled" || attempts >= maxAttempts) {
             setIsSending(false);
-            setError("Az elemzés nem sikerült vagy túl sokáig tartott.");
+            setError(t("letter.analysisFailed"));
             return;
           }
 
@@ -499,7 +499,7 @@ export default function OfferLetterResult() {
         } catch (err) {
           console.error("Error polling status:", err);
           setIsSending(false);
-          setError("Hiba történt az állapot lekérdezése során.");
+          setError(t("letter.statusError"));
         }
       };
 
@@ -509,7 +509,7 @@ export default function OfferLetterResult() {
       poll();
     } catch (err) {
       console.error("Error resending request:", err);
-      setError("Hiba történt az újraküldés során. Kérjük próbáld újra később.");
+      setError(t("letter.resendError"));
       setIsSending(false);
     }
   };
@@ -618,7 +618,7 @@ export default function OfferLetterResult() {
                       "",
                       "",
                       "",
-                      "Becsült kivitelezési idő:",
+                      t("letter.estimatedTime"),
                       `${timeMatch[1].trim()} munkanap`,
                     ]);
                   }
@@ -650,7 +650,7 @@ export default function OfferLetterResult() {
                 className="flex items-center gap-1"
               >
                 <Download className="h-4 w-4 mr-1" />
-                Excel letöltése
+                {t("letter.downloadExcel")}
               </Button>
               <Button
                 variant="outline"
@@ -658,7 +658,7 @@ export default function OfferLetterResult() {
                 onClick={() => setIsEditing(true)}
               >
                 <Edit className="mr-2 h-4 w-4" />
-                További információ
+                {t("letter.moreInfo")}
               </Button>
             </div>
           )}
@@ -666,7 +666,7 @@ export default function OfferLetterResult() {
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow">
-        <h1 className="text-2xl font-bold mb-6">Generált Ajánlat</h1>
+        <h1 className="text-2xl font-bold mb-6">{t("letter.generated")}</h1>
 
         {offer && content ? (
           <div className="max-w-4xl mx-auto">
@@ -686,7 +686,7 @@ export default function OfferLetterResult() {
                     value={newText}
                     onChange={(e) => setNewText(e.target.value)}
                     className="min-h-[300px] font-mono text-sm"
-                    placeholder="Írd ide a kiegészítéseket, amit hozzá szeretnél adni a kéréshez..."
+                    placeholder={t("letter.extraHint")}
                   />
                   {error && (
                     <p className="mt-2 text-sm text-red-600">{error}</p>
@@ -825,7 +825,7 @@ export default function OfferLetterResult() {
                   }}
                   className="flex items-center gap-1"
                 >
-                  <span>+</span> Új tétel hozzáadása
+                  <span>+</span> {t("letter.addItem")}
                 </Button>
               </div>
 
@@ -884,7 +884,7 @@ export default function OfferLetterResult() {
 
             <div className="mt-8">
               <h3 className="text-lg font-semibold mb-2">
-                JSON Riport (nyers visszatérési érték):
+                {t("letter.jsonReport")}
               </h3>
               <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto max-h-96">
                 {JSON.stringify(offer.content, null, 2)}
@@ -892,7 +892,7 @@ export default function OfferLetterResult() {
             </div>
           </div>
         ) : (
-          <p>{error || "Nincs megjeleníthető adat."}</p>
+          <p>{error || t("billing.noData")}</p>
         )}
       </div>
     </div>

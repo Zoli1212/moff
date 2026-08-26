@@ -18,6 +18,10 @@ SUSPICIOUS = re.compile(
     r"===|!==|==|!=)\s*\(?\s*t\(\""
 )
 
+# A default parameter value sits in the signature, outside the body, so no hook can
+# reach it: `function Foo({ title = t("key") })` compiles nowhere.
+DEFAULT_PARAM = re.compile(r"^\s*\w+\s*=\s*t\(\"")
+
 failures = 0
 for path in sys.argv[1:]:
     try:
@@ -25,7 +29,7 @@ for path in sys.argv[1:]:
     except OSError:
         continue
     for number, line in enumerate(source.splitlines(), start=1):
-        if SUSPICIOUS.search(line):
+        if SUSPICIOUS.search(line) or DEFAULT_PARAM.match(line):
             print("%s:%d  %s" % (path, number, line.strip()[:110]))
             failures += 1
 

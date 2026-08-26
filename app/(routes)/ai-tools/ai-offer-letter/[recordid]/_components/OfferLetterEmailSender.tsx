@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,8 @@ export default function OfferLetterEmailSender({
   name?: string;
   email?: string;
 }) {
+  const { t } = useLocale();
+
   const [recipientEmail, setRecipientEmail] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [currentUserEmail, setCurrentUserEmail] = useState("");
@@ -57,15 +60,15 @@ export default function OfferLetterEmailSender({
     const projectDetails = [
       ["Projekt adatok"],
       [""],
-      ["Ajánlat", email],
-      ["Megrendelő:", name || "N/A"],
+      [t("od.offer"), email],
+      [t("letter.customer"), name || "N/A"],
       ["Cím", title],
       [""],
-      ["Összefoglaló"],
-      ["Összesített nettó költség:", total || "N/A"],
-      ["Becsült kivitelezési idő:", time ? `${time} munkanap` : "N/A"],
+      [t("letter.summary")],
+      [t("od.netTotal"), total || "N/A"],
+      [t("letter.estimatedTime"), time ? `${time} munkanap` : "N/A"],
       [""],
-      ["Létrehozva:", new Date().toLocaleString('hu-HU')],
+      [t("od.createdAt"), new Date().toLocaleString('hu-HU')],
     ];
     
     const wsProject = XLSX.utils.aoa_to_sheet(projectDetails);
@@ -77,7 +80,7 @@ export default function OfferLetterEmailSender({
     
     // 2. Offer items sheet
     const offerItemsData = [
-      ["Tétel megnevezése", "Mennyiség", "Egység", "Anyag egységár", "Díj egységár", "Anyag összesen", "Díj összesen"],
+      [t("od.itemLabel"), t("od.quantity"), t("od.unit"), t("od.materialUnitPrice"), t("od.feeUnitPrice"), t("od.materialTotal"), t("od.feeTotal")],
       ...items.map(item => [
         item.name,
         item.quantity,
@@ -90,7 +93,7 @@ export default function OfferLetterEmailSender({
     ];
 
     if (total) {
-      offerItemsData.push(["", "", "", "", "", "Összesen:", total]);
+      offerItemsData.push(["", "", "", "", "", t("od.total"), total]);
     }
 
     const wsItems = XLSX.utils.aoa_to_sheet(offerItemsData);
@@ -110,7 +113,7 @@ export default function OfferLetterEmailSender({
     
     // Add both worksheets to the workbook
     XLSX.utils.book_append_sheet(wb, wsProject, "Projekt adatok");
-    XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat tételes");
+    XLSX.utils.book_append_sheet(wb, wsItems, t("letter.itemised"));
     
     // Generate Excel file
     const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
@@ -160,7 +163,7 @@ export default function OfferLetterEmailSender({
     e.preventDefault();
     
     if (!recipientEmail || !currentUserEmail) {
-      toast.error("Kérjük, töltsd ki mindkét email címet!");
+      toast.error(t("proc.needBothEmails"));
       return;
     }
     
@@ -173,11 +176,11 @@ export default function OfferLetterEmailSender({
 
   return (
     <div className="mt-6 p-4 border rounded-lg bg-gray-50">
-      <h3 className="text-lg font-medium mb-4">Ajánlat küldése emailben</h3>
+      <h3 className="text-lg font-medium mb-4">{t("od.sendByEmail")}</h3>
       
       <form onSubmit={handleSendToBoth} className="space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="email">Címzett email címe</Label>
+          <Label htmlFor="email">{t("letter.recipientEmail")}</Label>
           <Input
             id="email"
             type="email"
@@ -189,7 +192,7 @@ export default function OfferLetterEmailSender({
         </div>
         
         <div className="space-y-2">
-          <Label htmlFor="currentUserEmail">Saját email címed</Label>
+          <Label htmlFor="currentUserEmail">{t("proc.ownEmail")}</Label>
           <Input
             id="currentUserEmail"
             type="email"
