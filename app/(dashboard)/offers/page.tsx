@@ -11,6 +11,8 @@ import { Plus, Trash2, Upload, Bell, MapPin, ArrowRight, ChevronDown } from "luc
 import TextInputDialog from "@/app/(routes)/dashboard/_components/TextInputDialog";
 import UploadOfferDialog from "@/app/(routes)/dashboard/_components/UploadOfferDialog";
 import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { useRequirementIdStore } from "@/store/requirement-id-store";
 import { useOfferTitleStore } from "@/store/offer-title-store";
@@ -74,6 +76,7 @@ interface IncomingRequest {
 }
 
 export default function OffersPage() {
+  const { t } = useLocale();
   const [offers, setOffers] = useState<Offer[]>([]);
   const [incomingRequests, setIncomingRequests] = useState<IncomingRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -184,15 +187,16 @@ export default function OffersPage() {
   const getStatusDisplay = (status: string) => {
     switch (status) {
       case "draft":
+        // Deliberately blank, as before: a draft needs no badge.
         return "";
       case "sent":
-        return "Elküldve";
+        return t("offers.status.sent");
       case "accepted":
-        return "Elfogadva";
+        return t("offers.status.accepted");
       case "rejected":
-        return "Elutasítva";
+        return t("offers.status.rejected");
       case "work":
-        return "Munka";
+        return t("offers.list.work");
       default:
         return status;
     }
@@ -213,17 +217,17 @@ export default function OffersPage() {
       const result = await deleteOffer(offerToDelete.id);
 
       if (result.success) {
-        toast.success("Ajánlat sikeresen törölve");
+        toast.success(t("offers.list.deleted"));
         // Remove from local state
         setOffers((prev) => prev.filter((o) => o.id !== offerToDelete.id));
         setDeleteModalOpen(false);
         setOfferToDelete(null);
       } else {
-        toast.error(result.error || "Hiba történt a törlés során");
+        toast.error(result.error || t("offers.list.deleteFailed"));
       }
     } catch (error) {
       console.log(error);
-      toast.error("Hiba történt a törlés során");
+      toast.error(t("offers.list.deleteFailed"));
     } finally {
       setIsDeleting(false);
     }
@@ -245,7 +249,7 @@ export default function OffersPage() {
                 <Link
                   href="/dashboard"
                   className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
-                  aria-label="Vissza a főoldalra"
+                  aria-label={t("offers.list.backHome")}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -262,16 +266,17 @@ export default function OffersPage() {
                     />
                   </svg>
                 </Link>
-                <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{t("offers.title")}</h1>
+                <LocaleSwitcher className="ml-3" />
               </div>
               <Button
                 onClick={() => setIsUploadDialogOpen(true)}
                 variant="outline"
                 className="border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 text-sm absolute left-1/2 transform -translate-x-1/2"
-                aria-label="Meglévő ajánlat feltöltése"
+                aria-label={t("offers.list.uploadExisting")}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Meglévő ajánlat feltöltése
+                {t("offers.list.uploadExisting")}
               </Button>
               <Button
                 onClick={() => setIsDialogOpen(true)}
@@ -290,7 +295,7 @@ export default function OffersPage() {
                   <Link
                     href="/dashboard"
                     className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
-                    aria-label="Vissza a főoldalra"
+                    aria-label={t("offers.list.backHome")}
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -307,7 +312,8 @@ export default function OffersPage() {
                       />
                     </svg>
                   </Link>
-                  <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+                  <h1 className="text-2xl font-bold text-gray-800">{t("offers.title")}</h1>
+                <LocaleSwitcher className="ml-3" />
                 </div>
                 <Button
                   onClick={() => setIsDialogOpen(true)}
@@ -322,10 +328,10 @@ export default function OffersPage() {
                 onClick={() => setIsUploadDialogOpen(true)}
                 variant="outline"
                 className="w-full border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 text-sm"
-                aria-label="Meglévő ajánlat feltöltése"
+                aria-label={t("offers.list.uploadExisting")}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Meglévő ajánlat feltöltése
+                {t("offers.list.uploadExisting")}
               </Button>
             </div>
 
@@ -464,7 +470,7 @@ export default function OffersPage() {
                           <div className="flex justify-between items-start">
                             <div>
                               <h3 className="text-lg font-medium text-[#FE9C00] group-hover:text-[#FE9C00]/80 transition-colors">
-                                {offer.title || "Névtelen ajánlat"}
+                                {offer.title || t("offers.list.untitled")}
                               </h3>
                               {offer.offerSummary && (
                                 <p className="mt-1 text-sm text-gray-700">
@@ -500,7 +506,7 @@ export default function OffersPage() {
                                         return (
                                           <>
                                             <span className="font-bold">
-                                              Becsült kivitelezési idő:
+                                              {t("offers.list.estimatedTime")}:
                                             </span>
                                             <span className="font-bold">
                                               {" "}
@@ -529,7 +535,7 @@ export default function OffersPage() {
                                   onClick={(e) => handleDeleteClick(offer, e)}
                                   className="p-1 transition-colors"
                                   style={{ color: "#FE9C00" }}
-                                  title="Ajánlat törlése"
+                                  title={t("offers.list.deleteTitle")}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -603,7 +609,7 @@ export default function OffersPage() {
         isOpen={deleteModalOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
-        title="Ajánlat törlése"
+        title={t("offers.list.deleteTitle")}
         message={`Biztosan törölni szeretnéd a(z) "${offerToDelete?.title || "Névtelen ajánlat"}" ajánlatot? Ez a művelet nem vonható vissza.`}
         confirmText="Törlés"
         cancelText="Mégse"

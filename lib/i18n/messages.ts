@@ -40,6 +40,20 @@ export const messages = {
     "offers.fee": "Díj",
     "offers.estimatedDuration": "Becsült időtartam",
 
+    "offers.list.backHome": "Vissza a főoldalra",
+    "offers.list.untitled": "Névtelen ajánlat",
+    "offers.list.uploadExisting": "Meglévő ajánlat feltöltése",
+    "offers.list.estimatedTime": "Becsült kivitelezési idő",
+    "offers.list.work": "Munka",
+    "offers.list.deleteTitle": "Ajánlat törlése",
+    "offers.list.deleted": "Ajánlat sikeresen törölve",
+    "offers.list.deleteFailed": "Hiba történt a törlés során",
+
+    "offers.status.draft": "Piszkozat",
+    "offers.status.sent": "Elküldve",
+    "offers.status.accepted": "Elfogadva",
+    "offers.status.rejected": "Elutasítva",
+
     "offers.currency.label": "Az ajánlat devizája",
     "offers.currency.rate": "Árfolyam (1 EUR = ? Ft)",
     "offers.currency.rateHint":
@@ -84,6 +98,20 @@ export const messages = {
     "offers.material": "Material",
     "offers.fee": "Labour",
     "offers.estimatedDuration": "Estimated duration",
+
+    "offers.list.backHome": "Back to home",
+    "offers.list.untitled": "Untitled offer",
+    "offers.list.uploadExisting": "Upload an existing offer",
+    "offers.list.estimatedTime": "Estimated duration",
+    "offers.list.work": "Job",
+    "offers.list.deleteTitle": "Delete offer",
+    "offers.list.deleted": "Offer deleted",
+    "offers.list.deleteFailed": "Deleting the offer failed",
+
+    "offers.status.draft": "Draft",
+    "offers.status.sent": "Sent",
+    "offers.status.accepted": "Accepted",
+    "offers.status.rejected": "Rejected",
 
     "offers.currency.label": "Offer currency",
     "offers.currency.rate": "Exchange rate (1 EUR = ? HUF)",
