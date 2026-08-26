@@ -10,9 +10,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   TASK_STATUSES,
-  TASK_STATUS_LABELS,
   type WorkTaskDependencyDto,
   type WorkTaskDto,
 } from "@/lib/work-plan/schema";
@@ -64,6 +64,7 @@ export default function TaskEditDialog({
   onClose,
   onSaved,
 }: Props) {
+  const { t } = useLocale();
   const existing = draft.mode === "edit" ? draft.task : null;
 
   const [title, setTitle] = useState(existing?.title ?? "");
@@ -87,15 +88,15 @@ export default function TaskEditDialog({
 
   const save = () => {
     if (!title.trim()) {
-      toast.error("A feladat neve kötelező.");
+      toast.error(t("task.nameRequired"));
       return;
     }
     if (!trade.trim()) {
-      toast.error("A szakma megadása kötelező.");
+      toast.error(t("task.tradeRequired"));
       return;
     }
     if (datesInvalid) {
-      toast.error("A befejezés nem lehet korábban, mint a kezdés.");
+      toast.error(t("task.endBeforeStart"));
       return;
     }
 
@@ -126,12 +127,12 @@ export default function TaskEditDialog({
             });
 
       if (!result.success) {
-        toast.error(result.error ?? "A mentés nem sikerült.");
+        toast.error(result.error ?? t("task.saveFailed"));
         return;
       }
 
       toast.success(
-        draft.mode === "create" ? "Feladat létrehozva." : "Feladat mentve."
+        draft.mode === "create" ? t("task.created") : t("task.saved")
       );
       onSaved();
     });
@@ -144,14 +145,14 @@ export default function TaskEditDialog({
           <DialogTitle>
             {draft.mode === "create"
               ? draft.parentId
-                ? "Új alfeladat"
-                : "Új feladat"
-              : "Feladat szerkesztése"}
+                ? t("task.newSubtask")
+                : t("task.newTask")
+              : t("task.edit")}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-3">
-          <Field label="Megnevezés">
+          <Field label={t("task.name")}>
             <input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
@@ -161,7 +162,7 @@ export default function TaskEditDialog({
             />
           </Field>
 
-          <Field label="Szakma">
+          <Field label={t("task.trade")}>
             <input
               value={trade}
               onChange={(event) => setTrade(event.target.value)}
@@ -170,7 +171,7 @@ export default function TaskEditDialog({
             />
           </Field>
 
-          <Field label="Leírás">
+          <Field label={t("task.description")}>
             <textarea
               value={description ?? ""}
               onChange={(event) => setDescription(event.target.value)}
@@ -180,7 +181,7 @@ export default function TaskEditDialog({
           </Field>
 
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Kezdés">
+            <Field label={t("task.start")}>
               <input
                 type="date"
                 value={startDate}
@@ -188,7 +189,7 @@ export default function TaskEditDialog({
                 className={inputClass}
               />
             </Field>
-            <Field label="Befejezés">
+            <Field label={t("task.end")}>
               <input
                 type="date"
                 value={endDate}
@@ -202,17 +203,17 @@ export default function TaskEditDialog({
 
           {datesInvalid && (
             <p className="text-xs text-red-600">
-              A befejezés korábbi, mint a kezdés.
+              {t("task.endBeforeStartShort")}
             </p>
           )}
 
-          <Field label="Felelős">
+          <Field label={t("task.assignee")}>
             <select
               value={assignee}
               onChange={(event) => setAssignee(event.target.value)}
               className={inputClass}
             >
-              <option value="">Nincs kijelölve</option>
+              <option value="">{t("task.noneSelected")}</option>
               {workforce.map((person) => (
                 <option key={person.id} value={person.id}>
                   {person.name} ({person.role})
@@ -232,7 +233,7 @@ export default function TaskEditDialog({
 
           {draft.mode === "edit" && (
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Státusz">
+              <Field label={t("task.status")}>
                 <select
                   value={status}
                   onChange={(event) =>
@@ -242,12 +243,12 @@ export default function TaskEditDialog({
                 >
                   {TASK_STATUSES.map((value) => (
                     <option key={value} value={value}>
-                      {TASK_STATUS_LABELS[value]}
+                      {t(`status.${value}`)}
                     </option>
                   ))}
                 </select>
               </Field>
-              <Field label={`Haladás (${progress}%)`}>
+              <Field label={`${t("task.progress")} (${progress}%)`}>
                 <input
                   type="range"
                   min={0}
@@ -269,7 +270,7 @@ export default function TaskEditDialog({
             disabled={isPending}
             className="w-full rounded-md bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 sm:w-auto"
           >
-            Mégse
+            {t("common.cancel")}
           </button>
           <button
             type="button"
@@ -277,7 +278,7 @@ export default function TaskEditDialog({
             disabled={isPending || datesInvalid}
             className="w-full rounded-md bg-[#FE9C00] px-4 py-2 text-sm font-medium text-white hover:bg-[#FE9C00]/90 disabled:opacity-60 sm:w-auto"
           >
-            {isPending ? "Mentés…" : "Mentés"}
+            {isPending ? t("common.saving") : t("common.save")}
           </button>
         </DialogFooter>
       </DialogContent>
@@ -301,6 +302,7 @@ function PredecessorPicker({
   dependencies: WorkTaskDependencyDto[];
   onChanged: () => void;
 }) {
+  const { t } = useLocale();
   const [isPending, startTransition] = useTransition();
 
   const current = dependencies.filter((edge) => edge.successorId === task.id);
@@ -315,7 +317,7 @@ function PredecessorPicker({
     startTransition(async () => {
       const result = await createTaskDependency(predecessorId, task.id);
       if (!result.success) {
-        toast.error(result.error ?? "A kapcsolat létrehozása nem sikerült.");
+        toast.error(result.error ?? t("task.linkFailed"));
         return;
       }
       onChanged();
@@ -326,7 +328,7 @@ function PredecessorPicker({
     startTransition(async () => {
       const result = await deleteTaskDependency(dependencyId);
       if (!result.success) {
-        toast.error(result.error ?? "A kapcsolat törlése nem sikerült.");
+        toast.error(result.error ?? t("task.unlinkFailed"));
         return;
       }
       onChanged();
@@ -336,7 +338,7 @@ function PredecessorPicker({
   return (
     <div>
       <span className="mb-1 block text-xs font-medium text-gray-700">
-        Előzmények — ezeknek előbb kell befejeződniük
+        {t("task.predecessors")}
       </span>
 
       {current.length > 0 && (
@@ -347,13 +349,13 @@ function PredecessorPicker({
               className="flex items-center gap-2 rounded-md bg-gray-50 px-2 py-1.5"
             >
               <span className="min-w-0 flex-1 truncate text-xs text-gray-700">
-                {byId.get(edge.predecessorId)?.title ?? "Ismeretlen feladat"}
+                {byId.get(edge.predecessorId)?.title ?? t("task.unknownTask")}
               </span>
               <button
                 type="button"
                 onClick={() => remove(edge.id)}
                 disabled={isPending}
-                aria-label="Kapcsolat törlése"
+                aria-label={t("task.removeLink")}
                 className="text-gray-400 hover:text-red-600 disabled:opacity-50"
               >
                 <X className="h-3.5 w-3.5" />
@@ -373,8 +375,8 @@ function PredecessorPicker({
       >
         <option value="">
           {candidates.length === 0
-            ? "Nincs több választható feladat"
-            : "Előzmény hozzáadása…"}
+            ? t("task.noMorePredecessors")
+            : t("task.addPredecessor")}
         </option>
         {candidates.map((candidate) => (
           <option key={candidate.id} value={candidate.id}>
@@ -384,7 +386,7 @@ function PredecessorPicker({
       </select>
 
       <p className="mt-1 text-[11px] text-gray-400">
-        A nyíl csak jelzi az összefüggést — a dátumokat nem tolja el automatikusan.
+        {t("task.arrowHint")}
       </p>
     </div>
   );
