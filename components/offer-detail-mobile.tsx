@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
+import { convertFromHuf, resolveCurrency } from "@/lib/i18n/config";
 import {
   updateOfferItems,
   updateOfferStatus,
@@ -167,6 +170,17 @@ export function OfferDetailView({
   onOfferDeleted,
   onOfferUpdated,
 }: OfferDetailViewProps) {
+  const { t, money } = useLocale();
+
+  // The offer carries its own currency and the rate it was quoted at. Reading them from
+  // the record rather than from a setting keeps an old offer displaying what it was
+  // actually agreed at, even after the tenant switches currency.
+  const offerCurrency = resolveCurrency(
+    (offer as { currency?: string } | null)?.currency
+  );
+  const offerRate =
+    (offer as { exchangeRate?: number | null } | null)?.exchangeRate ?? null;
+
   const [showRequirementDetail, setShowRequirementDetail] = useState(false);
   const [editableItems, setEditableItems] = useState<OfferItem[]>([]);
   const [editingItem, setEditingItem] = useState<{
@@ -313,8 +327,11 @@ export function OfferDetailView({
   };
 
   // Format currency
+  // Routed through the shared formatter so an EUR offer renders in euro. Amounts are
+  // stored in HUF, so they are converted with the rate captured on the offer itself -
+  // never a live rate, which would make a quoted total drift after it was sent.
   const formatCurrency = (value: number): string => {
-    return value.toLocaleString("hu-HU") + " Ft";
+    return money(convertFromHuf(value, offerCurrency, offerRate), offerCurrency);
   };
 
   // Format number with space as thousand separator
@@ -408,7 +425,7 @@ export function OfferDetailView({
     const qty = parseFloat(quantity) || 0;
     const price = parseFloat(unitPrice.replace(/[^\d.-]/g, "")) || 0;
     const total = qty * price;
-    return `${total.toLocaleString("hu-HU")} Ft`;
+    return money(convertFromHuf(total, offerCurrency, offerRate), offerCurrency);
   };
 
   // Show delete confirmation
@@ -966,7 +983,7 @@ export function OfferDetailView({
     if (typeof price === "string") {
       return price;
     }
-    return price.toLocaleString("hu-HU") + " Ft";
+    return money(convertFromHuf(price, offerCurrency, offerRate), offerCurrency);
   };
 
   // Format date with Hungarian locale
@@ -2114,10 +2131,23 @@ export function OfferDetailView({
               href={`/offers/${offer.requirement.id}/scenarios?offerId=${offer.id}`}
               className="flex w-full items-center justify-center rounded-md border border-gray-300 py-4 text-base font-medium text-gray-700 transition-colors hover:bg-gray-50"
             >
-              Mi lenne, ha… — alternatívák
+              {t("offers.alternatives")}
             </Link>
           </div>
         )}
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2">
+          <LocaleSwitcher />
+          <span className="text-xs text-gray-600">
+            {t("offers.currency.label")}:{" "}
+            <strong className="text-gray-900">{offerCurrency}</strong>
+            {offerCurrency !== "HUF" && offerRate ? (
+              <span className="ml-1 text-gray-400">
+                (1 EUR = {offerRate} Ft — {t("offers.currency.converted")})
+              </span>
+            ) : null}
+          </span>
+        </div>
 
         {/* Items Section - Mobile View */}
         {items.length > 0 && (

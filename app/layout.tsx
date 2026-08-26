@@ -9,6 +9,7 @@ import FullscreenHandler from "./_components/FullscreenHandler";
 import { GlobalLoading } from "@/components/GlobalLoading";
 import { GlobalLoadingHandler } from "@/components/GlobalLoadingHandler";
 import { TenantProvider } from "@/components/TenantProvider";
+import { LocaleProvider } from "@/components/i18n/LocaleProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,11 +60,13 @@ export default function RootLayout({
           <Providers>
             <Provider>
               <TenantProvider>
-                <GlobalLoading />
-                <GlobalLoadingHandler />
-                <FullscreenHandler />
-                {children}
-                <Toaster position="top-center" />
+                <LocaleProvider>
+                  <GlobalLoading />
+                  <GlobalLoadingHandler />
+                  <FullscreenHandler />
+                  {children}
+                  <Toaster position="top-center" />
+                </LocaleProvider>
               </TenantProvider>
             </Provider>
           </Providers>

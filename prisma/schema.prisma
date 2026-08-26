@@ -181,6 +181,15 @@ model Offer {
   offerSummary      String?
   estimatedDuration String?     // AI becslés az időtartamra (pl. "7-10 nap")
   isConvertedFromExisting Boolean @default(false) // Meglévő ajánlatból konvertálva-e
+
+  /// Currency this offer is quoted in: "HUF" or "EUR". Existing offers stay HUF.
+  currency          String      @default("HUF")
+  /// HUF per one unit of `currency`, captured when the offer was created.
+  ///
+  /// Snapshotted rather than looked up at render time: a quote handed to a customer must
+  /// not change value overnight because the exchange rate moved. Null for HUF offers,
+  /// where no conversion applies.
+  exchangeRate      Float?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
   createdBy         String?
