@@ -173,13 +173,13 @@ export default function GroupedDiaryForm({
     try {
       const result = await updateWorkItemQuantity(workItemId, newQuantity);
       if (result.success) {
-        toast.success("Mennyiség sikeresen frissítve!");
+        toast.success(t("diary.quantityUpdated"));
       } else {
-        toast.error(result.error || "Hiba a mennyiség frissítése során");
+        toast.error(result.error || t("diary.quantityError"));
       }
     } catch (error) {
       console.log(error);
-      toast.error("Hiba a mennyiség frissítése során");
+      toast.error(t("diary.quantityError"));
     }
   };
 
@@ -414,7 +414,7 @@ export default function GroupedDiaryForm({
         if (data.url) {
           return data.url;
         } else {
-          throw new Error(data.error || "Hiba történt a feltöltésnél.");
+          throw new Error(data.error || t("work.uploadError"));
         }
       });
 
@@ -437,13 +437,13 @@ export default function GroupedDiaryForm({
     e.preventDefault();
 
     if (!date || selectedGroupedItems.length === 0) {
-      showToast("error", "Dátum és legalább egy munkafázis szükséges.");
+      showToast("error", t("diary.needDateAndPhase"));
       return;
     }
 
     // Check if workers are selected
     if (selectedWorkers.length === 0) {
-      showToast("error", "Legalább egy dolgozót ki kell választani.");
+      showToast("error", t("diary.needWorker"));
       return;
     }
 
@@ -462,7 +462,7 @@ export default function GroupedDiaryForm({
             workItemId: selectedGroupedItems[0].workItem.id,
           });
         if (!res?.success || !res?.data?.id) {
-          showToast("error", "Napló azonosító megszerzése sikertelen.");
+          showToast("error", t("diary.idFailed"));
           return;
         }
         diaryIdToUse = res.data.id as number;
@@ -584,28 +584,28 @@ export default function GroupedDiaryForm({
             if (result.success) {
               showToast(
                 "success",
-                result.message || "Csoportos jóváhagyás frissítve"
+                result.message || t("diary.approvalUpdated")
               );
             } else {
               showToast(
                 "error",
-                result.message || "Hiba történt a jóváhagyás során"
+                result.message || t("diary.approvalError")
               );
             }
           } catch (error) {
             console.error("Group approval update error:", error);
-            showToast("error", "Hiba történt a jóváhagyás során");
+            showToast("error", t("diary.approvalError"));
           }
         }
         setPendingApprovalChange(null);
       }
 
       // Success message
-      showToast("success", "Csoportos napló bejegyzés sikeresen létrehozva.");
+      showToast("success", t("diary.groupCreated"));
       onSave({});
     } catch (error) {
       console.log(error);
-      showToast("error", "Hiba történt a napló bejegyzés létrehozása során.");
+      showToast("error", t("diary.createError"));
     } finally {
       setIsSubmitting(false);
     }
@@ -644,9 +644,9 @@ export default function GroupedDiaryForm({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]">
           <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <div className="text-lg font-medium text-gray-800">Frissítés</div>
+            <div className="text-lg font-medium text-gray-800">{t("diary.refresh")}</div>
             <div className="text-sm text-gray-600">
-              Napló bejegyzések feldolgozása...
+              {t("diary.processing")}
             </div>
           </div>
         </div>
@@ -658,10 +658,10 @@ export default function GroupedDiaryForm({
           <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 shadow-xl">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
             <div className="text-lg font-medium text-gray-800">
-              Képek feltöltése
+              {t("diary.uploadImages")}
             </div>
             <div className="text-sm text-gray-600">
-              Kérjük várjon, amíg a képek feltöltődnek...
+              {t("diary.waitForUpload")}
             </div>
           </div>
         </div>
@@ -671,7 +671,7 @@ export default function GroupedDiaryForm({
       <div className="flex items-center justify-between p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
         <div className="flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-blue-600" />
-          <span className="font-medium text-blue-800">Napló bejegyzés</span>
+          <span className="font-medium text-blue-800">{t("diary.entry")}</span>
         </div>
         {/* <Button
           type="button"
@@ -682,7 +682,7 @@ export default function GroupedDiaryForm({
           className="flex items-center gap-2 opacity-50 cursor-not-allowed"
         >
           <User className="h-4 w-4" />
-          Egyéni módra
+          {t("diary.toIndividual")}
         </Button> */}
       </div>
 
@@ -691,7 +691,7 @@ export default function GroupedDiaryForm({
         <div className="space-y-2">
           <Label htmlFor="date" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Dátum
+            {t("diary.date")}
           </Label>
           <Input
             id="date"
@@ -743,7 +743,7 @@ export default function GroupedDiaryForm({
           {selectedGroupedItems.length === 0 && (
             <div className="text-center py-8 text-gray-500">
               <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>Kattints a + gombra munkafázisok hozzáadásához</p>
+              <p>{t("diary.addPhasesHint")}</p>
             </div>
           )}
         </div>
@@ -753,7 +753,7 @@ export default function GroupedDiaryForm({
           <div className="border rounded-lg p-4 bg-blue-50">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-blue-800">
-                Dolgozók kiválasztása
+                {t("diary.selectWorkers")}
               </h3>
               <Button
                 type="button"
@@ -820,7 +820,7 @@ export default function GroupedDiaryForm({
               <div className="text-center py-4 text-gray-500">
                 <User className="h-8 w-8 mx-auto mb-2 opacity-50" />
                 <p className="text-sm">
-                  Kattints a + gombra dolgozók hozzáadásához
+                  {t("diary.addWorkersHint")}
                 </p>
               </div>
             )}
@@ -832,7 +832,7 @@ export default function GroupedDiaryForm({
               <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">
-                    Munkafázis kiválasztása
+                    {t("diary.selectPhase")}
                   </h3>
                   <Button
                     type="button"
@@ -877,7 +877,7 @@ export default function GroupedDiaryForm({
                             {workItem.name}
                             {workItem.inProgress && (
                               <span className="ml-2 text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-                                Aktív
+                                {t("diary.active")}
                               </span>
                             )}
                           </Button>
@@ -885,7 +885,7 @@ export default function GroupedDiaryForm({
                     </div>
                   ) : (
                     <div className="text-center py-4 text-gray-500">
-                      <p>Minden munkafázis hozzá van adva</p>
+                      <p>{t("diary.allPhasesAdded")}</p>
                     </div>
                   )}
                 </div>
@@ -897,7 +897,7 @@ export default function GroupedDiaryForm({
           <div className="border rounded-lg p-4 bg-gray-50">
             <div className="flex items-center justify-between mb-4">
               <Label className="text-base font-semibold">
-                Jelenlegi állapot
+                {t("diary.currentState")}
               </Label>
               <Button
                 type="button"
@@ -932,7 +932,7 @@ export default function GroupedDiaryForm({
                           setShowQuantityModal(true);
                         }}
                         className="p-1 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
-                        title="Mennyiség módosítása"
+                        title={t("diary.editQuantity")}
                       >
                         <Plus className="h-3 w-3" />
                       </button>
@@ -940,7 +940,7 @@ export default function GroupedDiaryForm({
                     <div className="mt-2">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm text-gray-600">
-                          Készültség
+                          {t("diary.progressShort")}
                         </span>
                         <span className="text-sm font-medium text-blue-600">
                           {localProgress.get(groupedItem.workItem.id) || 0}/
@@ -1165,7 +1165,7 @@ export default function GroupedDiaryForm({
             {selectedGroupedItems.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>Kattints a + gombra munkafázisok hozzáadásához</p>
+                <p>{t("diary.addPhasesHint")}</p>
               </div>
             )}
           </div>
@@ -1176,7 +1176,7 @@ export default function GroupedDiaryForm({
               <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-semibold">
-                    Dolgozó kiválasztása
+                    {t("diary.selectWorkerSingle")}
                   </h3>
                   <Button
                     type="button"
@@ -1222,7 +1222,7 @@ export default function GroupedDiaryForm({
                     </div>
                   ) : (
                     <div className="text-center py-4 text-gray-500">
-                      <p>Minden dolgozó hozzá van adva</p>
+                      <p>{t("diary.allWorkersAdded")}</p>
                     </div>
                   )}
                 </div>
@@ -1239,13 +1239,13 @@ export default function GroupedDiaryForm({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             rows={4}
-            placeholder="Csoportos munka leírása..."
+            placeholder={t("diary.groupDescription")}
           />
         </div>
 
         {/* Images */}
         <div className="space-y-2">
-          <Label>Képek feltöltése</Label>
+          <Label>{t("diary.uploadImages")}</Label>
           <div className="flex flex-wrap gap-3 items-center">
             {images.map((img, index) => (
               <div key={img} className="relative group">
@@ -1262,14 +1262,14 @@ export default function GroupedDiaryForm({
                   type="button"
                   onClick={() => handleRemoveImage(img)}
                   className="absolute -top-2 -right-2 bg-white border border-red-500 text-red-500 rounded-full w-6 h-6 flex items-center justify-center opacity-70 group-hover:opacity-100"
-                  title="Kép törlése"
+                  title={t("diary.deleteImage")}
                 >
                   ×
                 </button>
               </div>
             ))}
             <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed rounded cursor-pointer hover:bg-gray-50 transition">
-              <span className="text-xs text-gray-500">Kép hozzáadása</span>
+              <span className="text-xs text-gray-500">{t("diary.addImage")}</span>
               <Input
                 type="file"
                 accept="image/*"
@@ -1290,7 +1290,7 @@ export default function GroupedDiaryForm({
         {/* Action Buttons */}
         <div className="flex gap-2 justify-end">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Mégsem
+            {t("diary.cancel")}
           </Button>
           <Button
             type="submit"
@@ -1306,10 +1306,10 @@ export default function GroupedDiaryForm({
             {isSubmitting ? (
               <div className="flex items-center gap-2">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Frissítés...
+                {t("diary.refreshing")}
               </div>
             ) : (
-              "Bejegyzés mentése"
+              t("diary.saveEntry")
             )}
           </Button>
         </div>

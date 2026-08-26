@@ -78,7 +78,7 @@ export default function WorkDetailPage() {
   const workMoney = (amount: number | null | undefined) =>
     money(convertFromHuf(amount, workCurrency, workRate), workCurrency);
 
-  const error = queryError ? "Hiba a munka lekérdezésekor" : null;
+  const error = queryError ? t("work.loadError") : null;
 
   // State for delete modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -273,10 +273,10 @@ export default function WorkDetailPage() {
         const workId = (work as Record<string, unknown>).id as number;
         const updateResult = await updateWorkImageUrl(workId, data.url);
         if (!updateResult.success) {
-          setImageError("Hiba az adatbázis frissítésekor.");
+          setImageError(t("work.dbError"));
         }
       } else {
-        setImageError(data.error || "Hiba történt a feltöltésnél.");
+        setImageError(data.error || t("work.uploadError"));
       }
     } catch (err) {
       setImageError("Hiba a feltöltés során: " + (err as Error).message);
@@ -294,7 +294,7 @@ export default function WorkDetailPage() {
         const workId = (work as Record<string, unknown>).id as number;
         const updateResult = await updateWorkImageUrl(workId, null);
         if (!updateResult.success) {
-          setImageError("Hiba az adatbázis frissítésekor.");
+          setImageError(t("work.dbError"));
         }
       }
     } catch (err) {
@@ -404,7 +404,7 @@ export default function WorkDetailPage() {
       }
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Hiba történt a törlés során");
+      alert(t("offers.list.deleteFailed"));
     } finally {
       setDeleteLoading(false);
       setShowDeleteModal(false);
@@ -414,7 +414,7 @@ export default function WorkDetailPage() {
   if (loading) return <WorksSkeletonLoader />;
   if (error)
     return <div style={{ padding: 40, color: "red" }}>Hiba: {error}</div>;
-  if (!work) return <div style={{ padding: 40 }}>Nincs adat a munkához.</div>;
+  if (!work) return <div style={{ padding: 40 }}>{t("work.noData")}</div>;
 
   // Dates
   // Kezdés: startDate vagy createdAt
@@ -579,7 +579,7 @@ export default function WorkDetailPage() {
             <Link
               href="/works"
               className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors flex-shrink-0"
-              aria-label="Vissza a munkákhoz"
+              aria-label={t("work.backToWorks")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -598,7 +598,7 @@ export default function WorkDetailPage() {
             </Link>
             <h1 className="text-xl font-bold text-gray-900 truncate flex-1">
               {((work as Record<string, unknown>).title as string) ||
-                "Munka részletei"}
+                t("work.details")}
             </h1>
           </div>
 
@@ -646,7 +646,7 @@ export default function WorkDetailPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="text-base font-semibold text-gray-900">
-                    Helyszín:
+                    {t("work.location")}
                   </span>
                   {((work as Record<string, unknown>).location as string) && (
                     <a
@@ -681,7 +681,7 @@ export default function WorkDetailPage() {
 
               <div className="space-y-0.5">
                 <span className="text-base font-semibold text-gray-900">
-                  Kezdés:
+                  {t("work.start")}
                 </span>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-900">{startDate}</span>
@@ -697,7 +697,7 @@ export default function WorkDetailPage() {
 
               <div className="space-y-0.5">
                 <span className="text-base font-semibold text-gray-900">
-                  Befejezés:
+                  {t("work.end")}
                 </span>
                 <div className="flex items-center gap-3">
                   <span className="text-xs text-gray-900">{endDate}</span>
@@ -713,7 +713,7 @@ export default function WorkDetailPage() {
 
               <div className="space-y-1">
                 <span className="text-base font-semibold text-gray-900">
-                  Becsült időtartam:
+                  {t("work.estimatedDuration")}
                 </span>
                 <div className="flex items-center gap-3">
                   <span className="text-sm text-gray-900">
@@ -842,7 +842,7 @@ export default function WorkDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-500">
-                    Munkadíj összesen:
+                    {t("od.labourCostTotal")}
                   </span>
                   <span className="text-sm font-bold text-gray-900">
                     {workMoney(
@@ -852,7 +852,7 @@ export default function WorkDetailPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-gray-500">
-                    Anyagköltség összesen:
+                    {t("od.materialCostTotal")}
                   </span>
                   <span className="text-sm font-bold text-gray-900">
                     {workMoney(
@@ -862,7 +862,7 @@ export default function WorkDetailPage() {
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                   <span className="text-base font-bold text-gray-900">
-                    Összesen:
+                    {t("od.total")}
                   </span>
                   <span className="text-base font-bold text-gray-900">
                     {workMoney(
@@ -885,7 +885,7 @@ export default function WorkDetailPage() {
               {/* Teljesített */}
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-500">
-                  Teljesített:
+                  {t("work.done")}
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -903,7 +903,7 @@ export default function WorkDetailPage() {
               {/* Számlázott (billed + paid combined) */}
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-500">
-                  Számlázott:
+                  {t("work.billed")}
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -926,7 +926,7 @@ export default function WorkDetailPage() {
               {/* Számlázható */}
               <div className="flex justify-between items-center">
                 <span className="text-sm font-medium text-gray-500">
-                  Számlázható:
+                  {t("work.billable")}
                 </span>
                 <div className="flex items-center gap-2">
                   <div className="w-20 bg-gray-200 rounded-full h-2">
@@ -949,7 +949,7 @@ export default function WorkDetailPage() {
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               <h3 className="font-semibold text-gray-600">
-                Profitráta elemzés
+                {t("work.profitAnalysis")}
               </h3>
               {!profitLoading && dynamicProfit.totalCost > 0 && (
                 <div
@@ -1071,7 +1071,7 @@ export default function WorkDetailPage() {
                     // Group workers by name
                     const workerGroups = workers.reduce(
                       (acc, worker) => {
-                        const name = worker.name || "Névtelen munkás";
+                        const name = worker.name || t("work.unnamedWorker");
                         if (acc[name]) {
                           acc[name].count += 1;
                         } else {
@@ -1095,7 +1095,7 @@ export default function WorkDetailPage() {
                           {group.count > 1 ? ` (${group.count})` : ""}
                         </span>
                         <span className="text-xs text-gray-500">
-                          {group.worker.profession || "Munkás"}
+                          {group.worker.profession || t("work.worker")}
                         </span>
                       </div>
                     ));
@@ -1209,7 +1209,7 @@ export default function WorkDetailPage() {
               </h3>
               {workDiaries.length === 0 ? (
                 <p className="text-sm text-gray-500">
-                  Nincsenek naplóbejegyzések
+                  {t("work.noDiaryEntries")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -1308,13 +1308,13 @@ export default function WorkDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Becsült időtartam szerkesztése
+              {t("work.editDuration")}
             </h3>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Napok száma:
+                  {t("work.dayCount")}
                 </label>
                 <input
                   type="number"
@@ -1363,13 +1363,13 @@ export default function WorkDetailPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Cím szerkesztése
+              {t("od.editTitle")}
             </h3>
 
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Munka címe:
+                  {t("work.title")}
                 </label>
                 <input
                   type="text"
@@ -1388,7 +1388,7 @@ export default function WorkDetailPage() {
                 disabled={!editTitle.trim() || titleSaving}
                 className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {titleSaving ? "Mentés..." : "Mentés"}
+                {titleSaving ? t("od.saving") : t("common.save")}
               </button>
               <button
                 onClick={() => setShowTitleModal(false)}
@@ -1429,7 +1429,7 @@ export default function WorkDetailPage() {
                 </svg>
               </div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Munka törlése
+                {t("work.delete")}
               </h3>
             </div>
 
@@ -1447,7 +1447,7 @@ export default function WorkDetailPage() {
                 </p>
               ) : (
                 <p className="text-sm text-gray-700">
-                  Biztosan törölni szeretné ezt a munkát?
+                  {t("work.deleteConfirm")}
                   <br />
                   <br />
                   <span className="text-red-600 font-medium">
@@ -1485,7 +1485,7 @@ export default function WorkDetailPage() {
                     ></path>
                   </svg>
                 )}
-                {deleteLoading ? "Törlés..." : "Törlés"}
+                {deleteLoading ? t("diary.deleting") : t("common.delete")}
               </button>
               <button
                 onClick={() => setShowDeleteModal(false)}

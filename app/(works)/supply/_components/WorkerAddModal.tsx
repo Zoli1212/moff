@@ -60,6 +60,8 @@ function CustomSelect({
   disabled?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
+
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -90,7 +92,7 @@ function CustomSelect({
         className={`border rounded px-3 py-2 w-full max-w-full text-left flex items-center justify-between ${disabled ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white cursor-pointer"}`}
       >
         <span className={`truncate ${!selected ? "text-gray-400" : ""}`}>
-          {selected ? selected.label : placeholder || "Válassz..."}
+          {selected ? selected.label : placeholder || t("worker.choose")}
         </span>
         <span aria-hidden className="ml-2 text-gray-500">
           ▾
@@ -192,7 +194,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           setInitiallySelectedWorkers(assignedWorkerIds); // Save initial selection
         } catch (error) {
           console.error("Error loading existing workers:", error);
-          toast.error("Hiba a munkások betöltése során");
+          toast.error(t("worker.loadError"));
         } finally {
           setLoadingWorkers(false);
         }
@@ -261,7 +263,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             name: worker.name || "",
             email: worker.email || "",
             phone: worker.phone || "",
-            profession: "általános", // Always "általános"
+            profession: t("worker.general"), // Always t("worker.general")
             workItemId: null, // Always null
             avatarUrl: worker.avatarUrl || undefined,
             // dailyRate nincs megadva, mert meglévő munkásnak már van
@@ -287,22 +289,22 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         onOpenChange(false);
       } catch (error) {
         console.error("Error assigning existing workers:", error);
-        toast.error("Hiba történt a munkások hozzárendelése során.");
+        toast.error(t("worker.assignError"));
       } finally {
         setLoading(false);
       }
     } else {
       // Handle new worker creation
-      const finalProfession = "általános"; // Always "általános"
+      const finalProfession = t("worker.general"); // Always t("worker.general")
       // Always use null for workItemId
 
       if (!name || !finalProfession) {
-        toast.error("Kérjük töltsd ki az összes kötelező mezőt!");
+        toast.error(t("worker.fillRequired"));
         return;
       }
 
       if (!dailyRate || isNaN(Number(dailyRate)) || Number(dailyRate) <= 0) {
-        toast.error("Kérjük adj meg egy érvényes napi díjat!");
+        toast.error(t("worker.needValidRate"));
         return;
       }
 
@@ -331,7 +333,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
         onOpenChange(false);
       } catch (error) {
         console.error("Error saving worker:", error);
-        toast.error("Hiba történt a mentés során. Kérlek próbáld újra.");
+        toast.error(t("worker.saveError"));
       } finally {
         setLoading(false);
       }
@@ -354,13 +356,13 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       return professions.filter((p) => p === lockedProfession);
     }
 
-    // If not locked (top + button), use availableRoles like "Meglévő munkás" tab
+    // If not locked (top + button), use availableRoles like t("worker.existing") tab
     return availableRoles.sort((a, b) => a.localeCompare(b, "hu"));
   }, [professions, lockedProfession, availableRoles]);
 
   // Keep profession consistent with the available options
   useEffect(() => {
-    // Don't clear if user selected the generic "Egyéb"
+    // Don't clear if user selected the generic t("worker.other")
     if (
       profession &&
       profession !== "Egyéb" &&
@@ -374,8 +376,8 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
   useEffect(() => {
     if (open) {
       // Only set default mode when first opening, don't override user selection
-      setProfession(lockedProfession ?? "általános");
-      setSelectedRole("általános"); // Always default to "általános"
+      setProfession(lockedProfession ?? t("worker.general"));
+      setSelectedRole(t("worker.general")); // Always default to t("worker.general")
       setSelectedExistingWorkers([]);
     } else {
       // clear fields on close
@@ -400,7 +402,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
       <DialogContent className="max-w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
           <DialogTitle>
-            Új munkás regisztrálása és hozzárendelése munkához
+            {t("worker.registerAndAssign")}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -411,7 +413,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 type="button"
                 onClick={() => setWorkerMode("new")}
                 className="w-10 h-10 rounded-full border-2 border-[#f97316] text-[#f97316] hover:bg-[#f97316] hover:text-white flex items-center justify-center transition-colors font-bold text-xl"
-                title="Új munkás hozzáadása"
+                title={t("worker.addNew")}
               >
                 <span
                   style={{
@@ -430,7 +432,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                 type="button"
                 onClick={() => setWorkerMode("existing")}
                 className="text-[#FF9900] hover:text-[#e68a00] transition-colors"
-                title="Vissza a listához"
+                title={t("worker.backToList")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -452,10 +454,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
           {/* Work Item Selection - Always null, but show info */}
           <div className="space-y-2">
             <label className="text-sm font-medium leading-none">
-              Munkafázis
+              {t("worker.phase")}
             </label>
             <div className="p-2 bg-gray-50 rounded-md border border-gray-200 text-sm text-gray-700">
-              Általános hozzárendelés (nem konkrét munkafázishoz)
+              {t("worker.generalAssignment")}
             </div>
           </div>
 
@@ -464,15 +466,15 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             <>
               <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">
-                  Szerepkör
+                  {t("worker.role")}
                 </label>
                 <CustomSelect
                   className="mt-2"
                   value={selectedRole}
                   onChange={setSelectedRole}
-                  placeholder="Válassz szerepkört..."
+                  placeholder={t("worker.chooseRole")}
                   options={[
-                    { value: "általános", label: "általános" },
+                    { value: t("worker.general"), label: t("worker.general") },
                     ...availableRoles.map((role) => ({
                       value: role,
                       label: role,
@@ -489,11 +491,11 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   {loadingWorkers ? (
                     <div className="p-8 text-center text-gray-500">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-2"></div>
-                      <div>Betöltés...</div>
+                      <div>{t("worker.loading")}</div>
                     </div>
                   ) : existingWorkers.length === 0 ? (
                     <div className="p-4 text-center text-gray-500">
-                      Nincsenek elérhető munkások
+                      {t("worker.none")}
                     </div>
                   ) : (
                     existingWorkers.map((worker) => {
@@ -526,7 +528,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                           />
                           <div className="flex-1 text-sm">
                             <div className="font-medium">
-                              {worker.name || "Névtelen"}
+                              {worker.name || t("worker.unnamed")}
                             </div>
                             <div className="text-gray-600">
                               {worker.role || "Ismeretlen szakma"} •{" "}
@@ -548,15 +550,15 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
             <>
               <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">
-                  Szerepkör
+                  {t("worker.role")}
                 </label>
                 <CustomSelect
                   className="mt-2"
                   value={selectedRole}
                   onChange={setSelectedRole}
-                  placeholder="Válassz szerepkört..."
+                  placeholder={t("worker.chooseRole")}
                   options={[
-                    { value: "általános", label: "általános" },
+                    { value: t("worker.general"), label: t("worker.general") },
                     ...availableRoles.map((role) => ({
                       value: role,
                       label: role,
@@ -566,16 +568,16 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               </div>
               <div className="space-y-2" style={{ display: "none" }}>
                 <label className="text-sm font-medium leading-none">
-                  Válassz munkást
+                  {t("worker.chooseWorker")}
                 </label>
                 <CustomSelect
                   className="mt-2"
                   value=""
                   onChange={() => {}}
-                  placeholder="Válassz munkást..."
+                  placeholder={t("worker.chooseWorkerDots")}
                   options={existingWorkers.map((worker) => ({
                     value: worker.id.toString(),
-                    label: `${worker.name || "Névtelen"} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
+                    label: `${worker.name || t("worker.unnamed")} (${worker.role || "Ismeretlen szakma"}) - ${worker.email || "Nincs email"} - ${worker.phone || "Nincs telefon"}`,
                   }))}
                 />
               </div>
@@ -598,10 +600,10 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                     value={profession}
                     onChange={setProfession}
                     disabled={professionsForSelected.length === 0}
-                    placeholder="Válassz szakmát..."
+                    placeholder={t("worker.chooseTrade")}
                     options={[
-                      { value: "", label: "Válassz szakmát..." },
-                      { value: "általános", label: "általános" },
+                      { value: "", label: t("worker.chooseTrade") },
+                      { value: t("worker.general"), label: t("worker.general") },
                       ...professionsForSelected.map((p) => ({
                         value: p,
                         label: p,
@@ -621,14 +623,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               />
               <input
                 type="email"
-                placeholder="Email (opcionális)"
+                placeholder={t("worker.email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="border rounded px-3 py-2"
               />
               <input
                 type="tel"
-                placeholder="Telefon (opcionális)"
+                placeholder={t("worker.phone")}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="border rounded px-3 py-2"
@@ -637,7 +639,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
               {/* Daily Rate Input - Only for new workers */}
               <div className="space-y-2">
                 <label className="text-sm font-medium leading-none">
-                  Napi díj (Ft) *
+                  {t("worker.dailyRate")}
                 </label>
                 <input
                   type="number"
@@ -650,14 +652,14 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                   step="1"
                 />
                 <div className="text-xs text-gray-500">
-                  8 órás munkanapra vonatkozó díj
+                  {t("worker.dailyRateHint")}
                 </div>
               </div>
 
               {/* Avatar upload with preview - polished UI */}
               <div className="mt-2">
                 <label className="block text-sm font-medium mb-2">
-                  Profilkép
+                  {t("worker.avatar")}
                 </label>
                 <div className="flex items-center gap-4">
                   <div className="relative">
@@ -672,7 +674,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                       onClick={() => fileInputRef.current?.click()}
                       className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black text-white rounded-full px-3 py-0.5 text-[12px] shadow"
                     >
-                      {avatarPreview || avatarUrl ? "Csere" : "Kép feltöltése"}
+                      {avatarPreview || avatarUrl ? "Csere" : t("worker.uploadImage")}
                     </button>
                     {(avatarPreview || avatarUrl) && (
                       <button
@@ -682,7 +684,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                           setAvatarUrl("");
                           setAvatarError("");
                         }}
-                        title="Profilkép törlése"
+                        title={t("worker.deleteAvatar")}
                         className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-white border border-[#ddd] text-red-600 inline-flex items-center justify-center shadow"
                       >
                         ×
@@ -712,7 +714,7 @@ const WorkerAddModal: React.FC<WorkerAddModalProps> = ({
                             setAvatarUrl(data.url);
                           } else {
                             setAvatarError(
-                              data.error || "Hiba történt a feltöltésnél."
+                              data.error || t("work.uploadError")
                             );
                             setAvatarUrl("");
                             setAvatarPreview("");

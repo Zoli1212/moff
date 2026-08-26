@@ -347,7 +347,7 @@ export default function WorkerDiaryEditForm({
       if (data.url) {
         setImages((prev) => [...prev, data.url]);
       } else {
-        setImageError(data.error || "Hiba történt a feltöltésnél.");
+        setImageError(data.error || t("work.uploadError"));
       }
     } catch (err) {
       setImageError("Hiba a feltöltés során: " + (err as Error).message);
@@ -404,10 +404,10 @@ export default function WorkerDiaryEditForm({
       showToast(
         "error",
         !selectedName && !selectedEmail
-          ? "Hiányzik a dolgozó neve és email címe."
+          ? t("diary.missingWorkerBoth")
           : !selectedName
-            ? "Hiányzik a dolgozó neve."
-            : "Hiányzik a dolgozó email címe."
+            ? t("diary.missingWorkerName")
+            : t("diary.missingWorkerEmail")
       );
       return;
     }
@@ -464,7 +464,7 @@ export default function WorkerDiaryEditForm({
           if (!res?.success) {
             showToast(
               "error",
-              res?.message || "Készültség mentése sikertelen."
+              res?.message || t("diary.progressSaveFailed")
             );
             return;
           }
@@ -481,10 +481,10 @@ export default function WorkerDiaryEditForm({
       const result: ActionResult<Partial<WorkDiaryWithItem>> =
         await updateWorkDiaryItem(updatePayload);
       if (result.success && result.data) {
-        showToast("success", "Napló bejegyzés frissítve.");
+        showToast("success", t("diary.entryUpdated"));
         onSave(result.data);
       } else {
-        showToast("error", result.message || "Sikertelen mentés.");
+        showToast("error", result.message || t("diary.saveFailed"));
       }
     } else {
       // Create new WorkDiaryItem
@@ -499,7 +499,7 @@ export default function WorkerDiaryEditForm({
         if (!res?.success || !res?.data?.id) {
           showToast(
             "error",
-            res?.message || "Napló azonosító megszerzése sikertelen."
+            res?.message || t("diary.idFailed")
           );
           return;
         }
@@ -513,10 +513,10 @@ export default function WorkerDiaryEditForm({
       const result: ActionResult<Partial<WorkDiaryWithItem>> =
         await createWorkDiaryItem(createPayload);
       if (result.success && result.data) {
-        showToast("success", "Napló bejegyzés mentve.");
+        showToast("success", t("diary.entrySaved"));
         onSave(result.data);
       } else {
-        showToast("error", result.message || "Sikertelen mentés.");
+        showToast("error", result.message || t("diary.saveFailed"));
       }
     }
   };
@@ -539,7 +539,7 @@ export default function WorkerDiaryEditForm({
           }
           required
         >
-          <option value="">Válassz munkafolyamatot…</option>
+          <option value="">{t("diary.selectProcess")}</option>
           {workItems.map((item) => (
             <option key={item.id} value={item.id}>
               {item.name}
@@ -548,7 +548,7 @@ export default function WorkerDiaryEditForm({
         </select>
       </div>
       <div>
-        <Label htmlFor="worker-select">Dolgozó</Label>
+        <Label htmlFor="worker-select">{t("diary.worker")}</Label>
         <select
           id="worker-select"
           className="w-full border rounded px-3 py-2 mt-1 mb-4"
@@ -580,7 +580,7 @@ export default function WorkerDiaryEditForm({
           disabled={selectedWorkItemId === ""}
           required
         >
-          <option value="">Válassz dolgozót…</option>
+          <option value="">{t("diary.selectWorker")}</option>
           {displayWorkerOptions.map((w) => (
             <option key={w.key} value={w.token}>
               {w.name} {w.role ? `(${w.role})` : ""}
@@ -592,13 +592,13 @@ export default function WorkerDiaryEditForm({
           assignedWorkers.length === 0 &&
           (selectedItem?.workers ?? []).length === 0 && (
             <div className="text-xs text-muted-foreground">
-              Ehhez a munkafolyamathoz nincs dolgozó rendelve.
+              {t("diary.noWorkerAssigned")}
             </div>
           )}
       </div>
       <div>
         <Label htmlFor="diary-date">
-          Dátum <Calendar className="inline ml-1 h-4 w-4" />
+          {t("diary.date")} <Calendar className="inline ml-1 h-4 w-4" />
         </Label>
         <Input
           id="diary-date"
@@ -618,7 +618,7 @@ export default function WorkerDiaryEditForm({
         />
       </div>
       <div>
-        <Label htmlFor="diary-work-hours">Munkaóra</Label>
+        <Label htmlFor="diary-work-hours">{t("diary.workHours")}</Label>
         <Input
           id="diary-work-hours"
           type="number"
@@ -643,7 +643,7 @@ export default function WorkerDiaryEditForm({
         />
       </div>
       <div>
-        <Label htmlFor="diary-unit">Mennyiségi egység</Label>
+        <Label htmlFor="diary-unit">{t("diary.unit")}</Label>
         <Input
           id="diary-unit"
           value={unit}
@@ -652,7 +652,7 @@ export default function WorkerDiaryEditForm({
         />
       </div>
       <div>
-        <Label>Képek feltöltése</Label>
+        <Label>{t("diary.uploadImages")}</Label>
         <div className="flex flex-wrap gap-3 items-center">
           {images.map((img, idx) => (
             <div key={img} className="relative group">
@@ -666,7 +666,7 @@ export default function WorkerDiaryEditForm({
                 type="button"
                 onClick={() => handleRemoveImage(img)}
                 className="absolute -top-2 -right-2 bg-white border border-destructive text-destructive rounded-full w-6 h-6 flex items-center justify-center opacity-70 group-hover:opacity-100"
-                title="Kép törlése"
+                title={t("diary.deleteImage")}
               >
                 ×
               </button>
@@ -674,7 +674,7 @@ export default function WorkerDiaryEditForm({
           ))}
           <label className="flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed rounded cursor-pointer hover:bg-muted-foreground/10 transition">
             <span className="text-xs text-muted-foreground">
-              Kép hozzáadása
+              {t("diary.addImage")}
             </span>
             <Input
               type="file"
@@ -686,7 +686,7 @@ export default function WorkerDiaryEditForm({
           </label>
         </div>
         {imageUploading && (
-          <div className="text-blue-600 text-xs mt-1">Feltöltés...</div>
+          <div className="text-blue-600 text-xs mt-1">{t("diary.uploading")}</div>
         )}
         {imageError && (
           <div className="text-red-600 text-xs mt-1">{imageError}</div>
@@ -723,7 +723,7 @@ export default function WorkerDiaryEditForm({
           {
             <div className="space-y-2 rounded-md border p-3 bg-muted/20">
               <div className="flex items-center justify-between">
-                <Label htmlFor="completed-inline">Elkészült mennyiség</Label>
+                <Label htmlFor="completed-inline">{t("diary.completedQuantity")}</Label>
                 <div className="text-right text-sm">
                   <div className="font-medium">
                     {`${(Number.isFinite(completedQtyValue) ? completedQtyValue : 0).toFixed(2)} / ${Number(selectedItem?.quantity || 0)} ${selectedItem?.unit || ""}`}
@@ -776,7 +776,7 @@ export default function WorkerDiaryEditForm({
                 )}
               </div>
               <div className="text-xs text-muted-foreground text-right">
-                A készültség a fő Mentés gombbal kerül mentésre.
+                {t("diary.progressHint")}
               </div>
             </div>
           }
@@ -789,12 +789,12 @@ export default function WorkerDiaryEditForm({
             variant="destructive" 
             onClick={() => setShowDeleteConfirm(true)}
           >
-            Napló törlése
+            {t("diary.deleteEntry")}
           </Button>
         )}
         <div className="flex gap-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Mégsem
+            {t("diary.cancel")}
           </Button>
           <Button
             type="submit"
@@ -826,11 +826,11 @@ export default function WorkerDiaryEditForm({
       <Dialog open={progressOpen} onOpenChange={setProgressOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Munkafolyamat készültség</DialogTitle>
+            <DialogTitle>{t("diary.progress")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label htmlFor="completed-range">Elkészült mennyiség</Label>
+              <Label htmlFor="completed-range">{t("diary.completedQuantity")}</Label>
               <div className="text-right text-sm">
                 <div className="font-medium">
                   {`${(Number.isFinite(completedQtyValue) ? completedQtyValue : 0).toFixed(2)} / ${Number(selectedItem?.quantity || 0)} ${selectedItem?.unit || ""}`}
@@ -868,7 +868,7 @@ export default function WorkerDiaryEditForm({
               variant="outline"
               onClick={() => setProgressOpen(false)}
             >
-              Mégsem
+              {t("diary.cancel")}
             </Button>
             <Button
               type="button"
@@ -881,7 +881,7 @@ export default function WorkerDiaryEditForm({
                   completedQuantity: Number(completedQtyValue) || 0,
                 })) as unknown as SimpleResult;
                 if (result?.success) {
-                  showToast("success", "Készültség mentve.");
+                  showToast("success", t("diary.progressSaved"));
                   // If we are editing an existing diary item and the tenant checked acceptance,
                   // persist accepted=true immediately so it's not lost if the user doesn't submit the main form.
                   try {
@@ -899,7 +899,7 @@ export default function WorkerDiaryEditForm({
                 } else {
                   showToast(
                     "error",
-                    result?.message || "Készültség mentése sikertelen."
+                    result?.message || t("diary.progressSaveFailed")
                   );
                 }
               }}
@@ -914,17 +914,17 @@ export default function WorkerDiaryEditForm({
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Napló törlése</DialogTitle>
+            <DialogTitle>{t("diary.deleteEntry")}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
             <p>
               {editingItem?.id 
-                ? "Biztosan törölni szeretnéd ezt a napló bejegyzést?" 
-                : "Biztosan törölni szeretnéd ezt a naplót?"
+                ? t("diary.confirmDeleteEntry") 
+                : t("diary.confirmDeleteDiary")
               }
             </p>
             <p className="text-sm text-muted-foreground mt-2">
-              Ez a művelet nem vonható vissza.
+              {t("diary.irreversible")}
             </p>
           </div>
           <DialogFooter>
@@ -933,7 +933,7 @@ export default function WorkerDiaryEditForm({
               variant="outline"
               onClick={() => setShowDeleteConfirm(false)}
             >
-              Mégsem
+              {t("diary.cancel")}
             </Button>
             <Button
               type="button"
@@ -949,7 +949,7 @@ export default function WorkerDiaryEditForm({
                       setShowDeleteConfirm(false);
                       onSave({});
                     } else {
-                      showToast("error", "Nem sikerült törölni a napló bejegyzést.");
+                      showToast("error", t("diary.deleteFailedEntry"));
                     }
                   } else {
                     // Delete entire workDiary if no specific item
@@ -961,12 +961,12 @@ export default function WorkerDiaryEditForm({
                       setShowDeleteConfirm(false);
                       onSave({});
                     } else {
-                      showToast("error", result.message || "Nem sikerült törölni a naplót.");
+                      showToast("error", result.message || t("diary.deleteFailedDiary"));
                     }
                   }
                 } catch (error) {
                   console.log(error)
-                  showToast("error", "Hiba történt a törlés során.");
+                  showToast("error", t("diary.deleteError"));
                 }
               }}
             >

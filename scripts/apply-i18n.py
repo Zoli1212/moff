@@ -19,6 +19,14 @@ path = sys.argv[1]
 mapping = json.load(io.open("scripts/i18n-map.json", encoding="utf-8"))
 source = io.open(path, encoding="utf-8").read()
 
+# Strings this file parses or compares rather than shows. Without this the script
+# happily re-translates them on every run, undoing the fix each time.
+keep = json.load(io.open("scripts/i18n-keep-literal.json", encoding="utf-8"))
+protected = set(keep.get(path.replace("\\", "/"), []))
+if protected:
+    mapping = {k: v for k, v in mapping.items() if k not in protected}
+    print("keeping literal:", ", ".join(sorted(protected)))
+
 # Longest first, so "Tételek pontosítása" is not partly eaten by "Tételek".
 pairs = sorted(mapping.items(), key=lambda kv: -len(kv[0]))
 counts = {"attr": 0, "jsx": 0, "literal": 0}

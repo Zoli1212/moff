@@ -84,7 +84,10 @@ for path in sys.argv[1:]:
             continue
         open_at, close_at = span
         body = source[open_at:close_at]
-        if 't("' not in body or "const { t } = useLocale();" in body:
+        # Any destructuring that already pulls t counts - the existing line is often
+        # `const { t, money } = useLocale();`, and matching the exact one-name form
+        # produced a duplicate declaration.
+        if 't("' not in body or re.search(r"const\s*\{[^}]*t[^}]*\}\s*=\s*useLocale\(\)", body):
             continue
         source = (
             source[: open_at + 1]

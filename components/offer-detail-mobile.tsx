@@ -1041,7 +1041,7 @@ export function OfferDetailView({
         }
 
         // 2. AI feldolgozás indítása (merge-work endpoint)
-        toast.loading("AI feldolgozás folyamatban...", { id: "ai-merge" });
+        toast.loading(t("offer.aiProcessing"), { id: "ai-merge" });
 
         try {
           const aiResponse = await fetch("/api/merge-work", {
@@ -1074,11 +1074,11 @@ export function OfferDetailView({
             window.location.reload();
           } else {
             toast.dismiss("ai-merge");
-            toast.error(aiResult.error || "AI feldolgozás sikertelen");
+            toast.error(aiResult.error || t("offer.aiFailed"));
           }
         } catch (error) {
           toast.dismiss("ai-merge");
-          toast.error("Hiba történt az AI feldolgozás során");
+          toast.error(t("offer.aiError"));
           console.error("AI merge error:", error);
         }
 
@@ -1242,7 +1242,7 @@ export function OfferDetailView({
                 disabled={isSupplementing}
                 className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
               >
-                Mégse
+                {t("common.cancel")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1609,14 +1609,14 @@ export function OfferDetailView({
                   backgroundColor: "#FE9C00",
                 }}
               >
-                {isSaving ? t("od.saving") : "Mentés"}
+                {isSaving ? t("od.saving") : t("common.save")}
               </button>
               <button
                 onClick={cancelEditing}
                 disabled={isSaving}
                 className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-200 border border-gray-300 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
               >
-                Mégse
+                {t("common.cancel")}
               </button>
             </div>
           </DialogContent>
@@ -1658,14 +1658,14 @@ export function OfferDetailView({
                   disabled={isUpdatingTitle}
                   className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
                 >
-                  {isUpdatingTitle ? t("od.saving") : "Mentés"}
+                  {isUpdatingTitle ? t("od.saving") : t("common.save")}
                 </button>
                 <button
                   onClick={handleTitleCancel}
                   disabled={isUpdatingTitle}
                   className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </button>
               </div>
             </div>
@@ -2028,7 +2028,7 @@ export function OfferDetailView({
                       className="w-full py-6 border-orange-500 text-orange-500 hover:bg-orange-50 hover:text-orange-600 hover:border-orange-600 focus:ring-orange-500 focus:ring-offset-2 focus:ring-2"
                     >
                       <span className="text-lg font-medium">
-                        + Kérdések megválaszolása
+                        {t("offer.answerQuestions")}
                       </span>
                     </Button>
                   </div>
@@ -2726,7 +2726,7 @@ export function OfferDetailView({
             <DialogDescription className="pt-4">
               {offer.status === "draft"
                 ? assignToExisting
-                  ? "Válaszd ki, melyik munkához szeretnéd hozzárendelni az ajánlatot:"
+                  ? t("offer.selectWorkPrompt")
                   : 'Biztosan át szeretnéd állítani az ajánlatot t("od.inWork") állapotba?'
                 : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
             </DialogDescription>
@@ -2759,7 +2759,7 @@ export function OfferDetailView({
                     onChange={(e) => setSelectedWorkId(Number(e.target.value))}
                     size={Math.min(availableWorks.length + 1, 6)}
                   >
-                    <option value="">-- Válassz --</option>
+                    <option value="">{t("offer.chooseDash")}</option>
                     {availableWorks.map((work) => (
                       <option key={work.id} value={work.id}>
                         {work.title} ({work.location})
@@ -2820,7 +2820,7 @@ export function OfferDetailView({
               disabled={isUpdatingStatus}
               className="w-full mt-2"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2865,7 +2865,7 @@ export function OfferDetailView({
                 </div>
                 <div>
                   <Label className="text-sm font-medium">
-                    Munkadíj egységár
+                    {t("offer.labourUnitPrice")}
                   </Label>
                   <p className="text-sm text-gray-700 mt-1">
                     {formatNumberWithSpace(selectedCustomItem.unitPrice)} Ft
@@ -2888,7 +2888,7 @@ export function OfferDetailView({
               disabled={isSavingGlobalPrice}
               className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
             >
-              {isSavingGlobalPrice ? t("od.saving") : "Mentés"}
+              {isSavingGlobalPrice ? t("od.saving") : t("common.save")}
             </Button>
             <Button
               variant="outline"
@@ -2896,7 +2896,7 @@ export function OfferDetailView({
               disabled={isSavingGlobalPrice}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2945,7 +2945,7 @@ export function OfferDetailView({
               disabled={isRefining}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -2995,7 +2995,7 @@ export function OfferDetailView({
               disabled={isSupplementing}
               className="bg-gray-200 hover:bg-gray-300 text-gray-800 border-0 w-full"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -3008,8 +3008,8 @@ export function OfferDetailView({
         onConfirm={handleOfferDeleteConfirm}
         title={t("od.deleteOffer")}
         message={`Biztosan törölni szeretnéd a(z) "${offer.title || t("od.untitled")}" ajánlatot? Ez a művelet nem vonható vissza.`}
-        confirmText="Törlés"
-        cancelText="Mégse"
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         isLoading={isOfferDeleting}
       />
     </>
