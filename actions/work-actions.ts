@@ -943,6 +943,9 @@ export async function getWorkById(id: number) {
       tools: true,
       workDiaries: true,
       performances: true, // Include Performance table
+      // Additive: the work's money is quoted in whatever currency its offer was, so the
+      // detail screen needs it. Nothing existing reads this, it only adds a field.
+      offer: { select: { currency: true, exchangeRate: true } },
     },
   });
 
