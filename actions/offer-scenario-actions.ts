@@ -64,6 +64,8 @@ async function loadOwnedOffer(offerId: number, tenantEmail: string) {
       items: true,
       tenantEmail: true,
       requirementId: true,
+      currency: true,
+      exchangeRate: true,
     },
   });
 
@@ -79,6 +81,9 @@ export async function getOfferScenarios(offerId: number): Promise<{
   error?: string;
   offerTitle?: string;
   offerTotalPrice?: number;
+  /** So the analysis renders its amounts in the currency the offer was quoted in. */
+  offerCurrency?: string;
+  offerExchangeRate?: number | null;
   scenarios?: OfferScenarioDto[];
 }> {
   try {
@@ -118,6 +123,8 @@ export async function getOfferScenarios(offerId: number): Promise<{
       success: true,
       offerTitle: offer.title,
       offerTotalPrice: offer.totalPrice,
+      offerCurrency: offer.currency,
+      offerExchangeRate: offer.exchangeRate,
       scenarios,
     };
   } catch (error) {

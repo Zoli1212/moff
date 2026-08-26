@@ -16,6 +16,9 @@ import {
   Trash2,
 } from "lucide-react";
 import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
+import { convertFromHuf, resolveCurrency, type Currency } from "@/lib/i18n/config";
 import {
   SCOPE_ACTION_LABELS,
   totalClaimedSavings,
@@ -44,6 +47,7 @@ export default function ScenariosClient({
   offerId: number;
   requirementId: string;
 }) {
+  const { t } = useLocale();
   const queryClient = useQueryClient();
 
   // Back to the offer that was open, not to the offer list. The detail view is what the
@@ -126,7 +130,7 @@ export default function ScenariosClient({
         </Link>
         <div className="min-w-0">
           <h1 className="truncate text-lg font-semibold text-gray-900">
-            Alternatívák
+            {t("scenarios.title")}
           </h1>
           {query.data?.offerTitle && (
             <p className="truncate text-xs text-gray-500">
@@ -134,12 +138,11 @@ export default function ScenariosClient({
             </p>
           )}
         </div>
+        <LocaleSwitcher className="ml-auto shrink-0" />
       </header>
 
       <p className="mt-4 rounded-lg border-l-4 border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-        Itt <strong>nem készül új ajánlat</strong>. Az AI elolvassa a meglévő ajánlatot
-        és az eredeti igényt, majd megmutatja, mi a mozgástered a megadott korlát mellett.
-        Az ajánlaton semmi nem változik.
+        {t("scenarios.notAnOffer")}
       </p>
 
       <section className="mt-5 rounded-xl border border-gray-200 bg-white p-4">
@@ -147,7 +150,7 @@ export default function ScenariosClient({
           htmlFor="constraint"
           className="mb-2 block text-sm font-medium text-gray-800"
         >
-          Mi a megszorítás?
+          {t("scenarios.constraintLabel")}
         </label>
         <textarea
           id="constraint"
@@ -183,7 +186,7 @@ export default function ScenariosClient({
           ) : (
             <Sparkles className="h-4 w-4" />
           )}
-          {isPending ? "Elemzés…" : "Alternatívák kérése"}
+          {isPending ? t("scenarios.analysing") : t("scenarios.request")}
         </button>
       </section>
 
@@ -199,6 +202,8 @@ export default function ScenariosClient({
             <ScenarioCard
               key={scenario.id}
               scenario={scenario}
+              currency={resolveCurrency(query.data?.offerCurrency)}
+              exchangeRate={query.data?.offerExchangeRate ?? null}
               onDelete={() => setDeleting(scenario)}
             />
           ))}
@@ -219,11 +224,25 @@ export default function ScenariosClient({
 
 function ScenarioCard({
   scenario,
+  currency,
+  exchangeRate,
   onDelete,
 }: {
   scenario: OfferScenarioDto;
+  currency: Currency;
+  exchangeRate: number | null;
   onDelete: () => void;
 }) {
+  const { money } = useLocale();
+
+  /**
+   * The model reasons about the offer in HUF, because that is what it was given, so its
+   * figures come back in HUF and are converted here for display - at the rate captured on
+   * the offer, never a live one.
+   */
+  const inOfferCurrency = (amountHuf: number | null | undefined) =>
+    money(convertFromHuf(amountHuf, currency, exchangeRate), currency);
+
   const { analysis } = scenario;
   const savings = totalClaimedSavings(analysis);
   const duration = analysis.durationImpact;
@@ -258,7 +277,7 @@ function ScenarioCard({
         <p className="mt-2 flex items-start gap-1.5 rounded-md bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
           Az ajánlat azóta megváltozott. Ez az elemzés a korábbi,{" "}
-          {Math.round(scenario.baseTotalPrice).toLocaleString("hu-HU")} Ft-os
+          {inOfferCurrency(scenario.baseTotalPrice)}-os
           változatra készült.
         </p>
       )}
@@ -283,7 +302,7 @@ function ScenarioCard({
           <Stat
             icon={<Scissors className="h-3.5 w-3.5" />}
             label="Felszabadítható"
-            value={`${Math.round(savings).toLocaleString("hu-HU")} Ft`}
+            value={inOfferCurrency(savings)}
           />
         )}
       </div>
@@ -333,7 +352,7 @@ function ScenarioCard({
                     {cut.itemName}
                     {cut.savedAmount != null && (
                       <span className="ml-1 text-xs text-gray-500">
-                        ({Math.round(cut.savedAmount).toLocaleString("hu-HU")} Ft)
+                        ({inOfferCurrency(cut.savedAmount)})
                       </span>
                     )}
                   </p>
