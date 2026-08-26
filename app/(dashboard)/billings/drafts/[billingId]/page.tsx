@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams, useRouter } from "next/navigation";
 import { getCurrentUserData } from "@/actions/user-actions";
 import {
@@ -34,6 +35,8 @@ interface Billing {
 }
 
 export default function BillingDraftPage() {
+  const { t } = useLocale();
+
   const params = useParams();
   const router = useRouter();
   const billingId = Number(params.billingId as string);
@@ -125,10 +128,10 @@ export default function BillingDraftPage() {
             }))
           );
         } else {
-          setError("Számlapiszkozat nem található.");
+          setError(t("billing.draftNotFound"));
         }
       } catch (err) {
-        setError("Hiba történt a piszkozat betöltésekor.");
+        setError(t("billing.loadDraftError"));
         console.error(err);
       } finally {
         setLoading(false);
@@ -216,7 +219,7 @@ export default function BillingDraftPage() {
         customerZip: customerZip || null,
       });
       if (result.success) {
-        toast.success("Számlatervezet sikeresen frissítve!");
+        toast.success(t("billing.draftUpdated"));
         if (result.billing) {
           const parsedItems =
             typeof result.billing.items === "string"
@@ -235,11 +238,11 @@ export default function BillingDraftPage() {
           );
         }
       } else {
-        toast.error(result.error || "Hiba történt a mentés során.");
+        toast.error(result.error || t("billing.saveError"));
       }
     } catch (err) {
       console.log(err);
-      toast.error("Váratlan hiba történt a mentés során.");
+      toast.error(t("billing.unexpectedSaveError"));
     } finally {
       setIsSaving(false);
     }
@@ -296,7 +299,7 @@ export default function BillingDraftPage() {
       if (!updateResult.success) {
         toast.error(
           updateResult.error ||
-            "Hiba történt a piszkozat mentésekor a véglegesítés előtt."
+            t("billing.saveBeforeFinalise")
         );
         setIsFinalizing(false);
         return;
@@ -306,15 +309,15 @@ export default function BillingDraftPage() {
       const result = await finalizeAndGenerateInvoice(billing.id);
       if (result.success && result.updatedBilling) {
         setBilling(result.updatedBilling as Billing);
-        toast.success("Számla sikeresen véglegesítve!");
+        toast.success(t("billing.finalised"));
       } else {
-        setError(result.error || "A számla véglegesítése sikertelen.");
-        toast.error(result.error || "A számla véglegesítése sikertelen.");
+        setError(result.error || t("billing.finaliseFailed"));
+        toast.error(result.error || t("billing.finaliseFailed"));
       }
     } catch (err) {
-      setError("Hiba történt a számla véglegesítésekor.");
+      setError(t("billing.finaliseError"));
       console.log(err);
-      toast.error("Hiba történt a számla véglegesítésekor.");
+      toast.error(t("billing.finaliseError"));
     } finally {
       setIsFinalizing(false);
     }
@@ -362,7 +365,7 @@ export default function BillingDraftPage() {
       if (!updateResult.success) {
         toast.error(
           updateResult.error ||
-            "Hiba történt a piszkozat mentésekor a pénzügyi teljesítés előtt."
+            t("billing.saveBeforeSettle")
         );
         setIsMarkingPaid(false);
         return;
@@ -372,17 +375,17 @@ export default function BillingDraftPage() {
       const result = await markAsPaidCash(billing.id);
       if (result.success && result.updatedBilling) {
         setBilling(result.updatedBilling as Billing);
-        toast.success("Pénzügyileg teljesítve!");
+        toast.success(t("billing.settledDone"));
       } else {
-        setError(result.error || "A pénzügyi teljesítés jelölése sikertelen.");
+        setError(result.error || t("billing.settleFailed"));
         toast.error(
-          result.error || "A pénzügyi teljesítés jelölése sikertelen."
+          result.error || t("billing.settleFailed")
         );
       }
     } catch (err) {
-      setError("Hiba történt a pénzügyi teljesítés jelölésekor.");
+      setError(t("billing.settleError"));
       console.log(err);
-      toast.error("Hiba történt a pénzügyi teljesítés jelölésekor.");
+      toast.error(t("billing.settleError"));
     } finally {
       setIsMarkingPaid(false);
     }
@@ -390,7 +393,7 @@ export default function BillingDraftPage() {
 
   const handleSaveApiKey = async () => {
     if (!apiKey || apiKey.trim() === "") {
-      toast.error("Az API kulcs nem lehet üres!");
+      toast.error(t("billing.apiKeyEmpty"));
       return;
     }
 
@@ -407,13 +410,13 @@ export default function BillingDraftPage() {
         handleFinalize(true);
       }
     } else {
-      toast.error(result.error || "Hiba történt az API kulcs mentésekor.");
+      toast.error(result.error || t("billing.apiKeySaveError"));
     }
   };
 
-  if (loading) return <p>Betöltés...</p>;
+  if (loading) return <p>{t("worker.loading")}</p>;
   if (error) return <p className="text-red-500">{error}</p>;
-  if (!billing) return <p>Nincs megjeleníthető adat.</p>;
+  if (!billing) return <p>{t("billing.noData")}</p>;
 
   return (
     <div className="min-h-screen w-full bg-gray-50 pt-4 pb-24 sm:pb-16">
@@ -429,7 +432,7 @@ export default function BillingDraftPage() {
               value={editedTitle}
               onChange={(e) => setEditedTitle(e.target.value)}
               className="w-full text-center sm:text-left text-xl font-bold text-gray-800 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Számla címe"
+              placeholder={t("billing.invoiceAddress")}
             />
           </div>
           <div className="w-8"></div>
@@ -441,7 +444,7 @@ export default function BillingDraftPage() {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
               <div className="flex-shrink-0">
                 <span className="text-sm text-gray-500">
-                  Státusz:
+                  {t("od.status")}
                   <span
                     className={`font-semibold ml-1 ${
                       billing.status === "draft"
@@ -454,7 +457,7 @@ export default function BillingDraftPage() {
                     {billing.status === "draft"
                       ? "Piszkozat"
                       : billing.status === "paid_cash"
-                        ? "Pénzügyileg teljesítve"
+                        ? t("billing.settled")
                         : `Számlázva (${billing.invoiceNumber})`}
                   </span>
                 </span>
@@ -463,7 +466,7 @@ export default function BillingDraftPage() {
               {/* Customer Fields - Collapsible */}
               <details className="mt-4 border border-gray-300 rounded-md">
                 <summary className="px-4 py-3 cursor-pointer bg-gray-50 hover:bg-gray-100 font-medium text-gray-700 flex items-center justify-between">
-                  <span>Vevő adatai</span>
+                  <span>{t("billing.customerData")}</span>
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -484,7 +487,7 @@ export default function BillingDraftPage() {
                       htmlFor="customerName"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Vevő neve *
+                      {t("billing.customerName")}
                     </label>
                     <input
                       type="text"
@@ -500,7 +503,7 @@ export default function BillingDraftPage() {
                       htmlFor="customerCity"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Város *
+                      {t("billing.city")}
                     </label>
                     <input
                       type="text"
@@ -516,7 +519,7 @@ export default function BillingDraftPage() {
                       htmlFor="customerAddress"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Utca, házszám
+                      {t("billing.street")}
                     </label>
                     <input
                       type="text"
@@ -532,7 +535,7 @@ export default function BillingDraftPage() {
                       htmlFor="customerZip"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Irányítószám
+                      {t("billing.zip")}
                     </label>
                     <input
                       type="text"
@@ -548,7 +551,7 @@ export default function BillingDraftPage() {
                       htmlFor="taxNumber"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Adószám
+                      {t("billing.taxNumber")}
                     </label>
                     <input
                       type="text"
@@ -564,7 +567,7 @@ export default function BillingDraftPage() {
                       htmlFor="euTaxNumber"
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      EU adószám
+                      {t("billing.euTaxNumber")}
                     </label>
                     <input
                       type="text"
@@ -587,7 +590,7 @@ export default function BillingDraftPage() {
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
                     <Save className="h-4 w-4 mr-2" />
-                    {isSaving ? "Mentés..." : "Piszkozat mentése"}
+                    {isSaving ? t("od.saving") : t("billing.saveDraft")}
                   </Button>
                   <Button
                     onClick={() => handleFinalize()}
@@ -596,8 +599,8 @@ export default function BillingDraftPage() {
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
                     {isFinalizing
-                      ? "Véglegesítés..."
-                      : "Jóváhagyás és Számla Kiállítása"}
+                      ? t("billing.finalising")
+                      : t("billing.approveAndIssue")}
                   </Button>
                   <Button
                     onClick={handleMarkAsPaidCash}
@@ -605,7 +608,7 @@ export default function BillingDraftPage() {
                     size="sm"
                     className="bg-orange-500 hover:bg-orange-600 text-white w-full sm:w-auto font-semibold"
                   >
-                    {isMarkingPaid ? "Jelölés..." : "Pénzügyileg teljesítve"}
+                    {isMarkingPaid ? t("billing.marking") : t("billing.settled")}
                   </Button>
                   <Button
                     onClick={() => setShowApiKeyModal(true)}
@@ -614,7 +617,7 @@ export default function BillingDraftPage() {
                     className="w-full sm:w-auto font-semibold border-orange-500 text-orange-500 hover:bg-orange-50"
                   >
                     <Settings className="h-4 w-4 mr-2" />
-                    API Beállítások
+                    {t("billing.apiSettings")}
                   </Button>
                 </div>
               )}
@@ -628,7 +631,7 @@ export default function BillingDraftPage() {
                   rel="noopener noreferrer"
                   className="text-sm text-blue-500 hover:underline"
                 >
-                  Számla megtekintése
+                  {t("billing.viewInvoice")}
                 </a>
               </div>
             )}
@@ -645,7 +648,7 @@ export default function BillingDraftPage() {
 
           <div className="flex justify-between items-center mt-6 pt-4 border-t">
             <span className="text-lg font-bold text-gray-800">
-              Teljes összeg:
+              {t("billing.total")}
             </span>
             <span className="text-xl font-bold text-gray-900">
               {new Intl.NumberFormat("hu-HU", {
@@ -668,7 +671,7 @@ export default function BillingDraftPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <h2 className="text-xl font-bold mb-4">
-                Számlázz.hu API Beállítás
+                {t("billing.szamlazzSettings")}
               </h2>
               <p className="text-sm text-gray-600 mb-4">
                 A számla kiállításához szükséges a Számlázz.hu API kulcsod. Ezt
@@ -695,7 +698,7 @@ export default function BillingDraftPage() {
                   id="apiKey"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Írd be az API kulcsod"
+                  placeholder={t("billing.apiKeyPlaceholder")}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 />
               </div>
@@ -704,14 +707,14 @@ export default function BillingDraftPage() {
                   onClick={handleSaveApiKey}
                   className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
                 >
-                  Mentés és Folytatás
+                  {t("billing.saveAndContinue")}
                 </Button>
                 <Button
                   onClick={() => setShowApiKeyModal(false)}
                   variant="outline"
                   className="flex-1"
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>

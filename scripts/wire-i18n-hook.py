@@ -21,15 +21,16 @@ DECL = re.compile(
 )
 
 
-def body_range(source, start):
+def body_range(source, start, skip_params=True):
     """
     Span of the component body.
 
-    The parameter list is skipped by balancing parentheses first. Without that, a
-    destructured signature - function Foo({ a, b }: Props) - hands back the destructuring
-    brace, and the hook lands inside the parameter list instead of the body.
+    For a `function Foo({ a, b }: Props)` the parameter list has to be balanced past
+    first, otherwise the destructuring brace is mistaken for the body. For an arrow
+    component the match already consumed the parameters and ended at `=>`, so looking for
+    another parenthesis finds one inside the body and lands the hook in the wrong place.
     """
-    paren_at = source.find("(", start)
+    paren_at = source.find("(", start) if skip_params else -1
     if paren_at != -1:
         depth = 0
         for index in range(paren_at, len(source)):
@@ -79,7 +80,9 @@ for path in sys.argv[1:]:
     wired = []
     for match in reversed(list(DECL.finditer(source))):
         name = match.group(1) or match.group(2)
-        span = body_range(source, match.end() - 1)
+        # An arrow match ends at '=>', so its parameters are already behind us.
+        is_arrow = source[match.start():match.end()].rstrip().endswith("=>")
+        span = body_range(source, match.end() - 1, skip_params=not is_arrow)
         if not span:
             continue
         open_at, close_at = span

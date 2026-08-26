@@ -82,7 +82,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
     if (isFetchingPrice) return;
 
     setIsFetchingPrice(true);
-    toast("Piaci árak lekérdezése...", {
+    toast(t("taskcard.checkingPrices"), {
       id: "fetch-price",
       duration: 50000,
       style: {
@@ -106,7 +106,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
         const data = await response.json();
 
         toast.dismiss("fetch-price");
-        toast.success("Piaci ár frissítve!", {
+        toast.success(t("taskcard.priceUpdated"), {
           duration: 3000,
           style: {
             background: "#d1fae5",
@@ -124,14 +124,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
         }
       } else {
         toast.dismiss("fetch-price");
-        toast.error("Hiba történt az árfrissítés során", {
+        toast.error(t("taskcard.priceError"), {
           duration: 3000,
         });
       }
     } catch (error) {
       console.log(error);
       toast.dismiss("fetch-price");
-      toast.error("Hiba történt az árfrissítés során", {
+      toast.error(t("taskcard.priceError"), {
         duration: 3000,
       });
     } finally {
@@ -151,7 +151,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       return (
         <div className="flex items-center gap-1 text-blue-500">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-xs">Frissítés...</span>
+          <span className="text-xs">{t("diary.refreshing")}</span>
         </div>
       );
     }
@@ -165,10 +165,10 @@ const TaskCard: React.FC<TaskCardProps> = ({
             handleFetchPrice();
           }}
           className="flex items-center gap-1 text-red-500 hover:text-red-700 transition-colors"
-          title="Kattints a piaci ár lekérdezéséhez"
+          title={t("taskcard.checkMarketPrice")}
         >
           <AlertCircle className="h-4 w-4" />
-          <span className="text-xs font-medium">Nincs árinfó</span>
+          <span className="text-xs font-medium">{t("taskcard.noPriceInfo")}</span>
         </button>
       );
     }
@@ -209,11 +209,11 @@ const TaskCard: React.FC<TaskCardProps> = ({
           handleFetchPrice();
         }}
         className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors max-w-[70%]"
-        title={localMarketPrice.productName ? `${localMarketPrice.productName}\n${localMarketPrice.supplier}` : "Nincs jobb ajánlat"}
+        title={localMarketPrice.productName ? `${localMarketPrice.productName}\n${localMarketPrice.supplier}` : t("taskcard.noBetterOffer")}
       >
         <CheckCircle className="h-4 w-4 flex-shrink-0" />
         <div className="flex flex-col items-start">
-          <span className="text-xs">Árinfó OK</span>
+          <span className="text-xs">{t("taskcard.priceOk")}</span>
           {localMarketPrice.productName && (
             <span className="text-xs text-gray-600 truncate max-w-full">
               {localMarketPrice.productName}
@@ -246,21 +246,21 @@ const TaskCard: React.FC<TaskCardProps> = ({
         {/* Progress bars below */}
         <div className="mt-3 space-y-2">
           <ProgressBar
-            label="Teljesített"
+            label={t("taskcard.completed")}
             value={completedQuantity || 0}
             max={effectiveQuantity || 100}
             unit={unit || "db"}
             color="bg-blue-500"
           />
           <ProgressBar
-            label="Számlázott"
+            label={t("taskcard.billed")}
             value={(billedQuantity || 0) + (paidQuantity || 0)}
             max={effectiveQuantity || 0}
             unit={unit || "db"}
             color="bg-green-500"
           />
           <ProgressBar
-            label="Számlázható"
+            label={t("taskcard.billable")}
             value={Math.max(
               0,
               (completedQuantity || 0) - (billedQuantity || 0) - (paidQuantity || 0)
@@ -280,7 +280,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                     setShowPriceDetails(!showPriceDetails);
                   }}
                   className="text-green-600 hover:text-green-700 transition-colors"
-                  title={showPriceDetails ? "Részletek elrejtése" : "Részletek megjelenítése"}
+                  title={showPriceDetails ? t("taskcard.hideDetails") : t("taskcard.showDetails")}
                 >
                   {showPriceDetails ? (
                     <ChevronUp className="h-4 w-4" />
@@ -299,7 +299,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                   setShowQuantityModal(true);
                 }}
                 className="p-1 rounded-full border-2 border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white transition-colors"
-                title="Mennyiség módosítása"
+                title={t("diary.editQuantity")}
               >
                 <Plus className="h-3 w-3" />
               </button>
@@ -328,7 +328,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
             <div className="text-sm space-y-1 overflow-hidden max-w-full">
               {materialUnitPrice && (
                 <div className="break-words">
-                  <span className="font-medium text-gray-700">Jelenlegi ár: </span>
+                  <span className="font-medium text-gray-700">{t("taskcard.currentPrice")} </span>
                   <span className="text-gray-900">
                     {materialUnitPrice.toLocaleString("hu-HU")} Ft/{unit || "db"}
                   </span>
@@ -351,7 +351,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
               )}
               {localMarketPrice.savings > 0 && localMarketPrice.savings != null && (
                 <div className="break-words">
-                  <span className="font-medium text-gray-700">Megtakarítás: </span>
+                  <span className="font-medium text-gray-700">{t("taskcard.saving")} </span>
                   <span className="text-green-600 font-semibold">
                     -{localMarketPrice.savings.toLocaleString("hu-HU")} Ft/{unit || "db"}
                   </span>
@@ -419,7 +419,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
           onChange={async (e) => {
             e.stopPropagation();
             if (!onCheck) return;
-            toast("Frissítés folyamatban ...", {
+            toast(t("taskcard.refreshing"), {
               id: "frissites",
               duration: 50000,
               style: {
@@ -448,7 +448,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
       {showQuantityModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Mennyiség módosítása</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("diary.editQuantity")}</h3>
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Jelenlegi mennyiség: {effectiveQuantity} {unit}
@@ -457,7 +457,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 type="number"
                 value={newQuantity}
                 onChange={(e) => setNewQuantity(e.target.value)}
-                placeholder="Új mennyiség"
+                placeholder={t("taskcard.newQuantity")}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
                 step="0.01"
                 min="0"
@@ -473,7 +473,7 @@ const TaskCard: React.FC<TaskCardProps> = ({
                 onClick={handleQuantitySubmit}
                 className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-md transition-colors"
               >
-                Módosítás
+                {t("taskcard.modify")}
               </button>
               <button
                 onClick={() => {

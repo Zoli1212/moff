@@ -59,7 +59,7 @@ export default function ProcurementEmailSender({
       toast.success("Sablon sikeresen mentve!");
     },
     onError: () => {
-      toast.error("Hiba történt a sablon mentésekor");
+      toast.error(t("proc.templateSaveError"));
     },
   });
 
@@ -79,7 +79,7 @@ export default function ProcurementEmailSender({
     } else {
       // Generate default template
       const deliveryAddressText = `${addressData.zip} ${addressData.city}, ${addressData.address}${addressData.country ? `, ${addressData.country}` : ''}`;
-      const defaultTemplate = `${requestType === "quote" ? "Ajánlatkérés" : "Megrendelés"} anyagbeszerzéshez
+      const defaultTemplate = `${requestType === "quote" ? t("proc.quoteRequest") : t("proc.order")} anyagbeszerzéshez
 
 Szállítási cím: ${deliveryAddressText}
 
@@ -102,19 +102,19 @@ Köszönjük!`;
 
     // 1. Request details sheet
     const requestDetails = [
-      ["T. címzett!"],
+      [t("proc.dear")],
       [""],
       [`Kérek ajánlatot a következő tételekre:`],
       [""],
-      ["Kérelmező adatai:"],
-      ["Név:", user?.fullName || ""],
-      ...(addressData.companyName ? [["Cégnév:", addressData.companyName]] : []),
-      ["Irányítószám:", addressData.zip],
-      ["Város:", addressData.city],
-      ["Utca, házszám:", addressData.address],
-      ["Ország:", addressData.country],
+      [t("proc.requesterData")],
+      [t("proc.name"), user?.fullName || ""],
+      ...(addressData.companyName ? [[t("proc.companyName"), addressData.companyName]] : []),
+      [t("proc.zip"), addressData.zip],
+      [t("proc.city"), addressData.city],
+      [t("proc.street"), addressData.address],
+      [t("proc.country"), addressData.country],
       [""],
-      ["Dátum:", currentDate],
+      [t("proc.date"), currentDate],
     ];
 
     const wsRequest = XLSX.utils.aoa_to_sheet(requestDetails);
@@ -124,7 +124,7 @@ Köszönjük!`;
 
     // 2. Materials sheet with empty columns for supplier to fill
     const materialsData = [
-      ["Anyag megnevezése", t("od.quantity"), t("od.unit"), t("offers.unitPrice"), "Összesen"],
+      [t("proc.materialName"), t("od.quantity"), t("od.unit"), t("offers.unitPrice"), t("proc.sum")],
       ...materials.map(item => [
         item.name,
         item.quantity,
@@ -133,7 +133,7 @@ Köszönjük!`;
         ""  // Empty for supplier to fill
       ]),
       ["", "", "", "", ""], // Empty row
-      ["", "", "", "Teljes anyagköltség:", ""] // Total row with empty value
+      ["", "", "", t("proc.materialTotal"), ""] // Total row with empty value
     ];
 
     const wsMaterials = XLSX.utils.aoa_to_sheet(materialsData);
@@ -169,7 +169,7 @@ Köszönjük!`;
         },
         body: JSON.stringify({
           email: recipientEmail,
-          subject: requestType === "quote" ? "Ajánlatkérés anyagbeszerzéshez" : "Megrendelés anyagbeszerzéshez",
+          subject: requestType === "quote" ? t("proc.quoteRequestFull") : t("proc.orderFull"),
           text: emailTemplate,
           attachments: [{
             filename: `anyagbeszerzes-${Date.now()}.xlsx`,
@@ -201,7 +201,7 @@ Köszönjük!`;
     e.preventDefault();
 
     if (!recipientEmail || !currentUserEmail) {
-      toast.error("Kérjük, töltsd ki mindkét email címet!");
+      toast.error(t("proc.needBothEmails"));
       return;
     }
 
@@ -222,7 +222,7 @@ Köszönjük!`;
           color: "#333",
         }}
       >
-        Email címek
+        {t("proc.emails")}
       </h3>
 
       <form onSubmit={handleSendToBoth}>
@@ -237,7 +237,7 @@ Köszönjük!`;
               color: "#666",
             }}
           >
-            Bolt email címe
+            {t("proc.shopEmail")}
           </label>
           <input
             id="recipientEmail"
@@ -269,7 +269,7 @@ Köszönjük!`;
               color: "#666",
             }}
           >
-            Saját email címed
+            {t("proc.ownEmail")}
           </label>
           <input
             id="currentUserEmail"
@@ -302,7 +302,7 @@ Köszönjük!`;
                 color: "#666",
               }}
             >
-              Email szövege
+              {t("proc.emailBody")}
             </label>
             <button
               type="button"
@@ -319,7 +319,7 @@ Köszönjük!`;
                 transition: "all 0.2s",
               }}
             >
-              Sablon mentése
+              {t("proc.saveTemplate")}
             </button>
           </div>
           <textarea

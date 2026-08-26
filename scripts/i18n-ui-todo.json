@@ -1,5 +1,5 @@
 {
- "app/(routes)/proposal-preview/ProposalPreview.tsx": [
+ "ProposalPreview.tsx": [
   "A kivitelező csapat",
   "Ajánlatlevél",
   "Bruttó összeg:",
@@ -31,7 +31,7 @@
   "Ütemezés részletei",
   "Ütemezés:"
  ],
- "app/(dashboard)/billings/drafts/[billingId]/page.tsx": [
+ "page.tsx": [
   "A pénzügyi teljesítés jelölése sikertelen.",
   "A számla véglegesítése sikertelen.",
   "API Beállítások",
@@ -71,7 +71,7 @@
   "Véglegesítés...",
   "Írd be az API kulcsod"
  ],
- "app/(works)/tasks/_components/TaskCard.tsx": [
+ "TaskCard.tsx": [
   "Frissítés folyamatban ...",
   "Hiba történt az árfrissítés során",
   "Jelenlegi ár:",
@@ -90,12 +90,9 @@
   "Talált ár:",
   "Teljesített",
   "Árinfó OK",
-  "Új mennyiség",
-  "ℹ️ Piaci ár információ",
-  "💰 Jobb ajánlat elérhető",
-  "🔗 Megtekintés webshopban"
+  "Új mennyiség"
  ],
- "app/(works)/others/_components/WorkforceEditModal.tsx": [
+ "WorkforceEditModal.tsx": [
   "Aktív munkás",
   "Cím, további telefonszám, stb.",
   "Felvétel dátuma",
@@ -110,10 +107,9 @@
   "Teljes név",
   "További elérhetőség",
   "További információk, megjegyzések...",
-  "Távozás dátuma",
-  "×"
+  "Távozás dátuma"
  ],
- "app/(works)/supply/[id]/procurement/_components/ProcurementEmailSender.tsx": [
+ "ProcurementEmailSender.tsx": [
   "Ajánlatkérés",
   "Ajánlatkérés anyagbeszerzéshez",
   "Anyag megnevezése",

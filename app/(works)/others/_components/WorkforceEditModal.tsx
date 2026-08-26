@@ -93,14 +93,14 @@ export default function WorkforceEditModal({
       const result = await updateWorkforceRegistry(worker.id!, dataToSubmit);
 
       if (result.success && result.data) {
-        toast.success("Munkás sikeresen frissítve");
+        toast.success(t("wf.updated"));
         onWorkerUpdated(result.data);
       } else {
-        toast.error(result.error || "Hiba történt a munkás frissítése során");
+        toast.error(result.error || t("wf.updateError"));
       }
     } catch (error) {
       console.log((error as Error).message);
-      toast.error("Hiba történt a munkás frissítése során");
+      toast.error(t("wf.updateError"));
     } finally {
       setIsLoading(false);
     }
@@ -132,13 +132,13 @@ export default function WorkforceEditModal({
 
       if (data.url) {
         setFormData((prev) => ({ ...prev, avatarUrl: data.url }));
-        toast.success("Kép sikeresen feltöltve");
+        toast.success(t("wf.imageUploaded"));
       } else {
-        throw new Error(data.error || "Hiba történt a feltöltésnél.");
+        throw new Error(data.error || t("work.uploadError"));
       }
     } catch (err) {
       setImageError("Hiba a feltöltés során: " + (err as Error).message);
-      toast.error("Hiba a kép feltöltése során");
+      toast.error(t("wf.imageError"));
     } finally {
       setImageUploading(false);
       e.target.value = "";
@@ -149,7 +149,7 @@ export default function WorkforceEditModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="!w-[calc(100vw-1rem)] !max-w-[calc(100vw-1rem)] sm:!max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl !p-3 sm:!p-6 !gap-3">
         <DialogHeader className="pr-8">
-          <DialogTitle className="text-base sm:text-lg">Munkás szerkesztése</DialogTitle>
+          <DialogTitle className="text-base sm:text-lg">{t("wf.editWorker")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-6 overflow-x-hidden">
@@ -160,14 +160,14 @@ export default function WorkforceEditModal({
                 <div className="relative group">
                   <img
                     src={formData.avatarUrl}
-                    alt="Profilkép"
+                    alt={t("worker.avatar")}
                     className="w-32 h-32 rounded-full object-cover border-4 border-gray-200"
                   />
                   <button
                     type="button"
                     onClick={() => setFormData((prev) => ({ ...prev, avatarUrl: "" }))}
                     className="absolute -top-2 -right-2 bg-white border border-red-500 text-red-500 rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-50 transition"
-                    title="Kép törlése"
+                    title={t("diary.deleteImage")}
                   >
                     ×
                   </button>
@@ -185,7 +185,7 @@ export default function WorkforceEditModal({
               ) : (
                 <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:bg-gray-50 transition">
                   <span className="text-xs text-gray-500 text-center px-2">
-                    {imageUploading ? "Feltöltés..." : "Kép hozzáadása"}
+                    {imageUploading ? t("diary.uploading") : t("diary.addImage")}
                   </span>
                   <Input
                     type="file"
@@ -205,12 +205,12 @@ export default function WorkforceEditModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name - Required */}
             <div>
-              <Label htmlFor="name">Név *</Label>
+              <Label htmlFor="name">{t("wf.nameRequired")}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Teljes név"
+                placeholder={t("wf.fullName")}
                 required
                 className="mt-1"
               />
@@ -218,7 +218,7 @@ export default function WorkforceEditModal({
 
             {/* Role - Required */}
             <div>
-              <Label htmlFor="role">Szerepkör *</Label>
+              <Label htmlFor="role">{t("wf.roleRequired")}</Label>
               <Input
                 id="role"
                 value={formData.role}
@@ -256,7 +256,7 @@ export default function WorkforceEditModal({
 
             {/* Hired Date */}
             <div>
-              <Label htmlFor="hiredDate">Felvétel dátuma</Label>
+              <Label htmlFor="hiredDate">{t("wf.hiredDate")}</Label>
               <Input
                 id="hiredDate"
                 type="date"
@@ -268,7 +268,7 @@ export default function WorkforceEditModal({
 
             {/* Left Date */}
             <div>
-              <Label htmlFor="leftDate">Távozás dátuma</Label>
+              <Label htmlFor="leftDate">{t("wf.leftDate")}</Label>
               <Input
                 id="leftDate"
                 type="date"
@@ -292,12 +292,12 @@ export default function WorkforceEditModal({
 
           {/* Contact Info */}
           <div>
-            <Label htmlFor="contactInfo">További elérhetőség</Label>
+            <Label htmlFor="contactInfo">{t("wf.moreContact")}</Label>
             <Input
               id="contactInfo"
               value={formData.contactInfo}
               onChange={(e) => handleInputChange("contactInfo", e.target.value)}
-              placeholder="Cím, további telefonszám, stb."
+              placeholder={t("wf.moreContactHint")}
               className="mt-1"
             />
           </div>
@@ -309,7 +309,7 @@ export default function WorkforceEditModal({
               id="notes"
               value={formData.notes}
               onChange={(e) => handleInputChange("notes", e.target.value)}
-              placeholder="További információk, megjegyzések..."
+              placeholder={t("wf.notesHint")}
               rows={3}
               className="mt-1"
             />
@@ -325,7 +325,7 @@ export default function WorkforceEditModal({
               }
             />
             <Label htmlFor="isActive" className="text-sm font-medium">
-              Aktív munkás
+              {t("wf.activeWorker")}
             </Label>
           </div>
 

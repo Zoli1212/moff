@@ -1,7 +1,10 @@
 import { Cost, Phase, Proposal } from "@/types/proposal";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import React from "react";
 
 const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
+  const { t } = useLocale();
+
   return (
     <div className="max-w-auto mx-auto bg-white text-black">
       {/* Fejléc, címzett */}
@@ -10,38 +13,38 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
           {new Date().toLocaleDateString("hu-HU")}
         </div>
         <h2 className="text-2xl font-extrabold text-black text-center mb-2">
-          Ajánlatlevél
+          {t("proposal.title")}
         </h2>
         <div className="mb-1">
-          <b>Címzett:</b> {proposal.customer_name ?? "-"}
+          <b>{t("proposal.recipient")}</b> {proposal.customer_name ?? "-"}
         </div>
         <div className="mb-1">
           <b>Email:</b> {proposal.customer_email ?? "-"}
         </div>
         <div className="mb-1">
-          <b>Projekt helyszín:</b> {proposal.location ?? "-"}
+          <b>{t("proposal.projectLocation")}</b> {proposal.location ?? "-"}
         </div>
         <div className="mb-1">
-          <b>Projekt típusa:</b> {proposal.project_type ?? "-"}
+          <b>{t("proposal.projectType")}</b> {proposal.project_type ?? "-"}
         </div>
       </div>
 
       {/* Tárgy */}
       <div className="mb-8 border-b pb-4">
-        <b>Tárgy:</b>{" "}
+        <b>{t("proposal.subject")}</b>{" "}
         {proposal.property_type
           ? `${proposal.property_type} felújítási ajánlat`
-          : "Felújítási ajánlat"}
+          : t("proposal.renovationOffer")}
       </div>
 
       {/* Bevezető szöveg */}
       <div className="mb-8">
-        <p>Tisztelt {proposal.customer_name ?? "Ügyfél"}!</p>
+        <p>Tisztelt {proposal.customer_name ?? t("proposal.customer")}!</p>
         <p className="mt-4">
           Ezúton küldjük Önnek{" "}
           {proposal.location
             ? `ingatlan felújítására vonatkozó ajánlatunkat az alábbi részletekkel:`
-            : "ingatlan felújítására vonatkozó ajánlatunkat az alábbi részletekkel:"}
+            : t("proposal.intro")}
         </p>
       </div>
 
@@ -49,46 +52,46 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
       <div className="mb-8 border-b pb-4">
         <b className="block mb-2">Projekt alapadatai</b>
         <div>
-          <b>Projekt típusa:</b> {proposal.project_type ?? "-"}
+          <b>{t("proposal.projectType")}</b> {proposal.project_type ?? "-"}
         </div>
         <div>
-          <b>Ingatlan típusa:</b> {proposal.property_type ?? "-"}
+          <b>{t("proposal.propertyType")}</b> {proposal.property_type ?? "-"}
         </div>
         <div>
-          <b>Terület:</b> {proposal.area_sqm ? `${proposal.area_sqm} m²` : "-"}
+          <b>{t("proposal.area")}</b> {proposal.area_sqm ? `${proposal.area_sqm} m²` : "-"}
         </div>
         <div>
-          <b>Felújítás terjedelme:</b> {proposal.scope ?? "-"}
+          <b>{t("proposal.scope")}</b> {proposal.scope ?? "-"}
         </div>
         <div>
-          <b>Végső határidő:</b> {proposal.final_deadline ?? "-"}
+          <b>{t("proposal.deadline")}</b> {proposal.final_deadline ?? "-"}
         </div>
         <div>
-          <b>Ütemezés:</b> {proposal.timeline ?? "-"}
+          <b>{t("proposal.schedule")}</b> {proposal.timeline ?? "-"}
         </div>
         <div>
-          <b>Költségbecslés:</b> {proposal.budget_estimate ?? "-"}
+          <b>{t("proposal.costEstimate")}</b> {proposal.budget_estimate ?? "-"}
         </div>
         <div>
-          <b>ÁFA összege:</b> {proposal.vat_amount ?? "-"}
+          <b>{t("proposal.vat")}</b> {proposal.vat_amount ?? "-"}
         </div>
         <div>
-          <b>Nettó összeg:</b> {proposal.total_net_amount ?? "-"}
+          <b>{t("proposal.net")}</b> {proposal.total_net_amount ?? "-"}
         </div>
         <div>
-          <b>Bruttó összeg:</b> {proposal.total_gross_amount ?? "-"}
+          <b>{t("proposal.gross")}</b> {proposal.total_gross_amount ?? "-"}
         </div>
         <div>
-          <b>Összefoglaló:</b> {proposal.summary_comment ?? "-"}
+          <b>{t("proposal.summary")}</b> {proposal.summary_comment ?? "-"}
         </div>
       </div>
 
       {/* Elvárások, követelmények */}
       <div className="mb-8 border-b pb-4">
-        <b className="block mb-2">Elvárások és követelmények</b>
+        <b className="block mb-2">{t("proposal.expectations")}</b>
         {proposal.must_haves && proposal.must_haves.length > 0 && (
           <div className="mb-2">
-            <b>Kötelezők:</b>
+            <b>{t("proposal.mandatory")}</b>
             <ul className="list-disc ml-5">
               {proposal.must_haves.map((item: string, i: number) => (
                 <li key={i}>{item}</li>
@@ -98,7 +101,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
         )}
         {proposal.nice_to_haves && proposal.nice_to_haves.length > 0 && (
           <div className="mb-2">
-            <b>Kívánatosak:</b>
+            <b>{t("proposal.desirable")}</b>
             <ul className="list-disc ml-5">
               {proposal.nice_to_haves.map((item: string, i: number) => (
                 <li key={i}>{item}</li>
@@ -108,7 +111,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
         )}
         {proposal.requirements && proposal.requirements.length > 0 && (
           <div className="mb-2">
-            <b>Követelmények:</b>
+            <b>{t("proposal.requirements")}</b>
             <ul className="list-disc ml-5">
               {proposal.requirements.map((item: string, i: number) => (
                 <li key={i}>{item}</li>
@@ -118,7 +121,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
         )}
         {proposal.rooms_affected && (
           <div className="mb-2">
-            <b>Érintett helyiségek:</b>
+            <b>{t("proposal.rooms")}</b>
             <ul className="list-disc ml-5">
               {Array.isArray(proposal.rooms_affected) ? (
                 proposal.rooms_affected.map((item: string, i: number) => (
@@ -132,7 +135,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
         )}
         {proposal.client_priorities && (
           <div className="mb-2">
-            <b>Ügyfél prioritások:</b>
+            <b>{t("proposal.priorities")}</b>
             <ul className="list-disc ml-5">
               {Array.isArray(proposal.client_priorities) ? (
                 proposal.client_priorities.map((item: string, i: number) => (
@@ -146,7 +149,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
         )}
         {proposal.constraints && proposal.constraints.length > 0 && (
           <div className="mb-2">
-            <b>Korlátozások:</b>
+            <b>{t("proposal.constraints")}</b>
             <ul className="list-disc ml-5">
               {proposal.constraints.map((item: string, i: number) => (
                 <li key={i}>{item}</li>
@@ -158,7 +161,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
 
       {/* Főbb munkafázisok, költségek, feladatok */}
       <div className="mb-8 border-b pb-4">
-        <b className="block mb-2">Főbb munkafázisok és költségek</b>
+        <b className="block mb-2">{t("proposal.phases")}</b>
         {Array.isArray(proposal.main_work_phases_and_tasks) &&
         Array.isArray(proposal.estimated_costs_per_phase_and_total) ? (
           <ul className="list-disc list-inside text-black text-sm">
@@ -184,7 +187,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
               (item: Cost) => item.phase === "Total"
             ) && (
               <li key="total" className="font-bold">
-                <b>Összesen:</b>{" "}
+                <b>{t("od.total")}</b>{" "}
                 {
                   proposal.estimated_costs_per_phase_and_total?.find(
                     (item: Cost) => item.phase === "Total"
@@ -202,7 +205,7 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
       {proposal.timeline_and_scheduling_details &&
         proposal.timeline_and_scheduling_details.length > 0 && (
           <div className="mb-8 border-b pb-4">
-            <b className="block mb-2">Ütemezés részletei</b>
+            <b className="block mb-2">{t("proposal.scheduleDetails")}</b>
             <ul className="list-disc ml-5">
             {Array.isArray(proposal.timeline_and_scheduling_details) ? (
               proposal.timeline_and_scheduling_details.map((item: string, i: number) => (
@@ -217,11 +220,11 @@ const ProposalPreview = ({ proposal }: { proposal: Proposal }) => {
 
       {/* Záró formula, aláírás */}
       <div className="mt-8">
-        <p>Kérdés esetén készséggel állunk rendelkezésére.</p>
+        <p>{t("proposal.closing")}</p>
         <p className="mt-4">
-          Üdvözlettel,
+          {t("proposal.regards")}
           <br />
-          <b>A kivitelező csapat</b>
+          <b>{t("proposal.team")}</b>
         </p>
       </div>
     </div>
