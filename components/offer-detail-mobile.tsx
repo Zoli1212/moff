@@ -90,7 +90,7 @@ function extractQuestions(
     return [];
   }
 
-  // Check if there's already a "Válaszok a kérdésekre:" section
+  // Check if there's already a t("od.answers") section
   // If yes, extract answered questions and filter them out
   const answeredQuestions = new Set<string>();
   const answersMatch = description.match(
@@ -121,7 +121,7 @@ function extractQuestions(
     const trimmed = line.trim();
     if (!trimmed) continue;
 
-    // Skip lines that are in the "Válaszok a kérdésekre:" section
+    // Skip lines that are in the t("od.answers") section
     if (answersMatch && answersMatch[0].includes(line)) continue;
 
     if (trimmed.endsWith("?")) {
@@ -407,15 +407,15 @@ export function OfferDetailView({
       );
 
       if (result.success) {
-        toast.success("Az új tétel sikeresen hozzáadva");
+        toast.success(t("od.itemAdded"));
         setEditableItems(updatedItems);
         setOriginalItems(updatedItems.map((item) => ({ ...item })));
       } else {
-        toast.error(result.error || "Hiba történt a mentés során");
+        toast.error(result.error || t("od.errSave"));
       }
     } catch (error) {
       console.error("Error saving new item:", error);
-      toast.error("Hiba történt a mentés során");
+      toast.error(t("od.errSave"));
     } finally {
       setIsSaving(false);
     }
@@ -441,7 +441,7 @@ export function OfferDetailView({
 
     // Ha az ajánlat munkában van, ne engedjük törölni
     if (offer.status === "work") {
-      toast.error("Munkába állított ajánlatból nem lehet tételt törölni!");
+      toast.error(t("od.cannotDeleteInWork"));
       setShowDeleteConfirm(false);
       setItemToDelete(null);
       return;
@@ -458,17 +458,17 @@ export function OfferDetailView({
       );
 
       if (result.success) {
-        toast.success("A tétel sikeresen törölve");
+        toast.success(t("od.itemDeleted"));
         setEditableItems(newItems);
         setOriginalItems(newItems.map((item) => ({ ...item })));
       } else {
-        toast.error(result.error || "Hiba történt a törlés során");
+        toast.error(result.error || t("od.errDelete"));
         // Restore original state on error
         setEditableItems([...editableItems]);
       }
     } catch (error) {
       console.error("Error deleting item:", error);
-      toast.error("Hiba történt a törlés során");
+      toast.error(t("od.errDelete"));
       // Restore original state on error
       setEditableItems([...editableItems]);
     } finally {
@@ -512,7 +512,7 @@ export function OfferDetailView({
     const { index, item } = editingItem;
 
     if (!item.name || !item.quantity || !item.unit) {
-      toast.error("Kérem töltse ki az összes kötelező mezőt");
+      toast.error(t("od.fillRequired"));
       return;
     }
 
@@ -532,7 +532,7 @@ export function OfferDetailView({
 
         // Ha a checkbox be van jelölve, mentjük a vállalkozói szintű árakat is
         if (saveTenantPriceChecked) {
-          console.log("Vállalkozói szintű ár mentése...", {
+          console.log(t("od.savingContractor"), {
             name: item.name,
             unit: item.unit,
             unitPrice: item.unitPrice,
@@ -560,13 +560,13 @@ export function OfferDetailView({
             );
             // Nem jelezzük hibát, mert az offer már mentve van
           } else {
-            console.log("Vállalkozói szintű ár sikeresen mentve");
+            console.log(t("od.contractorSaved"));
           }
         }
 
         // Ha a checkbox be van jelölve, mentjük a globális árakat is
         if (saveGlobalPriceChecked) {
-          console.log("Globális ár mentése...", {
+          console.log(t("od.savingGlobal"), {
             name: item.name,
             unit: item.unit,
             unitPrice: item.unitPrice,
@@ -592,20 +592,20 @@ export function OfferDetailView({
             );
             // Nem jelezzük hibát, mert az offer már mentve van
           } else {
-            console.log("Globális ár sikeresen mentve");
+            console.log(t("od.globalSaved"));
           }
         }
 
-        toast.success("A tétel sikeresen mentve");
+        toast.success(t("od.itemSaved"));
         setEditableItems(newItems);
         setOriginalItems(newItems.map((item) => ({ ...item })));
         setIsModalOpen(false);
       } else {
-        toast.error(result.error || "Hiba történt a mentés során");
+        toast.error(result.error || t("od.errSave"));
       }
     } catch (error) {
       console.error("Error saving item:", error);
-      toast.error("Hiba történt a mentés során");
+      toast.error(t("od.errSave"));
     } finally {
       setIsSaving(false);
     }
@@ -655,20 +655,20 @@ export function OfferDetailView({
           setEditableItems(updatedItems);
           setOriginalItems(updatedItems.map((item) => ({ ...item })));
           toast.success(
-            "Az egyedi tétel sikeresen mentve a globális árlistához!",
+            t("od.customSavedGlobal"),
           );
         } else {
-          toast.error("A tétel mentve, de az ajánlat frissítése sikertelen");
+          toast.error(t("od.itemSavedOfferFailed"));
         }
 
         setShowCustomItemModal(false);
         setSelectedCustomItem(null);
       } else {
-        toast.error(result.message || "Hiba történt a mentés során");
+        toast.error(result.message || t("od.errSave"));
       }
     } catch (error) {
       console.error("Error saving custom item to global price list:", error);
-      toast.error("Hiba történt a mentés során");
+      toast.error(t("od.errSave"));
     } finally {
       setIsSavingGlobalPrice(false);
     }
@@ -711,7 +711,7 @@ export function OfferDetailView({
 
     const selectedDate = new Date(value);
     if (isNaN(selectedDate.getTime())) {
-      toast.error("Kérem adjon meg egy érvényes dátumot");
+      toast.error(t("od.needValidDate"));
       return;
     }
 
@@ -720,17 +720,17 @@ export function OfferDetailView({
       const result = await updateOfferValidUntil(offer.id, selectedDate);
 
       if (result.success) {
-        toast.success("Az érvényességi dátum sikeresen frissítve");
+        toast.success(t("od.validUntilUpdated"));
         // Update the offer object in the parent component
         if (onOfferUpdated && result.offer) {
           onOfferUpdated({ validUntil: result.offer.validUntil });
         }
       } else {
-        toast.error(result.error || "Hiba történt a dátum frissítésekor");
+        toast.error(result.error || t("od.errDate"));
       }
     } catch (error) {
       console.error("Error updating validUntil:", error);
-      toast.error("Hiba történt a dátum frissítésekor");
+      toast.error(t("od.errDate"));
     } finally {
       setIsUpdatingValidUntil(false);
     }
@@ -744,7 +744,7 @@ export function OfferDetailView({
 
   const handleTitleSave = async () => {
     if (!titleValue.trim()) {
-      toast.error("Kérem adjon meg egy címet");
+      toast.error(t("od.needTitle"));
       return;
     }
 
@@ -754,17 +754,17 @@ export function OfferDetailView({
       const result = await updateOfferTitle(offer.id, titleValue);
 
       if (result.success) {
-        toast.success("A cím sikeresen frissítve");
+        toast.success(t("od.titleUpdated"));
         setIsEditingTitle(false);
         if (onOfferUpdated && result.offer) {
           onOfferUpdated({ title: result.offer.title });
         }
       } else {
-        toast.error(result.error || "Hiba történt a cím frissítésekor");
+        toast.error(result.error || t("od.errTitle"));
       }
     } catch (error) {
       console.error("Error updating title:", error);
-      toast.error("Hiba történt a cím frissítésekor");
+      toast.error(t("od.errTitle"));
     } finally {
       setIsUpdatingTitle(false);
     }
@@ -781,7 +781,7 @@ export function OfferDetailView({
       const result = await deleteOffer(offer.id);
 
       if (result.success) {
-        toast.success("Ajánlat sikeresen törölve");
+        toast.success(t("od.offerDeleted"));
 
         // Notify parent component about deletion
         if (onOfferDeleted) {
@@ -793,11 +793,11 @@ export function OfferDetailView({
           onBack();
         }
       } else {
-        toast.error(result.error || "Hiba történt a törlés során");
+        toast.error(result.error || t("od.errDelete"));
       }
     } catch (error) {
       console.error("❌ [OFFER-DETAIL] Error deleting offer:", error);
-      toast.error("Hiba történt a törlés során");
+      toast.error(t("od.errDelete"));
     } finally {
       setIsOfferDeleting(false);
       setShowOfferDeleteModal(false);
@@ -811,7 +811,7 @@ export function OfferDetailView({
   // Handle items refinement with AI
   const handleRefineItems = async () => {
     if (!refineInput.trim()) {
-      toast.error("Kérlek add meg a pontosítást!");
+      toast.error(t("od.needRefinement"));
       return;
     }
 
@@ -841,12 +841,12 @@ export function OfferDetailView({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Hiba történt a pontosítás során");
+        throw new Error(data.error || t("od.errRefine"));
       }
 
       if (data.success) {
         console.log("✅ Offer items refined successfully");
-        toast.success("Tételek sikeresen pontosítva!");
+        toast.success(t("od.itemsRefined"));
         setIsRefineModalOpen(false);
         setRefineInput("");
 
@@ -856,7 +856,7 @@ export function OfferDetailView({
     } catch (error) {
       console.error("❌ Error refining items:", error);
       toast.error(
-        (error as Error).message || "Hiba történt a pontosítás során",
+        (error as Error).message || t("od.errRefine"),
       );
     } finally {
       setIsRefining(false);
@@ -866,7 +866,7 @@ export function OfferDetailView({
   // Handle supplement info with AI
   const handleSupplementInfo = async () => {
     if (!supplementInput.trim()) {
-      toast.error("Kérlek add meg a kiegészítő információt!");
+      toast.error(t("od.needExtraInfo"));
       return;
     }
 
@@ -889,12 +889,12 @@ export function OfferDetailView({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Hiba történt a kiegészítés során");
+        throw new Error(data.error || t("od.errSupplement"));
       }
 
       if (data.success) {
         console.log("✅ Offer supplemented successfully");
-        toast.success("Ajánlat sikeresen kiegészítve!");
+        toast.success(t("od.offerSupplemented"));
         setIsSupplementModalOpen(false);
         setSupplementInput("");
 
@@ -904,7 +904,7 @@ export function OfferDetailView({
     } catch (error) {
       console.error("❌ Error supplementing offer:", error);
       toast.error(
-        (error as Error).message || "Hiba történt a kiegészítés során",
+        (error as Error).message || t("od.errSupplement"),
       );
     } finally {
       setIsSupplementing(false);
@@ -993,7 +993,7 @@ export function OfferDetailView({
     try {
       const date = new Date(dateString);
       return isNaN(date.getTime())
-        ? "Érvénytelen dátum"
+        ? t("od.invalidDate")
         : format(date, "PPP", { locale: hu });
     } catch (e) {
       return `Érvénytelen dátum: ${(e as Error).message}`;
@@ -1035,7 +1035,7 @@ export function OfferDetailView({
         );
 
         if (!result.success) {
-          toast.error(result.message || "Hiba történt a hozzárendelés során");
+          toast.error(result.message || t("od.errAssign"));
           setIsUpdatingStatus(false);
           return;
         }
@@ -1067,7 +1067,7 @@ export function OfferDetailView({
             await mergeWorkWithAIResult(selectedWorkId, aiResult);
 
             toast.dismiss("ai-merge");
-            toast.success("Az ajánlat sikeresen hozzárendelve és feldolgozva!");
+            toast.success(t("od.assigned"));
             setIsStatusDialogOpen(false);
             setAssignToExisting(false);
             setSelectedWorkId(null);
@@ -1147,7 +1147,7 @@ export function OfferDetailView({
           "❌ [MUNKÁBA ÁLLÍTÁS] updateOfferStatus sikertelen:",
           result,
         );
-        toast.error(result.message || "Hiba történt az állapot frissítésekor");
+        toast.error(result.message || t("od.errStatus"));
       }
     } catch (error) {
       console.error(
@@ -1161,7 +1161,7 @@ export function OfferDetailView({
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Hiba történt az állapot frissítésekor";
+          : t("od.errStatus");
       toast.error(errorMessage);
     } finally {
       console.log(
@@ -1174,12 +1174,12 @@ export function OfferDetailView({
   // Get status display text
   function getStatusDisplay(status: string) {
     const statusMap: Record<string, string> = {
-      draft: "Ajánlattevés",
+      draft: t("od.quoting"),
       work: "Munka",
-      sent: "Elküldve",
+      sent: t("od.sent"),
       accepted: "Elfogadva",
-      rejected: "Elutasítva",
-      expired: "Lejárt",
+      rejected: t("od.rejected"),
+      expired: t("od.expired"),
     };
 
     return statusMap[status] || status;
@@ -1201,16 +1201,16 @@ export function OfferDetailView({
         >
           <DialogContent className="w-[calc(100%-48px)] sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-xl flex flex-col">
             <DialogHeader>
-              <DialogTitle>Kiegészítő információ</DialogTitle>
+              <DialogTitle>{t("od.extraInfo")}</DialogTitle>
               <DialogDescription>
-                Írd le a további követelményeket vagy módosításokat.
+                {t("od.extraInfoHint")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="supplement-input-req">
-                  Kiegészítő információ
+                  {t("od.extraInfo")}
                 </Label>
                 <textarea
                   id="supplement-input-req"
@@ -1230,8 +1230,8 @@ export function OfferDetailView({
                 className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
               >
                 {isSupplementing
-                  ? "Ajánlat frissítése..."
-                  : "Ajánlat frissítése"}
+                  ? t("od.updatingOffer")
+                  : t("od.updateOffer")}
               </Button>
               <Button
                 variant="outline"
@@ -1335,18 +1335,18 @@ export function OfferDetailView({
   //     <!DOCTYPE html>
   //     <html>
   //     <head>
-  //       <title>${offer.title || "Ajánlat"}</title>
+  //       <title>${offer.title || t("od.offer")}</title>
   //       <meta charset="utf-8">
   //       <style>${printStyles}</style>
   //     </head>
   //     <body>
   //       <div id="printable-area">
   //         <div class="print-header">
-  //           <div class="print-title">${offer.title || "Ajánlat"}</div>
+  //           <div class="print-title">${offer.title || t("od.offer")}</div>
   //           <div class="print-meta">
-  //             <div><strong>Státusz:</strong> ${getStatusDisplay(offer.status || "draft")}</div>
-  //             <div><strong>Létrehozva:</strong> ${formatDate(offer.createdAt)}</div>
-  //             ${offer.validUntil ? `<div><strong>Érvényes:</strong> ${formatDate(offer.validUntil)}</div>` : ""}
+  //             <div><strong>{t("od.status")}</strong> ${getStatusDisplay(offer.status || "draft")}</div>
+  //             <div><strong>{t("od.createdAt")}</strong> ${formatDate(offer.createdAt)}</div>
+  //             ${offer.validUntil ? `<div><strong>{t("od.validUntil")}</strong> ${formatDate(offer.validUntil)}</div>` : ""}
   //           </div>
   //         </div>
 
@@ -1354,7 +1354,7 @@ export function OfferDetailView({
   //           offer.description
   //             ? `
   //           <div class="print-section">
-  //             <div class="print-section-title">Leírás</div>
+  //             <div class="print-section-title">{t("od.description")}</div>
   //             <div>${offer.description.replace(/\n/g, "<br>")}</div>
   //           </div>
   //         `
@@ -1365,18 +1365,18 @@ export function OfferDetailView({
   //           items.length > 0
   //             ? `
   //           <div class="print-section">
-  //             <div class="print-section-title">Tételek</div>
+  //             <div class="print-section-title">{t("od.items")}</div>
   //             <table class="print-table">
   //               <thead>
   //                 <tr>
   //                   <th style="width: 5%;">#</th>
-  //                   <th style="width: 25%;">Tétel megnevezése</th>
-  //                   <th style="width: 8%;">Mennyiség</th>
-  //                   <th style="width: 8%;">Egység</th>
-  //                   <th style="width: 15%;">Anyag egységár</th>
-  //                   <th style="width: 15%;">Díj egységár</th>
-  //                   <th style="width: 12%;">Anyag összesen</th>
-  //                   <th style="width: 12%;">Díj összesen</th>
+  //                   <th style="width: 25%;">{t("od.itemLabel")}</th>
+  //                   <th style="width: 8%;">{t("od.quantity")}</th>
+  //                   <th style="width: 8%;">{t("od.unit")}</th>
+  //                   <th style="width: 15%;">{t("od.materialUnitPrice")}</th>
+  //                   <th style="width: 15%;">{t("od.feeUnitPrice")}</th>
+  //                   <th style="width: 12%;">{t("od.materialTotal")}</th>
+  //                   <th style="width: 12%;">{t("od.feeTotal")}</th>
   //                 </tr>
   //               </thead>
   //               <tbody>
@@ -1397,15 +1397,15 @@ export function OfferDetailView({
   //                   )
   //                   .join("")}
   //                 <tr>
-  //                   <td colspan="4" class="text-right font-bold">Munkadíj összesen:</td>
+  //                   <td colspan="4" class="text-right font-bold">{t("od.labourCostTotal")}</td>
   //                   <td colspan="4" class="text-right font-bold">${workTotal.toLocaleString("hu-HU")} Ft</td>
   //                 </tr>
   //                 <tr>
-  //                   <td colspan="4" class="text-right font-bold">Anyagköltség összesen:</td>
+  //                   <td colspan="4" class="text-right font-bold">{t("od.materialCostTotal")}</td>
   //                   <td colspan="4" class="text-right font-bold">${materialTotal.toLocaleString("hu-HU")} Ft</td>
   //                 </tr>
   //                 <tr>
-  //                   <td colspan="4" class="text-right font-bold">Összesített nettó költség:</td>
+  //                   <td colspan="4" class="text-right font-bold">{t("od.netTotal")}</td>
   //                   <td colspan="4" class="text-right font-bold">${grandTotal.toLocaleString("hu-HU")} Ft</td>
   //                 </tr>
   //               </tbody>
@@ -1419,7 +1419,7 @@ export function OfferDetailView({
   //           notes.length > 0
   //             ? `
   //           <div class="print-section">
-  //             <div class="print-section-title">Megjegyzések</div>
+  //             <div class="print-section-title">{t("od.notes")}</div>
   //             <ul>
   //               ${notes.map((note) => `<li>• ${note}</li>`).join("")}
   //             </ul>
@@ -1453,12 +1453,12 @@ export function OfferDetailView({
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="sm:max-w-[425px] rounded-2xl flex flex-col max-h-[90vh] mx-auto my-auto w-[calc(100%-3rem)]">
             <DialogHeader>
-              <DialogTitle>Tétel szerkesztése</DialogTitle>
+              <DialogTitle>{t("od.editItem")}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4 overflow-y-auto flex-1">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
-                  Megnevezés
+                  {t("od.name")}
                 </Label>
                 <Input
                   id="name"
@@ -1469,7 +1469,7 @@ export function OfferDetailView({
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="quantity" className="text-right">
-                  Mennyiség
+                  {t("od.quantity")}
                 </Label>
                 <Input
                   id="quantity"
@@ -1483,7 +1483,7 @@ export function OfferDetailView({
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="unit" className="text-right">
-                  Egység
+                  {t("od.unit")}
                 </Label>
                 <select
                   id="unit"
@@ -1491,7 +1491,7 @@ export function OfferDetailView({
                   onChange={(e) => handleModalChange("unit", e.target.value)}
                   className="col-span-3 px-3 py-2 border border-gray-300 rounded-md text-sm"
                 >
-                  <option value="">Válassz egységet</option>
+                  <option value="">{t("od.chooseUnit")}</option>
                   <option value="m²">m²</option>
                   <option value="m³">m³</option>
                   <option value="fm">fm</option>
@@ -1509,7 +1509,7 @@ export function OfferDetailView({
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="materialUnitPrice" className="text-right">
-                  Anyag egységár
+                  {t("od.materialUnitPrice")}
                 </Label>
                 <div className="col-span-3 flex items-center">
                   <Input
@@ -1530,7 +1530,7 @@ export function OfferDetailView({
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="workUnitPrice" className="text-right">
-                  Díj egységár
+                  {t("od.feeUnitPrice")}
                 </Label>
                 <div className="col-span-3 flex items-center">
                   <Input
@@ -1548,13 +1548,13 @@ export function OfferDetailView({
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
-                <Label className="text-right font-medium">Anyag összesen</Label>
+                <Label className="text-right font-medium">{t("od.materialTotal")}</Label>
                 <div className="col-span-3 font-medium">
                   {formatNumberWithSpace(editingItem?.item.materialTotal)} Ft
                 </div>
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label className="text-right font-medium">Díj összesen</Label>
+                <Label className="text-right font-medium">{t("od.feeTotal")}</Label>
                 <div className="col-span-3 font-medium">
                   {formatNumberWithSpace(editingItem?.item.workTotal)} Ft
                 </div>
@@ -1574,7 +1574,7 @@ export function OfferDetailView({
                     htmlFor="saveTenantPrice"
                     className="cursor-pointer text-sm"
                   >
-                    Mentés vállalkozói tételként
+                    {t("od.saveContractorItem")}
                   </Label>
                 </div>
               </div>
@@ -1594,7 +1594,7 @@ export function OfferDetailView({
                       htmlFor="saveGlobalPrice"
                       className="cursor-pointer text-sm"
                     >
-                      Mentés globális tételként
+                      {t("od.saveGlobalItem")}
                     </Label>
                   </div>
                 </div>
@@ -1609,7 +1609,7 @@ export function OfferDetailView({
                   backgroundColor: "#FE9C00",
                 }}
               >
-                {isSaving ? "Mentés..." : "Mentés"}
+                {isSaving ? t("od.saving") : "Mentés"}
               </button>
               <button
                 onClick={cancelEditing}
@@ -1633,13 +1633,13 @@ export function OfferDetailView({
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                Cím szerkesztése
+                {t("od.editTitle")}
               </h3>
 
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Ajánlat címe:
+                    {t("od.offerTitle")}
                   </label>
                   <input
                     type="text"
@@ -1658,7 +1658,7 @@ export function OfferDetailView({
                   disabled={isUpdatingTitle}
                   className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
                 >
-                  {isUpdatingTitle ? "Mentés..." : "Mentés"}
+                  {isUpdatingTitle ? t("od.saving") : "Mentés"}
                 </button>
                 <button
                   onClick={handleTitleCancel}
@@ -1706,13 +1706,13 @@ export function OfferDetailView({
               className="hover:bg-orange-100"
             >
               {offer.status === "draft"
-                ? "Munkába állítás"
-                : "Kivétel munkából"}
+                ? t("od.startWork")
+                : t("od.removeFromWorkShort")}
             </Button>
             <a
               href="http://localhost:3000"
               className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
-              aria-label="Főoldal"
+              aria-label={t("od.home")}
             >
               <Home className="h-7 w-7" />
             </a>
@@ -1722,14 +1722,14 @@ export function OfferDetailView({
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <div className="flex justify-between items-center mb-4">
               <h1 className="text-2xl font-bold text-gray-900 flex-1">
-                {offer.title || "Ajánlat részletei"}
+                {offer.title || t("od.offerDetails")}
               </h1>
               <div className="flex items-center gap-2">
                 {offer.status === "draft" && (
                   <button
                     onClick={handleTitleEdit}
                     className="p-2 rounded-full hover:bg-orange-50 transition-colors text-[#FE9C00] hover:text-[#e68a00]"
-                    title="Cím szerkesztése"
+                    title={t("od.editTitle")}
                   >
                     <Pencil className="h-5 w-5" />
                   </button>
@@ -1738,7 +1738,7 @@ export function OfferDetailView({
                   <button
                     onClick={handleOfferDeleteClick}
                     className="p-2 rounded-full hover:bg-red-50 transition-colors text-red-500 hover:text-red-600"
-                    title="Ajánlat törlése"
+                    title={t("od.deleteOffer")}
                   >
                     <Trash2 className="h-5 w-5" />
                   </button>
@@ -1771,18 +1771,18 @@ export function OfferDetailView({
                     }}
                   >
                     <Printer className="mr-2 h-4 w-4" />
-                    <span>Nyomtatás</span>
+                    <span>{t("od.print")}</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     className="flex items-center cursor-pointer"
                     onSelect={(e: Event) => {
                       e.preventDefault();
                       navigator.clipboard.writeText(window.location.href);
-                      toast.success("Link a vágólapra másolva");
+                      toast.success(t("od.linkCopied"));
                     }}
                   >
                     <Copy className="mr-2 h-4 w-4" />
-                    <span>Link másolása</span>
+                    <span>{t("od.copyLink")}</span>
                   </DropdownMenuItem> */}
                     <DropdownMenuSeparator />
                     <div className="px-2 py-1.5">
@@ -1821,7 +1821,7 @@ export function OfferDetailView({
                 onClick={() => handleStatusUpdate()}
               >
                 <Tag className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Státusz: </span>
+                <span>{t("od.status")} </span>
                 <span
                   className={`ml-1 font-medium ${
                     offer.status === "work"
@@ -1837,7 +1837,7 @@ export function OfferDetailView({
 
               <div className="flex items-center text-gray-600">
                 <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Létrehozva: </span>
+                <span>{t("od.createdAt")} </span>
                 <span className="ml-1 font-medium">
                   {formatDate(offer.createdAt)}
                 </span>
@@ -1845,7 +1845,7 @@ export function OfferDetailView({
 
               <div className="flex items-center text-gray-600">
                 <Clock className="h-4 w-4 mr-2 text-gray-400" />
-                <span>Érvényes: </span>
+                <span>{t("od.validUntil")} </span>
                 <div className="ml-1 flex items-center gap-2 relative">
                   <span className="font-medium">
                     {offer.validUntil
@@ -1868,7 +1868,7 @@ export function OfferDetailView({
                   <button
                     onClick={handleValidUntilEdit}
                     className="text-[#FFB545] hover:text-[#e68a00] transition-colors"
-                    title="Érvényességi dátum szerkesztése"
+                    title={t("od.editValidUntil")}
                     disabled={isUpdatingValidUntil}
                   >
                     <Pencil className="h-4 w-4" />
@@ -1881,7 +1881,7 @@ export function OfferDetailView({
               <div className="flex items-start">
                 <div className="ml-3">
                   <p className="text-sm text-orange-700">
-                    <span className="font-medium">Összesen: </span>
+                    <span className="font-medium">{t("od.total")} </span>
                     <span className="font-medium">
                       {formatPrice(calculateTotals().total)}
                     </span>
@@ -1897,7 +1897,7 @@ export function OfferDetailView({
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center">
                   <FileText className="h-5 w-5 mr-2 text-gray-500" />
-                  Összefoglalás
+                  {t("od.summary")}
                 </h2>
               </div>
               <div className="p-6">
@@ -1918,7 +1918,7 @@ export function OfferDetailView({
                 >
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <List className="h-5 w-5 mr-2 text-gray-500" />
-                    Követelmény
+                    {t("od.requirement")}
                     <span className="ml-2 bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
                       {offer?.requirement?.updateCount || "1"}
                     </span>
@@ -1934,7 +1934,7 @@ export function OfferDetailView({
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900 flex items-center">
                   <FileText className="h-5 w-5 mr-2 text-gray-500" />
-                  További információk
+                  {t("od.moreInfo")}
                 </h2>
               </div>
               <div className="p-6">
@@ -1946,7 +1946,7 @@ export function OfferDetailView({
                       // Üres sorokat kihagyunk
                       if (!trimmed) return false;
 
-                      // Ha questionCount >= 1 VAGY updateCount >= 3, akkor MINDEN kérdést ÉS a "Tisztázandó kérdések:" feliratot is kihagyunk
+                      // Ha questionCount >= 1 VAGY updateCount >= 3, akkor MINDEN kérdést ÉS a t("od.openQuestionsColon") feliratot is kihagyunk
                       if (
                         (offer.requirement?.questionCount !== undefined &&
                           offer.requirement.questionCount >= 1) ||
@@ -1957,7 +1957,7 @@ export function OfferDetailView({
                         if (trimmed.endsWith("?")) {
                           return false;
                         }
-                        // "Tisztázandó kérdések:" felirat kiszűrése
+                        // t("od.openQuestionsColon") felirat kiszűrése
                         if (trimmed.includes("Tisztázandó kérdések")) {
                           return false;
                         }
@@ -1974,7 +1974,7 @@ export function OfferDetailView({
                       line.trim().endsWith("?"),
                     );
 
-                    // Ha nincs kérdés, akkor a "Tisztázandó kérdések:" feliratot is kiszűrjük
+                    // Ha nincs kérdés, akkor a t("od.openQuestionsColon") feliratot is kiszűrjük
                     const finalLines = hasQuestions
                       ? filteredLines
                       : filteredLines.filter(
@@ -2077,7 +2077,7 @@ export function OfferDetailView({
             setItemToDelete(null);
           }}
           onConfirm={handleRemoveItem}
-          title="Tétel törlése"
+          title={t("od.deleteItem")}
           description={
             offer.status === "work"
               ? "⚠️ Munkába állítva - Ez az ajánlat már munkába van állítva, ezért nem lehet tételt törölni belőle."
@@ -2092,7 +2092,7 @@ export function OfferDetailView({
             <div className="px-6 py-4 border-b border-gray-200">
               <h2 className="text-lg font-medium text-gray-900 flex items-center">
                 <MessageSquare className="h-5 w-5 mr-2 text-gray-500" />
-                Megjegyzések
+                {t("od.notes")}
               </h2>
             </div>
             <div className="p-6">
@@ -2116,13 +2116,13 @@ export function OfferDetailView({
               variant="outline"
               className="w-full py-6 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00] hover:border-[#E58A00] active:bg-[#FE9C00] active:text-white font-medium text-lg transition-colors"
             >
-              Tételek pontosítása
+              {t("od.refineItems")}
             </Button>
           </div>
         )}
 
         {/*
-          Read-only what-if analysis. Unlike "Tételek pontosítása" this never edits the
+          Read-only what-if analysis. Unlike t("od.refineItems") this never edits the
           offer, so it stays available after the offer leaves draft - that is exactly
           when someone asks what happens with fewer people or less money.
         */}
@@ -2176,7 +2176,7 @@ export function OfferDetailView({
                         />
                       </svg>
                       <span className="text-amber-800 font-medium">
-                        Válaszolja meg a kérdéseket a tételek szerkesztéséhez
+                        {t("od.answerToEdit")}
                       </span>
                     </div>
                     <button
@@ -2192,23 +2192,23 @@ export function OfferDetailView({
                           ) {
                             onOfferUpdated({ description: result.description });
                             toast.success(
-                              "Kérdések ignorálva, most már szerkesztheti a tételeket",
+                              t("od.questionsIgnored"),
                             );
                           } else {
                             toast.error(
-                              "Hiba történt a kérdések eltávolítása során",
+                              t("od.errQuestions"),
                             );
                           }
                         } catch (error) {
                           console.error("Error ignoring questions:", error);
                           toast.error(
-                            "Hiba történt a kérdések eltávolítása során",
+                            t("od.errQuestions"),
                           );
                         }
                       }}
                       className="flex-shrink-0 px-3 py-1.5 bg-white border border-amber-300 text-amber-700 hover:bg-amber-50 text-sm font-medium rounded-md transition-colors shadow-sm"
                     >
-                      Ignorálás
+                      {t("od.ignore")}
                     </button>
                   </div>
                 </div>
@@ -2217,7 +2217,7 @@ export function OfferDetailView({
                 <div className="flex items-center space-x-4">
                   <h2 className="text-lg font-medium text-gray-900 flex items-center">
                     <List className="h-5 w-5 mr-2 text-gray-500" />
-                    Tételek
+                    {t("od.items")}
                   </h2>
                 </div>
                 <div className="flex space-x-2">
@@ -2227,11 +2227,11 @@ export function OfferDetailView({
                     className="inline-flex items-center px-3 py-1 border border-[#FF9900] text-sm leading-4 font-medium rounded-md text-[#FF9900] hover:bg-[#FF9900]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed"
                     title={
                       hasUnansweredQuestions
-                        ? "Először válaszoljon meg a kérdéseket"
+                        ? t("od.answerFirst")
                         : ""
                     }
                   >
-                    <Plus className="h-4 w-4 mr-1" /> Új tétel
+                    <Plus className="h-4 w-4 mr-1" /> {t("od.newItem")}
                   </button>
                 </div>
               </div>
@@ -2254,7 +2254,7 @@ export function OfferDetailView({
                             className={`p-1 rounded flex items-center gap-2 ${hasUnansweredQuestions ? "cursor-not-allowed" : "cursor-pointer hover:bg-gray-100"}`}
                             title={
                               hasUnansweredQuestions
-                                ? "Először válaszoljon meg a kérdéseket"
+                                ? t("od.answerFirst")
                                 : ""
                             }
                           >
@@ -2268,7 +2268,7 @@ export function OfferDetailView({
                                     setShowCustomItemModal(true);
                                   }}
                                   className="inline-flex items-center justify-center ml-1 flex-shrink-0 font-bold text-white text-xs cursor-pointer hover:opacity-80 transition-opacity"
-                                  title="Kattints a globális árlistához való mentéshez"
+                                  title={t("od.clickToSaveGlobal")}
                                   style={{
                                     width: "12px",
                                     height: "12px",
@@ -2322,7 +2322,7 @@ export function OfferDetailView({
                                 Anyag
                               </th>
                               <th className="px-2 py-1 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Díj
+                                {t("od.fee")}
                               </th>
                             </tr>
                           </thead>
@@ -2391,7 +2391,7 @@ export function OfferDetailView({
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-right">
                       <div className="text-sm font-medium text-gray-700">
-                        Anyagköltség összesen:
+                        {t("od.materialCostTotal")}
                       </div>
                       <div className="text-sm font-bold text-gray-900">
                         {Math.floor(materialTotal).toLocaleString("hu-HU")} Ft
@@ -2399,7 +2399,7 @@ export function OfferDetailView({
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-medium text-gray-700">
-                        Munkadíj összesen:
+                        {t("od.labourCostTotal")}
                       </div>
                       <div className="text-sm font-bold text-gray-900">
                         {Math.floor(workTotal).toLocaleString("hu-HU")} Ft
@@ -2409,7 +2409,7 @@ export function OfferDetailView({
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <div className="flex justify-between items-center">
                       <div className="text-sm font-bold text-gray-900">
-                        Összesített nettó költség:
+                        {t("od.netTotal")}
                       </div>
                       <div className="text-lg font-bold text-gray-900">
                         {Math.floor(grandTotal).toLocaleString("hu-HU")} Ft
@@ -2435,7 +2435,7 @@ export function OfferDetailView({
                               htmlFor="saveNewItemsGlobally"
                               className="text-sm font-medium text-gray-700 cursor-pointer"
                             >
-                              Mentés globálisan is
+                              {t("od.saveGlobally")}
                             </label>
                           </div>
                         )}
@@ -2446,7 +2446,7 @@ export function OfferDetailView({
                               (item) => item.new,
                             );
                             if (newItems.length === 0) {
-                              toast.info("Nincs új tétel mentésre");
+                              toast.info(t("od.noNewItem"));
                               return;
                             }
 
@@ -2582,7 +2582,7 @@ export function OfferDetailView({
                         <div className="flex items-center">
                           <Mail className="h-5 w-5 mr-2 text-gray-500" />
                           <span className="font-medium">
-                            Ajánlat küldése emailben
+                            {t("od.sendByEmail")}
                           </span>
                         </div>
                         {isEmailExpanded ? (
@@ -2606,7 +2606,7 @@ export function OfferDetailView({
                               workTotal: item.workTotal || "0 Ft",
                             }))}
                             total={grandTotal.toLocaleString("hu-HU") + " Ft"}
-                            title={offer.title || "Ajánlat"}
+                            title={offer.title || t("od.offer")}
                             name={extractName(offer.requirement?.title)}
                             email={extractEmail(offer.requirement?.description)}
                           />
@@ -2624,7 +2624,7 @@ export function OfferDetailView({
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mt-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium text-gray-900">
-              Megosztás és export
+              {t("od.shareExport")}
             </h3>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -2654,18 +2654,18 @@ export function OfferDetailView({
                 }}
               >
                 <Printer className="mr-2 h-4 w-4" />
-                <span>Nyomtatás</span>
+                <span>{t("od.print")}</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="flex items-center cursor-pointer"
                 onSelect={(e: Event) => {
                   e.preventDefault();
                   navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link a vágólapra másolva");
+                  toast.success(t("od.linkCopied"));
                 }}
               >
                 <Copy className="mr-2 h-4 w-4" />
-                <span>Link másolása</span>
+                <span>{t("od.copyLink")}</span>
               </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <div className="px-2 py-1.5">
@@ -2720,14 +2720,14 @@ export function OfferDetailView({
           <DialogHeader>
             <DialogTitle>
               {offer.status === "draft"
-                ? "Munkába állítás"
-                : "Kivétel a munkából"}
+                ? t("od.startWork")
+                : t("od.removeFromWork")}
             </DialogTitle>
             <DialogDescription className="pt-4">
               {offer.status === "draft"
                 ? assignToExisting
                   ? "Válaszd ki, melyik munkához szeretnéd hozzárendelni az ajánlatot:"
-                  : 'Biztosan át szeretnéd állítani az ajánlatot "Munkában" állapotba?'
+                  : 'Biztosan át szeretnéd állítani az ajánlatot t("od.inWork") állapotba?'
                 : 'Biztosan vissza szeretnéd állítani az ajánlatot "Piszkozat" állapotba?'}
             </DialogDescription>
           </DialogHeader>
@@ -2743,7 +2743,7 @@ export function OfferDetailView({
                 variant="outline"
                 className="w-full border-2 border-[#FE9C00] text-[#FE9C00] hover:bg-orange-50"
               >
-                Meglévő munkához rendelés
+                {t("od.assignExisting")}
               </Button>
             )}
 
@@ -2751,7 +2751,7 @@ export function OfferDetailView({
             {offer.status === "draft" && assignToExisting && (
               <>
                 <div className="w-full">
-                  <Label htmlFor="work-select">Válassz munkát:</Label>
+                  <Label htmlFor="work-select">{t("od.chooseWork")}</Label>
                   <select
                     id="work-select"
                     className="w-full mt-2 p-2 border rounded-md max-h-40 overflow-y-auto text-sm"
@@ -2807,11 +2807,11 @@ export function OfferDetailView({
               className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
             >
               {isUpdatingStatus
-                ? "Feldolgozás..."
+                ? t("od.processing")
                 : offer.status === "draft"
                   ? assignToExisting
-                    ? "Hozzárendelés a munkához"
-                    : "Igen, munkába állítom"
+                    ? t("od.assignToWork")
+                    : t("od.confirmStartWork")
                   : "Igen, piszkozatba teszem"}
             </Button>
             <Button
@@ -2837,7 +2837,7 @@ export function OfferDetailView({
       <Dialog open={showCustomItemModal} onOpenChange={setShowCustomItemModal}>
         <DialogContent className="max-w-sm rounded-lg mx-auto w-[calc(100%-3rem)]">
           <DialogHeader>
-            <DialogTitle>Egyedi tétel mentése globális árlistához</DialogTitle>
+            <DialogTitle>{t("od.saveCustomGlobal")}</DialogTitle>
             <DialogDescription>
               Az alábbi egyedi tétel mentésre kerül a globális árlistához, így
               később más ajánlatokban is használható lesz.
@@ -2847,7 +2847,7 @@ export function OfferDetailView({
           {selectedCustomItem && (
             <div className="space-y-4">
               <div>
-                <Label className="text-sm font-medium">Tétel neve</Label>
+                <Label className="text-sm font-medium">{t("od.itemName")}</Label>
                 <p className="text-sm text-gray-700 mt-1">
                   {selectedCustomItem.name}
                 </p>
@@ -2855,7 +2855,7 @@ export function OfferDetailView({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium">Anyag egységár</Label>
+                  <Label className="text-sm font-medium">{t("od.materialUnitPrice")}</Label>
                   <p className="text-sm text-gray-700 mt-1">
                     {formatNumberWithSpace(
                       selectedCustomItem.materialUnitPrice,
@@ -2874,7 +2874,7 @@ export function OfferDetailView({
               </div>
 
               <div>
-                <Label className="text-sm font-medium">Egység</Label>
+                <Label className="text-sm font-medium">{t("od.unit")}</Label>
                 <p className="text-sm text-gray-700 mt-1">
                   {selectedCustomItem.unit}
                 </p>
@@ -2888,7 +2888,7 @@ export function OfferDetailView({
               disabled={isSavingGlobalPrice}
               className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
             >
-              {isSavingGlobalPrice ? "Mentés..." : "Mentés"}
+              {isSavingGlobalPrice ? t("od.saving") : "Mentés"}
             </Button>
             <Button
               variant="outline"
@@ -2906,7 +2906,7 @@ export function OfferDetailView({
       <Dialog open={isRefineModalOpen} onOpenChange={setIsRefineModalOpen}>
         <DialogContent className="w-[calc(100%-48px)] sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-xl flex flex-col">
           <DialogHeader>
-            <DialogTitle>Tételek pontosítása</DialogTitle>
+            <DialogTitle>{t("od.refineItems")}</DialogTitle>
             <DialogDescription>
               Írd le, hogyan szeretnéd módosítani a tételeket. Az AI csak azokat
               a tételeket módosítja, amelyekre vonatkozik a kérésed, a többit
@@ -2916,7 +2916,7 @@ export function OfferDetailView({
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="refine-input">Pontosítási kérés</Label>
+              <Label htmlFor="refine-input">{t("od.refineRequest")}</Label>
               <textarea
                 id="refine-input"
                 value={refineInput}
@@ -2934,7 +2934,7 @@ export function OfferDetailView({
               disabled={isRefining || !refineInput.trim()}
               className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
             >
-              {isRefining ? "Pontosítás folyamatban..." : "Tételek pontosítása"}
+              {isRefining ? t("od.refining") : t("od.refineItems")}
             </Button>
             <Button
               variant="outline"
@@ -2958,15 +2958,15 @@ export function OfferDetailView({
       >
         <DialogContent className="w-[calc(100%-48px)] sm:max-w-[600px] max-h-[90vh] overflow-hidden rounded-xl flex flex-col">
           <DialogHeader>
-            <DialogTitle>Kiegészítő információ</DialogTitle>
+            <DialogTitle>{t("od.extraInfo")}</DialogTitle>
             <DialogDescription>
-              Írd le a további követelményeket vagy módosításokat.
+              {t("od.extraInfoHint")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="supplement-input">Kiegészítő információ</Label>
+              <Label htmlFor="supplement-input">{t("od.extraInfo")}</Label>
               <textarea
                 id="supplement-input"
                 value={supplementInput}
@@ -2984,7 +2984,7 @@ export function OfferDetailView({
               disabled={isSupplementing || !supplementInput.trim()}
               className="bg-[#FE9C00] hover:bg-[#E58A00] w-full"
             >
-              {isSupplementing ? "Ajánlat frissítése..." : "Ajánlat frissítése"}
+              {isSupplementing ? t("od.updatingOffer") : t("od.updateOffer")}
             </Button>
             <Button
               variant="outline"
@@ -3006,8 +3006,8 @@ export function OfferDetailView({
         isOpen={showOfferDeleteModal}
         onClose={handleOfferDeleteCancel}
         onConfirm={handleOfferDeleteConfirm}
-        title="Ajánlat törlése"
-        message={`Biztosan törölni szeretnéd a(z) "${offer.title || "Névtelen ajánlat"}" ajánlatot? Ez a művelet nem vonható vissza.`}
+        title={t("od.deleteOffer")}
+        message={`Biztosan törölni szeretnéd a(z) "${offer.title || t("od.untitled")}" ajánlatot? Ez a művelet nem vonható vissza.`}
         confirmText="Törlés"
         cancelText="Mégse"
         isLoading={isOfferDeleting}
