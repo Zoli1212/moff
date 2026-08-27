@@ -2,6 +2,7 @@
 // Új stílusos AppSidebar arany-sötétszürke témában
 
 import React, { useEffect, useState, useRef } from "react";
+import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import type { Translator } from "@/lib/i18n/messages";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
@@ -48,12 +49,12 @@ const buildMainItems = (t: Translator) => [
   { title: t("nav.myInvoices"), url: "/billings", icon: Wallet, tenantOnly: true },
   { title: t("work.workers"), url: "/others", icon: Users, tenantOnly: true },
   { title: t("nav.myPrices"), url: "/prices", icon: DollarSign, tenantOnly: true },
-  { title: "Statisztika", url: "/statistics", icon: BarChart3, superUserOnly: true },
+  { title: t("stats.title"), url: "/statistics", icon: BarChart3, superUserOnly: true },
 ];
 
 const buildSecondaryItems = (t: Translator) => [
   { title: t("nav.mySubscription"), url: "/billing", icon: Wallet },
-  { title: "Profil", url: "/profile", icon: UserCircle },
+  { title: t("nav.profile"), url: "/profile", icon: UserCircle },
 ];
 
 export function AppSidebar() {
@@ -181,7 +182,7 @@ export function AppSidebar() {
 
         setInviteCopied(true);
 
-        // 3 másodperc után eltűnik a t("nav.copied") jelzés
+        // 3 másodperc után eltűnik a "Másolva" jelzés
         setTimeout(() => {
           setInviteCopied(false);
         }, 3000);
@@ -492,6 +493,13 @@ export function AppSidebar() {
           <Palette size={14} />
           <span>{t("nav.background")}</span>
         </button>
+
+        {/*
+          The switcher belongs in the sidebar because the sidebar is on every screen.
+          It previously sat only on the handful of pages that were translated first,
+          which left no way to change language from the dashboard at all.
+        */}
+        <LocaleSwitcher className="mt-2 hover:bg-gray-700" />
       </div>
 
       <SidebarFooter className="bg-gradient-to-b from-gray-900 to-gray-800 border-t border-gray-700">

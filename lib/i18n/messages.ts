@@ -1225,6 +1225,8 @@ export const messages = {
     "x.hideEmptySlot": "Üres slot elrejtése",
     "x.message": "Üzenet:",
 
+    "nav.profile": "Profil",
+
     "scenarios.title": "Alternatívák",
     "scenarios.constraintLabel": "Mi a megszorítás?",
     "scenarios.request": "Alternatívák kérése",
@@ -2448,6 +2450,8 @@ export const messages = {
     "x.customerEmail": "Customer email address",
     "x.hideEmptySlot": "Hide the empty slot",
     "x.message": "Message:",
+
+    "nav.profile": "Profile",
 
     "scenarios.title": "Alternatives",
     "scenarios.constraintLabel": "What is the constraint?",
