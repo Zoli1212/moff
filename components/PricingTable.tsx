@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,65 +25,75 @@ interface PricingPlan {
   benefits: string[];
 }
 
-const pricingPlans: PricingPlan[] = [
+/**
+ * Built per render rather than held as a module constant: the benefit lines are copy
+ * shown to the user, and a constant is evaluated once at import time, before any
+ * locale is known.
+ */
+const buildPricingPlans = (
+  t: (key: Parameters<ReturnType<typeof useLocale>["t"]>[0]) => string
+): PricingPlan[] => [
   {
     id: 1,
     title: "Profi",
-    description: "14 napos ingyenes próbaidőszak",
+    description: t("price.trial"),
     priceMonthly: "29 000 Ft",
     priceYearly: "290 000 Ft",
     priceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO,
     priceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PRO_YEARLY,
     benefits: [
-      "Korlátlan ajánlat készítés",
-      "Korlátlan munka kezelés",
+      t("price.unlimitedOffers"),
+      t("price.unlimitedJobs"),
       "Feladat menedzsment",
-      "Munkaerő menedzsment",
-      "Eszköz menedzsment",
+      t("price.workforce"),
+      t("price.tools"),
       "Anyag menedzsment",
-      "Teljesítmény napló",
-      "Költségvetés monitoring",
-      "Profit ráta elemzés",
-      "Számlázás",
+      t("price.diary"),
+      t("price.budget"),
+      t("price.profit"),
+      t("price.billing"),
     ],
   },
   {
     id: 2,
-    title: "Prémium",
-    description: "Teljes körű megoldás vállalkozásoknak",
+    title: t("price.premium"),
+    description: t("price.fullSolution"),
     priceMonthly: "59 000 Ft",
     priceYearly: "590 000 Ft",
     priceIdMonthly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM,
     priceIdYearly: process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_PREMIUM_YEARLY,
     benefits: [
-      "Korlátlan ajánlat készítés",
-      "Korlátlan munka kezelés",
+      t("price.unlimitedOffers"),
+      t("price.unlimitedJobs"),
       "Feladat menedzsment",
-      "Munkaerő menedzsment",
-      "Eszköz menedzsment",
+      t("price.workforce"),
+      t("price.tools"),
       "Anyag menedzsment",
-      "Teljesítmény napló",
-      "Költségvetés monitoring",
-      "Profit ráta elemzés",
-      "Számlázás",
-      "Automata beszerzési segéd",
-      "Automata munkaterv segéd",
-      "Automata raktárkészlet kezelés",
+      t("price.diary"),
+      t("price.budget"),
+      t("price.profit"),
+      t("price.billing"),
+      t("price.autoProcurement"),
+      t("price.autoPlan"),
+      t("price.autoStock"),
     ],
   },
 ];
 
 export function PricingTable() {
+  const { t } = useLocale();
+  const pricingPlans = buildPricingPlans(t);
+
   const [isYearly, setIsYearly] = useState(false);
 
   return (
     <>
       <div className="max-w-5xl mx-auto text-center mb-8">
         <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          Válassz csomagot
+          {t("price.choosePlan")}
         </h2>
         <p className="mt-4 text-lg text-gray-600">
-          Válassz egy előfizetési csomagot az összes eszköz eléréséhez
+          {t("price.choosePlanHint")}
         </p>
 
         {/* Toggle havi/éves */}
@@ -104,7 +115,7 @@ export function PricingTable() {
           <span
             className={`text-sm font-medium ${isYearly ? "text-gray-900" : "text-gray-500"}`}
           >
-            Éves
+            {t("price.yearly")}
           </span>
         </div>
       </div>
@@ -121,7 +132,7 @@ export function PricingTable() {
                   <div className="flex items-center justify-between">
                     <h3 style={{ color: "#FE9C00" }}>{plan.title}</h3>
                     <p className="rounded-full bg-[#FE9C00]/20 px-3 py-1 text-xs font-semibold leading-5 text-[#FE9C00]">
-                      Legnépszerűbb
+                      {t("price.mostPopular")}
                     </p>
                   </div>
                 ) : (
@@ -164,7 +175,7 @@ export function PricingTable() {
                     color: "white",
                   }}
                 >
-                  Csomag kiválasztása
+                  {t("price.selectPlan")}
                 </Button>
               </form>
             </CardFooter>

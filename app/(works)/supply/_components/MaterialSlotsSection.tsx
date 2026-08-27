@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Material } from "@/types/work";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -27,6 +28,8 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
   workId,
   workItems,
 }) => {
+  const { t } = useLocale();
+
   // Szűrés: csak azok az anyagok jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
   const inProgressWorkItemIds = workItems.filter(wi => wi.inProgress).map(wi => wi.id);
   const filteredMaterials = initialMaterials.filter(mat => inProgressWorkItemIds.includes(mat.workItemId));
@@ -111,7 +114,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
           );
         }
         setSelected((prev) => [...prev, id]);
-        toast.success("Anyag elérhetőként beállítva!");
+        toast.success(t("mat.markedAvailable"));
       } else {
         // Unchecking logic - összesített anyag esetén az összes kapcsolódó anyagot nullázzuk
         if (mat.workItemIds && mat.workItemIds.length > 1) {
@@ -153,7 +156,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
           );
         }
         setSelected((prev) => prev.filter((mid) => mid !== id));
-        toast.success("Anyag elérhetőség visszaállítva!");
+        toast.success(t("mat.availabilityReset"));
       }
     } catch (err) {
       toast.error(
@@ -182,14 +185,14 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
   }) => {
     try {
       const newMat = await addMaterial({ ...data, workId });
-      toast.success("Anyag sikeresen hozzáadva!");
+      toast.success(t("mat.added"));
       setMaterials((prev) => [...prev, {
         ...newMat,
         bestOffer: newMat.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined
       }]);
     } catch (err) {
       console.error("Anyag hozzáadása sikertelen:", err);
-      toast.error("Hiba történt az anyag hozzáadásakor!");
+      toast.error(t("mat.addError"));
     }
   };
 
@@ -203,7 +206,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
   }) => {
     try {
       const updated = await updateMaterial(data);
-      toast.success("Anyag sikeresen frissítve!");
+      toast.success(t("mat.updated"));
       setEditMaterial(null);
       setMaterials((prev) =>
         prev.map((mat) =>
@@ -216,7 +219,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
       );
     } catch (err) {
       console.error("Anyag szerkesztése sikertelen:", err);
-      toast.error("Hiba történt az anyag szerkesztésekor!");
+      toast.error(t("mat.editError"));
     }
   };
 
@@ -224,12 +227,12 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
   const handleDeleteMaterial = async (id: number) => {
     try {
       await deleteMaterial(id);
-      toast.success("Anyag törölve!");
+      toast.success(t("mat.deleted"));
       setEditMaterial(null);
       setMaterials((prev) => prev.filter((mat) => mat.id !== id));
     } catch (err) {
       console.error("Anyag törlése sikertelen:", err);
-      toast.error("Hiba történt az anyag törlésekor!");
+      toast.error(t("mat.deleteError"));
     }
   };
 
@@ -249,7 +252,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
         <Button
           onClick={() => setIsAddModalOpen(true)}
           variant="outline"
-          aria-label="Új anyag hozzáadása"
+          aria-label={t("mat.addNew")}
           className="border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
           style={{ 
             width: 32, 
@@ -294,7 +297,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                       setEditMaterial(mat);
                     }}
                     className="p-1.5"
-                    aria-label="Anyag szerkesztése"
+                    aria-label={t("mat.edit")}
                   >
                     <Pencil className="w-4 h-4 text-[#FF9900]" />
                   </button>
@@ -306,7 +309,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                         const workItemIdsToDelete = mat.workItemIds || [mat.workItemId];
                         await removeMaterialFromWorkEverywhere(workId, mat.name, workItemIdsToDelete);
                         
-                        toast.success("Az anyag sikeresen törölve a munkáról!");
+                        toast.success(t("mat.deletedFromWork"));
                         // Remove all aggregated materials with the same name
                         setMaterials((prev) => prev.filter((m) => m.name.toLowerCase() !== mat.name.toLowerCase()));
                       } catch (err) {
@@ -314,7 +317,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
                       }
                     }}
                     className="p-1.5"
-                    aria-label="Anyag törlése"
+                    aria-label={t("mat.delete")}
                   >
                     <Trash2 className="w-4 h-4 text-[#FF9900]" />
                   </button>

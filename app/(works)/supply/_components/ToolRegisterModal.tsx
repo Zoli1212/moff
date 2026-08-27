@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Tool } from "@/types/work";
 import { checkToolExists } from "../../../../actions/tool-exists.server";
 
@@ -41,6 +42,8 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   maxQuantity,
   requiredToolName,
 }) => {
+  const { t } = useLocale();
+
   const [selectedToolId, setSelectedToolId] = useState<string | number>("");
   const [toolName, setToolName] = useState<string>(requiredToolName || "");
   const [displayName, setDisplayName] = useState<string>(requiredToolName || "");
@@ -85,7 +88,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const handleSave = async () => {
     // Validáció
     if (!toolName) {
-      setError("Add meg az eszköz nevét!");
+      setError(t("tool.needName"));
       return;
     }
 
@@ -143,17 +146,17 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
     <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : null)}>
       <DialogContent className="max-w-[90vw] sm:max-w-[425px] rounded-2xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl sm:text-2xl tracking-tight">Eszköz kiválasztása</DialogTitle>
+          <DialogTitle className="text-center text-xl sm:text-2xl tracking-tight">{t("tool.selectTool")}</DialogTitle>
         </DialogHeader>
 
         {/* Tool image upload UI */}
         <div className="space-y-2">
-          <Label className="text-center">Kis kép (opcionális)</Label>
+          <Label className="text-center">{t("tool.thumbnail")}</Label>
           <div className="flex items-center justify-center gap-3">
             <label
               htmlFor="tool-avatar-upload"
               className={`relative inline-flex h-16 w-16 items-center justify-center rounded-full border ${avatarPreview ? "border-primary bg-primary/5 shadow-sm" : "border-dashed border-muted-foreground/40 bg-muted"} cursor-pointer transition`}
-              title="Kis kép kiválasztása"
+              title={t("tool.chooseThumbnail")}
             >
               {avatarPreview && (
                 <button
@@ -164,7 +167,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                     setAvatarUrl("");
                   }}
                   className="absolute -top-2 -right-2 inline-flex h-6 w-6 items-center justify-center rounded-full border border-destructive text-destructive bg-background hover:shadow"
-                  title="Kép törlése"
+                  title={t("diary.deleteImage")}
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -177,7 +180,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
               ) : (
                 <span className="flex flex-col items-center text-muted-foreground">
                   <ImagePlus className="h-8 w-8" />
-                  <span className="mt-1 text-xs">Kép feltöltése</span>
+                  <span className="mt-1 text-xs">{t("worker.uploadImage")}</span>
                 </span>
               )}
               <input
@@ -202,12 +205,12 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
                     if (data.url) {
                       setAvatarUrl(data.url);
                     } else {
-                      setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                      setAvatarError(data.error || t("work.uploadError"));
                       setAvatarUrl("");
                     }
                   } catch (err) {
                     console.log(err)
-                    setAvatarError("Hiba a feltöltés során.");
+                    setAvatarError(t("tool.uploadError"));
                     setAvatarUrl("");
                   } finally {
                     setAvatarUploading(false);
@@ -216,8 +219,8 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
               />
             </label>
             <div className="flex flex-col gap-0.5 text-sm">
-              <span className="text-muted-foreground">Max 1 kép, 2 MB</span>
-              {avatarUploading && <span className="text-primary text-xs">Feltöltés...</span>}
+              <span className="text-muted-foreground">{t("tool.imageLimit")}</span>
+              {avatarUploading && <span className="text-primary text-xs">{t("diary.uploading")}</span>}
               {avatarError && <span className="text-destructive text-xs">{avatarError}</span>}
             </div>
           </div>
@@ -225,20 +228,20 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         {/* End Tool image upload UI */}
 
         <div className="space-y-2">
-          <Label>Választható eszköz:</Label>
+          <Label>{t("tool.available")}</Label>
           <Select
             disabled={loading}
             value={selectValue}
             onValueChange={(val) => setSelectedToolId(val)}
           >
             <SelectTrigger className={`${toolAvailable === false ? "bg-destructive/10 text-destructive" : ""}`}>
-              <SelectValue placeholder={loading ? "Ellenőrzés..." : "Válassz eszközt"} />
+              <SelectValue placeholder={loading ? t("tool.checking") : t("tool.chooseTool")} />
             </SelectTrigger>
             <SelectContent>
               {loading ? (
-                <SelectItem value="ellenorzes">Ellenőrzés...</SelectItem>
+                <SelectItem value="ellenorzes">{t("tool.checking")}</SelectItem>
               ) : toolAvailable === false && requiredToolName ? (
-                <SelectItem value="nem_elérhető" disabled>nem elérhető</SelectItem>
+                <SelectItem value="nem_elérhető" disabled>{t("tool.unavailable")}</SelectItem>
               ) : requiredToolName ? (
                 <SelectItem value={requiredToolName}>{requiredToolName}</SelectItem>
               ) : null}
@@ -247,7 +250,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         </div>
 
         <div className="space-y-2">
-          <Label>Név:</Label>
+          <Label>{t("proc.name")}</Label>
           <Input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -258,19 +261,19 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
 
         <div className="space-y-2">
           <Label>
-            Leírás <span className="text-destructive">*</span>:
+            {t("od.description")} <span className="text-destructive">*</span>:
           </Label>
           <Textarea
             value={customDescription || ""}
             onChange={(e) => setCustomDescription(e.target.value)}
-            placeholder="Rövid leírás az eszközről"
+            placeholder={t("tool.shortDescription")}
             className="min-h-14"
             required
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <Label className="min-w-20">Mennyiség <span className="text-destructive">*</span>:</Label>
+          <Label className="min-w-20">{t("od.quantity")} <span className="text-destructive">*</span>:</Label>
           <Input
             type="number"
             value={quantity}
@@ -294,12 +297,12 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         )}
 
         <DialogFooter className="mt-2 flex gap-3 sm:gap-4">
-          <Button variant="secondary" className="flex-1" onClick={onClose}>Mégse</Button>
+          <Button variant="secondary" className="flex-1" onClick={onClose}>{t("common.cancel")}</Button>
           <Button
             className="flex-1 bg-[#FE9C00] hover:bg-[#e68a00] text-white"
             onClick={handleSave}
           >
-            Mentés
+            {t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

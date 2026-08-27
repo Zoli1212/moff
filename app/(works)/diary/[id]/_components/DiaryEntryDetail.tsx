@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Image from "next/image";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 import WorkerDiaryEditForm from "../edit/WorkerDiaryEditForm";
@@ -21,6 +22,8 @@ export default function DiaryEntryDetail({
   onEdit,
   onClose,
 }: DiaryEntryDetailProps) {
+  const { t } = useLocale();
+
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     if (diary.date) {
       const d = new Date(diary.date);
@@ -76,11 +79,11 @@ export default function DiaryEntryDetail({
         setLocalDiary({ ...localDiary, ...updated });
         setEditMode(false);
       } else {
-        setError(res.message || "Hiba a mentéskor");
+        setError(res.message || t("de.saveError"));
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "Ismeretlen hiba";
-      setError(msg || "Hiba a mentéskor");
+      setError(msg || t("de.saveError"));
     } finally {
       setSaving(false);
     }
@@ -90,7 +93,7 @@ export default function DiaryEntryDetail({
     return (
       <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 max-w-2xl w-[90%] sm:w-full mx-auto max-h-[90dvh] overflow-y-auto">
-          <h2 className="text-2xl font-bold mb-6">Munkanapló</h2>
+          <h2 className="text-2xl font-bold mb-6">{t("de.title")}</h2>
           <WorkerDiaryEditForm
             diary={localDiary}
             workItems={workItems}
@@ -105,7 +108,7 @@ export default function DiaryEntryDetail({
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Munka napló bejegyzés részletei</h2>
+        <h2 className="text-xl font-bold">{t("de.entryDetails")}</h2>
         {onClose && (
           <button
             onClick={onClose}
@@ -120,7 +123,7 @@ export default function DiaryEntryDetail({
       )}
       {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
       <div className="mb-3 text-sm text-gray-600">
-        <b>Munkafázis:</b>
+        <b>{t("de.phase")}</b>
         <select
           className="border rounded px-2 py-1 ml-2"
           value={localDiary.workItemId ?? ""}
@@ -141,7 +144,7 @@ export default function DiaryEntryDetail({
           ))}
         </select>
         <br />
-        <b>Dátum:</b>{" "}
+        <b>{t("proc.date")}</b>{" "}
         <input
           type="date"
           className="border rounded px-2 py-1 ml-1"
@@ -152,43 +155,43 @@ export default function DiaryEntryDetail({
           }}
           style={{ width: 150 }}
         />
-        <b>Jelentő:</b> {diary.reportedByName || "-"}
+        <b>{t("de.reporter")}</b> {diary.reportedByName || "-"}
       </div>
       <div className="flex flex-col gap-2">
         <div>
-          <span className="font-semibold">Dátum:</span>{" "}
+          <span className="font-semibold">{t("proc.date")}</span>{" "}
           {localDiary.date
             ? new Date(localDiary.date).toLocaleDateString()
             : "-"}
         </div>
         <div>
-          <span className="font-semibold">Leírás:</span>{" "}
+          <span className="font-semibold">{t("de.description")}</span>{" "}
           {localDiary.description || "-"}
         </div>
         <div>
-          <span className="font-semibold">Mennyiség:</span>{" "}
+          <span className="font-semibold">{t("de.quantity")}</span>{" "}
           {localDiary.quantity != null ? localDiary.quantity : "-"}
         </div>
         <div>
-          <span className="font-semibold">Mennyiségi egység:</span>{" "}
+          <span className="font-semibold">{t("de.unit")}</span>{" "}
           {localDiary.unit || "-"}
         </div>
         <div>
-          <span className="font-semibold">Munkaóra:</span>{" "}
+          <span className="font-semibold">{t("de.workHours")}</span>{" "}
           {localDiary.workHours != null ? localDiary.workHours : "-"}
         </div>
         <div>
-          <span className="font-semibold">Időjárás:</span>{" "}
+          <span className="font-semibold">{t("de.weather")}</span>{" "}
           {localDiary.weather || "-"}
         </div>
         <div>
-          <span className="font-semibold">Hőmérséklet:</span>{" "}
+          <span className="font-semibold">{t("de.temperature")}</span>{" "}
           {localDiary.temperature != null
             ? `${localDiary.temperature} °C`
             : "-"}
         </div>
         <div>
-          <span className="font-semibold">Problémák:</span>{" "}
+          <span className="font-semibold">{t("de.issues")}</span>{" "}
           {localDiary.issues || "-"}
         </div>
         <div>
@@ -200,7 +203,7 @@ export default function DiaryEntryDetail({
         <b>Jegyzetek:</b> {diary.notes || "-"}
       </div>
       <div className="mb-4">
-        <b>Képek:</b>
+        <b>{t("de.images")}</b>
         <div className="flex gap-2 flex-wrap mt-2">
           {diary.images && diary.images.length > 0 ? (
             diary.images.map((img, i) => (
@@ -214,7 +217,7 @@ export default function DiaryEntryDetail({
               />
             ))
           ) : (
-            <span className="text-gray-400">Nincs kép</span>
+            <span className="text-gray-400">{t("de.noImage")}</span>
           )}
         </div>
       </div>
@@ -223,7 +226,7 @@ export default function DiaryEntryDetail({
           onClick={handleEdit}
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          Szerkesztés
+          {t("de.edit")}
         </button>
         <button
           onClick={async () => {
@@ -237,7 +240,7 @@ export default function DiaryEntryDetail({
           onClick={onClose}
           className="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300"
         >
-          Bezárás
+          {t("common.close")}
         </button>
       </div>
     </div>

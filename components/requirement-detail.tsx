@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useSearchParams } from "next/navigation";
 import { useDemandStore } from "@/store/offerLetterStore";
 
@@ -67,6 +68,8 @@ export function RequirementDetail({
   offerStatus,
   onSupplementClick,
 }: RequirementDetailProps) {
+  const { t } = useLocale();
+
   const searchParams = useSearchParams();
   const { setStoredItems, isGlobalLoading } = useDemandStore();
 
@@ -291,7 +294,7 @@ export function RequirementDetail({
         <SwipeAction destructive={true} onClick={() => confirmDelete(lineId)}>
           <div className="flex items-center justify-end h-full px-4 bg-red-500 text-white">
             <Trash2 className="h-5 w-5 mr-2" />
-            <span>Törlés</span>
+            <span>{t("common.delete")}</span>
           </div>
         </SwipeAction>
       </TrailingActions>
@@ -373,13 +376,13 @@ export function RequirementDetail({
         );
         setLineToDelete(null);
         setIsDeleteDialogOpen(false);
-        toast.success("A követelmény sor eltávolítva");
+        toast.success(t("req.rowRemoved"));
       } else {
-        throw new Error(data.error || "Ismeretlen hiba történt");
+        throw new Error(data.error || t("req.unknownError"));
       }
     } catch (error) {
       console.error("Error removing line:", error);
-      toast.error("Hiba történt a sor eltávolítása közben");
+      toast.error(t("req.removeError"));
     } finally {
       setIsProcessing(false);
       setLineToDelete(null);
@@ -435,7 +438,7 @@ export function RequirementDetail({
                               }}
                               disabled={isProcessing}
                               className="flex-shrink-0 text-gray-400 hover:text-red-500 disabled:opacity-50 transition-colors p-1 -mr-1"
-                              title="Sor törlése"
+                              title={t("req.deleteRow")}
                             >
                               <X className="h-4 w-4" />
                             </button>
@@ -449,7 +452,7 @@ export function RequirementDetail({
             ) : (
               <div className="p-3 text-center">
                 <p className="text-gray-400 text-sm italic">
-                  Nincs megjeleníthető tartalom
+                  {t("req.nothingToShow")}
                 </p>
               </div>
             )}
@@ -460,7 +463,7 @@ export function RequirementDetail({
         {blocks.length > 0 && (
           <div className="p-4 border-t border-gray-200">
             <h3 className="text-md font-medium text-gray-900 mb-3">
-              Kiegészítések
+              {t("req.additions")}
             </h3>
             <div className="space-y-2">
               {blocks
@@ -511,7 +514,7 @@ export function RequirementDetail({
                 disabled={isGlobalLoading}
                 className="w-full h-12 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00] hover:border-[#E58A00] active:bg-[#FE9C00] active:text-white font-medium transition-colors"
               >
-                Kiegészítő információ
+                {t("od.extraInfo")}
               </Button>
             )}
             <Button
@@ -523,7 +526,7 @@ export function RequirementDetail({
               disabled={isGlobalLoading}
               className="w-full h-12 bg-gray-100 hover:bg-gray-200"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </div>
         </div>
@@ -533,9 +536,9 @@ export function RequirementDetail({
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Megerősítés szükséges</DialogTitle>
+            <DialogTitle>{t("req.confirmNeeded")}</DialogTitle>
             <DialogDescription>
-              Biztosan eltávolítod ezt a sort? A művelet nem vonható vissza.
+              {t("req.confirmRemoveRow")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -544,14 +547,14 @@ export function RequirementDetail({
               onClick={() => setIsDeleteDialogOpen(false)}
               disabled={isProcessing}
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleRemoveLine}
               disabled={isProcessing}
             >
-              {isProcessing ? "Feldolgozás..." : "Eltávolítás"}
+              {isProcessing ? t("od.processing") : t("req.remove")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -2,6 +2,7 @@
 
 
 import { useRouter } from "next/navigation";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { usePDF, Resolution } from "react-to-pdf";
 import { Button } from "@/components/ui/button";
 import ProposalPreview from "./ProposalPreview";
@@ -12,6 +13,8 @@ import { useProposalStore } from "@/store/proposalStore";
 import { Proposal } from "@/types/proposal";
 
 export default function ProposalPreviewPage() {
+  const { t } = useLocale();
+
   const proposal = useProposalStore((state) => state.proposal);
   const router = useRouter();
 
@@ -47,7 +50,7 @@ export default function ProposalPreviewPage() {
     };
 
     addIf("Projekt típusa", proposal.project_type);
-    addIf("Ügyfél", proposal.customer_name);
+    addIf(t("proposal.customer"), proposal.customer_name);
     addIf("Email", proposal.customer_email);
     addIf("Helyszín", proposal.location);
     addIf("Alapterület (nm)", proposal.area_sqm);
@@ -95,7 +98,7 @@ const costRows: CostRow[] = [];
     costRows.push({
       Fázis: "Fázis",
       Feladatok: "Feladatok",
-      Költség: "Költség",
+      Költség: t("work.cost"),
     });
 
     if (
@@ -124,7 +127,7 @@ const costRows: CostRow[] = [];
       );
       if (total) {
         costRows.push({
-          Fázis: "Összesen",
+          Fázis: t("proc.sum"),
           Feladatok: "",
           Költség: total.cost,
         });
@@ -138,7 +141,7 @@ const costRows: CostRow[] = [];
     });
     const wsCost = XLSX.utils.json_to_sheet(costRows, { skipHeader: true });
 
-    // Minimális formázás: például "Összesen" sor szürke háttér (ha támogatott)
+    // Minimális formázás: például t("proc.sum") sor szürke háttér (ha támogatott)
     // SheetJS community edition csak néhány buildben támogatja a .s property-t!
     const lastCostRow = costRows.length;
     if (wsCost && wsCost["A" + lastCostRow]) {
@@ -171,9 +174,9 @@ const costRows: CostRow[] = [];
             <Button variant="outline" onClick={() => router.back()}>
               Vissza
             </Button>
-            <Button onClick={() => toPDF()}>PDF letöltése</Button>
+            <Button onClick={() => toPDF()}>{t("share.downloadPdf")}</Button>
             {proposal && <Button onClick={() => exportProposalToExcel(proposal)}>
-              Excel letöltése
+              {t("letter.downloadExcel")}
             </Button>}
           </div>
           {proposal && proposal.customer_email && <EmailSender email={proposal.customer_email} proposal={proposal} />}
