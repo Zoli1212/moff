@@ -2,6 +2,8 @@
 // Új stílusos AppSidebar arany-sötétszürke témában
 
 import React, { useEffect, useState, useRef } from "react";
+import type { Translator } from "@/lib/i18n/messages";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Sidebar,
   SidebarContent,
@@ -36,21 +38,29 @@ import { useUserStore } from "@/store/userStore";
 import { getUserSubscription } from "@/actions/subscription-actions";
 import { generateInviteLink } from "@/actions/invite-actions";
 
-const mainItems = [
-  { title: "Munkáim", url: "/works", icon: Layers },
-  { title: "Ajánlataim", url: "/offers", icon: Inbox, tenantOnly: true },
-  { title: "Számláim", url: "/billings", icon: Wallet, tenantOnly: true },
-  { title: "Munkások", url: "/others", icon: Users, tenantOnly: true },
-  { title: "Áraim", url: "/prices", icon: DollarSign, tenantOnly: true },
+/**
+ * Built per render: these are labels, and a module constant is evaluated at import
+ * time, before any locale has been read.
+ */
+const buildMainItems = (t: Translator) => [
+  { title: t("nav.myWorks"), url: "/works", icon: Layers },
+  { title: t("nav.myOffers"), url: "/offers", icon: Inbox, tenantOnly: true },
+  { title: t("nav.myInvoices"), url: "/billings", icon: Wallet, tenantOnly: true },
+  { title: t("work.workers"), url: "/others", icon: Users, tenantOnly: true },
+  { title: t("nav.myPrices"), url: "/prices", icon: DollarSign, tenantOnly: true },
   { title: "Statisztika", url: "/statistics", icon: BarChart3, superUserOnly: true },
 ];
 
-const secondaryItems = [
-  { title: "Előfizetésem", url: "/billing", icon: Wallet },
+const buildSecondaryItems = (t: Translator) => [
+  { title: t("nav.mySubscription"), url: "/billing", icon: Wallet },
   { title: "Profil", url: "/profile", icon: UserCircle },
 ];
 
 export function AppSidebar() {
+  const { t } = useLocale();
+  const mainItems = buildMainItems(t);
+  const secondaryItems = buildSecondaryItems(t);
+
   const path = usePathname();
   const { user } = useUser();
   const { signOut } = useClerk();
@@ -171,7 +181,7 @@ export function AppSidebar() {
 
         setInviteCopied(true);
 
-        // 3 másodperc után eltűnik a "Másolva" jelzés
+        // 3 másodperc után eltűnik a t("nav.copied") jelzés
         setTimeout(() => {
           setInviteCopied(false);
         }, 3000);
@@ -380,7 +390,7 @@ export function AppSidebar() {
                   <UserPlus className="h-5 w-5 flex-shrink-0" />
                 )}
                 <span className="truncate">
-                  {inviteCopied ? "Másolva!" : "Meghívás"}
+                  {inviteCopied ? t("nav.copiedExcl") : t("nav.invite")}
                 </span>
               </button>
             )}
@@ -398,7 +408,7 @@ export function AppSidebar() {
             <div className="bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-xl">
               <div className="flex justify-between items-center mb-2">
                 <h2 className="text-xs font-semibold text-orange-400">
-                  Háttér választása
+                  {t("nav.chooseBackground")}
                 </h2>
                 <button
                   onClick={() => setShowThemeSelector(false)}
@@ -480,7 +490,7 @@ export function AppSidebar() {
           className="w-11/12 mt-2 py-2 px-3 rounded-lg text-xs font-medium flex items-center justify-center gap-2 transition-colors border cursor-pointer active:bg-[#4B5563]"
         >
           <Palette size={14} />
-          <span>Háttér</span>
+          <span>{t("nav.background")}</span>
         </button>
       </div>
 
@@ -531,7 +541,7 @@ export function AppSidebar() {
             }}
             className="w-full px-3 py-2 border rounded-lg text-xs font-medium transition-colors cursor-pointer active:bg-[#DE6B12] active:text-white"
           >
-            Kijelentkezés
+            {t("nav.signOut")}
           </button>
         </div>
       </SidebarFooter>
@@ -546,9 +556,9 @@ export function AppSidebar() {
             className="bg-white rounded-xl p-6 mx-4 max-w-md w-full shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Meghívó link</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t("nav.inviteLink")}</h3>
             <p className="text-sm text-gray-600 mb-3">
-              Jelöld ki és másold a linket:
+              {t("nav.copyLinkHint")}
             </p>
             <input
               type="text"

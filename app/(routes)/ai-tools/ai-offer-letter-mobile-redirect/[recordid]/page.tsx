@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
@@ -14,6 +15,8 @@ import { FileText } from "lucide-react";
 import { useOfferItemQuestionStore } from "@/store/offerItemQuestionStore";
 
 export default function SilentOfferSaverPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -96,7 +99,7 @@ export default function SilentOfferSaverPage() {
 
         if (!offer) {
           console.error("Offer not found after max attempts");
-          toast.error("Az ajánlat nem található. Kérjük próbáld újra később.");
+          toast.error(t("pp.notFound"));
           router.push("/offers");
           return;
         }
@@ -164,7 +167,7 @@ export default function SilentOfferSaverPage() {
 
         if (!result) {
           console.error("❌ No result from server");
-          toast.error("Nincs válasz a szervertől");
+          toast.error(t("pp.noResponse"));
           router.push("/offers");
           return;
         }
@@ -174,7 +177,7 @@ export default function SilentOfferSaverPage() {
           console.error("Error:", "error" in result ? result.error : "Unknown");
           console.error("Full result:", JSON.stringify(result, null, 2));
           toast.error(
-            "error" in result ? result.error : "Hiba a mentés közben."
+            "error" in result ? result.error : t("pp.saveError")
           );
           router.push("/offers");
           return;
@@ -188,7 +191,7 @@ export default function SilentOfferSaverPage() {
           result.offerId
         ) {
           console.log("Offer saved to database", result);
-          toast.success("Ajánlat sikeresen lementve!");
+          toast.success(t("pp.saved"));
 
           // Clear the checked items from the store
           if (offerItems && offerItems.length > 0) {
@@ -206,11 +209,11 @@ export default function SilentOfferSaverPage() {
 
         // Fallback - redirect to /offers
         console.error("Unexpected result format:", result);
-        toast.error("Váratlan válasz formátum");
+        toast.error(t("pp.badFormat"));
         router.push("/offers");
       } catch (error) {
         console.error("Error fetching or saving offer:", error);
-        toast.error("Hiba történt az ajánlat mentése közben.");
+        toast.error(t("pp.saveErrorLong"));
         router.push("/offers");
       }
     };
@@ -237,7 +240,7 @@ export default function SilentOfferSaverPage() {
             className="text-lg font-mono tracking-widest animate-pulse"
             style={{ color: "#FE9C00" }}
           >
-            AJÁNLAT BETÖLTÉSE...
+            {t("pp.loading")}
           </p>
         </div>
       </div>

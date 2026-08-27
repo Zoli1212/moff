@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useUser } from "@clerk/nextjs";
 import {
   Card,
@@ -49,6 +50,8 @@ type Phase = {
 };
 
 export default function JobsPage() {
+  const { t } = useLocale();
+
   const { user } = useUser();
   const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
@@ -181,26 +184,26 @@ export default function JobsPage() {
       setSelectedWorkflow("");
       setSelectedSpecialty("");
 
-      toast.success("A fázisok sikeresen elmentve!");
+      toast.success(t("wf2.phasesSaved"));
     } catch (error) {
       console.error("Error saving phases:", error);
-      toast.error("Nem sikerült elmenteni a fázisokat");
+      toast.error(t("wf2.phasesSaveFailed"));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   if (isLoading) {
-    return <div>Betöltés...</div>;
+    return <div>{t("worker.loading")}</div>;
   }
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Munkafolyamat Kezelés</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("wf2.title")}</h1>
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Szakterület és Munkafolyamat Kiválasztása</CardTitle>
+          <CardTitle>{t("wf2.selectTradeAndFlow")}</CardTitle>
           <CardDescription>
             Válassz szakmát és munkafolyamatot a fázisok és feladatok
             kezeléséhez
@@ -219,7 +222,7 @@ export default function JobsPage() {
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Válassz szakmát" />
+                  <SelectValue placeholder={t("wf2.chooseTrade")} />
                 </SelectTrigger>
                 <SelectContent>
                   {specialties.map((specialty) => (
@@ -242,7 +245,7 @@ export default function JobsPage() {
                 disabled={!selectedSpecialty}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Válassz munkafolyamatot" />
+                  <SelectValue placeholder={t("wf2.chooseFlow")} />
                 </SelectTrigger>
                 <SelectContent>
                   {workflows.map((workflow) => (
@@ -265,9 +268,9 @@ export default function JobsPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Fázisok és Feladatok</CardTitle>
+                <CardTitle>{t("wf2.phasesAndTasks")}</CardTitle>
                 <CardDescription>
-                  Fázisok és hozzájuk tartozó feladatok hozzáadása és kezelése
+                  {t("wf2.phasesHint")}
                 </CardDescription>
               </div>
               <Button
@@ -276,7 +279,7 @@ export default function JobsPage() {
                 size="sm"
                 onClick={handleAddPhase}
               >
-                <Plus className="mr-2 h-4 w-4" /> Fázis Hozzáadása
+                <Plus className="mr-2 h-4 w-4" /> {t("wf2.addPhase")}
               </Button>
             </CardHeader>
             <CardContent>
@@ -293,7 +296,7 @@ export default function JobsPage() {
                         <div className="flex-1">
                           <Input
                             type="text"
-                            placeholder="Fázis neve"
+                            placeholder={t("wf2.phaseName")}
                             value={phase.name}
                             onChange={(e) =>
                               handlePhaseNameChange(phaseIndex, e.target.value)
@@ -353,7 +356,7 @@ export default function JobsPage() {
                           className="mt-2"
                           onClick={() => handleAddTask(phaseIndex)}
                         >
-                          <Plus className="mr-2 h-4 w-4" /> Feladat Hozzáadása
+                          <Plus className="mr-2 h-4 w-4" /> {t("wf2.addTask")}
                         </Button>
                       </div>
                     </Card>
@@ -366,7 +369,7 @@ export default function JobsPage() {
           {phases.length > 0 && (
             <div className="mt-6 flex justify-end">
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Mentés..." : "Fázisok Mentése"}
+                {isSubmitting ? t("od.saving") : t("wf2.savePhases")}
               </Button>
             </div>
           )}

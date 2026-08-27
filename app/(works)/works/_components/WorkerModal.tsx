@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useTransition, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getWorkforce } from "@/actions/workforce-actions";
 import type { WorkItem } from "@/types/work";
 
@@ -31,6 +32,8 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
   profession,
   onSave
 }) => {
+  const { t } = useLocale();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -140,7 +143,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
           ×
         </button>
         <h2 style={{ textAlign: "center", marginBottom: 18 }}>
-          Munkás kiválasztása
+          {t("wm.selectWorker")}
         </h2>
         {/* Toggle between add/select */}
         <div
@@ -162,7 +165,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
             }}
             onClick={() => setIsNew(true)}
           >
-            Új munkás
+            {t("wm.newWorker")}
           </button> */}
           <button
             style={{
@@ -178,7 +181,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
               setShowWorkerList(true);
             }}
           >
-            Válassz a regisztráltak közül
+            {t("wm.fromRegistered")}
           </button>
         </div>
         {showWorkerList && !isNew && (
@@ -278,7 +281,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
                 type="tel"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value)}
-                placeholder="Telefonszám"
+                placeholder={t("wm.phone")}
                 style={{
                   width: "100%",
                   padding: "8px 10px",
@@ -292,7 +295,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
               <label
                 style={{ fontWeight: 600, display: "block", marginBottom: 8 }}
               >
-                Profilkép
+                {t("worker.avatar")}
               </label>
               <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
                 <div style={{ position: "relative" }}>
@@ -326,7 +329,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
                       boxShadow: "0 1px 6px #0002",
                     }}
                   >
-                    {avatarPreview || avatarUrl ? "Csere" : "Kép feltöltése"}
+                    {avatarPreview || avatarUrl ? "Csere" : t("worker.uploadImage")}
                   </button>
                   {(avatarPreview || avatarUrl) && (
                     <button
@@ -336,7 +339,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
                         setAvatarUrl("");
                         setAvatarError("");
                       }}
-                      title="Profilkép törlése"
+                      title={t("worker.deleteAvatar")}
                       style={{
                         position: "absolute",
                         top: -6,
@@ -382,7 +385,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
                           setAvatarUrl(data.url);
                         } else {
                           setAvatarError(
-                            data.error || "Hiba történt a feltöltésnél."
+                            data.error || t("work.uploadError")
                           );
                           setAvatarUrl("");
                           setAvatarPreview("");
@@ -448,7 +451,7 @@ export const WorkerModal: React.FC<WorkerModalProps> = ({
               disabled={isPending || (!isNew && !selectedId)}
               onClick={handleSave}
             >
-              {isPending ? "Mentés..." : "Mentés"}
+              {isPending ? t("od.saving") : t("common.save")}
             </button>
           </>
         )}

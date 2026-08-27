@@ -49,22 +49,22 @@ export default function ProposalPreviewPage() {
       if (value) projectRows.push({ Mező: label, Érték: String(value) });
     };
 
-    addIf("Projekt típusa", proposal.project_type);
+    addIf(t("pf.projectType"), proposal.project_type);
     addIf(t("proposal.customer"), proposal.customer_name);
     addIf("Email", proposal.customer_email);
-    addIf("Helyszín", proposal.location);
-    addIf("Alapterület (nm)", proposal.area_sqm);
-    addIf("Időszak", proposal.timeline);
-    addIf("Bruttó összeg", proposal.total_gross_amount);
-    addIf("Nettó összeg", proposal.total_net_amount);
+    addIf(t("pf.location"), proposal.location);
+    addIf(t("pf.floorArea"), proposal.area_sqm);
+    addIf(t("pf.period"), proposal.timeline);
+    addIf(t("pf.gross"), proposal.total_gross_amount);
+    addIf(t("pf.net"), proposal.total_net_amount);
     addIf("ÁFA", proposal.vat_amount);
-    addIf("Becsült költség", proposal.budget_estimate);
-    addIf("Határidő", proposal.final_deadline);
+    addIf(t("pf.estimatedCost"), proposal.budget_estimate);
+    addIf(t("pf.deadline"), proposal.final_deadline);
 
     // Hiányzó információk blokk, ha van
     if (proposal?.missing_info?.length) {
       projectRows.push({});
-      projectRows.push({ Mező: "Hiányzó információk", Érték: "" });
+      projectRows.push({ Mező: t("pf.missingInfo"), Érték: "" });
       proposal.missing_info.forEach((info: string) => {
         if (info) projectRows.push({ Mező: "", Érték: info });
       });
@@ -74,12 +74,12 @@ export default function ProposalPreviewPage() {
     if (proposal.summary_comment) {
       projectRows.push({});
       projectRows.push({
-        Mező: "Megjegyzés / Összegzés",
+        Mező: t("pf.noteSummary"),
         Érték: proposal.summary_comment,
       });
     }
 
-    // 2. Költségek a "Költségek" fülre
+    // 2. Költségek a t("pf.costs") fülre
     interface CostRow {
   Fázis: string;
   Feladatok: string;
@@ -96,7 +96,7 @@ interface CostItem {
 const costRows: CostRow[] = [];
     // Fejléc
     costRows.push({
-      Fázis: "Fázis",
+      Fázis: t("pf.phase"),
       Feladatok: "Feladatok",
       Költség: t("work.cost"),
     });
@@ -160,7 +160,7 @@ const costRows: CostRow[] = [];
     });
 
     XLSX.utils.book_append_sheet(wb, wsProject, "Projekt");
-    XLSX.utils.book_append_sheet(wb, wsCost, "Költségek");
+    XLSX.utils.book_append_sheet(wb, wsCost, t("pf.costs"));
     const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
     const data = new Blob([excelBuffer], { type: "application/octet-stream" });
     saveAs(data, "ajanlat-koltsegvetes.xlsx");

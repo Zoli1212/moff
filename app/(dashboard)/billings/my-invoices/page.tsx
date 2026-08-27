@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getBillings } from "@/actions/billing-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
 import Link from "next/link";
@@ -36,6 +37,8 @@ interface SelectedBillingData extends Billing {
 }
 
 export default function MyInvoicesPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [billings, setBillings] = useState<Billing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +98,7 @@ export default function MyInvoicesPage() {
       case "pending":
         return "Folyamatban";
       case "issued":
-        return "Kiállítva";
+        return t("inv.issued");
       case "paid":
         return "Fizetve";
       default:
@@ -114,7 +117,7 @@ export default function MyInvoicesPage() {
           <Link
             href="/dashboard"
             className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
-            aria-label="Vissza az irányítópultra"
+            aria-label={t("inv.backToDashboard")}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -131,16 +134,16 @@ export default function MyInvoicesPage() {
               />
             </svg>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-800">Számláim</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t("nav.myInvoices")}</h1>
           <div className="w-8"></div>
         </div>
 
         <div className="mt-6 space-y-4">
           {isLoading ? (
-            <div className="text-center py-8">Betöltés...</div>
+            <div className="text-center py-8">{t("worker.loading")}</div>
           ) : billings.length === 0 ? (
             <div className="bg-white rounded-lg p-6 text-center">
-              <p className="text-gray-500">Nincsenek kiállított számlák.</p>
+              <p className="text-gray-500">{t("inv.none")}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -182,7 +185,7 @@ export default function MyInvoicesPage() {
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2">
                               <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                                Eddig számlázott:
+                                {t("inv.billedSoFar")}
                               </span>
                               <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-green-100 text-green-800 whitespace-nowrap">
                                 {new Intl.NumberFormat("hu-HU", {
@@ -197,7 +200,7 @@ export default function MyInvoicesPage() {
                             {(workBillings[0] as BillingWithWork)?.work && (
                               <div className="flex items-center gap-2">
                                 <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
-                                  Teljes érték:
+                                  {t("inv.totalValue")}
                                 </span>
                                 <span className="inline-flex items-center px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm font-semibold bg-blue-100 text-blue-800 whitespace-nowrap">
                                   {new Intl.NumberFormat("hu-HU", {
@@ -248,8 +251,8 @@ export default function MyInvoicesPage() {
                             // Determine label based on status
                             const invoiceLabel =
                               billing.status === "paid_cash"
-                                ? "Pénzügyileg teljesített"
-                                : "Számla";
+                                ? t("inv.settled")
+                                : t("stats.invoice");
 
                             return (
                               <div
@@ -403,7 +406,7 @@ export default function MyInvoicesPage() {
                                 <tr>
                                   <td className="px-2 py-1 text-sm font-normal text-gray-900">
                                     <div className="text-xs text-black leading-tight">
-                                      Számlázott<br />mennyiség
+                                      {t("taskcard.billed")}<br />{t("inv.quantity")}
                                     </div>
                                     <div className="text-sm font-bold text-black">
                                       {item.quantity} {item.unit || "db"}
@@ -454,14 +457,14 @@ export default function MyInvoicesPage() {
                 </div>
               ) : (
                 <div className="text-center text-gray-500 py-8">
-                  Nincsenek tételek
+                  {t("inv.noItems")}
                 </div>
               )}
 
               {/* Summary */}
               <div className="bg-gray-50 rounded-lg p-4 space-y-3 border border-gray-200">
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Anyagköltség összesen:</span>
+                  <span className="text-gray-600">{t("od.materialCostTotal")}</span>
                   <span className="font-semibold text-gray-900">
                     {new Intl.NumberFormat("hu-HU", {
                       style: "currency",
@@ -478,7 +481,7 @@ export default function MyInvoicesPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600">Munkadíj összesen:</span>
+                  <span className="text-gray-600">{t("od.labourCostTotal")}</span>
                   <span className="font-semibold text-gray-900">
                     {new Intl.NumberFormat("hu-HU", {
                       style: "currency",
@@ -495,7 +498,7 @@ export default function MyInvoicesPage() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-base font-bold border-t pt-3">
-                  <span className="text-gray-900">Mindösszesen:</span>
+                  <span className="text-gray-900">{t("inv.grandTotal")}</span>
                   <span className="text-[#FE9C00]">
                     {new Intl.NumberFormat("hu-HU", {
                       style: "currency",

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Translator } from "@/lib/i18n/messages";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { OfferWithItems } from "@/types/offer.types";
 import {
@@ -25,6 +27,8 @@ function OfferDetailsModal({
   onClose: () => void;
   offer: OfferWithItems;
 }) {
+  const { t } = useLocale();
+
   if (!isOpen) return null;
 
   return (
@@ -33,12 +37,12 @@ function OfferDetailsModal({
         <div className="p-6">
           <div className="flex justify-between items-start">
             <h3 className="text-xl font-semibold text-gray-900">
-              {offer.title || "Ajánlat részletei"}
+              {offer.title || t("offers.detailsTitle")}
             </h3>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-500"
-              aria-label="Bezárás"
+              aria-label={t("common.close")}
             >
               <svg
                 className="h-6 w-6"
@@ -59,7 +63,7 @@ function OfferDetailsModal({
           <div className="mt-4 space-y-4">
             {offer.description && (
               <div className="prose max-w-none">
-                <h4 className="font-medium text-gray-900 mb-2">Leírás:</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t("de.description")}</h4>
                 <p className="whitespace-pre-line">{offer.description}</p>
               </div>
             )}
@@ -70,18 +74,18 @@ function OfferDetailsModal({
                 <p>{offer.totalPrice?.toLocaleString("hu-HU")} Ft</p>
               </div>
               <div>
-                <p className="font-medium">Státusz:</p>
-                <p>{getStatusDisplay(offer.status)}</p>
+                <p className="font-medium">{t("od.status")}</p>
+                <p>{getStatusDisplay(offer.status, t)}</p>
               </div>
               <div>
-                <p className="font-medium">Létrehozva:</p>
+                <p className="font-medium">{t("od.createdAt")}</p>
                 <p>
                   {format(new Date(offer.createdAt), "PPP", { locale: hu })}
                 </p>
               </div>
               {offer.validUntil && (
                 <div>
-                  <p className="font-medium">Érvényes:</p>
+                  <p className="font-medium">{t("od.validUntil")}</p>
                   <p>
                     {format(new Date(offer.validUntil), "PPP", { locale: hu })}
                   </p>
@@ -95,14 +99,14 @@ function OfferDetailsModal({
               href={`/offers/${offer.requirementId}/scenarios?offerId=${offer.id}`}
               className="px-4 py-2 rounded-md bg-[#FE9C00] text-white hover:bg-[#FE9C00]/90"
             >
-              Alternatívák
+              {t("scenarios.title")}
             </Link>
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Bezárás
+              {t("common.close")}
             </button>
           </div>
         </div>
@@ -112,6 +116,8 @@ function OfferDetailsModal({
 }
 
 export default function RequirementOffersPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
@@ -167,7 +173,7 @@ export default function RequirementOffersPage() {
         // Load requirement
         const requirementData = await getRequirementById(requirementId);
         if (!requirementData) {
-          throw new Error("A követelmény nem található");
+          throw new Error(t("ro.requirementNotFound"));
         }
         setRequirement(requirementData);
 
@@ -219,7 +225,7 @@ export default function RequirementOffersPage() {
         }
       } catch (err) {
         console.error("Error loading data:", err);
-        setError("Hiba történt az adatok betöltése közben.");
+        setError(t("ro.loadError"));
       } finally {
         setIsLoading(false);
       }
@@ -259,7 +265,7 @@ export default function RequirementOffersPage() {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
             role="alert"
           >
-            <p>{error || "A követelmény nem található"}</p>
+            <p>{error || t("ro.requirementNotFound")}</p>
             <button
               onClick={() => router.back()}
               className="mt-2 text-sm text-blue-600 hover:text-blue-800"
@@ -296,7 +302,7 @@ export default function RequirementOffersPage() {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
             role="alert"
           >
-            <p>{error || "A követelmény nem található"}</p>
+            <p>{error || t("ro.requirementNotFound")}</p>
             <button
               onClick={() => router.back()}
               className="mt-2 text-sm text-blue-600 hover:text-blue-800"
@@ -392,7 +398,7 @@ export default function RequirementOffersPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Ajánlatok</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{t("offers.title")}</h1>
           </div>
           <p className="text-gray-600 mt-1">{requirement.title}</p>
         </div>
@@ -406,14 +412,14 @@ export default function RequirementOffersPage() {
               href={`/offers/new?requirementId=${requirementId}`}
               className="inline-flex items-center px-4 py-2 border border-orange-500 text-orange-600 hover:bg-orange-50 rounded-md text-sm font-medium transition-colors"
             >
-              Új ajánlat
+              {t("ro.newOffer")}
             </Link>
           </div>
 
           {offers.length === 0 ? (
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <p className="text-sm text-blue-800">
-                Még nincsenek ajánlatok ehhez a követelményhez.
+                {t("ro.noOffers")}
               </p>
             </div>
           ) : (
@@ -434,7 +440,7 @@ export default function RequirementOffersPage() {
                           Részletek →
                         </button>
                         <h3 className="font-bold text-gray-900">
-                          {offer.title || "Névtelen ajánlat"}
+                          {offer.title || t("offers.list.untitled")}
                         </h3>
                       </div>
                       {offer.description && (
@@ -449,7 +455,7 @@ export default function RequirementOffersPage() {
                           Ár: {offer.totalPrice?.toLocaleString("hu-HU")} Ft
                         </span>
                         <span>•</span>
-                        <span>Státusz: {getStatusDisplay(offer.status)}</span>
+                        <span>Státusz: {getStatusDisplay(offer.status, t)}</span>
                         <span>•</span>
                         <span>
                           Létrehozva:{" "}
@@ -487,13 +493,13 @@ export default function RequirementOffersPage() {
   );
 }
 
-function getStatusDisplay(status: string) {
+function getStatusDisplay(status: string, t: Translator) {
   const statusMap: Record<string, string> = {
     draft: "Piszkozat",
-    sent: "Elküldve",
+    sent: t("offers.status.sent"),
     accepted: "Elfogadva",
-    rejected: "Elutasítva",
-    expired: "Lejárt",
+    rejected: t("offers.status.rejected"),
+    expired: t("od.expired"),
   };
 
   return statusMap[status] || status;
