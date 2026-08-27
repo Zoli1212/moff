@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { WorkItem } from "@/types/work";
 
@@ -11,6 +12,8 @@ interface ToolAddModalProps {
 }
 
 const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmit, workItems }) => {
+  const { t } = useLocale();
+
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
   const [workItemId, setWorkItemId] = useState<number | "">("");
@@ -32,11 +35,11 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90%] sm:max-w-md rounded-2xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Új eszköz hozzáadása</DialogTitle>
+          <DialogTitle>{t("ts.addTool")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 font-medium">Eszköz neve</label>
+            <label className="block mb-1 font-medium">{t("x.toolName")}</label>
             <input
               className="w-full border rounded px-3 py-2"
               value={name}
@@ -45,7 +48,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmi
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Munkafázis</label>
+            <label className="block mb-1 font-medium">{t("worker.phase")}</label>
             <select
               className="w-full border rounded px-3 py-2"
               value={workItemId}
@@ -59,7 +62,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmi
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-medium">Mennyiség</label>
+            <label className="block mb-1 font-medium">{t("od.quantity")}</label>
             <input
               type="number"
               min={1}
@@ -75,14 +78,14 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({ open, onOpenChange, onSubmi
               disabled={loading}
               className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
             >
-              {loading ? "Hozzáadás..." : "Hozzáadás"}
+              {loading ? t("x.adding") : t("aoi.add")}
             </button>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
               className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
             >
-              Mégse
+              {t("common.cancel")}
             </button>
           </div>
         </form>

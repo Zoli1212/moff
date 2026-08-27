@@ -1,12 +1,15 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getAllUserEmails, checkIsSuperUser } from '@/actions/user-management-actions'
 import { useUser } from '@clerk/nextjs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useTenantStore } from '@/store/tenantStore'
 
 export function TenantSelector() {
+  const { t } = useLocale();
+
   const { user } = useUser()
   const { 
     selectedTenantEmail, 
@@ -66,10 +69,10 @@ export function TenantSelector() {
   return (
     <div className="fixed bottom-4 right-4 bg-white p-3 rounded-lg shadow-lg z-50 border">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Bérlő váltása:</span>
+        <span className="text-sm font-medium">{t("x.switchTenantColon")}</span>
         <Select onValueChange={handleTenantChange} value={selectedTenantEmail || undefined}>
           <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Válassz bérlőt">
+            <SelectValue placeholder={t("x.chooseTenant")}>
               {getCurrentDisplayValue()}
             </SelectValue>
           </SelectTrigger>

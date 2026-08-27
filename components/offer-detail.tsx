@@ -474,7 +474,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
               className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="h-5 w-5 mr-2" />
-              Vissza az ajánlatokhoz
+              {t("sc.backToOffers")}
             </button>
           </div>
 
@@ -515,7 +515,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                   <DropdownMenuSeparator />
                   <div className="px-2 py-1.5">
                     <div className="text-xs font-medium text-gray-500 px-2 mb-1">
-                      Megosztás
+                      {t("share.share")}
                     </div>
                     <SocialShareButtons
                       offer={{
@@ -580,7 +580,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm text-blue-700">
-                    <span className="font-medium">Összeg: </span>
+                    <span className="font-medium">{t("x.amountColon")} </span>
                     <span className="font-bold text-lg">
                       {editingItemId !== null
                         ? formatPrice(calculateTotals().total)
@@ -754,7 +754,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               onClick={() => startEditing(index)}
                             >
                               {item.name ||
-                                "Kattints a szerkesztéshez"}
+                                t("x.clickToEdit")}
                             </div>
                           )}
                         </td>
@@ -936,7 +936,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                               <button
                                 onClick={() => startEditing(index)}
                                 className="p-1 text-blue-600 rounded-full hover:bg-blue-50"
-                                title="Szerkesztés"
+                                title={t("de.edit")}
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -945,7 +945,7 @@ export function OfferDetailView({ offer, onBack }: OfferDetailViewProps) {
                                   e.stopPropagation();
                                   if (
                                     window.confirm(
-                                      "Biztosan törölni szeretné ezt a tételt?"
+                                      t("x.confirmDeleteItem")
                                     )
                                   ) {
                                     handleRemoveItem(index);

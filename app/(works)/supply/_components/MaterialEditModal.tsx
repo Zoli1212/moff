@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import {
   Dialog,
@@ -33,6 +34,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
   onSubmit,
   onDelete,
 }) => {
+  const { t } = useLocale();
+
   const [name, setName] = useState(material?.name || "");
   const [quantity, setQuantity] = useState(
     material?.quantity?.toString() || ""
@@ -80,7 +83,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-2xl max-w-[calc(100%-2rem)] w-96">
         <DialogHeader>
-          <DialogTitle>Anyag szerkesztése</DialogTitle>
+          <DialogTitle>{t("mat.edit")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -93,7 +96,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Mennyiség</label>
+            <label className="block text-sm font-medium mb-1">{t("od.quantity")}</label>
             <input
               className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
               type="number"
@@ -104,7 +107,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Mennyiségi egység</label>
+            <label className="block text-sm font-medium mb-1">{t("diary.unit")}</label>
             <input
               className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
               value={unit}
@@ -114,7 +117,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">
-              Elérhető mennyiség
+              {t("x.availableQuantity")}
             </label>
             <input
               className="w-full border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-gray-400"
@@ -132,7 +135,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               disabled={loading} 
               className="w-full bg-[#FF9900] hover:bg-[#FF9900]/90 text-white"
             >
-              Mentés
+              {t("common.save")}
             </Button>
             <Button
               type="button"
@@ -140,7 +143,7 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
               disabled={loading}
               className="w-full bg-red-600 hover:bg-red-700 text-white"
             >
-              Törlés
+              {t("common.delete")}
             </Button>
           </DialogFooter>
         </form>
@@ -148,8 +151,8 @@ const MaterialEditModal: React.FC<MaterialEditModalProps> = ({
           isOpen={isConfirmOpen}
           onClose={() => setConfirmOpen(false)}
           onConfirm={handleDelete}
-          title="Anyag törlése"
-          description="Biztos, hogy törlöd ezt az anyagot? A művelet nem vonható vissza."
+          title={t("mat.delete")}
+          description={t("x.confirmDeleteMaterial")}
         />
       </DialogContent>
     </Dialog>

@@ -282,7 +282,7 @@ export default function OffersPage() {
                 onClick={() => setIsDialogOpen(true)}
                 variant="outline"
                 className="ml-auto p-2 rounded-full border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10"
-                aria-label="Új ajánlat létrehozása"
+                aria-label={t("x.createNewOffer")}
               >
                 <Plus className="h-5 w-5" />
               </Button>
@@ -319,7 +319,7 @@ export default function OffersPage() {
                   onClick={() => setIsDialogOpen(true)}
                   variant="outline"
                   className="ml-auto p-2 rounded-full border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10"
-                  aria-label="Új ajánlat létrehozása"
+                  aria-label={t("x.createNewOffer")}
                 >
                   <Plus className="h-5 w-5" />
                 </Button>
@@ -344,7 +344,7 @@ export default function OffersPage() {
                 >
                   <span className="flex items-center gap-2 text-sm font-semibold text-gray-700">
                     <Bell className="w-4 h-4 text-orange-500" />
-                    Beérkezett ajánlatkérések
+                    {t("x.incomingRequests")}
                     <span className="bg-orange-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
                       {incomingRequests.length}
                     </span>
@@ -417,16 +417,16 @@ export default function OffersPage() {
             <div className="mt-6 space-y-4">
               {isLoading ? (
                 <div className="text-center py-8">
-                  <p>Betöltés...</p>
+                  <p>{t("worker.loading")}</p>
                 </div>
               ) : offers.length === 0 ? (
                 <div className="bg-white rounded-lg p-6 text-center">
-                  <p className="text-gray-500">Még nincsenek ajánlataid.</p>
+                  <p className="text-gray-500">{t("x.noOffersYet")}</p>
                   <Button
                     onClick={() => setIsDialogOpen(true)}
                     className="mt-4"
                   >
-                    Új ajánlat létrehozása
+                    {t("x.createNewOffer")}
                   </Button>
                 </div>
               ) : (
@@ -492,7 +492,7 @@ export default function OffersPage() {
                                             )
                                           );
                                         const parts = text.split(
-                                          "Becsült kivitelezési idő:"
+                                          t("letter.estimatedTime")
                                         );
                                         const afterColon = parts[1] || "";
                                         // Extract only the time duration (e.g., "10-14 nap")
@@ -526,7 +526,7 @@ export default function OffersPage() {
                                 <div className="flex items-center gap-2 text-orange-600">
                                   <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin" />
                                   <span className="text-xs font-medium">
-                                    Feldolgozás...
+                                    {t("od.processing")}
                                   </span>
                                 </div>
                               )}
@@ -567,7 +567,7 @@ export default function OffersPage() {
                                   </span>
                                 </>
                               ) : (
-                                <span>Ár nincs megadva</span>
+                                <span>{t("x.noPriceGiven")}</span>
                               )}
                             </div>
                           </div>
@@ -589,7 +589,7 @@ export default function OffersPage() {
               variant="outline"
               className="w-full py-6 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 hover:text-[#FE9C00]/80 hover:border-[#FE9C00]/80 focus:ring-[#FE9C00] focus:ring-offset-2 focus:ring-2"
             >
-              <span className="text-lg font-medium">+ Új felmérés</span>
+              <span className="text-lg font-medium">{t("x.newSurvey")}</span>
             </Button>
           </div>
         </div>
@@ -610,9 +610,9 @@ export default function OffersPage() {
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title={t("offers.list.deleteTitle")}
-        message={`Biztosan törölni szeretnéd a(z) "${offerToDelete?.title || "Névtelen ajánlat"}" ajánlatot? Ez a művelet nem vonható vissza.`}
-        confirmText="Törlés"
-        cancelText="Mégse"
+        message={`Biztosan törölni szeretnéd a(z) "${offerToDelete?.title || t("offers.list.untitled")}" ajánlatot? Ez a művelet nem vonható vissza.`}
+        confirmText={t("common.delete")}
+        cancelText={t("common.cancel")}
         isLoading={isDeleting}
       />
     </div>

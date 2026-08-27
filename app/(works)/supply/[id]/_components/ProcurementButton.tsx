@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface ProcurementButtonProps {
   workId: number;
 }
 
 export default function ProcurementButton({ workId }: ProcurementButtonProps) {
+  const { t } = useLocale();
+
   const [isHoveredQuote, setIsHoveredQuote] = useState(false);
   const [isHoveredProcurement, setIsHoveredProcurement] = useState(false);
 
@@ -47,7 +50,7 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
           transition: "all 0.2s ease-in-out",
         }}
       >
-        Ajánlatkérés
+        {t("proc.quoteRequest")}
       </a>
 
       {/* Intelligens beszerzés button - Always opens as order */}
@@ -70,7 +73,7 @@ export default function ProcurementButton({ workId }: ProcurementButtonProps) {
           transition: "all 0.2s ease-in-out",
         }}
       >
-        + Int. beszerzés
+        {t("x.intProcurement")}
       </a>
     </div>
   );

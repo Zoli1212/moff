@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import WorkerDetailsModal from "./WorkerDetailsModal";
 import { WorkerModal } from "./WorkerModal";
 import { toast } from "sonner";
@@ -19,6 +20,8 @@ export default function ParticipantsSection({
   workItems?: WorkItem[];
   workId: number;
 }) {
+  const { t } = useLocale();
+
   const [workers, setWorkers] = useState<Worker[]>(initialWorkers as Worker[]);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalProfession, setModalProfession] = useState<string | null>(null);
@@ -72,7 +75,7 @@ export default function ParticipantsSection({
       );
 
       if (!worker || typeof worker.id !== "number")
-        throw new Error("Nincs megfelelő Worker rekord");
+        throw new Error(t("x.noWorkerRecord"));
       // 4. Update the JSON array
       await updateWorkerJsonArray({
         workerId: worker.id,
@@ -114,12 +117,12 @@ export default function ParticipantsSection({
           };
         })
       );
-      toast.success("Sikeres mentés! A résztvevő elmentve.");
+      toast.success(t("x.participantSaved"));
       setModalOpen(false);
       setModalProfession(null);
     } catch (e) {
       console.log(e)
-      toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
+      toast.error(t("ts.saveError"));
     }
   };
 
@@ -495,7 +498,7 @@ export default function ParticipantsSection({
               )
           );
           if (!parentWorker) {
-            toast.error("Nem található a szülő Worker rekord.");
+            toast.error(t("x.noParentWorker"));
             return;
           }
           try {
@@ -529,9 +532,9 @@ export default function ParticipantsSection({
             );
             setShowWorkerDetailsModal(false);
             setSelectedWorker(null);
-            toast.success("Sikeres törlés!");
+            toast.success(t("x.deleteSuccess"));
           } catch (e) {
-            toast.error("Hiba történt a törlés során. Próbáld újra!");
+            toast.error(t("x.deleteErrorRetry"));
             console.error(e);
           }
         }}

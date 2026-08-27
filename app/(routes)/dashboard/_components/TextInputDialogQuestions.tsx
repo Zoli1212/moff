@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,8 @@ export default function TextInputDialogQuestions({
   currentOfferId,
   onOfferUpdated,
 }: TextInputDialogProps & { currentItems?: OfferItemQuestion[] }) {
+  const { t } = useLocale();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [questions, setQuestions] = useState<QuestionWithAnswer[]>([]);
@@ -131,7 +134,7 @@ export default function TextInputDialogQuestions({
       const answeredQuestions = questions.filter((q) => q.answer.trim() !== "");
 
       if (answeredQuestions.length === 0) {
-        setError("Kérjük válaszoljon meg legalább egy kérdést!");
+        setError(t("x.answerAtLeastOne"));
         setLoading(false);
         return;
       }
@@ -162,7 +165,7 @@ export default function TextInputDialogQuestions({
         finalDescription = `${requirementDescription}\n\nVálaszok a kérdésekre:${answersText}`;
       }
 
-      // finalDescription már tartalmazza az eredeti követelményt + a "Válaszok a kérdésekre:" részt
+      // finalDescription már tartalmazza az eredeti követelményt + a t("od.answers") részt
       const combinedText = finalDescription;
 
       // Validate required parameters
@@ -195,7 +198,7 @@ export default function TextInputDialogQuestions({
       });
 
       if (!response.ok) {
-        throw new Error("Hiba történt az ajánlat frissítése során");
+        throw new Error(t("x.offerUpdateError"));
       }
 
       const result = await response.json();
@@ -203,7 +206,7 @@ export default function TextInputDialogQuestions({
 
       if (!result.success) {
         throw new Error(
-          result.error || "Hiba történt az ajánlat frissítése során"
+          result.error || t("x.offerUpdateError")
         );
       }
 
@@ -245,7 +248,7 @@ export default function TextInputDialogQuestions({
         "❌ Error details:",
         err instanceof Error ? err.message : String(err)
       );
-      setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
+      setError(t("td.processError"));
       setLoading(false);
     } finally {
       console.log("🏁 Finally block - ensuring loading is false");
@@ -268,10 +271,10 @@ export default function TextInputDialogQuestions({
           <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
             <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Feldolgozás folyamatban
+              {t("td.processingInProgress")}
             </h3>
             <p className="text-gray-600 max-w-md">
-              Az Ön kérése feldolgozás alatt áll, kérjük várjon...
+              {t("td.pleaseWait")}
             </p>
           </div>
         ) : (
@@ -279,10 +282,10 @@ export default function TextInputDialogQuestions({
             <div className="p-6 pb-0">
               <DialogHeader className="px-1">
                 <DialogTitle className="text-xl font-bold text-gray-900">
-                  Kérdések megválaszolása
+                  {t("x.answerQuestions")}
                 </DialogTitle>
                 <DialogDescription className="text-gray-600">
-                  Válaszolja meg az ajánlatkérésre felmerült kérdéseket
+                  {t("x.answerRequestQuestions")}
                 </DialogDescription>
               </DialogHeader>
             </div>
@@ -299,7 +302,7 @@ export default function TextInputDialogQuestions({
                         type="button"
                         onClick={() => handleRemoveQuestion(question.id)}
                         className="text-gray-400 hover:text-red-500 transition-colors p-1 -mr-2"
-                        title="Kérdés eltávolítása"
+                        title={t("x.removeQuestion")}
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -318,7 +321,7 @@ export default function TextInputDialogQuestions({
                       </button>
                     </div>
                     <Textarea
-                      placeholder="Ide írja a választ..."
+                      placeholder={t("x.typeAnswerHere")}
                       className="w-full text-base p-3 resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       value={question.answer}
                       onChange={(e) =>
@@ -340,15 +343,15 @@ export default function TextInputDialogQuestions({
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
-                      <span>Minden fontos információt írjon le</span>
+                      <span>{t("td.describeAll")}</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
-                      <span>Adja meg a röviden a válaszokat</span>
+                      <span>{t("x.answerBriefly")}</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
-                      <span>Adja meg a határidőket és mértékegységeket</span>
+                      <span>{t("x.enterDeadlinesUnits")}</span>
                     </li>
                   </ul>
                 </div>
@@ -375,7 +378,7 @@ export default function TextInputDialogQuestions({
                   ) : (
                     <>
                       <Sparkles className="mr-2 h-5 w-5" />
-                      Ajánlat frissítése
+                      {t("od.updateOffer")}
                     </>
                   )}
                 </Button>
@@ -397,7 +400,7 @@ export default function TextInputDialogQuestions({
                     );
                   }}
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </Button>
               </div>
             </div>

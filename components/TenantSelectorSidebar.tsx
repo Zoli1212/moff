@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getAllUserEmails, checkIsSuperUser } from '@/actions/user-management-actions'
 import { useUser } from '@clerk/nextjs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -9,6 +10,8 @@ import { X, Users } from 'lucide-react'
 import { useTenantStore } from '@/store/tenantStore'
 
 export function TenantSelectorSidebar() {
+  const { t } = useLocale();
+
   const { user } = useUser()
   const { 
     selectedTenantEmail, 
@@ -69,7 +72,7 @@ export function TenantSelectorSidebar() {
     return (
       <div className="w-full px-4 pb-3">
         <div className="bg-[#1e293b] border border-[#FE9C00] rounded-xl p-3 shadow-lg">
-          <div className="text-sm text-[#FE9C00]">Bérlők betöltése...</div>
+          <div className="text-sm text-[#FE9C00]">{t("x.loadingTenants")}</div>
         </div>
       </div>
     )
@@ -84,13 +87,13 @@ export function TenantSelectorSidebar() {
       <div className="bg-[#1e293b] border border-[#FE9C00] rounded-xl p-3 shadow-lg">
         <div className="flex items-center gap-2 mb-3">
           <Users className="h-4 w-4 text-[#FE9C00]" />
-          <span className="text-sm font-semibold text-[#FE9C00]">Bérlő váltása</span>
+          <span className="text-sm font-semibold text-[#FE9C00]">{t("x.switchTenant")}</span>
         </div>
         
         <div className="flex items-center gap-2">
           <Select onValueChange={handleTenantChange} value={selectedTenantEmail || undefined}>
             <SelectTrigger className="flex-1 bg-gray-800 border-[#FE9C00] text-white hover:bg-gray-700 focus:ring-orange-500 focus:border-orange-500">
-              <SelectValue placeholder="Válassz bérlőt">
+              <SelectValue placeholder={t("x.chooseTenant")}>
                 {getCurrentDisplayValue()}
               </SelectValue>
             </SelectTrigger>
@@ -112,7 +115,7 @@ export function TenantSelectorSidebar() {
             size="sm"
             onClick={handleClearSelection}
             className="p-2 h-8 w-8 bg-[#FE9C00] hover:bg-[#E58A00] text-white border-0"
-            title="Bérlő kiválasztás törlése"
+            title={t("x.clearTenant")}
           >
             <X className="h-4 w-4" />
           </Button>

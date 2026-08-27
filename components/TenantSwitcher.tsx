@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getAllUserEmails, checkIsSuperUser } from '@/actions/user-management-actions'
 import { useUser } from '@clerk/nextjs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -9,6 +10,8 @@ import { X } from 'lucide-react'
 import { useTenantStore } from '@/store/tenantStore'
 
 export function TenantSwitcher() {
+  const { t } = useLocale();
+
   const { user } = useUser()
   const { 
     selectedTenantEmail, 
@@ -73,10 +76,10 @@ export function TenantSwitcher() {
   return (
     <div className="fixed bottom-4 left-4 bg-[#1e293b] p-3 rounded-lg shadow-lg z-50 border border-[#FE9C00]">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium text-[#FE9C00]">Bérlő váltása:</span>
+        <span className="text-sm font-medium text-[#FE9C00]">{t("x.switchTenantColon")}</span>
         <Select onValueChange={handleTenantChange} value={selectedTenantEmail || undefined}>
           <SelectTrigger className="w-[200px] bg-gray-800 text-white border-[#FE9C00]">
-            <SelectValue placeholder="Válassz bérlőt" className="text-gray-400">
+            <SelectValue placeholder={t("x.chooseTenant")} className="text-gray-400">
               {getCurrentDisplayValue()}
             </SelectValue>
           </SelectTrigger>
@@ -94,7 +97,7 @@ export function TenantSwitcher() {
             size="sm"
             onClick={handleClearSelection}
             className="p-2 h-8 w-8 bg-[#FE9C00] hover:bg-[#E58A00] text-white border-0"
-            title="Bérlő kiválasztás törlése"
+            title={t("x.clearTenant")}
           >
             <X className="h-4 w-4" />
           </Button>

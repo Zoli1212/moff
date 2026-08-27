@@ -62,7 +62,7 @@ function OfferDetailsModal({
           <div className="mt-4 space-y-4">
             {offer.description && (
               <div className="prose max-w-none">
-                <h4 className="font-medium text-gray-900 mb-2">Leírás:</h4>
+                <h4 className="font-medium text-gray-900 mb-2">{t("de.description")}</h4>
                 <p className="whitespace-pre-line">{offer.description}</p>
               </div>
             )}
@@ -166,7 +166,7 @@ export default function RequirementOffersPage() {
         // Load requirement
         const requirementData = await getRequirementById(requirementId);
         if (!requirementData) {
-          throw new Error("A követelmény nem található");
+          throw new Error(t("ro.requirementNotFound"));
         }
         setRequirement(requirementData);
 
@@ -208,7 +208,7 @@ export default function RequirementOffersPage() {
         }
       } catch (err) {
         console.error("Error loading data:", err);
-        setError("Hiba történt az adatok betöltése közben.");
+        setError(t("ro.loadError"));
       } finally {
         setIsLoading(false);
       }
@@ -253,7 +253,7 @@ export default function RequirementOffersPage() {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
             role="alert"
           >
-            <p>{error || "A követelmény nem található"}</p>
+            <p>{error || t("ro.requirementNotFound")}</p>
             <button
               onClick={() => router.back()}
               className="mt-2 text-sm text-blue-600 hover:text-blue-800"
@@ -290,7 +290,7 @@ export default function RequirementOffersPage() {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
             role="alert"
           >
-            <p>{error || "A követelmény nem található"}</p>
+            <p>{error || t("ro.requirementNotFound")}</p>
             <button
               onClick={() => router.back()}
               className="mt-2 text-sm text-blue-600 hover:text-blue-800"
@@ -375,14 +375,14 @@ export default function RequirementOffersPage() {
               href={`/offers/new?requirementId=${requirementId}`}
               className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Új ajánlat
+              {t("ro.newOffer")}
             </Link>
           </div>
 
           {offers.length === 0 ? (
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
               <p className="text-sm text-blue-800">
-                Még nincsenek ajánlatok ehhez a követelményhez.
+                {t("ro.noOffers")}
               </p>
             </div>
           ) : (

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -15,6 +16,8 @@ export default function WorksLayoutClient({
   children,
   isTenant,
 }: WorksLayoutClientProps) {
+  const { t } = useLocale();
+
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isRestricted, setIsRestricted] = useState(false);
@@ -51,7 +54,7 @@ export default function WorksLayoutClient({
   const menu = [
     {
       href: workId ? `/works/${workId}` : "/works",
-      label: "Főoldal",
+      label: t("od.home"),
       icon: (
         <svg
           width="24"
@@ -105,11 +108,11 @@ export default function WorksLayoutClient({
     },
     {
       href: `/supply/${workId}`,
-      label: "Erőforrás",
+      label: t("x.resource"),
       icon: (
         <Image
           src="/worker3.png"
-          alt="Erőforrás"
+          alt={t("x.resource")}
           width={24}
           height={24}
           style={{
@@ -122,7 +125,7 @@ export default function WorksLayoutClient({
     },
     {
       href: `/diary/${workId}`,
-      label: "Napló",
+      label: t("x.diary"),
       restrictedWorkerOnly: true,
       icon: (
         <svg
@@ -155,7 +158,7 @@ export default function WorksLayoutClient({
     {
       // href: `/others/${workId}`,
       href: `/seged`,
-      label: "Egyéb",
+      label: t("worker.other"),
       tenantOnly: true,
       icon: (
         <svg

@@ -1,4 +1,7 @@
+"use client";
+
 import React from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 
 const questionList = [
@@ -10,9 +13,11 @@ const questionList = [
 ]
 
 function EmptyState({ selectedQuestion }: { selectedQuestion: (question: string) => void }) {
+  const { t } = useLocale();
+
     return (
         <div>
-            <h2 className='font-bold text-xl text-center'>Kérdésed van?</h2>
+            <h2 className='font-bold text-xl text-center'>{t("x.haveAQuestion")}</h2>
             <div>
                 {questionList.map((question, index) => (
                     <h2 className='p-4 text-center border rounded-lg my-3 hover:border-primary cursor-pointer'

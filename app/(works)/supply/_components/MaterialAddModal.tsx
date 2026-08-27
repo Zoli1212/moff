@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
   onSubmit,
   workItems,
 }) => {
+  const { t } = useLocale();
+
   const [name, setName] = useState("");
   const [quantity, setQuantity] = useState<number | "">("");
   const [unit, setUnit] = useState("");
@@ -58,7 +61,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90%] sm:max-w-md rounded-2xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Új anyag hozzáadása</DialogTitle>
+          <DialogTitle>{t("mat.addNew")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
@@ -71,7 +74,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
           />
           <input
             type="number"
-            placeholder="Mennyiség"
+            placeholder={t("od.quantity")}
             value={quantity}
             onChange={(e) =>
               setQuantity(e.target.value === "" ? "" : Number(e.target.value))
@@ -83,7 +86,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
           />
           <input
             type="text"
-            placeholder="Mértékegység (pl. kg, db)"
+            placeholder={t("x.unitExampleShort")}
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
             className="w-full border rounded px-3 py-2"
@@ -91,7 +94,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
           />
           <input
             type="number"
-            placeholder="Egységár (Ft)"
+            placeholder={t("x.unitPriceHuf")}
             value={unitPrice}
             onChange={(e) =>
               setUnitPrice(e.target.value === "" ? "" : Number(e.target.value))
@@ -109,7 +112,7 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
             className="w-full border rounded px-3 py-2"
             required
           >
-            <option value="">Válassz munkarészt...</option>
+            <option value="">{t("x.choosePart")}</option>
             {workItems.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.name}
@@ -122,14 +125,14 @@ const MaterialAddModal: React.FC<MaterialAddModalProps> = ({
               disabled={loading || !name || !quantity || !unit}
               className="w-full px-4 py-2 bg-[#FE9C00] hover:bg-[#FE9C00]/90 text-white rounded-md transition-colors disabled:opacity-50"
             >
-              {loading ? "Hozzáadás..." : "Hozzáadás"}
+              {loading ? t("x.adding") : t("aoi.add")}
             </button>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
               className="w-full px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
             >
-              Mégse
+              {t("common.cancel")}
             </button>
           </div>
         </form>

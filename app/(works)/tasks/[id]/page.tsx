@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Image from "next/image";
 import Link from "next/link";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -64,6 +65,8 @@ const getMonogram = (name?: string): string => {
 };
 
 export default function TasksPage() {
+  const { t } = useLocale();
+
   const params = useParams();
   const workId = useMemo(() => Number(params.id), [params.id]);
   const queryClient = useQueryClient();
@@ -79,7 +82,7 @@ export default function TasksPage() {
 
   const work = data?.work || null;
   const workItems = data?.workItems || [];
-  const error = queryError ? "Nem sikerült betölteni a munkalapot. Kérjük, próbálja újra később." : null;
+  const error = queryError ? t("x.worksheetLoadFailed") : null;
 
   const [assigning, setAssigning] = useState<number | null>(null);
   const [assignError, setAssignError] = useState<string | null>(null);
@@ -131,7 +134,7 @@ export default function TasksPage() {
       if (!inProgressResult.success) {
         setAssignError(
           inProgressResult.message ||
-            "Nem sikerült frissíteni a munkafázis állapotát."
+            t("x.phaseUpdateFailed")
         );
         return;
       }
@@ -149,7 +152,7 @@ export default function TasksPage() {
           const result = await createWorkDiary({ workId, workItemId });
 
           if (!result.success) {
-            setAssignError("Nem sikerült naplót létrehozni.");
+            setAssignError(t("x.diaryCreateFailed"));
             return;
           }
         }
@@ -157,7 +160,7 @@ export default function TasksPage() {
     } catch (e) {
       setAssignError(
         (e as Error).message ||
-          "Hiba történt a munkafázis állapot frissítésekor"
+          t("x.phaseStateError")
       );
     } finally {
       setAssigning(null);
@@ -194,19 +197,19 @@ export default function TasksPage() {
         // Force refetch immediately to refresh UI
         await queryClient.refetchQueries({ queryKey: ['work-tasks', workId] });
         // Show success message
-        showToast("success", "Új tétel sikeresen hozzáadva!");
+        showToast("success", t("pr.added"));
       } else {
         console.error("Tasks page - error:", result.error);
-        setAssignError(result.error || "Nem sikerült új tételt létrehozni.");
+        setAssignError(result.error || t("x.itemCreateFailed"));
         showToast(
           "error",
-          result.error || "Nem sikerült új tételt létrehozni."
+          result.error || t("x.itemCreateFailed")
         );
       }
     } catch (error) {
       console.error("Tasks page - exception:", error);
-      setAssignError("Hiba történt az új tétel létrehozásakor.");
-      showToast("error", "Hiba történt az új tétel létrehozásakor.");
+      setAssignError(t("x.newItemError"));
+      showToast("error", t("x.newItemError"));
     } finally {
       setAddingNewItem(false);
     }
@@ -245,7 +248,7 @@ export default function TasksPage() {
         setShowEditModal(false);
         setEditingWorkItem(null);
       } else {
-        throw new Error(result.error || "Hiba történt a mentés során");
+        throw new Error(result.error || t("od.errSave"));
       }
     } catch (error) {
       console.error("Error updating work item:", error);
@@ -276,7 +279,7 @@ export default function TasksPage() {
               color: "#5c3d09",
             }}
           >
-            <strong>Pipáld ki a folyamatban lévő feladatokat!</strong> Ezekre
+            <strong>{t("x.tickInProgress")}</strong> Ezekre
             fogom kiszámolni a szükséges erőforrás és eszköz igényt!
           </div>
         </div>

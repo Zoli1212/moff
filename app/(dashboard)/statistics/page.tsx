@@ -234,7 +234,7 @@ export default function StatisticsPage() {
                 <Users className="h-6 w-6" style={{ color: "#FE9C00" }} />
               </div>
               <div>
-                <p className="text-sm text-gray-500">Összes user</p>
+                <p className="text-sm text-gray-500">{t("x.allUsers")}</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
               </div>
             </div>
@@ -301,19 +301,19 @@ export default function StatisticsPage() {
                     Email
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                    Típus
+                    {t("stats.type")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                    Regisztráció
+                    {t("stats.registration")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                    Utolsó aktivitás
+                    {t("stats.lastActivity")}
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-                    Aktivitás
+                    {t("stats.activity")}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                    Meghívó
+                    {t("stats.invitedBy")}
                   </th>
                   <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
                     {t("common.details")}
@@ -523,7 +523,7 @@ export default function StatisticsPage() {
 
               {loadingDetails ? (
                 <div className="text-center py-8 text-gray-500">
-                  Betöltés...
+                  {t("worker.loading")}
                 </div>
               ) : activityDetails ? (
                 <>
@@ -535,7 +535,7 @@ export default function StatisticsPage() {
                         <p className="text-2xl font-bold" style={{ color: "#FE9C00" }}>
                           {activityDetails.offersCount}
                         </p>
-                        <p className="text-xs text-gray-500">Ajánlat</p>
+                        <p className="text-xs text-gray-500">{t("od.offer")}</p>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-3 text-center">
                         <p className="text-2xl font-bold" style={{ color: "#FE9C00" }}>
@@ -547,7 +547,7 @@ export default function StatisticsPage() {
                         <p className="text-2xl font-bold" style={{ color: "#FE9C00" }}>
                           {activityDetails.billingsCount}
                         </p>
-                        <p className="text-xs text-gray-500">Számla</p>
+                        <p className="text-xs text-gray-500">{t("stats.invoice")}</p>
                       </div>
                     </div>
                   </div>

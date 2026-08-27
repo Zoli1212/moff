@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useRouter } from "next/navigation";
 import WorkHeader from "@/components/WorkHeader";
 import { X } from "lucide-react";
@@ -41,6 +42,8 @@ interface Material {
 }
 
 export default function ProcurementClient({ workId }: { workId: number }) {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [selectedMaterials, setSelectedMaterials] = useState<Set<number>>(
@@ -109,7 +112,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
         backgroundColor: "#fff",
       }}
     >
-      <WorkHeader title="Anyagbeszerzés" />
+      <WorkHeader title={t("x.materialProcurement")} />
 
       <div style={{ padding: "16px" }}>
         {/* Close button */}
@@ -139,12 +142,12 @@ export default function ProcurementClient({ workId }: { workId: number }) {
               color: "#333",
             }}
           >
-            Válaszd ki a szükséges anyagokat
+            {t("x.chooseMaterials")}
           </label>
 
           {isLoading ? (
             <div style={{ textAlign: "center", padding: 40, color: "#999" }}>
-              Betöltés...
+              {t("worker.loading")}
             </div>
           ) : materials.length === 0 ? (
             <div
@@ -156,7 +159,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
                 borderRadius: 8,
               }}
             >
-              Nincs folyamatban lévő feladathoz tartozó anyag
+              {t("x.noMaterialForActive")}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -238,17 +241,17 @@ export default function ProcurementClient({ workId }: { workId: number }) {
                               </div>
                               <div style={{ fontSize: 11, color: "#065f46" }}>
                                 <div>
-                                  <span style={{ fontWeight: 500 }}>Jelenlegi ár: </span>
+                                  <span style={{ fontWeight: 500 }}>{t("taskcard.currentPrice")} </span>
                                   {material.materialUnitPrice?.toLocaleString("hu-HU")} Ft/{material.unit}
                                 </div>
                                 <div>
-                                  <span style={{ fontWeight: 500 }}>Legjobb ajánlat: </span>
+                                  <span style={{ fontWeight: 500 }}>{t("taskcard.bestOffer")} </span>
                                   <span style={{ fontWeight: 700, color: "#047857" }}>
                                     {bestOffer.bestPrice.toLocaleString("hu-HU")} Ft/{material.unit}
                                   </span>
                                 </div>
                                 <div>
-                                  <span style={{ fontWeight: 500 }}>Megtakarítás: </span>
+                                  <span style={{ fontWeight: 500 }}>{t("taskcard.saving")} </span>
                                   <span style={{ fontWeight: 700, color: "#047857" }}>
                                     -{bestOffer.savings.toLocaleString("hu-HU")} Ft/{material.unit}
                                   </span>
@@ -343,7 +346,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
                 marginBottom: 4,
               }}
             >
-              Kiválasztott tételek
+              {t("x.selectedItems")}
             </div>
             <div
               style={{
@@ -376,7 +379,7 @@ export default function ProcurementClient({ workId }: { workId: number }) {
               transition: "all 0.2s",
             }}
           >
-            Ajánlatbekérő küldése
+            {t("x.sendQuoteRequest")}
           </button>
           <button
             onClick={() => router.back()}

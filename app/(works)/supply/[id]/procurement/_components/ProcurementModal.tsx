@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { X } from "lucide-react";
 import MaterialShareButtons from "../../../_components/MaterialShareButtons";
 
@@ -23,6 +24,8 @@ export default function ProcurementModal({
   onClose,
   materials,
 }: ProcurementModalProps) {
+  const { t } = useLocale();
+
   if (!isOpen) return null;
 
   return (
@@ -91,7 +94,7 @@ export default function ProcurementModal({
               textAlign: "center",
             }}
           >
-            Ajánlatbekérő küldése
+            {t("x.sendQuoteRequest")}
           </h2>
           <p
             style={{
@@ -126,7 +129,7 @@ export default function ProcurementModal({
                 marginBottom: 12,
               }}
             >
-              Kiválasztott anyagok:
+              {t("x.selectedMaterials")}
             </h3>
             <div
               style={{

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface BatchScrapeResult {
   success: boolean;
@@ -16,6 +17,8 @@ interface BatchScrapeResult {
 }
 
 export default function TestBatchScrapePage() {
+  const { t } = useLocale();
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BatchScrapeResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export default function TestBatchScrapePage() {
             Ez az endpoint az összes Material táblában lévő anyagot scrapelje. Teljesen független a WorkItem alapú scraping-től.
           </p>
           <p className="text-xs text-blue-600 mt-1">
-            <strong>Cron ütemezés:</strong> Minden reggel 6:00-kor automatikusan (UTC)
+            <strong>{t("x.cronSchedule")}</strong> Minden reggel 6:00-kor automatikusan (UTC)
           </p>
         </div>
 
@@ -78,7 +81,7 @@ export default function TestBatchScrapePage() {
             disabled={loading}
             className="px-6 py-3 bg-[#FF9900] hover:bg-[#e68a00] disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors"
           >
-            {loading ? "Futtatás..." : "Material Batch Scraping Indítása"}
+            {loading ? t("x.running") : "Material Batch Scraping Indítása"}
           </button>
 
           {loading && (
@@ -88,7 +91,7 @@ export default function TestBatchScrapePage() {
                 <span>⏳ Árakat ellenőrzöm az összes Material tételre...</span>
               </div>
               <div className="text-xs text-gray-500">
-                Ez eltarthat egy ideig (1 másodperc / anyag). Kérlek várj...
+                {t("x.mayTakeAWhileMaterial")}
               </div>
             </div>
           )}
@@ -110,7 +113,7 @@ export default function TestBatchScrapePage() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-2xl font-bold text-gray-800">{result.results.total}</div>
-                  <div className="text-xs text-gray-600">Összes anyag</div>
+                  <div className="text-xs text-gray-600">{t("x.allMaterials")}</div>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
                   <div className="text-2xl font-bold text-green-600">{result.results.success}</div>
@@ -124,7 +127,7 @@ export default function TestBatchScrapePage() {
                   <div className="text-2xl font-bold text-blue-600">
                     {Math.round((result.results.success / result.results.total) * 100)}%
                   </div>
-                  <div className="text-xs text-gray-600">Siker arány</div>
+                  <div className="text-xs text-gray-600">{t("x.successRate")}</div>
                 </div>
               </div>
             )}
@@ -133,7 +136,7 @@ export default function TestBatchScrapePage() {
             {result.results && result.results.total > 0 && (
               <div className="mb-6">
                 <div className="flex justify-between text-xs text-gray-600 mb-1">
-                  <span>Előrehaladás</span>
+                  <span>{t("x.progress")}</span>
                   <span>{result.results.success + result.results.failed}/{result.results.total}</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
@@ -153,7 +156,7 @@ export default function TestBatchScrapePage() {
 
             <div className="space-y-2 mb-4 bg-white rounded-lg p-4">
               <div className="text-sm">
-                <span className="font-medium">Üzenet:</span> {result.message}
+                <span className="font-medium">{t("x.message")}</span> {result.message}
               </div>
               {result.tenantEmail && (
                 <div className="text-sm">
@@ -185,7 +188,7 @@ export default function TestBatchScrapePage() {
 
             <details className="mt-4">
               <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
-                Teljes JSON válasz
+                {t("x.fullJsonResponse")}
               </summary>
               <pre className="mt-2 p-4 bg-gray-100 rounded text-xs overflow-auto max-h-96">
                 {JSON.stringify(result, null, 2)}

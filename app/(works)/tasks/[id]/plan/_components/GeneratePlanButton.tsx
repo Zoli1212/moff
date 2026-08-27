@@ -29,7 +29,7 @@ export default function GeneratePlanButton({
       const result = await generateWorkPlan(workId);
 
       if (!result.success) {
-        toast.error(result.error ?? "Az ütemterv generálása nem sikerült.");
+        toast.error(result.error ?? t("x.planGenerationFailed"));
         return;
       }
 
@@ -37,7 +37,7 @@ export default function GeneratePlanButton({
         // Worth saying out loud: without a work start date the schedule is anchored to
         // today, which is a guess the user may want to correct.
         toast.warning(
-          "A munkának nincs kezdő dátuma, ezért az ütemterv mai naptól indul."
+          t("x.noStartDateFallback")
         );
       }
 
@@ -66,8 +66,8 @@ export default function GeneratePlanButton({
         onClose={() => setConfirming(false)}
         onConfirm={run}
         isLoading={isPending}
-        confirmText="Újragenerálás"
-        title="Ütemterv újragenerálása"
+        confirmText={t("x.regenerate")}
+        title={t("x.regeneratePlan")}
         message={`${existingAiTaskCount} AI által generált feladat cserélődik le — azok is, amiket közben szerkesztettél. Csak a kézzel felvett saját feladataid maradnak meg.`}
       />
     </>

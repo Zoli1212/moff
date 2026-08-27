@@ -102,7 +102,7 @@ export default function KanbanCard({
     startTransition(async () => {
       const result = await updateWorkTaskStatus(task.id, status);
       if (!result.success) {
-        toast.error(result.error ?? "A státusz módosítása nem sikerült.");
+        toast.error(result.error ?? t("plan.statusFailed"));
         return;
       }
       onChanged();
@@ -114,10 +114,10 @@ export default function KanbanCard({
       const result = await deleteWorkTask(task.id);
       setConfirmingDelete(false);
       if (!result.success) {
-        toast.error(result.error ?? "A törlés nem sikerült.");
+        toast.error(result.error ?? t("sc.deleteFailed"));
         return;
       }
-      toast.success("Feladat törölve.");
+      toast.success(t("x.taskDeleted"));
       onChanged();
     });
   };
@@ -160,7 +160,7 @@ export default function KanbanCard({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              aria-label="Műveletek"
+              aria-label={t("pr.actions")}
               onPointerDown={stopDrag}
               onClick={stopClick}
               className="-mr-0.5 -mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 md:-mr-1 md:-mt-1 md:h-7 md:w-7"
@@ -171,11 +171,11 @@ export default function KanbanCard({
           <DropdownMenuContent align="end" onClick={stopClick}>
             <DropdownMenuItem onSelect={() => onEdit(task)}>
               <Pencil className="mr-2 h-4 w-4" />
-              Szerkesztés
+              {t("de.edit")}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => onAddSubtask(task)}>
               <Plus className="mr-2 h-4 w-4" />
-              Alfeladat hozzáadása
+              {t("x.addSubtask")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
@@ -183,7 +183,7 @@ export default function KanbanCard({
               onSelect={() => setConfirmingDelete(true)}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Törlés
+              {t("common.delete")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -307,7 +307,7 @@ export default function KanbanCard({
           onClose={() => setConfirmingDelete(false)}
           onConfirm={remove}
           isLoading={isPending}
-          title="Feladat törlése"
+          title={t("x.deleteTask")}
           message={
             task.children.length > 0
               ? `A(z) „${task.title}" feladat és ${task.children.length} alfeladata is törlődik. Ez nem vonható vissza.`

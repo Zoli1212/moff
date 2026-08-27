@@ -1,6 +1,7 @@
 'use client'
 
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import * as z from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -21,6 +22,8 @@ const formSchema = z.object({
 })
 
 export default function EmailSender({ email, proposal }: { email: string, proposal: Proposal }) {
+  const { t } = useLocale();
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -49,9 +52,9 @@ export default function EmailSender({ email, proposal }: { email: string, propos
     });
 
     if (response.ok) {
-      toast.success("Email sikeresen elküldve!");
+      toast.success(t("x.emailSent"));
     } else {
-      toast.error("Hiba történt az email küldésekor!");
+      toast.error(t("x.emailSendError"));
     }
   }
 
@@ -64,7 +67,7 @@ export default function EmailSender({ email, proposal }: { email: string, propos
             name="email"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>Ügyfél email cím</FormLabel>
+                <FormLabel>{t("x.customerEmail")}</FormLabel>
                 <FormControl>
                   <Input placeholder="email" {...field} />
                 </FormControl>
@@ -77,7 +80,7 @@ export default function EmailSender({ email, proposal }: { email: string, propos
             name="attachments"
             render={({ field }) => (
               <FormItem className="flex-1">
-                <FormLabel>Csatolmány</FormLabel>
+                <FormLabel>{t("x.attachment")}</FormLabel>
                 <FormControl>
                   <Input
                     type="file"
@@ -101,7 +104,7 @@ export default function EmailSender({ email, proposal }: { email: string, propos
               </FormItem>
             )}
           />
-          <Button type="submit" className="h-10">Elküld</Button>
+          <Button type="submit" className="h-10">{t("x.send")}</Button>
         </div>
       </form>
     </Form>

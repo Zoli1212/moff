@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 import { OfferItem } from "@/types/offer.types";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -25,6 +26,8 @@ export function InvoiceItemsTable({
   items,
   onItemsChange,
 }: InvoiceItemsTableProps) {
+  const { t } = useLocale();
+
   const [editingItem, setEditingItem] = useState<{
     index: number;
     item: OfferItem;
@@ -58,7 +61,7 @@ export function InvoiceItemsTable({
   const handleAddItem = () => {
     const newItem: OfferItem = {
       id: Date.now(),
-      name: "Új tétel",
+      name: t("offers.newItem"),
       quantity: "1",
       unit: "db",
       materialUnitPrice: "0",
@@ -82,7 +85,7 @@ export function InvoiceItemsTable({
       onItemsChange(items.filter((_, i) => i !== itemToDelete));
       setDeleteConfirmOpen(false);
       setItemToDelete(null);
-      toast.success("Tétel törölve");
+      toast.success(t("x.itemDeleted"));
     }
   };
 
@@ -116,7 +119,7 @@ export function InvoiceItemsTable({
     const { index, item } = editingItem;
 
     if (!item.name || !item.quantity || !item.unit) {
-      toast.error("Kérem töltse ki az összes kötelező mezőt");
+      toast.error(t("od.fillRequired"));
       return;
     }
 
@@ -124,7 +127,7 @@ export function InvoiceItemsTable({
     newItems[index] = item;
     onItemsChange(newItems);
     setIsModalOpen(false);
-    toast.success("Tétel módosítva");
+    toast.success(t("x.itemUpdated"));
   };
 
   const handleToggleSelect = (index: number, checked: boolean) => {
@@ -148,12 +151,12 @@ export function InvoiceItemsTable({
           style={{ width: "min(90vw, 425px)" }}
         >
           <DialogHeader>
-            <DialogTitle>Tétel szerkesztése</DialogTitle>
+            <DialogTitle>{t("od.editItem")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Megnevezés
+                {t("od.name")}
               </Label>
               <Input
                 id="name"
@@ -164,7 +167,7 @@ export function InvoiceItemsTable({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="quantity" className="text-right">
-                Mennyiség
+                {t("od.quantity")}
               </Label>
               <Input
                 id="quantity"
@@ -174,7 +177,7 @@ export function InvoiceItemsTable({
                 className="col-span-1"
               />
               <Label htmlFor="unit" className="text-right">
-                Egység
+                {t("od.unit")}
               </Label>
               <Input
                 id="unit"
@@ -185,7 +188,7 @@ export function InvoiceItemsTable({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="materialUnitPrice" className="text-right">
-                Anyag egységár
+                {t("od.materialUnitPrice")}
               </Label>
               <div className="col-span-3 flex items-center">
                 <Input
@@ -206,7 +209,7 @@ export function InvoiceItemsTable({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="workUnitPrice" className="text-right">
-                Díj egységár
+                {t("od.feeUnitPrice")}
               </Label>
               <div className="col-span-3 flex items-center">
                 <Input
@@ -226,14 +229,14 @@ export function InvoiceItemsTable({
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
-              <Label className="text-right font-medium">Anyag összesen</Label>
+              <Label className="text-right font-medium">{t("od.materialTotal")}</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(editingItem?.item.materialTotal || "")}{" "}
                 Ft
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">Díj összesen</Label>
+              <Label className="text-right font-medium">{t("od.feeTotal")}</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(editingItem?.item.workTotal || "")} Ft
               </div>
@@ -241,14 +244,14 @@ export function InvoiceItemsTable({
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Mégse
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={saveItem}
               style={{ backgroundColor: "#FE9C00", color: "white" }}
               className="hover:opacity-90"
             >
-              Mentés
+              {t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -261,7 +264,7 @@ export function InvoiceItemsTable({
           style={{ width: "min(90vw, 425px)" }}
         >
           <DialogHeader>
-            <DialogTitle>Biztosan ki szeretnéd törölni?</DialogTitle>
+            <DialogTitle>{t("x.confirmDelete")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 mt-4">
             <Button
@@ -269,14 +272,14 @@ export function InvoiceItemsTable({
               className="w-full"
               style={{ backgroundColor: "#EF4444", color: "white" }}
             >
-              Törlés
+              {t("common.delete")}
             </Button>
             <Button
               variant="outline"
               onClick={() => setDeleteConfirmOpen(false)}
               className="w-full"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -284,7 +287,7 @@ export function InvoiceItemsTable({
 
       <div className="w-full">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-800">Tételek</h3>
+          <h3 className="text-lg font-semibold text-gray-800">{t("offers.items")}</h3>
           <Button
             variant="outline"
             size="sm"
@@ -292,7 +295,7 @@ export function InvoiceItemsTable({
             style={{ color: "#FE9C00", borderColor: "#FE9C00" }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Új tétel
+            {t("offers.newItem")}
           </Button>
         </div>
 
@@ -314,7 +317,7 @@ export function InvoiceItemsTable({
               htmlFor="select-all-mobile"
               className="font-medium text-sm text-gray-700"
             >
-              Összes kijelölése
+              {t("x.selectAll")}
             </label>
           </div>
 

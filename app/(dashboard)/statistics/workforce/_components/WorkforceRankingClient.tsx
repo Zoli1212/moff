@@ -46,7 +46,7 @@ export default function WorkforceRankingClient() {
       <header className="flex items-center gap-3 pt-6">
         <Link
           href="/statistics"
-          aria-label="Vissza a statisztikákhoz"
+          aria-label={t("x.backToStats")}
           className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
           style={{ color: BRAND }}
         >

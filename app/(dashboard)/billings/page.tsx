@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getUserWorks } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
 import Link from "next/link";
@@ -18,6 +19,8 @@ interface Work {
 }
 
 export default function BillingsPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,11 +75,11 @@ export default function BillingsPage() {
       case "pending":
         return "Folyamatban";
       case "sent":
-        return "Elküldve";
+        return t("offers.status.sent");
       case "accepted":
         return "Elfogadva";
       case "rejected":
-        return "Elutasítva";
+        return t("offers.status.rejected");
       case "work":
         return "Munka";
       default:
@@ -97,7 +100,7 @@ export default function BillingsPage() {
               <Link
                 href="/dashboard"
                 className="text-[#FE9C00] hover:text-[#FE9C00]/80 transition-colors"
-                aria-label="Vissza az irányítópultra"
+                aria-label={t("inv.backToDashboard")}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -114,19 +117,19 @@ export default function BillingsPage() {
                   />
                 </svg>
               </Link>
-              <h1 className="text-2xl font-bold text-gray-800">Számlázás</h1>
+              <h1 className="text-2xl font-bold text-gray-800">{t("price.billing")}</h1>
               <div className="w-8"></div>
             </div>
 
             <div className="mt-6 space-y-4">
               {isLoading ? (
                 <div className="text-center py-8">
-                  <p>Munkák betöltése...</p>
+                  <p>{t("x.loadingWorks")}</p>
                 </div>
               ) : works.length === 0 ? (
                 <div className="bg-white rounded-lg p-6 text-center">
                   <p className="text-gray-500">
-                    Nincsenek munkák, amikből számlát lehetne készíteni.
+                    {t("x.noWorksToBill")}
                   </p>
                 </div>
               ) : (
@@ -153,7 +156,7 @@ export default function BillingsPage() {
                         <div className="flex justify-between items-start">
                           <div>
                             <h3 className="font-medium" style={{ color: "#FE9C00" }}>
-                              {work.title || "Névtelen munka"}
+                              {work.title || t("x.unnamedWorkPlain")}
                             </h3>
                             {work.description && (
                               <p className="mt-1 text-sm text-gray-600 line-clamp-2">
@@ -185,7 +188,7 @@ export default function BillingsPage() {
                                 }).format(work.totalPrice)}
                               </span>
                             ) : (
-                              <span>Ár nincs megadva</span>
+                              <span>{t("x.noPriceGiven")}</span>
                             )}
                           </div>
                         </div>

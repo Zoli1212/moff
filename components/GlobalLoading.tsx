@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useDemandStore } from "@/store/offerLetterStore";
 import { Loader2 } from "lucide-react";
 
 export function GlobalLoading() {
+  const { t } = useLocale();
+
   const { isGlobalLoading } = useDemandStore();
   const [isVisible, setIsVisible] = useState(false);
   const [shouldShow, setShouldShow] = useState(false);
@@ -41,13 +44,13 @@ export function GlobalLoading() {
           <Loader2 className="w-16 h-16 text-blue-600 animate-spin" />
         </div>
         <h3 className="text-2xl font-bold text-gray-900 mb-3">
-          Feldolgozás folyamatban
+          {t("td.processingInProgress")}
         </h3>
         <p className="text-gray-600">
-          Az Ön kérése feldolgozás alatt áll, kérjük várjon...
+          {t("td.pleaseWait")}
         </p>
         <div className="mt-6 text-sm text-gray-500">
-          Ez eltarthat néhány másodpercig
+          {t("x.mayTakeSeconds")}
         </div>
       </div>
     </div>

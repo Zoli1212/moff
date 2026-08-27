@@ -1,3 +1,5 @@
+"use client";
+
 import { Cost, Phase, Proposal } from "@/types/proposal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import React from "react";

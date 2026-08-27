@@ -1,5 +1,6 @@
 "use client";
 import FullCalendar from "@fullcalendar/react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import React from "react";
 
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -56,6 +57,8 @@ export default function GoogleCalendarView({
   view,
   setView,
 }: GoogleCalendarViewProps) {
+  const { t } = useLocale();
+
   // Group WorkDiaryItems by groupNo and create events for groups
   const events = React.useMemo(() => {
     const list: EventInput[] = [];
@@ -346,7 +349,7 @@ export default function GoogleCalendarView({
 
           return (
             <div className="fc-event-inner detailed">
-              <div>{originalProps.workItemName || "Napló"}</div>
+              <div>{originalProps.workItemName || t("x.diary")}</div>
               <div>{originalProps.name || originalProps.email}</div>
               {hours && <div>{hours}</div>}
             </div>

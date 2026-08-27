@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState, useCallback } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
     Dialog,
     DialogContent,
@@ -23,6 +26,8 @@ interface ProcessedFile {
 }
 
 function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialogProps) {
+  const { t } = useLocale();
+
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState('');
     const [processedFile, setProcessedFile] = useState<ProcessedFile | null>(null);
@@ -88,7 +93,7 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialo
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Excel Fájl Feldolgozó</DialogTitle>
+                    <DialogTitle>{t("x.excelProcessor")}</DialogTitle>
                     <DialogDescription asChild>
                         <div className='mt-2 space-y-4'>
                             <div 
@@ -105,17 +110,17 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialo
                                     {isProcessing ? (
                                         <div className='space-y-2'>
                                             <Loader2 className='h-6 w-6 mx-auto animate-spin text-primary' />
-                                            <p className='text-sm text-muted-foreground'>Feldolgozás folyamatban...</p>
+                                            <p className='text-sm text-muted-foreground'>{t("x.processingInProgress")}</p>
                                         </div>
                                     ) : isDragActive ? (
-                                        <p className='text-sm text-muted-foreground'>Engedje el a fájlt a feltöltéshez</p>
+                                        <p className='text-sm text-muted-foreground'>{t("x.dropToUpload")}</p>
                                     ) : (
                                         <>
                                             <p className='text-sm text-muted-foreground'>
-                                                Húzza ide a fájlt, vagy kattintson a tallózáshoz
+                                                {t("x.dropOrBrowse")}
                                             </p>
                                             <p className='text-xs text-muted-foreground'>
-                                                Csak .xlsx és .xls fájlok támogatottak
+                                                {t("x.onlyXlsx")}
                                             </p>
                                         </>
                                     )}
@@ -132,7 +137,7 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialo
                                 <div className='p-4 bg-green-50 max-w-md rounded-md border border-green-200'>
                                     <div className='flex justify-between items-center'>
                                         <div>
-                                            <p className='font-medium'>Fájl sikeresen feldolgozva!</p>
+                                            <p className='font-medium'>{t("x.fileProcessed")}</p>
                                             <p className='text-sm text-muted-foreground'>{processedFile.filename}</p>
                                         </div>
                                         <Button 
@@ -155,7 +160,7 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialo
                         variant='outline' 
                         onClick={() => setOpenDialog(false)}
                     >
-                        Bezárás
+                        {t("common.close")}
                     </Button>
                     <Button 
                         onClick={downloadFile}
@@ -163,7 +168,7 @@ function OfferGeneratorDialog({ openDialog, setOpenDialog }: OfferGeneratorDialo
                         className='gap-2'
                     >
                         <FileDown className='h-4 w-4' />
-                        Fájl letöltése
+                        {t("x.downloadFile")}
                     </Button>
                 </DialogFooter>
             </DialogContent>

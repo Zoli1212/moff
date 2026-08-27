@@ -43,9 +43,9 @@ export default async function Billing() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Előfizetés kezelése</CardTitle>
+              <CardTitle>{"Előfizetés kezelése"}</CardTitle>
               <CardDescription>
-                Kezeld az előfizetésedet, módosítsd a fizetési módot vagy mondj le
+                {"Kezeld az előfizetésedet, módosítsd a fizetési módot vagy mondj le"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -57,13 +57,13 @@ export default async function Billing() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Státusz</p>
+                  <p className="text-sm text-gray-500">{"Státusz"}</p>
                   <p className="text-lg font-semibold">
                     {statusMap[subscription.status] || subscription.status}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Következő fizetés</p>
+                  <p className="text-sm text-gray-500">{"Következő fizetés"}</p>
                   <p className="text-lg font-semibold">
                     {new Date(subscription.stripeCurrentPeriodEnd).toLocaleDateString("hu-HU")}
                   </p>
@@ -76,7 +76,7 @@ export default async function Billing() {
                   className="w-full"
                   style={{ backgroundColor: "#FE9C00" }}
                 >
-                  Előfizetés kezelése
+                  {"Előfizetés kezelése"}
                 </Button>
               </form>
 

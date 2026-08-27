@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,8 @@ export default function UpdateWorkItemQuantityModal({
   initialQuantity,
   workItemName,
 }: UpdateWorkItemQuantityModalProps) {
+  const { t } = useLocale();
+
   const [quantity, setQuantity] = useState(initialQuantity);
 
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function UpdateWorkItemQuantityModal({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100]">
       <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Mennyiség módosítása</h3>
+          <h3 className="text-lg font-semibold">{t("diary.editQuantity")}</h3>
           <Button type="button" variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -55,21 +58,21 @@ export default function UpdateWorkItemQuantityModal({
             <p className="text-sm text-gray-600 mb-2">
               Feladat: <span className="font-medium">{workItemName}</span>
             </p>
-            <Label htmlFor="quantity">Új mennyiség</Label>
+            <Label htmlFor="quantity">{t("taskcard.newQuantity")}</Label>
             <Input
               id="quantity"
               type="number"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Adja meg a mennyiséget..."
+              placeholder={t("x.enterQuantity")}
             />
           </div>
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
-              Mégse
+              {t("common.cancel")}
             </Button>
             <Button type="button" onClick={handleSave}>
-              Mentés
+              {t("common.save")}
             </Button>
           </div>
         </div>

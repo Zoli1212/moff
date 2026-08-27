@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { updateExpectedProfitPercent, getExpectedProfitPercent } from "@/actions/performance-actions";
 
 interface ProfitPercentageSectionProps {
@@ -8,6 +9,8 @@ interface ProfitPercentageSectionProps {
 }
 
 export default function ProfitPercentageSection({ workId }: ProfitPercentageSectionProps) {
+  const { t } = useLocale();
+
   const [percentage, setPercentage] = useState<number | string>(50);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,7 +41,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
     const numericPercentage = parseFloat(percentage.toString());
 
     if (isNaN(numericPercentage) || numericPercentage < 0 || numericPercentage > 100) {
-      setMessage("A százalék 0 és 100 közötti szám kell legyen!");
+      setMessage(t("x.percentRange"));
       return;
     }
 
@@ -56,7 +59,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
       }
     } catch (error) {
       setMessage("❌ Hiba történt a mentés során");
-      console.error("Mentési hiba:", error);
+      console.error(t("x.saveError"), error);
     } finally {
       setIsSaving(false);
     }
@@ -78,7 +81,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
         }}
       >
         <div style={{ textAlign: "center", color: "#666" }}>
-          Elvárt profit betöltése...
+          {t("x.loadingExpectedProfit")}
         </div>
       </div>
     );
@@ -105,7 +108,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
           textShadow: "0 2px 4px rgba(0,0,0,0.5)",
         }}
       >
-        Teljesítmény
+        {t("x.performance")}
       </div>
       
       <div
@@ -117,7 +120,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
           opacity: 0.8,
         }}
       >
-        Adja meg az elvárt profit százalékát.
+        {t("x.enterExpectedProfit")}
       </div>
 
       <div
@@ -164,7 +167,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
             textAlign: 'center'
           }}
         >
-          Munkadíj - Költségek / Költségek
+          {t("x.labourCosts")}
         </div>
 
         <button
@@ -182,7 +185,7 @@ export default function ProfitPercentageSection({ workId }: ProfitPercentageSect
             transition: "all 0.3s ease",
           }}
         >
-          {isSaving ? "Mentés..." : "Mentés"}
+          {isSaving ? t("od.saving") : t("common.save")}
         </button>
       </div>
 

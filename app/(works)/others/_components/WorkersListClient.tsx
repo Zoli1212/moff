@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -19,6 +20,8 @@ interface WorkerWithStatus extends WorkerAcrossTenants {
 }
 
 export default function WorkersListClient({ workers }: WorkersListClientProps) {
+  const { t } = useLocale();
+
   // Initialize workers with fake active status
   const [workersWithStatus, setWorkersWithStatus] = useState<WorkerWithStatus[]>(
     workers.map(worker => ({
@@ -82,7 +85,7 @@ export default function WorkersListClient({ workers }: WorkersListClientProps) {
               <Users className="h-8 w-8 text-blue-600" />
               <div>
                 <p className="text-2xl font-bold">{totalCount}</p>
-                <p className="text-sm text-gray-600">Összes munkás</p>
+                <p className="text-sm text-gray-600">{t("wr.allWorkers")}</p>
               </div>
             </div>
           </CardContent>
@@ -94,7 +97,7 @@ export default function WorkersListClient({ workers }: WorkersListClientProps) {
               <Users className="h-8 w-8 text-green-600" />
               <div>
                 <p className="text-2xl font-bold text-green-600">{activeCount}</p>
-                <p className="text-sm text-gray-600">Aktív munkások</p>
+                <p className="text-sm text-gray-600">{t("wr.activeWorkers")}</p>
               </div>
             </div>
           </CardContent>
@@ -118,16 +121,16 @@ export default function WorkersListClient({ workers }: WorkersListClientProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Szűrők
+            {t("x.filters")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="search">Keresés</Label>
+              <Label htmlFor="search">{t("wr.search")}</Label>
               <Input
                 id="search"
-                placeholder="Név, email vagy szerepkör..."
+                placeholder={t("x.searchNameEmailRole")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="mt-1"
@@ -262,10 +265,10 @@ export default function WorkersListClient({ workers }: WorkersListClientProps) {
           <CardContent className="p-12 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Nincs találat
+              {t("stats.noResults")}
             </h3>
             <p className="text-gray-600">
-              Próbálja meg módosítani a keresési feltételeket.
+              {t("x.trySearchAgain")}
             </p>
           </CardContent>
         </Card>

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import ConfirmationDialog from "@/components/ConfirmationDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ interface WorkerEditModalProps {
 }
 
 const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, worker, onSubmit, onDelete }) => {
+  const { t } = useLocale();
+
   const [name, setName] = useState(worker?.name ?? "");
   const [email, setEmail] = useState(worker?.email ?? "");
   const [phone, setPhone] = useState(worker?.phone ?? "");
@@ -80,7 +83,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
       <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[90vw] sm:max-w-md rounded-2xl p-6">
         <DialogHeader>
-          <DialogTitle>Munkás adatok</DialogTitle>
+          <DialogTitle>{t("x.workerData")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {/* Contact buttons at the top */}
@@ -89,7 +92,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               <a
                 href={`mailto:${email}`}
                 className="w-16 h-16 rounded-full bg-blue-500 hover:bg-blue-600 text-white flex items-center justify-center shadow-md transition-colors"
-                title="Email küldése"
+                title={t("x.sendEmail")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -101,7 +104,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               <a
                 href={`tel:${phone}`}
                 className="w-16 h-16 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center shadow-md transition-colors"
-                title="Hívás indítása"
+                title={t("x.startCall")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
@@ -129,7 +132,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
                       setAvatarError(""); 
                     }}
                     className="absolute -top-2 -right-2 bg-white border border-red-500 text-red-500 rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-50 transition"
-                    title="Kép törlése"
+                    title={t("diary.deleteImage")}
                   >
                     ×
                   </button>
@@ -154,7 +157,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
                           if (data.url) {
                             setAvatarUrl(data.url);
                           } else {
-                            setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                            setAvatarError(data.error || t("work.uploadError"));
                             setAvatarUrl("");
                             setAvatarPreview("");
                           }
@@ -173,7 +176,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               ) : (
                 <label className="flex flex-col items-center justify-center w-32 h-32 border-2 border-dashed border-gray-300 rounded-full cursor-pointer hover:bg-gray-50 transition">
                   <span className="text-xs text-gray-500 text-center px-2">
-                    {avatarUploading ? "Feltöltés..." : "Kép hozzáadása"}
+                    {avatarUploading ? t("diary.uploading") : t("diary.addImage")}
                   </span>
                   <input
                     type="file"
@@ -194,7 +197,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
                         if (data.url) {
                           setAvatarUrl(data.url);
                         } else {
-                          setAvatarError(data.error || "Hiba történt a feltöltésnél.");
+                          setAvatarError(data.error || t("work.uploadError"));
                           setAvatarUrl("");
                           setAvatarPreview("");
                         }
@@ -215,7 +218,7 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               <div className="text-red-600 text-xs">{avatarError}</div>
             )}
             <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">{name || "Névtelen munkás"}</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">{name || t("work.unnamedWorker")}</h3>
               {phone && (
                 <p className="text-sm text-gray-600 mb-1">
                   <span className="font-medium">📞</span> {phone}
@@ -237,10 +240,10 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
               disabled={loading}
               className="w-full max-w-xs"
             >
-              Törlés
+              {t("common.delete")}
             </Button>
             <Button type="submit" disabled={loading} className="flex-1" style={{ display: "none" }}>
-              Mentés
+              {t("common.save")}
             </Button>
           </DialogFooter>
         </form>
@@ -248,8 +251,8 @@ const WorkerEditModal: React.FC<WorkerEditModalProps> = ({ open, onOpenChange, w
           isOpen={isConfirmOpen}
           onClose={() => setConfirmOpen(false)}
           onConfirm={handleDelete}
-          title="Munkás törlése"
-          description="Biztos, hogy törlöd ezt a munkást? A művelet nem vonható vissza."
+          title={t("x.deleteWorker")}
+          description={t("x.confirmDeleteWorker")}
         />
       </DialogContent>
     </Dialog>

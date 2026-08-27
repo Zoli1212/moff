@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useInviteToken as activateInviteToken } from "@/actions/invite-actions";
@@ -14,6 +15,8 @@ export default function InviteClient({
   token: string;
   createdBy: string;
 }) {
+  const { t } = useLocale();
+
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const [processing, setProcessing] = useState(false);
@@ -33,7 +36,7 @@ export default function InviteClient({
         router.push("/dashboard");
       }, 2000);
     } else {
-      setError(result.error || "Hiba történt");
+      setError(result.error || t("x.errorOccurred"));
       setProcessing(false);
     }
   }, [user, token, router]);
@@ -61,7 +64,7 @@ export default function InviteClient({
         <div className="max-w-md w-full bg-white/10 backdrop-blur-lg rounded-lg p-8 text-center">
           <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
           <p className="text-gray-300">
-            {!isLoaded ? "Betöltés..." : "14 napos trial aktiválása..."}
+            {!isLoaded ? t("worker.loading") : t("x.trialActivating")}
           </p>
         </div>
       </div>
@@ -78,7 +81,7 @@ export default function InviteClient({
             href="/"
             className="inline-block px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
           >
-            Vissza a főoldalra
+            {t("offers.list.backHome")}
           </Link>
         </div>
       </div>
@@ -104,16 +107,16 @@ export default function InviteClient({
           </svg>
         </div>
         <h1 className="text-2xl font-bold text-white mb-4">
-          Sikeres aktiválás!
+          {t("x.activationSuccess")}
         </h1>
         <p className="text-gray-300 mb-2">
-          14 napos Pro trial aktiválva
+          {t("x.trialActivated")}
         </p>
         <p className="text-sm text-gray-400 mb-6">
           Meghívó: {createdBy}
         </p>
         <p className="text-sm text-gray-500">
-          Átirányítás a főoldalra...
+          {t("x.redirecting")}
         </p>
       </div>
     </div>

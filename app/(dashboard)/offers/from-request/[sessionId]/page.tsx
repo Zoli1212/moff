@@ -44,7 +44,7 @@ export default function FromRequestPage() {
           userEmail ? getNotifications(userEmail) : Promise.resolve([]),
         ]);
         if (!data) {
-          setError("Az ajánlatkérés nem található.");
+          setError(t("x.requestNotFound"));
         } else {
           setSession(data as SessionData);
           // Find the matching notification
@@ -54,7 +54,7 @@ export default function FromRequestPage() {
           if (match) setNotificationId(match.id);
         }
       } catch {
-        setError("Hiba történt az adatok betöltésekor.");
+        setError(t("x.dataLoadError"));
       } finally {
         setLoading(false);
       }
@@ -100,7 +100,7 @@ export default function FromRequestPage() {
         throw new Error("Offer creation failed");
       }
     } catch {
-      setError("Hiba történt az ajánlat generálásakor. Kérjük próbálja újra.");
+      setError(t("x.offerGenerateError"));
       setGenerating(false);
     }
   };
@@ -154,9 +154,9 @@ export default function FromRequestPage() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
         {/* Header */}
         <div className="bg-orange-50 border-b border-orange-200 px-6 py-4">
-          <h1 className="text-lg font-semibold text-gray-800">Beérkezett ajánlatkérés</h1>
+          <h1 className="text-lg font-semibold text-gray-800">{t("x.incomingRequest")}</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Egy megrendelő ajánlatot kér az alábbi munkákra
+            {t("x.customerRequestsQuote")}
           </p>
         </div>
 
@@ -207,7 +207,7 @@ export default function FromRequestPage() {
             <div className="flex items-start gap-3">
               <Ruler className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Méretek</p>
+                <p className="text-sm font-medium text-gray-700">{t("x.dimensions")}</p>
                 {(() => {
                   const dim = session.dimensions as Record<string, unknown>;
                   const parts: string[] = [];
@@ -222,7 +222,7 @@ export default function FromRequestPage() {
 
           {/* Original description */}
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-sm font-medium text-gray-700 mb-2">Megrendelő leírása</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">{t("x.customerDescription")}</p>
             <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600 whitespace-pre-wrap">
               {session.description}
             </div>
@@ -231,7 +231,7 @@ export default function FromRequestPage() {
           {/* Estimate if available */}
           {cleanEstimate && (
             <div className="mt-2">
-              <p className="text-sm font-medium text-gray-700 mb-2">Előzetes becslés</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t("x.preliminaryEstimate")}</p>
               <div className="bg-orange-50 border border-orange-100 rounded-lg p-4 text-sm text-gray-600 whitespace-pre-wrap">
                 {cleanEstimate}
               </div>
@@ -252,7 +252,7 @@ export default function FromRequestPage() {
             {generating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Ajánlat generálása...
+                {t("x.generatingOffer")}
               </>
             ) : (
               <>
@@ -266,7 +266,7 @@ export default function FromRequestPage() {
             disabled={generating}
             className="flex-1 bg-white hover:bg-gray-50 text-gray-600 font-medium py-3 px-4 rounded-lg border border-gray-200 transition-all"
           >
-            Elutasítás
+            {t("x.reject")}
           </button>
         </div>
       </div>

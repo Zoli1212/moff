@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useTransition, useRef } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getWorkforce } from "@/actions/workforce-actions";

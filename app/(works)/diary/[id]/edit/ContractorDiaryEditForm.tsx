@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { WorkDiaryWithItem } from "@/actions/get-workdiariesbyworkid-actions";
 
 interface ContractorDiaryEditFormProps {
@@ -8,6 +11,8 @@ interface ContractorDiaryEditFormProps {
 }
 
 export default function ContractorDiaryEditForm({ diary, onSave, onCancel }: ContractorDiaryEditFormProps) {
+  const { t } = useLocale();
+
   const [description, setDescription] = useState(diary.description || "");
   const [weather, setWeather] = useState(diary.weather || "");
   const [temperature, setTemperature] = useState(diary.temperature ?? "");
@@ -35,33 +40,33 @@ export default function ContractorDiaryEditForm({ diary, onSave, onCancel }: Con
   return (
     <form className="space-y-4" onSubmit={handleSubmit}>
       <div>
-        <label className="block font-medium">Leírás</label>
+        <label className="block font-medium">{t("od.description")}</label>
         <textarea className="w-full border rounded p-2" value={description} onChange={e => setDescription(e.target.value)} rows={4} />
       </div>
       <div>
-        <label className="block font-medium">Időjárás</label>
+        <label className="block font-medium">{t("x.weather")}</label>
         <input className="w-full border rounded p-2" value={weather} onChange={e => setWeather(e.target.value)} />
       </div>
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block font-medium">Hőmérséklet (°C)</label>
+          <label className="block font-medium">{t("x.temperature")}</label>
           <input type="number" className="w-full border rounded p-2" value={temperature} onChange={e => setTemperature(e.target.value)} />
         </div>
         <div>
-        <label className="block font-medium">Mennyiség</label>
+        <label className="block font-medium">{t("od.quantity")}</label>
         <input type="number" className="w-full border rounded p-2" value={quantity} onChange={e => setQuantity(e.target.value)} min={0} step={0.01} />
       </div>
       </div>
       <div>
-        <label className="block font-medium">Mennyiségi egység</label>
+        <label className="block font-medium">{t("diary.unit")}</label>
         <input className="w-full border rounded p-2" value={unit} onChange={e => setUnit(e.target.value)} placeholder="pl. m², fm, db" />
       </div>
       <div>
-        <label className="block font-medium">Munkaóra</label>
+        <label className="block font-medium">{t("diary.workHours")}</label>
         <input type="number" className="w-full border rounded p-2" value={workHours} onChange={e => setWorkHours(e.target.value)} min={0} step={0.1} />
       </div>
       <div>
-        <label className="block font-medium">Problémák</label>
+        <label className="block font-medium">{t("x.issues")}</label>
         <textarea className="w-full border rounded p-2" value={issues} onChange={e => setIssues(e.target.value)} rows={2} />
       </div>
       <div>
@@ -69,8 +74,8 @@ export default function ContractorDiaryEditForm({ diary, onSave, onCancel }: Con
         <textarea className="w-full border rounded p-2" value={notes} onChange={e => setNotes(e.target.value)} rows={2} />
       </div>
       <div className="flex gap-4 mt-6">
-        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Mentés</button>
-        <button type="button" className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400" onClick={onCancel}>Mégsem</button>
+        <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">{t("common.save")}</button>
+        <button type="button" className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400" onClick={onCancel}>{t("diary.cancel")}</button>
       </div>
     </form>
   );

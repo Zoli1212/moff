@@ -84,7 +84,7 @@ function EmailList() {
 
   const analyzeEmail = async () => {
     if (!selectedEmail?.content) {
-      setAnalysisError("Nincs elemzésre váró tartalom");
+      setAnalysisError(t("x.nothingToAnalyse"));
       return;
     }
 
@@ -131,7 +131,7 @@ function EmailList() {
 
       if (!result) {
         throw new Error(
-          "Nem sikerült letölteni az elemzést. Kérjük, próbálja újra később."
+          t("x.analysisDownloadFailed")
         );
       }
     } catch (error: unknown) {
@@ -173,9 +173,9 @@ function EmailList() {
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
-      <h2 className="text-2xl font-bold mb-4">Kérések lista</h2>
+      <h2 className="text-2xl font-bold mb-4">{t("x.requestList")}</h2>
       {emails.length === 0 ? (
-        <div className="text-gray-500">Nincs beérkező email.</div>
+        <div className="text-gray-500">{t("x.noIncomingEmail")}</div>
       ) : (
         <ul className="w-full max-w-[1600px] p-0 m-0 list-none">
           {emails.map((email) => (
@@ -209,7 +209,7 @@ function EmailList() {
                   </p>
                 </div>
                 {email.hasAttachment && (
-                  <span className="flex-shrink-0 ml-2" title="Mellékletek">
+                  <span className="flex-shrink-0 ml-2" title={t("x.attachments")}>
                     <FileText className="w-4 h-4 text-gray-400" />
                   </span>
                 )}
@@ -261,7 +261,7 @@ function EmailList() {
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <h4 className="text-sm font-medium mb-2 flex items-center">
                       <FileText className="w-4 h-4 mr-1" />
-                      Mellékletek
+                      {t("x.attachments")}
                     </h4>
                     <div className="flex flex-wrap gap-2">
                       {selectedEmail.attachmentFilenames.map(
@@ -283,7 +283,7 @@ function EmailList() {
 
                 <div className="mt-6 pt-4 border-t border-gray-200">
                   <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-sm font-medium">Elemzés</h4>
+                    <h4 className="text-sm font-medium">{t("x.analysis")}</h4>
                     <Button
                       onClick={analyzeEmail}
                       disabled={isAnalyzing}
@@ -292,7 +292,7 @@ function EmailList() {
                       {isAnalyzing ? (
                         <>
                           <Loader2Icon className="w-4 h-4 animate-spin" />
-                          Elemzés folyamatban...
+                          {t("x.analysisInProgress")}
                         </>
                       ) : (
                         <>
@@ -313,13 +313,13 @@ function EmailList() {
                   {analysisResult && (
                     <div className="bg-gray-50 rounded-lg p-4 mt-4">
                       <h5 className="font-medium text-gray-900 mb-3">
-                        Eredmények
+                        {t("x.results")}
                       </h5>
 
                       {analysisResult.analysis?.main_topic && (
                         <div className="mb-4">
                           <h6 className="text-sm font-medium text-gray-700 mb-1">
-                            Fő téma
+                            {t("x.mainTopic")}
                           </h6>
                           <p className="text-sm">
                             {analysisResult.analysis.main_topic}
@@ -331,7 +331,7 @@ function EmailList() {
                         analysisResult.analysis.key_points.length > 0 && (
                           <div className="mb-4">
                             <h6 className="text-sm font-medium text-gray-700 mb-1">
-                              Kulcsfontosságú pontok
+                              {t("x.keyPoints")}
                             </h6>
                             <ul className="list-disc pl-5 space-y-1">
                               {analysisResult.analysis.key_points.map(
@@ -347,7 +347,7 @@ function EmailList() {
                         analysisResult.summary.next_steps.length > 0 && (
                           <div className="mt-4 pt-4 border-t border-gray-200">
                             <h6 className="text-sm font-medium text-gray-700 mb-2">
-                              Következő lépések
+                              {t("x.nextSteps")}
                             </h6>
                             <ul className="list-disc pl-5 space-y-1">
                               {analysisResult.summary.next_steps.map(

@@ -46,14 +46,14 @@ export default function OfferLetterGenerator() {
       router.push(`/ai-tools/ai-offer-letter-mobile-redirect/${recordId}`);
     } catch (err) {
       console.error("Error processing text:", err);
-      setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
+      setError(t("td.processError"));
       setIsLoading(false);
     }
   };
 
   return (
     <div className="container mx-auto p-4 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6">Ajánlatlevél Generátor</h1>
+      <h1 className="text-2xl font-bold mb-6">{t("ai.letterGenerator")}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
@@ -61,7 +61,7 @@ export default function OfferLetterGenerator() {
             htmlFor="offer-text"
             className="block text-sm font-medium mb-2"
           >
-            Illessze be az elemzendő szöveget:
+            {t("x.pasteTextToAnalyse")}
           </label>
           <Textarea
             id="offer-text"
@@ -83,7 +83,7 @@ export default function OfferLetterGenerator() {
             ) : (
               <>
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generálás
+                {t("x.generate")}
               </>
             )}
           </Button>

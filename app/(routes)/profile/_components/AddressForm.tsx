@@ -20,7 +20,7 @@ export default function AddressForm() {
     address: "",
     city: "",
     zip: "",
-    country: "Magyarország",
+    country: t("x.hungary"),
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -38,7 +38,7 @@ export default function AddressForm() {
               address: data.address || "",
               city: data.city || "",
               zip: data.zip || "",
-              country: data.country || "Magyarország",
+              country: data.country || t("x.hungary"),
             });
           }
         }
@@ -251,7 +251,7 @@ export default function AddressForm() {
               borderRadius: "6px",
               fontSize: "14px",
             }}
-            placeholder="Magyarország"
+            placeholder={t("x.hungary")}
           />
         </div>
 

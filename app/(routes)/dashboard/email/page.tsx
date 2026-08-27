@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export default function AuthPage() {
+  const { t } = useLocale();
+
   const [authUrl, setAuthUrl] = useState("");
 
   useEffect(() => {
@@ -14,7 +17,7 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-lg shadow-lg flex flex-col items-center w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-gray-800">Email Elemzés</h1>
+        <h1 className="text-2xl font-bold mb-6 text-gray-800">{t("x.emailAnalysis")}</h1>
         {authUrl && (
           <a href={authUrl} className="w-full">
             <button

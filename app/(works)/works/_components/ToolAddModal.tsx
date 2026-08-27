@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,8 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
   onSubmit,
   workItems,
 }) => {
+  const { t } = useLocale();
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -79,11 +82,11 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Új eszköz hozzáadása</DialogTitle>
+          <DialogTitle>{t("ts.addTool")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Eszköz neve *</Label>
+            <Label htmlFor="name">{t("x.toolNameRequired")}</Label>
             <Input
               id="name"
               type="text"
@@ -95,7 +98,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Leírás</Label>
+            <Label htmlFor="description">{t("od.description")}</Label>
             <Input
               id="description"
               type="text"
@@ -106,7 +109,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="quantity">Mennyiség *</Label>
+            <Label htmlFor="quantity">{t("aoi.quantityRequired")}</Label>
             <Input
               id="quantity"
               type="number"
@@ -125,7 +128,7 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
               required
             >
               <SelectTrigger>
-                <SelectValue placeholder="Válassz feladatot" />
+                <SelectValue placeholder={t("x.chooseTask")} />
               </SelectTrigger>
               <SelectContent>
                 {workItems.map((item) => (
@@ -144,13 +147,13 @@ const ToolAddModal: React.FC<ToolAddModalProps> = ({
               onClick={handleClose}
               disabled={isSubmitting}
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
               disabled={!name.trim() || !workItemId || isSubmitting}
             >
-              {isSubmitting ? "Mentés..." : "Hozzáadás"}
+              {isSubmitting ? t("od.saving") : t("aoi.add")}
             </Button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -31,6 +32,8 @@ export default function SalaryHistoryModal({
   salaryHistory,
   isLoading
 }: SalaryHistoryModalProps) {
+  const { t } = useLocale();
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('hu-HU', {
       style: 'currency',
@@ -114,7 +117,7 @@ export default function SalaryHistoryModal({
           <div className="bg-gray-50 p-4 rounded-lg">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Jelenlegi fizetés</p>
+                <p className="text-sm text-gray-600 mb-1">{t("x.currentSalary")}</p>
                 <p className="text-xl font-semibold text-gray-900">
                   {formatCurrency(getCurrentSalary())}
                 </p>
@@ -124,7 +127,7 @@ export default function SalaryHistoryModal({
               </div>
               {totalIncrease && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Összes növekedés</p>
+                  <p className="text-sm text-gray-600 mb-1">{t("x.totalIncrease")}</p>
                   <p className={`text-xl font-semibold ${
                     totalIncrease.difference >= 0 ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -140,18 +143,18 @@ export default function SalaryHistoryModal({
 
           {/* Fizetéstörténet lista */}
           <div className="space-y-4">
-            <h3 className="font-medium text-gray-900">Fizetésváltozások</h3>
+            <h3 className="font-medium text-gray-900">{t("x.payChanges")}</h3>
             
             {isLoading ? (
               <div className="text-center py-8">
-                <p className="text-gray-500">Betöltés...</p>
+                <p className="text-gray-500">{t("worker.loading")}</p>
               </div>
             ) : salaryHistory.length === 0 ? (
               <div className="text-center py-8">
                 <History className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">Még nincs fizetéstörténet</p>
+                <p className="text-gray-500">{t("x.noPayHistory")}</p>
                 <p className="text-sm text-gray-400 mt-1">
-                  A jelenlegi fizetés a WorkforceRegistry alapértelmezett értéke.
+                  {t("x.defaultSalaryNote")}
                 </p>
               </div>
             ) : (
@@ -219,15 +222,15 @@ export default function SalaryHistoryModal({
                       {/* Részletes információk */}
                       <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-3 gap-4 text-sm text-gray-600">
                         <div>
-                          <p className="text-xs text-gray-500">Órabér</p>
+                          <p className="text-xs text-gray-500">{t("x.hourlyRate")}</p>
                           <p>{formatCurrency(item.dailyRate / 8)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Heti becslés (5 nap)</p>
+                          <p className="text-xs text-gray-500">{t("x.weeklyEstimate")}</p>
                           <p>{formatCurrency(item.dailyRate * 5)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Havi becslés (22 nap)</p>
+                          <p className="text-xs text-gray-500">{t("x.monthlyEstimate")}</p>
                           <p>{formatCurrency(item.dailyRate * 22)}</p>
                         </div>
                       </div>
@@ -243,7 +246,7 @@ export default function SalaryHistoryModal({
         <div className="flex justify-end pt-4 border-t">
           <Button variant="outline" onClick={onClose}>
             <X className="h-4 w-4 mr-2" />
-            Bezárás
+            {t("common.close")}
           </Button>
         </div>
       </DialogContent>

@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Tool as BaseTool, Tool, WorkItem } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
 // import { checkToolExists } from "../../../../actions/tool-exists.server";
@@ -23,6 +24,8 @@ const ToolDetailsModal = ({
   onClose: () => void;
   tool: BaseTool | null;
 }) => {
+  const { t } = useLocale();
+
   if (!open || !tool) return null;
   return (
     <div
@@ -67,7 +70,7 @@ const ToolDetailsModal = ({
           {tool.name}
         </h2>
         <div style={{ fontSize: 16, marginBottom: 8 }}>
-          Mennyiség: <b>{tool.quantity}</b> db
+          {t("de.quantity")} <b>{tool.quantity}</b> db
         </div>
       </div>
     </div>
@@ -91,6 +94,8 @@ const ToolsSlotsSection: React.FC<Props> = ({
   assignedTools: assignedToolsProp,
   workItems = [],
 }) => {
+  const { t } = useLocale();
+
   // Local state for assignedTools to enable instant UI update
   const [assignedTools, setAssignedTools] =
     useState<AssignedTool[]>(assignedToolsProp);
@@ -119,7 +124,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
       if (tool.id && tool.id !== -1) {
         // Már létező eszköz, csak hozzárendelés
         await createWorkToolsRegistry(workId, tool.id, quantity, tool.name);
-        toast.success("Az eszköz sikeresen hozzárendelve a munkához!");
+        toast.success(t("ts.assigned"));
       } else {
         // Nem létező eszköz: regisztráljuk, majd hozzárendeljük
         const savedTool = await addToolToRegistry(
@@ -135,13 +140,13 @@ const ToolsSlotsSection: React.FC<Props> = ({
           savedTool.name
         );
         toast.success(
-          "Sikeres mentés! Az eszköz elmentve és hozzárendelve a munkához."
+          t("ts.savedAndAssigned")
         );
       }
       // Always refresh assignedTools after save
       await fetchAssignedToolsAndUpdateState();
     } catch (err) {
-      toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
+      toast.error(t("ts.saveError"));
       console.error("Tool save error:", err);
     }
   };
@@ -169,10 +174,10 @@ const ToolsSlotsSection: React.FC<Props> = ({
         savedTool.name
       );
       
-      toast.success("Új eszköz sikeresen hozzáadva!");
+      toast.success(t("ts.added"));
       await fetchAssignedToolsAndUpdateState();
     } catch (err) {
-      toast.error("Hiba történt az eszköz hozzáadásakor!");
+      toast.error(t("x.toolAddError"));
       console.error("Tool add error:", err);
     }
   };
@@ -195,14 +200,14 @@ const ToolsSlotsSection: React.FC<Props> = ({
       <Button
         onClick={() => setIsAddToolOpen(true)}
         variant="outline"
-        aria-label="Új eszköz hozzáadása"
+        aria-label={t("ts.addTool")}
         className="absolute top-[14px] right-[18px] rounded-full border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] w-9 h-9 p-0 flex items-center justify-center"
       >
         <Plus className="h-5 w-5" />
       </Button>
       <div className="h-8" />
       <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">
-        Szükséges eszközök
+        {t("x.neededTools")}
       </div>
 
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
@@ -280,7 +285,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                                   "../../../../actions/tools-registry-actions"
                                 );
                                 await res.decrementWorkToolQuantity(lastAssigned.id);
-                                toast.success("Slot törölve!");
+                                toast.success(t("x.slotDeleted"));
                                 await fetchAssignedToolsAndUpdateState();
                               } catch (err) {
                                 toast.error(
@@ -290,7 +295,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                             }
                           }}
                           className="px-2 py-2 rounded-r border border-dashed border-l-0 border-[#aaa] bg-[#fafbfc] hover:bg-red-100"
-                          title="Slot törlése"
+                          title={t("x.deleteSlot")}
                         >
                           <svg className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -331,7 +336,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
         selectedTool &&
         tools.filter((t) => t.name === selectedTool.name).length === 0 && (
           <div style={{ color: "red", textAlign: "center", marginTop: 12 }}>
-            Nincs raktáron ilyen eszköz!
+            {t("x.toolOutOfStock")}
           </div>
         )}
       <ToolDetailsModal

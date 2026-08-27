@@ -1,5 +1,8 @@
+"use client";
+
 "use cliente";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Tool } from "@/types/work";
 
 interface ToolRegisterModalProps {
@@ -21,6 +24,8 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   maxQuantity,
   requiredToolName,
 }) => {
+  const { t } = useLocale();
+
   const [selectedToolId, setSelectedToolId] = useState<string | number>("");
   const [toolName, setToolName] = useState<string>(requiredToolName || "");
   const [displayName, setDisplayName] = useState<string>(
@@ -64,7 +69,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
   const handleSave = async () => {
     // Validáció
     if (!toolName) {
-      setError("Add meg az eszköz nevét!");
+      setError(t("tool.needName"));
       return;
     }
 
@@ -149,11 +154,11 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
             letterSpacing: 0.2,
           }}
         >
-          Eszköz kiválasztása
+          {t("tool.selectTool")}
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ fontWeight: 500, marginBottom: 2 }}>
-            Választható eszköz:
+            {t("tool.available")}
           </label>
           <select
             value={
@@ -175,10 +180,10 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
             disabled={loading}
           >
             {loading ? (
-              <option value="">Ellenőrzés...</option>
+              <option value="">{t("tool.checking")}</option>
             ) : toolAvailable === false && requiredToolName ? (
               <option value="nem_elérhető" disabled style={{ color: "red" }}>
-                nem elérhető
+                {t("tool.unavailable")}
               </option>
             ) : (
               <option value={requiredToolName}>{requiredToolName}</option>
@@ -186,7 +191,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
           </select>
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <label style={{ fontWeight: 500, marginBottom: 2 }}>Név:</label>
+          <label style={{ fontWeight: 500, marginBottom: 2 }}>{t("proc.name")}</label>
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -205,7 +210,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           <label style={{ fontWeight: 500 }}>
-            Leírás <span style={{ color: "#e53935" }}>*</span>:
+            {t("od.description")} <span style={{ color: "#e53935" }}>*</span>:
           </label>
           <textarea
             value={customDescription || ""}
@@ -221,13 +226,13 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
               outline: "none",
               resize: "vertical",
             }}
-            placeholder="Rövid leírás az eszközről"
+            placeholder={t("tool.shortDescription")}
             required
           />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <label style={{ fontWeight: 500, minWidth: 72 }}>
-            Mennyiség <span style={{ color: "#e53935" }}>*</span>:
+            {t("od.quantity")} <span style={{ color: "#e53935" }}>*</span>:
           </label>
           <input
             type="number"
@@ -287,7 +292,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
               marginRight: 2,
             }}
           >
-            Mégse
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSave}
@@ -307,7 +312,7 @@ const ToolRegisterModal: React.FC<ToolRegisterModalProps> = ({
             }}
             disabled={isOutOfStock}
           >
-            Mentés
+            {t("common.save")}
           </button>
         </div>
       </div>

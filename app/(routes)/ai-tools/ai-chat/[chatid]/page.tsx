@@ -1,6 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Input } from '@/components/ui/input'
 import { LoaderCircle, Send } from 'lucide-react'
 import React, { useEffect, useState, useCallback } from 'react'
@@ -18,6 +19,8 @@ type Message = {
 }
 
 function AiChat() {
+  const { t } = useLocale();
+
   const [userInput, setUserInput] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [messageList, setMessageList] = useState<Message[]>([]);
@@ -88,12 +91,12 @@ function AiChat() {
     <div className='px-10 md:px-24 lg:px-36 xl:px-48 h-[75vh] '>
       <div className='flex items-center justify-between gap-8'>
         <div>
-          <h2 className='font-bold text-lg'>Ajánlat Chat</h2>
+          <h2 className='font-bold text-lg'>{t("ai.offerChat")}</h2>
           <p className="font-bold text-lg bg-gradient-to-tl from-blue-800 to-blue-900 text-transparent bg-clip-text">
-            okosabb ajánlatokat adhatsz
+            {t("x.smarterOffers")}
           </p>
         </div>
-        <Button onClick={onNewChat}>+ Új Csevegés</Button>
+        <Button onClick={onNewChat}>{t("x.newChat")}</Button>
       </div>
 
       <div className='flex flex-col h-[70vh] overflow-auto '>

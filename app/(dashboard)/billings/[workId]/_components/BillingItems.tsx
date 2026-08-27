@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 import { WorkItem } from "@/types/work";
 import { updateWorkItemDetails } from "@/actions/update-workitem-details";
@@ -33,6 +34,8 @@ interface BillingItemsProps {
 }
 
 export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
+  const { t } = useLocale();
+
   const [editingItem, setEditingItem] = useState<{
     index: number;
     item: BillingWorkItem;
@@ -70,7 +73,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     const newItem: BillingWorkItem = {
       id: Date.now(),
       workId: 0,
-      name: "Új tétel",
+      name: t("offers.newItem"),
       quantity: 1,
       unit: "db",
       materialUnitPrice: 0,
@@ -102,7 +105,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
       onItemsChange(items.filter((_, i) => i !== itemToDelete));
       setDeleteConfirmOpen(false);
       setItemToDelete(null);
-      toast.success("Tétel törölve");
+      toast.success(t("x.itemDeleted"));
     }
   };
 
@@ -145,7 +148,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     const { index, item } = editingItem;
 
     if (!item.name || !item.quantity || !item.unit) {
-      toast.error("Kérem töltse ki az összes kötelező mezőt");
+      toast.error(t("od.fillRequired"));
       return;
     }
 
@@ -166,7 +169,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
       });
 
       if (!result.success) {
-        toast.error(result.error || "Hiba történt a mentés során");
+        toast.error(result.error || t("od.errSave"));
         return;
       }
     }
@@ -175,7 +178,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
     newItems[index] = item;
     onItemsChange(newItems);
     setIsModalOpen(false);
-    toast.success("Tétel módosítva");
+    toast.success(t("x.itemUpdated"));
   };
 
   const handleToggleSelect = (index: number, checked: boolean) => {
@@ -220,12 +223,12 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
           style={{ width: "min(90vw, 425px)" }}
         >
           <DialogHeader>
-            <DialogTitle>Tétel szerkesztése</DialogTitle>
+            <DialogTitle>{t("od.editItem")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Megnevezés
+                {t("od.name")}
               </Label>
               <Input
                 id="name"
@@ -236,7 +239,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="quantity" className="text-right">
-                Mennyiség
+                {t("od.quantity")}
               </Label>
               <Input
                 id="quantity"
@@ -248,7 +251,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                 className="col-span-1"
               />
               <Label htmlFor="unit" className="text-right">
-                Egység
+                {t("od.unit")}
               </Label>
               <Input
                 id="unit"
@@ -261,7 +264,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="materialUnitPrice" className="text-right">
-                Anyag egységár
+                {t("od.materialUnitPrice")}
               </Label>
               <div className="col-span-3 flex items-center">
                 <Input
@@ -286,7 +289,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="workUnitPrice" className="text-right">
-                Díj egységár
+                {t("od.feeUnitPrice")}
               </Label>
               <div className="col-span-3 flex items-center">
                 <Input
@@ -311,7 +314,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4 pt-4 border-t">
-              <Label className="text-right font-medium">Anyag összesen</Label>
+              <Label className="text-right font-medium">{t("od.materialTotal")}</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(
                   typeof editingItem?.item.materialTotal === "number"
@@ -325,7 +328,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">Díj összesen</Label>
+              <Label className="text-right font-medium">{t("od.feeTotal")}</Label>
               <div className="col-span-3 font-medium">
                 {formatNumberWithSpace(
                   typeof editingItem?.item.workTotal === "number"
@@ -341,14 +344,14 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
           </div>
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-              Mégse
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={saveItem}
               style={{ backgroundColor: "#FE9C00", color: "white" }}
               className="hover:opacity-90"
             >
-              Mentés
+              {t("common.save")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -361,7 +364,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
           style={{ width: "min(90vw, 425px)" }}
         >
           <DialogHeader>
-            <DialogTitle>Biztosan ki szeretnéd törölni?</DialogTitle>
+            <DialogTitle>{t("x.confirmDelete")}</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2 mt-4">
             <Button
@@ -369,14 +372,14 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
               className="w-full"
               style={{ backgroundColor: "#EF4444", color: "white" }}
             >
-              Törlés
+              {t("common.delete")}
             </Button>
             <Button
               variant="outline"
               onClick={() => setDeleteConfirmOpen(false)}
               className="w-full"
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </div>
         </DialogContent>
@@ -385,7 +388,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-gray-900 flex items-center">
-            Tételek
+            {t("offers.items")}
           </h2>
           <Button
             variant="outline"
@@ -394,7 +397,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
             style={{ color: "#FE9C00", borderColor: "#FE9C00" }}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Új tétel
+            {t("offers.newItem")}
           </Button>
         </div>
 
@@ -499,9 +502,9 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                         <tr>
                           <td className="px-2 py-1 text-sm font-normal text-gray-900">
                             <div className="text-xs text-black leading-tight">
-                              Számlázható
+                              {t("taskcard.billable")}
                               <br />
-                              mennyiség
+                              {t("inv.quantity")}
                             </div>
                             <div className="text-sm font-bold text-black">
                               {Math.max(
@@ -604,7 +607,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
 
                 <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
                   <ProgressBar
-                    label="Teljesített"
+                    label={t("taskcard.completed")}
                     value={item.completedQuantity || 0}
                     max={
                       typeof item.quantity === "number"
@@ -615,7 +618,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                     color="bg-blue-500"
                   />
                   <ProgressBar
-                    label="Számlázott"
+                    label={t("taskcard.billed")}
                     value={
                       (item.billedQuantity || 0) + (item.paidQuantity || 0)
                     }
@@ -628,7 +631,7 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
                     color="bg-green-500"
                   />
                   <ProgressBar
-                    label="Számlázható"
+                    label={t("taskcard.billable")}
                     value={Math.max(
                       0,
                       (item.completedQuantity || 0) -
@@ -649,19 +652,19 @@ export function BillingItems({ items, onItemsChange }: BillingItemsProps) {
 
         <div className="mt-6 pt-4 border-t">
           <div className="flex justify-between items-center text-sm mb-2">
-            <span className="text-gray-600">Anyagköltség összesen:</span>
+            <span className="text-gray-600">{t("od.materialCostTotal")}</span>
             <span className="font-medium text-gray-800">
               {formatCurrency(totals.material)}
             </span>
           </div>
           <div className="flex justify-between items-center text-sm mb-2">
-            <span className="text-gray-600">Munkadíj összesen:</span>
+            <span className="text-gray-600">{t("od.labourCostTotal")}</span>
             <span className="font-medium text-gray-800">
               {formatCurrency(totals.work)}
             </span>
           </div>
           <div className="flex justify-between items-center text-base font-bold mt-4">
-            <span className="text-gray-900">Mindösszesen:</span>
+            <span className="text-gray-900">{t("inv.grandTotal")}</span>
             <span className="text-gray-900">
               {formatCurrency(totals.total)}
             </span>

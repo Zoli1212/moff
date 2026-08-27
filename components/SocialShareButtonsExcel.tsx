@@ -498,7 +498,7 @@ export default function SocialShareButtonsExcel({
                     : "",
                 ],
                 [
-                  "Érvényes",
+                  t("x.valid"),
                   offer?.validUntil
                     ? new Date(offer.validUntil).toLocaleDateString("hu-HU")
                     : "",
@@ -583,7 +583,7 @@ export default function SocialShareButtonsExcel({
             } catch (error) {
               console.error("Hiba az Excel letöltése közben:", error);
               alert(
-                "Hiba történt az Excel letöltése közben. Kérjük, próbáld újra később."
+                t("x.excelDownloadErrorLong")
               );
             }
           }}

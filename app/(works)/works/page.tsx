@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useCallback, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useQuery } from "@tanstack/react-query";
 import { getUserWorks, initializeAllWorkTotals } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
@@ -75,6 +76,8 @@ function toCardProps(
 }
 
 const WorkListPage = () => {
+  const { t } = useLocale();
+
 
   const [workStates, setWorkStates] = useState<Record<string | number, string>>(
     {}
@@ -151,7 +154,7 @@ const WorkListPage = () => {
         alert("Hiba: " + result.message);
       }
     } catch (error) {
-      alert("Hiba történt a frissítés során");
+      alert(t("x.refreshError"));
       console.error(error);
     } finally {
       setRefreshing(false);
@@ -208,7 +211,7 @@ const WorkListPage = () => {
         <h2
           style={{ margin: 0, fontSize: 20, fontWeight: 500, color: "#000000" }}
         >
-          Munkák
+          {t("x.works")}
         </h2>
       </div>
       {/* Automatically update all works that have not been AI-updated */}
@@ -253,7 +256,7 @@ const WorkListPage = () => {
                 marginBottom: 8,
               }}
             >
-              Munkák nem elérhetőek
+              {t("x.worksUnavailable")}
             </div>
             <div
               style={{
@@ -261,7 +264,7 @@ const WorkListPage = () => {
                 color: "#666666",
               }}
             >
-              Forduljon az üzemeltetőhöz
+              {t("x.contactOperator")}
             </div>
           </div>
         ) : (
@@ -345,7 +348,7 @@ const WorkListPage = () => {
                     animation: "spin 1s linear infinite",
                   }}
                 />
-                Frissítés...
+                {t("diary.refreshing")}
               </>
             ) : (
               <>
@@ -361,7 +364,7 @@ const WorkListPage = () => {
                 >
                   <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
                 </svg>
-                Frissítés
+                {t("diary.refresh")}
               </>
             )}
           </button>

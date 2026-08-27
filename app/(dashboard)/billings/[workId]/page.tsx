@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useRouter, useParams } from "next/navigation";
 import { getWorkById } from "@/actions/work-actions";
 import { getCurrentUserData } from "@/actions/user-actions";
@@ -56,6 +57,8 @@ interface Work {
 }
 
 export default function BillingsDetailPage() {
+  const { t } = useLocale();
+
   const params = useParams();
   const workId = params.workId as string;
   const router = useRouter();
@@ -109,10 +112,10 @@ export default function BillingsDetailPage() {
             })) ?? [];
           setWork({ ...data, workItems: itemsWithIds });
         } else {
-          setError("Munka nem található.");
+          setError(t("x.workNotFound2"));
         }
       } catch (err) {
-        setError("Hiba történt a munka betöltésekor.");
+        setError(t("x.workLoadError"));
         console.error(err);
       } finally {
         setLoading(false);
@@ -264,12 +267,12 @@ export default function BillingsDetailPage() {
             </svg>
           </Link>
           <h1 className="text-xl font-bold text-gray-800 truncate">
-            {work?.title || "Számla létrehozása"}
+            {work?.title || t("x.createInvoice")}
           </h1>
           <div className="w-8"></div>
         </div>
 
-        {loading && <p>Betöltés...</p>}
+        {loading && <p>{t("worker.loading")}</p>}
         {error && <p className="text-red-500">{error}</p>}
         {work && (
           <BillingItems items={billingItems} onItemsChange={setBillingItems} />
@@ -281,7 +284,7 @@ export default function BillingsDetailPage() {
             <div className="hidden sm:block fixed bottom-0 left-0 right-0 bg-white border-t p-4 shadow-lg-top">
               <div className="max-w-7xl mx-auto flex justify-end">
                 <Button onClick={handleCreateBilling} size="lg">
-                  Számla létrehozása
+                  {t("x.createInvoice")}
                 </Button>
               </div>
             </div>
@@ -294,7 +297,7 @@ export default function BillingsDetailPage() {
                 className="bg-white hover:bg-orange-50 shadow-lg px-8 py-4 text-lg font-semibold rounded-md border-2"
                 style={{ borderColor: "#FE9C00", color: "#FE9C00" }}
               >
-                Számla létrehozása
+                {t("x.createInvoice")}
               </Button>
             </div>
           </>

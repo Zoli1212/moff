@@ -33,7 +33,7 @@ export default async function SupplyPage({
 }) {
   const { id } = await params;
   const workId = Number(id);
-  if (!workId) return <div>Hibás workId</div>;
+  if (!workId) return <div>{"Hibás workId"}</div>;
 
   const { tab } = await searchParams;
 
@@ -80,7 +80,7 @@ export default async function SupplyPage({
     workers = work.workers || [];
   } catch (e) {
     console.error(e);
-    return <div>Nem sikerült betölteni az anyagokat vagy szerszámokat.</div>;
+    return <div>{"Nem sikerült betölteni az anyagokat vagy szerszámokat."}</div>;
   }
 
   return (
@@ -122,7 +122,7 @@ export default async function SupplyPage({
                 textOverflow: "ellipsis",
               }}
             >
-              Munkaerő
+              {"Munkaerő"}
             </a>
           )}
           <a
@@ -146,7 +146,7 @@ export default async function SupplyPage({
               textOverflow: "ellipsis",
             }}
           >
-            Eszközök
+            {"Eszközök"}
           </a>
           {isTenant && (
             <a
@@ -195,7 +195,7 @@ export default async function SupplyPage({
                 textAlign: "center",
               }}
             >
-              Folyamatban lévő feladatokhoz rendelt munkaerő
+              {"Folyamatban lévő feladatokhoz rendelt munkaerő"}
             </p>
           </div>
         )}
@@ -220,7 +220,7 @@ export default async function SupplyPage({
                 textAlign: "center",
               }}
             >
-              Folyamatban lévő feladatokhoz szükséges eszközök
+              {"Folyamatban lévő feladatokhoz szükséges eszközök"}
             </p>
           </div>
         )}
@@ -245,7 +245,7 @@ export default async function SupplyPage({
                 textAlign: "center",
               }}
             >
-              Folyamatban lévő feladatokhoz szükséges anyagok
+              {"Folyamatban lévő feladatokhoz szükséges anyagok"}
             </p>
           </div>
         )}

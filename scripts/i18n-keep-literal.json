@@ -25,5 +25,55 @@
   "Elutasítva",
   "Lejárt",
   "Érvénytelen dátum"
+ ],
+ "app/(dashboard)/jobs/[requirementId]/page.tsx": [
+  "Elküldve",
+  "Elutasítva",
+  "Lejárt"
+ ],
+ "app/(routes)/ai-tools/ai-offer-letter-mobile-redirect/[recordid]/_components/OfferLetterEmailSender.tsx": [
+  "Ajánlat"
+ ],
+ "app/(routes)/ai-tools/ai-offer-letter-mobile/[recordid]/_components/OfferLetterEmailSender.tsx": [
+  "Ajánlat"
+ ],
+ "app/(routes)/ai-tools/ai-offer-letter/[recordid]/_components/OfferLetterEmailSender.tsx": [
+  "Ajánlat"
+ ],
+ "app/(routes)/billing/page.tsx": [
+  "Aktív",
+  "Előfizetés kezelése",
+  "Kezeld az előfizetésedet, módosítsd a fizetési módot vagy mondj le",
+  "Következő fizetés",
+  "Lejárt fizetés",
+  "Próbaidőszak",
+  "Státusz"
+ ],
+ "app/(works)/diary/[id]/page.tsx": [
+  "A munka nem található.",
+  "Hiba történt az adatok lekérése közben."
+ ],
+ "app/(works)/others/page.tsx": [
+  "Munkásregiszter Kezelése"
+ ],
+ "app/(works)/seged/page.tsx": [
+  "Egyéb menü"
+ ],
+ "app/(works)/supply/[id]/page.tsx": [
+  "Beszerzés",
+  "Eszközök",
+  "Folyamatban lévő feladatokhoz rendelt munkaerő",
+  "Folyamatban lévő feladatokhoz szükséges anyagok",
+  "Folyamatban lévő feladatokhoz szükséges eszközök",
+  "Hibás workId",
+  "Munkaerő",
+  "Nem sikerült betölteni az anyagokat vagy szerszámokat."
+ ],
+ "app/(works)/works/page.tsx": [
+  "(Névtelen munka)"
+ ],
+ "app/invite/[token]/page.tsx": [
+  "Vissza a főoldalra",
+  "Érvénytelen meghívó"
  ]
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,6 +19,8 @@ interface WorkforceAddModalProps {
 }
 
 export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: WorkforceAddModalProps) {
+  const { t } = useLocale();
+
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -97,19 +100,19 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Új munkás hozzáadása</DialogTitle>
+          <DialogTitle>{t("worker.addNew")}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Name - Required */}
             <div>
-              <Label htmlFor="name">Név *</Label>
+              <Label htmlFor="name">{t("wf.nameRequired")}</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleInputChange('name', e.target.value)}
-                placeholder="Teljes név"
+                placeholder={t("wf.fullName")}
                 required
                 className="mt-1"
               />
@@ -117,7 +120,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
 
             {/* Role - Required */}
             <div>
-              <Label htmlFor="role">Szerepkör *</Label>
+              <Label htmlFor="role">{t("wf.roleRequired")}</Label>
               <Input
                 id="role"
                 value={formData.role}
@@ -155,7 +158,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
 
             {/* Daily Rate */}
             <div>
-              <Label htmlFor="dailyRate">Napi díj (Ft)</Label>
+              <Label htmlFor="dailyRate">{t("x.dailyRateHuf")}</Label>
               <Input
                 id="dailyRate"
                 type="number"
@@ -170,7 +173,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
 
             {/* Hired Date */}
             <div>
-              <Label htmlFor="hiredDate">Felvétel dátuma</Label>
+              <Label htmlFor="hiredDate">{t("wf.hiredDate")}</Label>
               <Input
                 id="hiredDate"
                 type="date"
@@ -182,7 +185,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
 
             {/* Left Date */}
             <div>
-              <Label htmlFor="leftDate">Távozás dátuma</Label>
+              <Label htmlFor="leftDate">{t("wf.leftDate")}</Label>
               <Input
                 id="leftDate"
                 type="date"
@@ -195,19 +198,19 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
 
           {/* Contact Info */}
           <div>
-            <Label htmlFor="contactInfo">További elérhetőség</Label>
+            <Label htmlFor="contactInfo">{t("wf.moreContact")}</Label>
             <Input
               id="contactInfo"
               value={formData.contactInfo}
               onChange={(e) => handleInputChange('contactInfo', e.target.value)}
-              placeholder="Cím, további telefonszám, stb."
+              placeholder={t("wf.moreContactHint")}
               className="mt-1"
             />
           </div>
 
           {/* Avatar URL */}
           <div>
-            <Label htmlFor="avatarUrl">Profilkép URL</Label>
+            <Label htmlFor="avatarUrl">{t("x.avatarUrl")}</Label>
             <Input
               id="avatarUrl"
               type="url"
@@ -220,12 +223,12 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
 
           {/* Notes */}
           <div>
-            <Label htmlFor="notes">Megjegyzések</Label>
+            <Label htmlFor="notes">{t("od.notes")}</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
-              placeholder="További információk, megjegyzések..."
+              placeholder={t("wf.notesHint")}
               rows={3}
               className="mt-1"
             />
@@ -239,7 +242,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
               onCheckedChange={(checked) => handleInputChange('isActive', checked)}
             />
             <Label htmlFor="isActive" className="text-sm font-medium">
-              Aktív munkás
+              {t("wf.activeWorker")}
             </Label>
           </div>
 
@@ -251,7 +254,7 @@ export default function WorkforceAddModal({ isOpen, onClose, onWorkerAdded }: Wo
               onClick={handleClose}
               disabled={isLoading}
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"

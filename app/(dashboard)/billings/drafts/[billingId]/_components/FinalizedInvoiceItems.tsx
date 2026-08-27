@@ -1,6 +1,7 @@
 "use client";
 
 import { OfferItem } from "@/types/offer.types";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface FinalizedInvoiceItemsProps {
@@ -18,22 +19,24 @@ const formatCurrency = (value: number): string => {
 };
 
 export function FinalizedInvoiceItems({ items }: FinalizedInvoiceItemsProps) {
+  const { t } = useLocale();
+
   return (
     <div className="w-full">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Kiszámlázott tételek</h3>
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">{t("x.billedItems")}</h3>
       
       {/* Desktop Table */}
       <div className="hidden sm:block border rounded-lg overflow-hidden">
         <Table>
           <TableHeader className="bg-gray-50">
             <TableRow>
-              <TableHead>Megnevezés</TableHead>
-              <TableHead className="text-right">Mennyiség</TableHead>
-              <TableHead>Egység</TableHead>
-              <TableHead className="text-right">Anyag egységár</TableHead>
-              <TableHead className="text-right">Díj egységár</TableHead>
-              <TableHead className="text-right">Anyag összesen</TableHead>
-              <TableHead className="text-right">Díj összesen</TableHead>
+              <TableHead>{t("od.name")}</TableHead>
+              <TableHead className="text-right">{t("od.quantity")}</TableHead>
+              <TableHead>{t("od.unit")}</TableHead>
+              <TableHead className="text-right">{t("od.materialUnitPrice")}</TableHead>
+              <TableHead className="text-right">{t("od.feeUnitPrice")}</TableHead>
+              <TableHead className="text-right">{t("od.materialTotal")}</TableHead>
+              <TableHead className="text-right">{t("od.feeTotal")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -60,11 +63,11 @@ export function FinalizedInvoiceItems({ items }: FinalizedInvoiceItemsProps) {
             
             <div className="grid grid-cols-2 gap-4 mt-3">
               <div>
-                <div className="text-sm text-gray-500">Mennyiség</div>
+                <div className="text-sm text-gray-500">{t("od.quantity")}</div>
                 <div className="font-medium">{item.quantity} {item.unit}</div>
               </div>
               <div className="text-right">
-                <div className="text-sm text-gray-500">Egységár</div>
+                <div className="text-sm text-gray-500">{t("offers.unitPrice")}</div>
                 <div className="font-medium">{formatCurrency(parseCurrency(item.unitPrice || '0'))}</div>
               </div>
             </div>
@@ -77,7 +80,7 @@ export function FinalizedInvoiceItems({ items }: FinalizedInvoiceItemsProps) {
                   <div className="font-semibold text-gray-900">{formatCurrency(parseCurrency(item.materialTotal || '0'))}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500">MUNKADÍJ</div>
+                  <div className="text-xs text-gray-500">{t("x.labourUpper")}</div>
                   <div className="text-sm text-gray-600">{formatCurrency(parseCurrency(item.unitPrice || '0'))}/db</div>
                   <div className="font-semibold text-gray-900">{formatCurrency(parseCurrency(item.workTotal || '0'))}</div>
                 </div>

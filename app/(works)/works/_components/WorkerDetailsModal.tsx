@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 export interface WorkerDetailsModalProps {
   open: boolean;
@@ -15,6 +18,8 @@ export interface WorkerDetailsModalProps {
 }
 
 const WorkerDetailsModal: React.FC<WorkerDetailsModalProps> = ({ open, onClose, worker, onDelete }) => {
+  const { t } = useLocale();
+
   if (!open || !worker) return null;
   return (
     <div
@@ -56,7 +61,7 @@ const WorkerDetailsModal: React.FC<WorkerDetailsModalProps> = ({ open, onClose, 
             color: "#888",
           }}
           onClick={onClose}
-          aria-label="Bezárás"
+          aria-label={t("common.close")}
         >
           ✕
         </button>
@@ -88,7 +93,7 @@ const WorkerDetailsModal: React.FC<WorkerDetailsModalProps> = ({ open, onClose, 
             onClick={onDelete}
             disabled={!onDelete}
           >
-            Törlés
+            {t("common.delete")}
           </button>
         </div>
       </div>

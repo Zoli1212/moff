@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { deleteStuckWork } from "@/actions/work-cleanup-actions";
 import { toast } from "sonner";
 import type { OfferItem } from "@/types/offer.types";
@@ -39,6 +40,8 @@ const getUrgentColor = (level: "warning" | "danger") => {
 };
 
 const WorkCard: React.FC<WorkCardProps> = (props) => {
+  const { t } = useLocale();
+
   const {
     id,
     title,
@@ -78,16 +81,16 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     try {
       const result = await deleteStuckWork(id);
       if (result.success) {
-        toast.success(result.message || "Munka törölve");
+        toast.success(result.message || t("x.workDeleted"));
         setShowModal(false);
         // Refresh the page
         window.location.reload();
       } else {
-        toast.error(result.error || "Hiba történt a törlés során");
+        toast.error(result.error || t("offers.list.deleteFailed"));
       }
     } catch (error) {
       console.log(error)
-      toast.error("Hiba történt a törlés során");
+      toast.error(t("offers.list.deleteFailed"));
     } finally {
       setIsDeleting(false);
     }
@@ -124,7 +127,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
     }
 
     // Fallback: hardcoded text
-    return "Munka összefoglaló";
+    return t("x.workSummary");
   };
 
   return (
@@ -208,7 +211,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       {/* Teljesített - Only for tenants */}
       {isTenant && (
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 13, color: "#666" }}>Teljesített</div>
+        <div style={{ fontSize: 13, color: "#666" }}>{t("taskcard.completed")}</div>
         <div
           style={{
             background: "#eee",
@@ -235,7 +238,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       {/* Számlázott - Only for tenants */}
       {isTenant && (
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 13, color: "#666" }}>Számlázott</div>
+        <div style={{ fontSize: 13, color: "#666" }}>{t("taskcard.billed")}</div>
         <div
           style={{
             background: "#eee",
@@ -262,7 +265,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
       {/* Számlázható - Only for tenants */}
       {isTenant && (
       <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 13, color: "#666" }}>Számlázható</div>
+        <div style={{ fontSize: 13, color: "#666" }}>{t("taskcard.billable")}</div>
         <div
           style={{
             background: "#eee",
@@ -345,7 +348,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
             <div style={{ textAlign: "center", marginBottom: 20 }}>
               <div style={{ fontSize: 48, marginBottom: 12 }}>⚠️</div>
               <h3 style={{ fontSize: 20, fontWeight: 600, color: "#e74c3c", marginBottom: 8 }}>
-                Feldolgozás nem sikerült
+                {t("x.processingFailed")}
               </h3>
               <p style={{ fontSize: 14, color: "#666", marginBottom: 20 }}>
                 Az AI feldolgozás 5 perc alatt nem fejeződött be. A munka törlésre kerül, de az ajánlat megmarad.
@@ -368,7 +371,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
                   opacity: isDeleting ? 0.5 : 1,
                 }}
               >
-                Mégse
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleDeleteWork}
@@ -386,7 +389,7 @@ const WorkCard: React.FC<WorkCardProps> = (props) => {
                   opacity: isDeleting ? 0.5 : 1,
                 }}
               >
-                {isDeleting ? "Törlés..." : "Munka törlése"}
+                {isDeleting ? t("diary.deleting") : t("work.delete")}
               </button>
             </div>
           </div>

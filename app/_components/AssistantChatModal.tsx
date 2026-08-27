@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { X, Send, Loader2 } from "lucide-react";
 
 interface Message {
@@ -18,6 +19,8 @@ export function AssistantChatModal({
   isOpen,
   onClose,
 }: AssistantChatModalProps) {
+  const { t } = useLocale();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +68,7 @@ export function AssistantChatModal({
       console.error("Chat error:", error);
       const errorMessage: Message = {
         role: "assistant",
-        content: "Sajnálom, hiba történt. Kérlek próbáld újra!",
+        content: t("x.sorryError"),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
@@ -113,7 +116,7 @@ export function AssistantChatModal({
                 Szia! Hajni vagyok, miben segíthetek?
               </p>
               <p className="text-sm">
-                Kérdezz bármit a munkáidról és az ajánlataidról!
+                {t("x.askAnything")}
               </p>
             </div>
           )}
@@ -155,7 +158,7 @@ export function AssistantChatModal({
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Írj egy üzenetet..."
+              placeholder={t("x.writeMessage")}
               className="flex-1 resize-none rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent max-h-32"
               rows={1}
               disabled={isLoading}

@@ -1,4 +1,7 @@
+"use client";
+
 import React, { useEffect, useState } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
     Dialog,
     DialogContent,
@@ -20,6 +23,8 @@ interface DemandUploadDialogProps {
 }
 
 function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
+  const { t } = useLocale();
+
 
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
@@ -76,7 +81,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
       
             if (status === 'Cancelled' || attempts >= maxAttempts) {
               setLoading(false);
-              alert("Az elemzés nem sikerült vagy túl sokáig tartott.");
+              alert(t("letter.analysisFailed"));
               return;
             }
       
@@ -88,7 +93,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
         } catch (err) {
           console.error('Hiba történt:', err);
           setLoading(false);
-          alert("Nem sikerült elindítani az elemzést.");
+          alert(t("x.analysisStartFailed"));
         }
       };
       
@@ -98,12 +103,12 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-12">
                         <Loader2Icon className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-                        <span className="text-lg font-semibold text-blue-700">Analízis...</span>
+                        <span className="text-lg font-semibold text-blue-700">{t("x.analysing")}</span>
                     </div>
                 ) : (
                     <>
                         <DialogHeader>
-                            <DialogTitle>Töltsd fel az Igénylést</DialogTitle>
+                            <DialogTitle>{t("x.uploadRequest")}</DialogTitle>
                             <DialogDescription>
                                 <div>
                                     <label htmlFor='demandUpload' className='flex items-center flex-col 
@@ -112,7 +117,7 @@ function DemandUploadDialog({ open, setOpen }: DemandUploadDialogProps) {
                                         <File className='h-10 w-10' />
                                         {file ?
                                             <h2 className='mt-3 text-blue-600'>{file?.name}</h2> :
-                                            <h2 className='mt-3'>Kattintson ide a fájl feltöltéséhez (PDF, DOCX, XLSX, CSV)</h2>}
+                                            <h2 className='mt-3'>{t("x.clickToUpload")}</h2>}
                                     </label>
                                     <input 
                                         type='file' 

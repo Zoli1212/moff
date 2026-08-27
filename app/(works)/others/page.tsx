@@ -8,7 +8,7 @@ export default async function OthersPage() {
 
   return (
     <div className="container mx-auto">
-      <WorkHeader title="Munkásregiszter Kezelése" />
+      <WorkHeader title={"Munkásregiszter Kezelése"} />
       <div className="py-8 px-4">
       <div className="mb-8">
         <p className="text-gray-600">

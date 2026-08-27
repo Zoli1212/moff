@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { SignInButton, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -7,6 +8,8 @@ import { useThemeStore } from "@/store/theme-store";
 import { getThemeImagePath } from "@/store/theme-store";
 
 export default function Home() {
+  const { t } = useLocale();
+
   const { user, isLoaded } = useUser();
   const router = useRouter();
   const { theme: currentTheme } = useThemeStore();
@@ -46,12 +49,12 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row gap-4">
             <SignInButton mode="modal" forceRedirectUrl="/quote-request">
               <button className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-10 rounded-lg shadow-lg transform hover:scale-105 transition-all text-lg min-w-[240px]">
-                Bejelentkezés ügyfélként
+                {t("x.signInCustomer")}
               </button>
             </SignInButton>
             <SignInButton mode="modal" forceRedirectUrl="/dashboard">
               <button className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-4 px-10 rounded-lg shadow-lg transform hover:scale-105 transition-all text-lg min-w-[240px]">
-                Bejelentkezés vállalkozóként
+                {t("x.signInContractor")}
               </button>
             </SignInButton>
           </div>

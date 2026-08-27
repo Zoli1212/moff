@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { WorkItemFromDb, Tool } from "@/types/work";
 import { AssignedTool } from "@/types/tools.types";
 
@@ -12,6 +15,8 @@ export default function ToolsSummary({
   workItems,
   assignedTools,
 }: ToolsSummaryProps) {
+  const { t } = useLocale();
+
   // Collect tools from workItems (required tools)
   const requiredToolsMap = new Map<string, { tool: Tool; workItems: string[]; totalQuantity: number }>();
   
@@ -97,16 +102,16 @@ export default function ToolsSummary({
         }}
       >
         <div>
-          <span style={{ fontWeight: 600, color: "#27ae60" }}>Hozzárendelve:</span> {totalAssigned} db
+          <span style={{ fontWeight: 600, color: "#27ae60" }}>{t("x.assignedColon")}</span> {totalAssigned} db
         </div>
         <div>
-          <span style={{ fontWeight: 600, color: "#e74c3c" }}>Szükséges:</span> {totalRequired} db
+          <span style={{ fontWeight: 600, color: "#e74c3c" }}>{t("x.neededColon")}</span> {totalRequired} db
         </div>
       </div>
 
       {totalAssigned === 0 && totalRequired === 0 ? (
         <div style={{ color: "#bbb", fontStyle: "italic" }}>
-          Nincsenek eszközök
+          {t("work.noTools")}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -157,7 +162,7 @@ export default function ToolsSummary({
                 </div>
                 
                 <div style={{ fontSize: 12, color: "#666", marginBottom: 4 }}>
-                  Hozzárendelve a munkához
+                  {t("x.assignedToWork")}
                 </div>
                 
                 {requiredItem && (

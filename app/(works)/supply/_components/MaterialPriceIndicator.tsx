@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 import { AlertCircle, CheckCircle, Loader2, RefreshCw } from "lucide-react";
 
@@ -53,6 +54,8 @@ export default function MaterialPriceIndicator({
   materialName,
   materialBestOffer, // NEW
 }: MaterialPriceIndicatorProps) {
+  const { t } = useLocale();
+
   const [isFetchingPrice, setIsFetchingPrice] = useState(false);
   const [localMarketPrice] = useState<MarketPrice | null>(
     initialMarketPrice || null
@@ -131,7 +134,7 @@ export default function MaterialPriceIndicator({
         const data = await response.json();
 
         toast.dismiss(`fetch-price-${workItemId}`);
-        toast.success("Ajánlatok betöltve! Válaszd ki, melyiket szeretnéd menteni.", {
+        toast.success(t("x.offersLoaded"), {
           duration: 4000,
           style: {
             background: "#d1fae5",
@@ -148,14 +151,14 @@ export default function MaterialPriceIndicator({
         }
       } else {
         toast.dismiss(`fetch-price-${workItemId}`);
-        toast.error("Hiba történt az árfrissítés során", {
+        toast.error(t("taskcard.priceError"), {
           duration: 3000,
         });
       }
     } catch (error) {
       console.log(error);
       toast.dismiss(`fetch-price-${workItemId}`);
-      toast.error("Hiba történt az árfrissítés során", {
+      toast.error(t("taskcard.priceError"), {
         duration: 3000,
       });
     } finally {
@@ -171,7 +174,7 @@ export default function MaterialPriceIndicator({
       return (
         <div className="flex items-center gap-1 text-blue-500">
           <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-xs">Frissítés...</span>
+          <span className="text-xs">{t("diary.refreshing")}</span>
         </div>
       );
     }
@@ -185,10 +188,10 @@ export default function MaterialPriceIndicator({
             handleFetchPrice();
           }}
           className="flex items-center gap-1 text-red-500 hover:text-red-700 transition-colors"
-          title="Kattints a piaci ár lekérdezéséhez"
+          title={t("taskcard.checkMarketPrice")}
         >
           <AlertCircle className="h-4 w-4" />
-          <span className="text-xs font-medium">Nincs árinfó</span>
+          <span className="text-xs font-medium">{t("taskcard.noPriceInfo")}</span>
         </button>
       );
     }
@@ -206,7 +209,7 @@ export default function MaterialPriceIndicator({
           }}
           className="flex items-center gap-1 text-green-600 hover:text-green-700 transition-colors overflow-hidden"
           style={{ maxWidth: "calc(100% - 32px)" }}
-          title={`${bestOffer.productName || "Termék"}\nSpórolás: -${savingsAmount.toLocaleString("hu-HU")} Ft\n${bestOffer.supplier}${offerCount > 1 ? `\n+${offerCount - 1} további ajánlat` : ''}`}
+          title={`${bestOffer.productName || t("x.product")}\nSpórolás: -${savingsAmount.toLocaleString("hu-HU")} Ft\n${bestOffer.supplier}${offerCount > 1 ? `\n+${offerCount - 1} további ajánlat` : ''}`}
         >
           <CheckCircle className="h-4 w-4 flex-shrink-0" />
           <div className="flex flex-col items-start overflow-hidden min-w-0">
@@ -236,7 +239,7 @@ export default function MaterialPriceIndicator({
         title={
           bestOffer.productName
             ? `${bestOffer.productName}\n${bestOffer.supplier}${offerCount > 1 ? `\n+${offerCount - 1} további ajánlat` : ''}`
-            : "Nincs jobb ajánlat"
+            : t("taskcard.noBetterOffer")
         }
       >
         <CheckCircle className="h-4 w-4 flex-shrink-0" />
@@ -264,7 +267,7 @@ export default function MaterialPriceIndicator({
           handleFetchPrice();
         }}
         className="mb-2 text-[#FF9900] hover:text-[#e68a00] transition-colors"
-        title="Árak frissítése"
+        title={t("x.refreshPrices")}
         disabled={isFetchingPrice}
       >
         <RefreshCw className={`h-4 w-4 ${isFetchingPrice ? 'animate-spin' : ''}`} />
@@ -306,7 +309,7 @@ export default function MaterialPriceIndicator({
                 <div className="text-xs space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-gray-700">
-                      {hasSavings ? "Ajánlati ár:" : "Talált ár:"}
+                      {hasSavings ? t("x.offerPrice") : t("taskcard.foundPrice")}
                     </span>
                     <span className={`font-semibold ${hasSavings ? "text-green-600" : "text-gray-900"}`}>
                       {offer.bestPrice?.toLocaleString("hu-HU")} Ft/{unit || "db"}
@@ -315,7 +318,7 @@ export default function MaterialPriceIndicator({
 
                   {hasSavings && (
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700">Egységár spórolás:</span>
+                      <span className="font-medium text-gray-700">{t("x.unitPriceSaving")}</span>
                       <span className="text-green-600 font-semibold">
                         -{offer.savings.toLocaleString("hu-HU")} Ft/{unit || "db"}
                       </span>
@@ -374,7 +377,7 @@ export default function MaterialPriceIndicator({
                   <div className="flex items-center gap-1">
                     <span className="text-sm">💾</span>
                     <span className={`text-xs font-semibold ${hasSavings ? "text-green-700" : "text-gray-700"}`}>
-                      {hasSavings ? "Mentett ajánlat" : "Mentett ár"}
+                      {hasSavings ? t("x.savedOffer") : t("x.savedPrice")}
                     </span>
                   </div>
                   {hasSavings && (
@@ -387,7 +390,7 @@ export default function MaterialPriceIndicator({
                 <div className="text-xs space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-gray-700">
-                      {hasSavings ? "Ajánlati ár:" : "Talált ár:"}
+                      {hasSavings ? t("x.offerPrice") : t("taskcard.foundPrice")}
                     </span>
                     <span className={`font-semibold ${hasSavings ? "text-green-600" : "text-gray-900"}`}>
                       {offer.bestPrice?.toLocaleString("hu-HU")} Ft/{unit || "db"}
@@ -396,7 +399,7 @@ export default function MaterialPriceIndicator({
 
                   {hasSavings && (
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-gray-700">Egységár spórolás:</span>
+                      <span className="font-medium text-gray-700">{t("x.unitPriceSaving")}</span>
                       <span className="text-green-600 font-semibold">
                         -{offer.savings.toLocaleString("hu-HU")} Ft/{unit || "db"}
                       </span>

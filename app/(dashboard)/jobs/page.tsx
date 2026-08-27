@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -34,6 +35,8 @@ interface Work {
 }
 
 export default function OffersPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [works, setWorks] = useState<Work[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -64,7 +67,7 @@ export default function OffersPage() {
       setError(null);
     } catch (err) {
       console.error("Error fetching works:", err);
-      setError("Hiba történt az adatok betöltése közben.");
+      setError(t("ro.loadError"));
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +87,7 @@ export default function OffersPage() {
       setWorks((prevWorks) => prevWorks.filter((work) => work.id !== id));
     } catch (error) {
       console.error("Error deleting work:", error);
-      setError("Hiba történt a törlés közben.");
+      setError(t("x.deleteErrorDuring"));
     }
   }, []);
 
@@ -122,7 +125,7 @@ export default function OffersPage() {
     return (
       <div className="min-h-screen bg-gray-50 pt-24 overflow-x-hidden w-full h-full">
         <div className="w-full max-w-screen-lg mx-auto px-4">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">Munkáim</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-6">{t("nav.myWorks")}</h1>
           <div className="animate-pulse space-y-4">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white rounded-lg p-4 h-24"></div>
@@ -141,7 +144,7 @@ export default function OffersPage() {
             className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4"
             role="alert"
           >
-            <p>Hiba történt az adatok betöltése közben.</p>
+            <p>{t("ro.loadError")}</p>
           </div>
         </div>
       </div>
@@ -156,7 +159,7 @@ export default function OffersPage() {
             <button
               onClick={() => router.push("/dashboard")}
               className="text-gray-600 hover:text-gray-900 transition-colors"
-              aria-label="Vissza a főoldalra"
+              aria-label={t("offers.list.backHome")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -173,11 +176,11 @@ export default function OffersPage() {
                 />
               </svg>
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">Munkáim</h1>
+            <h1 className="text-2xl font-bold text-gray-800">{t("nav.myWorks")}</h1>
             <button
               onClick={() => setIsDialogOpen(true)}
               className="ml-auto p-2 rounded-full border-2 border-[#FE9C00] text-[#FE9C00] hover:bg-[#FE9C00]/10 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#FE9C00]"
-              aria-label="Új munka hozzáadása"
+              aria-label={t("x.addNewWork")}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -200,7 +203,7 @@ export default function OffersPage() {
           <div className="mt-4 relative">
             <input
               type="text"
-              placeholder="Keresés..."
+              placeholder={t("x.searching")}
               className="w-full p-3 pl-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <svg
@@ -292,7 +295,7 @@ export default function OffersPage() {
 
           {works?.length === 0 && (
             <div className="text-center py-10">
-              <p className="text-gray-500">Még nincsenek munkáid.</p>
+              <p className="text-gray-500">{t("x.noWorksYet")}</p>
             </div>
           )}
         </div>

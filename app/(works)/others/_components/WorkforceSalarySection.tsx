@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Edit, History, TrendingUp } from 'lucide-react'
@@ -22,6 +23,8 @@ interface SalaryHistoryItem {
 }
 
 export default function WorkforceSalarySection({ worker, onSalaryUpdated }: WorkforceSalaryProps) {
+  const { t } = useLocale();
+
   const [showEditModal, setShowEditModal] = useState(false)
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [salaryHistory, setSalaryHistory] = useState<SalaryHistoryItem[]>([])
@@ -104,7 +107,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-green-600" />
-            Fizetés
+            {t("x.payment")}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -112,7 +115,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
             {/* Jelenlegi fizetés */}
             <div className="flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-sm text-gray-600">Jelenlegi napi díj</p>
+                <p className="text-sm text-gray-600">{t("sal.currentRate")}</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(getCurrentSalary())}
                 </p>
@@ -129,7 +132,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                   className="flex items-center gap-1"
                 >
                   <Edit className="h-4 w-4" />
-                  Szerkesztés
+                  {t("de.edit")}
                 </Button>
                 {hasMultipleSalaries && (
                   <Button
@@ -140,7 +143,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                     className="flex items-center gap-1"
                   >
                     <History className="h-4 w-4" />
-                    Történet
+                    {t("x.story")}
                   </Button>
                 )}
               </div>
@@ -149,14 +152,14 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
             {/* Fizetéstörténet összefoglaló */}
             {hasMultipleSalaries && (
               <div className="bg-gray-50 p-3 rounded-lg">
-                <p className="text-sm text-gray-600 mb-2">Fizetéstörténet</p>
+                <p className="text-sm text-gray-600 mb-2">{t("x.paymentHistory")}</p>
                 <div className="space-y-1">
                   {salaryHistory.slice(0, 3).map((item, index) => (
                     <div 
                       key={item.id} 
                       className="flex justify-between text-xs cursor-pointer hover:bg-gray-100 p-1 rounded transition-colors"
                       onClick={() => handleEditExistingSalary(item)}
-                      title="Kattints a szerkesztéshez"
+                      title={t("x.clickToEdit")}
                     >
                       <span className={index === 0 ? 'font-medium text-green-600' : 'text-gray-500'}>
                         {new Date(item.validFrom).toLocaleDateString('hu-HU')} -től
@@ -170,7 +173,7 @@ export default function WorkforceSalarySection({ worker, onSalaryUpdated }: Work
                     <div 
                       className="text-xs text-gray-700 mt-1 cursor-pointer hover:text-black hover:underline transition-colors font-medium"
                       onClick={() => setShowHistoryModal(true)}
-                      title="Kattints a teljes történet megtekintéséhez"
+                      title={t("x.clickForFullHistory")}
                     >
                       +{salaryHistory.length - 3} további bejegyzés megtekintése →
                     </div>

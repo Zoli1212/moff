@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +26,8 @@ const WorkerRemoveModal: React.FC<Props> = ({
   workItems,
   onRemove,
 }) => {
+  const { t } = useLocale();
+
   const [isRemoving, setIsRemoving] = useState(false);
 
   // Filter to only in-progress workItems that have workers with the specified role
@@ -95,7 +98,7 @@ const WorkerRemoveModal: React.FC<Props> = ({
                       variant="destructive"
                       size="sm"
                     >
-                      {isRemoving ? "Törlés..." : "Eltávolít"}
+                      {isRemoving ? t("diary.deleting") : t("x.remove")}
                     </Button>
                   </div>
                 );
@@ -109,7 +112,7 @@ const WorkerRemoveModal: React.FC<Props> = ({
               variant="outline"
               disabled={isRemoving}
             >
-              Mégse
+              {t("common.cancel")}
             </Button>
           </div>
         </div>

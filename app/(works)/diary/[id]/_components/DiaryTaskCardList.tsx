@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { WorkItem } from "@/types/work";
 import { useState } from "react";
 import DiaryTaskCard from "./DiaryTaskCard";
@@ -18,6 +19,8 @@ export default function DiaryTaskCardList({
   items,
   diaries = [],
 }: DiaryTaskCardListProps) {
+  const { t } = useLocale();
+
   const [selectedDiary, setSelectedDiary] = useState<WorkDiaryWithItem | null>(
     null
   );
@@ -151,10 +154,10 @@ export default function DiaryTaskCardList({
   return (
     <div style={{ maxWidth: 420, margin: "0 auto", padding: 16 }}>
       <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 24 }}>
-        Munka napló
+        {t("x.workDiary")}
       </h2>
       {groupedEntries.length === 0 ? (
-        <div>Nincs napló bejegyzés.</div>
+        <div>{t("x.noDiaryEntry")}</div>
       ) : (
         groupedEntries.map((group) => (
           <div

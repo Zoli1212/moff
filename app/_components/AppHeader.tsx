@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Menu, MessageCircle, Bell } from "lucide-react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { AssistantChatModal } from "./AssistantChatModal";
@@ -20,6 +21,8 @@ interface Notification {
 }
 
 export function AppHeader() {
+  const { t } = useLocale();
+
   const { toggleSidebar } = useSidebar();
   const { user } = useUser();
   const router = useRouter();
@@ -99,7 +102,7 @@ export function AppHeader() {
           <input
             type="text"
             className="w-full pl-4 pr-20 py-2 rounded-lg bg-white/70 border-0 focus:ring-2 focus:ring-orange-500 focus:outline-none text-base placeholder-gray-500 cursor-pointer"
-            placeholder="Miben segíthetek?"
+            placeholder={t("x.howCanIHelp")}
             onClick={handleOpenChat}
             readOnly
           />
@@ -120,7 +123,7 @@ export function AppHeader() {
               {bellOpen && (
                 <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                    <span className="text-sm font-semibold text-gray-800">Értesítések</span>
+                    <span className="text-sm font-semibold text-gray-800">{t("x.notifications")}</span>
                     {unreadCount > 0 && (
                       <button
                         onClick={handleMarkAllRead}
@@ -132,7 +135,7 @@ export function AppHeader() {
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <p className="px-4 py-6 text-sm text-gray-400 text-center">Nincs értesítés</p>
+                      <p className="px-4 py-6 text-sm text-gray-400 text-center">{t("x.noNotification")}</p>
                     ) : (
                       notifications.map((n) => (
                         <button

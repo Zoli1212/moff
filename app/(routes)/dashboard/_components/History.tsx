@@ -32,8 +32,8 @@ function History() {
 
     return (
         <div className='mt-5 p-5 border rounded-xl'>
-            <h2 className='font-bold text-lg'>Előzmények</h2>
-            <p>Előző munkáidat itt találod</p>
+            <h2 className='font-bold text-lg'>{t("x.history")}</h2>
+            <p>{t("x.previousWorksHere")}</p>
 
             {loading &&
                 <div>

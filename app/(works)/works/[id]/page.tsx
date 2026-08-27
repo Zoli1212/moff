@@ -1436,7 +1436,7 @@ export default function WorkDetailPage() {
             <div className="mb-6">
               {hasDiaries ? (
                 <p className="text-sm text-gray-700">
-                  A munkához <strong>{diaryCount} naplóbejegyzés</strong>{" "}
+                  {t("x.forTheWork")} <strong>{diaryCount} naplóbejegyzés</strong>{" "}
                   tartozik, így is szeretné törölni?
                   <br />
                   <br />

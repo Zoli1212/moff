@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { removeGeneralWorkerFromWork } from "@/actions/workitemworker-actions";
@@ -73,6 +74,8 @@ const WorkersSummary: React.FC<Props> = ({
   generalWorkersFromDB = [],
   showAllWorkItems = false,
 }) => {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
@@ -348,7 +351,7 @@ const WorkersSummary: React.FC<Props> = ({
 
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-4">
         {professions.length === 0 && (
-          <span className="text-[#bbb]">Nincs szükség meghatározva</span>
+          <span className="text-[#bbb]">{t("x.noNeedDefined")}</span>
         )}
         {professions.map((role) => {
           const required = requiredPerProfession[role] || 0;
@@ -402,7 +405,7 @@ const WorkersSummary: React.FC<Props> = ({
                   })}
                   {list.length === 0 && (
                     <div className="text-[#bbb] text-[14px] italic px-3 py-2">
-                      Nincs hozzárendelt munkás
+                      {t("x.noAssignedWorker")}
                     </div>
                   )}
                 </div>
@@ -415,7 +418,7 @@ const WorkersSummary: React.FC<Props> = ({
         {generalWorkersFromDB.length > 0 && (
           <div className="mt-6 pt-4 border-t border-gray-200">
             <div className="font-bold text-[16px] mb-3 text-gray-700">
-              Általános munkások
+              {t("x.generalWorkers")}
             </div>
             {(() => {
               // Group general workers by role
@@ -463,12 +466,12 @@ const WorkersSummary: React.FC<Props> = ({
                               onClick={() =>
                                 handleRemoveGeneralWorker(
                                   worker.id,
-                                  worker.name || "Névtelen munkás"
+                                  worker.name || t("work.unnamedWorker")
                                 )
                               }
                               className="hover:text-red-700 p-1 rounded hover:bg-red-50"
                               style={{ color: '#FE9C00' }}
-                              title="Munkás eltávolítása"
+                              title={t("ws.removeWorker")}
                             >
                               <Trash2 size={16} />
                             </button>
@@ -488,7 +491,7 @@ const WorkersSummary: React.FC<Props> = ({
         isOpen={confirmDialog.isOpen}
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
-        title="Munkás eltávolítása"
+        title={t("ws.removeWorker")}
         description={`Biztosan el szeretnéd távolítani ${confirmDialog.workerName || "ezt a"} munkást az általános munkások közül?`}
       />
     </div>

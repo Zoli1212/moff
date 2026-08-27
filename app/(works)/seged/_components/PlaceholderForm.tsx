@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 import { Construction } from "lucide-react"
 
@@ -9,6 +10,8 @@ interface PlaceholderFormProps {
 }
 
 export default function PlaceholderForm({ title }: PlaceholderFormProps) {
+  const { t } = useLocale();
+
   return (
     <div className="flex flex-col items-center justify-center py-12 px-6">
       <div className="text-center">
@@ -17,7 +20,7 @@ export default function PlaceholderForm({ title }: PlaceholderFormProps) {
           {title}
         </h3>
         <p className="text-gray-500 text-lg">
-          Hamarosan elérhető lesz
+          {t("x.comingSoon")}
         </p>
         <div className="mt-6 p-4 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <p className="text-sm text-gray-600">

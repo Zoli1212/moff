@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";

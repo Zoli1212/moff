@@ -1,11 +1,14 @@
 "use client"
 import axios from 'axios';
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 import Report from './_components/Report';
 import { Proposal } from '@/types/proposal';
 
 function AiDemandAnalzyer() {
+  const { t } = useLocale();
+
     const { recordid } = useParams();
     const [fileUrl, setFileUrl] = useState<string>();
     const [fileType, setFileType] = useState<string>();
@@ -89,7 +92,7 @@ function AiDemandAnalzyer() {
 
             {/* File Preview Section */}
             <div className="col-span-2 p-4">
-                <h2 className="font-bold text-2xl mb-5">Igény leírás eredeti</h2>
+                <h2 className="font-bold text-2xl mb-5">{t("x.originalRequirement")}</h2>
                 {fileUrl ? (
                     <div className="w-full">
                         {fileType?.includes('pdf') ? (
@@ -111,7 +114,7 @@ function AiDemandAnalzyer() {
                         ) : (
                             <div className="bg-white p-6 rounded-lg shadow-md">
                                 <h3 className="text-lg font-semibold mb-4">Fájl előnézet: {fileName}</h3>
-                                <p className="mb-4">Ez a fájltípus nem tekinthető meg közvetlenül az oldalon.</p>
+                                <p className="mb-4">{t("x.cannotPreviewType")}</p>
                                 <a 
                                     href={fileUrl} 
                                     target="_blank" 
@@ -119,13 +122,13 @@ function AiDemandAnalzyer() {
                                     className="text-blue-600 hover:underline"
                                     download
                                 >
-                                    Fájl letöltése
+                                    {t("x.downloadFile")}
                                 </a>
                             </div>
                         )}
                     </div>
                 ) : (
-                    <p className="text-gray-500">Nincs megjeleníthető fájl.</p>
+                    <p className="text-gray-500">{t("x.noFileToShow")}</p>
                 )}
             </div>
         </div>

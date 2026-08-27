@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function PaymentFailed() {
+  const { t } = useLocale();
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-rose-50 p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8 text-center">
@@ -11,7 +16,7 @@ export default function PaymentFailed() {
         </div>
         
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          Sikertelen fizetés
+          {t("x.paymentFailed")}
         </h1>
         
         <p className="text-gray-600 mb-8">
@@ -21,7 +26,7 @@ export default function PaymentFailed() {
         <div className="space-y-3">
           <Button asChild className="w-full" size="lg">
             <Link href="/billing">
-              Újrapróbálás
+              {t("plan.retry")}
             </Link>
           </Button>
           

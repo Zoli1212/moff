@@ -191,7 +191,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
         bestOffer: newMat.bestOffer as { url: string; unit: string; price: number; supplier: string; checkedAt: string; packageSize: string; } | null | undefined
       }]);
     } catch (err) {
-      console.error("Anyag hozzáadása sikertelen:", err);
+      console.error(t("x.materialAddFailed"), err);
       toast.error(t("mat.addError"));
     }
   };
@@ -218,7 +218,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
         )
       );
     } catch (err) {
-      console.error("Anyag szerkesztése sikertelen:", err);
+      console.error(t("x.materialEditFailed"), err);
       toast.error(t("mat.editError"));
     }
   };
@@ -231,7 +231,7 @@ const MaterialSlotsSection: React.FC<MaterialSlotsSectionProps> = ({
       setEditMaterial(null);
       setMaterials((prev) => prev.filter((mat) => mat.id !== id));
     } catch (err) {
-      console.error("Anyag törlése sikertelen:", err);
+      console.error(t("x.materialDeleteFailed"), err);
       toast.error(t("mat.deleteError"));
     }
   };

@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Image from "next/image";
 import type {
   WorkItem,
@@ -82,6 +83,8 @@ function WorkersSlotsSectionWithoutRoles({
   showAllWorkItems = false,
   maxRequiredWorkers,
 }: Props) {
+  const { t } = useLocale();
+
   // State to control if empty slot is visible
   const [showEmptySlot, setShowEmptySlot] = useState(true);
 
@@ -196,7 +199,7 @@ function WorkersSlotsSectionWithoutRoles({
       setAssignments(list);
     } catch (err) {
       console.error(err);
-      toast.error("Nem sikerült frissíteni a munkások listáját!");
+      toast.error(t("ws.refreshError"));
     }
   };
 
@@ -240,7 +243,7 @@ function WorkersSlotsSectionWithoutRoles({
     } catch (err) {
       console.error(err);
       const errorMessage =
-        err instanceof Error ? err.message : "Hiba történt mentés közben.";
+        err instanceof Error ? err.message : t("ws.saveError");
       toast.error(errorMessage);
     }
   };
@@ -256,12 +259,12 @@ function WorkersSlotsSectionWithoutRoles({
   }) => {
     try {
       await updateWorkItemWorker(data);
-      toast.success("Munkás hozzárendelés frissítve!");
+      toast.success(t("ws.assignmentUpdated"));
       setEditAssignment(null);
       await refreshAssignments();
     } catch (err) {
       console.error(err);
-      toast.error("Hiba történt a frissítés közben.");
+      toast.error(t("ws.updateError"));
     }
   };
 
@@ -286,15 +289,15 @@ function WorkersSlotsSectionWithoutRoles({
       // Only update if we got valid data back
       if (data) {
         setAssignments(data);
-        toast.success("Munkás eltávolítva!");
+        toast.success(t("ws.workerRemoved"));
       } else {
         // Rollback to previous state if no data returned
         setAssignments(previousAssignments.filter((a) => a.id !== id));
-        toast.success("Munkás eltávolítva!");
+        toast.success(t("ws.workerRemoved"));
       }
     } catch (err) {
       console.error(err);
-      toast.error("Hiba történt törlés közben.");
+      toast.error(t("ws.deleteError"));
 
       // Rollback to previous state on error
       setAssignments(previousAssignments);
@@ -394,7 +397,7 @@ function WorkersSlotsSectionWithoutRoles({
             setIsAddOpen(true);
           }}
           className="flex items-center justify-center w-6 h-6 rounded-full border border-[#FF9900] text-[#FF9900] bg-white hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
-          title="Új munkás hozzáadása"
+          title={t("worker.addNew")}
         >
           <Plus className="w-3 h-3" />
         </button>
@@ -424,15 +427,15 @@ function WorkersSlotsSectionWithoutRoles({
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <span className="text-[#666] font-medium">Frissítés</span>
-            <span className="text-[#888] text-sm">Adatok betöltése</span>
+            <span className="text-[#666] font-medium">{t("diary.refresh")}</span>
+            <span className="text-[#888] text-sm">{t("ws.loadingData")}</span>
           </div>
         ) : (
           <>
             {/* Simple unified worker list - no role grouping */}
             <div className="bg-[#f7f7f7] rounded-lg font-medium text-[15px] text-[#555] mb-[2px] px-3 pt-2 pb-5 min-h-[44px] flex flex-col gap-1">
               <div className="flex items-center gap-2.5">
-                <div className="flex-1 font-semibold">Összes munkás</div>
+                <div className="flex-1 font-semibold">{t("wr.allWorkers")}</div>
                 <div className="flex items-center gap-2 ml-auto">
                   <div className="font-semibold text-[14px] text-[#222]">
                     {allAssignments.length} fő
@@ -484,7 +487,7 @@ function WorkersSlotsSectionWithoutRoles({
                         }}
                         className="hover:text-red-700 p-1 rounded hover:bg-red-50"
                         style={{ color: "#FE9C00" }}
-                        title="Munkás eltávolítása"
+                        title={t("ws.removeWorker")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -505,7 +508,7 @@ function WorkersSlotsSectionWithoutRoles({
                         setAddLock(null); // No role lock - general assignment
                         setIsAddOpen(true);
                       }}
-                      title="Új munkás hozzáadása"
+                      title={t("worker.addNew")}
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -513,7 +516,7 @@ function WorkersSlotsSectionWithoutRoles({
                       onClick={() => setShowEmptySlot(false)}
                       className="flex items-center justify-center w-12 h-12 rounded border bg-white"
                       style={{ color: "#FE9C00", borderColor: "#FE9C00" }}
-                      title="Üres slot elrejtése"
+                      title={t("x.hideEmptySlot")}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

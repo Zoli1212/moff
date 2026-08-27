@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useEffect } from "react";
 import {
   getPriceItems,
@@ -18,6 +19,8 @@ type PriceItem = {
 };
 
 export default function PricesPage() {
+  const { t } = useLocale();
+
   const { user } = useUser();
   const tenantEmail = user?.emailAddresses?.[0]?.emailAddress;
 
@@ -52,7 +55,7 @@ export default function PricesPage() {
       !newPrice.trim() ||
       !newUnit.trim() 
     ) {
-      setError("Minden mező kitöltése kötelező!");
+      setError(t("x.allFieldsRequired"));
       return;
     }
     try {
@@ -101,7 +104,7 @@ export default function PricesPage() {
       !editUnit.trim() ||
       isNaN(Number(editPrice))
     ) {
-      setError("Minden mező kitöltése kötelező, és az árnak számnak kell lennie!");
+      setError(t("x.allFieldsRequiredNumber"));
       return;
     }
   
@@ -127,7 +130,7 @@ export default function PricesPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">Áraim</h1>
+      <h1 className="text-2xl font-bold mb-6 text-center">{t("nav.myPrices")}</h1>
       {error && (
         <div className="bg-red-100 border border-red-300 text-red-700 px-4 py-2 rounded mb-4 text-center">
           {error}
@@ -137,21 +140,21 @@ export default function PricesPage() {
         <input
           type="text"
           className="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-          placeholder="Tétel neve"
+          placeholder={t("od.itemName")}
           value={newName}
           onChange={(e) => setNewName(e.target.value)}
         />
         <input
           type="text"
           className="w-70 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-          placeholder="Mennyiségi Egység (pl. kg, db,nm2)"
+          placeholder={t("x.unitExample")}
           value={newUnit}
           onChange={(e) => setNewUnit(e.target.value)}
         />
         <input
           type="text"
           className="w-24 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-          placeholder="Ár (Ft)"
+          placeholder={t("x.priceHuf")}
           value={newPrice}
           onChange={(e) => setNewPrice(e.target.value)}
         />
@@ -160,12 +163,12 @@ export default function PricesPage() {
           className="bg-green-500 hover:bg-green-600 text-white font-bold px-5 py-2 rounded-lg transition"
           onClick={handleAdd}
         >
-          Hozzáad
+          {t("x.add")}
         </button>
       </div>
       <div className="space-y-2">
         {items.length === 0 && (
-          <div className="text-gray-400 text-center">Nincs még tétel.</div>
+          <div className="text-gray-400 text-center">{t("x.noItemsYet")}</div>
         )}
         {items.map((item) => (
           <div
@@ -197,13 +200,13 @@ export default function PricesPage() {
                   className="bg-green-500 hover:bg-green-600 text-white font-bold px-3 py-1 rounded-lg mr-1"
                   onClick={() => handleSave(item.id)}
                 >
-                  Mentés
+                  {t("common.save")}
                 </button>
                 <button
                   className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold px-3 py-1 rounded-lg"
                   onClick={() => setEditId(null)}
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </button>
               </>
             ) : (
@@ -226,7 +229,7 @@ export default function PricesPage() {
                   className="bg-red-400 hover:bg-red-500 text-white font-bold px-3 py-1 rounded-lg"
                   onClick={() => handleDelete(item.id)}
                 >
-                  Töröl
+                  {t("x.delete")}
                 </button>
               </>
             )}

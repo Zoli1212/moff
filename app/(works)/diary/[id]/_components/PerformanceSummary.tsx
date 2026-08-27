@@ -1,6 +1,7 @@
 'use client';
 
 import type { PerformanceData } from '@/hooks/usePerformanceData';
+import { useLocale } from "@/components/i18n/LocaleProvider";
 
 interface PerformanceSummaryProps {
   data: PerformanceData | null;
@@ -8,11 +9,13 @@ interface PerformanceSummaryProps {
 }
 
 const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading }) => {
+  const { t } = useLocale();
+
 
   if (isLoading) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-md mb-6 text-center text-gray-500">
-        Teljesítmény adatok betöltése...
+        {t("x.loadingPerformance")}
       </div>
     );
   }
@@ -20,7 +23,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
   if (!data) {
     return (
       <div className="bg-white p-4 rounded-lg shadow-md mb-6 text-center text-gray-400">
-        A kiválasztott időszakban nincsenek teljesítmény adatok.
+        {t("x.noPerformanceInPeriod")}
       </div>
     );
   }
@@ -31,7 +34,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg mb-6 border border-gray-200">
       <div className="mb-4">
         <div className="flex items-center gap-2 mb-3 flex-wrap">
-          <h2 className="text-xl font-bold text-gray-800">Heti teljesítmény</h2>
+          <h2 className="text-xl font-bold text-gray-800">{t("x.weeklyPerformance")}</h2>
           {/* Trend információ */}
           {performanceChange !== undefined && previousPeriodPerformance !== undefined && (
             <span className={`text-sm font-medium ${
@@ -62,7 +65,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
       
         {/* Középső oszlop: Munkafázis teljesítmények */}
         <div className="space-y-2">
-          <h3 className="font-semibold text-gray-600 border-b pb-1"><small>Munkafázis teljesítmények</small></h3>
+          <h3 className="font-semibold text-gray-600 border-b pb-1"><small>{t("x.phasePerformance")}</small></h3>
           {workItemPerformances && workItemPerformances.length > 0 ? (
             <>
               {workItemPerformances
@@ -105,14 +108,14 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                 ))}
             </>
           ) : (
-            <p className="text-sm text-gray-500">Nincsenek munkafázis teljesítmények.</p>
+            <p className="text-sm text-gray-500">{t("x.noPhasePerformance")}</p>
           )}
         </div>
 
         {/* Jobb oldali oszlop: Ledolgozott órák és teljesítmény */}
         <div className="space-y-2">
           <h6 className="font-semibold text-gray-600 border-b pb-1">
-            <small>Ledolgozott órák és teljesítmények</small></h6>
+            <small>{t("x.hoursAndPerformance")}</small></h6>
           {hoursByWorker.length > 0 ? (
             <>
               {hoursByWorker
@@ -160,7 +163,7 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
                 })}
             </>
           ) : (
-            <p className="text-sm text-gray-500">Nincsenek rögzített órák.</p>
+            <p className="text-sm text-gray-500">{t("x.noHoursLogged")}</p>
           )}
         </div>
 
@@ -168,16 +171,16 @@ const PerformanceSummary: React.FC<PerformanceSummaryProps> = ({ data, isLoading
 
       {/* Profitráta számítás */}
       <div className="mt-6 pt-4 border-t border-gray-200">
-        <h3 className="font-semibold text-gray-600 mb-3">Profitráta elemzés</h3>
+        <h3 className="font-semibold text-gray-600 mb-3">{t("work.profitAnalysis")}</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
           <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="text-blue-600 font-medium">Bevétel</div>
+            <div className="text-blue-600 font-medium">{t("work.revenue")}</div>
             <div className="text-lg font-bold text-blue-800">
               {totalRevenue.toLocaleString('hu-HU')} Ft
             </div>
           </div>
           <div className="bg-red-50 p-3 rounded-lg">
-            <div className="text-red-600 font-medium">Költség</div>
+            <div className="text-red-600 font-medium">{t("work.cost")}</div>
             <div className="text-lg font-bold text-red-800">
               {totalCost.toLocaleString('hu-HU')} Ft
             </div>
