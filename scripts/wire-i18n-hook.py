@@ -66,7 +66,9 @@ for path in sys.argv[1:]:
         continue
 
     if "useLocale" not in source:
-        first_import = re.search(r"^import .*?;\n", source, re.M)
+        # Semicolons are optional here: several files in this repo omit them entirely,
+        # and requiring one made the script silently skip them.
+        first_import = re.search(r"^import [^\n]*\n", source, re.M)
         if not first_import:
             print("skip (no imports):", path)
             continue

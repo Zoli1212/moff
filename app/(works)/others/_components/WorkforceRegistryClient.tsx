@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -33,6 +34,8 @@ interface WorkforceRegistryClientProps {
 }
 
 export default function WorkforceRegistryClient({ workforceRegistry: initialData }: WorkforceRegistryClientProps) {
+  const { t } = useLocale();
+
   const [workforceRegistry, setWorkforceRegistry] = useState<WorkforceRegistryData[]>(initialData)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all')
@@ -156,7 +159,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
               <Users className="h-8 w-8 text-blue-600" />
               <div>
                 <p className="text-2xl font-bold">{totalCount}</p>
-                <p className="text-sm text-gray-600">Összes munkás</p>
+                <p className="text-sm text-gray-600">{t("wr.allWorkers")}</p>
               </div>
             </div>
           </CardContent>
@@ -168,7 +171,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
               <CheckCircle className="h-8 w-8 text-green-600" />
               <div>
                 <p className="text-2xl font-bold text-green-600">{activeCount}</p>
-                <p className="text-sm text-gray-600">Aktív munkások</p>
+                <p className="text-sm text-gray-600">{t("wr.activeWorkers")}</p>
               </div>
             </div>
           </CardContent>
@@ -181,7 +184,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
               <XCircle className="h-8 w-8 text-red-600" />
               <div>
                 <p className="text-2xl font-bold text-red-600">{totalCount - activeCount}</p>
-                <p className="text-sm text-gray-600">Inaktív munkások</p>
+                <p className="text-sm text-gray-600">{t("wr.inactiveWorkers")}</p>
               </div>
             </div>
           </CardContent>
@@ -194,37 +197,37 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
             <CardTitle className="flex items-center gap-2">
               <Search className="h-5 w-5" />
-              Szűrők és Keresés
+              {t("wr.filtersAndSearch")}
             </CardTitle>
             <Button onClick={() => setShowAddModal(true)} className="flex items-center gap-2 w-full sm:w-auto bg-[#FE9C00] hover:bg-[#E68A00] text-white">
               <Plus className="h-4 w-4" />
-              Új munkás hozzáadása
+              {t("worker.addNew")}
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="search">Keresés</Label>
+              <Label htmlFor="search">{t("wr.search")}</Label>
               <Input
                 id="search"
-                placeholder="Név, email, szerepkör, telefon..."
+                placeholder={t("wr.searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="status">Aktív státusz</Label>
+              <Label htmlFor="status">{t("wr.activeStatus")}</Label>
               <select
                 id="status"
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'active' | 'inactive')}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="all">Minden státusz</option>
-                <option value="active">Csak aktív</option>
-                <option value="inactive">Csak inaktív</option>
+                <option value="all">{t("wr.allStatuses")}</option>
+                <option value="active">{t("wr.onlyActive")}</option>
+                <option value="inactive">{t("wr.onlyInactive")}</option>
               </select>
             </div>
             <div className="flex items-end">
@@ -236,7 +239,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                 }}
                 className="w-full"
               >
-                Szűrők törlése
+                {t("wr.clearFilters")}
               </Button>
             </div>
           </div>
@@ -310,7 +313,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                     
                     {worker.notes && (
                       <div className="text-sm text-gray-500 text-center sm:text-left">
-                        <strong>Megjegyzések:</strong> <span className="break-words">{worker.notes}</span>
+                        <strong>{t("wr.notes")}</strong> <span className="break-words">{worker.notes}</span>
                       </div>
                     )}
                   </div>
@@ -320,7 +323,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                   {/* Toggle Switches */}
                   <div className="flex items-center justify-center space-x-2 w-full">
                     <Label htmlFor={`active-${worker.id}`} className="text-sm font-medium">
-                      Aktív
+                      {t("diary.active")}
                     </Label>
                     <Switch
                       id={`active-${worker.id}`}
@@ -332,7 +335,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
 
                   <div className="flex items-center justify-center space-x-2 w-full">
                     <Label htmlFor={`restricted-${worker.id}`} className="text-sm font-medium">
-                      Napló korlátozása
+                      {t("wr.restrictDiary")}
                     </Label>
                     <Switch
                       id={`restricted-${worker.id}`}
@@ -352,7 +355,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                       style={{ color: '#FE9C00' }}
                     >
                       <Edit className="h-4 w-4" />
-                      <span className="hidden xs:inline">Szerkesztés</span>
+                      <span className="hidden xs:inline">{t("de.edit")}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -362,7 +365,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
                       style={{ color: '#FE9C00' }}
                     >
                       <Trash2 className="h-4 w-4" />
-                      <span className="hidden xs:inline">Törlés</span>
+                      <span className="hidden xs:inline">{t("common.delete")}</span>
                     </Button>
                   </div>
                 </div>
@@ -377,7 +380,7 @@ export default function WorkforceRegistryClient({ workforceRegistry: initialData
           <CardContent className="p-12 text-center">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Nincs találat
+              {t("stats.noResults")}
             </h3>
             <p className="text-gray-600">
               Próbálja meg módosítani a keresési feltételeket vagy adjon hozzá új munkást.

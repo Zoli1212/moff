@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { deleteWorkforceRegistry, cleanupAndDeleteWorkforceRegistry, removeWorkItemWorkerAssignment, removeWorkerDiaryEntries, removeWorkerFromRegistryOnly, WorkforceRegistryData } from '@/actions/workforce-registry-actions'
@@ -30,6 +31,8 @@ interface WorkforceDeleteModalProps {
 }
 
 export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorkerDeleted }: WorkforceDeleteModalProps) {
+  const { t } = useLocale();
+
   const [isLoading, setIsLoading] = useState(false)
   const [cleanupData, setCleanupData] = useState<CleanupData | null>(null)
   const [checkingConnections, setCheckingConnections] = useState(false)
@@ -187,7 +190,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
           {checkingConnections ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              <span>Kapcsolatok ellenőrzése...</span>
+              <span>{t("wd.checkingLinks")}</span>
             </div>
           ) : cleanupData ? (
             // Cleanup mode - show detailed deletion interface
@@ -206,17 +209,17 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
                       {cleanupData.workItemAssignments?.length ?? 0}
                     </span>
-                    Munkafázis hozzárendelés
+                    {t("wd.phaseAssignment")}
                   </h4>
                   <div className="flex justify-between items-center bg-white p-2 rounded border">
-                    <span className="text-sm">Munkafázis hozzárendelések törlése</span>
+                    <span className="text-sm">{t("wd.deletePhaseAssignments")}</span>
                     <Button
                       size="sm"
                       variant="outline"
                       className="text-blue-600 border-blue-300 hover:bg-blue-50"
                       onClick={handleRemoveAllAssignments}
                     >
-                      Törlés
+                      {t("common.delete")}
                     </Button>
                   </div>
                 </div>
@@ -229,17 +232,17 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                     <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
                       {cleanupData.diaryEntriesCount}
                     </span>
-                    Napló bejegyzés
+                    {t("diary.entry")}
                   </h4>
                   <div className="flex justify-between items-center bg-white p-2 rounded border">
-                    <span className="text-sm">Összes napló bejegyzés törlése</span>
+                    <span className="text-sm">{t("wd.deleteAllDiary")}</span>
                     <Button
                       size="sm"
                       variant="outline"
                       className="text-green-600 border-green-300 hover:bg-green-50"
                       onClick={handleRemoveDiaryEntries}
                     >
-                      Törlés
+                      {t("common.delete")}
                     </Button>
                   </div>
                 </div>
@@ -249,7 +252,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
               <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                 <h4 className="font-semibold text-red-900 mb-3 flex items-center gap-2">
                   <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">1</span>
-                  Munkás regiszter
+                  {t("wd.workerRegistry")}
                 </h4>
                 <div className="flex justify-between items-center bg-white p-2 rounded border">
                   <div>
@@ -265,9 +268,9 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                     }
                     onClick={canDeleteFromRegistry ? handleRemoveFromRegistry : undefined}
                     disabled={!canDeleteFromRegistry}
-                    title={!canDeleteFromRegistry ? "Először távolítsa el az összes kapcsolatot" : ""}
+                    title={!canDeleteFromRegistry ? t("wd.removeLinksFirst") : ""}
                   >
-                    {canDeleteFromRegistry ? "Deaktiválás" : "Letiltva"}
+                    {canDeleteFromRegistry ? t("wd.deactivate") : "Letiltva"}
                   </Button>
                 </div>
               </div>
@@ -291,7 +294,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                   onClick={onClose}
                   disabled={isLoading}
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </Button>
                 <div className="space-x-2">
                   <Button
@@ -317,15 +320,15 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
               </Alert>
 
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-gray-900 mb-2">Deaktiválandó munkás:</h4>
+                <h4 className="font-semibold text-gray-900 mb-2">{t("wd.workerToDeactivate")}</h4>
                 <div className="text-sm text-gray-600">
-                  <p><strong>Név:</strong> {worker.name}</p>
-                  <p><strong>Szerepkör:</strong> {worker.role}</p>
+                  <p><strong>{t("proc.name")}</strong> {worker.name}</p>
+                  <p><strong>{t("wd.role")}</strong> {worker.role}</p>
                 </div>
               </div>
 
               <p className="text-sm text-gray-600">
-                Biztosan deaktiválni szeretné <strong>{worker.name}</strong> munkást a rendszerben?
+                {t("wd.confirmDeactivate")} <strong>{worker.name}</strong> {t("wd.workerInSystem")}
               </p>
 
               <div className="flex justify-end space-x-2 pt-4">
@@ -335,7 +338,7 @@ export default function WorkforceDeleteModal({ isOpen, onClose, worker, onWorker
                   onClick={onClose}
                   disabled={isLoading}
                 >
-                  Mégse
+                  {t("common.cancel")}
                 </Button>
                 <Button
                   type="button"

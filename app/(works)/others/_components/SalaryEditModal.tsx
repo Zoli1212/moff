@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +41,8 @@ export default function SalaryEditModal({
   existingSalaryEntry,
   onSalaryUpdated,
 }: SalaryEditModalProps) {
+  const { t } = useLocale();
+
   const [newSalary, setNewSalary] = useState(
     existingSalaryEntry ? existingSalaryEntry.dailyRate.toString() : currentSalary.toString()
   );
@@ -80,19 +83,19 @@ export default function SalaryEditModal({
     const salaryAmount = parseFloat(newSalary);
 
     if (isNaN(salaryAmount) || salaryAmount < 0) {
-      toast.error("Érvénytelen fizetés összeg");
+      toast.error(t("sal.invalidAmount"));
       return;
     }
 
     if (!worker.id) {
-      toast.error("Munkás ID hiányzik");
+      toast.error(t("sal.missingWorkerId"));
       return;
     }
 
     // Convert date string to Date object
     const validFromDate = new Date(validFromStr);
     if (isNaN(validFromDate.getTime())) {
-      toast.error("Érvénytelen dátum");
+      toast.error(t("od.invalidDate"));
       return;
     }
 
@@ -105,15 +108,15 @@ export default function SalaryEditModal({
       );
 
       if (result.success) {
-        toast.success("Fizetés sikeresen frissítve");
+        toast.success(t("sal.updated"));
         onSalaryUpdated();
         onClose();
       } else {
-        toast.error(result.error || "Hiba történt a mentés során");
+        toast.error(result.error || t("od.errSave"));
       }
     } catch (error) {
       console.error("Error saving salary:", error);
-      toast.error("Hiba történt a mentés során");
+      toast.error(t("od.errSave"));
     } finally {
       setIsLoading(false);
     }
@@ -150,14 +153,14 @@ export default function SalaryEditModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Save className="h-5 w-5" />
-            {existingSalaryEntry ? "Fizetés szerkesztése" : "Fizetés módosítása"} - {worker.name}
+            {existingSalaryEntry ? t("sal.edit") : t("sal.change")} - {worker.name}
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
           {/* Jelenlegi fizetés */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Jelenlegi napi díj</p>
+            <p className="text-sm text-gray-600 mb-1">{t("sal.currentRate")}</p>
             <p className="text-xl font-semibold text-gray-900">
               {formatCurrency(currentSalary)}
             </p>
@@ -168,7 +171,7 @@ export default function SalaryEditModal({
 
           {/* Új fizetés */}
           <div className="space-y-2">
-            <Label htmlFor="newSalary">Új napi díj (Ft)</Label>
+            <Label htmlFor="newSalary">{t("sal.newRate")}</Label>
             <Input
               id="newSalary"
               type="number"
@@ -191,7 +194,7 @@ export default function SalaryEditModal({
 
           {/* Érvényesség dátuma */}
           <div className="space-y-2">
-            <Label htmlFor="validFrom">Érvényes mikortól</Label>
+            <Label htmlFor="validFrom">{t("sal.validFrom")}</Label>
             <div className="relative">
               <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -203,7 +206,7 @@ export default function SalaryEditModal({
               />
             </div>
             <p className="text-xs text-gray-500">
-              A fizetésváltozás ettől a dátumtól lesz érvényes
+              {t("sal.validFromHint")}
             </p>
           </div>
 
@@ -211,7 +214,7 @@ export default function SalaryEditModal({
           {hasChanges() && (
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm font-medium text-blue-900 mb-2">
-                {existingSalaryEntry ? "Módosítások" : "Változás összefoglalása"}
+                {existingSalaryEntry ? t("sal.changes") : t("sal.changeSummary")}
               </p>
               <div className="space-y-1 text-sm text-blue-800">
                 {existingSalaryEntry ? (
@@ -247,14 +250,14 @@ export default function SalaryEditModal({
         <div className="flex justify-end gap-2 pt-4 border-t">
           <Button variant="outline" onClick={handleClose} disabled={isLoading}>
             <X className="h-4 w-4 mr-2" />
-            Mégse
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSave}
             disabled={isLoading || !hasChanges()}
           >
             <Save className="h-4 w-4 mr-2" />
-            {isLoading ? "Mentés..." : "Mentés"}
+            {isLoading ? t("od.saving") : t("common.save")}
           </Button>
         </div>
       </DialogContent>

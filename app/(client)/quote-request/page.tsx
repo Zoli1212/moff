@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useRouter } from "next/navigation";
 import { createClientQuoteSession } from "@/actions/client-quote-actions";
 import { Sparkles, Paperclip, X, FileText, Shield } from "lucide-react";
@@ -10,6 +11,8 @@ const ACCEPTED_FILE_TYPES = ".pdf,.xlsx,.xls,.docx,.jpg,.jpeg,.png,.dwg";
 const MAX_FILE_SIZE_MB = 10;
 
 export default function QuoteRequestPage() {
+  const { t } = useLocale();
+
   const router = useRouter();
   const [description, setDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -24,15 +27,15 @@ export default function QuoteRequestPage() {
 
   const handleStart = async () => {
     if (!turnstileToken) {
-      setError("Kérjük igazolja, hogy nem robot.");
+      setError(t("qr.needRobotCheck"));
       return;
     }
     if (!gdprConsent) {
-      setError("Az adatkezelési tájékoztató elfogadása szükséges.");
+      setError(t("qr.needPrivacyConsent"));
       return;
     }
     if (description.trim().length < 10) {
-      setError("Kérjük írjon legalább 10 karaktert a projekt leírásához.");
+      setError(t("qr.needTenChars"));
       return;
     }
     setIsLoading(true);
@@ -42,7 +45,7 @@ export default function QuoteRequestPage() {
         router.push(`/quote-request/${result.sessionId}`);
       }
     } catch {
-      setError("Hiba történt. Kérjük próbálja újra.");
+      setError(t("qr.genericError"));
     } finally {
       setIsLoading(false);
     }
@@ -61,14 +64,14 @@ export default function QuoteRequestPage() {
       const res = await fetch("/api/parse-file", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setFileError(data.error || "Nem sikerült feldolgozni a fájlt.");
+        setFileError(data.error || t("qr.processError"));
         return;
       }
       setDescription(data.extractedText.slice(0, 2000));
       setUploadedFileName(file.name);
       setError("");
     } catch {
-      setFileError("Hiba történt a fájl feltöltése során.");
+      setFileError(t("qr.uploadError"));
     } finally {
       setIsParsing(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -113,12 +116,12 @@ export default function QuoteRequestPage() {
         {isDragging && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-orange-50/90 border-2 border-dashed border-orange-400 pointer-events-none">
             <Paperclip className="w-10 h-10 text-orange-400 mb-2" />
-            <p className="text-orange-600 font-semibold text-sm">Húzza ide a dokumentumot</p>
+            <p className="text-orange-600 font-semibold text-sm">{t("qr.dropDocument")}</p>
             <p className="text-orange-400 text-xs mt-1">PDF, DWG, DOCX, JPG, PNG</p>
           </div>
         )}
 
-        <h1 className="text-2xl font-bold text-gray-800 mb-1">Új ajánlatkérés</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">{t("td.newRequest")}</h1>
         <p className="text-gray-500 mb-6 text-sm">
           Illessze be az ajánlatkérést, írja le részletesen, vagy töltsön fel dokumentumot
         </p>
@@ -142,7 +145,7 @@ export default function QuoteRequestPage() {
           {isParsing ? (
             <>
               <div className="w-4 h-4 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
-              Dokumentum feldolgozása...
+              {t("qr.processingDocument")}
             </>
           ) : (
             <>
@@ -176,7 +179,7 @@ export default function QuoteRequestPage() {
         <div className="relative mb-2">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex-1 h-px bg-gray-200" />
-            <span className="text-xs text-gray-400">vagy írja le</span>
+            <span className="text-xs text-gray-400">{t("qr.orDescribe")}</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
         </div>
@@ -227,7 +230,7 @@ export default function QuoteRequestPage() {
             <Shield className="w-3 h-3 inline-block mr-1 text-orange-500" />
             Elfogadom az{" "}
             <a href="/adatkezelesi-tajekoztato" target="_blank" className="text-orange-500 underline hover:text-orange-600">
-              adatkezelési tájékoztatót
+              {t("qr.privacyNotice")}
             </a>
             . Tudomásul veszem, hogy megadott adataimat a rendszer kizárólag az ajánlatkérés feldolgozásához
             tárolja, és bármikor kérhetem azok törlését.
@@ -252,7 +255,7 @@ export default function QuoteRequestPage() {
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 disabled:cursor-not-allowed text-white font-medium py-3 px-6 rounded-lg transition-all"
           >
             <Sparkles className="w-4 h-4" />
-            {isLoading ? "Indítás..." : "Elemzés indítása"}
+            {isLoading ? t("qr.starting") : t("td.startAnalysis")}
           </button>
         </div>
       </div>

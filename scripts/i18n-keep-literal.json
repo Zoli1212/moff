@@ -13,5 +13,17 @@
  "app/(client)/quote-request/[sessionId]/QuoteChatClient.tsx": [
   "---AJÁNLAT_KEZDET---",
   "---AJÁNLAT_VÉGE---"
+ ],
+ "components/SocialShareButtons.tsx": [
+  "Elküldve",
+  "Elutasítva",
+  "Lejárt",
+  "Érvénytelen dátum"
+ ],
+ "components/SocialShareButtonsExcel.tsx": [
+  "Elküldve",
+  "Elutasítva",
+  "Lejárt",
+  "Érvénytelen dátum"
  ]
 }

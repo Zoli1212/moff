@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import React from "react";
 import { usePDF } from "react-to-pdf";
 import { Cost, Phase, Proposal } from "@/types/proposal";
@@ -32,6 +33,8 @@ function Report({
 }: {
   aiReport: { proposal?: Proposal; [key: string]: unknown };
 }) {
+  const { t } = useLocale();
+
 
   const setProposal = useProposalStore((state) => state.setProposal);
   const router = useRouter();
@@ -72,7 +75,7 @@ function Report({
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-extrabold text-gray-800 gradient-component-text">
-          Felújítási igény AI elemzés
+          {t("rp.title")}
         </h2>
         {aiReport?.proposal && (
   <div className="mb-4 flex justify-end">
@@ -85,7 +88,7 @@ function Report({
         }
       }}
     >
-      Ajánlat előnézet & PDF letöltés
+      {t("rp.previewAndPdf")}
     </Button>
   </div>
 )}
@@ -94,54 +97,54 @@ function Report({
       {/* Project Main Info */}
       <div className="bg-gradient-to-r from-[#6b166b] via-[#7c1e7c] to-[#8d269d] rounded-lg shadow-md p-6 mb-6 border border-purple-900">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center">
-          <i className="fas fa-home text-yellow-400 mr-2"></i> Projekt fő adatai
+          <i className="fas fa-home text-yellow-400 mr-2"></i> {t("rp.projectData")}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-white">
           <div>
-            <span className="font-semibold">Projekt típusa:</span>{" "}
+            <span className="font-semibold">{t("proposal.projectType")}</span>{" "}
             {typeof aiReport?.project_type === "string"
               ? filterValue(aiReport?.project_type)
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Felújítás jellege:</span>{" "}
+            <span className="font-semibold">{t("rp.renovationType")}</span>{" "}
             {typeof aiReport?.scope === "string"
               ? filterValue(aiReport?.scope)
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Ingatlan típusa:</span>{" "}
+            <span className="font-semibold">{t("proposal.propertyType")}</span>{" "}
             {typeof aiReport?.property_type === "string"
               ? filterValue(aiReport?.property_type)
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Ingatlan mérete: </span>
+            <span className="font-semibold">{t("rp.propertySize")} </span>
             {typeof aiReport?.area_sqm === "string" ||
             typeof aiReport?.area_sqm === "number"
               ? `${filterValue(String(aiReport.area_sqm))} m2`
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Cím:</span>{" "}
+            <span className="font-semibold">{t("share.address")}</span>{" "}
             {typeof aiReport?.location === "string"
               ? filterValue(aiReport?.location)
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Költségkeret:</span>{" "}
+            <span className="font-semibold">{t("rp.budget")}</span>{" "}
             {typeof aiReport?.budget_estimate === "string"
               ? filterValue(aiReport?.budget_estimate)
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Ütemezés:</span>{" "}
+            <span className="font-semibold">{t("proposal.schedule")}</span>{" "}
             {typeof aiReport?.timeline === "string"
               ? filterValue(aiReport?.timeline)
               : "-"}
           </div>
           <div>
-            <span className="font-semibold">Fázisok:</span>{" "}
+            <span className="font-semibold">{t("rp.phases")}</span>{" "}
             {typeof aiReport?.phasing === "string"
               ? filterValue(aiReport?.phasing)
               : "-"}
@@ -153,7 +156,7 @@ function Report({
       <div className="flex flex-wrap gap-6 mb-6">
         <div className="bg-white rounded-lg shadow-md p-5 border border-blue-200 min-w-[280px] max-w-full flex-1">
           <h4 className="text-lg font-semibold text-gray-700 mb-2">
-            <i className="fas fa-list-alt text-blue-400 mr-2"></i> Követelmények
+            <i className="fas fa-list-alt text-blue-400 mr-2"></i> {t("rp.requirements")}
           </h4>
           <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
             {requirements.length > 0 ? (
@@ -290,7 +293,7 @@ function Report({
       {/* Summary */}
       <div className="bg-blue-50 rounded-lg shadow-md p-5 border-l-8 border-blue-400 mb-6">
         <h4 className="text-lg font-bold text-black mb-1 flex items-center">
-          <i className="fas fa-info-circle mr-2"></i> Összefoglaló
+          <i className="fas fa-info-circle mr-2"></i> {t("letter.summary")}
         </h4>
         <p className="text-black text-base">
           {typeof aiReport?.proposal?.summary_comment === "string"
@@ -310,7 +313,7 @@ function Report({
         }
       }}
     >
-      Ajánlat előnézet & PDF letöltés
+      {t("rp.previewAndPdf")}
     </Button>
   </div>
 )}
@@ -338,28 +341,28 @@ function Report({
               {/* Összegzés */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <b>Nettó összeg:</b>{" "}
+                  <b>{t("proposal.net")}</b>{" "}
                   {typeof aiReport.proposal.total_net_amount === "string" ||
                   typeof aiReport.proposal.total_net_amount === "number"
                     ? aiReport.proposal.total_net_amount
                     : "-"}
                 </div>
                 <div>
-                  <b>ÁFA összege:</b>{" "}
+                  <b>{t("proposal.vat")}</b>{" "}
                   {typeof aiReport.proposal.vat_amount === "string" ||
                   typeof aiReport.proposal.vat_amount === "number"
                     ? aiReport.proposal.vat_amount
                     : "-"}
                 </div>
                 <div>
-                  <b>Bruttó összeg:</b>{" "}
+                  <b>{t("proposal.gross")}</b>{" "}
                   {typeof aiReport.proposal.total_gross_amount === "string" ||
                   typeof aiReport.proposal.total_gross_amount === "number"
                     ? aiReport.proposal.total_gross_amount
                     : "-"}
                 </div>
                 <div>
-                  <b>Végső határidő:</b>{" "}
+                  <b>{t("proposal.deadline")}</b>{" "}
                   {typeof aiReport.proposal.final_deadline === "string"
                     ? aiReport.proposal.final_deadline
                     : "-"}
@@ -369,7 +372,7 @@ function Report({
               {/* Munkafázisok */}
               <div>
                 <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-                  Főbb munkafázisok
+                  {t("rp.mainPhases")}
                 </h4>
                 {Array.isArray(aiReport.proposal.main_work_phases_and_tasks) &&
                 aiReport.proposal.main_work_phases_and_tasks.length > 0 ? (
@@ -405,7 +408,7 @@ function Report({
               {/* Ütemezés */}
               <div>
                 <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-                  Időzítés, ütemezés
+                  {t("rp.timing")}
                 </h4>
                 {Array.isArray(
                   aiReport.proposal.timeline_and_scheduling_details
@@ -434,7 +437,7 @@ function Report({
               {/* Költségek bontása */}
               <div>
                 <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-                  Költségek bontása
+                  {t("rp.costBreakdown")}
                 </h4>
                 {Array.isArray(
                   aiReport?.proposal?.estimated_costs_per_phase_and_total
@@ -458,7 +461,7 @@ function Report({
                           <li key={item.phase || idx} className="mb-2">
                             <b>
                               {typeof item.phase === "string"
-                                ? item.phase === "Total" ? "Összesen" : item.phase
+                                ? item.phase === "Total" ? t("proc.sum") : item.phase
                                 : "-"}
                               :
                             </b>{" "}
@@ -508,7 +511,7 @@ function Report({
         return (
           <div>
             <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-              Megjegyzések, javaslatok
+              {t("rp.notes")}
             </h4>
             {Array.isArray(notes) ? (
               <ul className="list-disc list-inside text-black text-sm">
@@ -536,7 +539,7 @@ function Report({
         return (
           <div>
             <h4 className="text-lg font-semibold mb-2 text-black border-b pb-1">
-              Feltételezések
+              {t("rp.assumptions")}
             </h4>
             {Array.isArray(assumptions) ? (
               <ul className="list-disc list-inside text-black text-sm">
@@ -556,7 +559,7 @@ function Report({
       {/* JSON Riport megjelenítése */}
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-2">
-          JSON Riport (nyers visszatérési érték):
+          {t("letter.jsonReport")}
         </h3>
         <pre className="bg-gray-100 p-4 rounded text-xs overflow-x-auto max-h-96">
           {JSON.stringify(aiReport, null, 2)}

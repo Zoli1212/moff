@@ -359,7 +359,7 @@ export default function SocialShareButtonsExcel({
     } catch (error) {
       console.error("Hiba a PDF generálása közben:", error);
       alert(
-        "Hiba történt a PDF generálása közben. Kérjük, próbáld újra később."
+        t("ss.pdfGenerateError")
       );
       return null;
     }
@@ -371,7 +371,7 @@ export default function SocialShareButtonsExcel({
     try {
       const pdfBlob = await generatePdf();
       if (!pdfBlob) {
-        console.error("Nem sikerült létrehozni a PDF-t");
+        console.error(t("share.pdfCreateFailed"));
         return;
       }
 
@@ -383,7 +383,7 @@ export default function SocialShareButtonsExcel({
         try {
           const shareData: ShareData & { files?: File[] } = {
             title: offer.title || t("od.offer"),
-            text: "Itt az ajánlatod PDF formátumban",
+            text: t("ss.pdfMessage"),
             files: [pdfFile],
           };
 
@@ -410,7 +410,7 @@ export default function SocialShareButtonsExcel({
       }, 100);
     } catch (error) {
       console.error("Hiba történt a megosztás során:", error);
-      alert("Hiba történt a megosztás során. Kérjük, próbáld újra később.");
+      alert(t("ss.shareError"));
     }
   };
 
@@ -418,12 +418,12 @@ export default function SocialShareButtonsExcel({
     <div className="flex flex-col items-center">
       {/* Megosztás */}
       <div className="text-xs font-medium text-gray-500 mb-1 text-center">
-        Megosztás
+        {t("share.share")}
       </div>
       <div className="flex gap-1.5 mb-1 justify-center">
         <button
           onClick={handleShare}
-          aria-label="Megosztás"
+          aria-label={t("share.share")}
           className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
         >
           <svg
@@ -444,7 +444,7 @@ export default function SocialShareButtonsExcel({
       </div>
       {/* Letöltés */}
       <div className="text-xs font-medium text-gray-500 mb-1 text-center">
-        Letöltés
+        {t("share.download")}
       </div>
       <div className="flex gap-1.5 justify-center">
         {/* PDF */}
@@ -465,11 +465,11 @@ export default function SocialShareButtonsExcel({
             } catch (error) {
               console.error("Hiba a PDF letöltése közben:", error);
               alert(
-                "Hiba történt a PDF letöltése közben. Kérjük, próbáld újra később."
+                t("ss.pdfDownloadError")
               );
             }
           }}
-          aria-label="PDF letöltése"
+          aria-label={t("share.downloadPdf")}
           className="bg-[#FE9C00] text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-[#e68a00] px-3 py-1 text-sm font-semibold"
         >
           <FileDigit className="w-4 h-4 mr-2" />
@@ -562,7 +562,7 @@ export default function SocialShareButtonsExcel({
               ];
 
               XLSX.utils.book_append_sheet(wb, wsProject, "Projekt adatok");
-              XLSX.utils.book_append_sheet(wb, wsItems, "Ajánlat tételes");
+              XLSX.utils.book_append_sheet(wb, wsItems, t("letter.itemised"));
 
               // 4. Excel file generálás és letöltés
               const excelBuffer = XLSX.write(wb, {
@@ -587,7 +587,7 @@ export default function SocialShareButtonsExcel({
               );
             }
           }}
-          aria-label="Excel letöltése"
+          aria-label={t("letter.downloadExcel")}
           className="bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700 px-3 py-1 text-sm font-semibold"
         >
           <Sheet className="w-4 h-4 mr-2" />

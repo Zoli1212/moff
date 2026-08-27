@@ -347,7 +347,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
     } catch (error) {
       console.error("Hiba a PDF generálása közben:", error);
       alert(
-        "Hiba történt a PDF generálása közben. Kérjük, próbáld újra később."
+        t("ss.pdfGenerateError")
       );
       return null;
     }
@@ -359,7 +359,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
     try {
       const pdfBlob = await generatePdf();
       if (!pdfBlob) {
-        console.error("Nem sikerült létrehozni a PDF-t");
+        console.error(t("share.pdfCreateFailed"));
         return;
       }
 
@@ -371,7 +371,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
         try {
           const shareData: ShareData & { files?: File[] } = {
             title: offer.title || t("od.offer"),
-            text: "Itt az ajánlatod PDF formátumban",
+            text: t("ss.pdfMessage"),
             files: [pdfFile],
           };
 
@@ -398,7 +398,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
       }, 100);
     } catch (error) {
       console.error("Hiba történt a megosztás során:", error);
-      alert("Hiba történt a megosztás során. Kérjük, próbáld újra később.");
+      alert(t("ss.shareError"));
     }
   };
 
@@ -407,7 +407,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
       {/* Native Share */}
       <button
         onClick={handleShare}
-        aria-label="Megosztás"
+        aria-label={t("share.share")}
         className="w-8 h-8 bg-gray-100 text-gray-700 rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-gray-200"
       >
         <Share2 className="w-4 h-4" />
@@ -427,7 +427,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
             console.error("Hiba a Messenger megosztás során:", error);
           }
         }}
-        aria-label="Megosztás Messengeren"
+        aria-label={t("ss.shareMessenger")}
         className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-blue-700"
       >
         <MessageCircle className="w-4 h-4" />
@@ -444,7 +444,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
             console.error("Hiba a WhatsApp megosztás során:", error);
           }
         }}
-        aria-label="Megosztás WhatsAppon"
+        aria-label={t("ss.shareWhatsApp")}
         className="w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-green-700"
       >
         <MessageCircle className="w-4 h-4" />
@@ -461,7 +461,7 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
             console.error("Hiba a Viber megosztás során:", error);
           }
         }}
-        aria-label="Megosztás Viberen"
+        aria-label={t("ss.shareViber")}
         className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-purple-700"
       >
         <MessageCircle className="w-4 h-4" />
@@ -485,11 +485,11 @@ export default function SocialShareButtons({ offer }: SocialShareButtonsProps) {
           } catch (error) {
             console.error("Hiba a PDF letöltése közben:", error);
             alert(
-              "Hiba történt a PDF letöltése közben. Kérjük, próbáld újra később."
+              t("ss.pdfDownloadError")
             );
           }
         }}
-        aria-label="PDF letöltése"
+        aria-label={t("share.downloadPdf")}
         className="w-8 h-8 bg-red-600 text-white rounded-full flex items-center justify-center shadow-sm hover:shadow transition-colors hover:bg-red-700"
       >
         <FileText className="w-4 h-4" />

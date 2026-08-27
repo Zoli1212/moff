@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { getAllEmails } from "../../../actions/email-actions";
 import { v4 as uuidv4 } from "uuid";
 import axios from "axios";
@@ -57,6 +58,8 @@ interface AnalysisResult {
 }
 
 function EmailList() {
+  const { t } = useLocale();
+
   const [emails, setEmails] = useState<Email[]>([]);
   const [isPending, startTransition] = useTransition();
   const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
@@ -166,7 +169,7 @@ function EmailList() {
     startTransition(processEmails);
   }, []);
 
-  if (isPending && emails.length === 0) return <div>Betöltés...</div>;
+  if (isPending && emails.length === 0) return <div>{t("worker.loading")}</div>;
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column" }}>
@@ -294,7 +297,7 @@ function EmailList() {
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4" />
-                          Elemzés indítása
+                          {t("td.startAnalysis")}
                         </>
                       )}
                     </Button>

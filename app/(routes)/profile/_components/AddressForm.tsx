@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 
 interface AddressData {
@@ -12,6 +13,8 @@ interface AddressData {
 }
 
 export default function AddressForm() {
+  const { t } = useLocale();
+
   const [formData, setFormData] = useState<AddressData>({
     companyName: "",
     address: "",
@@ -61,13 +64,13 @@ export default function AddressForm() {
       });
 
       if (response.ok) {
-        toast.success("Cím sikeresen mentve!");
+        toast.success(t("ad.saved"));
       } else {
-        toast.error("Hiba történt a mentés során");
+        toast.error(t("od.errSave"));
       }
     } catch (error) {
       console.error("Error saving address:", error);
-      toast.error("Hiba történt a mentés során");
+      toast.error(t("od.errSave"));
     } finally {
       setIsSaving(false);
     }
@@ -76,7 +79,7 @@ export default function AddressForm() {
   if (isLoading) {
     return (
       <div style={{ padding: "20px", textAlign: "center" }}>
-        Betöltés...
+        {t("worker.loading")}
       </div>
     );
   }
@@ -92,10 +95,10 @@ export default function AddressForm() {
       }}
     >
       <h2 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "16px" }}>
-        Számlázási és rendelési cím
+        {t("ad.title")}
       </h2>
       <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "24px" }}>
-        Ez a cím kerül felhasználásra számlázáskor és rendelésekkor.
+        {t("ad.hint")}
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -109,7 +112,7 @@ export default function AddressForm() {
               marginBottom: "6px",
             }}
           >
-            Cégnév
+            {t("ad.companyName")}
           </label>
           <input
             type="text"
@@ -140,7 +143,7 @@ export default function AddressForm() {
               marginBottom: "6px",
             }}
           >
-            Utca, házszám
+            {t("billing.street")}
           </label>
           <input
             type="text"
@@ -171,7 +174,7 @@ export default function AddressForm() {
                 marginBottom: "6px",
               }}
             >
-              Város
+              {t("ad.city")}
             </label>
             <input
               type="text"
@@ -201,7 +204,7 @@ export default function AddressForm() {
                 marginBottom: "6px",
               }}
             >
-              Irányítószám
+              {t("billing.zip")}
             </label>
             <input
               type="text"
@@ -232,7 +235,7 @@ export default function AddressForm() {
               marginBottom: "6px",
             }}
           >
-            Ország
+            {t("ad.country")}
           </label>
           <input
             type="text"
@@ -268,7 +271,7 @@ export default function AddressForm() {
             opacity: isSaving ? 0.7 : 1,
           }}
         >
-          {isSaving ? "Mentés..." : "Cím mentése"}
+          {isSaving ? t("od.saving") : t("ad.save")}
         </button>
       </form>
     </div>
