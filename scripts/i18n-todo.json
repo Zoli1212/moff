@@ -15,75 +15,27 @@
   "általános felújítás",
   "📎 Feltöltött dokumentum"
  ],
- "app/(client)/_components/SignOutBtn.tsx": [
-  "Kilépés"
- ],
  "app/(dashboard)/billings/drafts/[billingId]/page.tsx": [
   "Fő utca 1.",
   "Kovács János",
   "Számlázz.hu"
  ],
- "app/(dashboard)/billings/drafts/[billingId]/_components/FinalizedInvoiceItems.tsx": [
-  "Kiszámlázott tételek",
-  "MUNKADÍJ"
- ],
  "app/(dashboard)/billings/drafts/[billingId]/_components/InvoiceItemsTable.tsx": [
-  "Biztosan ki szeretnéd törölni?",
-  "Díj",
-  "Tétel módosítva",
-  "Tétel törölve",
-  "Összes kijelölése"
+  "Díj"
  ],
  "app/(dashboard)/billings/my-invoices/page.tsx": [
   "Díj"
  ],
- "app/(dashboard)/billings/page.tsx": [
-  "Munkák betöltése...",
-  "Nincsenek munkák, amikből számlát lehetne készíteni.",
-  "Névtelen munka",
-  "Ár nincs megadva"
- ],
- "app/(dashboard)/billings/[workId]/page.tsx": [
-  "Hiba történt a munka betöltésekor.",
-  "Munka nem található.",
-  "Számla létrehozása"
- ],
  "app/(dashboard)/billings/[workId]/_components/BillingItems.tsx": [
-  "Biztosan ki szeretnéd törölni?",
-  "Díj",
-  "Tétel módosítva",
-  "Tétel törölve"
- ],
- "app/(dashboard)/jobs/page.tsx": [
-  "Hiba történt a törlés közben.",
-  "Keresés...",
-  "Még nincsenek munkáid.",
-  "Új munka hozzáadása"
+  "Díj"
  ],
  "app/(dashboard)/jobs/[requirementId]/page.tsx": [
   "Részletek →",
   "Ár:"
  ],
  "app/(dashboard)/offers/from-request/[sessionId]/page.tsx": [
-  "Ajánlat generálása...",
-  "Az ajánlatkérés nem található.",
-  "Beérkezett ajánlatkérés",
-  "Egy megrendelő ajánlatot kér az alábbi munkákra",
   "Elfogadás — Ajánlat készítése",
-  "Elutasítás",
-  "Előzetes becslés",
-  "Hiba történt az adatok betöltésekor.",
-  "Hiba történt az ajánlat generálásakor. Kérjük próbálja újra.",
-  "Megrendelő leírása",
-  "Méretek",
   "•"
- ],
- "app/(dashboard)/offers/page.tsx": [
-  "+ Új felmérés",
-  "Beérkezett ajánlatkérések",
-  "Még nincsenek ajánlataid.",
-  "Ár nincs megadva",
-  "Új ajánlat létrehozása"
  ],
  "app/(dashboard)/offers/[requirementId]/page.tsx": [
   "Részletek →",
@@ -99,28 +51,7 @@
  ],
  "app/(dashboard)/statistics/page.tsx": [
   "Hiba a statisztikák betöltésekor:",
-  "Név",
-  "Összes user"
- ],
- "app/(dashboard)/statistics/workforce/_components/WorkforceRankingClient.tsx": [
-  "Vissza a statisztikákhoz"
- ],
- "app/(routes)/ai-tools/ai-chat/[chatid]/page.tsx": [
-  "+ Új Csevegés",
-  "okosabb ajánlatokat adhatsz"
- ],
- "app/(routes)/ai-tools/ai-chat/_components/EmptyState.tsx": [
-  "Kérdésed van?"
- ],
- "app/(routes)/ai-tools/ai-demand-analyzer/[recordid]/page.tsx": [
-  "Ez a fájltípus nem tekinthető meg közvetlenül az oldalon.",
-  "Fájl letöltése",
-  "Igény leírás eredeti",
-  "Nincs megjeleníthető fájl."
- ],
- "app/(routes)/ai-tools/ai-offer-letter/page.tsx": [
-  "Generálás",
-  "Illessze be az elemzendő szöveget:"
+  "Név"
  ],
  "app/(routes)/ai-tools/ai-offer-letter/[recordid]/page.tsx": [
   "Becsült kivitelezési idő: 15-20 nap",
@@ -135,10 +66,6 @@
  "app/(routes)/ai-tools/ai-offer-letter/[recordid]/_components/OfferLetterEmailSender.tsx": [
   "Cím"
  ],
- "app/(routes)/ai-tools/ai-offer-letter-mobile/page.tsx": [
-  "Generálás",
-  "Illessze be az elemzendő szöveget:"
- ],
  "app/(routes)/ai-tools/ai-offer-letter-mobile/[recordid]/page.tsx": [
   "Becsült kivitelezési idő: 15-20 nap",
   "Kád felszerelés",
@@ -152,10 +79,6 @@
  "app/(routes)/ai-tools/ai-offer-letter-mobile/[recordid]/_components/OfferLetterEmailSender.tsx": [
   "Cím"
  ],
- "app/(routes)/ai-tools/ai-offer-letter-mobile-redirect/page.tsx": [
-  "Generálás",
-  "Illessze be az elemzendő szöveget:"
- ],
  "app/(routes)/ai-tools/ai-offer-letter-mobile-redirect/[recordid]/page.tsx": [
   "❌ No result from server",
   "❌ Save failed!"
@@ -163,61 +86,7 @@
  "app/(routes)/ai-tools/ai-offer-letter-mobile-redirect/[recordid]/_components/OfferLetterEmailSender.tsx": [
   "Cím"
  ],
- "app/(routes)/ai-tools/page.tsx": [
-  "Kezdjük el a csevegést",
-  "Személyi Asszisztens"
- ],
- "app/(routes)/billing/page.tsx": [
-  "Előfizetés kezelése",
-  "Kezeld az előfizetésedet, módosítsd a fizetési módot vagy mondj le",
-  "Következő fizetés",
-  "Lejárt fizetés",
-  "Próbaidőszak"
- ],
- "app/(routes)/billing/_components/BillingNotifications.tsx": [
-  "Az előfizetési folyamat megszakadt. Próbáld újra később!",
-  "Előfizetés megszakítva"
- ],
- "app/(routes)/dashboard/email/page.tsx": [
-  "Email Elemzés"
- ],
- "app/(routes)/dashboard/prices/page.tsx": [
-  "Hozzáad",
-  "Mennyiségi Egység (pl. kg, db,nm2)",
-  "Minden mező kitöltése kötelező!",
-  "Minden mező kitöltése kötelező, és az árnak számnak kell lennie!",
-  "Nincs még tétel.",
-  "Töröl",
-  "Ár (Ft)"
- ],
- "app/(routes)/dashboard/_components/DemandUploadDialog.tsx": [
-  "Analízis...",
-  "Kattintson ide a fájl feltöltéséhez (PDF, DOCX, XLSX, CSV)",
-  "Nem sikerült elindítani az elemzést.",
-  "Töltsd fel az Igénylést"
- ],
- "app/(routes)/dashboard/_components/History.tsx": [
-  "Előzmények",
-  "Előző munkáidat itt találod"
- ],
- "app/(routes)/dashboard/_components/OfferGeneratorDialog.tsx": [
-  "Csak .xlsx és .xls fájlok támogatottak",
-  "Engedje el a fájlt a feltöltéshez",
-  "Excel Fájl Feldolgozó",
-  "Feldolgozás folyamatban...",
-  "Fájl letöltése",
-  "Fájl sikeresen feldolgozva!",
-  "Húzza ide a fájlt, vagy kattintson a tallózáshoz"
- ],
  "app/(routes)/dashboard/_components/TextInputDialogQuestions.tsx": [
-  "Adja meg a határidőket és mértékegységeket",
-  "Adja meg a röviden a válaszokat",
-  "Hiba történt az ajánlat frissítése során",
-  "Ide írja a választ...",
-  "Kérdés eltávolítása",
-  "Kérdések megválaszolása",
-  "Kérjük válaszoljon meg legalább egy kérdést!",
-  "Válaszolja meg az ajánlatkérésre felmerült kérdéseket",
   "✅ API Response:",
   "✅ Old offer deleted",
   "✅ router.push called",
@@ -230,46 +99,12 @@
   "🗑️ Deleting old offer:",
   "🚀 Calling router.push..."
  ],
- "app/(routes)/dashboard/_components/WelcomeBanner.tsx": [
-  "Személyi asszisztens"
- ],
- "app/(routes)/email-list/page.tsx": [
-  "Elemzés",
-  "Elemzés folyamatban...",
-  "Eredmények",
-  "Fő téma",
-  "Kulcsfontosságú pontok",
-  "Kérések lista",
-  "Következő lépések",
-  "Mellékletek",
-  "Nem sikerült letölteni az elemzést. Kérjük, próbálja újra később.",
-  "Nincs beérkező email.",
-  "Nincs elemzésre váró tartalom"
- ],
- "app/(routes)/payment/canceled/page.tsx": [
-  "Fizetés megszakítva",
-  "Vissza az előfizetésekhez"
- ],
- "app/(routes)/payment/failed/page.tsx": [
-  "Sikertelen fizetés"
- ],
- "app/(routes)/payment/success/page.tsx": [
-  "Előfizetés kezelése",
-  "Sikeres fizetés!",
-  "Tovább a Dashboard-ra"
- ],
  "app/(routes)/profile/_components/AddressForm.tsx": [
-  "Magyarország",
   "Példa Kft.",
   "Példa utca 42."
  ],
  "app/(routes)/proposal-preview/page.tsx": [
   "ÁFA"
- ],
- "app/(works)/diary/[id]/edit/ContractorDiaryEditForm.tsx": [
-  "Hőmérséklet (°C)",
-  "Időjárás",
-  "Problémák"
  ],
  "app/(works)/diary/[id]/edit/GroupedDiaryCreateForm.tsx": [
   "Hiba a feltöltés során:",
@@ -289,61 +124,14 @@
   "Hiba a feltöltés során:",
   "×"
  ],
- "app/(works)/diary/[id]/edit/_components/UpdateWorkItemQuantityModal.tsx": [
-  "Adja meg a mennyiséget..."
- ],
- "app/(works)/diary/[id]/page.tsx": [
-  "A munka nem található.",
-  "Hiba történt az adatok lekérése közben."
- ],
  "app/(works)/diary/[id]/_components/CalendarMonthView.tsx": [
   "◀"
  ],
  "app/(works)/diary/[id]/_components/DiaryEntryDetail.tsx": [
   "Mentés folyamatban…"
  ],
- "app/(works)/diary/[id]/_components/DiaryTaskCardList.tsx": [
-  "Munka napló",
-  "Nincs napló bejegyzés."
- ],
- "app/(works)/diary/[id]/_components/DiaryTypeSelector.tsx": [
-  "E napló",
-  "Munkások naplója"
- ],
  "app/(works)/diary/[id]/_components/GoogleCalendarView.tsx": [
-  "Hét",
-  "Napló"
- ],
- "app/(works)/diary/[id]/_components/PerformanceSummary.tsx": [
-  "A kiválasztott időszakban nincsenek teljesítmény adatok.",
-  "Heti teljesítmény",
-  "Ledolgozott órák és teljesítmények",
-  "Munkafázis teljesítmények",
-  "Nincsenek munkafázis teljesítmények.",
-  "Nincsenek rögzített órák.",
-  "Teljesítmény adatok betöltése..."
- ],
- "app/(works)/others/page.tsx": [
-  "Munkásregiszter Kezelése"
- ],
- "app/(works)/others/_components/SalaryHistoryModal.tsx": [
-  "A jelenlegi fizetés a WorkforceRegistry alapértelmezett értéke.",
-  "Fizetésváltozások",
-  "Havi becslés (22 nap)",
-  "Heti becslés (5 nap)",
-  "Jelenlegi fizetés",
-  "Még nincs fizetéstörténet",
-  "Órabér",
-  "Összes növekedés"
- ],
- "app/(works)/others/_components/WorkersListClient.tsx": [
-  "Név, email vagy szerepkör...",
-  "Próbálja meg módosítani a keresési feltételeket.",
-  "Szűrők"
- ],
- "app/(works)/others/_components/WorkforceAddModal.tsx": [
-  "Napi díj (Ft)",
-  "Profilkép URL"
+  "Hét"
  ],
  "app/(works)/others/_components/WorkforceDeleteModal.tsx": [
   "⚠️ A munkás csak akkor deaktiválható, ha minden kapcsolat törölve van."
@@ -355,68 +143,16 @@
   "Hiba a feltöltés során:",
   "×"
  ],
- "app/(works)/others/_components/WorkforceSalarySection.tsx": [
-  "Fizetés",
-  "Fizetéstörténet",
-  "Kattints a szerkesztéshez",
-  "Kattints a teljes történet megtekintéséhez",
-  "Történet"
- ],
- "app/(works)/seged/page.tsx": [
-  "Egyéb menü"
- ],
  "app/(works)/seged/_components/AidClient.tsx": [
-  "Beszerzési segéd",
-  "Munkaterv segéd",
-  "Raktárkeszlét",
-  "Raktárkészlet"
- ],
- "app/(works)/seged/_components/PlaceholderForm.tsx": [
-  "Hamarosan elérhető lesz"
- ],
- "app/(works)/supply/[id]/page.tsx": [
-  "Beszerzés",
-  "Folyamatban lévő feladatokhoz rendelt munkaerő",
-  "Folyamatban lévő feladatokhoz szükséges anyagok",
-  "Folyamatban lévő feladatokhoz szükséges eszközök",
-  "Hibás workId",
-  "Munkaerő",
-  "Nem sikerült betölteni az anyagokat vagy szerszámokat."
+  "Raktárkeszlét"
  ],
  "app/(works)/supply/[id]/procurement/ProcurementClient.tsx": [
-  "Ajánlatbekérő küldése",
-  "Anyagbeszerzés",
-  "Kiválasztott tételek",
-  "Nincs folyamatban lévő feladathoz tartozó anyag",
-  "Válaszd ki a szükséges anyagokat",
   "🔗 Megtekintés webshopban"
  ],
- "app/(works)/supply/[id]/procurement/_components/ProcurementModal.tsx": [
-  "Ajánlatbekérő küldése",
-  "Kiválasztott anyagok:"
- ],
- "app/(works)/supply/[id]/_components/ProcurementButton.tsx": [
-  "+ Int. beszerzés"
- ],
- "app/(works)/supply/_components/MaterialAddModal.tsx": [
-  "Egységár (Ft)",
-  "Hozzáadás...",
-  "Mértékegység (pl. kg, db)",
-  "Válassz munkarészt..."
- ],
  "app/(works)/supply/_components/MaterialEditModal.tsx": [
-  "Biztos, hogy törlöd ezt az anyagot? A művelet nem vonható vissza.",
-  "Elérhető mennyiség",
   "Név"
  ],
  "app/(works)/supply/_components/MaterialPriceIndicator.tsx": [
-  "Ajánlati ár:",
-  "Ajánlatok betöltve! Válaszd ki, melyiket szeretnéd menteni.",
-  "Egységár spórolás:",
-  "Mentett ajánlat",
-  "Mentett ár",
-  "Termék",
-  "Árak frissítése",
   "✅ Mentett ajánlat:",
   "🎯 Legjobb ár",
   "💡 Jobb ajánlat:",
@@ -432,15 +168,10 @@
   "Hiba történt a megosztás során:"
  ],
  "app/(works)/supply/_components/MaterialSlotsSection.tsx": [
-  "Anyag hozzáadása sikertelen:",
-  "Anyag szerkesztése sikertelen:",
-  "Anyag törlése sikertelen:",
   "Hiba a törlés során:",
   "Hiba az elérhetőség frissítésekor:"
  ],
  "app/(works)/supply/_components/ToolAddModal.tsx": [
-  "Eszköz neve",
-  "Hozzáadás...",
   "Válassz munkafázist…"
  ],
  "app/(works)/supply/_components/ToolRegisterModal.tsx": [
@@ -458,40 +189,11 @@
   "▾"
  ],
  "app/(works)/supply/_components/WorkerEditModal.tsx": [
-  "Biztos, hogy törlöd ezt a munkást? A művelet nem vonható vissza.",
-  "Email küldése",
   "Hiba a feltöltés során:",
-  "Hívás indítása",
-  "Munkás adatok",
-  "Munkás törlése",
   "×"
  ],
- "app/(works)/supply/_components/WorkerRemoveModal.tsx": [
-  "Eltávolít"
- ],
- "app/(works)/supply/_components/WorkersSlotsSectionWithoutRoles.tsx": [
-  "Üres slot elrejtése"
- ],
  "app/(works)/tasks/[id]/page.tsx": [
-  "Hiba történt a munkafázis állapot frissítésekor",
-  "Hiba történt az új tétel létrehozásakor.",
-  "Nem sikerült betölteni a munkalapot. Kérjük, próbálja újra később.",
-  "Nem sikerült frissíteni a munkafázis állapotát.",
-  "Nem sikerült naplót létrehozni.",
-  "Nem sikerült új tételt létrehozni.",
-  "Pipáld ki a folyamatban lévő feladatokat!",
   "Ütemterv — Gantt és Kanban"
- ],
- "app/(works)/tasks/[id]/plan/_components/GeneratePlanButton.tsx": [
-  "A munkának nincs kezdő dátuma, ezért az ütemterv mai naptól indul.",
-  "Az ütemterv generálása nem sikerült.",
-  "Újragenerálás",
-  "Ütemterv újragenerálása"
- ],
- "app/(works)/tasks/[id]/plan/_components/KanbanCard.tsx": [
-  "Alfeladat hozzáadása",
-  "Feladat törlése",
-  "Feladat törölve."
  ],
  "app/(works)/tasks/_components/TaskCard.tsx": [
   "ℹ️ Piaci ár információ",
@@ -499,16 +201,10 @@
   "🔗 Megtekintés webshopban"
  ],
  "app/(works)/works/page.tsx": [
-  "(Névtelen munka)",
   "Ez egy rövid összefoglaló. Ez a második sor.",
-  "Forduljon az üzemeltetőhöz",
-  "Hiba történt a frissítés során",
-  "Munkák",
-  "Munkák nem elérhetőek",
   "⚠️"
  ],
  "app/(works)/works/[id]/page.tsx": [
-  "A munkához",
   "Hiba a feltöltés során:",
   "Hiba a kép törlésekor:",
   "Hiba történt a törlés során:",
@@ -516,50 +212,20 @@
   "❌ [PROFIT] Error calculating profit:",
   "❌ [WORKITEMS] Error loading work items:"
  ],
- "app/(works)/works/_components/ParticipantsSection.tsx": [
-  "Hiba történt a törlés során. Próbáld újra!",
-  "Nem található a szülő Worker rekord.",
-  "Nincs megfelelő Worker rekord",
-  "Sikeres mentés! A résztvevő elmentve.",
-  "Sikeres törlés!"
- ],
  "app/(works)/works/_components/ProfitPercentageSection.tsx": [
-  "A százalék 0 és 100 közötti szám kell legyen!",
-  "Adja meg az elvárt profit százalékát.",
-  "Elvárt profit betöltése...",
   "Hiba a százalék betöltésekor:",
-  "Mentési hiba:",
-  "Munkadíj - Költségek / Költségek",
-  "Teljesítmény",
   "✅ Sikeresen mentve!",
   "❌ Hiba a betöltéskor",
   "❌ Hiba történt a mentés során"
- ],
- "app/(works)/works/_components/ToolAddModal.tsx": [
-  "Eszköz neve *",
-  "Válassz feladatot"
  ],
  "app/(works)/works/_components/ToolRegisterModal.tsx": [
   "nem_elérhető"
  ],
  "app/(works)/works/_components/ToolsSlotsSection.tsx": [
-  "Hiba történt az eszköz hozzáadásakor!",
-  "Nincs raktáron ilyen eszköz!",
-  "Slot törlése",
-  "Slot törölve!",
-  "Szükséges eszközök",
   "×"
  ],
  "app/(works)/works/_components/ToolsSummary.tsx": [
-  "Hozzárendelve a munkához",
-  "Hozzárendelve:",
-  "Szükséges:",
   "❌ Nincs hozzárendelve"
- ],
- "app/(works)/works/_components/WorkCard.tsx": [
-  "Feldolgozás nem sikerült",
-  "Munka törölve",
-  "Munka összefoglaló"
  ],
  "app/(works)/works/_components/WorkerDetailsModal.tsx": [
   "✕"
@@ -570,41 +236,12 @@
   "×"
  ],
  "app/(works)/works/_components/WorkersSummary.tsx": [
-  "Hiba a munkás törlése során:",
-  "Nincs hozzárendelt munkás",
-  "Nincs szükség meghatározva",
-  "Általános munkások"
- ],
- "app/(works)/_components/WorksLayoutClient.tsx": [
-  "Erőforrás",
-  "Napló"
- ],
- "app/invite/[token]/InviteClient.tsx": [
-  "14 napos Pro trial aktiválva",
-  "14 napos trial aktiválása...",
-  "Hiba történt",
-  "Sikeres aktiválás!",
-  "Átirányítás a főoldalra..."
- ],
- "app/invite/[token]/page.tsx": [
-  "Érvénytelen meghívó"
- ],
- "app/page.tsx": [
-  "Bejelentkezés vállalkozóként",
-  "Bejelentkezés ügyfélként"
+  "Hiba a munkás törlése során:"
  ],
  "app/test-batch-scrape/page.tsx": [
-  "Cron ütemezés:",
-  "Előrehaladás",
-  "Ez eltarthat egy ideig (1 másodperc / anyag). Kérlek várj...",
-  "Futtatás...",
   "Material Batch Scraping Indítása",
   "Material Batch Scraping Tesztelő",
-  "Siker arány",
-  "Teljes JSON válasz",
-  "Összes anyag",
   "Új batch scraping endpoint:",
-  "Üzenet:",
   "⏱️ Futási idő:",
   "⏳ Árakat ellenőrzöm az összes Material tételre...",
   "✅ Batch Scraping Kész!",
@@ -613,11 +250,6 @@
   "❌ Hiba",
   "🚀 Starting batch scraping via /api/scrape-materials-batch"
  ],
- "app/_components/AppHeader.tsx": [
-  "Miben segíthetek?",
-  "Nincs értesítés",
-  "Értesítések"
- ],
  "app/_components/AppSidebar.tsx": [
   "✅ Setting isSuperUser to:",
   "✅ isSuperUserLoading set to false",
@@ -625,20 +257,7 @@
   "🔍 getCurrentUserData result:"
  ],
  "app/_components/AssistantChatModal.tsx": [
-  "Kérdezz bármit a munkáidról és az ajánlataidról!",
-  "Sajnálom, hiba történt. Kérlek próbáld újra!",
-  "Szia! Hajni vagyok, miben segíthetek?",
-  "Írj egy üzenetet..."
- ],
- "components/email-sender/EmailSender.tsx": [
-  "Csatolmány",
-  "Elküld",
-  "Email sikeresen elküldve!",
-  "Hiba történt az email küldésekor!",
-  "Ügyfél email cím"
- ],
- "components/GlobalLoading.tsx": [
-  "Ez eltarthat néhány másodpercig"
+  "Szia! Hajni vagyok, miben segíthetek?"
  ],
  "components/offer-detail-mobile.tsx": [
   "Ajánlat - John Doe",
@@ -683,11 +302,6 @@
   "🟢 [GOMB KATTINTÁS] isUpdatingStatus:",
   "🟢 [GOMB KATTINTÁS] selectedWorkId:"
  ],
- "components/offer-detail.tsx": [
-  "Biztosan törölni szeretné ezt a tételt?",
-  "Kattints a szerkesztéshez",
-  "Összeg:"
- ],
  "components/SocialShareButtons.tsx": [
   "*Tételek:*\\n",
   "Hiba a Messenger megosztás során:",
@@ -704,23 +318,6 @@
   "Hiba a PDF letöltése közben:",
   "Hiba a megosztás közben:",
   "Hiba az Excel letöltése közben:",
-  "Hiba történt a megosztás során:",
-  "Hiba történt az Excel letöltése közben. Kérjük, próbáld újra később.",
-  "Érvényes"
- ],
- "components/TenantSelector.tsx": [
-  "Bérlő váltása:",
-  "Válassz bérlőt"
- ],
- "components/TenantSelectorSidebar.tsx": [
-  "Bérlő kiválasztás törlése",
-  "Bérlő váltása",
-  "Bérlők betöltése...",
-  "Válassz bérlőt"
- ],
- "components/TenantSwitcher.tsx": [
-  "Bérlő kiválasztás törlése",
-  "Bérlő váltása:",
-  "Válassz bérlőt"
+  "Hiba történt a megosztás során:"
  ]
 }
