@@ -1,23 +1,52 @@
 "use client";
 
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { I18nextProvider, useTranslation } from "react-i18next";
 import {
   DEFAULT_LOCALE,
-  LOCALE_COOKIE,
+  formatMoney,
   resolveLocale,
   type Currency,
   type Locale,
-  formatMoney,
 } from "@/lib/i18n/config";
-import { translate, type MessageKey } from "@/lib/i18n/messages";
+import { getI18n } from "@/lib/i18n/i18n";
+import type { MessageKey } from "@/lib/i18n/messages";
+import {
+  getUserLanguage,
+  setUserLanguage,
+} from "@/actions/user-language-actions";
+
+/**
+ * Puts the app under react-i18next and keeps the chosen language on the user's record.
+ *
+ * The language is deliberately not kept in a cookie or in local storage. It is read from
+ * the account after mount and written back when it changes, so the choice follows the
+ * person rather than the browser, and nothing has to be read during rendering - which
+ * would have forced every page into dynamic rendering.
+ */
+export function LocaleProvider({
+  initialLocale,
+  children,
+}: {
+  initialLocale?: string;
+  children: ReactNode;
+}) {
+  const [i18n] = useState(() => getI18n(resolveLocale(initialLocale)));
+
+  useEffect(() => {
+    let cancelled = false;
+    void getUserLanguage().then(({ locale }) => {
+      if (!cancelled && locale !== i18n.language) {
+        void i18n.changeLanguage(locale);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [i18n]);
+
+  return <I18nextProvider i18n={i18n}>{children}</I18nextProvider>;
+}
 
 interface LocaleContextValue {
   locale: Locale;
@@ -27,77 +56,36 @@ interface LocaleContextValue {
   money: (amount: number | null | undefined, currency?: Currency) => string;
 }
 
-const LocaleContext = createContext<LocaleContextValue | null>(null);
-
 /**
- * Holds the active locale for the client tree.
+ * The same shape the rest of the app already consumes.
  *
- * The locale is persisted in a plain cookie rather than in the URL, so no route has to
- * move under a /[locale] segment. Every existing link and bookmark keeps working.
+ * Kept identical when the engine changed from a hand-rolled dictionary to i18next, so
+ * that swapping the implementation touched no component.
  */
-export function LocaleProvider({
-  initialLocale,
-  children,
-}: {
-  initialLocale?: string;
-  children: ReactNode;
-}) {
-  const [locale, setLocaleState] = useState<Locale>(() =>
-    resolveLocale(initialLocale)
+export function useLocale(): LocaleContextValue {
+  const { t, i18n } = useTranslation();
+  const locale = resolveLocale(i18n.language);
+
+  const setLocale = useCallback(
+    (next: Locale) => {
+      void i18n.changeLanguage(next);
+      // Persisted in the background: the interface should not wait on a round trip to
+      // show the new language.
+      void setUserLanguage(next);
+    },
+    [i18n]
   );
 
-  /**
-   * The cookie is read after mount rather than on the server. Calling cookies() in the
-   * root layout would opt the entire application into dynamic rendering, losing the
-   * static generation several pages rely on today. The cost is one frame in the default
-   * language before the stored choice applies; the alternative was slowing every page.
-   */
-  useEffect(() => {
-    const stored = document.cookie
-      .split("; ")
-      .find((entry) => entry.startsWith(`${LOCALE_COOKIE}=`))
-      ?.split("=")[1];
-
-    if (stored) {
-      const resolved = resolveLocale(stored);
-      setLocaleState((current) => (current === resolved ? current : resolved));
-    }
-  }, []);
-
-  const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next);
-    // One year, site-wide. No sensitive content, so no need for anything stricter.
-    document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
-  }, []);
-
-  const value = useMemo<LocaleContextValue>(
+  return useMemo(
     () => ({
       locale,
       setLocale,
-      t: (key, params) => translate(locale, key, params),
+      t: (key, params) => t(key, params ?? {}) as string,
       money: (amount, currency) => formatMoney(amount, currency, locale),
     }),
-    [locale, setLocale]
-  );
-
-  return (
-    <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+    [t, locale, setLocale]
   );
 }
 
-/**
- * Falls back to Hungarian defaults when no provider is above it, so a component can be
- * rendered outside the provider - in a test, or on a page not yet wired up - without
- * throwing.
- */
-export function useLocale(): LocaleContextValue {
-  const context = useContext(LocaleContext);
-  if (context) return context;
-
-  return {
-    locale: DEFAULT_LOCALE,
-    setLocale: () => {},
-    t: (key, params) => translate(DEFAULT_LOCALE, key, params),
-    money: (amount, currency) => formatMoney(amount, currency, DEFAULT_LOCALE),
-  };
-}
+/** Fallback for anything rendered outside the provider, such as a test. */
+export const FALLBACK_LOCALE = DEFAULT_LOCALE;

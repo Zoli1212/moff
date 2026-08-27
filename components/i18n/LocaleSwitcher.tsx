@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { Globe } from "lucide-react";
 import { LOCALES, LOCALE_LABELS, type Locale } from "@/lib/i18n/config";
 import { useLocale } from "./LocaleProvider";
@@ -11,7 +10,6 @@ export default function LocaleSwitcher({
   className?: string;
 }) {
   const { locale, setLocale } = useLocale();
-  const router = useRouter();
 
   return (
     <label
@@ -21,12 +19,9 @@ export default function LocaleSwitcher({
       <span className="sr-only">{LOCALE_LABELS[locale]}</span>
       <select
         value={locale}
-        onChange={(event) => {
-          setLocale(event.target.value as Locale);
-          // Server components read the locale from the cookie, so the tree has to be
-          // re-rendered for their strings to follow the switch.
-          router.refresh();
-        }}
+        // i18next re-renders every subscriber itself, and the choice is persisted to
+        // the user record in the background.
+        onChange={(event) => setLocale(event.target.value as Locale)}
         className="rounded-md border border-gray-300 bg-white px-2 py-1 text-sm"
       >
         {LOCALES.map((value) => (

@@ -1,19 +1,15 @@
 /**
  * Locale and currency primitives.
  *
- * Deliberately not next-intl. Its standard setup moves every route under /[locale]/...,
- * which would restructure the whole app - a large, risky change for what is currently a
- * demonstration of capability. Here the locale lives in a cookie and the URLs stay
- * exactly as they are, so nothing existing has to move.
+ * The locale lives on the user's record, not in the URL and not in the browser. Routing
+ * by locale would move every path under /[locale]/..., and a cookie or local storage
+ * would tie the choice to a machine rather than to the person.
  */
 
 export const LOCALES = ["hu", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = "hu";
-
-/** Cookie name; readable by both the server components and the client switcher. */
-export const LOCALE_COOKIE = "app-locale";
 
 export const LOCALE_LABELS: Record<Locale, string> = {
   hu: "Magyar",

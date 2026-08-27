@@ -42,6 +42,9 @@ model User {
   isTenant         Boolean        @default(true)
   isClient         Boolean        @default(false) // Használta az ügyfél ajánlatkérő flow-t
   theme            String         @default("corporate")
+  /// UI language: "hu" or "en". Stored per user rather than in a cookie, so the choice
+  /// follows the account onto any machine.
+  language         String         @default("hu")
   stripeCustomerId String?        @unique
   invitedBy        String?        // SuperUser email aki meghívta
   trialEndsAt      DateTime?      // Trial lejárati dátum
