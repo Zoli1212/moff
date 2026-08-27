@@ -79,7 +79,7 @@ export default function PricesPage() {
         }
       } catch (error) {
         console.error("Hiba az árak betöltésekor:", error);
-        toast.error("Hiba az árak betöltésekor");
+        toast.error(t("pr.loadError"));
       } finally {
         setIsLoading(false);
       }
@@ -136,7 +136,7 @@ export default function PricesPage() {
             });
 
       if (result.success) {
-        toast.success("Ár sikeresen frissítve");
+        toast.success(t("pr.updated"));
 
         // Reload prices to show updated values
         const tenantResult = await getTenantPrices();
@@ -154,11 +154,11 @@ export default function PricesPage() {
         setIsModalOpen(false);
         setEditingItem(null);
       } else {
-        toast.error(result.message || "Hiba az ár frissítésekor");
+        toast.error(result.message || t("pr.updateError"));
       }
     } catch (error) {
       console.error("Hiba az ár frissítésekor:", error);
-      toast.error("Hiba az ár frissítésekor");
+      toast.error(t("pr.updateError"));
     } finally {
       setIsSaving(false);
     }
@@ -191,7 +191,7 @@ export default function PricesPage() {
   );
 
   const handleDelete = async (id: number, type: "global" | "tenant") => {
-    if (!confirm("Biztosan törölni szeretnéd ezt az árat?")) return;
+    if (!confirm(t("pr.confirmDelete"))) return;
 
     try {
       const result =
@@ -200,7 +200,7 @@ export default function PricesPage() {
           : await deleteTenantPrice(id);
 
       if (result.success) {
-        toast.success("Ár sikeresen törölve");
+        toast.success(t("pr.deleted"));
 
         // Reload prices
         const tenantResult = await getTenantPrices();
@@ -215,18 +215,18 @@ export default function PricesPage() {
           }
         }
       } else {
-        toast.error(result.message || "Hiba az ár törlésekor");
+        toast.error(result.message || t("pr.deleteError"));
       }
     } catch (error) {
       console.error("Hiba az ár törlésekor:", error);
-      toast.error("Hiba az ár törlésekor");
+      toast.error(t("pr.deleteError"));
     }
   };
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg text-gray-600">Árak betöltése...</div>
+        <div className="text-lg text-gray-600">{t("pr.loading")}</div>
       </div>
     );
   }
@@ -243,7 +243,7 @@ export default function PricesPage() {
             <ChevronLeft className="h-6 w-6" style={{ color: "#FE9C00" }} />
           </button>
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
-            Áraim kezelése
+            {t("pr.manage")}
           </h1>
         </div>
 
@@ -251,7 +251,7 @@ export default function PricesPage() {
         <div className="mb-6">
           <input
             type="text"
-            placeholder="Keresés tétel alapján..."
+            placeholder={t("pr.search")}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
@@ -262,7 +262,7 @@ export default function PricesPage() {
         <div className="mb-8 md:mb-12">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-              Vállalkozói Áraim
+              {t("pr.myContractor")}
             </h2>
             <button
               onClick={() => {
@@ -271,7 +271,7 @@ export default function PricesPage() {
               }}
               className="p-2 rounded-full border-2 transition-colors"
               style={{ borderColor: "#FE9C00", color: "#FE9C00" }}
-              title="Új tétel hozzáadása"
+              title={t("letter.addItem")}
             >
               <Plus className="h-5 w-5" />
             </button>
@@ -284,25 +284,25 @@ export default function PricesPage() {
                 <thead className="bg-gray-100">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                      Tétel
+                      {t("pr.item")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                      Kategória
+                      {t("pr.category")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                      Technológia
+                      {t("pr.technology")}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
                       {t("od.unit")}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
-                      Munkaköltség
+                      {t("pr.labourCost")}
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
-                      Anyagköltség
+                      {t("pr.materialCost")}
                     </th>
                     <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-                      Műveletek
+                      {t("pr.actions")}
                     </th>
                   </tr>
                 </thead>
@@ -315,7 +315,7 @@ export default function PricesPage() {
                       >
                         {searchTerm
                           ? t("stats.noResults")
-                          : "Nincsenek vállalkozói Áraim"}
+                          : t("pr.noContractor")}
                       </td>
                     </tr>
                   ) : (
@@ -345,7 +345,7 @@ export default function PricesPage() {
                               onClick={() => handleEdit(price, "tenant")}
                               className="transition-colors"
                               style={{ color: "#FE9C00" }}
-                              title="Szerkesztés"
+                              title={t("de.edit")}
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
@@ -370,7 +370,7 @@ export default function PricesPage() {
           <div className="md:hidden space-y-3">
             {filteredTenantPrices.length === 0 ? (
               <div className="bg-white rounded-lg p-4 text-center text-gray-500">
-                {searchTerm ? t("stats.noResults") : "Nincsenek vállalkozói Áraim"}
+                {searchTerm ? t("stats.noResults") : t("pr.noContractor")}
               </div>
             ) : (
               filteredTenantPrices.map((price) => (
@@ -388,7 +388,7 @@ export default function PricesPage() {
                         onClick={() => handleEdit(price, "tenant")}
                         className="p-1.5 rounded-md hover:bg-orange-50 transition-colors"
                         style={{ color: "#FE9C00" }}
-                        title="Szerkesztés"
+                        title={t("de.edit")}
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -407,7 +407,7 @@ export default function PricesPage() {
                     {price.category && (
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-gray-500 w-20">
-                          Kategória:
+                          {t("pr.categoryColon")}
                         </span>
                         <span className="text-sm text-gray-700">
                           {price.category}
@@ -417,7 +417,7 @@ export default function PricesPage() {
                     {price.technology && (
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-gray-500 w-20">
-                          Technológia:
+                          {t("pr.technologyColon")}
                         </span>
                         <span className="text-sm text-gray-700">
                           {price.technology}
@@ -427,7 +427,7 @@ export default function PricesPage() {
                     {price.unit && (
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium text-gray-500 w-20">
-                          Egység:
+                          {t("pr.unitColon")}
                         </span>
                         <span className="text-sm text-gray-700">
                           {price.unit}
@@ -439,13 +439,13 @@ export default function PricesPage() {
                   {/* Prices */}
                   <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 mb-1">Anyagköltség</p>
+                      <p className="text-xs text-gray-500 mb-1">{t("pr.materialCost")}</p>
                       <p className="text-sm font-semibold text-gray-900">
                         {price.materialCost.toLocaleString("hu-HU")} Ft
                       </p>
                     </div>
                     <div className="text-center">
-                      <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
+                      <p className="text-xs text-gray-500 mb-1">{t("pr.fee")}</p>
                       <p className="text-sm font-semibold text-gray-900">
                         {price.laborCost.toLocaleString("hu-HU")} Ft
                       </p>
@@ -462,7 +462,7 @@ export default function PricesPage() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl md:text-2xl font-bold text-gray-800">
-                Globális Árak
+                {t("pr.global")}
               </h2>
               <button
                 onClick={() => {
@@ -471,7 +471,7 @@ export default function PricesPage() {
                 }}
                 className="p-2 rounded-full border-2 transition-colors"
                 style={{ borderColor: "#FE9C00", color: "#FE9C00" }}
-                title="Új tétel hozzáadása"
+                title={t("letter.addItem")}
               >
                 <Plus className="h-5 w-5" />
               </button>
@@ -484,25 +484,25 @@ export default function PricesPage() {
                   <thead className="bg-gray-100">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                        Tétel
+                        {t("pr.item")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                        Kategória
+                        {t("pr.category")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
-                        Technológia
+                        {t("pr.technology")}
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">
                         {t("od.unit")}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
-                        Munka Díj
+                        {t("pr.fee")}
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">
-                        Anyagköltség
+                        {t("pr.materialCost")}
                       </th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">
-                        Műveletek
+                        {t("pr.actions")}
                       </th>
                     </tr>
                   </thead>
@@ -515,7 +515,7 @@ export default function PricesPage() {
                         >
                           {searchTerm
                             ? t("stats.noResults")
-                            : "Nincsenek globális Áraim"}
+                            : t("pr.noGlobal")}
                         </td>
                       </tr>
                     ) : (
@@ -545,7 +545,7 @@ export default function PricesPage() {
                                 onClick={() => handleEdit(price, "global")}
                                 className="transition-colors"
                                 style={{ color: "#FE9C00" }}
-                                title="Szerkesztés"
+                                title={t("de.edit")}
                               >
                                 <Pencil className="h-4 w-4" />
                               </button>
@@ -570,7 +570,7 @@ export default function PricesPage() {
             <div className="md:hidden space-y-3">
               {filteredGlobalPrices.length === 0 ? (
                 <div className="bg-white rounded-lg p-4 text-center text-gray-500">
-                  {searchTerm ? t("stats.noResults") : "Nincsenek globális Áraim"}
+                  {searchTerm ? t("stats.noResults") : t("pr.noGlobal")}
                 </div>
               ) : (
                 filteredGlobalPrices.map((price) => (
@@ -588,7 +588,7 @@ export default function PricesPage() {
                           onClick={() => handleEdit(price, "global")}
                           className="p-1.5 rounded-md hover:bg-orange-50 transition-colors"
                           style={{ color: "#FE9C00" }}
-                          title="Szerkesztés"
+                          title={t("de.edit")}
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -607,7 +607,7 @@ export default function PricesPage() {
                       {price.category && (
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500 w-20">
-                            Kategória:
+                            {t("pr.categoryColon")}
                           </span>
                           <span className="text-sm text-gray-700">
                             {price.category}
@@ -617,7 +617,7 @@ export default function PricesPage() {
                       {price.technology && (
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500 w-20">
-                            Technológia:
+                            {t("pr.technologyColon")}
                           </span>
                           <span className="text-sm text-gray-700">
                             {price.technology}
@@ -627,7 +627,7 @@ export default function PricesPage() {
                       {price.unit && (
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-medium text-gray-500 w-20">
-                            Egység:
+                            {t("pr.unitColon")}
                           </span>
                           <span className="text-sm text-gray-700">
                             {price.unit}
@@ -640,14 +640,14 @@ export default function PricesPage() {
                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                       <div className="text-center">
                         <p className="text-xs text-gray-500 mb-1">
-                          Anyagköltség
+                          {t("pr.materialCost")}
                         </p>
                         <p className="text-sm font-semibold text-gray-900">
                           {price.materialCost.toLocaleString("hu-HU")} Ft
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-gray-500 mb-1">Munka Díj</p>
+                        <p className="text-xs text-gray-500 mb-1">{t("pr.fee")}</p>
                         <p className="text-sm font-semibold text-gray-900">
                           {price.laborCost.toLocaleString("hu-HU")} Ft
                         </p>
@@ -666,12 +666,12 @@ export default function PricesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Új tétel hozzáadása
+              {t("letter.addItem")}
             </h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tétel neve *
+                  {t("pr.itemNameRequired")}
                 </label>
                 <input
                   type="text"
@@ -682,7 +682,7 @@ export default function PricesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kategória
+                  {t("pr.category")}
                 </label>
                 <input
                   type="text"
@@ -693,7 +693,7 @@ export default function PricesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Technológia
+                  {t("pr.technology")}
                 </label>
                 <input
                   type="text"
@@ -704,7 +704,7 @@ export default function PricesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Egység *
+                  {t("pr.unitRequired")}
                 </label>
                 <input
                   type="text"
@@ -715,7 +715,7 @@ export default function PricesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Munka Díj (Ft) *
+                  {t("pr.feeRequired")}
                 </label>
                 <input
                   type="number"
@@ -726,7 +726,7 @@ export default function PricesPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Anyagköltség (Ft) *
+                  {t("pr.materialCostRequired")}
                 </label>
                 <input
                   type="number"
@@ -770,7 +770,7 @@ export default function PricesPage() {
                     ) || 0;
 
                   if (!task || !unit || laborCost === 0 || materialCost === 0) {
-                    toast.error("Kérjük, töltsd ki az összes kötelező mezőt!");
+                    toast.error(t("pr.fillRequired"));
                     return;
                   }
 
@@ -786,7 +786,7 @@ export default function PricesPage() {
                         materialCost,
                       });
                       if (result.success) {
-                        toast.success("Új tétel sikeresen hozzáadva!");
+                        toast.success(t("pr.added"));
                         setIsAddingNew(false);
                         setNewItemType(null);
                         // Reload prices
@@ -796,7 +796,7 @@ export default function PricesPage() {
                         }
                       } else {
                         toast.error(
-                          result.message || "Hiba a tétel hozzáadásakor"
+                          result.message || t("pr.addError")
                         );
                       }
                     } else {
@@ -809,7 +809,7 @@ export default function PricesPage() {
                         materialCost,
                       });
                       if (result.success) {
-                        toast.success("Új tétel sikeresen hozzáadva!");
+                        toast.success(t("pr.added"));
                         setIsAddingNew(false);
                         setNewItemType(null);
                         // Reload prices
@@ -819,13 +819,13 @@ export default function PricesPage() {
                         }
                       } else {
                         toast.error(
-                          result.message || "Hiba a tétel hozzáadásakor"
+                          result.message || t("pr.addError")
                         );
                       }
                     }
                   } catch (error) {
                     console.error("Error adding price:", error);
-                    toast.error("Hiba a tétel hozzáadásakor");
+                    toast.error(t("pr.addError"));
                   } finally {
                     setIsSaving(false);
                   }
@@ -856,13 +856,13 @@ export default function PricesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Ár szerkesztése
+              {t("pr.edit")}
             </h3>
 
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tétel *
+                  {t("pr.itemRequired")}
                 </label>
                 <input
                   ref={taskRef}
@@ -874,7 +874,7 @@ export default function PricesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Kategória
+                  {t("pr.category")}
                 </label>
                 <input
                   ref={categoryRef}
@@ -886,7 +886,7 @@ export default function PricesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Technológia
+                  {t("pr.technology")}
                 </label>
                 <input
                   ref={technologyRef}
@@ -910,7 +910,7 @@ export default function PricesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Munkaköltség (Ft) *
+                  {t("pr.labourCostRequired")}
                 </label>
                 <input
                   ref={laborCostRef}
@@ -922,7 +922,7 @@ export default function PricesPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Anyagköltség (Ft) *
+                  {t("pr.materialCostRequired")}
                 </label>
                 <input
                   ref={materialCostRef}

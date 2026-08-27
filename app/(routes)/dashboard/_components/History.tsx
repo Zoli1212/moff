@@ -3,12 +3,15 @@ import { Button } from '@/components/ui/button';
 import axios from 'axios';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react'
-import { aiToolsList } from './AiToolsList';
+import { buildAiToolsList } from './AiToolsList';
+import { useLocale } from '@/components/i18n/LocaleProvider';
 import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { type History } from '@prisma/client';
 
 function History() {
+  const { t } = useLocale();
+  const aiToolsList = buildAiToolsList(t);
     const [userHistory, setUserHistory] = useState([]);
     const [loading, setLoading] = useState(false);
     useEffect(() => {

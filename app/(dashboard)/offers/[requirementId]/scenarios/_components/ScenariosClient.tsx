@@ -19,6 +19,7 @@ import DeleteConfirmModal from "@/components/ui/delete-confirm-modal";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import LocaleSwitcher from "@/components/i18n/LocaleSwitcher";
 import { convertFromHuf, resolveCurrency, type Currency } from "@/lib/i18n/config";
+import type { Translator } from "@/lib/i18n/messages";
 import {
   SCOPE_ACTION_LABELS,
   totalClaimedSavings,
@@ -33,11 +34,11 @@ import {
 const BRAND = "#FE9C00";
 
 /** Starting points, because a blank box is the hardest thing to answer. */
-const EXAMPLES = [
-  "Csak 2 emberem van a tervezett 4 helyett",
-  "Feleannyi pénzből kellene kijönni",
-  "Két héttel korábban kész kell lennie",
-  "Nincs gépi bontásra eszközöm",
+const buildExamples = (t: Translator) => [
+  t("sc.exTwoPeople"),
+  t("sc.exHalfBudget"),
+  t("sc.exTwoWeeksEarlier"),
+  t("sc.exNoMachine"),
 ];
 
 export default function ScenariosClient({
@@ -48,6 +49,7 @@ export default function ScenariosClient({
   requirementId: string;
 }) {
   const { t } = useLocale();
+  const EXAMPLES = buildExamples(t);
   const queryClient = useQueryClient();
 
   // Back to the offer that was open, not to the offer list. The detail view is what the
@@ -71,16 +73,16 @@ export default function ScenariosClient({
   const generate = () => {
     const text = constraint.trim();
     if (!text) {
-      toast.error("Írd le, mi a megszorítás.");
+      toast.error(t("sc.describeConstraint"));
       return;
     }
     startTransition(async () => {
       const result = await createOfferScenario(offerId, text);
       if (!result.success) {
-        toast.error(result.error ?? "Az elemzés nem sikerült.");
+        toast.error(result.error ?? t("sc.analysisFailed"));
         return;
       }
-      toast.success("Elemzés elkészült.");
+      toast.success(t("sc.analysisDone"));
       setConstraint("");
       refresh();
     });
@@ -93,7 +95,7 @@ export default function ScenariosClient({
       const result = await deleteOfferScenario(id);
       setDeleting(null);
       if (!result.success) {
-        toast.error(result.error ?? "A törlés nem sikerült.");
+        toast.error(result.error ?? t("sc.deleteFailed"));
         return;
       }
       refresh();
@@ -110,7 +112,7 @@ export default function ScenariosClient({
             className="mt-3 inline-block text-sm font-medium"
             style={{ color: BRAND }}
           >
-            Vissza az ajánlatokhoz
+            {t("sc.backToOffers")}
           </Link>
         </div>
       </div>
@@ -122,7 +124,7 @@ export default function ScenariosClient({
       <header className="flex items-center gap-3 pt-6">
         <Link
           href={backHref}
-          aria-label="Vissza az ajánlatokhoz"
+          aria-label={t("sc.backToOffers")}
           className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-gray-100"
           style={{ color: BRAND }}
         >
@@ -194,7 +196,7 @@ export default function ScenariosClient({
         <div className="mt-6 h-40 animate-pulse rounded-xl bg-gray-100" />
       ) : scenarios.length === 0 ? (
         <p className="mt-8 text-center text-sm text-gray-500">
-          Még nincs elemzés. Írd le fent, mi szorít, és kérj alternatívákat.
+          {t("sc.noAnalyses")}
         </p>
       ) : (
         <div className="mt-6 space-y-4">
@@ -215,8 +217,8 @@ export default function ScenariosClient({
         onClose={() => setDeleting(null)}
         onConfirm={remove}
         isLoading={isPending}
-        title="Elemzés törlése"
-        message={`A(z) „${deleting?.constraint ?? ""}" elemzés törlődik. Az ajánlatot ez nem érinti.`}
+        title={t("sc.deleteAnalysis")}
+        message={t("sc.deleteMessage", { constraint: deleting?.constraint ?? "" })}
       />
     </div>
   );
@@ -233,6 +235,8 @@ function ScenarioCard({
   exchangeRate: number | null;
   onDelete: () => void;
 }) {
+  const { t } = useLocale();
+
   const { money } = useLocale();
 
   /**
@@ -266,7 +270,7 @@ function ScenarioCard({
         <button
           type="button"
           onClick={onDelete}
-          aria-label="Elemzés törlése"
+          aria-label={t("sc.deleteAnalysis")}
           className="text-gray-300 hover:text-red-600"
         >
           <Trash2 className="h-4 w-4" />
@@ -290,7 +294,7 @@ function ScenarioCard({
         {adjustedDays != null && (
           <Stat
             icon={<CalendarClock className="h-3.5 w-3.5" />}
-            label="Átfutás"
+            label={t("sc.timeline")}
             value={
               dayDelta != null
                 ? `${originalDays} → ${adjustedDays} nap (${dayDelta >= 0 ? "+" : ""}${dayDelta})`
@@ -301,7 +305,7 @@ function ScenarioCard({
         {savings > 0 && (
           <Stat
             icon={<Scissors className="h-3.5 w-3.5" />}
-            label="Felszabadítható"
+            label={t("sc.freedUp")}
             value={inOfferCurrency(savings)}
           />
         )}
@@ -314,7 +318,7 @@ function ScenarioCard({
       )}
 
       {analysis.phases?.length ? (
-        <Section icon={<Layers className="h-4 w-4" />} title="Ütemekre bontás">
+        <Section icon={<Layers className="h-4 w-4" />} title={t("sc.phasing")}>
           <ol className="space-y-2">
             {analysis.phases.map((phase, index) => (
               <li key={`${phase.name}-${index}`}>
@@ -334,7 +338,7 @@ function ScenarioCard({
       ) : null}
 
       {analysis.scopeCuts?.length ? (
-        <Section icon={<Scissors className="h-4 w-4" />} title="Elhagyható vagy halasztható">
+        <Section icon={<Scissors className="h-4 w-4" />} title={t("sc.cuts")}>
           <ul className="space-y-2">
             {analysis.scopeCuts.map((cut, index) => (
               <li key={`${cut.itemName}-${index}`} className="flex gap-2">
@@ -365,7 +369,7 @@ function ScenarioCard({
       ) : null}
 
       {analysis.alternatives?.length ? (
-        <Section icon={<Lightbulb className="h-4 w-4" />} title="Más megoldás">
+        <Section icon={<Lightbulb className="h-4 w-4" />} title={t("sc.alternatives")}>
           <ul className="space-y-2">
             {analysis.alternatives.map((alternative, index) => (
               <li key={`${alternative.itemName}-${index}`}>
@@ -387,7 +391,7 @@ function ScenarioCard({
       {analysis.risks?.length ? (
         <Section
           icon={<AlertTriangle className="h-4 w-4" />}
-          title="Amit kockáztatsz"
+          title={t("sc.risks")}
         >
           <ul className="list-disc space-y-1 pl-4">
             {analysis.risks.map((risk, index) => (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { Send, Sparkles, FileText, Table2, ChevronDown, Paperclip, X, Trash2, Download, Check, Bell } from "lucide-react";
 import { exportToPDF, exportToExcel } from "./export-utils";
 import { deleteClientQuoteData, exportClientQuoteData } from "@/actions/client-quote-actions";
@@ -69,13 +70,15 @@ function EstimateCard({
   emailSent: boolean;
   emailResult: string;
 }) {
+  const { t } = useLocale();
+
   const [exportOpen, setExportOpen] = useState(false);
   const lines = estimate.split("\n").filter(Boolean);
   return (
     <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 text-sm text-gray-700">
       <div className="flex items-center gap-2 mb-3 pb-2 border-b border-orange-200">
         <Sparkles className="w-4 h-4 text-orange-500" />
-        <span className="font-semibold text-orange-700">Becsült ajánlat</span>
+        <span className="font-semibold text-orange-700">{t("qc.estimate")}</span>
       </div>
       <div className="space-y-1.5">
         {lines.map((line, i) => {
@@ -136,13 +139,13 @@ function EstimateCard({
             onClick={onRefine}
             className="flex-1 bg-white hover:bg-orange-50 text-orange-600 text-xs font-medium py-2 px-3 rounded-lg border border-orange-200 transition-all"
           >
-            Ajánlat pontosítása a chatben
+            {t("qc.refineInChat")}
           </button>
           <button
             onClick={onDecline}
             className="flex-1 bg-white hover:bg-gray-50 text-gray-500 text-xs font-medium py-2 px-3 rounded-lg border border-gray-200 transition-all"
           >
-            Nem kérem, köszönöm
+            {t("qc.noThanks")}
           </button>
         </div>
 
@@ -152,39 +155,39 @@ function EstimateCard({
             className="w-full flex items-center justify-center gap-1.5 bg-white hover:bg-gray-50 text-gray-600 text-xs font-medium py-2 px-3 rounded-lg border transition-all"
           >
             <ChevronDown className="w-3.5 h-3.5" />
-            Exportálás
+            {t("qc.export")}
           </button>
           {exportOpen && (
             <div className="absolute bottom-full mb-1 right-0 w-56 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden z-10">
-              <div className="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase tracking-wide">Tételek + árak</div>
+              <div className="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase tracking-wide">{t("qc.itemsWithPrices")}</div>
               <button
                 onClick={() => { exportToPDF(estimate, true); setExportOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
               >
                 <FileText className="w-4 h-4 text-orange-400" />
-                PDF letöltés
+                {t("qc.pdfDownload")}
               </button>
               <button
                 onClick={() => { exportToExcel(estimate, true); setExportOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors border-t border-gray-100"
               >
                 <Table2 className="w-4 h-4 text-orange-400" />
-                Excel letöltés
+                {t("qc.excelDownload")}
               </button>
-              <div className="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase tracking-wide border-t">Csak tételek (ár nélkül)</div>
+              <div className="px-3 py-2 bg-gray-50 text-[10px] text-gray-400 font-semibold uppercase tracking-wide border-t">{t("qc.itemsOnly")}</div>
               <button
                 onClick={() => { exportToPDF(estimate, false); setExportOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
               >
                 <FileText className="w-4 h-4 text-gray-400" />
-                PDF letöltés
+                {t("qc.pdfDownload")}
               </button>
               <button
                 onClick={() => { exportToExcel(estimate, false); setExportOpen(false); }}
                 className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors border-t border-gray-100"
               >
                 <Table2 className="w-4 h-4 text-gray-400" />
-                Excel letöltés
+                {t("qc.excelDownload")}
               </button>
             </div>
           )}
@@ -212,6 +215,8 @@ function TypingIndicator() {
 }
 
 export function QuoteChatClient({ sessionId, initialMessages }: Props) {
+  const { t } = useLocale();
+
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -260,7 +265,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
       } else if (data.error) {
         setMessages([
           ...currentMessages,
-          { role: "assistant", content: "Hiba történt, kérjük próbálja újra." },
+          { role: "assistant", content: t("qc.genericError") },
         ]);
       }
     } catch (e) {
@@ -271,7 +276,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
       }
       setMessages([
         ...currentMessages,
-        { role: "assistant", content: "Nem sikerült kapcsolódni a szerverhez. Kérjük próbálja újra." },
+        { role: "assistant", content: t("qc.connectError") },
       ]);
     } finally {
       setIsLoading(false);
@@ -315,7 +320,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
     // Rate limiting check
     const now = Date.now();
     if (now - lastUploadTime.current < UPLOAD_COOLDOWN) {
-      setFileError("Túl gyakori feltöltés. Kérjük várjon 2 másodpercet.");
+      setFileError(t("qc.tooFrequent"));
       return;
     }
     lastUploadTime.current = now;
@@ -345,7 +350,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
           const data = await res.json();
           if (!res.ok || !data.success) {
             throw new Error(
-              `"${file.name}": ${data.error || "Feldolgozási hiba"}`
+              `"${file.name}": ${data.error || t("qc.processingError")}`
             );
           }
           return `📎 Feltöltött dokumentum (${file.name}):\n\n${data.extractedText}`;
@@ -361,7 +366,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
       await sendToAI(newMessages);
     } catch (err: unknown) {
       setFileError(
-        err instanceof Error ? err.message : "Hiba történt a feltöltés során."
+        err instanceof Error ? err.message : t("qc.uploadError")
       );
     } finally {
       setIsParsingFile(false);
@@ -409,15 +414,15 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
         <div className="flex items-center gap-3">
           <Sparkles className="w-5 h-5 text-orange-500" />
           <div>
-            <h2 className="font-semibold text-gray-800 text-sm">AI Ajánlatkérő</h2>
+            <h2 className="font-semibold text-gray-800 text-sm">{t("qc.title")}</h2>
             <p className="text-xs text-gray-400">
-              Válaszoljon az AI kérdéseire az ajánlat elkészítéséhez
+              {t("qc.answerPrompt")}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-1">
           <button
-            title="Adataim exportálása (GDPR)"
+            title={t("qc.exportGdpr")}
             onClick={async () => {
               try {
                 const data = await exportClientQuoteData(sessionId);
@@ -435,7 +440,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
             <Download className="w-4 h-4" />
           </button>
           <button
-            title="Adataim törlése (GDPR)"
+            title={t("qc.deleteGdpr")}
             onClick={async () => {
               if (!confirm("Biztosan törölni szeretné az összes adatát ehhez az ajánlatkéréshez? Ez a művelet nem visszavonható.")) return;
               try {
@@ -455,7 +460,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-orange-50/90 border-2 border-dashed border-orange-400 rounded-xl pointer-events-none">
           <Paperclip className="w-10 h-10 text-orange-400 mb-3" />
           <p className="text-orange-600 font-semibold text-sm">
-            Húzza ide a fájlokat
+            {t("qc.dropFiles")}
           </p>
           <p className="text-orange-400 text-xs mt-1">
             PDF, DWG, JPG, PNG, DOCX
@@ -526,7 +531,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                   <EstimateCard
                     estimate={estimate}
                     onRefine={() => {
-                      const refineMsg = "Kérem az ajánlat pontosítását.";
+                      const refineMsg = t("qc.refineYes");
                       const newMessages: Message[] = [
                         ...messages,
                         { role: "user", content: refineMsg },
@@ -535,7 +540,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                       sendToAI(newMessages);
                     }}
                     onDecline={() => {
-                      const declineMsg = "Köszönöm, nem kérem az ajánlat pontosítását.";
+                      const declineMsg = t("qc.refineNo");
                       const newMessages: Message[] = [
                         ...messages,
                         { role: "user", content: declineMsg },
@@ -549,7 +554,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                         const allText = messages.map((m) => m.content).join(" ");
                         const workTypes = allText.match(/festés|burkolás|villanyszerelés|vízszerelés|gipszkarton|tetőfedés|asztalos|kőműves|bádogos|vakolás|szigetelés|laminált|padló|ajtó/gi) || ["általános felújítás"];
                         const uniqueWorkTypes = [...new Set(workTypes.map((w) => w.toLowerCase()))];
-                        const clientName = messages.find((m) => m.role === "user" && /vagyok|nevem/i.test(m.content))?.content.match(/([A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+\s[A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+)/)?.[1] || "Megrendelő";
+                        const clientName = messages.find((m) => m.role === "user" && /vagyok|nevem/i.test(m.content))?.content.match(/([A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+\s[A-ZÁÉÍÓÖŐÜŰ][a-záéíóöőüű]+)/)?.[1] || t("qc.customer");
 
                         const { notifyAllContractors } = await import("@/actions/quote-request-actions");
                         const result = await notifyAllContractors(
@@ -561,7 +566,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
                         setEmailResult(result.message);
                         setEmailSent(true);
                       } catch {
-                        setEmailResult("Hiba történt a küldés során. Kérjük próbálja újra.");
+                        setEmailResult(t("qc.sendError"));
                         setEmailSent(true);
                       } finally {
                         setEmailSending(false);
@@ -581,7 +586,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
           <div className="flex justify-end">
             <div className="flex items-center gap-2 bg-orange-100 text-orange-600 text-xs px-4 py-2 rounded-xl">
               <div className="w-3 h-3 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />
-              Fájl feldolgozása...
+              {t("qc.processingFile")}
             </div>
           </div>
         )}
@@ -614,7 +619,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isDisabled}
-            title="Fájl feltöltése (PDF, Excel, DOCX, JPG, PNG)"
+            title={t("qc.uploadFile")}
             className="text-gray-400 hover:text-orange-500 disabled:text-gray-200 disabled:cursor-not-allowed p-3 rounded-xl border border-gray-200 hover:border-orange-300 transition-all flex-shrink-0"
           >
             <Paperclip className="w-5 h-5" />
@@ -623,7 +628,7 @@ export function QuoteChatClient({ sessionId, initialMessages }: Props) {
           <textarea
             ref={textareaRef}
             className="flex-1 resize-none border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 leading-relaxed"
-            placeholder="Írja be válaszát..."
+            placeholder={t("qc.inputPlaceholder")}
             value={input}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}

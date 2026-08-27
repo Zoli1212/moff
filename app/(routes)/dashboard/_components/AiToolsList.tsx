@@ -1,41 +1,55 @@
-import React from "react";
-import AiToolCard from "./AiToolCard";
+"use client";
 
-export const aiToolsList = [
+// The tool titles come from the client-side locale context, which a server
+// component cannot read. This is a presentational list, so making it a client
+// island is cheaper than making the whole page dynamic to read the cookie.
+import React from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
+import AiToolCard from "./AiToolCard";
+import type { Translator } from "@/lib/i18n/messages";
+
+/**
+ * Built with the translator rather than frozen at import time: these are the card
+ * titles and buttons a user reads.
+ */
+export const buildAiToolsList = (t: Translator) => [
   {
-    name: "Ajánlat Chat",
-    desc: "Kérdéseket az ajánlatról",
+    name: t("ai.offerChat"),
+    desc: t("ai.offerChatHint"),
     icon: "/chatbot.png",
-    button: "Kérdezz most",
+    button: t("ai.askNow"),
     path: "/ai-tools/ai-chat",
   },
   {
-    name: "Igény Elemző",
-    desc: "Elemezd az ügyfél igényeit",
+    name: t("ai.demandAnalyser"),
+    desc: t("ai.demandHint"),
     icon: "/resume.png",
-    button: "Elemzés most",
+    button: t("ai.analyseNow"),
     path: "/ai-tools/ai-demands-analyzer",
   },
   {
-    name: "Ajánlatlevél Generátor",
-    desc: "Ajánlatlevél szövegből",
+    name: t("ai.letterGenerator"),
+    desc: t("ai.letterFromText"),
     icon: "/cover.png",
-    button: "Létrehozás most",
+    button: t("ai.createNow"),
     path: "/ai-tools/ai-offer-letter",
   },
   {
-    name: "Ajánlat árazatlan költségkiírásra",
-    desc: "Előre megírt tételekkel",
+    name: t("ai.unpricedOffer"),
+    desc: t("ai.prewrittenItems"),
     icon: "/roadmap.png",
-    button: "Számolás most",
+    button: t("ai.calculateNow"),
     path: "/ai-tools/ai-cost-calculator",
  },
 ];
 
 function AiToolsList() {
+  const { t } = useLocale();
+  const aiToolsList = buildAiToolsList(t);
+
   return (
     <div className="mt-7 p-5 bg-white border rounded-xl">
-      <h2 className="font-bold text-lg">Elérhető eszközök</h2>
+      <h2 className="font-bold text-lg">{t("ai.available")}</h2>
       <p>
         Kezdd el létrehozni az optimális ajánlatokat ügyfeleidnek ezekkel az
         exkluzív eszközökkel!

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,8 @@ export default function TextInputDialog({
   open,
   setOpen,
 }: TextInputDialogProps) {
+  const { t } = useLocale();
+
   const { demandText, setDemandText } = useDemandStore();
   // Lokális state a textarea-hoz - nem rendereli újra a store-t minden karakternél
   const [localText, setLocalText] = useState("");
@@ -65,7 +68,7 @@ export default function TextInputDialog({
         setSelectedFile(file);
         setError("");
       } else {
-        setError("Csak Excel (.xlsx, .xls) és PDF fájlokat fogadunk el.");
+        setError(t("td.onlyExcelPdf"));
       }
     }
   };
@@ -91,7 +94,7 @@ export default function TextInputDialog({
         setSelectedFile(null);
       } else {
         setError(
-          response.data.error || "Hiba történt a fájl feldolgozása során."
+          response.data.error || t("td.fileError")
         );
       }
     } catch (err: unknown) {
@@ -99,7 +102,7 @@ export default function TextInputDialog({
       const axiosError = err as { response?: { data?: { error?: string } } };
       setError(
         axiosError.response?.data?.error ||
-          "Hiba történt a fájl feldolgozása során. Kérjük próbáld újra."
+          t("td.fileErrorRetry")
       );
     } finally {
       setUploadingFile(false);
@@ -113,7 +116,7 @@ export default function TextInputDialog({
 
   const onAnalyze = async () => {
     if (!localText.trim()) {
-      setError("Kérjük adj meg egy szöveget az elemzéshez!");
+      setError(t("letter.needText"));
       return;
     }
 
@@ -144,7 +147,7 @@ export default function TextInputDialog({
       }
     } catch (err) {
       console.error("Error processing text:", err);
-      setError("Hiba történt a feldolgozás során. Kérjük próbáld újra később.");
+      setError(t("td.processError"));
       setLoading(false);
     }
   };
@@ -156,17 +159,17 @@ export default function TextInputDialog({
           <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
             <Loader2 className="w-16 h-16 text-blue-500 animate-spin mb-6" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Feldolgozás folyamatban
+              {t("td.processingInProgress")}
             </h3>
             <p className="text-gray-600 max-w-md">
-              Az Ön kérése feldolgozás alatt áll, kérjük várjon...
+              {t("td.pleaseWait")}
             </p>
           </div>
         ) : (
           <div className="flex flex-col h-full">
             <DialogHeader className="px-1">
               <DialogTitle className="text-xl font-bold text-gray-900">
-                Új ajánlatkérés
+                {t("td.newRequest")}
               </DialogTitle>
               <DialogDescription className="text-gray-600">
                 Illessze be az ajánlatkérést vagy írja le részletesen mire van
@@ -196,7 +199,7 @@ export default function TextInputDialog({
                         <span className="text-sm font-medium text-gray-700">
                           {selectedFile
                             ? selectedFile.name
-                            : "Beérkezett ajánlatkérés feltöltése (Excel/PDF)"}
+                            : t("td.uploadRequest")}
                         </span>
                       </div>
                     </label>
@@ -212,10 +215,10 @@ export default function TextInputDialog({
                           {uploadingFile ? (
                             <>
                               <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                              Feldolgozás...
+                              {t("od.processing")}
                             </>
                           ) : (
-                            "Feldolgozás"
+                            t("td.processing")
                           )}
                         </Button>
                         <Button
@@ -251,15 +254,15 @@ export default function TextInputDialog({
                   <ul className="space-y-2 text-sm text-gray-600">
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
-                      <span>Minden fontos információt írjon le</span>
+                      <span>{t("td.describeAll")}</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
-                      <span>Adja meg a pontos helyszínt</span>
+                      <span>{t("td.exactLocation")}</span>
                     </li>
                     <li className="flex items-start">
                       <span className="text-blue-500 mr-2">•</span>
-                      <span>Mikorra lenne szüksége a munkákra?</span>
+                      <span>{t("td.whenNeeded")}</span>
                     </li>
                   </ul>
                 </div>
@@ -272,7 +275,7 @@ export default function TextInputDialog({
                 className="w-full h-14 text-base font-medium"
                 onClick={() => setOpen(false)}
               >
-                Mégse
+                {t("common.cancel")}
               </Button>
               <Button
                 className="w-full h-14 text-base font-medium bg-[#FF9900] hover:bg-[#e68a00] text-white"
@@ -288,7 +291,7 @@ export default function TextInputDialog({
                 ) : (
                   <>
                     <Sparkles className="mr-2 h-5 w-5" />
-                    Elemzés indítása
+                    {t("td.startAnalysis")}
                   </>
                 )}
               </Button>

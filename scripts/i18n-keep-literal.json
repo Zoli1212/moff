@@ -1,16 +1,17 @@
 {
  "_why": "Hungarian strings that must never become t(...). They are parsed or compared, not displayed, so translating them compiles cleanly and breaks the feature in silence. apply-i18n.py skips these, otherwise every run re-introduces the bug.",
-
  "components/offer-detail-mobile.tsx": [
   "Kérdés:",
   "Tisztázandó kérdések"
  ],
-
  "app/(works)/supply/_components/WorkerAddModal.tsx": [
   "Egyéb"
  ],
-
  "app/(dashboard)/offers/page.tsx": [
   "Becsült kivitelezési idő"
+ ],
+ "app/(client)/quote-request/[sessionId]/QuoteChatClient.tsx": [
+  "---AJÁNLAT_KEZDET---",
+  "---AJÁNLAT_VÉGE---"
  ]
 }

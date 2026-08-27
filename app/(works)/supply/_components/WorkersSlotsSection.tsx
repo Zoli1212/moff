@@ -1,5 +1,6 @@
 "use client";
 import React, { useMemo, useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import Image from "next/image";
 import type {
   WorkItem,
@@ -83,6 +84,8 @@ const WorkersSlotsSection: React.FC<Props> = ({
   workers,
   showAllWorkItems = false,
 }) => {
+  const { t } = useLocale();
+
   // Filter work items based on showAllWorkItems flag
   const activeWorkItemIds = useMemo(
     () =>
@@ -389,7 +392,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       setAssignments(list);
     } catch (err) {
       console.error(err);
-      toast.error("Nem sikerült frissíteni a munkások listáját!");
+      toast.error(t("ws.refreshError"));
     }
   };
 
@@ -430,7 +433,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
     } catch (err) {
       console.error(err);
       const errorMessage =
-        err instanceof Error ? err.message : "Hiba történt mentés közben.";
+        err instanceof Error ? err.message : t("ws.saveError");
       toast.error(errorMessage);
     }
   };
@@ -446,12 +449,12 @@ const WorkersSlotsSection: React.FC<Props> = ({
   }) => {
     try {
       await updateWorkItemWorker(data);
-      toast.success("Munkás hozzárendelés frissítve!");
+      toast.success(t("ws.assignmentUpdated"));
       setEditAssignment(null);
       await refreshAssignments();
     } catch (err) {
       console.error(err);
-      toast.error("Hiba történt a frissítés közben.");
+      toast.error(t("ws.updateError"));
     }
   };
 
@@ -507,12 +510,12 @@ const WorkersSlotsSection: React.FC<Props> = ({
       if (assignment) {
         await deleteWorkItemWorker(id);
       }
-      toast.success("Hozzárendelés törölve!");
+      toast.success(t("ws.assignmentRemoved"));
       setEditAssignment(null);
       await refreshAssignments();
     } catch (err) {
       console.error(err);
-      toast.error("Hiba történt törlés közben.");
+      toast.error(t("ws.deleteError"));
     }
   };
 
@@ -520,7 +523,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
   const handleDeleteWorkItemWorkerOnly = async (id: number) => {
     try {
       await deleteWorkItemWorker(id);
-      toast.success("Munkás eltávolítva!");
+      toast.success(t("ws.workerRemoved"));
 
       // Reload assignments from server
       const { getWorkItemWorkersForWork } = await import(
@@ -530,7 +533,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
       setAssignments(data || []);
     } catch (err) {
       console.error(err);
-      toast.error("Hiba történt törlés közben.");
+      toast.error(t("ws.deleteError"));
     }
   };
 
@@ -649,14 +652,14 @@ const WorkersSlotsSection: React.FC<Props> = ({
           setIsAddOpen(true);
         }}
         variant="outline"
-        aria-label="Új munkás hozzáadása"
+        aria-label={t("worker.addNew")}
         className="absolute top-[14px] right-[18px] rounded-full border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900] w-9 h-9 p-0 flex items-center justify-center"
       >
         <Plus className="h-5 w-5" />
       </Button>
       <div className="h-8" />
       <h3 className="text-md font-semibold text-gray-600 mb-3">
-        Az aktív feladatokhoz rendelt munkások
+        {t("ws.activeAssigned")}
       </h3>
       <div className="font-bold text-[17px] mb-2 tracking-[0.5px]">
         Munkások (
@@ -693,13 +696,13 @@ const WorkersSlotsSection: React.FC<Props> = ({
       <div className="flex flex-col gap-3 max-h=[calc(100vh-250px)] overflow-y-auto pb-20">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <span className="text-[#666] font-medium">Frissítés</span>
-            <span className="text-[#888] text-sm">Adatok betöltése</span>
+            <span className="text-[#666] font-medium">{t("diary.refresh")}</span>
+            <span className="text-[#888] text-sm">{t("ws.loadingData")}</span>
           </div>
         ) : (
           <>
             {professions.length === 0 && (
-              <span className="text-[#bbb]">Nincs folyamatban munkafázis</span>
+              <span className="text-[#bbb]">{t("ws.noActivePhase")}</span>
             )}
             {professions.map((role) => {
               const required = requiredPerProfession[role] || 0;
@@ -748,7 +751,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                             handleAddSlot(role);
                           }}
                           className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
-                          title="Slot hozzáadása"
+                          title={t("ws.addSlot")}
                         >
                           <Plus className="h-4 w-4" />
                         </button>
@@ -800,7 +803,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                   }}
                                   className="hover:text-red-700 p-1 rounded hover:bg-red-50"
                                   style={{ color: "#FE9C00" }}
-                                  title="Munkás eltávolítása"
+                                  title={t("ws.removeWorker")}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>
@@ -831,7 +834,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                               }}
                               className="hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#aaa] bg-[#fafbfc] hover:bg-red-50"
                               style={{ color: "#FE9C00" }}
-                              title="Üres slot eltávolítása"
+                              title={t("ws.removeEmptySlot")}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -849,7 +852,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
               <>
                 <div className="my-6 border-t border-gray-300 relative">
                   <div className="absolute left-1/2 top-0 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-gray-500 font-medium">
-                    További feladatokhoz szükséges munkások
+                    {t("ws.neededForMore")}
                   </div>
                 </div>
                 {inactiveProfessions.map((role) => {
@@ -915,7 +918,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                           <div className="flex-1 font-semibold flex items-center gap-2">
                             {role}
                             <span className="text-xs text-gray-400">
-                              (nem aktív)
+                              {t("ws.inactive")}
                             </span>
                             <button
                               onClick={(e) => {
@@ -938,7 +941,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                 handleAddSlot(role);
                               }}
                               className="text-orange-500 hover:text-orange-700 p-1 rounded hover:bg-orange-50"
-                              title="Slot hozzáadása"
+                              title={t("ws.addSlot")}
                             >
                               <Plus className="h-4 w-4" />
                             </button>
@@ -990,7 +993,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                       }}
                                       className="hover:text-red-700 p-1 rounded hover:bg-red-50"
                                       style={{ color: "#FE9C00" }}
-                                      title="Munkás eltávolítása"
+                                      title={t("ws.removeWorker")}
                                     >
                                       <Trash2 className="h-4 w-4" />
                                     </button>
@@ -1021,7 +1024,7 @@ const WorkersSlotsSection: React.FC<Props> = ({
                                   }}
                                   className="hover:text-red-700 p-2 rounded-r border border-l-0 border-dashed border-[#bbb] bg-[#f8f8f8] hover:bg-red-50"
                                   style={{ color: "#FE9C00" }}
-                                  title="Üres slot eltávolítása"
+                                  title={t("ws.removeEmptySlot")}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </button>

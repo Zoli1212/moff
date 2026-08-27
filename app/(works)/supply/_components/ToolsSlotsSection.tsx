@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import type { Tool as BaseTool, Tool } from "@/types/work";
 import ToolRegisterModal from "./ToolRegisterModal";
 import { Pencil, Trash2 } from "lucide-react";
@@ -30,6 +31,8 @@ const ToolDetailsModal = ({
   onClose: () => void;
   tool: BaseTool | null;
 }) => {
+  const { t } = useLocale();
+
   if (!open || !tool) return null;
   return (
     <div
@@ -74,7 +77,7 @@ const ToolDetailsModal = ({
           {capitalizeWords(tool.name || "")}
         </h2>
         <div style={{ fontSize: 16, marginBottom: 8 }}>
-          Mennyiség: <b>{tool.quantity}</b> db
+          {t("de.quantity")} <b>{tool.quantity}</b> db
         </div>
       </div>
     </div>
@@ -106,6 +109,8 @@ const ToolsSlotsSection: React.FC<Props> = ({
   assignedTools: assignedToolsProp,
   workItems,
 }) => {
+  const { t } = useLocale();
+
   // Szűrés: csak azok az eszközök jelenjenek meg, amelyek olyan workItemhez tartoznak, ami inProgress
 
   // Local state for assignedTools to enable instant UI update
@@ -173,11 +178,11 @@ const ToolsSlotsSection: React.FC<Props> = ({
             );
             toolId = savedTool.id;
             finalToolName = savedTool.name;
-            toast.success("Eszköz regisztrálva és hozzárendelve a munkához!");
+            toast.success(t("ts.registeredAndAssigned"));
           } else {
             const tool = tools.find((t) => t.id === id);
             if (!tool) {
-              toast.error("Nem található a kiválasztott eszköz!");
+              toast.error(t("ts.notFound"));
               return;
             }
           }
@@ -185,7 +190,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
           // Hozzárendeljük a munkához
           await createWorkToolsRegistry(workId, toolId, toAdd, finalToolName);
           if (id !== -1) {
-            toast.success("Az eszköz sikeresen hozzárendelve a munkához!");
+            toast.success(t("ts.assigned"));
           }
           await fetchAssignedToolsAndUpdateState();
           
@@ -224,7 +229,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
         }
       }
       if (assignments.length > 0 && errors === 0) {
-        toast.success("Az eszköz eltávolítva a munkáról (a registry-ben megmaradt).");
+        toast.success(t("ts.removedKeptInRegistry"));
       }
       await fetchAssignedToolsAndUpdateState();
     }
@@ -252,7 +257,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
       if (tool.id && tool.id !== -1) {
         // Már létező eszköz, csak hozzárendelés
         await createWorkToolsRegistry(workId, tool.id, quantity, tool.name);
-        toast.success("Az eszköz sikeresen hozzárendelve a munkához!");
+        toast.success(t("ts.assigned"));
       } else {
         // Nem létező eszköz: regisztráljuk, majd hozzárendeljük
         const savedTool = await addToolToRegistry(
@@ -268,13 +273,13 @@ const ToolsSlotsSection: React.FC<Props> = ({
           savedTool.name
         );
         toast.success(
-          "Sikeres mentés! Az eszköz elmentve és hozzárendelve a munkához."
+          t("ts.savedAndAssigned")
         );
       }
       // Always refresh assignedTools after save
       await fetchAssignedToolsAndUpdateState();
     } catch (err) {
-      toast.error("Hiba történt a mentés során. Kérjük, próbáld újra!");
+      toast.error(t("ts.saveError"));
       console.error("Tool save error:", err);
     }
   };
@@ -349,7 +354,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
               quantity,
               savedTool.name
             );
-            toast.success("Új eszköz sikeresen hozzáadva!");
+            toast.success(t("ts.added"));
             await fetchAssignedToolsAndUpdateState();
           } catch (err) {
             toast.error(
@@ -372,7 +377,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
         <Button
           onClick={() => setShowAddToolModal(true)}
           variant="outline"
-          aria-label="Új eszköz hozzáadása"
+          aria-label={t("ts.addTool")}
           className="border border-[#FF9900] text-[#FF9900] bg-white z-20 hover:bg-[#FF9900]/10 hover:border-[#FF9900] hover:text-[#FF9900] focus:ring-2 focus:ring-offset-2 focus:ring-[#FF9900]"
           style={{
             width: 32,
@@ -411,7 +416,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       setModalOpen(true);
                     }}
                     className="p-1.5"
-                    aria-label="Eszköz szerkesztése"
+                    aria-label={t("ts.editTool")}
                   >
                     <Pencil className="w-4 h-4 text-[#FF9900]" />
                   </button>
@@ -427,7 +432,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                         );
 
                         toast.success(
-                          "Az eszköz sikeresen törölve a munkáról!"
+                          t("ts.deletedFromWork")
                         );
                         // Update selected tools state
                         setSelectedTools((prev) =>
@@ -448,7 +453,7 @@ const ToolsSlotsSection: React.FC<Props> = ({
                       }
                     }}
                     className="p-1.5"
-                    aria-label="Eszköz törlése"
+                    aria-label={t("ts.deleteTool")}
                   >
                     <Trash2 className="w-4 h-4 text-[#FF9900]" />
                   </button>
