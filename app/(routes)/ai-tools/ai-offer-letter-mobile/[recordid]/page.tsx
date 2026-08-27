@@ -830,7 +830,7 @@ export default function OfferLetterResult() {
                     </div>
                     <div className="grid grid-cols-1 gap-2 text-xs">
                       <div className="text-gray-600 flex items-center">
-                        Mennyiség:
+                        {t("de.quantity")}
                       </div>
                       <input
                         type="text"
@@ -842,7 +842,7 @@ export default function OfferLetterResult() {
                       />
 
                       <div className="text-gray-600 flex items-center">
-                        Egység:
+                        {t("pr.unitColon")}
                       </div>
                       <input
                         type="text"
@@ -854,7 +854,7 @@ export default function OfferLetterResult() {
                       />
 
                       <div className="text-gray-600 flex items-center">
-                        Anyag egységár:
+                        {t("it.materialUnitPrice")}
                       </div>
                       <input
                         type="text"
@@ -870,7 +870,7 @@ export default function OfferLetterResult() {
                       />
 
                       <div className="text-gray-600 flex items-center">
-                        Díj egységár:
+                        {t("it.feeUnitPrice")}
                       </div>
                       <input
                         type="text"
@@ -882,14 +882,14 @@ export default function OfferLetterResult() {
                       />
 
                       <div className="text-gray-600 flex items-center">
-                        Anyag összesen:
+                        {t("it.materialTotal")}
                       </div>
                       <div className="text-left text-xs font-medium p-1">
                         {item.materialTotal}
                       </div>
 
                       <div className="text-gray-600 flex items-center">
-                        Díj összesen:
+                        {t("it.feeTotal")}
                       </div>
                       <div className="text-left text-xs font-medium p-1">
                         {item.workTotal}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -42,6 +43,8 @@ export function WorkItemEditModal({
   workItem,
   onSave,
 }: WorkItemEditModalProps) {
+  const { t } = useLocale();
+
   const [formData, setFormData] = useState<WorkItemEditData>({
     id: 0,
     name: "",
@@ -98,12 +101,12 @@ export function WorkItemEditModal({
 
     // Validation
     if (!formData.name.trim()) {
-      toast.error("A tétel neve kötelező!");
+      toast.error(t("wie.needName"));
       return;
     }
 
     if (formData.quantity !== undefined && formData.quantity < 0) {
-      toast.error("A mennyiség nem lehet negatív!");
+      toast.error(t("wie.noNegativeQuantity"));
       return;
     }
 
@@ -120,11 +123,11 @@ export function WorkItemEditModal({
         // completedQuantity removed - only diary entries can modify this
       });
 
-      toast.success("A tétel sikeresen módosítva!");
+      toast.success(t("wie.updated"));
       onClose();
     } catch (error) {
       console.error("Error saving work item:", error);
-      toast.error("Hiba történt a mentés során!");
+      toast.error(t("wie.saveError"));
     } finally {
       setIsSaving(false);
     }
@@ -157,21 +160,21 @@ export function WorkItemEditModal({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px] max-w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto rounded-2xl">
         <DialogHeader>
-          <DialogTitle>Tétel szerkesztése</DialogTitle>
+          <DialogTitle>{t("od.editItem")}</DialogTitle>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           {/* Name field */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right font-medium">
-              Megnevezés
+              {t("od.name")}
             </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               className="col-span-3"
-              placeholder="Tétel megnevezése"
+              placeholder={t("od.itemLabel")}
             />
           </div>
 
@@ -181,21 +184,21 @@ export function WorkItemEditModal({
               htmlFor="description"
               className="text-right font-medium pt-2"
             >
-              Leírás
+              {t("od.description")}
             </Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               className="col-span-3 min-h-[80px]"
-              placeholder="Részletes leírás (opcionális)"
+              placeholder={t("wie.detailedDescription")}
             />
           </div>
 
           {/* Quantity and Unit fields */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="quantity" className="text-right font-medium">
-              Mennyiség
+              {t("od.quantity")}
             </Label>
             <Input
               id="quantity"
@@ -216,7 +219,7 @@ export function WorkItemEditModal({
               min="0"
             />
             <Label htmlFor="unit" className="text-right font-medium">
-              Egység
+              {t("od.unit")}
             </Label>
             <Input
               id="unit"
@@ -230,7 +233,7 @@ export function WorkItemEditModal({
           {/* Unit Price field */}
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="unitPrice" className="text-right font-medium">
-              Munka egységár
+              {t("wie.workUnitPrice")}
             </Label>
             <Input
               id="unitPrice"
@@ -257,7 +260,7 @@ export function WorkItemEditModal({
               htmlFor="materialUnitPrice"
               className="text-right font-medium"
             >
-              Anyag egységár
+              {t("od.materialUnitPrice")}
             </Label>
             <Input
               id="materialUnitPrice"
@@ -284,7 +287,7 @@ export function WorkItemEditModal({
 
           {/* Total Price display */}
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right font-medium">Összár</Label>
+            <Label className="text-right font-medium">{t("wie.totalPrice")}</Label>
             <div className="col-span-3 p-2 bg-gray-50 rounded border text-lg font-semibold">
               {formatNumberWithSpace(formData.totalPrice)} Ft
             </div>
@@ -296,7 +299,7 @@ export function WorkItemEditModal({
               htmlFor="completedQuantity"
               className="text-right font-medium"
             >
-              Teljesítve
+              {t("work.completed")}
             </Label>
             <div className="col-span-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
               {workItem?.completedQuantity || 0}
@@ -311,7 +314,7 @@ export function WorkItemEditModal({
                   % (csak napló alapján módosítható)
                 </span>
               ) : (
-                <span className="text-gray-400">Csak napló alapján módosítható</span>
+                <span className="text-gray-400">{t("wie.diaryOnly")}</span>
               )}
             </div>
           </div>
@@ -319,7 +322,7 @@ export function WorkItemEditModal({
           {/* Progress display */}
           {formData.quantity && workItem?.completedQuantity !== undefined && (
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label className="text-right font-medium">Haladás</Label>
+              <Label className="text-right font-medium">{t("task.progress")}</Label>
               <div className="col-span-3">
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
@@ -340,7 +343,7 @@ export function WorkItemEditModal({
 
         <DialogFooter className="gap-3">
           <Button variant="outline" onClick={handleClose} disabled={isSaving}>
-            Mégse
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleSave}
@@ -350,7 +353,7 @@ export function WorkItemEditModal({
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#E58A00')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#FE9C00')}
           >
-            {isSaving ? "Mentés..." : "Mentés"}
+            {isSaving ? t("od.saving") : t("common.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

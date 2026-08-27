@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import {
   Dialog,
   DialogContent,
@@ -24,6 +25,8 @@ export default function UploadOfferDialog({
   open,
   setOpen,
 }: UploadOfferDialogProps) {
+  const { t } = useLocale();
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -41,7 +44,7 @@ export default function UploadOfferDialog({
     ];
 
     if (!validTypes.includes(file.type)) {
-      setError("Csak Excel (.xlsx, .xls) vagy PDF fájlokat fogadunk el!");
+      setError(t("uo.onlyExcelPdf"));
       return;
     }
 
@@ -59,7 +62,7 @@ export default function UploadOfferDialog({
 
   const handleUpload = async () => {
     if (!selectedFile) {
-      setError("Kérjük válassz ki egy fájlt!");
+      setError(t("uo.needFile"));
       return;
     }
 
@@ -79,16 +82,16 @@ export default function UploadOfferDialog({
       const { success, requirementId, offerId } = response.data;
 
       if (success && requirementId && offerId) {
-        toast.success("Ajánlat sikeresen feltöltve és konvertálva!");
+        toast.success(t("uo.converted"));
         setOpen(false);
         clearFile();
         router.push(`/offers/${requirementId}?offerId=${offerId}`);
       } else {
-        throw new Error("Ajánlat konvertálása sikertelen");
+        throw new Error(t("uo.convertFailed"));
       }
     } catch (err) {
       console.error("Error uploading offer:", err);
-      setError("Hiba történt a fájl feldolgozása során. Kérjük próbáld újra.");
+      setError(t("td.fileErrorRetry"));
     } finally {
       setUploading(false);
     }
@@ -101,17 +104,17 @@ export default function UploadOfferDialog({
           <div className="flex flex-col items-center justify-center p-8 text-center">
             <Loader2 className="w-16 h-16 text-[#FF9900] animate-spin mb-6" />
             <h3 className="text-xl font-semibold text-gray-800 mb-2">
-              Feldolgozás folyamatban
+              {t("td.processingInProgress")}
             </h3>
             <p className="text-gray-600 max-w-md">
-              Az ajánlatot feldolgozzuk és konvertáljuk...
+              {t("uo.converting")}
             </p>
           </div>
         ) : (
           <>
             <DialogHeader>
               <DialogTitle className="text-xl font-bold text-gray-900">
-                Meglévő ajánlat feltöltése
+                {t("offers.list.uploadExisting")}
               </DialogTitle>
               <DialogDescription className="text-gray-600">
                 Töltsd fel meglévő ajánlatodat (Excel vagy PDF formátumban), és
@@ -146,10 +149,10 @@ export default function UploadOfferDialog({
                   <div className="flex flex-col items-center">
                     <Upload className="h-12 w-12 text-gray-400 mb-3" />
                     <p className="text-sm font-medium text-gray-900 mb-1">
-                      Kattints ide fájl kiválasztásához
+                      {t("uo.clickToChoose")}
                     </p>
                     <p className="text-xs text-gray-500">
-                      Excel (.xlsx, .xls) vagy PDF fájlok
+                      {t("uo.acceptedTypes")}
                     </p>
                   </div>
                 )}
@@ -168,7 +171,7 @@ export default function UploadOfferDialog({
                     className="text-gray-600 hover:text-gray-900"
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Fájl törlése
+                    {t("uo.deleteFile")}
                   </Button>
                 </div>
               )}
@@ -197,7 +200,7 @@ export default function UploadOfferDialog({
                   clearFile();
                 }}
               >
-                Mégse
+                {t("common.cancel")}
               </Button>
               <Button
                 className="w-full sm:w-auto bg-[#FF9900] hover:bg-[#e68a00] text-white"
@@ -207,12 +210,12 @@ export default function UploadOfferDialog({
                 {uploading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Feldolgozás...
+                    {t("od.processing")}
                   </>
                 ) : (
                   <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Feltöltés és konvertálás
+                    {t("uo.uploadAndConvert")}
                   </>
                 )}
               </Button>

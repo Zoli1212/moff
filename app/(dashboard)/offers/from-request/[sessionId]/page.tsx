@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { useParams, useRouter } from "next/navigation";
 import { getClientQuoteSession, acceptQuoteRequest, declineQuoteRequest, getNotifications } from "@/actions/quote-request-actions";
 import { Loader2, Sparkles, MapPin, Ruler, User, ArrowLeft } from "lucide-react";
@@ -21,6 +22,8 @@ interface SessionData {
 }
 
 export default function FromRequestPage() {
+  const { t } = useLocale();
+
   const params = useParams();
   const router = useRouter();
   const sessionId = params.sessionId as string;
@@ -125,7 +128,7 @@ export default function FromRequestPage() {
           onClick={() => router.push("/offers")}
           className="text-orange-500 hover:text-orange-600 text-sm font-medium"
         >
-          Vissza az ajánlatokhoz
+          {t("sc.backToOffers")}
         </button>
       </div>
     );
@@ -145,7 +148,7 @@ export default function FromRequestPage() {
         className="flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        Vissza az ajánlatokhoz
+        {t("sc.backToOffers")}
       </button>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -163,7 +166,7 @@ export default function FromRequestPage() {
           <div className="flex items-start gap-3">
             <User className="w-4 h-4 text-gray-400 mt-0.5" />
             <div>
-              <p className="text-sm font-medium text-gray-700">Megrendelő</p>
+              <p className="text-sm font-medium text-gray-700">{t("qc.customer")}</p>
               <p className="text-sm text-gray-500">{session.clientName}</p>
             </div>
           </div>
@@ -173,7 +176,7 @@ export default function FromRequestPage() {
             <div className="flex items-start gap-3">
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-700">Helyszín</p>
+                <p className="text-sm font-medium text-gray-700">{t("pf.location")}</p>
                 <p className="text-sm text-gray-500">{session.location}</p>
               </div>
             </div>

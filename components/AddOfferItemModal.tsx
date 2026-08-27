@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import { X } from "lucide-react";
 
 interface AddOfferItemModalProps {
@@ -20,6 +21,8 @@ export function AddOfferItemModal({
   onClose,
   onSave,
 }: AddOfferItemModalProps) {
+  const { t } = useLocale();
+
   const [formData, setFormData] = useState({
     name: "",
     quantity: "1",
@@ -42,15 +45,15 @@ export function AddOfferItemModal({
     const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = "A tétel neve kötelező";
+      newErrors.name = t("aoi.needName");
     }
 
     if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
-      newErrors.quantity = "A mennyiség pozitív szám kell legyen";
+      newErrors.quantity = t("aoi.needPositiveQuantity");
     }
 
     if (!formData.unit.trim()) {
-      newErrors.unit = "Az egység kötelező";
+      newErrors.unit = t("aoi.needUnit");
     }
 
     setErrors(newErrors);
@@ -105,7 +108,7 @@ export function AddOfferItemModal({
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
         <div className="flex items-center justify-between p-6 border-b">
           <h2 className="text-xl font-semibold text-gray-900">
-            Új tétel hozzáadása
+            {t("letter.addItem")}
           </h2>
           <button
             onClick={handleCancel}
@@ -121,7 +124,7 @@ export function AddOfferItemModal({
               htmlFor="name"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Tétel megnevezése *
+              {t("aoi.nameRequired")}
             </label>
             <input
               type="text"
@@ -144,7 +147,7 @@ export function AddOfferItemModal({
                 htmlFor="quantity"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Mennyiség *
+                {t("aoi.quantityRequired")}
               </label>
               <input
                 type="number"
@@ -167,7 +170,7 @@ export function AddOfferItemModal({
                 htmlFor="unit"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                Egység *
+                {t("pr.unitRequired")}
               </label>
               <input
                 type="text"
@@ -177,7 +180,7 @@ export function AddOfferItemModal({
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                   errors.unit ? "border-red-500" : "border-gray-300"
                 }`}
-                placeholder="db, m², óra, stb."
+                placeholder={t("aoi.unitPlaceholder")}
               />
               {errors.unit && (
                 <p className="text-red-500 text-sm mt-1">{errors.unit}</p>
@@ -190,7 +193,7 @@ export function AddOfferItemModal({
               htmlFor="materialUnitPrice"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Anyag egységár (Ft)
+              {t("aoi.materialUnitPrice")}
             </label>
             <input
               type="number"
@@ -210,7 +213,7 @@ export function AddOfferItemModal({
               htmlFor="unitPrice"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Díj egységár (Ft)
+              {t("aoi.feeUnitPrice")}
             </label>
             <input
               type="number"
@@ -228,14 +231,14 @@ export function AddOfferItemModal({
               type="submit"
               className="w-full px-4 py-2 text-sm font-medium text-white bg-[#FF9900] border border-transparent rounded-md hover:bg-[#FF9900]/90 focus:outline-none focus:ring-2 focus:ring-[#FF9900]"
             >
-              Hozzáadás
+              {t("aoi.add")}
             </button>
             <button
               type="button"
               onClick={handleCancel}
               className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
-              Mégse
+              {t("common.cancel")}
             </button>
           </div>
         </form>
