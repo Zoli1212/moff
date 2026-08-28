@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  ESETI_BEJEGYZES_CATEGORIES,
   budapestDayKey,
   buildDailyReports,
+  renderDateText,
   renderHeadcountText,
   renderPerformanceText,
+  renderTemperatureText,
   renderWeatherText,
   type EnaploDiarySource,
 } from "../lib/enaplo/daily-report";
@@ -124,9 +127,21 @@ describe("buildDailyReports", () => {
       diary({ id: 2, date: "2026-08-20T09:00:00Z", notes: "Műszaki ellenőr helyszíni bejárása." }),
     ]);
 
+    // di) is the regulation's point for anything that holds the work up; a loose note
+    // has no better home than dw), "egyéb bejegyzés".
     expect(reports[0].incidentProposals).toEqual([
-      { diaryId: 1, text: "Anyaghiány miatt állás délután.", source: "issues" },
-      { diaryId: 2, text: "Műszaki ellenőr helyszíni bejárása.", source: "notes" },
+      {
+        diaryId: 1,
+        text: "Anyaghiány miatt állás délután.",
+        source: "issues",
+        suggestedCategory: "di",
+      },
+      {
+        diaryId: 2,
+        text: "Műszaki ellenőr helyszíni bejárása.",
+        source: "notes",
+        suggestedCategory: "dw",
+      },
     ]);
   });
 
@@ -174,7 +189,27 @@ describe("rendering the ÁNYK blocks", () => {
     expect(renderHeadcountText(report)).toBe("kőműves: 2 fő (Kiss Péter, Nagy Anna)\nÖsszesen: 2 fő");
   });
 
-  it("writes the weather block", () => {
-    expect(renderWeatherText(report)).toBe("napos, 24.5 °C");
+  it("keeps temperature and weather apart, the way points cb) and cc) split them", () => {
+    expect(renderTemperatureText(report)).toBe("24.5 °C");
+    expect(renderWeatherText(report)).toBe("napos");
+  });
+
+  it("names the day as well as dating it, which point ca) asks for", () => {
+    expect(report.dayName).toBe("csütörtök");
+    expect(renderDateText(report)).toBe("2026-08-20, csütörtök");
+  });
+});
+
+describe("the regulation's category list", () => {
+  it("covers every point from da) to dw)", () => {
+    expect(ESETI_BEJEGYZES_CATEGORIES).toHaveLength(23);
+    expect(ESETI_BEJEGYZES_CATEGORIES[0].code).toBe("da");
+    expect(ESETI_BEJEGYZES_CATEGORIES[22].code).toBe("dw");
+  });
+
+  it("has a label for every category a proposal can suggest", () => {
+    const codes = new Set(ESETI_BEJEGYZES_CATEGORIES.map((c) => c.code));
+    expect(codes.has("di")).toBe(true);
+    expect(codes.has("dw")).toBe(true);
   });
 });

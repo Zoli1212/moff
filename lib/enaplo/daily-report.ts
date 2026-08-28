@@ -62,11 +62,21 @@ export interface EnaploIncidentProposal {
   diaryId: number;
   text: string;
   source: "issues" | "notes";
+  /**
+   * The regulation's category this most likely falls under.
+   *
+   * A suggestion, not a classification: point di) covers exactly the kind of thing our
+   * issues field collects — labour shortage, supply trouble, stoppage, accident — while
+   * a loose note has no better home than dw), "egyéb bejegyzés".
+   */
+  suggestedCategory: string;
 }
 
 export interface EnaploDailyReport {
   /** Hungarian calendar day, YYYY-MM-DD. The form cannot be backdated, so this is the key. */
   date: string;
+  /** Point ca) asks for the day to be named, not just dated. */
+  dayName: string;
   weather: string | null;
   temperature: number | null;
   /** Conflicting weather across the day's rows; the user picks one for the form. */
@@ -77,6 +87,29 @@ export interface EnaploDailyReport {
   incidentProposals: EnaploIncidentProposal[];
   diaryIds: number[];
 }
+
+/**
+ * The napi jelentés contents, as 191/2009. (IX. 15.) Korm. rendelet 26/B. § lists them.
+ *
+ * The annex that used to carry the diary template was repealed in 2024, so this list
+ * from the body of the regulation is the current authority on what a day must contain.
+ * The export is laid out against these points rather than against the ÁNYK screenshots,
+ * so a block that we cannot fill is visible as a gap instead of quietly missing.
+ */
+export const NAPI_JELENTES_POINTS = ["ca", "cb", "cc", "cd", "ce", "cf"] as const;
+export type NapiJelentesPoint = (typeof NAPI_JELENTES_POINTS)[number];
+
+/**
+ * Points the regulation requires that our diary cannot supply from what it stores.
+ *
+ * These do not depend on the day's data — they are shortcomings of the model itself, so
+ * they are stated once rather than repeated under every date:
+ *  cb) two measured outside temperatures, one of them the day's lowest; we keep one.
+ *  cc) how long the weather actually held the work up; we keep no duration.
+ *  cd) the split between own and subcontractor headcount; we keep a role only.
+ *  cf) construction and demolition waste, down to KÜJ/KTJ and transfer invoices.
+ */
+export const UNSUPPORTED_POINTS = ["cb", "cc", "cd", "cf"] as const;
 
 const BUDAPEST = "Europe/Budapest";
 
@@ -96,6 +129,13 @@ export function budapestDayKey(value: Date | string): string {
     month: "2-digit",
     day: "2-digit",
   }).format(date);
+}
+
+/** The Hungarian name of the weekday, which point ca) asks for alongside the date. */
+export function budapestDayName(value: Date | string): string {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("hu-HU", { timeZone: BUDAPEST, weekday: "long" }).format(date);
 }
 
 function cleanText(value: unknown): string | null {
@@ -205,13 +245,28 @@ export function buildDailyReports(
     const incidentProposals: EnaploIncidentProposal[] = [];
     for (const row of rows) {
       const issues = cleanText(row.issues);
-      if (issues) incidentProposals.push({ diaryId: row.id, text: issues, source: "issues" });
+      if (issues) {
+        incidentProposals.push({
+          diaryId: row.id,
+          text: issues,
+          source: "issues",
+          suggestedCategory: "di",
+        });
+      }
       const notes = cleanText(row.notes);
-      if (notes) incidentProposals.push({ diaryId: row.id, text: notes, source: "notes" });
+      if (notes) {
+        incidentProposals.push({
+          diaryId: row.id,
+          text: notes,
+          source: "notes",
+          suggestedCategory: "dw",
+        });
+      }
     }
 
     reports.push({
       date,
+      dayName: budapestDayName(rows[0].date),
       weather: weathers[0] ?? null,
       weatherConflicts: weathers.slice(1),
       temperature: firstNumber(rows.map((r) => r.temperature)),
@@ -265,10 +320,55 @@ export function renderHeadcountText(report: EnaploDailyReport): string {
   return lines.join("\n");
 }
 
-/** The weather line, which the form takes as its own field. */
+/**
+ * The eseti bejegyzés categories the regulation enumerates, points da) to dw).
+ *
+ * Deliberately not translated. The regulation requires the diary to be kept in Hungarian
+ * — 24/A. § (1), "Az e-építési naplót magyar nyelven kell vezetni" — so these are the
+ * words that go into the filing, not interface labels that follow the reader's language.
+ */
+export const ESETI_BEJEGYZES_CATEGORIES: { code: string; label: string }[] = [
+  { code: "da", label: "Építési munkaterület átadás-átvétele" },
+  { code: "db", label: "Az építmény helyének kitűzése" },
+  { code: "dc", label: "Tervek átvétele" },
+  { code: "dd", label: "Munkarészek ellenőrzése és annak eredménye" },
+  { code: "de", label: "Eltakart munkarészek, megrendelői észrevétel, vállalkozói megjegyzés" },
+  { code: "df", label: "Alapozás elkészülte" },
+  { code: "dg", label: "Műszakilag és elszámolás szempontjából fontos tények" },
+  { code: "dh", label: "Többletmunka, pótmunka szükségessége" },
+  { code: "di", label: "Munkavégzést gátló, határidő-túllépést okozó körülmény" },
+  { code: "dj", label: "Anyagok, szerkezetek, próbatestek vizsgálata" },
+  { code: "dk", label: "Naplómellékletek feltöltése" },
+  { code: "dl", label: "Kivitelezés közben keletkezett károk felvétele" },
+  { code: "dm", label: "Speciális munkák adatai" },
+  { code: "dn", label: "Küszöbértéket meghaladó építési-bontási hulladék" },
+  { code: "do", label: "Építési termékek megfelelőség-igazolásának átadása" },
+  { code: "dp", label: "Számla ellenértéke után átadott dokumentumok, nyilatkozatok" },
+  { code: "dq", label: "Az e-építési napló lezárása" },
+  { code: "dr", label: "Kivitelezési dokumentációtól való eltérés" },
+  { code: "ds", label: "Építész tervezői nyilatkozat elmaradása" },
+  { code: "dt", label: "Területi építész kamara nyilatkozatának feltöltése" },
+  { code: "du", label: "Rehabilitációs környezettervezői nyilatkozat elmaradása" },
+  { code: "dv", label: "Hatósági helyszíni szemle, ellenőrzés időpontja" },
+  { code: "dw", label: "Egyéb bejegyzés" },
+];
+
+/** Point ca): the date, named as well as numbered. */
+export function renderDateText(report: EnaploDailyReport): string {
+  return report.dayName ? `${report.date}, ${report.dayName}` : report.date;
+}
+
+/**
+ * Point cb): the measured outside temperature.
+ *
+ * The regulation wants at least two readings a day, one of them the lowest. We store a
+ * single value per diary row, so this is a starting figure the user completes.
+ */
+export function renderTemperatureText(report: EnaploDailyReport): string {
+  return report.temperature !== null ? `${formatAmount(report.temperature)} °C` : "";
+}
+
+/** Point cc): the weather itself, kept apart from the temperature the way the law splits them. */
 export function renderWeatherText(report: EnaploDailyReport): string {
-  const parts: string[] = [];
-  if (report.weather) parts.push(report.weather);
-  if (report.temperature !== null) parts.push(`${formatAmount(report.temperature)} °C`);
-  return parts.join(", ");
+  return report.weather ?? "";
 }
