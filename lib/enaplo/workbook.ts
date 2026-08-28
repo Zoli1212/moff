@@ -8,7 +8,6 @@
 
 import {
   ESETI_BEJEGYZES_CATEGORIES,
-  renderHeadcountText,
   renderPerformanceText,
   renderTemperatureText,
   renderWeatherText,
