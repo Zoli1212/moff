@@ -1,35 +1,25 @@
 "use client";
 
-import { CalendarCheck, Receipt, Sparkles } from "lucide-react";
+import { CalendarCheck, Check, Receipt, Sparkles } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import PhoneMockup from "./PhoneMockup";
+import { BoardScreen, DiaryScreen } from "./PhoneScreens";
+import { displaySerif } from "./fonts";
 
 /**
- * What the product does, and the order it happens in.
+ * What the product does, shown on the device it is used on.
  *
- * Three capabilities rather than a longer list: the page has to say enough to be
- * credible without turning into documentation. The steps below repeat the same story as
- * a sequence, because a contractor deciding whether to try this wants to know where the
- * work starts, not only what features exist.
+ * Three capabilities first, because a visitor deciding whether to read on wants the
+ * shape of the thing quickly. Then two showcases with a phone each, alternating sides so
+ * the eye keeps moving. The steps close the section by putting the same story in order.
  */
 export default function LandingFeatures() {
   const { t } = useLocale();
 
   const capabilities = [
-    {
-      icon: Sparkles,
-      title: t("landing.cap1Title"),
-      body: t("landing.cap1Body"),
-    },
-    {
-      icon: CalendarCheck,
-      title: t("landing.cap2Title"),
-      body: t("landing.cap2Body"),
-    },
-    {
-      icon: Receipt,
-      title: t("landing.cap3Title"),
-      body: t("landing.cap3Body"),
-    },
+    { icon: Sparkles, title: t("landing.cap1Title"), body: t("landing.cap1Body") },
+    { icon: CalendarCheck, title: t("landing.cap2Title"), body: t("landing.cap2Body") },
+    { icon: Receipt, title: t("landing.cap3Title"), body: t("landing.cap3Body") },
   ];
 
   const steps = [
@@ -41,7 +31,7 @@ export default function LandingFeatures() {
   return (
     <>
       <section className="border-t border-stone-200 bg-white">
-        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
           <div className="grid gap-8 sm:grid-cols-3 sm:gap-6 lg:gap-10">
             {capabilities.map(({ icon: Icon, title, body }) => (
               <div key={title}>
@@ -56,19 +46,36 @@ export default function LandingFeatures() {
         </div>
       </section>
 
-      <section id="how" className="scroll-mt-20 border-t border-stone-200 bg-stone-50">
-        <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 lg:py-20">
-          <h2 className="max-w-2xl text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+      <Showcase
+        eyebrow={t("landing.showBoardEyebrow")}
+        title={t("landing.showBoardTitle")}
+        body={t("landing.showBoardBody")}
+        points={[t("landing.showBoardP1"), t("landing.showBoardP2"), t("landing.showBoardP3")]}
+        phone={<BoardScreen />}
+      />
+
+      <Showcase
+        reversed
+        tone="dark"
+        eyebrow={t("landing.showDiaryEyebrow")}
+        title={t("landing.showDiaryTitle")}
+        body={t("landing.showDiaryBody")}
+        points={[t("landing.showDiaryP1"), t("landing.showDiaryP2"), t("landing.showDiaryP3")]}
+        phone={<DiaryScreen />}
+      />
+
+      <section id="how" className="scroll-mt-20 border-t border-stone-200 bg-white">
+        <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
+          <h2
+            className={`${displaySerif.className} max-w-2xl text-4xl leading-[1.1] tracking-[-0.01em] text-stone-900 sm:text-5xl`}
+          >
             {t("landing.howTitle")}
           </h2>
-          <p className="mt-3 max-w-xl text-base text-stone-600">{t("landing.howSubtitle")}</p>
+          <p className="mt-3 max-w-xl text-[15px] text-stone-600">{t("landing.howSubtitle")}</p>
 
-          <ol className="mt-10 grid gap-6 sm:grid-cols-3">
+          <ol className="mt-10 grid gap-4 sm:grid-cols-3 sm:gap-6">
             {steps.map((step) => (
-              <li
-                key={step.n}
-                className="relative rounded-2xl border border-stone-200 bg-white p-5 shadow-sm"
-              >
+              <li key={step.n} className="rounded-2xl border border-stone-200 bg-stone-50 p-5">
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-stone-900 text-sm font-bold text-white">
                   {step.n}
                 </span>
@@ -80,5 +87,81 @@ export default function LandingFeatures() {
         </div>
       </section>
     </>
+  );
+}
+
+/** One feature block: words on one side, the phone on the other. */
+function Showcase({
+  eyebrow,
+  title,
+  body,
+  points,
+  phone,
+  reversed = false,
+  tone = "light",
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  points: string[];
+  phone: React.ReactNode;
+  reversed?: boolean;
+  tone?: "light" | "dark";
+}) {
+  const isDark = tone === "dark";
+
+  return (
+    <section
+      className={`border-t ${isDark ? "border-stone-900 bg-stone-900" : "border-stone-200 bg-stone-50"}`}
+    >
+      <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <div className={reversed ? "lg:order-2" : ""}>
+            <span
+              className={`text-xs font-bold uppercase tracking-[0.12em] ${
+                isDark ? "text-orange-400" : "text-orange-600"
+              }`}
+            >
+              {eyebrow}
+            </span>
+            <h2
+              className={`${displaySerif.className} mt-3 text-4xl leading-[1.1] tracking-[-0.01em] sm:text-5xl ${
+                isDark ? "text-white" : "text-stone-900"
+              }`}
+            >
+              {title}
+            </h2>
+            <p
+              className={`mt-4 max-w-lg text-[15px] leading-relaxed ${
+                isDark ? "text-stone-300" : "text-stone-600"
+              }`}
+            >
+              {body}
+            </p>
+            <ul className="mt-6 space-y-2.5">
+              {points.map((point) => (
+                <li
+                  key={point}
+                  className={`flex items-start gap-2.5 text-sm ${
+                    isDark ? "text-stone-200" : "text-stone-700"
+                  }`}
+                >
+                  <Check
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${
+                      isDark ? "text-orange-400" : "text-orange-500"
+                    }`}
+                  />
+                  {point}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className={`flex justify-center ${reversed ? "lg:order-1" : ""}`}>
+            <PhoneMockup>{phone}</PhoneMockup>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

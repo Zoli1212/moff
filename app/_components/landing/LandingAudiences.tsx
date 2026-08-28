@@ -2,6 +2,7 @@
 
 import { ArrowRight, Check } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { displaySerif } from "./fonts";
 import { ContractorSignIn, CustomerSignIn } from "./SignInActions";
 
 /**
@@ -33,7 +34,7 @@ export default function LandingAudiences() {
           <div className="grid gap-6 lg:grid-cols-2">
             {/* The contractor is the primary audience, so this panel carries the weight. */}
             <div className="rounded-2xl border border-stone-900 bg-stone-900 p-6 text-white sm:p-8">
-              <h3 className="text-xl font-bold tracking-tight sm:text-2xl">
+              <h3 className={`${displaySerif.className} text-3xl leading-tight tracking-tight sm:text-4xl`}>
                 {t("landing.forContractorTitle")}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-300">
@@ -59,7 +60,7 @@ export default function LandingAudiences() {
             </div>
 
             <div className="rounded-2xl border border-stone-200 bg-stone-50 p-6 sm:p-8">
-              <h3 className="text-xl font-bold tracking-tight text-stone-900 sm:text-2xl">
+              <h3 className={`${displaySerif.className} text-3xl leading-tight tracking-tight text-stone-900 sm:text-4xl`}>
                 {t("landing.forCustomerTitle")}
               </h3>
               <p className="mt-2 text-sm leading-relaxed text-stone-600">
@@ -89,7 +90,7 @@ export default function LandingAudiences() {
 
       <section className="border-t border-stone-200 bg-stone-50">
         <div className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6 lg:py-20">
-          <h2 className="text-3xl font-bold tracking-tight text-stone-900 sm:text-4xl">
+          <h2 className={`${displaySerif.className} text-4xl leading-[1.1] tracking-[-0.01em] text-stone-900 sm:text-5xl`}>
             {t("landing.ctaTitle")}
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-base text-stone-600">
