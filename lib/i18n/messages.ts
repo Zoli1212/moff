@@ -1272,6 +1272,10 @@ export const messages = {
     "enaplo.showCategories": "Az eseti bejegyzés jogszabályi kategóriái (da–dw)",
     "enaplo.hideCategories": "Kategóriák elrejtése",
     "enaplo.exportAction": "E-napló export",
+    "enaplo.exportExcel": "Excel",
+    "enaplo.exportPdf": "PDF / nyomtatás",
+    "enaplo.excelFailed": "Nem sikerült elkészíteni az Excel fájlt.",
+    "enaplo.generatedAt": "készült: {{time}}",
   },
 
   en: {
@@ -2537,6 +2541,10 @@ export const messages = {
     "enaplo.showCategories": "The regulation's incident-entry categories (da-dw)",
     "enaplo.hideCategories": "Hide the categories",
     "enaplo.exportAction": "E-napló export",
+    "enaplo.exportExcel": "Excel",
+    "enaplo.exportPdf": "PDF / print",
+    "enaplo.excelFailed": "Could not build the Excel file.",
+    "enaplo.generatedAt": "generated: {{time}}",
   },
 } satisfies Record<Locale, Record<string, string>>;
 

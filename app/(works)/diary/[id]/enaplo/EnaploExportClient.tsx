@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { ArrowLeft, Check, Copy, Info, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Check, Copy, FileSpreadsheet, Info, Printer, TriangleAlert } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import { downloadEnaploWorkbook } from "./export";
 import {
   ESETI_BEJEGYZES_CATEGORIES,
   UNSUPPORTED_POINTS,
@@ -44,6 +45,20 @@ export default function EnaploExportClient({ workId, workTitle, location, report
   const { t } = useLocale();
   const [copied, setCopied] = useState<string | null>(null);
   const [showCategories, setShowCategories] = useState(false);
+  // Stamped after mount: rendering a clock during SSR would not match the client.
+  const [printedAt, setPrintedAt] = useState("");
+
+  useEffect(() => {
+    setPrintedAt(new Date().toLocaleString("hu-HU"));
+  }, []);
+
+  function exportExcel() {
+    try {
+      downloadEnaploWorkbook(reports, workId, { workTitle, location });
+    } catch {
+      toast.error(t("enaplo.excelFailed"));
+    }
+  }
 
   async function copy(key: string, text: string) {
     try {
@@ -63,7 +78,7 @@ export default function EnaploExportClient({ workId, workTitle, location, report
         type="button"
         onClick={() => copy(blockKey, text)}
         disabled={text.trim() === ""}
-        className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex shrink-0 items-center gap-1 rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40 print:hidden"
       >
         {isCopied ? <Check className="h-3.5 w-3.5 text-green-600" /> : <Copy className="h-3.5 w-3.5" />}
         {isCopied ? t("enaplo.copiedShort") : t("enaplo.copy")}
@@ -108,20 +123,45 @@ export default function EnaploExportClient({ workId, workTitle, location, report
     <div className="mx-auto w-full max-w-3xl px-3 pb-16 pt-4 sm:px-4">
       <Link
         href={`/diary/${workId}`}
-        className="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-800"
+        className="mb-3 inline-flex items-center gap-1 text-sm text-gray-500 transition-colors hover:text-gray-800 print:hidden"
       >
         <ArrowLeft className="h-4 w-4" />
         {t("enaplo.backToDiary")}
       </Link>
 
-      <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">{t("enaplo.title")}</h1>
-      <p className="mt-1 text-sm text-gray-600">
-        {workTitle}
-        {location ? ` — ${location}` : ""}
-      </p>
-      <p className="mt-1 text-xs text-gray-500">{t("enaplo.legalBasis")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900 sm:text-2xl">{t("enaplo.title")}</h1>
+          <p className="mt-1 text-sm text-gray-600">
+            {workTitle}
+            {location ? ` — ${location}` : ""}
+          </p>
+          <p className="mt-1 text-xs text-gray-500">{t("enaplo.legalBasis")}</p>
+        </div>
 
-      <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+        <div className="flex gap-2 print:hidden">
+          <button
+            type="button"
+            onClick={exportExcel}
+            disabled={reports.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            {t("enaplo.exportExcel")}
+          </button>
+          <button
+            type="button"
+            onClick={() => window.print()}
+            disabled={reports.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-sm text-gray-700 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Printer className="h-4 w-4" />
+            {t("enaplo.exportPdf")}
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900 print:hidden">
         <div className="flex items-start gap-2">
           <Info className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
@@ -136,7 +176,7 @@ export default function EnaploExportClient({ workId, workTitle, location, report
         </div>
       </div>
 
-      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+      <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 print:hidden">
         <div className="flex items-start gap-2">
           <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
           <div>
@@ -161,7 +201,12 @@ export default function EnaploExportClient({ workId, workTitle, location, report
       ) : (
         <div className="mt-5 space-y-5">
           {reports.map((report) => (
-            <section key={report.date} className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+            <section
+              key={report.date}
+              // A day is one unit of the filing; splitting it across pages makes the
+              // printed record harder to check against the napló.
+              className="rounded-xl border border-gray-200 bg-gray-50 p-3 print:break-inside-avoid print:border-gray-400 print:bg-white"
+            >
               <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="text-base font-bold text-gray-900">{renderDateText(report)}</h2>
                 <span className="text-xs text-gray-500">
@@ -253,7 +298,13 @@ export default function EnaploExportClient({ workId, workTitle, location, report
         </div>
       )}
 
-      <div className="mt-6">
+      {/* Only meaningful on paper, where nothing else says where the sheet came from. */}
+      <p className="mt-6 hidden border-t border-gray-300 pt-2 text-[10px] text-gray-500 print:block">
+        {t("enaplo.legalBasis")}
+        {printedAt ? ` — ${t("enaplo.generatedAt", { time: printedAt })}` : ""}
+      </p>
+
+      <div className="mt-6 print:hidden">
         <button
           type="button"
           onClick={() => setShowCategories((open) => !open)}
