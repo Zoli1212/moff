@@ -293,7 +293,7 @@ export const messages = {
     "ranking.withinTrade":
       "Az egyéni sorrend szakmán belül értendő. A naplóban szereplő mennyiségek szakmánként más mértékegységben vannak, ezért azokból nem képezhető összehasonlítható teljesítmény.",
     "ranking.coverage":
-      "{total} naplóbejegyzésből {attributed} köthető nevesített dolgozóhoz ({percent}%). A többi munka megtörtént, de nem szerepel ebben a rangsorban.",
+      "{{total}} naplóbejegyzésből {{attributed}} köthető nevesített dolgozóhoz ({{percent}}%). A többi munka megtörtént, de nem szerepel ebben a rangsorban.",
     "ranking.hoursShort": "óra",
     "ranking.daysShort": "nap",
     "ranking.jobsShort": "munka",
@@ -846,7 +846,7 @@ export const messages = {
     "sc.exNoMachine": "Nincs gépi bontásra eszközöm",
 
     "sc.exTwoPeople": "Csak 2 emberem van a tervezett 4 helyett",
-    "sc.deleteMessage": "A(z) „{constraint}\" elemzés törlődik. Az ajánlatot ez nem érinti.",
+    "sc.deleteMessage": "A(z) „{{constraint}}\" elemzés törlődik. Az ajánlatot ez nem érinti.",
 
     "ss.shareWhatsApp": "Megosztás WhatsAppon",
     "ss.shareMessenger": "Megosztás Messengeren",
@@ -1233,6 +1233,33 @@ export const messages = {
     "scenarios.analysing": "Elemzés…",
     "scenarios.notAnOffer":
       "Itt nem készül új ajánlat. Az AI elolvassa a meglévő ajánlatot és az eredeti igényt, majd megmutatja, mi a mozgástered a megadott korlát mellett. Az ajánlaton semmi nem változik.",
+    "enaplo.title": "E-napló export",
+    "enaplo.backToDiary": "Vissza a naplóhoz",
+    "enaplo.howToTitle": "Így kerül be az e-építési naplóba",
+    "enaplo.step1": "Töltsd le a saját nyomtatvány sablonodat az e-építési naplóból, és telepítsd az ÁNYK programba.",
+    "enaplo.step2": "Nyisd meg az ÁNYK-t, és a sablonból indíts egy új napi jelentést.",
+    "enaplo.step3": "Másold át a nap blokkjait: időjárás, létszám, teljesítmény.",
+    "enaplo.step4": "Mentsd el, majd az e-építési naplóban töltsd fel az „Offline jelentés (.enyk) feltöltése” gombbal.",
+    "enaplo.warnDeadline": "A napi jelentést a munkavégzés napján kell kitölteni — visszadátumozni nem lehet —, és 3 napon belül fel kell tölteni.",
+    "enaplo.warnHeadcount": "A létszám csak azokat tartalmazza, akiknek van naplóbejegyzésük. A jogszabály mindenkit kér, aki jelen volt, a műszaki és adminisztratív munkatársakat is — őket az ÁNYK-ban kell hozzáírni.",
+    "enaplo.warnAttachments": "Offline bejegyzéshez kép nem csatolható, a naplóban tárolt fotók ezen az úton nem jutnak át.",
+    "enaplo.warnIncidents": "Az eseti bejegyzéseket nem visszük át automatikusan: hogy egy probléma eseti bejegyzésnek minősül-e, az a te döntésed.",
+    "enaplo.empty": "Ehhez a munkához még nincs naplóbejegyzés.",
+    "enaplo.blockWeather": "Időjárás",
+    "enaplo.blockHeadcount": "Napi létszám",
+    "enaplo.blockPerformance": "Napi teljesítmény",
+    "enaplo.blockIncidents": "Javasolt eseti bejegyzések",
+    "enaplo.incidentsHint": "A napló problémái és jegyzetei. Csak akkor vidd át, ha eseti bejegyzésnek minősül.",
+    "enaplo.noWeather": "Nincs rögzített időjárás.",
+    "enaplo.noHeadcount": "Nincs rögzített létszám.",
+    "enaplo.noPerformance": "Nincs rögzített teljesítmény.",
+    "enaplo.copy": "Másolás",
+    "enaplo.copiedShort": "Kimásolva",
+    "enaplo.copied": "Vágólapra másolva.",
+    "enaplo.copyFailed": "Nem sikerült a vágólapra másolni.",
+    "enaplo.headcountBadge": "{{count}} fő",
+    "enaplo.weatherConflict": "Aznap eltérő időjárás is szerepel: {{values}}",
+    "enaplo.exportAction": "E-napló export",
   },
 
   en: {
@@ -1519,7 +1546,7 @@ export const messages = {
     "ranking.withinTrade":
       "Individual order is within a trade. Diary quantities use different units per trade, so they cannot produce a comparable performance figure.",
     "ranking.coverage":
-      "{attributed} of {total} diary entries can be attributed to a named worker ({percent}%). The rest of the work happened, but does not appear in this ranking.",
+      "{{attributed}} of {{total}} diary entries can be attributed to a named worker ({{percent}}%). The rest of the work happened, but does not appear in this ranking.",
     "ranking.hoursShort": "h",
     "ranking.daysShort": "days",
     "ranking.jobsShort": "jobs",
@@ -2072,7 +2099,7 @@ export const messages = {
     "sc.exNoMachine": "I have no machine for demolition",
 
     "sc.exTwoPeople": "I only have 2 people instead of the 4 planned",
-    "sc.deleteMessage": "The analysis „{constraint}” will be deleted. The offer is not affected.",
+    "sc.deleteMessage": "The analysis „{{constraint}}” will be deleted. The offer is not affected.",
 
     "ss.shareWhatsApp": "Share on WhatsApp",
     "ss.shareMessenger": "Share on Messenger",
@@ -2459,6 +2486,33 @@ export const messages = {
     "scenarios.analysing": "Analysing…",
     "scenarios.notAnOffer":
       "No new offer is produced here. The AI reads the existing offer and the original requirement, then shows what room you have under the stated constraint. Nothing on the offer changes.",
+    "enaplo.title": "E-napló export",
+    "enaplo.backToDiary": "Back to the diary",
+    "enaplo.howToTitle": "How this reaches the e-építési napló",
+    "enaplo.step1": "Download your own form template from the e-építési napló and install it into ÁNYK.",
+    "enaplo.step2": "Open ÁNYK and start a new daily report from that template.",
+    "enaplo.step3": "Copy the day's blocks across: weather, headcount, performance.",
+    "enaplo.step4": "Save it, then upload it in the e-építési napló with the „Offline jelentés (.enyk) feltöltése” button.",
+    "enaplo.warnDeadline": "The daily report has to be filled in on the day the work happened — it cannot be backdated — and uploaded within 3 days.",
+    "enaplo.warnHeadcount": "The headcount only covers people who have a diary entry. The regulation asks for everyone present, technical and administrative staff included, so add them in ÁNYK.",
+    "enaplo.warnAttachments": "Offline entries take no attachments, so photos held in the diary do not travel this route.",
+    "enaplo.warnIncidents": "Incident entries are not carried over automatically: whether a problem counts as one is your call.",
+    "enaplo.empty": "This work has no diary entries yet.",
+    "enaplo.blockWeather": "Weather",
+    "enaplo.blockHeadcount": "Daily headcount",
+    "enaplo.blockPerformance": "Daily performance",
+    "enaplo.blockIncidents": "Suggested incident entries",
+    "enaplo.incidentsHint": "Problems and notes from the diary. Carry one across only if it qualifies as an incident entry.",
+    "enaplo.noWeather": "No weather recorded.",
+    "enaplo.noHeadcount": "No headcount recorded.",
+    "enaplo.noPerformance": "No performance recorded.",
+    "enaplo.copy": "Copy",
+    "enaplo.copiedShort": "Copied",
+    "enaplo.copied": "Copied to the clipboard.",
+    "enaplo.copyFailed": "Could not copy to the clipboard.",
+    "enaplo.headcountBadge": "{{count}} people",
+    "enaplo.weatherConflict": "The day also carries different weather: {{values}}",
+    "enaplo.exportAction": "E-napló export",
   },
 } satisfies Record<Locale, Record<string, string>>;
 
@@ -2473,7 +2527,7 @@ export type Translator = (
 /**
  * Falls back to Hungarian, then to the key itself, so nothing renders blank.
  *
- * Supports {name} placeholders. Sentences that carry numbers read differently in each
+ * Supports {{name}} placeholders. Sentences that carry numbers read differently in each
  * language - word order, what gets a suffix - so they have to be translated whole rather
  * than assembled from fragments in JSX.
  */

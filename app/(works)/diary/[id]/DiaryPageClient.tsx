@@ -1,6 +1,9 @@
 "use client";
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { FileDown } from "lucide-react";
+import { useLocale } from "@/components/i18n/LocaleProvider";
 import GoogleCalendarView from "./_components/GoogleCalendarView";
 import PerformanceSummary from "./_components/PerformanceSummary";
 import { usePerformanceData } from "@/hooks/usePerformanceData";
@@ -49,6 +52,7 @@ export default function DiaryPageClient({
   isTenant,
 }: DiaryPageClientProps) {
   const router = useRouter();
+  const { t } = useLocale();
   const [isLoading, setIsLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState<"dayGridMonth" | "timeGridWeek">(
@@ -199,9 +203,20 @@ export default function DiaryPageClient({
     <div className="max-w-3xl mx-auto">
       <WorkHeader title={work?.title || "Munkanapló"} />
       <div className="py-6 md:py-8 px-3 sm:px-4 md:px-0">
-        <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-2 sm:mb-3 md:mb-6">
-          Munkanapló
-        </h1>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-2 sm:mb-3 md:mb-6">
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold">
+            Munkanapló
+          </h1>
+          {work?.id != null && (
+            <Link
+              href={`/diary/${work.id}/enaplo`}
+              className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-2.5 py-1.5 text-xs sm:text-sm text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <FileDown className="h-4 w-4" />
+              {t("enaplo.exportAction")}
+            </Link>
+          )}
+        </div>
 
         {error && (
           <div className="bg-red-100 text-red-700 p-4 mb-4 rounded">
