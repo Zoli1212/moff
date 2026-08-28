@@ -2,7 +2,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileText, ListChecks } from "lucide-react";
+import { FileText, ListChecks, Wallet } from "lucide-react";
 
 export default function BillingsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -17,6 +17,11 @@ export default function BillingsLayout({ children }: { children: React.ReactNode
       href: "/billings/my-invoices",
       label: "Számlázott",
       icon: <FileText size={24} />,
+    },
+    {
+      href: "/billings/payroll",
+      label: "Bérszámfejtés",
+      icon: <Wallet size={24} />,
     },
   ];
 
