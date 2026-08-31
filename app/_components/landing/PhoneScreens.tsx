@@ -7,8 +7,9 @@ import { PhoneTabBar } from "./PhoneMockup";
  * The screens shown inside the phone frames.
  *
  * Composed from the same shapes the product uses — a work with priced items and a
- * progress bar, a Kanban board, a day in the site diary — so the landing shows what is
- * actually being sold rather than a generic dashboard. The figures are illustrative.
+ * progress bar, a day in the site diary, and the performance the diary adds up to — so
+ * the landing shows what is actually being sold rather than a generic dashboard. The
+ * figures are illustrative.
  */
 
 /** Work detail: what a contractor opens most often. */
@@ -77,41 +78,80 @@ export function WorkScreen() {
   );
 }
 
-/** The Kanban board, which is the answer to "where does the job stand". */
-export function BoardScreen() {
+/**
+ * What the diary adds up to.
+ *
+ * The point of logging every day is not the log — it is that the week's performance,
+ * each worker's hours and whether the job is actually making money all fall out of it
+ * without anyone assembling a spreadsheet.
+ */
+export function PerformanceScreen() {
   const { t } = useLocale();
 
-  const columns = [
-    { label: t("landing.colTodo"), cards: 2, tone: "bg-stone-200" },
-    { label: t("landing.colDoing"), cards: 3, tone: "bg-orange-400" },
-    { label: t("landing.colReview"), cards: 1, tone: "bg-amber-300" },
-    { label: t("landing.colDone"), cards: 4, tone: "bg-emerald-400" },
+  const workers = [
+    { name: "Kiss P.", hours: 38, width: "w-[95%]" },
+    { name: "Nagy A.", hours: 32, width: "w-[80%]" },
+    { name: "Tóth B.", hours: 24, width: "w-[60%]" },
   ];
 
   return (
     <div className="flex h-full flex-col bg-stone-50 pt-9">
       <div className="px-3 pb-2">
-        <p className="text-[11px] font-bold text-stone-900">{t("landing.screenBoardLabel")}</p>
+        <p className="text-[11px] font-bold text-stone-900">{t("landing.screenPerfLabel")}</p>
       </div>
 
-      {/* Four columns at once, which is how the board is built for a phone. */}
-      <div className="grid flex-1 grid-cols-4 gap-1 px-2">
-        {columns.map((column) => (
-          <div key={column.label} className="flex flex-col gap-1">
-            <div className="flex items-center gap-1">
-              <span className={`h-1.5 w-1.5 rounded-full ${column.tone}`} />
-              <span className="truncate text-[6px] font-bold uppercase tracking-wide text-stone-500">
-                {column.label}
+      <div className="mx-3 rounded-xl bg-white p-2.5 shadow-sm">
+        <div className="flex items-baseline justify-between">
+          <span className="text-[8px] font-semibold uppercase tracking-wide text-stone-400">
+            {t("landing.perfWeek")}
+          </span>
+          {/* The comparison is the part that makes a number mean something. */}
+          <span className="rounded-full bg-emerald-50 px-1.5 py-0.5 text-[8px] font-bold text-emerald-700">
+            +12%
+          </span>
+        </div>
+        <p className="mt-0.5 text-lg font-bold leading-none text-stone-900">104%</p>
+      </div>
+
+      <div className="mx-3 mt-2 flex-1 rounded-xl bg-white p-2.5 shadow-sm">
+        <p className="text-[8px] font-semibold uppercase tracking-wide text-stone-400">
+          {t("landing.perfHours")}
+        </p>
+        <div className="mt-2 space-y-1.5">
+          {workers.map((worker) => (
+            <div key={worker.name} className="flex items-center gap-1.5">
+              <span className="w-11 shrink-0 truncate text-[8px] text-stone-600">{worker.name}</span>
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-stone-100">
+                <div className={`h-full rounded-full bg-orange-500 ${worker.width}`} />
+              </div>
+              <span className="w-5 shrink-0 text-right text-[8px] font-bold tabular-nums text-stone-800">
+                {worker.hours}
               </span>
             </div>
-            {Array.from({ length: column.cards }).map((_, index) => (
-              <div key={index} className="rounded-md bg-white p-1 shadow-sm">
-                <div className="h-1 w-full rounded-full bg-stone-200" />
-                <div className="mt-1 h-1 w-2/3 rounded-full bg-stone-100" />
-              </div>
-            ))}
-          </div>
-        ))}
+          ))}
+        </div>
+      </div>
+
+      {/* Revenue, cost and what is left: the question behind the whole diary. */}
+      <div className="mx-3 mb-14 mt-2 grid grid-cols-3 gap-1">
+        <div className="rounded-lg bg-white p-1.5 text-center shadow-sm">
+          <p className="text-[6px] font-semibold uppercase text-stone-400">
+            {t("landing.perfRevenue")}
+          </p>
+          <p className="mt-0.5 text-[8px] font-bold text-stone-800">2,0 M</p>
+        </div>
+        <div className="rounded-lg bg-white p-1.5 text-center shadow-sm">
+          <p className="text-[6px] font-semibold uppercase text-stone-400">
+            {t("landing.perfCost")}
+          </p>
+          <p className="mt-0.5 text-[8px] font-bold text-stone-800">1,4 M</p>
+        </div>
+        <div className="rounded-lg bg-stone-900 p-1.5 text-center shadow-sm">
+          <p className="text-[6px] font-semibold uppercase text-stone-400">
+            {t("landing.perfProfit")}
+          </p>
+          <p className="mt-0.5 text-[8px] font-bold text-orange-400">31%</p>
+        </div>
       </div>
 
       <PhoneTabBar active="work" />

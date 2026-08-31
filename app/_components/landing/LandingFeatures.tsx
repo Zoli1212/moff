@@ -3,7 +3,7 @@
 import { CalendarCheck, Check, Receipt, Sparkles } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import PhoneMockup from "./PhoneMockup";
-import { BoardScreen, DiaryScreen } from "./PhoneScreens";
+import { DiaryScreen, PerformanceScreen } from "./PhoneScreens";
 import { displayFont } from "./fonts";
 
 /**
@@ -47,21 +47,21 @@ export default function LandingFeatures() {
       </section>
 
       <Showcase
-        eyebrow={t("landing.showBoardEyebrow")}
-        title={t("landing.showBoardTitle")}
-        body={t("landing.showBoardBody")}
-        points={[t("landing.showBoardP1"), t("landing.showBoardP2"), t("landing.showBoardP3")]}
-        phone={<BoardScreen />}
-      />
-
-      <Showcase
-        reversed
-        tone="dark"
         eyebrow={t("landing.showDiaryEyebrow")}
         title={t("landing.showDiaryTitle")}
         body={t("landing.showDiaryBody")}
         points={[t("landing.showDiaryP1"), t("landing.showDiaryP2"), t("landing.showDiaryP3")]}
         phone={<DiaryScreen />}
+      />
+
+      <Showcase
+        reversed
+        tone="dark"
+        eyebrow={t("landing.showPerfEyebrow")}
+        title={t("landing.showPerfTitle")}
+        body={t("landing.showPerfBody")}
+        points={[t("landing.showPerfP1"), t("landing.showPerfP2"), t("landing.showPerfP3")]}
+        phone={<PerformanceScreen />}
       />
 
       <section id="how" className="scroll-mt-20 border-t border-stone-200 bg-white">
