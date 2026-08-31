@@ -18,25 +18,29 @@ export default function LandingHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-stone-200/70 bg-stone-50/80 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+      {/* Tall enough that the lockup is not wedged against the header's edges. */}
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:h-20 sm:px-6">
         {/*
           The logo is a full lockup — mark above the word "OfferFlow" — so no text label
           sits beside it; that would set the name twice.
 
-          Two details the file forces. It is a JPEG with no alpha, so its white ground
-          would otherwise show as a pale square against the header: mix-blend-multiply
-          drops white on a light background without needing the image edited. And it
-          carries wide internal margins, so the box clips a scaled-up copy, which makes
-          the mark fill the space instead of floating in the middle of it.
+          Shown whole rather than cropped. An earlier version scaled it up inside a
+          clipping box to swallow the file's wide white margins, which cut the top off
+          the arrow — losing part of the mark to gain a little size is a bad trade.
+          Instead the box is simply larger and object-contain keeps all of it.
+
+          It is a JPEG with no alpha, so its white ground would show as a pale square
+          against the header; mix-blend-multiply drops white on a light background
+          without the image needing to be edited.
         */}
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center sm:h-14 sm:w-14">
           <Image
             src="/offerflow-logo.jpg"
             alt="OfferFlow"
-            width={88}
-            height={88}
+            width={112}
+            height={112}
             priority
-            className="h-full w-full scale-[1.38] object-contain mix-blend-multiply"
+            className="h-full w-full object-contain mix-blend-multiply"
           />
         </div>
 
