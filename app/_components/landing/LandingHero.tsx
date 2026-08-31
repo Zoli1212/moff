@@ -5,7 +5,7 @@ import { useLocale } from "@/components/i18n/LocaleProvider";
 import { ContractorSignIn } from "./SignInActions";
 import PhoneMockup from "./PhoneMockup";
 import { WorkScreen } from "./PhoneScreens";
-import { displaySerif } from "./fonts";
+import { displayFont } from "./fonts";
 
 /**
  * The first screen: what this is, and one thing to do next.
@@ -29,7 +29,7 @@ export default function LandingHero() {
         </span>
 
         <h1
-          className={`${displaySerif.className} mx-auto mt-6 max-w-3xl text-[2.6rem] leading-[1.06] tracking-[-0.015em] text-stone-900 sm:text-6xl lg:text-7xl`}
+          className={`${displayFont.className} mx-auto mt-6 max-w-3xl text-[2.6rem] font-extrabold leading-[1.04] tracking-[-0.035em] text-stone-900 sm:text-6xl lg:text-7xl`}
         >
           {t("landing.heroTitle")}
         </h1>

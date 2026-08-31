@@ -4,7 +4,7 @@ import { CalendarCheck, Check, Receipt, Sparkles } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
 import PhoneMockup from "./PhoneMockup";
 import { BoardScreen, DiaryScreen } from "./PhoneScreens";
-import { displaySerif } from "./fonts";
+import { displayFont } from "./fonts";
 
 /**
  * What the product does, shown on the device it is used on.
@@ -67,7 +67,7 @@ export default function LandingFeatures() {
       <section id="how" className="scroll-mt-20 border-t border-stone-200 bg-white">
         <div className="mx-auto w-full max-w-6xl px-4 py-14 sm:px-6 lg:py-20">
           <h2
-            className={`${displaySerif.className} max-w-2xl text-4xl leading-[1.1] tracking-[-0.01em] text-stone-900 sm:text-5xl`}
+            className={`${displayFont.className} max-w-2xl text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] text-stone-900 sm:text-5xl`}
           >
             {t("landing.howTitle")}
           </h2>
@@ -125,7 +125,7 @@ function Showcase({
               {eyebrow}
             </span>
             <h2
-              className={`${displaySerif.className} mt-3 text-4xl leading-[1.1] tracking-[-0.01em] sm:text-5xl ${
+              className={`${displayFont.className} mt-3 text-4xl font-extrabold leading-[1.08] tracking-[-0.03em] sm:text-5xl ${
                 isDark ? "text-white" : "text-stone-900"
               }`}
             >
