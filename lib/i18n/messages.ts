@@ -1242,7 +1242,6 @@ export const messages = {
     "enaplo.step3": "Másold át a nap pontjait: ca)-tól cf)-ig.",
     "enaplo.step4": "Mentsd el, majd az e-építési naplóban töltsd fel az „Offline jelentés (.enyk) feltöltése” gombbal.",
     "enaplo.gapsTitle": "Ezt kéri a jogszabály, de a naplónk nem tárolja — az ÁNYK-ban pótold",
-    "enaplo.gap.cb": "Naponta legalább két mért külső hőmérséklet, az egyik a napi legalacsonyabb. Nálunk egy érték van.",
     "enaplo.gap.cc": "A munkamenetet akadályozó időjárás és az akadályozás időtartama. Nálunk csak az időjárás leírása van.",
     "enaplo.gap.cd": "A létszám saját és alvállalkozói bontásban. Nálunk szakma szerinti bontás van, és csak azok szerepelnek, akiknek van naplóbejegyzésük.",
     "enaplo.gap.cf": "Építési-bontási hulladék: mennyiség, típus, azonosító kód, elszállítás, KÜJ/KTJ, számlák. Ezt a naplónk egyáltalán nem gyűjti.",
@@ -1369,6 +1368,11 @@ export const messages = {
     "landing.showDiaryP1": "Napi rögzítés a helyszínen",
     "landing.showDiaryP2": "Létszám és teljesítmény dolgozónként",
     "landing.showDiaryP3": "E-napló export a jogszabály pontjai szerint",
+    "weather.fetch": "Időjárás lekérése",
+    "weather.failed": "Az időjárás lekérése nem sikerült.",
+    "weather.source": "Forrás: Open-Meteo — {{place}}",
+    "weather.tempMin": "Napi minimum (°C)",
+    "weather.tempMax": "Napi maximum (°C)",
   },
 
   en: {
@@ -2604,7 +2608,6 @@ export const messages = {
     "enaplo.step3": "Copy the day's points across, ca) through cf).",
     "enaplo.step4": "Save it, then upload it in the e-építési napló with the „Offline jelentés (.enyk) feltöltése” button.",
     "enaplo.gapsTitle": "Required by the regulation but not stored by our diary — fill these in inside ÁNYK",
-    "enaplo.gap.cb": "At least two measured outside temperatures a day, one of them the day's lowest. We keep a single value.",
     "enaplo.gap.cc": "The weather that held the work up, and for how long. We only keep a description of the weather.",
     "enaplo.gap.cd": "Headcount split between own and subcontractor staff. We break it down by trade, and only people with a diary entry appear.",
     "enaplo.gap.cf": "Construction and demolition waste: quantity, type, identifier code, removal, KÜJ/KTJ, invoices. Our diary does not collect this at all.",
@@ -2731,6 +2734,11 @@ export const messages = {
     "landing.showDiaryP1": "Logged on site, the same day",
     "landing.showDiaryP2": "Headcount and output per worker",
     "landing.showDiaryP3": "E-napló export by the regulation’s points",
+    "weather.fetch": "Fetch weather",
+    "weather.failed": "Could not fetch the weather.",
+    "weather.source": "Source: Open-Meteo — {{place}}",
+    "weather.tempMin": "Daily low (°C)",
+    "weather.tempMax": "Daily high (°C)",
   },
 } satisfies Record<Locale, Record<string, string>>;
 

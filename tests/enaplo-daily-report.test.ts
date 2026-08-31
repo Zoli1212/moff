@@ -167,6 +167,8 @@ describe("rendering the ÁNYK blocks", () => {
         date: "2026-08-20T08:00:00Z",
         weather: "napos",
         temperature: 24.5,
+        temperatureMin: 13.6,
+        temperatureMax: 27.4,
         progress: 40,
         description: "Északi homlokzat falazása.",
         workItem: { id: 10, name: "Falazás" },
@@ -190,7 +192,7 @@ describe("rendering the ÁNYK blocks", () => {
   });
 
   it("keeps temperature and weather apart, the way points cb) and cc) split them", () => {
-    expect(renderTemperatureText(report)).toBe("24.5 °C");
+    expect(renderTemperatureText(report)).toBe("24.5 °C, min. 13.6 °C, max. 27.4 °C");
     expect(renderWeatherText(report)).toBe("napos");
   });
 

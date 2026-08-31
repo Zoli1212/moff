@@ -185,6 +185,8 @@ export async function updateWorkDiary({
   description,
   weather,
   temperature,
+  temperatureMin,
+  temperatureMax,
   progress,
   issues,
   notes,
@@ -199,6 +201,9 @@ export async function updateWorkDiary({
   description?: string;
   weather?: string | null;
   temperature?: number | null;
+  /** The day's low and high, which point cb) of the e-napló daily report asks for. */
+  temperatureMin?: number | null;
+  temperatureMax?: number | null;
   progress?: number | null;
   issues?: string | null;
   notes?: string | null;
@@ -220,6 +225,8 @@ export async function updateWorkDiary({
   if (description !== undefined) data.description = description;
   if (weather !== undefined) data.weather = weather;
   if (temperature !== undefined) data.temperature = temperature;
+  if (temperatureMin !== undefined) data.temperatureMin = temperatureMin;
+  if (temperatureMax !== undefined) data.temperatureMax = temperatureMax;
   if (progress !== undefined) data.progress = progress;
   if (issues !== undefined) data.issues = issues;
   if (notes !== undefined) data.notes = notes;

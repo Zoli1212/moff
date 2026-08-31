@@ -7,6 +7,9 @@ export interface WorkDiary {
   description: string;
   weather?: string | null;
   temperature?: number | null;
+  /** The day's low and high, required by point cb) of the e-napló daily report. */
+  temperatureMin?: number | null;
+  temperatureMax?: number | null;
   quantity?: number | null;
   issues?: string | null;
   notes?: string | null;

@@ -22,6 +22,8 @@ export interface EnaploDiarySource {
   description?: string | null;
   weather?: string | null;
   temperature?: number | null;
+  temperatureMin?: number | null;
+  temperatureMax?: number | null;
   progress?: number | null;
   issues?: string | null;
   notes?: string | null;
@@ -79,6 +81,8 @@ export interface EnaploDailyReport {
   dayName: string;
   weather: string | null;
   temperature: number | null;
+  temperatureMin: number | null;
+  temperatureMax: number | null;
   /** Conflicting weather across the day's rows; the user picks one for the form. */
   weatherConflicts: string[];
   headcount: EnaploHeadcountRow[];
@@ -104,12 +108,14 @@ export type NapiJelentesPoint = (typeof NAPI_JELENTES_POINTS)[number];
  *
  * These do not depend on the day's data — they are shortcomings of the model itself, so
  * they are stated once rather than repeated under every date:
- *  cb) two measured outside temperatures, one of them the day's lowest; we keep one.
  *  cc) how long the weather actually held the work up; we keep no duration.
  *  cd) the split between own and subcontractor headcount; we keep a role only.
  *  cf) construction and demolition waste, down to KÜJ/KTJ and transfer invoices.
+ *
+ * cb) used to be here. The diary now records the day's low and high alongside the
+ * reading, filled from the weather service, which is what the point asks for.
  */
-export const UNSUPPORTED_POINTS = ["cb", "cc", "cd", "cf"] as const;
+export const UNSUPPORTED_POINTS = ["cc", "cd", "cf"] as const;
 
 const BUDAPEST = "Europe/Budapest";
 
@@ -270,6 +276,8 @@ export function buildDailyReports(
       weather: weathers[0] ?? null,
       weatherConflicts: weathers.slice(1),
       temperature: firstNumber(rows.map((r) => r.temperature)),
+      temperatureMin: firstNumber(rows.map((r) => r.temperatureMin)),
+      temperatureMax: firstNumber(rows.map((r) => r.temperatureMax)),
       headcount: [...byRole.entries()]
         .map(([role, names]) => ({ role, names: names.sort((a, b) => a.localeCompare(b, "hu")) }))
         .sort((a, b) => a.role.localeCompare(b.role, "hu")),
@@ -365,7 +373,15 @@ export function renderDateText(report: EnaploDailyReport): string {
  * single value per diary row, so this is a starting figure the user completes.
  */
 export function renderTemperatureText(report: EnaploDailyReport): string {
-  return report.temperature !== null ? `${formatAmount(report.temperature)} °C` : "";
+  const parts: string[] = [];
+  if (report.temperature !== null) parts.push(`${formatAmount(report.temperature)} °C`);
+  if (report.temperatureMin !== null) {
+    parts.push(`min. ${formatAmount(report.temperatureMin)} °C`);
+  }
+  if (report.temperatureMax !== null) {
+    parts.push(`max. ${formatAmount(report.temperatureMax)} °C`);
+  }
+  return parts.join(", ");
 }
 
 /** Point cc): the weather itself, kept apart from the temperature the way the law splits them. */

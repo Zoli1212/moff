@@ -42,7 +42,7 @@ export function buildDailySheetRows(
     [
       "ca) Dátum",
       "ca) Nap",
-      "cb) Mért külső hőmérséklet",
+      "cb) Hőmérséklet (mért / min / max)",
       "cc) Időjárási adatok",
       "cd) Létszám összesen",
       "cd) Létszám részletezve",

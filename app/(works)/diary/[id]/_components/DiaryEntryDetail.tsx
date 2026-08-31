@@ -73,6 +73,8 @@ export default function DiaryEntryDetail({
         description: updated.description,
         weather: updated.weather,
         temperature: updated.temperature,
+        temperatureMin: updated.temperatureMin,
+        temperatureMax: updated.temperatureMax,
         issues: updated.issues,
         notes: updated.notes,
         unit: updated.unit,

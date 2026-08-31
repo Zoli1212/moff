@@ -367,6 +367,10 @@ model WorkDiary {
   description    String
   weather        String?
   temperature    Float?
+  /// The day's low and high, which point cb) of the e-napló daily report requires
+  /// alongside a reading. Filled from the weather service, overridable by hand.
+  temperatureMin Float?
+  temperatureMax Float?
   progress       Float?      // 0-100 percentage
   issues         String?
   notes          String?
