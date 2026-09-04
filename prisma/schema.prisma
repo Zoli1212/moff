@@ -871,6 +871,38 @@ model InviteToken {
   @@index([createdBy])
 }
 
+/// Kulcs, amivel egy külső bérszámfejtő rendszer lekérheti tőlünk a havi
+/// bérösszesítőt.
+///
+/// Miért mi adunk API-t, és nem fordítva: nem találtunk olyan magyar
+/// bérprogramot, amely nyilvános REST API-t adna külső hívónak (ld.
+/// lib/payroll/providers.ts). A megfordított irány viszont működik — a
+/// könyvelő rendszere lekéri tőlünk az adatot, fájlküldözgetés nélkül.
+///
+/// A kulcs HASH-elve tárolódik, ahogy egy jelszó: a nyers értéket egyszer,
+/// létrehozáskor mutatjuk meg, utána már nem visszanyerhető. A `keyPrefix`
+/// csak annyi, hogy a listán fel lehessen ismerni, melyik kulcsról van szó.
+model PayrollApiKey {
+  id          String    @id @default(cuid())
+  /// Melyik bérlő adatához ad hozzáférést. A lekérdezés ebből szűr — a kulcs
+  /// SOSE lát más bérlő adatát.
+  tenantEmail String
+  /// SHA-256 a nyers kulcsból.
+  keyHash     String    @unique
+  /// Az első néhány karakter, felismeréshez ("pk_live_a1b2…").
+  keyPrefix   String
+  /// A koordinátor által adott név, pl. "Novitax — könyvelő".
+  name        String
+  lastUsedAt  DateTime?
+  /// Visszavonás: a sort megtartjuk (audit), de a kulcs nem használható.
+  revokedAt   DateTime?
+  createdBy   String
+  createdAt   DateTime  @default(now())
+
+  @@index([tenantEmail, revokedAt])
+  @@index([keyHash])
+}
+
 model Notification {
   id           Int      @id @default(autoincrement())
   recipientEmail String // kivitelező email

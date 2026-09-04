@@ -1,8 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, PlugZap, TriangleAlert } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, PlugZap, TriangleAlert } from "lucide-react";
 import { useLocale } from "@/components/i18n/LocaleProvider";
+import {
+  buildPayrollSheetRows,
+  payrollExportFilename,
+} from "@/lib/payroll/export-run";
 import type { PayrollRun } from "@/lib/payroll/types";
 
 interface Props {
@@ -29,6 +33,42 @@ function shiftMonth(month: string, delta: number): string {
  */
 export default function PayrollClient({ run, month, providerName, error, candidates }: Props) {
   const { t, money } = useLocale();
+
+  /**
+   * A fájl a kliensen készül, ugyanabból a futásból, amit a táblázat mutat —
+   * így nem térhet el attól, amit a felhasználó lát, és nem kell újabb
+   * szerver-kör. Az xlsx-et csak kattintáskor töltjük be, hogy ne terhelje
+   * az oldal első megjelenítését.
+   */
+  const handleExport = async (payrollRun: PayrollRun) => {
+    const [{ default: XLSX }, { saveAs }] = await Promise.all([
+      import("xlsx"),
+      import("file-saver"),
+    ]);
+    const rows = buildPayrollSheetRows(payrollRun, {
+      worker: t("payroll.colWorker"),
+      role: t("payroll.colRole"),
+      days: t("payroll.colDays"),
+      hours: t("payroll.colHours"),
+      gross: t("payroll.colGross"),
+      total: t("payroll.total"),
+      note: t("payroll.colNote"),
+      daysWithoutRate: (count) => t("payroll.daysWithoutRate", { count: String(count) }),
+      daysPending: (count) => t("payroll.daysPending", { count: String(count) }),
+    });
+
+    const sheet = XLSX.utils.aoa_to_sheet(rows);
+    sheet["!cols"] = [{ wch: 24 }, { wch: 18 }, { wch: 8 }, { wch: 8 }, { wch: 14 }, { wch: 34 }];
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, month);
+    const buffer = XLSX.write(book, { bookType: "xlsx", type: "array" });
+    saveAs(
+      new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      }),
+      payrollExportFilename(month),
+    );
+  };
 
   const hasEntries = run !== null && run.entries.length > 0;
   const flagged =
@@ -68,6 +108,19 @@ export default function PayrollClient({ run, month, providerName, error, candida
           </div>
         </div>
       </div>
+
+      {hasEntries && run && (
+        <div className="mt-4 flex justify-end">
+          <button
+            type="button"
+            onClick={() => handleExport(run)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+          >
+            <Download className="h-4 w-4" />
+            {t("payroll.export")}
+          </button>
+        </div>
+      )}
 
       <div className="mt-5 flex items-center justify-between gap-2">
         <Link
